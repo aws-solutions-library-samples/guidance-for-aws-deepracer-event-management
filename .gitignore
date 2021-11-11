@@ -1,0 +1,17 @@
+*.swp
+package-lock.json
+__pycache__
+.pytest_cache
+.env
+.venv
+*.egg-info
+.DS_Store
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+cdk.outputs
+
+lambda/get_smg_trains_simple/images
+lambda/get_smg_trains_simple/data.json
+node_modules

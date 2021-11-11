@@ -1,0 +1,22 @@
+{
+    "Auth": {
+        "region": "",
+        "userPoolId": "",
+        "userPoolWebClientId": "",
+        "identityPoolId": ""
+    },
+    "Storage": {
+        "region": "",
+        "bucket": "",
+        "identityPoolId":""
+    },
+    "API": {
+        "endpoints": [
+            {
+                "name": "images",
+                "endpoint": "",
+                "region": ""
+            }
+        ]
+    }
+}
