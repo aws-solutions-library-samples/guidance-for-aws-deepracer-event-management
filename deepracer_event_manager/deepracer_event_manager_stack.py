@@ -37,7 +37,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
         )
 
         ### Lambda
-        ## Models Function 
+        ## Models Function
         models_function = lambda_python.PythonFunction(self, "get_models_function",
             entry="lambda/get_models_function/",
             index="index.py",
@@ -51,7 +51,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
         #permissions for s3 bucket read
         models_bucket.grant_read_write(models_function, 'uploads/*')
 
-        ## Cars Function 
+        ## Cars Function
         cars_function = lambda_python.PythonFunction(self, "get_cars_function",
             entry="lambda/get_cars_function/",
             index="index.py",
@@ -80,10 +80,10 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
         origin_access_identity = cloudfront.OriginAccessIdentity(self, "OAI",
             comment=stack.stack_name
         )
-        
+
         distribution = cloudfront.CloudFrontWebDistribution(self, "Distribution",
             origin_configs=[{
-                "behaviors": [{ 
+                "behaviors": [{
                     "isDefaultBehavior": True
                 }],
                 "s3OriginSource": {
@@ -101,7 +101,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             #         "errorCode": 404,
             #         "responseCode": 200,
             #         "responsePagePath": "/errors/404.html"
-            #     }                
+            #     }
             # ],
             default_root_object="index.html",
             price_class=cloudfront.PriceClass.PRICE_CLASS_100,
@@ -148,6 +148,13 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             self_sign_up_enabled=False
         )
 
+        # Cognito User Group (Admin)
+        user_pool_group = cognito.CfnUserPoolGroup(self, "AdminGroup",
+            user_pool_id=user_pool.user_pool_id,
+            description="Admin user group",
+            group_name="admin"
+        )
+
         ## Cognito Client
         user_pool_client_web = cognito.UserPoolClient(self, "UserPoolClientWeb",
             user_pool=user_pool
@@ -169,7 +176,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
         )
 
         ## Cognito Identity Pool Authenitcated Role
-        id_pool_auth_user_role = iam.Role(self, "CognitoDefaultAuthenticatedRole", 
+        id_pool_auth_user_role = iam.Role(self, "CognitoDefaultAuthenticatedRole",
             assumed_by=iam.FederatedPrincipal(
                 federated="cognito-identity.amazonaws.com",
                 conditions={
@@ -237,7 +244,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             authorization_type=apig.AuthorizationType.IAM
         )
 
-        ## Grant API Invoke permissions to the Default authenticated user 
+        ## Grant API Invoke permissions to the Default authenticated user
         # https://aws.amazon.com/blogs/compute/secure-api-access-with-amazon-cognito-federated-identities-amazon-cognito-user-pools-and-amazon-api-gateway/
         id_pool_auth_user_role.add_to_policy(
             iam.PolicyStatement(
