@@ -51,7 +51,18 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
         #permissions for s3 bucket read
         models_bucket.grant_read_write(models_function, 'uploads/*')
 
-        ## Website
+        ## Cars Function 
+        cars_function = lambda_python.PythonFunction(self, "get_cars_function",
+            entry="lambda/get_cars_function/",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=cdk.Duration.minutes(1),
+            runtime=awslambda.Runtime.PYTHON_3_8,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=1024
+        )
+
+        ### Website
 
         ## S3
         source_bucket = s3.Bucket(self, "Bucket",
@@ -218,11 +229,13 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             integration=apig.LambdaIntegration(handler=models_function),
             authorization_type=apig.AuthorizationType.IAM
         )
-        # crud_images_method = api_images.add_method(
-        #     http_method="DELETE",
-        #     integration=apig.LambdaIntegration(handler=crud_images_function),
-        #     authorization_type=apig.AuthorizationType.IAM
-        # )
+
+        api_cars = api.root.add_resource('cars')
+        crud_models_method = api_cars.add_method(
+            http_method="GET",
+            integration=apig.LambdaIntegration(handler=cars_function),
+            authorization_type=apig.AuthorizationType.IAM
+        )
 
         ## Grant API Invoke permissions to the Default authenticated user 
         # https://aws.amazon.com/blogs/compute/secure-api-access-with-amazon-cognito-federated-identities-amazon-cognito-user-pools-and-amazon-api-gateway/
@@ -234,6 +247,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
                 ],
                 resources=[
                     api.arn_for_execute_api(method='GET',path='/models'),
+                    api.arn_for_execute_api(method='GET',path='/cars'),
                 ],
             )
         )

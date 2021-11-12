@@ -2,7 +2,7 @@
 import React, { Component } from 'react';
 import { Tab } from 'semantic-ui-react';
 
-// import { Models } from './models.js';
+import { Models } from './models.js';
 import { Uploader } from './uploader.js';
 
 class Menu extends Component {
@@ -27,10 +27,10 @@ class Menu extends Component {
   
     render() {
       var panes = [
-        // {
-        //   menuItem: 'Models',
-        //   render: () => <Tab.Pane attached={false}><Models /></Tab.Pane>,
-        // },
+        {
+          menuItem: 'Models',
+          render: () => <Tab.Pane attached={false}><Models /></Tab.Pane>,
+        },
         {
           menuItem: 'Upload',
           render: () => <Tab.Pane attached={false}><Uploader /></Tab.Pane>,

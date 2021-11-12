@@ -22,7 +22,7 @@ with open('cdk.outputs') as json_file:
         "API": {
             "endpoints": [
                 {
-                    "name": "models",
+                    "name": "deepracerEventManager",
                     "endpoint": data[apiGatewayEndpoint_key],
                     "region": data['region']
                 }
