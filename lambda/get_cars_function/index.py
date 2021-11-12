@@ -1,14 +1,28 @@
 import uuid
 import logging
 import simplejson as json
+import boto3
+from datetime import date, datetime
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+client_ssm = boto3.client('ssm')
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    raise TypeError ("Type %s not serializable" % type(obj))
 
 def lambda_handler(event, context):
     # function goes here
     unique_id = str(uuid.uuid4())
     logger.info(json.dumps(unique_id))
+
+    response = client_ssm.describe_instance_information()
+    logger.info(response['InstanceInformationList'])
 
     return {
         'headers': { 
@@ -17,5 +31,6 @@ def lambda_handler(event, context):
             "Access-Control-Allow-Credentials" : True # Required for cookies, authorization headers with HTTPS 
         },
         'statusCode': 200,
-        'body': json.dumps(unique_id)
+        'body': json.dumps(response['InstanceInformationList'], default=json_serial)
+        #'body': response
     }

@@ -61,6 +61,15 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=1024
         )
+        cars_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "ssm:DescribeInstanceInformation"
+                ],
+                resources=["*"],
+            )
+        )
 
         ### Website
 
