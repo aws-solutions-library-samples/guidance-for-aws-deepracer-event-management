@@ -47,6 +47,21 @@ To add additional dependencies, for example other CDK libraries, just add
 them to your `setup.py` file and rerun the `pip install -r requirements.txt`
 command.
 
+## Using pyenv
+
+Requirements:
+
+* [pyenv](https://github.com/pyenv/pyenv)
+* [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv)
+
+### Create and activate virtual env
+
+```
+$ pyenv install 3.8.12
+$ pyenv virtualenv 3.8.12 deepracer-event-manager
+$ pyenv local deepracer-event-manager
+```
+
 ## Useful commands
 
  * `cdk ls`          list all stacks in the app
