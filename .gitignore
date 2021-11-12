@@ -4,6 +4,7 @@ __pycache__
 .pytest_cache
 .env
 .venv
+.python-version
 *.egg-info
 .DS_Store
 
@@ -15,3 +16,6 @@ cdk.outputs
 lambda/get_smg_trains_simple/images
 lambda/get_smg_trains_simple/data.json
 node_modules
+
+# IDE
+.vscode
