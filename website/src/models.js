@@ -2,7 +2,9 @@
 
 import React, { Component } from 'react';
 import { Storage, API } from 'aws-amplify';
-import { Image as ImageSR, Table, Button } from 'semantic-ui-react';
+import { Table, Button } from 'semantic-ui-react';
+
+import CarModelUploadModal from "./carModelUploadModal.js";
 
 const path = require('path')
 class Models extends Component {
@@ -14,16 +16,38 @@ class Models extends Component {
       result: '',
       filename: '',
       models: [],
+      cars: [],
       view: 'list',
     };
   }
 
   componentDidMount = async () => {
+    // Cars
+    async function getCars() {
+      console.log("Collecting cars...")
+    
+      const apiName = 'deepracerEventManager';
+      const apiPath = 'cars';
+      // const myInit = { 
+      //   body: {
+      //     key: clickitem['key']
+      //   }
+      // };
+    
+      let response = await API.get(apiName, apiPath);
+      //let response = await API.post(apiName, apiPath, myInit);
+      //console.log(response)
+      return response
+    }
+
+    let cars = await getCars();
+    this.setState({ cars: cars })
+    console.log(cars);
+    
+    // Models
     async function getModels() { 
       return await Storage.list('models/uploaded/', { level: 'public' })
     }
-
-    this._isMounted = true;
     
     // Collect Image data
     this.setState({ files: [] })
@@ -42,7 +66,8 @@ class Models extends Component {
     //     //console.log(element)
     //   })
     // })
-    
+
+    this._isMounted = true;
   }
 
   componentWillUnmount() {
@@ -62,30 +87,31 @@ class Models extends Component {
     this.componentDidMount()
   }
 
-  onUploadClickHandler = async(clickitem) => {
-    console.log("Upload to Car " + clickitem['key'])
+  // onUploadClickHandler = async(clickitem) => {
+  //   console.log("Upload to Car " + clickitem['key'])
 
-    const apiName = 'deepracerEventManager';
-    const apiPath = 'cars';
-    // const myInit = { 
-    //   body: {
-    //     key: clickitem['key']
-    //   }
-    // };
+  //   const apiName = 'deepracerEventManager';
+  //   const apiPath = 'cars';
+  //   // const myInit = { 
+  //   //   body: {
+  //   //     key: clickitem['key']
+  //   //   }
+  //   // };
 
-    let response = await API.get(apiName, apiPath);
-    //let response = await API.post(apiName, apiPath, myInit);
-    console.log(response)
+  //   let response = await API.get(apiName, apiPath);
+  //   //let response = await API.post(apiName, apiPath, myInit);
+  //   console.log(response)
 
-    this.componentDidMount()
-  }
+  //   this.componentDidMount()
+  // }
 
   //
   render() {
     var tablerows = this.state.models.map(function (item, i) {
       return <Table.Row key={i} >
         <Table.Cell>{item.key} </Table.Cell>
-        <Table.Cell><Button positive circular icon='upload' onClick={(event) => this.onUploadClickHandler(item)}/></Table.Cell>
+        {/* <Table.Cell><Button positive circular icon='upload' onClick={(event) => this.onUploadClickHandler(item)}/></Table.Cell> */}
+        <Table.Cell><CarModelUploadModal cars={this.state.cars} /></Table.Cell>
         <Table.Cell><Button negative circular icon='delete' onClick={(event) => this.onDeleteClickHandler(item)}/></Table.Cell>
       </Table.Row>
     }.bind(this));
