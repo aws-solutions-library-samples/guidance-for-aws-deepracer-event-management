@@ -6,7 +6,7 @@ import { Table, Button } from 'semantic-ui-react';
 
 import CarModelUploadModal from "./carModelUploadModal.js";
 
-const path = require('path')
+//const path = require('path')
 class Models extends Component {
   constructor(props) {
     super(props);
@@ -107,12 +107,11 @@ class Models extends Component {
 
   //
   render() {
-    var tablerows = this.state.models.map(function (item, i) {
+    var tablerows = this.state.models.map(function (model, i) {
       return <Table.Row key={i} >
-        <Table.Cell>{item.key} </Table.Cell>
-        {/* <Table.Cell><Button positive circular icon='upload' onClick={(event) => this.onUploadClickHandler(item)}/></Table.Cell> */}
-        <Table.Cell><CarModelUploadModal cars={this.state.cars} /></Table.Cell>
-        <Table.Cell><Button negative circular icon='delete' onClick={(event) => this.onDeleteClickHandler(item)}/></Table.Cell>
+        <Table.Cell>{model.key} </Table.Cell>
+        <Table.Cell><CarModelUploadModal cars={this.state.cars} model={model} /></Table.Cell>
+        <Table.Cell><Button negative circular icon='delete' onClick={(event) => this.onDeleteClickHandler(model)}/></Table.Cell>
       </Table.Row>
     }.bind(this));
 

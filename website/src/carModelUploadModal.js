@@ -1,42 +1,30 @@
-import React from 'react'
-import { API } from 'aws-amplify';
-import { Table, Button, Modal, Radio } from 'semantic-ui-react'
+import React, {useState} from 'react'
+import { Table, Button, Modal } from 'semantic-ui-react'
 
-async function getCars() {
-  console.log("Collecting cars...")
-
-  const apiName = 'deepracerEventManager';
-  const apiPath = 'cars';
-  // const myInit = { 
-  //   body: {
-  //     key: clickitem['key']
-  //   }
-  // };
-
-  let response = await API.get(apiName, apiPath);
-  //let response = await API.post(apiName, apiPath, myInit);
-  //console.log(response)
-  return response
+function uploadModelToCar(car, model) {
+  console.log(car.InstanceId)
+  console.log(model.key)
 }
 
-function CarModelUploadModal(cars) {
-  const [open, setOpen] = React.useState(false)
+function CarModelUploadModal(props) {
+  const [open, setOpen] = useState(false)
 
   //let cars = collectCars()
   //let cars = [];
-  console.log(cars.cars);
+  //console.log(cars.cars);
+  //console.log('model')
+  //console.log(props.model)
 
-  var modaltablerows = cars.cars.map(function (item, i) {
+  var modaltablerows = props.cars.map(function (car, i) {
     return <Table.Row key={i} >
-      <Table.Cell>{item.ComputerName} </Table.Cell>
-      <Table.Cell><Radio></Radio> </Table.Cell>
+      <Table.Cell>{car.ComputerName} </Table.Cell>
+      <Table.Cell><Button content="Upload" labelPosition='right' icon='upload' onClick={() => {setOpen(false); uploadModelToCar(car, props.model) }} positive /></Table.Cell>
     </Table.Row>
   });
 
   return (
     
     <Modal
-      
       onClose={() => setOpen(false)}
       onOpen={() => setOpen(true)}
       open={open}
@@ -54,16 +42,7 @@ function CarModelUploadModal(cars) {
         </Table>
       </Modal.Content>
       <Modal.Actions>
-        <Button color='red' onClick={() => setOpen(false)}>
-          Cancel
-        </Button>
-        <Button
-          content="Upload"
-          labelPosition='right'
-          icon='upload'
-          onClick={() => setOpen(false)}
-          positive
-        />
+        <Button color='red' onClick={() => setOpen(false)}>Close</Button>
       </Modal.Actions>
     </Modal>
   )
