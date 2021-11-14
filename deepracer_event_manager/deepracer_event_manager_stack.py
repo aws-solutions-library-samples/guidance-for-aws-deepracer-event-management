@@ -71,6 +71,31 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             )
         )
 
+        ## upload_model_to_car_function
+        upload_model_to_car_function = lambda_python.PythonFunction(self, "upload_model_to_car_function",
+            entry="lambda/upload_model_to_car_function/",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=cdk.Duration.minutes(1),
+            runtime=awslambda.Runtime.PYTHON_3_8,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=1024,
+            environment={
+                "bucket": models_bucket.bucket_name
+            }
+        )
+        upload_model_to_car_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "ssm:GetCommandInvocation",
+                    "ssm:SendCommand",
+
+                ],
+                resources=["*"],
+            )
+        )
+
         ### Website
 
         ## S3
@@ -247,11 +272,19 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
         )
 
         api_cars = api.root.add_resource('cars')
-        crud_models_method = api_cars.add_method(
+        cars_method = api_cars.add_method(
             http_method="GET",
             integration=apig.LambdaIntegration(handler=cars_function),
             authorization_type=apig.AuthorizationType.IAM
         )
+
+        api_cars_upload = api_cars.add_resource('upload')
+        cars_upload_method = api_cars_upload.add_method(
+            http_method="POST",
+            integration=apig.LambdaIntegration(handler=upload_model_to_car_function),
+            authorization_type=apig.AuthorizationType.IAM
+        )
+        
 
         ## Grant API Invoke permissions to the Default authenticated user
         # https://aws.amazon.com/blogs/compute/secure-api-access-with-amazon-cognito-federated-identities-amazon-cognito-user-pools-and-amazon-api-gateway/
@@ -264,6 +297,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
                 resources=[
                     api.arn_for_execute_api(method='GET',path='/models'),
                     api.arn_for_execute_api(method='GET',path='/cars'),
+                    api.arn_for_execute_api(method='POST',path='/cars/upload'),
                 ],
             )
         )
