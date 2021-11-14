@@ -96,6 +96,9 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             )
         )
 
+        #permissions for s3 bucket read
+        models_bucket.grant_read_write(upload_model_to_car_function, 'public/models/uploaded/*')
+
         ### Website
 
         ## S3

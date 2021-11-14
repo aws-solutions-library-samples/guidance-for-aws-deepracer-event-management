@@ -3,6 +3,7 @@ import logging
 import simplejson as json
 import boto3
 import os
+from botocore.exceptions import ClientError
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -16,16 +17,42 @@ def lambda_handler(event, context):
 
     body_parameters=json.loads(event['body'])
     instance_id=body_parameters['InstanceId']
-    key=body_parameters['key']
+    
+    key_scope='public/'
+    key=key_scope + body_parameters['key']
+    filename=key.split('/')[-1]
+    foldername=filename.split('.')[0]
+
     logger.info(instance_id)
     logger.info(key)
 
-    command = 'echo ' + bucket + ' ' + key
+    status_code = 200
+
+    # Generate a presigned URL for the S3 object
+    s3_client = boto3.client('s3')
+    try:
+        presigned_url = s3_client.generate_presigned_url('get_object',
+            Params={
+                'Bucket': bucket,
+                'Key': key
+            },
+            ExpiresIn=300
+        )
+    except ClientError as e:
+        logging.error(e)
+        status_code = 500
+        
+    logger.info(json.dumps(presigned_url))
 
     response = client_ssm.send_command(
         InstanceIds=[instance_id],
         DocumentName="AWS-RunShellScript",
-        Parameters={'commands': [command]}
+        Parameters={'commands': [
+            "curl '{0}' -s --output /tmp/{1}".format(presigned_url, filename),
+            "mkdir /opt/aws/deepracer/artifacts/{0}/".format(foldername),
+            "tar zxvf /tmp/{0} -C /opt/aws/deepracer/artifacts/{1}/".format(filename,foldername),
+            "rm /tmp/{0}".format(filename)
+        ]}
     )
     command_id = response['Command']['CommandId']
     logger.info(command_id)
@@ -41,6 +68,6 @@ def lambda_handler(event, context):
             "Access-Control-Allow-Origin" : "*", # Required for CORS support to work
             "Access-Control-Allow-Credentials" : True # Required for cookies, authorization headers with HTTPS 
         },
-        'statusCode': 200,
+        'statusCode': status_code,
         'body': json.dumps(command_id)
     }
