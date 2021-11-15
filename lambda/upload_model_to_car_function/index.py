@@ -1,4 +1,3 @@
-import uuid
 import logging
 import simplejson as json
 import boto3
@@ -49,6 +48,7 @@ def lambda_handler(event, context):
         DocumentName="AWS-RunShellScript",
         Parameters={'commands': [
             "curl '{0}' -s --output /tmp/{1}".format(presigned_url, filename),
+            "rm -rf /opt/aws/deepracer/artifacts/{0}/".format(foldername),
             "mkdir /opt/aws/deepracer/artifacts/{0}/".format(foldername),
             "tar zxvf /tmp/{0} -C /opt/aws/deepracer/artifacts/{1}/".format(filename,foldername),
             "rm /tmp/{0}".format(filename)

@@ -1,4 +1,3 @@
-import uuid
 import logging
 import simplejson as json
 import boto3
@@ -18,9 +17,6 @@ def json_serial(obj):
 
 def lambda_handler(event, context):
     # function goes here
-    unique_id = str(uuid.uuid4())
-    logger.info(json.dumps(unique_id))
-
     response = client_ssm.describe_instance_information()
     logger.info(response['InstanceInformationList'])
 

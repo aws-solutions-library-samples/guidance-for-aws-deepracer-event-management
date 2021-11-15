@@ -11,6 +11,9 @@ class CarModelUploadModal extends Component {
       open: false,
       resultOpen: false,
       result: "",
+      CurrentInstanceId: "",
+      CommandId: "",
+      uploadStatus: "",
     };
   }
 
@@ -28,6 +31,27 @@ class CarModelUploadModal extends Component {
       body: {
         InstanceId: car.InstanceId,
         key: model.key
+      }
+    };
+
+    let response = await API.post(apiName, apiPath, myInit);
+    console.log(response)
+    this.setState({ result: response });
+    this.setState({ CommandId: response });
+    this.setState({ CurrentInstanceId: car.InstanceId });
+    return response
+  }
+
+  uploadModelToCarStatus= async (InstanceId, CommandId) => { 
+    console.log(InstanceId)
+    console.log(CommandId)
+
+    const apiName = 'deepracerEventManager';
+    const apiPath = 'cars/upload/status';
+    const myInit = { 
+      body: {
+        InstanceId: InstanceId,
+        CommandId: CommandId
       }
     };
 
@@ -99,6 +123,9 @@ class CarModelUploadModal extends Component {
             this.setState({ resultOpen: false }); 
             this.setState({ result: "" });
           }}>Close</Button>
+          <Button color='green' onClick={() => {
+            this.uploadModelToCarStatus(this.state.CurrentInstanceId, this.state.CommandId) 
+          }}>Refresh</Button>
         </Modal.Actions>
         </Modal>
       </>
