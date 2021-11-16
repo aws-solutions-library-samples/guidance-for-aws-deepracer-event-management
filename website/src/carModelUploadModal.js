@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { API } from 'aws-amplify';
-import { Header, Table, Button, Modal } from 'semantic-ui-react'
+import { Dimmer, Loader, Header, Table, Button, Modal } from 'semantic-ui-react'
 
 class CarModelUploadModal extends Component {
   constructor(props) {
@@ -15,6 +15,7 @@ class CarModelUploadModal extends Component {
       uploadStatus: "",
       count: 0,
       delay: 1000,
+      dimmerActive: false,
     };
   }
 
@@ -41,6 +42,7 @@ class CarModelUploadModal extends Component {
     this.setState({ CommandId: response });
     this.setState({ CurrentInstanceId: car.InstanceId });
     this.setState({ uploadStatus: "InProgress" });
+    this.setState({ dimmerActive: true });
     this.interval = setInterval(this.tick, this.state.delay); // start poll
     return response
   }
@@ -79,6 +81,7 @@ class CarModelUploadModal extends Component {
     if (this.state.uploadStatus !== "InProgress"){
       console.log(this.state.uploadStatus + " !== InProgress")
       clearInterval(this.interval); // stop poll
+      this.setState({ dimmerActive: false });
     }
   }
 
@@ -91,8 +94,8 @@ class CarModelUploadModal extends Component {
 
     var modaltablerows = this.props.cars.map(function (car, i) {
       return <Table.Row key={i} >
-        <Table.Cell>{car.ComputerName} </Table.Cell>
-        <Table.Cell><Button content="Upload" labelPosition='right' icon='upload' onClick={() => {
+        <Table.Cell textAlign='left'><Header as='h3'>{car.ComputerName}</Header></Table.Cell>
+        <Table.Cell textAlign='right'><Button content="Upload" labelPosition='right' icon='upload' onClick={() => {
           this.setState({ result: <p>Uploading...</p> });
           this.setState({ open: false });
           this.setState({ resultOpen: true }); 
@@ -100,6 +103,18 @@ class CarModelUploadModal extends Component {
           }} positive /></Table.Cell>
       </Table.Row>
     }.bind(this));
+
+    var resultModalContent = ""
+    if (this.state.dimmerActive) {
+      resultModalContent = 
+        <Dimmer active inverted>
+          <Loader size='large'>{this.state.result}</Loader>
+        </Dimmer>
+    }
+    else{
+      resultModalContent = 
+        <Header as='h3' textAlign='center'>{this.state.result}</Header>
+    }
 
     return (
       <>
@@ -111,9 +126,6 @@ class CarModelUploadModal extends Component {
         >
           <Modal.Header>Select a Car</Modal.Header>
           <Modal.Content>
-            <p>
-              Pick a car
-            </p>
             <Table>
               <Table.Body>
                 {modaltablerows}
@@ -135,7 +147,7 @@ class CarModelUploadModal extends Component {
         >
         <Modal.Header>Upload Result</Modal.Header>
         <Modal.Content>
-          <Header as='h3' textAlign='center'>{this.state.result}</Header>
+          {resultModalContent}
         </Modal.Content>
         <Modal.Actions>
           <Button color='red' onClick={() => {
@@ -143,9 +155,6 @@ class CarModelUploadModal extends Component {
             this.setState({ result: "" });
             clearInterval(this.interval); // stop poll
           }}>Close</Button>
-          <Button color='green' onClick={() => {
-            this.uploadModelToCarStatus(this.state.CurrentInstanceId, this.state.CommandId);
-          }}>Refresh</Button>
         </Modal.Actions>
         </Modal>
       </>
