@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { API } from 'aws-amplify';
-import { Table, Button, Modal } from 'semantic-ui-react'
-
+import { Header, Table, Button, Modal } from 'semantic-ui-react'
 
 class CarModelUploadModal extends Component {
   constructor(props) {
@@ -14,6 +13,8 @@ class CarModelUploadModal extends Component {
       CurrentInstanceId: "",
       CommandId: "",
       uploadStatus: "",
+      count: 0,
+      delay: 1000,
     };
   }
 
@@ -39,6 +40,8 @@ class CarModelUploadModal extends Component {
     this.setState({ result: response });
     this.setState({ CommandId: response });
     this.setState({ CurrentInstanceId: car.InstanceId });
+    this.setState({ uploadStatus: "InProgress" });
+    this.interval = setInterval(this.tick, this.state.delay); // start poll
     return response
   }
 
@@ -58,7 +61,25 @@ class CarModelUploadModal extends Component {
     let response = await API.post(apiName, apiPath, myInit);
     console.log(response)
     this.setState({ result: response });
+    this.setState({ uploadStatus: response });
     return response
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
+  // this is the function that is polling
+  tick = () => {
+    this.setState({
+      count: this.state.count + 1
+    });
+    console.log(this.state.count)
+    this.uploadModelToCarStatus(this.state.CurrentInstanceId, this.state.CommandId);
+    if (this.state.uploadStatus !== "InProgress"){
+      console.log(this.state.uploadStatus + " !== InProgress")
+      clearInterval(this.interval); // stop poll
+    }
   }
 
   render(){
@@ -75,7 +96,7 @@ class CarModelUploadModal extends Component {
           this.setState({ result: <p>Uploading...</p> });
           this.setState({ open: false });
           this.setState({ resultOpen: true }); 
-          this.uploadModelToCar(car, this.props.model) 
+          this.uploadModelToCar(car, this.props.model);
           }} positive /></Table.Cell>
       </Table.Row>
     }.bind(this));
@@ -114,17 +135,16 @@ class CarModelUploadModal extends Component {
         >
         <Modal.Header>Upload Result</Modal.Header>
         <Modal.Content>
-          <p>
-            {this.state.result}
-          </p>
+          <Header as='h3' textAlign='center'>{this.state.result}</Header>
         </Modal.Content>
         <Modal.Actions>
           <Button color='red' onClick={() => {
             this.setState({ resultOpen: false }); 
             this.setState({ result: "" });
+            clearInterval(this.interval); // stop poll
           }}>Close</Button>
           <Button color='green' onClick={() => {
-            this.uploadModelToCarStatus(this.state.CurrentInstanceId, this.state.CommandId) 
+            this.uploadModelToCarStatus(this.state.CurrentInstanceId, this.state.CommandId);
           }}>Refresh</Button>
         </Modal.Actions>
         </Modal>
