@@ -96,7 +96,7 @@ class CarModelUploadModal extends Component {
       return <Table.Row key={i} >
         <Table.Cell textAlign='left'><Header as='h3'>{car.ComputerName}</Header></Table.Cell>
         <Table.Cell textAlign='right'><Button content="Upload" labelPosition='right' icon='upload' onClick={() => {
-          this.setState({ result: <p>Uploading...</p> });
+          this.setState({ result: <p>Submitting Job...</p> });
           this.setState({ open: false });
           this.setState({ resultOpen: true }); 
           this.uploadModelToCar(car, this.props.model);

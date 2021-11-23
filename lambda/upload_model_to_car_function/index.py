@@ -51,7 +51,9 @@ def lambda_handler(event, context):
             "rm -rf /opt/aws/deepracer/artifacts/{0}/".format(foldername),
             "mkdir /opt/aws/deepracer/artifacts/{0}/".format(foldername),
             "tar zxvf /tmp/{0} -C /opt/aws/deepracer/artifacts/{1}/".format(filename,foldername),
-            "rm /tmp/{0}".format(filename)
+            "rm /tmp/{0}".format(filename),
+            "mv /opt/aws/deepracer/artifacts/{0}/agent/model.pb /opt/aws/deepracer/artifacts/{0}/model.pb".format(foldername),
+            "md5sum /opt/aws/deepracer/artifacts/{0}/model.pb | awk '{{ print $1 }}' > /opt/aws/deepracer/artifacts/{0}/checksum.txt".format(foldername),
         ]}
     )
     command_id = response['Command']['CommandId']
