@@ -2,24 +2,35 @@ import './App.css';
 import React from 'react';
 import awsconfig from './config.json';
 import Amplify from 'aws-amplify';
-import { Authenticator } from '@aws-amplify/ui-react';
+import { Authenticator, View, useTheme } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import './amplify.css';
 
-import { Menu } from './menu.js';
-import { Header, Button } from 'semantic-ui-react'
+// import { Menu } from './menu.js';
+import FixedMenuLayout from './FixedMenuLayout.js';
+import { Image, Button } from 'semantic-ui-react'
 
 Amplify.configure(awsconfig);
 
+const components = {
+  Header() {
+    const { tokens } = useTheme();
+
+    return (
+      <View textAlign="center" padding={tokens.space.large}>
+        <Image alt="DeepRacer Logo" src="logo.png" size='small' centered />
+      </View>
+    );
+  },
+}
 
 export default function App() {
   return (
-    <Authenticator>
+    <Authenticator components={components}>
       {({ signOut, user }) => (
         <main>
-          <Header as='h1' icon textAlign='center'>Hello {user.username}</Header>
-          <Menu />
-          <Button fluid onClick={signOut}>Sign out</Button>
+          <FixedMenuLayout user={user.username} signout={signOut}/>
+          {/* <Button fluid onClick={signOut}>Sign out</Button> */}
         </main>
       )}
     </Authenticator>
