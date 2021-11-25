@@ -17,7 +17,16 @@ def json_serial(obj):
 
 def lambda_handler(event, context):
     # function goes here
-    response = client_ssm.describe_instance_information()
+    response = client_ssm.describe_instance_information(
+        Filters=[
+            {
+                'Key': 'PingStatus',
+                'Values': [
+                    'Online',
+                ]
+            },
+        ],
+    )
     logger.info(response['InstanceInformationList'])
 
     return {

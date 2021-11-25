@@ -3,7 +3,6 @@ import {
   Container,
   Image,
   Menu,
-  Dropdown
 } from 'semantic-ui-react'
 
 import { Models } from './models.js';
@@ -22,7 +21,7 @@ class FixedMenuLayout extends Component {
   handleItemClick = (e, { name }) => this.setState({ activeItem: name })
 
   render() {
-    const { activeItem } = this.state
+    //const { activeItem } = this.state
 
     var content = <Models />
     if (this.state.activeItem === 'Upload') {

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { API } from 'aws-amplify';
-import { Dimmer, Loader, Header, Table, Button, Modal } from 'semantic-ui-react'
+import { Message, Icon, Dimmer, Loader, Header, Table, Button, Modal } from 'semantic-ui-react'
 
 class CarModelUploadModal extends Component {
   constructor(props) {
@@ -91,18 +91,30 @@ class CarModelUploadModal extends Component {
     //console.log(cars.cars);
     //console.log('model')
     //console.log(props.model)
+    console.log(this.props.cars.length)
 
-    var modaltablerows = this.props.cars.map(function (car, i) {
-      return <Table.Row key={i} >
-        <Table.Cell textAlign='left'><Header as='h3'>{car.ComputerName}</Header></Table.Cell>
-        <Table.Cell textAlign='right'><Button content="Upload" labelPosition='right' icon='upload' onClick={() => {
-          this.setState({ result: <p>Submitting Job...</p> });
-          this.setState({ open: false });
-          this.setState({ resultOpen: true }); 
-          this.uploadModelToCar(car, this.props.model);
-          }} positive /></Table.Cell>
-      </Table.Row>
-    }.bind(this));
+    var modaltable = <Message negative icon>
+      <Icon name='exclamation' />
+      <Message.Header>No DeepRacer cars are online</Message.Header>
+    </Message>
+
+    if (this.props.cars.length > 0){
+      modaltable = this.props.cars.map(function (car, i) {
+        return <Table>
+          <Table.Body>
+            <Table.Row key={i} >
+              <Table.Cell textAlign='left'><Header as='h3'>{car.ComputerName}</Header></Table.Cell>
+              <Table.Cell textAlign='right'><Button content="Upload" labelPosition='right' icon='upload' onClick={() => {
+                this.setState({ result: <p>Submitting Job...</p> });
+                this.setState({ open: false });
+                this.setState({ resultOpen: true }); 
+                this.uploadModelToCar(car, this.props.model);
+                }} positive /></Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>
+      }.bind(this));
+    }
 
     var resultModalContent = ""
     if (this.state.dimmerActive) {
@@ -126,11 +138,7 @@ class CarModelUploadModal extends Component {
         >
           <Modal.Header>Select a Car</Modal.Header>
           <Modal.Content>
-            <Table>
-              <Table.Body>
-                {modaltablerows}
-              </Table.Body>
-            </Table>
+            {modaltable}
           </Modal.Content>
           <Modal.Actions>
             <Button color='red' onClick={() => {

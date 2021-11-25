@@ -8,7 +8,7 @@ import './amplify.css';
 
 // import { Menu } from './menu.js';
 import FixedMenuLayout from './FixedMenuLayout.js';
-import { Image, Button } from 'semantic-ui-react'
+import { Image } from 'semantic-ui-react'
 
 Amplify.configure(awsconfig);
 
