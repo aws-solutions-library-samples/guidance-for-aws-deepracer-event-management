@@ -45,7 +45,8 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             timeout=cdk.Duration.minutes(1),
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
-            memory_size=128
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64
         )
 
         #permissions for s3 bucket read
@@ -59,7 +60,8 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             timeout=cdk.Duration.minutes(1),
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
-            memory_size=128
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64
         )
         cars_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -80,6 +82,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
+            architecture=awslambda.Architecture.ARM_64,
             environment={
                 "bucket": models_bucket.bucket_name
             }
@@ -104,6 +107,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
+            architecture=awslambda.Architecture.ARM_64,
         )
         upload_model_to_car_status_function.add_to_role_policy(
             iam.PolicyStatement(
