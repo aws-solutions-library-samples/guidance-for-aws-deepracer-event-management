@@ -45,11 +45,15 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             timeout=cdk.Duration.minutes(1),
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
-            memory_size=1024
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64,
+            environment={
+                "bucket": models_bucket.bucket_name
+            }
         )
 
         #permissions for s3 bucket read
-        models_bucket.grant_read_write(models_function, 'uploads/*')
+        models_bucket.grant_read(models_function, 'private/*')
 
         ## Cars Function
         cars_function = lambda_python.PythonFunction(self, "get_cars_function",
@@ -59,7 +63,8 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             timeout=cdk.Duration.minutes(1),
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
-            memory_size=1024
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64
         )
         cars_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -70,6 +75,55 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
                 resources=["*"],
             )
         )
+
+        ## upload_model_to_car_function
+        upload_model_to_car_function = lambda_python.PythonFunction(self, "upload_model_to_car_function",
+            entry="lambda/upload_model_to_car_function/",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=cdk.Duration.minutes(1),
+            runtime=awslambda.Runtime.PYTHON_3_8,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64,
+            environment={
+                "bucket": models_bucket.bucket_name
+            }
+        )
+        upload_model_to_car_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "ssm:GetCommandInvocation",
+                    "ssm:SendCommand",
+                ],
+                resources=["*"],
+            )
+        )
+
+        ## upload_model_to_car_function
+        upload_model_to_car_status_function = lambda_python.PythonFunction(self, "upload_model_to_car_status_function",
+            entry="lambda/upload_model_to_car_status_function/",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=cdk.Duration.minutes(1),
+            runtime=awslambda.Runtime.PYTHON_3_8,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64,
+        )
+        upload_model_to_car_status_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "ssm:GetCommandInvocation",
+                ],
+                resources=["*"],
+            )
+        )
+
+        #permissions for s3 bucket read
+        models_bucket.grant_read(upload_model_to_car_function, 'private/*')
 
         ### Website
 
@@ -157,13 +211,6 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             self_sign_up_enabled=False
         )
 
-        # Cognito User Group (Admin)
-        user_pool_group = cognito.CfnUserPoolGroup(self, "AdminGroup",
-            user_pool_id=user_pool.user_pool_id,
-            description="Admin user group",
-            group_name="admin"
-        )
-
         ## Cognito Client
         user_pool_client_web = cognito.UserPoolClient(self, "UserPoolClientWeb",
             user_pool=user_pool
@@ -212,13 +259,137 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             )
         )
 
-        models_bucket.grant_read_write(id_pool_auth_user_role, '*')
+        ##read/write own bucket only
+        id_pool_auth_user_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "s3:ListBucket",
+                ],
+                resources=[models_bucket.bucket_arn],
+                conditions={
+                    "StringLike": {
+                        "s3:prefix": ["private/${cognito-identity.amazonaws.com:sub}/*"],
+                    },
+                }
+            )
+        )
+
+        id_pool_auth_user_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:DeleteObject",
+                ],
+                resources=[
+                    models_bucket.bucket_arn + "/private/${cognito-identity.amazonaws.com:sub}",
+                    models_bucket.bucket_arn + "/private/${cognito-identity.amazonaws.com:sub}/*",
+                ],
+            )
+        )
+
+        ## Cognito Identity Pool Unauthenitcated Role
+        id_pool_unauth_user_role = iam.Role(self, "CognitoDefaultUnauthenticatedRole",
+            assumed_by=iam.FederatedPrincipal(
+                federated="cognito-identity.amazonaws.com",
+                conditions={
+                    "StringEquals": {
+                        "cognito-identity.amazonaws.com:aud": identity_pool.ref,
+                    },
+                    "ForAnyValue:StringLike": {
+                        "cognito-identity.amazonaws.com:amr": "unauthenticated",
+                    },
+                },
+                assume_role_action="sts:AssumeRoleWithWebIdentity"
+            )
+        )
 
         cognito.CfnIdentityPoolRoleAttachment(self, "IdentityPoolRoleAttachment",
             identity_pool_id=identity_pool.ref,
             roles={
-                "authenticated": id_pool_auth_user_role.role_arn
-            }
+                "authenticated": id_pool_auth_user_role.role_arn,
+                "unauthenticated": id_pool_unauth_user_role.role_arn,
+            },
+            role_mappings={
+                "role_mapping": cognito.CfnIdentityPoolRoleAttachment.RoleMappingProperty(
+                    type="Token",
+                    identity_provider='{}:{}'.format(user_pool.user_pool_provider_name,user_pool_client_web.user_pool_client_id),
+                    ambiguous_role_resolution='AuthenticatedRole'
+                )
+            },
+        )
+
+
+        ## Admin Users Group Role
+        admin_user_role = iam.Role(self, "AdminUserRole",
+            assumed_by=iam.FederatedPrincipal(
+                federated="cognito-identity.amazonaws.com",
+                conditions={
+                    "StringEquals": {
+                        "cognito-identity.amazonaws.com:aud": identity_pool.ref,
+                    },
+                    "ForAnyValue:StringLike": {
+                        "cognito-identity.amazonaws.com:amr": "authenticated",
+                    },
+                },
+                assume_role_action="sts:AssumeRoleWithWebIdentity"
+            )
+        )
+
+        admin_user_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "mobileanalytics:PutEvents",
+                    "cognito-sync:*",
+                    "cognito-identity:*",
+                ],
+                resources=["*"],
+            )
+        )
+
+        models_bucket.grant_read(admin_user_role, '*')
+
+        ##read/write own bucket only
+        admin_user_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "s3:ListBucket",
+                ],
+                resources=[models_bucket.bucket_arn],
+                conditions={
+                    "StringLike": {
+                        "s3:prefix": ["private/${cognito-identity.amazonaws.com:sub}/*"],
+                    },
+                }
+            )
+        )
+
+        admin_user_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:DeleteObject",
+                ],
+                resources=[
+                    models_bucket.bucket_arn + "/private/${cognito-identity.amazonaws.com:sub}",
+                    models_bucket.bucket_arn + "/private/${cognito-identity.amazonaws.com:sub}/*",
+                ],
+            )
+        )
+
+        # Cognito User Group (Admin)
+        user_pool_group = cognito.CfnUserPoolGroup(self, "AdminGroup",
+            user_pool_id=user_pool.user_pool_id,
+            description="Admin user group",
+            group_name="admin",
+            role_arn=admin_user_role.role_arn,
+            precedence=1
         )
 
 
@@ -247,15 +418,30 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
         )
 
         api_cars = api.root.add_resource('cars')
-        crud_models_method = api_cars.add_method(
+        cars_method = api_cars.add_method(
             http_method="GET",
             integration=apig.LambdaIntegration(handler=cars_function),
             authorization_type=apig.AuthorizationType.IAM
         )
 
-        ## Grant API Invoke permissions to the Default authenticated user
+        api_cars_upload = api_cars.add_resource('upload')
+        cars_upload_method = api_cars_upload.add_method(
+            http_method="POST",
+            integration=apig.LambdaIntegration(handler=upload_model_to_car_function),
+            authorization_type=apig.AuthorizationType.IAM
+        )
+
+        api_cars_upload_status = api_cars_upload.add_resource('status')
+        cars_upload_staus_method = api_cars_upload_status.add_method(
+            http_method="POST",
+            integration=apig.LambdaIntegration(handler=upload_model_to_car_status_function),
+            authorization_type=apig.AuthorizationType.IAM
+        )
+        
+
+        ## Grant API Invoke permissions to admin users
         # https://aws.amazon.com/blogs/compute/secure-api-access-with-amazon-cognito-federated-identities-amazon-cognito-user-pools-and-amazon-api-gateway/
-        id_pool_auth_user_role.add_to_policy(
+        admin_user_role.add_to_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
                 actions=[
@@ -264,6 +450,8 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
                 resources=[
                     api.arn_for_execute_api(method='GET',path='/models'),
                     api.arn_for_execute_api(method='GET',path='/cars'),
+                    api.arn_for_execute_api(method='POST',path='/cars/upload'),
+                    api.arn_for_execute_api(method='POST',path='/cars/upload/status'),
                 ],
             )
         )

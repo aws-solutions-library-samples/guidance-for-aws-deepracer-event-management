@@ -2,40 +2,38 @@ import './App.css';
 import React from 'react';
 import awsconfig from './config.json';
 import Amplify from 'aws-amplify';
-import { AmplifyAuthenticator, AmplifySignOut, AmplifySignIn } from '@aws-amplify/ui-react';
-import { AuthState, onAuthUIStateChange } from '@aws-amplify/ui-components';
-import { Header } from 'semantic-ui-react';
+import { Authenticator, View, useTheme } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
+import './amplify.css';
 
-import { Menu } from './menu.js';
+// import { Menu } from './menu.js';
+import FixedMenuLayout from './FixedMenuLayout.js';
+import { Image, Header } from 'semantic-ui-react'
 
 Amplify.configure(awsconfig);
 
+const components = {
+  Header() {
+    const { tokens } = useTheme();
 
-function App() {
-  const [authState, setAuthState] = React.useState();
-  const [user, setUser] = React.useState();
-
-  React.useEffect(() => {
-      onAuthUIStateChange((nextAuthState, authData) => {
-          setAuthState(nextAuthState);
-          setUser(authData)
-      });
-  }, []);
-
-  return authState === AuthState.SignedIn && user ? (
-      <div className="App">
-          <Header as='h1'>Hello {user.username}</Header>
-          <Menu />
-          <AmplifySignOut />
-      </div>
-    ) : (
-      <AmplifyAuthenticator>
-        <AmplifySignIn // https://docs.amplify.aws/ui/auth/authenticator/q/framework/react#sign-in
-          hideSignUp="true"
-          slot="sign-in"
-        ></AmplifySignIn>
-      </AmplifyAuthenticator>
+    return (
+      <View textAlign="center" padding={tokens.space.large}>
+        <Image alt="DeepRacer Logo" src="logo.png" size='small' centered />
+        <Header as='h1' icon textAlign='center'>Event Manager</Header>
+      </View>
     );
+  },
 }
 
-export default App;
+export default function App() {
+  return (
+    <Authenticator components={components}>
+      {({ signOut, user }) => (
+        <main>
+          <FixedMenuLayout user={user.username} signout={signOut}/>
+          {/* <Button fluid onClick={signOut}>Sign out</Button> */}
+        </main>
+      )}
+    </Authenticator>
+  );
+}

@@ -19,18 +19,18 @@ setuptools.setup(
     packages=setuptools.find_packages(where="deepracer_event_manager"),
 
     install_requires=[
-        "aws-cdk.core==1.132.0",
-        "aws_cdk.aws_s3==1.132.0",
-        "aws_cdk.aws_s3_deployment==1.132.0",
-        "aws_cdk.aws_cloudfront==1.132.0",
-        "aws_cdk.aws_cloudfront_origins==1.132.0",
-        "aws_cdk.aws_cognito==1.132.0",
-        "aws_cdk.aws_iam==1.132.0",
-        "aws_cdk.aws_lambda==1.132.0",
-        "aws_cdk.aws_lambda_python==1.132.0",
-        "aws_cdk.aws_s3_notifications==1.132.0",
-        "aws_cdk.aws_dynamodb==1.132.0",
-        "aws_cdk.aws_apigateway==1.132.0"
+        "aws-cdk.core==1.134.0",
+        "aws_cdk.aws_s3==1.134.0",
+        "aws_cdk.aws_s3_deployment==1.134.0",
+        "aws_cdk.aws_cloudfront==1.134.0",
+        "aws_cdk.aws_cloudfront_origins==1.134.0",
+        "aws_cdk.aws_cognito==1.134.0",
+        "aws_cdk.aws_iam==1.134.0",
+        "aws_cdk.aws_lambda==1.134.0",
+        "aws_cdk.aws_lambda_python==1.134.0",
+        "aws_cdk.aws_s3_notifications==1.134.0",
+        "aws_cdk.aws_dynamodb==1.134.0",
+        "aws_cdk.aws_apigateway==1.134.0"
     ],
 
     python_requires=">=3.6",
