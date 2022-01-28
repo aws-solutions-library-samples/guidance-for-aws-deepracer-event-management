@@ -18,8 +18,7 @@ const components = {
 
     return (
       <View textAlign="center" padding={tokens.space.large}>
-        <Image alt="DeepRacer Logo" src="logo-bw.png" size='small' centered />
-        <Header as='h1' icon textAlign='center'>Event Manager</Header>
+        <Image alt="DeepRacer Logo" src="logo-bw.png" size='large' centered />
       </View>
     );
   },
