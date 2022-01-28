@@ -1,14 +1,30 @@
-import uuid
 import logging
 import simplejson as json
+import boto3
+from datetime import date, datetime
+import os
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+client_s3 = boto3.client('s3')
+bucket = os.environ["bucket"]
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    raise TypeError ("Type %s not serializable" % type(obj))
+
 def lambda_handler(event, context):
     # function goes here
-    unique_id = str(uuid.uuid4())
-    logger.info(json.dumps(unique_id))
+    
+    response = client_s3.list_objects_v2(
+        Bucket=bucket,
+        Prefix='private/',
+    )
+    logger.info(response['Contents'])
 
     return {
         'headers': { 
@@ -17,5 +33,5 @@ def lambda_handler(event, context):
             "Access-Control-Allow-Credentials" : True # Required for cookies, authorization headers with HTTPS 
         },
         'statusCode': 200,
-        'body': json.dumps(unique_id)
+        'body': json.dumps(response['Contents'], default=json_serial)
     }

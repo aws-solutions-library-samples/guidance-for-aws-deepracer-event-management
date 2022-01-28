@@ -17,10 +17,12 @@ def lambda_handler(event, context):
     body_parameters=json.loads(event['body'])
     instance_id=body_parameters['InstanceId']
     
-    key_scope='public/'
-    key=key_scope + body_parameters['key']
+    #key_scope='private/'
+    #key=key_scope + body_parameters['key']
+    key=body_parameters['key']
+    username=key.split('/')[-3]
     filename=key.split('/')[-1]
-    foldername=filename.split('.')[0]
+    foldername="{}-{}".format(username,filename.split('.')[0])
 
     logger.info(instance_id)
     logger.info(key)

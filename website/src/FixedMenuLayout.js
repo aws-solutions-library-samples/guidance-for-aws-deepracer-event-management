@@ -4,8 +4,10 @@ import {
   Image,
   Menu,
 } from 'semantic-ui-react'
+import { Auth } from 'aws-amplify';
 
 import { Models } from './models.js';
+import { AdminModels } from './adminModels.js';
 import { Uploader } from './uploader.js';
 
 class FixedMenuLayout extends Component {
@@ -13,22 +15,53 @@ class FixedMenuLayout extends Component {
     super(props);
     this.containerDiv = React.createRef();
     this.state = {
-      activeItem: 'Models'
+      activeItem: 'Uploader',
+      groups: []
     };
   }
   _isMounted = false;
 
-  handleItemClick = (e, { name }) => this.setState({ activeItem: name })
+  componentDidMount() {
+    this._isMounted = true;
+
+    Auth.currentAuthenticatedUser().then(user => {
+      // Returns an array of groups
+      const groups = user.signInUserSession.accessToken.payload["cognito:groups"];
+      console.log("User Groups: ")
+      console.log(groups)
+      if (this._isMounted && groups !== undefined ) {
+        this.setState({ groups: groups })
+      }
+    })
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
+
+  handleItemClick = (e, { name }) => {
+    console.log(name)
+    this.setState({ activeItem: name })
+  }
 
   render() {
     //const { activeItem } = this.state
 
-    var content = <Models />
-    if (this.state.activeItem === 'Upload') {
+    var content = <Uploader />
+    if (this.state.activeItem === 'Models') {
+      content = <Models />
+    }
+    else if (this.state.activeItem === 'Admin Models') {
+      content = <AdminModels />
+    }
+    else {
       content = <Uploader />
     }
-    else{
-      content = <Models />
+
+    var menuItems = [<Menu.Item as='a' name='Upload' onClick={this.handleItemClick}></Menu.Item>]
+    menuItems.push(<Menu.Item as='a' name='Models' onClick={this.handleItemClick}></Menu.Item>)
+    if(this.state.groups.includes('admin')){
+      menuItems.push(<Menu.Item as='a' name='Admin Models' onClick={this.handleItemClick}></Menu.Item>)
     }
 
     return (
@@ -40,8 +73,7 @@ class FixedMenuLayout extends Component {
               DREM
             </Menu.Item>
 
-            <Menu.Item as='a' name='Models' onClick={this.handleItemClick}></Menu.Item>
-            <Menu.Item as='a' name='Upload' onClick={this.handleItemClick}></Menu.Item>
+            {menuItems}
 
             <Menu.Menu position='right'>
               <Menu.Item as='a' name={this.props.user}></Menu.Item>

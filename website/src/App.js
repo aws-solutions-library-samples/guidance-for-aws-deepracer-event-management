@@ -8,7 +8,7 @@ import './amplify.css';
 
 // import { Menu } from './menu.js';
 import FixedMenuLayout from './FixedMenuLayout.js';
-import { Image } from 'semantic-ui-react'
+import { Image, Header } from 'semantic-ui-react'
 
 Amplify.configure(awsconfig);
 
@@ -19,6 +19,7 @@ const components = {
     return (
       <View textAlign="center" padding={tokens.space.large}>
         <Image alt="DeepRacer Logo" src="logo.png" size='small' centered />
+        <Header as='h1' icon textAlign='center'>Event Manager</Header>
       </View>
     );
   },

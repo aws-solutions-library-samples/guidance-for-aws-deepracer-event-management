@@ -25,14 +25,14 @@ class CarModelUploadModal extends Component {
 
   uploadModelToCar= async (car, model) => { 
     console.log(car.InstanceId)
-    console.log(model.key)
+    console.log(model.Key)
 
     const apiName = 'deepracerEventManager';
     const apiPath = 'cars/upload';
     const myInit = { 
       body: {
         InstanceId: car.InstanceId,
-        key: model.key
+        key: model.Key
       }
     };
 

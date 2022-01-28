@@ -1,10 +1,11 @@
 
 
 import React, { Component } from 'react';
-import { Storage, API } from 'aws-amplify';
+import { Auth, Storage } from 'aws-amplify';
 import { Table, Button } from 'semantic-ui-react';
 
-import CarModelUploadModal from "./carModelUploadModal.js";
+//import CarModelUploadModal from "./carModelUploadModal.js";
+//import { ConsoleLogger } from '@aws-amplify/core';
 
 //const path = require('path')
 class Models extends Component {
@@ -16,56 +17,34 @@ class Models extends Component {
       result: '',
       filename: '',
       models: [],
-      cars: [],
       view: 'list',
+      username: '',
     };
   }
 
-  componentDidMount = async () => {
-    // Cars
-    async function getCars() {
-      console.log("Collecting cars...")
-    
-      const apiName = 'deepracerEventManager';
-      const apiPath = 'cars';
-      // const myInit = { 
-      //   body: {
-      //     key: clickitem['key']
-      //   }
-      // };
-    
-      let response = await API.get(apiName, apiPath);
-      //let response = await API.post(apiName, apiPath, myInit);
-      //console.log(response)
-      return response
-    }
-
-    let cars = await getCars();
-    this.setState({ cars: cars })
-    console.log(cars);
-    
+  componentDidMount = async () => {   
     // Models
-    async function getModels() { 
-      return await Storage.list('models/uploaded/', { level: 'public' })
+    async function getModels(outerThis) {
+      // get user's username
+      Auth.currentAuthenticatedUser().then(user => {
+        //console.log(user)
+        const username = user.username;
+        const s3Path = username + "/models";
+        console.log("s3Path: " + s3Path);
+        Storage.list(s3Path, { level: 'private' }).then(models => {
+          console.log(models)
+          if(models !== undefined){
+            outerThis.setState({ models: models });
+          }
+        })
+      })
     }
     
-    // Collect Image data
+    // Collect Car data
     this.setState({ files: [] })
-    let models = await getModels();
-    console.log(models);
-    this.setState({ models: models })
-    // let enhancedArrayedResult = [];
-    // models.forEach(element => {
-    //   let thumbnailKey = path.relative('/public', element.thumbnailKey);
-    //   let presignedurl = Storage.get(thumbnailKey)
-    //   presignedurl.then(url => {
-    //     element.presignedurl = url
-    //     enhancedArrayedResult = this.state.files
-    //     enhancedArrayedResult.push(element)
-    //     this.setState({ files: enhancedArrayedResult })
-    //     //console.log(element)
-    //   })
-    // })
+
+    // Collect Models
+    getModels(this);
 
     this._isMounted = true;
   }
@@ -76,7 +55,7 @@ class Models extends Component {
 
   onDeleteClickHandler = async(clickitem) => {
     async function deleteImage(key) { 
-      return await Storage.remove(key)
+      return await Storage.remove(key, { level: 'private' })
     }
 
     console.log(clickitem['key'])
@@ -87,30 +66,12 @@ class Models extends Component {
     this.componentDidMount()
   }
 
-  // onUploadClickHandler = async(clickitem) => {
-  //   console.log("Upload to Car " + clickitem['key'])
-
-  //   const apiName = 'deepracerEventManager';
-  //   const apiPath = 'cars';
-  //   // const myInit = { 
-  //   //   body: {
-  //   //     key: clickitem['key']
-  //   //   }
-  //   // };
-
-  //   let response = await API.get(apiName, apiPath);
-  //   //let response = await API.post(apiName, apiPath, myInit);
-  //   console.log(response)
-
-  //   this.componentDidMount()
-  // }
-
-  //
   render() {
     var tablerows = this.state.models.map(function (model, i) {
+      const modelKeyPieces = (model.key.split('/'))
+      var modelName = modelKeyPieces[modelKeyPieces.length - 1]
       return <Table.Row key={i} >
-        <Table.Cell>{model.key} </Table.Cell>
-        <Table.Cell><CarModelUploadModal cars={this.state.cars} model={model} /></Table.Cell>
+        <Table.Cell>{modelName} </Table.Cell>
         <Table.Cell><Button negative circular icon='delete' onClick={(event) => this.onDeleteClickHandler(model)}/></Table.Cell>
       </Table.Row>
     }.bind(this));
@@ -122,7 +83,6 @@ class Models extends Component {
       <Table.Header>
           <Table.Row>
             <Table.HeaderCell>Name</Table.HeaderCell>
-            <Table.HeaderCell>Upload to Car</Table.HeaderCell>
             <Table.HeaderCell>Delete</Table.HeaderCell>
           </Table.Row>
         </Table.Header>

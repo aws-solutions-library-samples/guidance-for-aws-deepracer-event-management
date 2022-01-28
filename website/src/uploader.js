@@ -1,6 +1,6 @@
 
 import React, { Component } from 'react';
-import { Storage } from 'aws-amplify';
+import { Auth, Storage } from 'aws-amplify';
 import { Button, Progress, Message, Icon } from 'semantic-ui-react';
 
 class Uploader extends Component {
@@ -10,19 +10,42 @@ class Uploader extends Component {
       this.state = {
         percent: 0,
         result: '',
-        filename: ''
+        filename: '',
+        username: '',
       };
     }
   
     fileInputRef = React.createRef();
+
+    _isMounted = false;
+
+    async componentDidMount() {
+      this._isMounted = true;
+
+      // get user's username
+      Auth.currentAuthenticatedUser().then(user => {
+        //console.log(user)
+        const username = user.username;
+        //console.log('username: ' + username)
+        if (this._isMounted && username !== undefined ) {
+          this.setState({ username: username });
+        }
+      })
+    }
+
+    async componentWillUnmount() {
+      this._isMounted = false;
+    }
 
     async onChange(e) {
         const file = e.target.files[0];
         console.log(file)
         this.setState({filename: file.name})
         const localthis = this;
-        await Storage.put(("models/uploaded/" + file.name), file, {
-          level: 'public',
+        var s3path = this.state.username + "/models/" + file.name
+        console.log("s3path: " + s3path)
+        await Storage.put((s3path), file, {
+          level: 'private',
           contentType: file.type,
           progressCallback(progress) {
             var currentpercent = Math.round(progress.loaded/progress.total*100)
