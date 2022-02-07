@@ -10,7 +10,9 @@ from aws_cdk import (
     aws_lambda as awslambda,
     aws_dynamodb as dynamodb,
     aws_apigateway as apig,
+    aws_rum as rum,
 )
+from cwrum_construct import CwRumAppMonitor
 
 class CdkDeepRacerEventManagerStack(cdk.Stack):
 
@@ -213,7 +215,8 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
 
         ## Cognito Client
         user_pool_client_web = cognito.UserPoolClient(self, "UserPoolClientWeb",
-            user_pool=user_pool
+            user_pool=user_pool,
+            prevent_user_existence_errors=True
         )
 
         cfn_user_pool_client_web = user_pool_client_web.node.default_child
@@ -456,6 +459,13 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             )
         )
 
+        ## RUM
+        cw_rum_app_monitor = CwRumAppMonitor(self, 'CwRumAppMonitor',
+            domain_name=distribution.domain_name            
+        )
+        
+        ## End RUM
+
         ## Outputs
         cdk.CfnOutput(
             self, "CFURL",
@@ -487,4 +497,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             value=models_bucket.bucket_name
         )
 
-
+        cdk.CfnOutput(
+            self, "rumScript",
+            value=cw_rum_app_monitor.script
+        )

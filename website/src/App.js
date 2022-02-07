@@ -6,9 +6,8 @@ import { Authenticator, View, useTheme } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import './amplify.css';
 
-// import { Menu } from './menu.js';
 import FixedMenuLayout from './FixedMenuLayout.js';
-import { Image, Header } from 'semantic-ui-react'
+import { Image } from 'semantic-ui-react'
 
 Amplify.configure(awsconfig);
 
@@ -30,7 +29,6 @@ export default function App() {
       {({ signOut, user }) => (
         <main>
           <FixedMenuLayout user={user.username} signout={signOut}/>
-          {/* <Button fluid onClick={signOut}>Sign out</Button> */}
         </main>
       )}
     </Authenticator>

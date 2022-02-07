@@ -1,21 +1,50 @@
 import React, { Component } from 'react';
 import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useLocation,
+} from "react-router-dom";
+import {
   Container,
   Image,
   Menu,
 } from 'semantic-ui-react'
 import { Auth } from 'aws-amplify';
 
+import { Home } from './home.js';
 import { Models } from './models.js';
 import { AdminModels } from './adminModels.js';
-import { Uploader } from './uploader.js';
+import { Upload } from './upload.js';
+
+function cwr(operation, payload){
+  console.log('Logged to RUM')
+};
+
+function usePageViews() {
+  let location = useLocation();
+  React.useEffect(() => {
+    console.log(location.pathname);
+    cwr("recordPageView", location.pathname);
+  }, [location]);
+}
+
+function MenuRoutes() {
+  usePageViews();
+  return <Routes>
+    <Route path="/models" element={<Models />} />
+    <Route path="/upload" element={<Upload />} />
+    <Route path="/admin/models" element={<AdminModels />} />
+    <Route exact path="/" element={<Home />} />
+  </Routes>;
+}
 
 class FixedMenuLayout extends Component {
   constructor(props) {
     super(props);
     this.containerDiv = React.createRef();
     this.state = {
-      activeItem: 'Uploader',
       groups: []
     };
   }
@@ -39,54 +68,41 @@ class FixedMenuLayout extends Component {
     this._isMounted = false;
   }
 
-  handleItemClick = (e, { name }) => {
-    console.log(name)
-    this.setState({ activeItem: name })
-  }
+  componentDidCatch(error, info) {
+    console.log(error);
+    cwr('recordError', error);
+  };
 
   render() {
-    //const { activeItem } = this.state
-
-    var content = <Uploader />
-    if (this.state.activeItem === 'Models') {
-      content = <Models />
-    }
-    else if (this.state.activeItem === 'Admin Models') {
-      content = <AdminModels />
-    }
-    else {
-      content = <Uploader />
-    }
-
-    var menuItems = [<Menu.Item as='a' name='Upload' onClick={this.handleItemClick}></Menu.Item>]
-    menuItems.push(<Menu.Item as='a' name='Models' onClick={this.handleItemClick}></Menu.Item>)
+    var menuItems = [<Menu.Item as={Link} name='Upload' to='/upload' ></Menu.Item>]
+    menuItems.push(<Menu.Item as={Link} name='Models' to='/models'></Menu.Item>)
     if(this.state.groups.includes('admin')){
-      menuItems.push(<Menu.Item as='a' name='Admin Models' onClick={this.handleItemClick}></Menu.Item>)
+      menuItems.push(<Menu.Item as={Link} name='Admin Models' to='/admin/models'></Menu.Item>)
     }
-
+  
     return (
       <div>
-        <Menu fixed='top' inverted>
-          <Container>
-            <Menu.Item as='a' header>
-              <Image size='mini' src='logo.png' style={{ marginRight: '1.5em' }} />
-              DREM
-            </Menu.Item>
+        <Router>
+          <Menu fixed='top' inverted>
+            <Container>
+              <Menu.Item as={Link} to='/' header>
+                <Image size='mini' src='logo.png' style={{ marginRight: '1.5em' }} />
+                DREM
+              </Menu.Item>
 
-            {menuItems}
+              {menuItems}
 
-            <Menu.Menu position='right'>
-              <Menu.Item as='a' name={this.props.user}></Menu.Item>
-              <Menu.Item as='a' name='Sign Out' onClick={this.props.signout}></Menu.Item>
-            </Menu.Menu>
+              <Menu.Menu position='right'>
+                <Menu.Item as='a' name={this.props.user}></Menu.Item>
+                <Menu.Item as='a' name='Sign Out' onClick={this.props.signout}></Menu.Item>
+              </Menu.Menu>
+            </Container>
+          </Menu>
+
+          <Container text style={{ marginTop: '7em' }}>
+            <MenuRoutes />
           </Container>
-        </Menu>
-
-        <Container text style={{ marginTop: '7em' }}>
-          {content}
-        </Container>
-
-        
+        </Router>
       </div>
     )
   }

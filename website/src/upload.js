@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { Auth, Storage } from 'aws-amplify';
 import { Button, Progress, Message, Icon } from 'semantic-ui-react';
 
-class Uploader extends Component {
+class Upload extends Component {
     constructor(props) {
       super(props);
       this.containerDiv = React.createRef();
@@ -120,4 +120,4 @@ class Uploader extends Component {
     }
 }
 
-export {Uploader}
+export {Upload}
