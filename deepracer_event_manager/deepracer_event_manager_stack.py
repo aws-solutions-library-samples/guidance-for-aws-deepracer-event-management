@@ -136,7 +136,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
                 block_public_policy=True,
                 ignore_public_acls=True,
                 restrict_public_buckets=True
-            )
+            ),
         )
         self.source_bucket = source_bucket
 
@@ -156,18 +156,18 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
                     "originAccessIdentity": origin_access_identity
                 },
             }],
-            # error_configurations=[
-            #     {
-            #         "errorCode": 403,
-            #         "responseCode": 200,
-            #         "responsePagePath": "/errors/403.html"
-            #     },
+            error_configurations=[
+                {
+                    "errorCode": 403,
+                    "responseCode": 200,
+                    "responsePagePath": "/index.html"
+                },
             #     {
             #         "errorCode": 404,
             #         "responseCode": 200,
             #         "responsePagePath": "/errors/404.html"
             #     }
-            # ],
+            ],
             default_root_object="index.html",
             price_class=cloudfront.PriceClass.PRICE_CLASS_100,
             viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
