@@ -86,7 +86,7 @@ class FixedMenuLayout extends Component {
           <Menu fixed='top' inverted>
             <Container>
               <Menu.Item as={Link} to='/' header>
-                <Image size='mini' src='logo.png' style={{ marginRight: '1.5em' }} />
+                <Image size='mini' src='/logo.png' style={{ marginRight: '1.5em' }} />
                 DREM
               </Menu.Item>
 
