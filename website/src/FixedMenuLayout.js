@@ -19,7 +19,9 @@ import { AdminModels } from './adminModels.js';
 import { Upload } from './upload.js';
 
 function cwr(operation, payload){
-  console.log('Logged to RUM')
+  // Instrument Routing to Record Page Views
+  // https://github.com/aws-observability/aws-rum-web/blob/main/docs/cdn_react.md
+  return void 0;
 };
 
 function usePageViews() {
