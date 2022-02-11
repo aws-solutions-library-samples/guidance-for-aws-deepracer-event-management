@@ -70,10 +70,12 @@ class AdminModels extends Component {
   }
 
   render() {
-    var tablerows = this.state.models.map(function (model, i) {
-      const modelKeyPieces = (model.Key.split('/'))
-      var modelName = modelKeyPieces[modelKeyPieces.length - 3] + '/' + modelKeyPieces[modelKeyPieces.length - 1]
+    let tablerows = this.state.models.map(function (model, i) {
+      const modelKeyPieces = (model.Key.split('/'));
+      let modelUser = modelKeyPieces[modelKeyPieces.length - 3];
+      let modelName = modelKeyPieces[modelKeyPieces.length - 1];
       return <Table.Row key={i} >
+        <Table.Cell>{modelUser} </Table.Cell>
         <Table.Cell>{modelName} </Table.Cell>
         <Table.Cell><CarModelUploadModal cars={this.state.cars} model={model} /></Table.Cell>
       </Table.Row>
@@ -85,7 +87,8 @@ class AdminModels extends Component {
       content = <Table celled striped>
       <Table.Header>
           <Table.Row>
-            <Table.HeaderCell>Name</Table.HeaderCell>
+            <Table.HeaderCell>User</Table.HeaderCell>
+            <Table.HeaderCell>Model</Table.HeaderCell>
             <Table.HeaderCell>Upload to Car</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
@@ -99,7 +102,7 @@ class AdminModels extends Component {
 
     return (
       <div>
-      <Header as='h1' icon textAlign='center'>Admin</Header>
+      <Header as='h1' icon textAlign='center'>Admin Models</Header>
       {content}
     </div>
     )

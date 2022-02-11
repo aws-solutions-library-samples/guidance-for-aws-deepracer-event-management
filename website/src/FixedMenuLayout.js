@@ -10,12 +10,14 @@ import {
   Container,
   Image,
   Menu,
+  Dropdown,
 } from 'semantic-ui-react'
 import { Auth } from 'aws-amplify';
 
 import { Home } from './home.js';
 import { Models } from './models.js';
-import { AdminModels } from './adminModels.js';
+import { AdminModels } from './admin/models.js';
+import { AdminCars } from './admin/cars.js';
 import { Upload } from './upload.js';
 
 function cwr(operation, payload){
@@ -38,6 +40,7 @@ function MenuRoutes() {
     <Route path="/models" element={<Models />} />
     <Route path="/upload" element={<Upload />} />
     <Route path="/admin/models" element={<AdminModels />} />
+    <Route path="/admin/cars" element={<AdminCars />} />
     <Route exact path="/" element={<Home />} />
   </Routes>;
 }
@@ -76,10 +79,16 @@ class FixedMenuLayout extends Component {
   };
 
   render() {
-    var menuItems = [<Menu.Item as={Link} name='Upload' to='/upload' ></Menu.Item>]
-    menuItems.push(<Menu.Item as={Link} name='Models' to='/models'></Menu.Item>)
     if(this.state.groups.includes('admin')){
-      menuItems.push(<Menu.Item as={Link} name='Admin Models' to='/admin/models'></Menu.Item>)
+      let menuAdminDropdownTemp = <Menu.Item as={Link} name='Admin Models' to='/admin/models'></Menu.Item>
+      var menuAdminDropdown = <React.Fragment>
+        <Dropdown item simple text='Admin'>
+          <Dropdown.Menu>
+            <Dropdown.Item as={Link} to='/admin/models'>Models</Dropdown.Item>
+            <Dropdown.Item as={Link} to='/admin/cars'>Cars</Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+      </React.Fragment>
     }
   
     return (
@@ -91,8 +100,9 @@ class FixedMenuLayout extends Component {
                 <Image size='mini' src='/logo.png' style={{ marginRight: '1.5em' }} />
                 DREM
               </Menu.Item>
-
-              {menuItems}
+              <Menu.Item as={Link} name='Upload' to='/upload' ></Menu.Item>
+              <Menu.Item as={Link} name='Models' to='/models'></Menu.Item>
+              {menuAdminDropdown}
 
               <Menu.Menu position='right'>
                 <Menu.Item as='a' name={this.props.user}></Menu.Item>
