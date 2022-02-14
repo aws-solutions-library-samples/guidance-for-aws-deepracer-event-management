@@ -2,7 +2,7 @@
 
 import React, { Component } from 'react';
 import { API } from 'aws-amplify';
-import { Header, Table } from 'semantic-ui-react';
+import { Container, Header, Table, Checkbox, } from 'semantic-ui-react';
 
 import CarModelUploadModal from "./carModelUploadModal.js";
 //import { ConsoleLogger } from '@aws-amplify/core';
@@ -17,6 +17,7 @@ class AdminModels extends Component {
       result: '',
       filename: '',
       models: [],
+      modelsToUpload: [],
       cars: [],
       view: 'list',
       username: '',
@@ -44,7 +45,7 @@ class AdminModels extends Component {
 
     let cars = await getCars();
     this.setState({ cars: cars })
-    console.log(cars);
+    //console.log(cars);
     
     // Models
     async function getModels(outerThis) {
@@ -52,7 +53,7 @@ class AdminModels extends Component {
       const apiPath = 'models';
     
       let models = await API.get(apiName, apiPath);
-      console.log(models)
+      //console.log(models)
       outerThis.setState({ models: models });
     }
     
@@ -63,6 +64,43 @@ class AdminModels extends Component {
     getModels(this);
 
     this._isMounted = true;
+  }
+
+  getCheckBoxState(model) {
+    let modelChecked = false;
+    for (const currentModel in this.state.modelsToUpload) {
+      if (this.state.modelsToUpload[currentModel].Key === model.Key) {
+        modelChecked = true;
+      }
+    }
+    return modelChecked;
+  }
+  
+  onCheckBoxChange(checked, cars, model) {
+    //console.log(event)
+    //console.log(checked)
+    //console.log(cars)
+    //console.log(model)
+
+    let tempModelsToUpload = this.state.modelsToUpload
+    if(checked){
+      tempModelsToUpload.push(model)
+    }
+    else if (!checked){
+      //console.log('remove')
+      tempModelsToUpload = []
+      for (const currentModel in this.state.modelsToUpload) {
+        // console.log(this.state.modelsToUpload[currentModel].Key);
+        // console.log(model.Key)
+        // Don't add key back to array that was just unticked
+        if (this.state.modelsToUpload[currentModel].Key !== model.Key) {
+          tempModelsToUpload.push(this.state.modelsToUpload[currentModel])
+        }
+      }
+    }
+
+    this.setState({modelsToUpload: tempModelsToUpload})
+    //console.log(this.state.modelsToUpload)
   }
 
   componentWillUnmount() {
@@ -77,7 +115,7 @@ class AdminModels extends Component {
       return <Table.Row key={i} >
         <Table.Cell>{modelUser} </Table.Cell>
         <Table.Cell>{modelName} </Table.Cell>
-        <Table.Cell><CarModelUploadModal cars={this.state.cars} model={model} /></Table.Cell>
+        <Table.Cell><Checkbox checked={this.getCheckBoxState(model)} onChange={(event, data) => this.onCheckBoxChange(data.checked, this.state.cars, model)} /></Table.Cell>
       </Table.Row>
     }.bind(this));
 
@@ -104,6 +142,9 @@ class AdminModels extends Component {
       <div>
       <Header as='h1' icon textAlign='center'>Admin Models</Header>
       {content}
+      <Container textAlign='center'>
+        <CarModelUploadModal cars={this.state.cars} models={this.state.modelsToUpload} />
+      </Container>
     </div>
     )
   }

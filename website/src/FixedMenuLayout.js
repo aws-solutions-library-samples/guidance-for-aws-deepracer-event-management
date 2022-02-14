@@ -80,7 +80,6 @@ class FixedMenuLayout extends Component {
 
   render() {
     if(this.state.groups.includes('admin')){
-      let menuAdminDropdownTemp = <Menu.Item as={Link} name='Admin Models' to='/admin/models'></Menu.Item>
       var menuAdminDropdown = <React.Fragment>
         <Dropdown item simple text='Admin'>
           <Dropdown.Menu>
