@@ -5,14 +5,19 @@ frontend.deploy: frontend.config
 
 frontend.config: infra.deploy
 	python generate_amplify_config.py
-	python update_index_html_with_script_tag.py 
+	python update_index_html_with_script_tag.py
 
 infra.deploy:
 	echo "{}" > website/src/config.json
 	cdk deploy CdkDeepRacerEventManagerStack --require-approval never --outputs-file cdk.outputs
 
-
-clean: 
+clean:
 	cdk destroy
+
+local.install:
+	npm install --prefix website
+
+local.run:
+	npm start --prefix website
 
 .NOTPARALLEL:
