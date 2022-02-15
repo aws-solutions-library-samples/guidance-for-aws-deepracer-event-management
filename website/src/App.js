@@ -17,7 +17,7 @@ const components = {
 
     return (
       <View textAlign="center" padding={tokens.space.large}>
-        <Image alt="DeepRacer Logo" src="logo-bw.png" size='large' centered />
+        <Image alt="DeepRacer Logo" src="/logo-bw.png" size='large' centered />
       </View>
     );
   },
