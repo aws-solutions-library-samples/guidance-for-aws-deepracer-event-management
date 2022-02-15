@@ -42,6 +42,9 @@ class CarModelUploadModal extends Component {
 
     //console.log('Models in array: ' + models.length)
     if (this.state.uploadStatus !== "InProgress"){
+      this.setState({ 
+        uploadStatus: "InProgress",
+      });
       //console.log(this.state.uploadStatus + " !== InProgress")
       if(models.length > 0) {
         let model = models.pop();
