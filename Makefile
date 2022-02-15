@@ -15,6 +15,7 @@ clean:
 	cdk destroy
 
 local.install:
+	python generate_amplify_config.py
 	npm install --prefix website
 
 local.run:
