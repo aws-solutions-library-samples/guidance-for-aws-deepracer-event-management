@@ -210,7 +210,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
                 email=cognito.StandardAttribute(required=True, mutable=True)
             ),
             mfa=cognito.Mfa.OFF,
-            self_sign_up_enabled=False
+            self_sign_up_enabled=True
         )
 
         ## Cognito Client
@@ -440,7 +440,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             integration=apig.LambdaIntegration(handler=upload_model_to_car_status_function),
             authorization_type=apig.AuthorizationType.IAM
         )
-        
+
 
         ## Grant API Invoke permissions to admin users
         # https://aws.amazon.com/blogs/compute/secure-api-access-with-amazon-cognito-federated-identities-amazon-cognito-user-pools-and-amazon-api-gateway/
@@ -461,9 +461,9 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
 
         ## RUM
         cw_rum_app_monitor = CwRumAppMonitor(self, 'CwRumAppMonitor',
-            domain_name=distribution.domain_name            
+            domain_name=distribution.domain_name
         )
-        
+
         ## End RUM
 
         ## Outputs
