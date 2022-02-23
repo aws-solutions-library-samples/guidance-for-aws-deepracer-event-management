@@ -16,7 +16,7 @@ class CdkDeepRacerEventManagerFEDeployStack(cdk.Stack):
                 s3_deployment.Source.asset(
                     path='./website',
                     bundling=cdk.BundlingOptions(
-                        image=cdk.BundlingDockerImage.from_registry("public.ecr.aws/sam/build-nodejs14.x"),
+                        image=cdk.DockerImage.from_registry("public.ecr.aws/sam/build-nodejs14.x"),
                         command=[
                             'bash', '-c', ' && '.join([
                                 'npm install --cache /tmp/empty-cache',

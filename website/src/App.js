@@ -4,7 +4,6 @@ import awsconfig from './config.json';
 import Amplify from 'aws-amplify';
 import { Authenticator, View, useTheme } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
-import './amplify.css';
 
 import FixedMenuLayout from './FixedMenuLayout.js';
 import { Image } from 'semantic-ui-react'
@@ -25,7 +24,7 @@ const components = {
 
 export default function App() {
   return (
-    <Authenticator components={components}>
+    <Authenticator components={components} hideSignUp={false}> 
       {({ signOut, user }) => (
         <main>
           <FixedMenuLayout user={user.username} signout={signOut}/>
