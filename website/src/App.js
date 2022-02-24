@@ -24,7 +24,7 @@ const components = {
 
 export default function App() {
   return (
-    <Authenticator components={components} hideSignUp={false}> 
+    <Authenticator components={components} hideSignUp={false} signUpAttributes={['email']}> 
       {({ signOut, user }) => (
         <main>
           <FixedMenuLayout user={user.username} signout={signOut}/>

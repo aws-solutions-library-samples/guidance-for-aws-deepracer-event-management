@@ -210,7 +210,8 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
                 email=cognito.StandardAttribute(required=True, mutable=True)
             ),
             mfa=cognito.Mfa.OFF,
-            self_sign_up_enabled=True
+            self_sign_up_enabled=True,
+            auto_verify=cognito.AutoVerifiedAttrs(email=True)
         )
 
         ## Cognito Client
