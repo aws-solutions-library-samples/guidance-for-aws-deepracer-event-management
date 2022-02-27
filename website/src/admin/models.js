@@ -1,5 +1,3 @@
-
-
 import React, { Component } from 'react';
 import { API } from 'aws-amplify';
 import { Container, Header, Table, Checkbox, } from 'semantic-ui-react';
