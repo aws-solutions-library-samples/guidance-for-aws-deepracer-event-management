@@ -164,7 +164,7 @@ class CarModelUploadModal extends Component {
     // if cars are online, display the car picker modal
     if (this.props.cars.length > 0){
       modaltable = this.props.cars.map(function (car, i) {
-        return <Table key='t0{i}'>
+        return <Table key={i}>
           <Table.Body>
             <Table.Row key={i} >
               <Table.Cell textAlign='left'><Header as='h3'>{car.ComputerName}</Header></Table.Cell>
@@ -184,7 +184,7 @@ class CarModelUploadModal extends Component {
     }
 
     let resultRows = this.state.results.map(function (result, i) {
-      return <Table key='t1{i}'>
+      return <Table key={i}>
         <Table.Body>
           <Table.Row key={i} >
             <Table.Cell textAlign='left'>{result.ModelName} </Table.Cell>
