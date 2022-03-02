@@ -149,6 +149,29 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             )
         )
 
+        ## create ssm activation function
+        create_ssm_activation_function = lambda_python.PythonFunction(self, "create_ssm_activation_function",
+            entry="lambda/create_ssm_activation_function/",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=cdk.Duration.minutes(1),
+            runtime=awslambda.Runtime.PYTHON_3_8,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64
+        )
+        create_ssm_activation_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "iam:PassRole",
+                    "ssm:AddTagsToResource",
+                    "ssm:CreateActivation"
+                ],
+                resources=["*"],
+            )
+        )
+
         ### Website
 
         ## S3
@@ -464,6 +487,13 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             authorization_type=apig.AuthorizationType.IAM
         )
 
+        api_cars_create_ssm_activation = api_cars.add_resource('create_ssm_activation')
+        api_cars_create_ssm_activation_method = api_cars_create_ssm_activation.add_method(
+            http_method="GET",
+            integration=apig.LambdaIntegration(handler=create_ssm_activation_function),
+            authorization_type=apig.AuthorizationType.IAM
+        )
+
         api_cars_upload_status = api_cars_upload.add_resource('status')
         cars_upload_staus_method = api_cars_upload_status.add_method(
             http_method="POST",
@@ -486,6 +516,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
                     api.arn_for_execute_api(method='POST',path='/cars/upload'),
                     api.arn_for_execute_api(method='POST',path='/cars/upload/status'),
                     api.arn_for_execute_api(method='POST',path='/cars/delete_all_models'),
+                    api.arn_for_execute_api(method='GET',path='/cars/create_ssm_activation'),
                 ],
             )
         )
