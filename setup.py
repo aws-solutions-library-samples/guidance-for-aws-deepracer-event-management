@@ -35,6 +35,7 @@ setuptools.setup(
         "aws_cdk.aws_events==1.147.0",
         "aws_cdk.aws_events_targets==1.147.0",
         "aws_cdk.aws_sns==1.147.0",
+        "cdk-serverless-clamscan==1.1.24"
     ],
 
     python_requires=">=3.6",

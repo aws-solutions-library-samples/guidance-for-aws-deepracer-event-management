@@ -31,7 +31,7 @@ def cwrum_custom_resource(self, name: str):
 
 class CwRumAppMonitor(cdk.Construct):
 
-    def __init__(self, scope: cdk.Construct, id: str, domain_name: str, allow_cookies: bool = True, enable_x_ray: bool = True, session_sample_rate: decimal = 1, telemetries: list[str] = ["performance","errors","http"], **kwargs):
+    def __init__(self, scope: cdk.Construct, id: str, domain_name: str, allow_cookies: bool = True, enable_x_ray: bool = True, session_sample_rate: decimal = 1, telemetries: list = ["performance","errors","http"], **kwargs):
         super().__init__(scope, id, **kwargs)
 
         stack = cdk.Stack.of(self)

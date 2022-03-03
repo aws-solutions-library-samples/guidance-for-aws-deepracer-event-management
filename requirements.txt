@@ -1,1 +1,1 @@
-cdk-serverless-clamscan==1.1.24
+-e .
