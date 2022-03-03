@@ -11,8 +11,12 @@ from aws_cdk import (
     aws_dynamodb as dynamodb,
     aws_apigateway as apig,
     aws_rum as rum,
+    aws_events as events,
+    aws_events_targets as events_targets,
+    aws_sns as sns
 )
 from cwrum_construct import CwRumAppMonitor
+from cdk_serverless_clamscan import ServerlessClamscan
 
 class CdkDeepRacerEventManagerStack(cdk.Stack):
 
@@ -37,6 +41,20 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
                 prefix='uploads/'
             )]
         )
+
+        #add clam av scan to S3 uploads bucket
+        bucketList = [ models_bucket ]
+        sc = ServerlessClamscan(self, "rClamScan",
+            buckets=bucketList,
+        )
+        infected_topic = sns.Topic(self, "rInfectedTopic")
+        if sc.infected_rule != None:
+            sc.infected_rule.add_target(
+                events_targets.SnsTopic(
+                    infected_topic,
+                    message=events.RuleTargetInput.from_event_path('$.detail.responsePayload.message'),
+                )
+            )
 
         ### Lambda
         ## Models Function
