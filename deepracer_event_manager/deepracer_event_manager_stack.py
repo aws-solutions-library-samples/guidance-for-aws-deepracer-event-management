@@ -147,7 +147,6 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
         #permissions for s3 bucket read
         models_bucket.grant_read(upload_model_to_car_function, 'private/*')
 
-
         ## delete_all_models_from_car_function
         delete_all_models_from_car_function = lambda_python.PythonFunction(self, "delete_all_models_from_car_function",
             entry="lambda/delete_all_models_from_car_function/",
