@@ -16,6 +16,7 @@ clean:
 
 local.install:
 	python generate_amplify_config.py
+	pip install -r requirements.txt
 	npm install --prefix website
 
 local.run:
