@@ -14,7 +14,7 @@ class Upload extends Component {
         username: '',
       };
     }
-  
+
     fileInputRef = React.createRef();
 
     _isMounted = false;
@@ -53,7 +53,7 @@ class Upload extends Component {
             console.log('Uploading:' + localthis.state.percent)
           },
         }).then (result => {
-          this.setState({result: 
+          this.setState({result:
             <Message success>
             <Message.Header>Uploaded</Message.Header>
             <p>{this.state.filename}</p>
@@ -62,7 +62,7 @@ class Upload extends Component {
           console.log(result)
           }
         ).catch(err => {
-          this.setState({result: 
+          this.setState({result:
           <Message negative>
             <Message.Header>Error whilst uploading</Message.Header>
             <p>{this.state.filename}</p>
@@ -72,12 +72,12 @@ class Upload extends Component {
           }
         );
     }
-    
+
     render() {
       let buttonstate;
       let progressbar;
-      if (100 > this.state.percent && this.state.percent > 0 ) { 
-        buttonstate = 
+      if (100 > this.state.percent && this.state.percent > 0 ) {
+        buttonstate =
           <Message icon>
             <Icon name='circle notched' loading />
             <Message.Content>
@@ -91,7 +91,7 @@ class Upload extends Component {
         buttonstate = null;
         progressbar = null;
       }
-      else {        
+      else {
         buttonstate =
           <div>
             <Button
@@ -99,19 +99,20 @@ class Upload extends Component {
               labelPosition="left"
               icon="file"
               onClick={() => this.fileInputRef.current.click()}
-            /> 
+            />
             <input
               ref={this.fileInputRef}
               type="file" accept='application/gzip'
               hidden
               onChange={(e) => this.onChange(e)}
             />
-          </div> 
+          </div>
         progressbar = <Progress percent={this.state.percent} indicating progress='percent'/>;
       }
-  
+
       return (
           <div>
+            <p><b>Note:</b> Models are only kept for 7 days from initial upload before being removed.</p>
             {progressbar}
             {this.state.result}
             {buttonstate}

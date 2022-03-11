@@ -22,7 +22,7 @@ class Models extends Component {
     };
   }
 
-  componentDidMount = async () => {   
+  componentDidMount = async () => {
     // Models
     async function getModels(outerThis) {
       // get user's username
@@ -39,7 +39,7 @@ class Models extends Component {
         })
       })
     }
-    
+
     // Collect Car data
     this.setState({ files: [] })
 
@@ -54,7 +54,7 @@ class Models extends Component {
   }
 
   onDeleteClickHandler = async(clickitem) => {
-    async function deleteImage(key) { 
+    async function deleteImage(key) {
       return await Storage.remove(key, { level: 'private' })
     }
 
@@ -77,7 +77,7 @@ class Models extends Component {
     }.bind(this));
 
     let content = ''
-    
+
     if (this.state.view === 'list'){
       content = <Table celled striped>
       <Table.Header>
@@ -91,13 +91,14 @@ class Models extends Component {
         </Table.Body>
       </Table>
     }
-    
+
 
 
     return (
       <div>
-      {content}
-    </div>
+        <p><b>Note:</b> Models are only kept for 7 days from initial upload before being removed.</p>
+        {content}
+      </div>
     )
   }
 }
