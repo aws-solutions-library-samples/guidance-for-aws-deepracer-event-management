@@ -96,7 +96,7 @@ class Models extends Component {
 
     return (
       <div>
-        <p><b>Note:</b> Models are only kept for 7 days from initial upload before being removed.</p>
+        <p><b>Note:</b> Models are only kept for 15 days from initial upload before being removed.</p>
         {content}
       </div>
     )
