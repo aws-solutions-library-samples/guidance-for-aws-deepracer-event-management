@@ -12,6 +12,7 @@ __pycache__
 .cdk.staging
 cdk.out
 cdk.outputs
+cdk.context.json
 
 lambda/get_smg_trains_simple/images
 lambda/get_smg_trains_simple/data.json

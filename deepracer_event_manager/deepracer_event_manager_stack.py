@@ -36,10 +36,13 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             ),
             auto_delete_objects=True,
             removal_policy=cdk.RemovalPolicy.DESTROY,
-            lifecycle_rules=[s3.LifecycleRule(
-                expiration=cdk.Duration.days(7),
-                prefix='uploads/'
-            )]
+            lifecycle_rules=[
+                s3.LifecycleRule(
+                    abort_incomplete_multipart_upload_after=cdk.Duration.days(1),
+                    expiration=cdk.Duration.days(15),
+                    prefix='/'
+                )
+            ]
         )
 
         #add clam av scan to S3 uploads bucket
