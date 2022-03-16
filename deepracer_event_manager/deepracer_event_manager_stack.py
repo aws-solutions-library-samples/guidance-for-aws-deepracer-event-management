@@ -39,8 +39,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             lifecycle_rules=[
                 s3.LifecycleRule(
                     abort_incomplete_multipart_upload_after=cdk.Duration.days(1),
-                    expiration=cdk.Duration.days(15),
-                    prefix='/'
+                    expiration=cdk.Duration.days(15)
                 )
             ]
         )
