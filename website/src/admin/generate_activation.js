@@ -9,7 +9,8 @@ class AdminActivation extends Component {
     this.state = {
       result: "",
       ActivationCode: "",
-      ActivationId: ""
+      ActivationId: "",
+      SSMCommand: ""
     };
   }
 
@@ -19,11 +20,12 @@ class AdminActivation extends Component {
 
     let response = await API.get(apiName, apiPath);
     //console.log(response)
-    
-    this.setState({ 
+
+    this.setState({
       result: response,
       ActivationCode: response['ActivationCode'],
-      ActivationId: response['ActivationId']
+      ActivationId: response['ActivationId'],
+      SSMCommand: 'sudo amazon-ssm-agent -register -code "'+ response['ActivationCode'] +'" -id "'+ response['ActivationId'] +'" -region "eu-west-1"'
     });
     //return response
   }
@@ -66,6 +68,22 @@ class AdminActivation extends Component {
               </Grid.Column>
               <Grid.Column width={4} textAlign='right'>
                 <Button content='Copy' icon='copy' onClick={() => {navigator.clipboard.writeText(this.state.ActivationId)}}/>
+              </Grid.Column>
+            </Grid.Row>
+
+            <Grid.Row>
+              <Grid.Column width={4}>
+                <Header as='h3'>Command</Header>
+              </Grid.Column>
+              <Grid.Column width={12} textAlign='center'>
+                {this.state.SSMCommand}
+              </Grid.Column>
+            </Grid.Row>
+            <Grid.Row>
+              <Grid.Column width={12}>
+              </Grid.Column>
+              <Grid.Column width={4} textAlign='right'>
+                <Button content='Copy' icon='copy' onClick={() => {navigator.clipboard.writeText(this.state.SSMCommand)}}/>
               </Grid.Column>
             </Grid.Row>
 
