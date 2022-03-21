@@ -9,14 +9,14 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
-    
+
     logger.info(json.dumps(event))
-    
+
     client = boto3.client('ssm')
-    
+
     now = datetime.now()
     datestr = now.strftime("%Y-%m-%d-%H:%M")
-    
+
     response = client.create_activation(
         Description='Hybrid activation for DREM',
         DefaultInstanceName='DREM Racer - '+datestr,
@@ -27,18 +27,22 @@ def lambda_handler(event, context):
                 'Key': 'Name',
                 'Value' : 'DREM Racer - '+datestr
             },
+            {
+                'Key': 'Type',
+                'Value': 'deepracer'
+            },
         ]
     )
-    
+
     logger.info(response)
-    
+
     status_code = 200
-    
+
     return {
-        'headers': { 
+        'headers': {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin" : "*", # Required for CORS support to work
-            "Access-Control-Allow-Credentials" : True # Required for cookies, authorization headers with HTTPS 
+            "Access-Control-Allow-Credentials" : True # Required for cookies, authorization headers with HTTPS
         },
         'statusCode': status_code,
         'body': json.dumps(response)
