@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { API } from 'aws-amplify';
-import {  Header, Button, Grid, Container, Divider } from 'semantic-ui-react';
+import {  Header, Button, Grid, Container, Divider, Message, Dimmer, Loader } from 'semantic-ui-react';
 
 class AdminActivation extends Component {
   constructor(props) {
@@ -10,13 +10,19 @@ class AdminActivation extends Component {
       result: "",
       ActivationCode: "",
       ActivationId: "",
-      SSMCommand: ""
+      region: "",
+      SSMCommand: "",
+      loading: false
     };
   }
 
   getActivation = async () => {
     const apiName = 'deepracerEventManager';
     const apiPath = 'cars/create_ssm_activation';
+
+    this.setState({
+      loading: true,
+    });
 
     let response = await API.get(apiName, apiPath);
     //console.log(response)
@@ -25,7 +31,9 @@ class AdminActivation extends Component {
       result: response,
       ActivationCode: response['ActivationCode'],
       ActivationId: response['ActivationId'],
-      SSMCommand: 'sudo amazon-ssm-agent -register -code "'+ response['ActivationCode'] +'" -id "'+ response['ActivationId'] +'" -region "eu-west-1"'
+      region: response['region'],
+      SSMCommand: 'sudo amazon-ssm-agent -register -code "'+ response['ActivationCode'] +'" -id "'+ response['ActivationId'] +'" -region "'+ response['region'] +'"',
+      loading: false,
     });
     //return response
   }
@@ -42,47 +50,58 @@ class AdminActivation extends Component {
   render() {
     return (
       <div>
-        <Header as='h1' icon textAlign='center'>Activation Key</Header>
+        <Header as='h1' icon textAlign='center'>Systems Manager Hybrid Activation</Header>
         <Divider />
         <Container>
           <Grid columns={3} centered>
 
             <Grid.Row>
-              <Grid.Column width={4}>
-                <Header as='h3'>Activation Code</Header>
+              <Grid.Column width={3}>
+                <Header as='h3'>Code</Header>
               </Grid.Column>
-              <Grid.Column width={8} textAlign='center'>
-                {this.state.ActivationCode}
+              <Grid.Column width={10} textAlign='center'>
+                <Message id="code">
+                  <Dimmer active={this.state.loading} inverted>
+                    <Loader/>
+                  </Dimmer>
+                  {this.state.ActivationCode}
+                </Message>
               </Grid.Column>
-              <Grid.Column width={4} textAlign='right'>
+              <Grid.Column width={3} textAlign='right'>
                 <Button content='Copy' icon='copy' onClick={() => {navigator.clipboard.writeText(this.state.ActivationCode)}}/>
               </Grid.Column>
             </Grid.Row>
 
             <Grid.Row>
-              <Grid.Column width={4}>
-                <Header as='h3'>Activation Id</Header>
+              <Grid.Column width={3}>
+                <Header as='h3'>Id</Header>
               </Grid.Column>
-              <Grid.Column width={8} textAlign='center'>
-                {this.state.ActivationId}
+              <Grid.Column width={10} textAlign='center'>
+                <Message id="code">
+                  <Dimmer active={this.state.loading} inverted>
+                    <Loader/>
+                  </Dimmer>
+                  {this.state.ActivationId}
+                </Message>
               </Grid.Column>
-              <Grid.Column width={4} textAlign='right'>
+              <Grid.Column width={3} textAlign='right'>
                 <Button content='Copy' icon='copy' onClick={() => {navigator.clipboard.writeText(this.state.ActivationId)}}/>
               </Grid.Column>
             </Grid.Row>
 
             <Grid.Row>
-              <Grid.Column width={4}>
+              <Grid.Column width={3}>
                 <Header as='h3'>Command</Header>
               </Grid.Column>
-              <Grid.Column width={12} textAlign='center'>
-                {this.state.SSMCommand}
+              <Grid.Column width={10} textAlign='center'>
+                <Message id="code">
+                  <Dimmer active={this.state.loading} inverted>
+                    <Loader/>
+                  </Dimmer>
+                  {this.state.SSMCommand}
+                </Message>
               </Grid.Column>
-            </Grid.Row>
-            <Grid.Row>
-              <Grid.Column width={12}>
-              </Grid.Column>
-              <Grid.Column width={4} textAlign='right'>
+              <Grid.Column width={3} textAlign='right'>
                 <Button content='Copy' icon='copy' onClick={() => {navigator.clipboard.writeText(this.state.SSMCommand)}}/>
               </Grid.Column>
             </Grid.Row>
@@ -91,7 +110,7 @@ class AdminActivation extends Component {
         </Container>
         <Divider />
         <Container textAlign='center'>
-          <Button content='Generate' color='green' onClick={() => {this.getActivation();}}/>
+          <Button content='Generate' color='green' onClick={() => {this.getActivation();}} disabled={this.state.loading}/>
         </Container>
       </div>
     )

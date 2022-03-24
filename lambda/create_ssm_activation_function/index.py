@@ -7,6 +7,7 @@ from datetime import datetime
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+region = os.environ['AWS_REGION']
 
 def lambda_handler(event, context):
 
@@ -34,7 +35,8 @@ def lambda_handler(event, context):
         ]
     )
 
-    logger.info(response)
+    response['region'] = region # Add the region to the response
+    logger.info(json.dumps(response))
 
     status_code = 200
 
