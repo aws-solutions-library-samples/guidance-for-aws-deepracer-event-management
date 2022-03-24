@@ -60,7 +60,7 @@ class AdminActivation extends Component {
                 <Header as='h3'>Code</Header>
               </Grid.Column>
               <Grid.Column width={10} textAlign='center'>
-                <Message id="code">
+                <Message id="code" color='black'>
                   <Dimmer active={this.state.loading} inverted>
                     <Loader/>
                   </Dimmer>
@@ -77,7 +77,7 @@ class AdminActivation extends Component {
                 <Header as='h3'>Id</Header>
               </Grid.Column>
               <Grid.Column width={10} textAlign='center'>
-                <Message id="code">
+                <Message id="code" color='black'>
                   <Dimmer active={this.state.loading} inverted>
                     <Loader/>
                   </Dimmer>
@@ -94,7 +94,7 @@ class AdminActivation extends Component {
                 <Header as='h3'>Command</Header>
               </Grid.Column>
               <Grid.Column width={10} textAlign='center'>
-                <Message id="code">
+                <Message id="code" color='black'>
                   <Dimmer active={this.state.loading} inverted>
                     <Loader/>
                   </Dimmer>
