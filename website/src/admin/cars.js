@@ -62,7 +62,7 @@ class AdminCars extends Component {
   render() {
     let tablerows = this.state.cars.map(function (car, i) {
       let carID = car['InstanceId']
-      let carName = car['Name']
+      let carName = car['Name']+' - '+car['IPAddress']
       return <Table.Row key={i} >
         <Table.Cell>{carID} </Table.Cell>
         <Table.Cell>{carName} </Table.Cell>

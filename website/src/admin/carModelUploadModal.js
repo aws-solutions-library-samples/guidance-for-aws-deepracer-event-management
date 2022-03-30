@@ -167,7 +167,7 @@ class CarModelUploadModal extends Component {
         return <Table key={i}>
           <Table.Body>
             <Table.Row key={i} >
-              <Table.Cell textAlign='left'><Header as='h3'>{car.ComputerName}</Header></Table.Cell>
+              <Table.Cell textAlign='left'><Header as='h3'>{car.ComputerName} - {car.IPAddress}</Header></Table.Cell>
               <Table.Cell textAlign='right'><Button content="Upload" labelPosition='right' icon='upload' onClick={() => {
                 this.setState({ 
                   result: <p>Submitting Job...</p>,
