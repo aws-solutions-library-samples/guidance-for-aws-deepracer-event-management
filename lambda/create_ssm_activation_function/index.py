@@ -23,13 +23,13 @@ def lambda_handler(event, context):
 
     response = client.create_activation(
         Description='Hybrid activation for DREM',
-        DefaultInstanceName='DREM Racer - '+datestr,
+        DefaultInstanceName=hostname+' - '+datestr,
         IamRole='service-role/AmazonEC2RunCommandRoleForManagedInstances',
         RegistrationLimit=1,
         Tags=[
             {
                 'Key': 'Name',
-                'Value' : 'DREM Racer: '+hostname+' - '+datestr
+                'Value' : hostname+' - '+datestr
             },
             {
                 'Key': 'Type',
