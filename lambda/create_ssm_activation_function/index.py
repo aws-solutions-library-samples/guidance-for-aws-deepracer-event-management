@@ -13,6 +13,9 @@ def lambda_handler(event, context):
 
     logger.info(json.dumps(event))
 
+    body_parameters=json.loads(event['body'])
+    hostname=body_parameters['hostname']
+
     client = boto3.client('ssm')
 
     now = datetime.now()
@@ -26,7 +29,7 @@ def lambda_handler(event, context):
         Tags=[
             {
                 'Key': 'Name',
-                'Value' : 'DREM Racer - '+datestr
+                'Value' : 'DREM Racer: '+hostname+' - '+datestr
             },
             {
                 'Key': 'Type',

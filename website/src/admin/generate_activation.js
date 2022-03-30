@@ -28,7 +28,13 @@ class AdminActivation extends Component {
       loading: true,
     });
 
-    let response = await API.get(apiName, apiPath);
+    const myInit = { 
+      body: {
+        hostname: this.state.hostname
+      }
+    };
+
+    let response = await API.post(apiName, apiPath, myInit);
     //console.log(response)
 
     this.setState({

@@ -508,7 +508,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
 
         api_cars_create_ssm_activation = api_cars.add_resource('create_ssm_activation')
         api_cars_create_ssm_activation_method = api_cars_create_ssm_activation.add_method(
-            http_method="GET",
+            http_method="POST",
             integration=apig.LambdaIntegration(handler=create_ssm_activation_function),
             authorization_type=apig.AuthorizationType.IAM
         )
