@@ -535,7 +535,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
                     api.arn_for_execute_api(method='POST',path='/cars/upload'),
                     api.arn_for_execute_api(method='POST',path='/cars/upload/status'),
                     api.arn_for_execute_api(method='POST',path='/cars/delete_all_models'),
-                    api.arn_for_execute_api(method='GET',path='/cars/create_ssm_activation'),
+                    api.arn_for_execute_api(method='POST',path='/cars/create_ssm_activation'),
                 ],
             )
         )
