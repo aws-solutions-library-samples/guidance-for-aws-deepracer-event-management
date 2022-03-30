@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { API } from 'aws-amplify';
-import {  Header, Button, Grid, Container, Divider, Message, Dimmer, Loader } from 'semantic-ui-react';
+import {  Input, Header, Button, Grid, Container, Divider, Message, Dimmer, Loader } from 'semantic-ui-react';
 
 class AdminActivation extends Component {
   constructor(props) {
@@ -11,7 +11,9 @@ class AdminActivation extends Component {
       ActivationCode: "",
       ActivationId: "",
       region: "",
+      hostname: "",
       SSMCommand: "",
+      UpdateCommand: "",
       loading: false
     };
   }
@@ -19,6 +21,8 @@ class AdminActivation extends Component {
   getActivation = async () => {
     const apiName = 'deepracerEventManager';
     const apiPath = 'cars/create_ssm_activation';
+
+    console.log(this.state.hostname);
 
     this.setState({
       loading: true,
@@ -33,6 +37,7 @@ class AdminActivation extends Component {
       ActivationId: response['ActivationId'],
       region: response['region'],
       SSMCommand: 'sudo amazon-ssm-agent -register -code "'+ response['ActivationCode'] +'" -id "'+ response['ActivationId'] +'" -region "'+ response['region'] +'"',
+      UpdateCommand: 'sudo ./manual_update.sh -h ' + this.state.hostname + ' -c '+ response['ActivationCode'] +' -i '+ response['ActivationId'] +' -r '+ response['region'] +'',
       loading: false,
     });
     //return response
@@ -91,7 +96,7 @@ class AdminActivation extends Component {
 
             <Grid.Row>
               <Grid.Column width={3}>
-                <Header as='h3'>Command</Header>
+                <Header as='h3'>SSM Only</Header>
               </Grid.Column>
               <Grid.Column width={10} textAlign='center'>
                 <Message id="code" color='black'>
@@ -106,11 +111,31 @@ class AdminActivation extends Component {
               </Grid.Column>
             </Grid.Row>
 
+            <Grid.Row>
+              <Grid.Column width={3}>
+                <Header as='h3'>Script</Header>
+              </Grid.Column>
+              <Grid.Column width={10} textAlign='center'>
+                <Message id="code" color='black'>
+                  <Dimmer active={this.state.loading} inverted>
+                    <Loader/>
+                  </Dimmer>
+                  {this.state.UpdateCommand}
+                </Message>
+              </Grid.Column>
+              <Grid.Column width={3} textAlign='right'>
+                <Button content='Copy' icon='copy' onClick={() => {navigator.clipboard.writeText(this.state.UpdateCommand)}}/>
+              </Grid.Column>
+            </Grid.Row>
+
           </Grid>
         </Container>
         <Divider />
         <Container textAlign='center'>
-          <Button content='Generate' color='green' onClick={() => {this.getActivation();}} disabled={this.state.loading}/>
+          <div>
+            <p><Input label='Hostname' placeholder='deepracer01' onChange={(h) => {this.setState({hostname: h.target.value});}}/></p>
+            <p><Button content='Generate' color='green' onClick={() => {this.getActivation();}} disabled={this.state.loading}/></p>
+          </div>
         </Container>
       </div>
     )
