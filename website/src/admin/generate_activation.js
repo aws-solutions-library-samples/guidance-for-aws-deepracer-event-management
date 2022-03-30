@@ -14,6 +14,7 @@ class AdminActivation extends Component {
       hostname: "",
       SSMCommand: "",
       UpdateCommand: "",
+      buttonDisabled: true,
       loading: false
     };
   }
@@ -25,6 +26,7 @@ class AdminActivation extends Component {
     console.log(this.state.hostname);
 
     this.setState({
+      buttonDisabled: true,
       loading: true,
     });
 
@@ -139,8 +141,8 @@ class AdminActivation extends Component {
         <Divider />
         <Container textAlign='center'>
           <div>
-            <p><Input label='Hostname' placeholder='deepracer01' onChange={(h) => {this.setState({hostname: h.target.value});}}/></p>
-            <p><Button content='Generate' color='green' onClick={() => {this.getActivation();}} disabled={this.state.loading}/></p>
+            <p><Input label='Hostname' placeholder='deepracer01' onChange={(h) => {this.setState({hostname: h.target.value});if(h.target.value!=="") { this.setState({buttonDisabled: false}) }; }}/></p>
+            <p><Button content='Generate' color='green' onClick={() => {this.getActivation();}} disabled={this.state.buttonDisabled}/></p>
           </div>
         </Container>
       </div>
