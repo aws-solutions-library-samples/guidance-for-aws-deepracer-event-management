@@ -45,6 +45,10 @@ def lambda_handler(event, context):
         
     logger.info(json.dumps(presigned_url))
 
+    extract_command = "zxvf"
+    if(key.endswith('.tar')):
+        extract_command = "xvf"
+
     response = client_ssm.send_command(
         InstanceIds=[instance_id],
         DocumentName="AWS-RunShellScript",
@@ -52,7 +56,7 @@ def lambda_handler(event, context):
             "curl '{0}' -s --output /tmp/{1}".format(presigned_url, filename),
             "rm -rf /opt/aws/deepracer/artifacts/{0}/".format(foldername),
             "mkdir /opt/aws/deepracer/artifacts/{0}/".format(foldername),
-            "tar zxvf /tmp/{0} -C /opt/aws/deepracer/artifacts/{1}/".format(filename,foldername),
+            "tar "+extract_command+" /tmp/{0} -C /opt/aws/deepracer/artifacts/{1}/".format(filename,foldername),
             "rm /tmp/{0}".format(filename),
             "mv /opt/aws/deepracer/artifacts/{0}/agent/model.pb /opt/aws/deepracer/artifacts/{0}/model.pb".format(foldername),
             "md5sum /opt/aws/deepracer/artifacts/{0}/model.pb | awk '{{ print $1 }}' > /opt/aws/deepracer/artifacts/{0}/checksum.txt".format(foldername),

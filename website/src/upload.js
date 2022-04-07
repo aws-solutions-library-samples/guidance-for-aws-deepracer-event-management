@@ -103,7 +103,7 @@ class Upload extends Component {
             />
             <input
               ref={this.fileInputRef}
-              type="file" accept='application/gzip'
+              type="file" accept='application/gzip,application/tar'
               hidden
               onChange={(e) => this.onChange(e)}
             />
