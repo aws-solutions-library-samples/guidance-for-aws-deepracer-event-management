@@ -40,9 +40,10 @@ class Upload extends Component {
     async onChange(e) {
         const file = e.target.files[0];
         console.log(file)
-        this.setState({filename: file.name})
+        const filename_nospace = file.name.replace(/ /g,"_")
+        this.setState({filename: filename_nospace})
         const localthis = this;
-        var s3path = this.state.username + "/models/" + file.name
+        var s3path = this.state.username + "/models/" + filename_nospace
         console.log("s3path: " + s3path)
         await Storage.put((s3path), file, {
           level: 'private',
