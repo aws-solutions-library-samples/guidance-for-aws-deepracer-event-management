@@ -1,3 +1,11 @@
+## ----------------------------------------------------------------------------
+## The purpose of this Makefile is to help document some of the commonly run
+## tasks for DeepRacer Event Manager (DREM).
+## ----------------------------------------------------------------------------
+
+help:		## Show this help.
+	@sed -ne '/@sed/!s/## //p' $(MAKEFILE_LIST)
+
 all: frontend.deploy
 
 frontend.deploy: frontend.config
@@ -11,15 +19,17 @@ infra.deploy:
 	echo "{}" > website/src/config.json
 	cdk deploy CdkDeepRacerEventManagerStack --require-approval never --outputs-file cdk.outputs
 
-clean:
+clean:		## Tear down the stack, only do this if you're really sure
 	cdk destroy
 
-local.install:
-	python generate_amplify_config.py
+local.install:	## Install Python and Javascript dependencies
 	pip install -r requirements.txt
 	npm install --prefix website
 
-local.run:
+local.run:	## Run the frontend application locally for development
 	npm start --prefix website
+
+local.config:
+	python generate_amplify_config.py
 
 .NOTPARALLEL:
