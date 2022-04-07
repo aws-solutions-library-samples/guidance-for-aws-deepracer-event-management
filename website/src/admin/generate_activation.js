@@ -143,6 +143,7 @@ class AdminActivation extends Component {
           <div>
             <p><Input label='Hostname' placeholder='deepracer01' onChange={(h) => {this.setState({hostname: h.target.value});if(h.target.value!=="") { this.setState({buttonDisabled: false}) }; }}/></p>
             <p><Button content='Generate' color='green' onClick={() => {this.getActivation();}} disabled={this.state.buttonDisabled}/></p>
+            <p><a href="/manual_update.sh">manual_update.sh script</a></p>
           </div>
         </Container>
       </div>
