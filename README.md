@@ -1,18 +1,14 @@
 
-# Welcome to your CDK Python project!
+# Welcome to DeepRacer Event Manager (DREM)
 
-This is a blank project for Python development with CDK.
+## PreReqs
+Docker Desktop  
+Python (Tested with 3.9.10)  
+CDK (Tested with 2.16.0)  
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Install 
 
-This project is set up like a standard Python project.  The initialization
-process also creates a virtualenv within this project, stored under the `.venv`
-directory.  To create the virtualenv it assumes that there is a `python3`
-(or `python` for Windows) executable in your path with access to the `venv`
-package. If for any reason the automatic creation of the virtualenv fails,
-you can create the virtualenv manually.
-
-To manually create a virtualenv on MacOS and Linux:
+Create a virtualenv on MacOS and Linux if you haven't already:
 
 ```
 $ python3 -m venv .venv
@@ -37,29 +33,10 @@ Once the virtualenv is activated, you can install the required dependencies.
 $ pip install -r requirements.txt
 ```
 
-At this point you can now synthesize the CloudFormation template for this code.
+At this point, set your default account and region and then you can deploy DREM by simply running make.
 
 ```
-$ cdk synth
-```
-
-To add additional dependencies, for example other CDK libraries, just add
-them to your `setup.py` file and rerun the `pip install -r requirements.txt`
-command.
-
-## Using pyenv
-
-Requirements:
-
-* [pyenv](https://github.com/pyenv/pyenv)
-* [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv)
-
-### Create and activate virtual env
-
-```
-$ pyenv install 3.8.12
-$ pyenv virtualenv 3.8.12 deepracer-event-manager
-$ pyenv local deepracer-event-manager
+$ make
 ```
 
 ## Useful commands
