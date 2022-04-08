@@ -41,10 +41,11 @@ $ make
 
 ## Useful commands
 
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
+ * `make` 
+    * deploy all stacks to your default AWS account/region
+ * `make frontend.only.deploy` 
+    * deploy only the frontend
+    * requires that you have already completed a full `make` to ensure the backend is already deployed and the local config files have been generated
 
-Enjoy!
+
+

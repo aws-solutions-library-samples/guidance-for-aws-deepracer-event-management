@@ -11,6 +11,9 @@ all: frontend.deploy
 frontend.deploy: frontend.config
 	cdk deploy CdkDeepRacerEventManagerFEDeployStack --require-approval never
 
+frontend.only.deploy: 
+	cdk deploy CdkDeepRacerEventManagerFEDeployStack --require-approval never
+
 frontend.config: infra.deploy
 	python generate_amplify_config.py
 	python update_index_html_with_script_tag.py
