@@ -30,7 +30,7 @@ class AdminActivation extends Component {
       loading: true,
     });
 
-    const myInit = { 
+    const myInit = {
       body: {
         hostname: this.state.hostname
       }
@@ -45,7 +45,7 @@ class AdminActivation extends Component {
       ActivationId: response['ActivationId'],
       region: response['region'],
       SSMCommand: 'sudo amazon-ssm-agent -register -code "'+ response['ActivationCode'] +'" -id "'+ response['ActivationId'] +'" -region "'+ response['region'] +'"',
-      UpdateCommand: 'sudo ./manual_update.sh -h ' + this.state.hostname + ' -c '+ response['ActivationCode'] +' -i '+ response['ActivationId'] +' -r '+ response['region'] +'',
+      UpdateCommand: 'curl -O ' + window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '') + '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -h ' + this.state.hostname + ' -c '+ response['ActivationCode'] +' -i '+ response['ActivationId'] +' -r '+ response['region'] +'',
       loading: false,
     });
     //return response
