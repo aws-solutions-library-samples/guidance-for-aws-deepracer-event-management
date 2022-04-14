@@ -3,15 +3,15 @@
 ## tasks for DeepRacer Event Manager (DREM).
 ## ----------------------------------------------------------------------------
 
-help:		## Show this help.
+help:			## Show this help.
 	@sed -ne '/@sed/!s/## //p' $(MAKEFILE_LIST)
 
-all: frontend.deploy
+all: frontend.deploy	## Deploy the application
 
 frontend.deploy: frontend.config
 	cdk deploy CdkDeepRacerEventManagerFEDeployStack --require-approval never
 
-frontend.only.deploy: 
+frontend.only.deploy:
 	cdk deploy CdkDeepRacerEventManagerFEDeployStack --require-approval never
 
 frontend.config: infra.deploy
@@ -22,14 +22,14 @@ infra.deploy:
 	echo "{}" > website/src/config.json
 	cdk deploy CdkDeepRacerEventManagerStack --require-approval never --outputs-file cdk.outputs
 
-clean:		## Tear down the stack, only do this if you're really sure
+clean:			## Tear down the stack, only do this if you're really sure
 	cdk destroy
 
-local.install:	## Install Python and Javascript dependencies
+local.install:		## Install Python and Javascript dependencies
 	pip install -r requirements.txt
 	npm install --prefix website
 
-local.run:	## Run the frontend application locally for development
+local.run:		## Run the frontend application locally for development
 	npm start --prefix website
 
 local.config:
