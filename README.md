@@ -41,11 +41,13 @@ $ make
 
 ## Useful commands
 
- * `make` 
+ * `make all` 
     * deploy all stacks to your default AWS account/region
  * `make frontend.only.deploy` 
     * deploy only the frontend
     * requires that you have already completed a full `make` to ensure the backend is already deployed and the local config files have been generated
 
+## SES + Cognito
+[Setup Guide](./SES.md)
 
 
