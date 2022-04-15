@@ -2,9 +2,8 @@
 
 usage()
 {
-    echo "Usage: sudo $0 -h HOSTNAME [ -p PASSWORD ] [ -c SSMCODE -i SSMID -r AWS_REGION ]"
-    echo "Default password is set to 'Aws2019!' for the car console if none is provided"
-    echo "If no details are provided for SSM the agent is installed but not activated, default region is 'eu-west-1'"
+    echo "Usage: sudo $0 -h HOSTNAME -p PASSWORD [ -c SSMCODE -i SSMID -r AWS_REGION ]"
+    echo "If no details are provided for SSM the agent is installed but not activated"
     exit 0
 }
 
