@@ -12,6 +12,7 @@ class AdminActivation extends Component {
       ActivationId: "",
       region: "",
       hostname: "",
+      password: "",
       SSMCommand: "",
       UpdateCommand: "",
       buttonDisabled: true,
@@ -23,8 +24,6 @@ class AdminActivation extends Component {
     const apiName = 'deepracerEventManager';
     const apiPath = 'cars/create_ssm_activation';
 
-    console.log(this.state.hostname);
-
     this.setState({
       buttonDisabled: true,
       loading: true,
@@ -32,7 +31,8 @@ class AdminActivation extends Component {
 
     const myInit = {
       body: {
-        hostname: this.state.hostname
+        hostname: this.state.hostname,
+        password: this.state.password
       }
     };
 
@@ -45,10 +45,22 @@ class AdminActivation extends Component {
       ActivationId: response['ActivationId'],
       region: response['region'],
       SSMCommand: 'sudo amazon-ssm-agent -register -code "'+ response['ActivationCode'] +'" -id "'+ response['ActivationId'] +'" -region "'+ response['region'] +'"',
-      UpdateCommand: 'curl -O ' + window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '') + '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -h ' + this.state.hostname + ' -c '+ response['ActivationCode'] +' -i '+ response['ActivationId'] +' -r '+ response['region'] +'',
+      UpdateCommand: 'curl -O ' + window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '') + '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -p ' + this.state.password + ' -h ' + this.state.hostname + ' -c '+ response['ActivationCode'] +' -i '+ response['ActivationId'] +' -r '+ response['region'] +'',
       loading: false,
     });
     //return response
+  }
+
+  handleChange = (e) => {
+    this.setState({
+      [e.target.name]: e.target.value
+    })
+
+    if (this.state.password!=='' && this.state.hostname!=='') {
+      this.setState({
+        buttonDisabled: false,
+      })
+    }
   }
 
   componentDidMount = async () => {
@@ -141,7 +153,8 @@ class AdminActivation extends Component {
         <Divider />
         <Container textAlign='center'>
           <div>
-            <p><Input label='Hostname' placeholder='deepracer01' onChange={(h) => {this.setState({hostname: h.target.value});if(h.target.value!=="") { this.setState({buttonDisabled: false}) }; }}/></p>
+            <p><Input label='Hostname' name='hostname' placeholder='deepracer01' onChange={this.handleChange}/></p>
+            <p><Input label='Password' name='password' placeholder='password' onChange={this.handleChange}/></p>
             <p><Button content='Generate' color='green' onClick={() => {this.getActivation();}} disabled={this.state.buttonDisabled}/></p>
             <p><a href="/manual_update.sh">manual_update.sh script</a></p>
           </div>
