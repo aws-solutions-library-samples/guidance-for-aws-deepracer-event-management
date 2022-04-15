@@ -17,6 +17,7 @@ import { Auth } from 'aws-amplify';
 import { Home } from './home.js';
 import { Models } from './models.js';
 import { AdminModels } from './admin/models.js';
+import { AdminModels2 } from './admin/models2.js';
 import { AdminCars } from './admin/cars.js';
 import { AdminActivation } from './admin/generate_activation.js';
 import { Upload } from './upload.js';
@@ -41,6 +42,7 @@ function MenuRoutes() {
     <Route path="/models" element={<Models />} />
     <Route path="/upload" element={<Upload />} />
     <Route path="/admin/models" element={<AdminModels />} />
+    <Route path="/admin/models2" element={<AdminModels2 />} />
     <Route path="/admin/cars" element={<AdminCars />} />
     <Route path="/admin/generate_activation" element={<AdminActivation />} />
     <Route exact path="/" element={<Home />} />
