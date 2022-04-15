@@ -14,15 +14,11 @@ if [ `whoami` != root ]; then
     exit 0
 fi
 
-# Default password
-defaultPass="Aws2019!"
-
 oldHost=NULL
 varHost=NULL
 varPass=NULL
 ssmCode=NULL
 ssmId=NULL
-ssmRegion=eu-west-1 # default region
 
 backupDir=/home/deepracer/backup
 if [ ! -d ${backupDir} ]; then
@@ -45,11 +41,6 @@ done
 if [ $OPTIND -eq 1 ]; then
     echo "No options selected."
     usage
-fi
-
-# Default password
-if [ $varPass = NULL ]; then
-    varPass=$defaultPass
 fi
 
 # Update the DeepRacer console password
