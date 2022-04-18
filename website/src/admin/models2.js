@@ -1,6 +1,6 @@
 import React, { Component, useState, useEffect } from 'react';
 import { API } from 'aws-amplify';
-import { Container, Header, Table, Checkbox, } from 'semantic-ui-react';
+import { Container, Header, Table, Checkbox, Icon, Menu } from 'semantic-ui-react';
 
 import CarModelUploadModal from "./carModelUploadModal.js";
 import { useTable, useSortBy, useRowSelect } from 'react-table'
@@ -38,18 +38,18 @@ function AdminModels2() {
       setData(response);
     }
 
-    // async function getCars() {
-    //   console.log("Collecting cars...")
+    async function getCars() {
+      console.log("Collecting cars...")
     
-    //   const apiName = 'deepracerEventManager';
-    //   const apiPath = 'cars';
+      const apiName = 'deepracerEventManager';
+      const apiPath = 'cars';
     
-    //   const response = await API.get(apiName, apiPath);
-    //   setCars(response);
-    // }
+      const response = await API.get(apiName, apiPath);
+      setCars(response);
+    }
 
     getModels();
-    //getCars();
+    getCars();
   },[])
 
   const columns = React.useMemo(
@@ -111,42 +111,60 @@ function AdminModels2() {
       ])
     }
   )
-
+  
   return (
     <>
-      <table {...getTableProps()}>
-        <thead>
+      <Header as='h1' icon textAlign='center'>Admin Models</Header>
+      <Table celled striped {...getTableProps()}>
+        <Table.Header>
           {headerGroups.map(headerGroup => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
+            <Table.Row {...headerGroup.getHeaderGroupProps()}>
               {headerGroup.headers.map(column => (
-                <th {...column.getHeaderProps(column.getSortByToggleProps())}>
+                <Table.HeaderCell {...column.getHeaderProps(column.getSortByToggleProps())}>
                   {column.render('Header')}
                   <span>
                     {column.isSorted
                       ? column.isSortedDesc
-                        ? ' 🔽'
-                        : ' 🔼'
+                        ? <Icon name='sort down' />
+                        : <Icon name='sort up' />
                       : ''}
                   </span>
-                </th>
+                </Table.HeaderCell>
               ))}
-            </tr>
+            </Table.Row>
           ))}
-        </thead>
-        <tbody {...getTableBodyProps()}>
+        </Table.Header>
+        <Table.Body {...getTableBodyProps()}>
           {rows.map((row, i) => {
             prepareRow(row)
             return (
-              <tr {...row.getRowProps()}>
+              <Table.Row {...row.getRowProps()}>
                 {row.cells.map(cell => {
-                  return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                  return <Table.Cell {...cell.getCellProps()}>{cell.render('Cell')}</Table.Cell>
                 })}
-              </tr>
+              </Table.Row>
             )
           })}
-        </tbody>
-      </table>
-      <p>Selected Rows: {Object.keys(selectedRowIds).length}</p>
+        </Table.Body>
+      </Table>
+      
+      <Menu fixed='bottom'>
+        <Menu.Item>
+        <CarModelUploadModal cars={cars} models={selectedFlatRows} />
+        </Menu.Item>
+      </Menu>
+
+      {/* <Container textAlign='center'>
+        <CarModelUploadModal cars={cars} models={selectedFlatRows} />
+      </Container> */}
+
+      <Container textAlign='center'>
+        <p>-</p>
+      </Container>
+      <Container textAlign='center'>
+        <p>-</p>
+      </Container>
+      {/* <p>Selected Rows: {Object.keys(selectedRowIds).length}</p>
       <pre>
         <code>
           {JSON.stringify(
@@ -160,7 +178,7 @@ function AdminModels2() {
             2
           )}
         </code>
-      </pre>
+      </pre> */}
     </>
   )
 }
