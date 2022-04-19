@@ -1,9 +1,9 @@
 import React, { Component, useState, useEffect } from 'react';
 import { API } from 'aws-amplify';
-import { Container, Header, Table, Checkbox, Icon, Menu } from 'semantic-ui-react';
+import { Container, Header, Table, Checkbox, Icon, Menu, Input } from 'semantic-ui-react';
 
 import CarModelUploadModal from "./carModelUploadModal.js";
-import { useTable, useSortBy, useRowSelect } from 'react-table'
+import { useTable, useSortBy, useRowSelect, useFilters } from 'react-table'
 
 const IndeterminateCheckbox = React.forwardRef(
   ({ indeterminate, ...rest }, ref) => {
@@ -21,6 +21,24 @@ const IndeterminateCheckbox = React.forwardRef(
     )
   }
 )
+
+// Define a default UI for filtering
+function DefaultColumnFilter({
+  column: { filterValue, preFilteredRows, setFilter },
+}) {
+  const count = preFilteredRows.length
+
+  return (
+    <Input
+      icon={{ name: 'search', circular: true }}
+      value={filterValue || ''}
+      onChange={e => {
+        setFilter(e.target.value || undefined) // Set undefined to remove the filter entirely
+      }}
+      placeholder={`Search ${count} records...`}
+    />
+  )
+}
 
 function AdminModels2() {
   const [data, setData] = useState([]);
@@ -72,6 +90,14 @@ function AdminModels2() {
     []
   )
 
+  const defaultColumn = React.useMemo(
+    () => ({
+      // Let's set up our default Filter UI
+      Filter: DefaultColumnFilter,
+    }),
+    []
+  )
+
   const {
     getTableProps,
     getTableBodyProps,
@@ -84,7 +110,9 @@ function AdminModels2() {
     {
       columns,
       data,
+      defaultColumn, // Be sure to pass the defaultColumn option
     },
+    useFilters,
     useSortBy,
     useRowSelect,
     hooks => {
@@ -131,6 +159,7 @@ function AdminModels2() {
                         : <Icon disabled name='sort' />
                       : ''}
                   </span>
+                  <div>{column.canFilter ? column.render('Filter') : null}</div>
                 </Table.HeaderCell>
               ))}
             </Table.Row>
@@ -161,10 +190,8 @@ function AdminModels2() {
       </Container> */}
 
       <Container textAlign='center'>
-        <p>-</p>
-      </Container>
-      <Container textAlign='center'>
-        <p>-</p>
+        <br></br>
+        <br></br>
       </Container>
       {/* <p>Selected Rows: {Object.keys(selectedRowIds).length}</p>
       <pre>
