@@ -123,10 +123,12 @@ function AdminModels2() {
                 <Table.HeaderCell {...column.getHeaderProps(column.getSortByToggleProps())}>
                   {column.render('Header')}
                   <span>
-                    {column.isSorted
-                      ? column.isSortedDesc
-                        ? <Icon name='sort down' />
-                        : <Icon name='sort up' />
+                    {column.canSort
+                      ? column.isSorted
+                        ? column.isSortedDesc
+                          ? <Icon name='sort down' />
+                          : <Icon name='sort up' />
+                        : <Icon disabled name='sort' />
                       : ''}
                   </span>
                 </Table.HeaderCell>
