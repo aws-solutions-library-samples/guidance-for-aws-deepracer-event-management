@@ -49,7 +49,7 @@ class CarModelUploadModal extends Component {
       if(models.length > 0) {
         let model = models.pop();
         //console.log('POP!');
-        this.uploadModelToCar(this.state.car, model);
+        this.uploadModelToCar(this.state.car, model.original);
       }
       else {
         clearInterval(this.interval); // stop poll
