@@ -1,6 +1,6 @@
-import React, { Component, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { API } from 'aws-amplify';
-import { Container, Header, Table, Checkbox, Icon, Menu, Input } from 'semantic-ui-react';
+import { Container, Header, Table, Icon, Menu, Input } from 'semantic-ui-react';
 
 import CarModelUploadModal from "./carModelUploadModal.js";
 import { useTable, useSortBy, useRowSelect, useFilters } from 'react-table'
@@ -17,6 +17,7 @@ const IndeterminateCheckbox = React.forwardRef(
     return (
       <>
         <input type="checkbox" ref={resolvedRef} {...rest} />
+        {/* <Checkbox ref={resolvedRef} {...rest}/> */}
       </>
     )
   }
@@ -105,7 +106,7 @@ function AdminModels() {
     rows,
     prepareRow,
     selectedFlatRows,
-    state: { selectedRowIds },
+    //state: { selectedRowIds },
   } = useTable(
     {
       columns,
