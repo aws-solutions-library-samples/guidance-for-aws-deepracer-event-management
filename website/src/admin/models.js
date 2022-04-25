@@ -181,14 +181,12 @@ function AdminModels() {
       </Table>
       
       <Menu fixed='bottom'>
-        <Menu.Item>
-          <CarModelUploadModal cars={cars} models={selectedFlatRows} />
-        </Menu.Item>
+        <Container>
+          <Menu.Item>
+            <CarModelUploadModal cars={cars} models={selectedFlatRows} />
+          </Menu.Item>
+        </Container>
       </Menu>
-
-      {/* <Container textAlign='center'>
-        <CarModelUploadModal cars={cars} models={selectedFlatRows} />
-      </Container> */}
 
       <Container textAlign='center'>
         <br></br>
