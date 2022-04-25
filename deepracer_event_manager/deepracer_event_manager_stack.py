@@ -1,12 +1,15 @@
 from aws_cdk import (
-    core as cdk,
+    Stack,
+    RemovalPolicy,
+    Duration,
+    CfnOutput,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as cloudfront_origins,
     aws_cognito as cognito,
     aws_iam as iam,
-    aws_lambda_python as lambda_python,
+    aws_lambda_python_alpha as lambda_python,
     aws_lambda as awslambda,
     aws_dynamodb as dynamodb,
     aws_apigateway as apig,
@@ -15,16 +18,18 @@ from aws_cdk import (
     aws_events_targets as events_targets,
     aws_sns as sns
 )
+from constructs import Construct
+
 from cwrum_construct import CwRumAppMonitor
 from cdk_serverless_clamscan import ServerlessClamscan
 
-class CdkDeepRacerEventManagerStack(cdk.Stack):
+class CdkDeepRacerEventManagerStack(Stack):
 
-    def __init__(self, scope: cdk.Construct, construct_id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         ## setup for pseudo parameters
-        stack = cdk.Stack.of(self)
+        stack = Stack.of(self)
 
         # Upload S3 bucket
         models_bucket = s3.Bucket(self, 'models_bucket',
@@ -35,11 +40,11 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
                 restrict_public_buckets=True
             ),
             auto_delete_objects=True,
-            removal_policy=cdk.RemovalPolicy.DESTROY,
+            removal_policy=RemovalPolicy.DESTROY,
             lifecycle_rules=[
                 s3.LifecycleRule(
-                    abort_incomplete_multipart_upload_after=cdk.Duration.days(1),
-                    expiration=cdk.Duration.days(15)
+                    abort_incomplete_multipart_upload_after=Duration.days(1),
+                    expiration=Duration.days(15)
                 )
             ]
         )
@@ -64,7 +69,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             entry="lambda/get_models_function/",
             index="index.py",
             handler="lambda_handler",
-            timeout=cdk.Duration.minutes(1),
+            timeout=Duration.minutes(1),
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
@@ -82,7 +87,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             entry="lambda/get_cars_function/",
             index="index.py",
             handler="lambda_handler",
-            timeout=cdk.Duration.minutes(1),
+            timeout=Duration.minutes(1),
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
@@ -103,7 +108,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             entry="lambda/upload_model_to_car_function/",
             index="index.py",
             handler="lambda_handler",
-            timeout=cdk.Duration.minutes(1),
+            timeout=Duration.minutes(1),
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
@@ -128,7 +133,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             entry="lambda/upload_model_to_car_status_function/",
             index="index.py",
             handler="lambda_handler",
-            timeout=cdk.Duration.minutes(1),
+            timeout=Duration.minutes(1),
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
@@ -151,7 +156,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             entry="lambda/delete_all_models_from_car_function/",
             index="index.py",
             handler="lambda_handler",
-            timeout=cdk.Duration.minutes(1),
+            timeout=Duration.minutes(1),
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=256,
@@ -173,7 +178,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             entry="lambda/create_ssm_activation_function/",
             index="index.py",
             handler="lambda_handler",
-            timeout=cdk.Duration.minutes(1),
+            timeout=Duration.minutes(1),
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
@@ -250,7 +255,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             allowed_origins=[
                 "*",
                 #"http://localhost:3000",
-                #"https://" + distribution.domain_name
+                #"https://" + distribution.distribution_domain_name
             ],
             exposed_headers=[
                 "x-amz-server-side-encryption",
@@ -285,8 +290,8 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
         )
 
         cfn_user_pool_client_web = user_pool_client_web.node.default_child
-        cfn_user_pool_client_web.callback_ur_ls=["https://" + distribution.domain_name,"http://localhost:3000"]
-        cfn_user_pool_client_web.logout_ur_ls=["https://" + distribution.domain_name,"http://localhost:3000"]
+        cfn_user_pool_client_web.callback_ur_ls=["https://" + distribution.distribution_domain_name,"http://localhost:3000"]
+        cfn_user_pool_client_web.logout_ur_ls=["https://" + distribution.distribution_domain_name,"http://localhost:3000"]
 
         ## Cognito Identity Pool
         identity_pool = cognito.CfnIdentityPool(self, "IdentityPool",
@@ -472,7 +477,7 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
             default_cors_preflight_options=apig.CorsOptions(
                 allow_origins=[
                     "http://localhost:3000",
-                    "https://" + distribution.domain_name
+                    "https://" + distribution.distribution_domain_name
                 ],
                 allow_credentials=True
             )
@@ -542,43 +547,43 @@ class CdkDeepRacerEventManagerStack(cdk.Stack):
 
         ## RUM
         cw_rum_app_monitor = CwRumAppMonitor(self, 'CwRumAppMonitor',
-            domain_name=distribution.domain_name
+            domain_name=distribution.distribution_domain_name
         )
 
         ## End RUM
 
         ## Outputs
-        cdk.CfnOutput(
+        CfnOutput(
             self, "CFURL",
-            value="https://" + distribution.domain_name
+            value="https://" + distribution.distribution_domain_name
         )
 
-        cdk.CfnOutput(
+        CfnOutput(
             self, "region",
             value=stack.region
         )
 
-        cdk.CfnOutput(
+        CfnOutput(
             self, "userPoolId",
             value=user_pool.user_pool_id
         )
 
-        cdk.CfnOutput(
+        CfnOutput(
             self, "userPoolWebClientId",
             value=user_pool_client_web.user_pool_client_id
         )
 
-        cdk.CfnOutput(
+        CfnOutput(
             self, "identityPoolId",
             value=identity_pool.ref
         )
 
-        cdk.CfnOutput(
+        CfnOutput(
             self, "modelsBucketName",
             value=models_bucket.bucket_name
         )
 
-        cdk.CfnOutput(
+        CfnOutput(
             self, "rumScript",
             value=cw_rum_app_monitor.script
         )
