@@ -153,7 +153,7 @@ cat ${backupDir}/login.py.bak | sed -e "s/datetime.timedelta(hours=1)/datetime.t
 # Disable Gnome and other services
 # - to enable gnome - systemctl set-default graphical
 # - to start gnome -  systemctl start gdm3
-# systemctl set-default multi-user
+systemctl set-default multi-user
 systemctl stop bluetooth
 systemctl stop cups-browsed
 
