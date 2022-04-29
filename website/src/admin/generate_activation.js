@@ -157,7 +157,54 @@ class AdminActivation extends Component {
             <p><Input label='Password' name='password' placeholder='password' onChange={this.handleChange}/></p>
             <p><Button content='Generate' color='green' onClick={() => {this.getActivation();}} disabled={this.state.buttonDisabled}/></p>
             <p><a href="/manual_update.sh">manual_update.sh script</a></p>
+            <p><b>Note:</b> this script will disable the GUI.</p>
           </div>
+        </Container>
+        <Divider />
+        <Container>
+          <Grid columns={3} centered>
+            <Grid.Row>
+              <Grid.Column width={3}>
+                <Header as='h3'>Start GUI</Header>
+              </Grid.Column>
+              <Grid.Column width={10} textAlign='center'>
+                <Message id="code" color='black'>
+                  sudo systemctl start gdm3
+                </Message>
+              </Grid.Column>
+              <Grid.Column width={3} textAlign='right'>
+                <Button content='Copy' icon='copy' onClick={() => {navigator.clipboard.writeText('sudo systemctl start gdm3')}}/>
+              </Grid.Column>
+            </Grid.Row>
+
+            <Grid.Row>
+              <Grid.Column width={3}>
+                <Header as='h3'>Enable GUI</Header>
+              </Grid.Column>
+              <Grid.Column width={10} textAlign='center'>
+                <Message id="code" color='black'>
+                  sudo systemctl set-default graphical
+                </Message>
+              </Grid.Column>
+              <Grid.Column width={3} textAlign='right'>
+                <Button content='Copy' icon='copy' onClick={() => {navigator.clipboard.writeText('sudo systemctl set-default graphical')}}/>
+              </Grid.Column>
+            </Grid.Row>
+
+            <Grid.Row>
+              <Grid.Column width={3}>
+                <Header as='h3'>Disable GUI</Header>
+              </Grid.Column>
+              <Grid.Column width={10} textAlign='center'>
+                <Message id="code" color='black'>
+                  sudo systemctl set-default multi-user
+                </Message>
+              </Grid.Column>
+              <Grid.Column width={3} textAlign='right'>
+                <Button content='Copy' icon='copy' onClick={() => {navigator.clipboard.writeText('sudo systemctl set-default multi-user')}}/>
+              </Grid.Column>
+            </Grid.Row>
+          </Grid>
         </Container>
       </div>
     )
