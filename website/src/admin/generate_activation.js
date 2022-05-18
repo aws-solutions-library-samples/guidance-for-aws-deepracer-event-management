@@ -13,6 +13,8 @@ class AdminActivation extends Component {
       region: "",
       hostname: "",
       password: "",
+      ssid: "",
+      wifiPass: "",
       SSMCommand: "",
       UpdateCommand: "",
       buttonDisabled: true,
@@ -32,7 +34,9 @@ class AdminActivation extends Component {
     const myInit = {
       body: {
         hostname: this.state.hostname,
-        password: this.state.password
+        password: this.state.password,
+        ssid: this.state.ssid,
+        wifiPass: this.state.wifiPass
       }
     };
 
@@ -45,7 +49,7 @@ class AdminActivation extends Component {
       ActivationId: response['ActivationId'],
       region: response['region'],
       SSMCommand: 'sudo amazon-ssm-agent -register -code "'+ response['ActivationCode'] +'" -id "'+ response['ActivationId'] +'" -region "'+ response['region'] +'"',
-      UpdateCommand: 'curl -O ' + window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '') + '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -p ' + this.state.password + ' -h ' + this.state.hostname + ' -c '+ response['ActivationCode'] +' -i '+ response['ActivationId'] +' -r '+ response['region'] +'',
+      UpdateCommand: 'curl -O ' + window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '') + '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -p ' + this.state.password + ' -h ' + this.state.hostname + ' -c '+ response['ActivationCode'] +' -i '+ response['ActivationId'] +' -r '+ response['region'] +' -s '+ this.state.ssid +' -p '+ this.state.wifiPass,
       loading: false,
     });
     //return response
@@ -155,56 +159,12 @@ class AdminActivation extends Component {
           <div>
             <p><Input label='Hostname' name='hostname' placeholder='deepracer01' onChange={this.handleChange}/></p>
             <p><Input label='Password' name='password' placeholder='password' onChange={this.handleChange}/></p>
+            <p><Input label='SSID' name='ssid' placeholder='ssid' onChange={this.handleChange}/></p>
+            <p><Input label='WiFi Password' name='wifiPass' placeholder='wifimagic' onChange={this.handleChange}/></p>
             <p><Button content='Generate' color='green' onClick={() => {this.getActivation();}} disabled={this.state.buttonDisabled}/></p>
             <p><a href="/manual_update.sh">manual_update.sh script</a></p>
             <p><b>Note:</b> this script will disable the GUI.</p>
           </div>
-        </Container>
-        <Divider />
-        <Container>
-          <Grid columns={3} centered>
-            <Grid.Row>
-              <Grid.Column width={3}>
-                <Header as='h3'>Start GUI</Header>
-              </Grid.Column>
-              <Grid.Column width={10} textAlign='center'>
-                <Message id="code" color='black'>
-                  sudo systemctl start gdm3
-                </Message>
-              </Grid.Column>
-              <Grid.Column width={3} textAlign='right'>
-                <Button content='Copy' icon='copy' onClick={() => {navigator.clipboard.writeText('sudo systemctl start gdm3')}}/>
-              </Grid.Column>
-            </Grid.Row>
-
-            <Grid.Row>
-              <Grid.Column width={3}>
-                <Header as='h3'>Enable GUI</Header>
-              </Grid.Column>
-              <Grid.Column width={10} textAlign='center'>
-                <Message id="code" color='black'>
-                  sudo systemctl set-default graphical
-                </Message>
-              </Grid.Column>
-              <Grid.Column width={3} textAlign='right'>
-                <Button content='Copy' icon='copy' onClick={() => {navigator.clipboard.writeText('sudo systemctl set-default graphical')}}/>
-              </Grid.Column>
-            </Grid.Row>
-
-            <Grid.Row>
-              <Grid.Column width={3}>
-                <Header as='h3'>Disable GUI</Header>
-              </Grid.Column>
-              <Grid.Column width={10} textAlign='center'>
-                <Message id="code" color='black'>
-                  sudo systemctl set-default multi-user
-                </Message>
-              </Grid.Column>
-              <Grid.Column width={3} textAlign='right'>
-                <Button content='Copy' icon='copy' onClick={() => {navigator.clipboard.writeText('sudo systemctl set-default multi-user')}}/>
-              </Grid.Column>
-            </Grid.Row>
-          </Grid>
         </Container>
       </div>
     )
