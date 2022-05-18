@@ -49,7 +49,7 @@ class AdminActivation extends Component {
       ActivationId: response['ActivationId'],
       region: response['region'],
       SSMCommand: 'sudo amazon-ssm-agent -register -code "'+ response['ActivationCode'] +'" -id "'+ response['ActivationId'] +'" -region "'+ response['region'] +'"',
-      UpdateCommand: 'curl -O ' + window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '') + '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -p ' + this.state.password + ' -h ' + this.state.hostname + ' -c '+ response['ActivationCode'] +' -i '+ response['ActivationId'] +' -r '+ response['region'] +' -s '+ this.state.ssid +' -p '+ this.state.wifiPass +'',
+      UpdateCommand: 'curl -O ' + window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '') + '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -p ' + this.state.password + ' -h ' + this.state.hostname + ' -c '+ response['ActivationCode'] +' -i '+ response['ActivationId'] +' -r '+ response['region'] +' -s '+ this.state.ssid +' -p '+ this.state.wifiPass,
       loading: false,
     });
     //return response
@@ -159,8 +159,8 @@ class AdminActivation extends Component {
           <div>
             <p><Input label='Hostname' name='hostname' placeholder='deepracer01' onChange={this.handleChange}/></p>
             <p><Input label='Password' name='password' placeholder='password' onChange={this.handleChange}/></p>
-            <p><Input label='SSID' name='ssid' placeholder='ssid'/></p>
-            <p><Input label='WiFi Password' name='wifiPass' placeholder='wifimagic'/></p>
+            <p><Input label='SSID' name='ssid' placeholder='ssid' onChange={this.handleChange}/></p>
+            <p><Input label='WiFi Password' name='wifiPass' placeholder='wifimagic' onChange={this.handleChange}/></p>
             <p><Button content='Generate' color='green' onClick={() => {this.getActivation();}} disabled={this.state.buttonDisabled}/></p>
             <p><a href="/manual_update.sh">manual_update.sh script</a></p>
             <p><b>Note:</b> this script will disable the GUI.</p>
