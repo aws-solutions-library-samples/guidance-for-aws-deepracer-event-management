@@ -2,7 +2,7 @@
 
 usage()
 {
-    echo "Usage: sudo $0 -h HOSTNAME -p PASSWORD [ -c SSMCODE -i SSMID -r AWS_REGION ]"
+    echo "Usage: sudo $0 -h HOSTNAME -p PASSWORD [ -c SSMCODE -i SSMID -r AWS_REGION ] [ -s SSID -w WIFI_PASSWORD]"
     echo "If no details are provided for SSM the agent is installed but not activated"
     exit 0
 }
@@ -18,13 +18,15 @@ varHost=NULL
 varPass=NULL
 ssmCode=NULL
 ssmId=NULL
+ssid=NULL
+wifiPass=NULL
 
 backupDir=/home/deepracer/backup
 if [ ! -d ${backupDir} ]; then
     mkdir ${backupDir}
 fi
 
-optstring=":h:p:c:i:r:"
+optstring=":h:p:c:i:r:s:w:"
 
 while getopts $optstring arg; do
     case ${arg} in
@@ -33,6 +35,8 @@ while getopts $optstring arg; do
         c) ssmCode=${OPTARG};;
         i) ssmId=${OPTARG};;
         r) ssmRegion=${OPTARG};;
+        s) ssid=${OPTARG};;
+        w) wifiPass=${OPTARG};;
         ?) usage ;;
     esac
 done
@@ -40,6 +44,66 @@ done
 if [ $OPTIND -eq 1 ]; then
     echo "No options selected."
     usage
+fi
+
+# Sort out the Wifi (if we have SSID + Password)
+if [ ${ssid} != NULL ] && [ ${wifiPass} != NULL ]; then
+    mkdir /etc/deepracer-wifi
+    cat > /etc/deepracer-wifi/start-wifi.sh << EOF
+#!/bin/sh -e
+#
+# This should add the hidden DeepRacer network, configure it, then connect to it
+#
+
+nmcli c add type wifi con-name reinvent ifname mlan0 ssid ${ssid}
+nmcli con modify reinvent wifi-sec.key-mgmt wpa-psk
+nmcli con modify reinvent wifi-sec.psk ${wifiPass}
+nmcli con up reinvent
+
+exit 0
+EOF
+    chmod u+x /etc/deepracer-wifi/start-wifi.sh
+
+    cat > /etc/deepracer-wifi/stop-wifi.sh << EOF
+#!/bin/sh -e
+#
+# This should disconnect from the hidden DeepRacer network
+#
+
+nmcli con down reinvent
+
+exit 0
+
+EOF
+    chmod u+x /etc/deepracer-wifi/stop-wifi.sh
+
+    cat > /etc/systemd/system/deepracer-wifi.service << EOF
+[Unit]
+Description=DeepRacer Wifi Service
+After=local-fs.target
+After=network.target
+
+[Service]
+ExecStart=/etc/deepracer-wifi/start-wifi.sh
+RemainAfterExit=true
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+    systemctl enable deepracer-wifi
+    systemctl start deepracer-wifi
+
+    echo 'DeepRacer Wifi service installed'
+    echo 'Checking for connection.'
+
+    while [ "$(hostname -I)" = "" ]; do
+        echo -e "\e[1A\e[KNo network: $(date)"
+        sleep 1
+    done
+
+    echo "..connected";
 fi
 
 # Update the DeepRacer console password
