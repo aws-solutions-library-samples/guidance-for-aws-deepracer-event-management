@@ -159,8 +159,11 @@ class AdminActivation extends Component {
           <div>
             <p><Input label='Hostname' name='hostname' placeholder='deepracer01' onChange={this.handleChange}/></p>
             <p><Input label='Password' name='password' placeholder='password' onChange={this.handleChange}/></p>
+            <Divider />
+            <p>Optional WiFi config for networks with hidden SSIDs</p>
             <p><Input label='SSID' name='ssid' placeholder='ssid' onChange={this.handleChange}/></p>
             <p><Input label='WiFi Password' name='wifiPass' placeholder='wifimagic' onChange={this.handleChange}/></p>
+            <Divider />
             <p><Button content='Generate' color='green' onClick={() => {this.getActivation();}} disabled={this.state.buttonDisabled}/></p>
             <p><a href="/manual_update.sh">manual_update.sh script</a></p>
             <p><b>Note:</b> this script will disable the GUI.</p>
