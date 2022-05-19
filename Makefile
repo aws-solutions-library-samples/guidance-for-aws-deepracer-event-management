@@ -28,11 +28,20 @@ clean:			## Tear down the stack, only do this if you're really sure
 local.install:		## Install Python and Javascript dependencies
 	pip install -r requirements.txt
 	npm install --prefix website
+	npm install -g aws-cdk@2.16.0
+	echo "{}" > website/src/config.json
+	cdk deploy CdkDeepRacerEventManagerStack --require-approval never --outputs-file cdk.outputs
+	python generate_amplify_config.py
 
 local.run:		## Run the frontend application locally for development
 	npm start --prefix website
 
 local.config:
 	python generate_amplify_config.py
+
+local.clean:	## Renmove everything
+	pip freeze | grep -v "^-e" | xargs pip uninstall -y
+	pip uninstall deepracer_event_manager -y
+	rm -rf node_modules
 
 .NOTPARALLEL:
