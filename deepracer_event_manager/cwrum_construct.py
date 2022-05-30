@@ -1,12 +1,15 @@
 import decimal
 #from constructs import Construct
 from aws_cdk import (
-    core as cdk,
+    Stack, 
+    RemovalPolicy,
     aws_iam as iam,
     aws_cognito as cognito,
     aws_rum as rum,
     custom_resources,
 )
+
+from constructs import Construct
 
 def cwrum_custom_resource(self, name: str): 
     on_create_aws_sdk_call=custom_resources.AwsSdkCall(
@@ -29,12 +32,12 @@ def cwrum_custom_resource(self, name: str):
     app_monitor_id = custom_resource.get_response_field('AppMonitor.Id')
     return app_monitor_id
 
-class CwRumAppMonitor(cdk.Construct):
+class CwRumAppMonitor(Construct):
 
-    def __init__(self, scope: cdk.Construct, id: str, domain_name: str, allow_cookies: bool = True, enable_x_ray: bool = True, session_sample_rate: decimal = 1, telemetries: list = ["performance","errors","http"], **kwargs):
+    def __init__(self, scope: Construct, id: str, domain_name: str, allow_cookies: bool = True, enable_x_ray: bool = True, session_sample_rate: decimal = 1, telemetries: list = ["performance","errors","http"], **kwargs):
         super().__init__(scope, id, **kwargs)
 
-        stack = cdk.Stack.of(self)
+        stack = Stack.of(self)
 
         ## RUM Cognito Identity Pool
         rum_identity_pool = cognito.CfnIdentityPool(self, "CwRumIdentityPool",
@@ -59,7 +62,7 @@ class CwRumAppMonitor(cdk.Construct):
             
         )
 
-        rum_id_pool_unauth_user_role.apply_removal_policy(cdk.RemovalPolicy.DESTROY)
+        rum_id_pool_unauth_user_role.apply_removal_policy(RemovalPolicy.DESTROY)
 
         cognito.CfnIdentityPoolRoleAttachment(self, "CwRumIdentityPoolRoleAttachment",
             identity_pool_id=rum_identity_pool.ref,
