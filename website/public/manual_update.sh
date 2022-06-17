@@ -48,6 +48,10 @@ fi
 
 # Sort out the Wifi (if we have SSID + Password)
 if [ ${ssid} != NULL ] && [ ${wifiPass} != NULL ]; then
+    echo "Please 'forget' the currently connected WiFi - a new service based connection will be created as part of the updates performed by this script."
+    read -s -n 1 -p "Press any key to once done."
+    echo
+
     mkdir /etc/deepracer-wifi
     cat > /etc/deepracer-wifi/start-wifi.sh << EOF
 #!/bin/sh -e
