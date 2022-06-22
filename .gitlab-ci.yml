@@ -10,7 +10,6 @@ zip_repo:
   image:
     name: ubuntu
   script: 
-  #  - gzip ./ > drem.zip
     - apt-get -y update
     - apt-get -y install zip
     - zip -r drem.zip .
