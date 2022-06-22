@@ -21,4 +21,5 @@ upload_to_s3:
     - aws --version
     - ls drem.zip -lah
     - echo $AWS_DEFAULT_REGION
+    - aws s3 cp drem.zip s3://$AWS_S3_BUCKET/
     
