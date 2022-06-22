@@ -3,6 +3,8 @@ stages:
   - upload_to_s3
 
 zip_repo:
+  only:
+    - main
   stage: zip_repo
   image:
     name: ubuntu
@@ -16,6 +18,8 @@ zip_repo:
     - drem.zip
 
 upload_to_s3:
+  only:
+    - main
   stage: upload_to_s3
   image:
     name: amazon/aws-cli
