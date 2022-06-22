@@ -7,7 +7,7 @@ zip_repo:
   #image:
   #  name: ubuntu
   script: 
-    - gzip -c * > drem.zip
+    - gzip ./ > drem.zip
   artifacts:
     paths:
     - drem.zip
