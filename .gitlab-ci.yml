@@ -5,6 +5,7 @@ stages:
 zip_repo:
   only:
     - main
+    - release
   stage: zip_repo
   image:
     name: ubuntu
@@ -20,6 +21,7 @@ zip_repo:
 upload_to_s3:
   only:
     - main
+    - release
   stage: upload_to_s3
   image:
     name: amazon/aws-cli
