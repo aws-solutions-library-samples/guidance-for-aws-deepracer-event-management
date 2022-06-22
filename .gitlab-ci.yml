@@ -4,10 +4,13 @@ stages:
 
 zip_repo:
   stage: zip_repo
-  #image:
-  #  name: ubuntu
+  image:
+    name: ubuntu
   script: 
-    - gzip ./ > drem.zip
+  #  - gzip ./ > drem.zip
+    - apt-get -y update
+    - apt-get -y install zip
+    - zip -r drem.zip .
   artifacts:
     paths:
     - drem.zip
