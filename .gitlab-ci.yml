@@ -19,4 +19,5 @@ upload_to_s3:
     entrypoint: [""]
   script:
     - aws --version
-    - ls -lah
+    - ls drem.zip -lah
+    - echo $AWS_DEFAULT_REGION
