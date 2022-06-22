@@ -5,7 +5,7 @@ stages:
 zip_repo:
   stage: zip_repo
   image:
-    name: amazon/aws-cli
+    name: ubuntu
   script: 
     - ls -lah
     - zip -r drem.zip .
