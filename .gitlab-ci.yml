@@ -21,3 +21,4 @@ upload_to_s3:
     - aws --version
     - ls drem.zip -lah
     - echo $AWS_DEFAULT_REGION
+    
