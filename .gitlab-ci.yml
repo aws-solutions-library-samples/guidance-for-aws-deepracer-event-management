@@ -1,8 +1,12 @@
-zip repo:
+stages:
+  - zip_repo 
+  - upload_to_s3
+
+zip_repo:
   script: 
     - ls -lah
 
-upload to s3:
+upload_to_s3:
   image:
     name: amazon/aws-cli
     entrypoint: [""]
