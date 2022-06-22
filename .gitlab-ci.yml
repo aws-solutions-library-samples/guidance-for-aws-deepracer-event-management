@@ -6,6 +6,7 @@ zip_repo:
   stage: zip_repo
   script: 
     - ls -lah
+    - zip -r drem.zip .
 
 upload_to_s3:
   stage: upload_to_s3
@@ -14,3 +15,4 @@ upload_to_s3:
     entrypoint: [""]
   script:
     - aws --version
+    - ls -lah
