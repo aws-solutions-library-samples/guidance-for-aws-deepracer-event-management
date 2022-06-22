@@ -6,7 +6,7 @@ zip_repo:
   stage: zip_repo
   script: 
     - ls -lah
-    - gzip -c . > drem.zip
+    - gzip -c * > drem.zip
 
 upload_to_s3:
   stage: upload_to_s3
