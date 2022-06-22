@@ -4,9 +4,14 @@ stages:
 
 zip_repo:
   stage: zip_repo
+  image:
+    name: amazon/aws-cli
   script: 
     - ls -lah
-    - gzip -c * > drem.zip
+    - zip -r drem.zip .
+  artifacts:
+    paths:
+    - drem.zip
 
 upload_to_s3:
   stage: upload_to_s3
