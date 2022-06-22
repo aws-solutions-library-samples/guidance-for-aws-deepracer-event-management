@@ -3,10 +3,12 @@ stages:
   - upload_to_s3
 
 zip_repo:
+  stage: zip_repo
   script: 
     - ls -lah
 
 upload_to_s3:
+  stage: upload_to_s3
   image:
     name: amazon/aws-cli
     entrypoint: [""]
