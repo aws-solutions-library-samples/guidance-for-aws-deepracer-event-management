@@ -3,6 +3,9 @@ stages:
   - upload_to_s3
 
 zip_repo:
+  only:
+    - main
+    - release
   stage: zip_repo
   image:
     name: ubuntu
@@ -16,6 +19,9 @@ zip_repo:
     - drem.zip
 
 upload_to_s3:
+  only:
+    - main
+    - release
   stage: upload_to_s3
   image:
     name: amazon/aws-cli
@@ -24,6 +30,6 @@ upload_to_s3:
     - aws --version
     - ls drem.zip -lah
     - echo $AWS_DEFAULT_REGION
-    - aws s3 cp drem.zip s3://$AWS_S3_BUCKET/
+    - aws s3 cp drem.zip s3://$AWS_S3_BUCKET/$CI_COMMIT_REF_NAME/
     
     
