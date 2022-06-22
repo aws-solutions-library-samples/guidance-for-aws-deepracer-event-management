@@ -7,7 +7,7 @@ zip_repo:
   image:
     name: ubuntu
   script: 
-    - ls -lah
+    - apk add --update zip
     - zip -r drem.zip .
   artifacts:
     paths:
