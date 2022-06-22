@@ -1,7 +1,10 @@
+zip repo:
+  script: 
+    - ls -lah
+
 upload to s3:
   image:
     name: amazon/aws-cli
     entrypoint: [""]
   script:
     - aws --version
-    - ls -lah
