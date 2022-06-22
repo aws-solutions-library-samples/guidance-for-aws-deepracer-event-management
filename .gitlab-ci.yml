@@ -1,0 +1,29 @@
+stages:
+  - zip_repo 
+  - upload_to_s3
+
+zip_repo:
+  stage: zip_repo
+  image:
+    name: ubuntu
+  script: 
+  #  - gzip ./ > drem.zip
+    - apt-get -y update
+    - apt-get -y install zip
+    - zip -r drem.zip .
+  artifacts:
+    paths:
+    - drem.zip
+
+upload_to_s3:
+  stage: upload_to_s3
+  image:
+    name: amazon/aws-cli
+    entrypoint: [""]
+  script:
+    - aws --version
+    - ls drem.zip -lah
+    - echo $AWS_DEFAULT_REGION
+    - aws s3 cp drem.zip s3://$AWS_S3_BUCKET/
+    
+    
