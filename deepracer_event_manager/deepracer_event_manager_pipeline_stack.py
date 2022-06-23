@@ -100,12 +100,12 @@ class CdkServerlessCharityPipelineStack(Stack):
                 ],
                 env_from_cfn_outputs={
                     "sourceBucketName": infrastructure.sourceBucketName,
-                    "distributionId": infrastructure.distributionId,
-                    "stackRegion": infrastructure.stackRegion,
-                    "userPoolId": infrastructure.userPoolId,
-                    "userPoolWebClientId": infrastructure.userPoolWebClientId,
-                    "identityPoolId": infrastructure.identityPoolId,
-                    "apiUrl": infrastructure.apiUrl
+                    # "distributionId": infrastructure.distributionId,
+                    # "stackRegion": infrastructure.stackRegion,
+                    # "userPoolId": infrastructure.userPoolId,
+                    # "userPoolWebClientId": infrastructure.userPoolWebClientId,
+                    # "identityPoolId": infrastructure.identityPoolId,
+                    # "apiUrl": infrastructure.apiUrl
                 },
                 #additional_artifacts=[source_artifact],
                 role_policy_statements=[
