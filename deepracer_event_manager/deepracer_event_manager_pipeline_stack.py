@@ -131,6 +131,13 @@ class CdkServerlessCharityPipelineStack(Stack):
                             "cloudfront:CreateInvalidation"
                         ],
                         resources=["*"]
+                    ),
+                    iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        actions=[
+                            "cloudformation:DescribeStacks"
+                        ],
+                        resources=["*"]
                     )
                 ]
             )
