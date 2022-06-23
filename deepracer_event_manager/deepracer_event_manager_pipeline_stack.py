@@ -90,9 +90,9 @@ class CdkServerlessCharityPipelineStack(Stack):
         # Add Generate Amplify Config and Deploy to S3
         infrastructure_stage.add_post(
             pipelines.CodeBuildStep("DeployAmplifyToS3",
-                # build_environment=codebuild.BuildEnvironment(
-                #     privileged=True
-                # ),
+                build_environment=codebuild.BuildEnvironment(
+                    privileged=True
+                ),
                 commands=[
                     "echo $sourceBucketName",
                     "aws cloudformation describe-stacks --stack-name InfrastructureDeploy-drem-{0} --query 'Stacks[0].Outputs' > cfn.outputs".format(branchname),
