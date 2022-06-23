@@ -18,7 +18,7 @@ env=Environment(
 )
 
 with open('branch.txt') as branch_file:
-    branchname = branch_file.read()
+    branchname = branch_file.readline()
     print("Branch Name: " + branchname)
 
 app = App()
