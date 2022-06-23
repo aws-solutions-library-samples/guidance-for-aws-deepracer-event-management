@@ -48,7 +48,7 @@ class CdkServerlessCharityPipelineStack(Stack):
         s3_repo_bucket=s3.Bucket.from_bucket_arn(self, "S3RepoBucket", "arn:aws:s3:::drem-pipeline-zip-113122841518-eu-west-1")
         pipeline = pipelines.CodePipeline(self, "Pipeline",
             docker_enabled_for_synth=True,
-            synth=pipelines.CodeBuildStep("Synth",
+            synth=pipelines.CodeBuildStep("SynthAndDeployBackend",
                 input=pipelines.CodePipelineSource.s3(
                     bucket=s3_repo_bucket,
                     object_key=branchname + "/drem.zip",
@@ -56,8 +56,8 @@ class CdkServerlessCharityPipelineStack(Stack):
                 ),
                 commands=[
                     "pip install -r requirements.txt", 
-                    "npm ci", 
-                    "npm run build", 
+                    # "npm ci", 
+                    # "npm run build", 
                     "npx cdk synth",
                 ],
                 role_policy_statements=[
