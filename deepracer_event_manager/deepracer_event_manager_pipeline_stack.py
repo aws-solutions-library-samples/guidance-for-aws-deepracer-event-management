@@ -60,6 +60,7 @@ class CdkServerlessCharityPipelineStack(Stack):
                     # "npm run build", 
                     "npx cdk synth",
                 ],
+                primary_output_directory="cdk.out",
                 role_policy_statements=[
                     iam.PolicyStatement(
                         actions=["sts:AssumeRole"],
@@ -92,15 +93,18 @@ class CdkServerlessCharityPipelineStack(Stack):
                 # ),
                 commands=[
                     "echo $sourceBucketName",
+                    "pwd",
+                    "ls -lah",
+                    "python generate_amplify_config.py",
+                    "python update_index_html_with_script_tag.py",
                     "cd ./website",
-                    "python generate_amplify_config.py $stackRegion $userPoolId $userPoolWebClientId $identityPoolId $apiUrl",
                     "docker run --rm -v $(pwd):/foo -w /foo public.ecr.aws/sam/build-nodejs14.x bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
                     "aws s3 sync ./build/ s3://$sourceBucketName/ --delete",
                     "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'"
                 ],
                 env_from_cfn_outputs={
                     "sourceBucketName": infrastructure.sourceBucketName,
-                    # "distributionId": infrastructure.distributionId,
+                    "distributionId": infrastructure.distributionId,
                     # "stackRegion": infrastructure.stackRegion,
                     # "userPoolId": infrastructure.userPoolId,
                     # "userPoolWebClientId": infrastructure.userPoolWebClientId,
