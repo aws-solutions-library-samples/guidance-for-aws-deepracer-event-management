@@ -55,6 +55,9 @@ class CdkServerlessCharityPipelineStack(Stack):
                     trigger=codepipeline_actions.S3Trigger.POLL
                 ),
                 commands=[
+                    "python -m venv venv",
+                    ". venv/bin/activate",
+                    "pip install --upgrade pip",
                     "pip install -r requirements.txt", 
                     # "npm ci", 
                     # "npm run build", 
