@@ -16,7 +16,10 @@ env=Environment(
     account=os.environ["CDK_DEFAULT_ACCOUNT"],
     region="eu-west-1"
 )
-branchname='cdk-pipeline-askwith'
+
+with open('branch.txt') as branch_file:
+    branchname = branch_file.read()
+    print("Branch Name: " + branchname)
 
 app = App()
 # infrastructure = CdkDeepRacerEventManagerStack(app, "CdkDeepRacerEventManagerStack", env=env)

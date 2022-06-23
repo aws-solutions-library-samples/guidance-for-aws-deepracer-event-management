@@ -14,6 +14,7 @@ zip_repo:
   script: 
     - apt-get -y update
     - apt-get -y install zip
+    - echo $CI_COMMIT_REF_NAME > branch.txt
     - zip -r drem.zip .
   artifacts:
     paths:
