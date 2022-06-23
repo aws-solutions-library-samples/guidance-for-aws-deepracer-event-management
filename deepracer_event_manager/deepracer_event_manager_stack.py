@@ -558,24 +558,44 @@ class CdkDeepRacerEventManagerStack(Stack):
             value="https://" + distribution.distribution_domain_name
         )
 
+        self.sourceBucketName = CfnOutput(
+            self, "sourceBucketName",
+            value=source_bucket.bucket_name
+        )
+
+        self.distributionId = CfnOutput(
+            self, "distributionId",
+            value=distribution.distribution_id
+        )
+
+        self.stackRegion = CfnOutput(
+            self, "stackRegion",
+            value=stack.region
+        )
+
         CfnOutput(
             self, "region",
             value=stack.region
         )
 
-        CfnOutput(
+        self.userPoolId = CfnOutput(
             self, "userPoolId",
             value=user_pool.user_pool_id
         )
 
-        CfnOutput(
+        self.userPoolWebClientId = CfnOutput(
             self, "userPoolWebClientId",
             value=user_pool_client_web.user_pool_client_id
         )
 
-        CfnOutput(
+        self.identityPoolId = CfnOutput(
             self, "identityPoolId",
             value=identity_pool.ref
+        )
+
+        self.apiUrl = CfnOutput(
+            self, "apiUrl",
+            value=api.url
         )
 
         CfnOutput(
