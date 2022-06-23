@@ -1,12 +1,12 @@
 stages:
-  - zip_repo 
-  - upload_to_s3
+  - zip
+  - upload
 
 zip_repo:
   only:
     - main
     - release
-  stage: zip_repo
+  stage: zip
   image:
     name: ubuntu
   script: 
@@ -21,7 +21,7 @@ upload_to_s3:
   only:
     - main
     - release
-  stage: upload_to_s3
+  stage: upload
   image:
     name: amazon/aws-cli
     entrypoint: [""]
