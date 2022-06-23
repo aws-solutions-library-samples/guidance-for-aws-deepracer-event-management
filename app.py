@@ -14,7 +14,7 @@ from deepracer_event_manager_pipeline_stack import CdkServerlessCharityPipelineS
 # Region
 env=Environment(
     account=os.environ["CDK_DEFAULT_ACCOUNT"],
-    region="eu-central-1"
+    region="eu-west-1"
 )
 branchname='cdk-pipeline-askwith'
 
