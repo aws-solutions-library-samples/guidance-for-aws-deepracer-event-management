@@ -7,8 +7,9 @@ import os
 # being updated to use `cdk`.  You may delete this import if you don't need it.
 from aws_cdk import Environment, App
 
-from deepracer_event_manager.deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
-from deepracer_event_manager.deepracer_event_manager_fe_deploy_stack import CdkDeepRacerEventManagerFEDeployStack
+# from deepracer_event_manager.deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
+# from deepracer_event_manager.deepracer_event_manager_fe_deploy_stack import CdkDeepRacerEventManagerFEDeployStack
+from deepracer_event_manager_pipeline_stack import CdkServerlessCharityPipelineStack
 
 # Region
 env=Environment(
@@ -16,8 +17,13 @@ env=Environment(
     region="eu-west-1"
 )
 
+with open('branch.txt') as branch_file:
+    branchname = branch_file.readline()
+    print("Branch Name: " + branchname)
+
 app = App()
-infrastructure = CdkDeepRacerEventManagerStack(app, "CdkDeepRacerEventManagerStack", env=env)
-CdkDeepRacerEventManagerFEDeployStack(app, "CdkDeepRacerEventManagerFEDeployStack", env=env, source_bucket=infrastructure.source_bucket, distribution=infrastructure.distribution)
+# infrastructure = CdkDeepRacerEventManagerStack(app, "CdkDeepRacerEventManagerStack", env=env)
+# CdkDeepRacerEventManagerFEDeployStack(app, "CdkDeepRacerEventManagerFEDeployStack", env=env, source_bucket=infrastructure.source_bucket, distribution=infrastructure.distribution)
+CdkServerlessCharityPipelineStack(app, "drem-pipeline-" + branchname, branchname=branchname, env=env)
 
 app.synth()
