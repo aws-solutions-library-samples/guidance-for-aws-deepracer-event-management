@@ -19,7 +19,7 @@ class InfrastructurePipelineStage(Stage):
     def __init__(self, scope: Construct, construct_id: str, env: Environment, branchname: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        stack = CdkDeepRacerEventManagerStack(self, "drem-" + branchname, env=env)
+        stack = CdkDeepRacerEventManagerStack(self, "drem-backend-" + branchname, env=env)
         
         self.sourceBucketName = stack.sourceBucketName
         self.distributionId = stack.distributionId
@@ -62,7 +62,7 @@ class CdkServerlessCharityPipelineStack(Stack):
                     "pwd",
                     "ls -lah",
                 ],
-                primary_output_directory="cdk.outputs",
+                #primary_output_directory="cdk.outputs",
                 role_policy_statements=[
                     iam.PolicyStatement(
                         actions=["sts:AssumeRole"],
@@ -95,10 +95,11 @@ class CdkServerlessCharityPipelineStack(Stack):
                 # ),
                 commands=[
                     "echo $sourceBucketName",
+                    "aws cloudformation describe-stacks --stack-name InfrastructureDeploy-drem-{0} --query 'Stacks[0].Outputs' > cfn.outputs".format(branchname),
                     "pwd",
                     "ls -lah",
-                    "python generate_amplify_config.py",
-                    "python update_index_html_with_script_tag.py",
+                    "python generate_amplify_config_cfn.py",
+                    "python update_index_html_with_script_tag_cfn.py",
                     "cd ./website",
                     "docker run --rm -v $(pwd):/foo -w /foo public.ecr.aws/sam/build-nodejs14.x bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
                     "aws s3 sync ./build/ s3://$sourceBucketName/ --delete",
