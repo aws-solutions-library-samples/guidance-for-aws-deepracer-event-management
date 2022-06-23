@@ -95,7 +95,7 @@ class CdkServerlessCharityPipelineStack(Stack):
                 ),
                 commands=[
                     "echo $sourceBucketName",
-                    "aws cloudformation describe-stacks --stack-name InfrastructureDeploy-drem-{0} --query 'Stacks[0].Outputs' > cfn.outputs".format(branchname),
+                    "aws cloudformation describe-stacks --stack-name InfrastructureDeploy-drem-backend-{0} --query 'Stacks[0].Outputs' > cfn.outputs".format(branchname),
                     "pwd",
                     "ls -lah",
                     "python generate_amplify_config_cfn.py",
