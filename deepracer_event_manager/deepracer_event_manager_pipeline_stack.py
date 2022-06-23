@@ -59,8 +59,10 @@ class CdkServerlessCharityPipelineStack(Stack):
                     # "npm ci", 
                     # "npm run build", 
                     "npx cdk synth",
+                    "pwd",
+                    "ls -lah",
                 ],
-                primary_output_directory="cdk.out",
+                primary_output_directory="cdk.outputs",
                 role_policy_statements=[
                     iam.PolicyStatement(
                         actions=["sts:AssumeRole"],
