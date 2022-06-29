@@ -33,6 +33,12 @@ Once the virtualenv is activated, you can install the required dependencies.
 $ pip install -r requirements.txt
 ```
 
+Run unit tests
+
+```
+$ pytest --cov
+```
+
 At this point, set your default account and region and then you can deploy DREM by simply running make.
 
 ```
