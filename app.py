@@ -7,8 +7,8 @@ import os
 # being updated to use `cdk`.  You may delete this import if you don't need it.
 from aws_cdk import Environment, App
 
-from deepracer_event_manager.deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
-from deepracer_event_manager.deepracer_event_manager_fe_deploy_stack import CdkDeepRacerEventManagerFEDeployStack
+from infrastructure.deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
+from infrastructure.deepracer_event_manager_fe_deploy_stack import CdkDeepRacerEventManagerFEDeployStack
 
 # Region
 env=Environment(
