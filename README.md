@@ -30,7 +30,8 @@ If you are a Windows platform, you would activate the virtualenv like this:
 Once the virtualenv is activated, you can install the required dependencies.
 
 ```
-$ pip install -r requirements.txt
+$ pip install -r requirements-dev.txt  # For development and unit testing
+$ pip install -r requirements.txt      # For CDK deployment
 ```
 
 Run unit tests
