@@ -56,7 +56,7 @@ def test_lambda_handler_file_found(s3_client):
     assert len(json.loads(result['body'])) == 2 #check that two files was returned
 
 @mock_s3
-def test_lambda_handler_file_found(s3_client):
+def test_lambda_handler_file_not_found(s3_client):
     from infrastructure.lambdas.get_models_function.index import lambda_handler
     
     # We need to create the bucket since this is all in Moto's 'virtual' AWS account
