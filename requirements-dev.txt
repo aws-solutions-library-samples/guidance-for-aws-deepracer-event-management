@@ -1,0 +1,8 @@
+-r requirements.txt
+
+pytest==7.1.2
+pytest-cov==3.0.0
+moto[all]
+
+#lambda function dependencies used for unit testing
+-r ./infrastructure/lambdas/get_models_function/requirements.txt
