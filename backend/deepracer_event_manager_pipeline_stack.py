@@ -13,7 +13,7 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-from deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
+from backend.deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
 
 class InfrastructurePipelineStage(Stage):
     def __init__(self, scope: Construct, construct_id: str, env: Environment, branchname: str, **kwargs) -> None:
@@ -58,9 +58,10 @@ class CdkServerlessCharityPipelineStack(Stack):
                     "python -m venv venv",
                     ". venv/bin/activate",
                     "pip install --upgrade pip",
-                    "pip install -r requirements.txt", 
+                    "pip install -r requirements-dev.txt", 
                     # "npm ci", 
                     # "npm run build", 
+                    "python -m pytest --junitxml=./unittestreport",
                     "npx cdk synth",
                     "pwd",
                     "ls -lah",

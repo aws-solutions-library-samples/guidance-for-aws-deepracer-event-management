@@ -27,19 +27,19 @@ def s3_client(mock_os_env):
 
 def test_json_serial_datettime():
     from datetime import datetime
-    from infrastructure.lambdas.get_models_function.index import json_serial
+    from backend.lambdas.get_models_function.index import json_serial
     now = datetime.now()
     assert type(json_serial(now)) is str
 
 def test_json_serial_date():
     from datetime import date
-    from infrastructure.lambdas.get_models_function.index import json_serial
+    from backend.lambdas.get_models_function.index import json_serial
     _date = date.fromtimestamp(1656493067)
     assert type(json_serial(_date)) is str
 
 @mock_s3
 def test_lambda_handler_file_found(s3_client):
-    from infrastructure.lambdas.get_models_function.index import lambda_handler
+    from backend.lambdas.get_models_function.index import lambda_handler
     
     # We need to create the bucket since this is all in Moto's 'virtual' AWS account
     s3_client.create_bucket(Bucket=BUCKET_NAME)
@@ -57,7 +57,7 @@ def test_lambda_handler_file_found(s3_client):
 
 @mock_s3
 def test_lambda_handler_file_not_found(s3_client):
-    from infrastructure.lambdas.get_models_function.index import lambda_handler
+    from backend.lambdas.get_models_function.index import lambda_handler
     
     # We need to create the bucket since this is all in Moto's 'virtual' AWS account
     s3_client.create_bucket(Bucket=BUCKET_NAME)

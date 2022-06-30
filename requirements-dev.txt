@@ -6,4 +6,4 @@ moto[all]
 boto3
 
 #lambda function dependencies used for unit testing
--r ./infrastructure/lambdas/get_models_function/requirements.txt
+-r ./backend/lambdas/get_models_function/requirements.txt

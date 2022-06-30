@@ -20,7 +20,7 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-from infrastructure.cwrum_construct import CwRumAppMonitor
+from backend.cwrum_construct import CwRumAppMonitor
 from cdk_serverless_clamscan import ServerlessClamscan
 
 class CdkDeepRacerEventManagerStack(Stack):
@@ -66,7 +66,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         ### Lambda
         ## Models Function
         models_function = lambda_python.PythonFunction(self, "get_models_function",
-            entry="infrastructure/lambdas/get_models_function/",
+            entry="backend/lambdas/get_models_function/",
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
@@ -84,7 +84,7 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         ## Cars Function
         cars_function = lambda_python.PythonFunction(self, "get_cars_function",
-            entry="infrastructure/lambdas/get_cars_function/",
+            entry="backend/lambdas/get_cars_function/",
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
@@ -105,7 +105,7 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         ## upload_model_to_car_function
         upload_model_to_car_function = lambda_python.PythonFunction(self, "upload_model_to_car_function",
-            entry="infrastructure/lambdas/upload_model_to_car_function/",
+            entry="backend/lambdas/upload_model_to_car_function/",
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
@@ -130,7 +130,7 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         ## upload_model_to_car_function
         upload_model_to_car_status_function = lambda_python.PythonFunction(self, "upload_model_to_car_status_function",
-            entry="infrastructure/lambdas/upload_model_to_car_status_function/",
+            entry="backend/lambdas/upload_model_to_car_status_function/",
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
@@ -153,7 +153,7 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         ## delete_all_models_from_car_function
         delete_all_models_from_car_function = lambda_python.PythonFunction(self, "delete_all_models_from_car_function",
-            entry="infrastructure/lambdas/delete_all_models_from_car_function/",
+            entry="backend/lambdas/delete_all_models_from_car_function/",
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
@@ -175,7 +175,7 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         ## create ssm activation function
         create_ssm_activation_function = lambda_python.PythonFunction(self, "create_ssm_activation_function",
-            entry="infrastructure/lambdas/create_ssm_activation_function/",
+            entry="backend/lambdas/create_ssm_activation_function/",
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),

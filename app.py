@@ -9,7 +9,7 @@ from aws_cdk import Environment, App
 
 # from deepracer_event_manager.deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
 # from deepracer_event_manager.deepracer_event_manager_fe_deploy_stack import CdkDeepRacerEventManagerFEDeployStack
-from infrastructure.deepracer_event_manager_pipeline_stack import CdkServerlessCharityPipelineStack
+from backend.deepracer_event_manager_pipeline_stack import CdkServerlessCharityPipelineStack
 
 # Region
 env=Environment(
