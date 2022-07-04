@@ -62,13 +62,11 @@ class CdkServerlessCharityPipelineStack(Stack):
                         "reports": {
                             "pytest_reports": {
                                 "files": [
-                                    {
-                                     "unittestReport": {
-                                         "base-directory": "./reports",
-                                         "file-format": "JUNITXML"
-                                     }
-                                    }
-                                ]
+                                    "unittest-report.xml",
+                                ],
+                                "base-directory": "./reports",
+                                "file-format": "JUNITXML"
+        
                             }
                         }
                 }),
