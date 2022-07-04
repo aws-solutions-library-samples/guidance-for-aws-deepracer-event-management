@@ -53,11 +53,25 @@ class CdkServerlessCharityPipelineStack(Stack):
                     "pip install -r requirements-dev.txt", 
                     # "npm ci", 
                     # "npm run build", 
-                    "python -m pytest --junitxml=./unittestreport",
+                    "python -m pytest --junitxml=./reports/unittest-report.xml",
                     "npx cdk synth",
                     "pwd",
                     "ls -lah",
                 ],
+                partial_build_spec=codebuild.BuildSpec.from_object({
+                        "reports": {
+                            "pytest_reports": {
+                                "files": [
+                                    {
+                                     "unittestReport": {
+                                         "base-directory": "./reports",
+                                         "file-format": "JUNITXML"
+                                     }
+                                    }
+                                ]
+                            }
+                        }
+                }),
                 role_policy_statements=[
                     iam.PolicyStatement(
                         actions=["sts:AssumeRole"],
