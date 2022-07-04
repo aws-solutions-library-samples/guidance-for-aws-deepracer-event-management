@@ -6,40 +6,44 @@
 help:			## Show this help.
 	@sed -ne '/@sed/!s/## //p' $(MAKEFILE_LIST)
 
-all: frontend.deploy	## Deploy the application
+pipeline.deploy: 	## Deploy the CDK pipeline, currently hardcoded to arn:aws:s3:::drem-pipeline-zip-113122841518-eu-west-1
+	cdk diff
+
+pipeline.clean: 	## Destroys the CDK pipeline
+	cdk destroy
+
+manual.deploy: frontend.deploy		## Deploy the application directly from command line (note this will not be compatible with a pipeline deploy)
 
 frontend.deploy: frontend.config
-	cdk deploy CdkDeepRacerEventManagerFEDeployStack --require-approval never
+	branch=`cat branch.txt` && cdk deploy drem-frontend-$$branch --require-approval never --context manual_deploy=True 
 
 frontend.only.deploy:
-	cdk deploy CdkDeepRacerEventManagerFEDeployStack --require-approval never
+	branch=`cat branch.txt` && cdk deploy drem-frontend-$$branch --require-approval never --context manual_deploy=True 
 
 frontend.config: infra.deploy
-	python generate_amplify_config.py
-	python update_index_html_with_script_tag.py
+	branch=`cat branch.txt` && aws cloudformation describe-stacks --stack-name drem-backend-$$branch-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
+	python generate_amplify_config_cfn.py
+	python update_index_html_with_script_tag_cfn.py
 
 infra.deploy:
 	echo "{}" > website/src/config.json
-	cdk deploy CdkDeepRacerEventManagerStack --require-approval never --outputs-file cdk.outputs
+	branch=`cat branch.txt` && cdk deploy drem-backend-$$branch-infrastructure --require-approval never --context manual_deploy=True 
 
-clean:			## Tear down the stack, only do this if you're really sure
-	cdk destroy
+manual.clean:		## Tear down the stack, only do this if you're really sure
+	cdk destroy  --context manual_deploy=True 
 
-local.install:		## Install Python and Javascript dependencies
+local.install:		## Install Python and Javascript dependencies + Generate Config from deployed backend
 	pip install -r requirements.txt
-	npm install --prefix website
-	npm install -g aws-cdk@2.16.0
+	npm install -g aws-cdk
 	echo "{}" > website/src/config.json
-	cdk deploy CdkDeepRacerEventManagerStack --require-approval never --outputs-file cdk.outputs
-	python generate_amplify_config.py
+	branch=`cat branch.txt` && aws cloudformation describe-stacks --stack-name drem-backend-$$branch-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
+	python generate_amplify_config_cfn.py
+	python update_index_html_with_script_tag_cfn.py
 
 local.run:		## Run the frontend application locally for development
 	npm start --prefix website
 
-local.config:
-	python generate_amplify_config.py
-
-local.clean:	## Renmove everything
+local.clean:		## Renmove everything
 	pip freeze | grep -v "^-e" | xargs pip uninstall -y
 	pip uninstall deepracer_event_manager -y
 	rm -rf node_modules
