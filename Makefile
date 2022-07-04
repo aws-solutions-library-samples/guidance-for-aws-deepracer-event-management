@@ -7,7 +7,7 @@ help:			## Show this help.
 	@sed -ne '/@sed/!s/## //p' $(MAKEFILE_LIST)
 
 pipeline.deploy: 	## Deploy the CDK pipeline, currently hardcoded to arn:aws:s3:::drem-pipeline-zip-113122841518-eu-west-1
-	cdk diff
+	cdk deploy
 
 pipeline.clean: 	## Destroys the CDK pipeline
 	cdk destroy
