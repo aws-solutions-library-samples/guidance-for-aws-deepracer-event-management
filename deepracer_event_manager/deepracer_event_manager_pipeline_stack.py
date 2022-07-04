@@ -19,7 +19,7 @@ class InfrastructurePipelineStage(Stage):
     def __init__(self, scope: Construct, construct_id: str, env: Environment, branchname: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        stack = CdkDeepRacerEventManagerStack(self, "drem-backend-" + branchname, env=env)
+        stack = CdkDeepRacerEventManagerStack(self, "infrastructure", env=env)
         
         self.sourceBucketName = stack.sourceBucketName
         self.distributionId = stack.distributionId
@@ -36,14 +36,6 @@ class CdkServerlessCharityPipelineStack(Stack):
 
         ## setup for pseudo parameters
         stack = Stack.of(self)
-
-        # ## codecommit repo
-        # repo = codecommit.Repository.from_repository_name(self, "SourceRepo",
-        #     repository_name="cdk-serverless-charity"
-        # )
-
-        ## codepipeline
-        #source_artifact = codepipeline.Artifact(artifact_name="source_artifact")
 
         s3_repo_bucket=s3.Bucket.from_bucket_arn(self, "S3RepoBucket", "arn:aws:s3:::drem-pipeline-zip-113122841518-eu-west-1")
         pipeline = pipelines.CodePipeline(self, "Pipeline",
@@ -65,7 +57,6 @@ class CdkServerlessCharityPipelineStack(Stack):
                     "pwd",
                     "ls -lah",
                 ],
-                #primary_output_directory="cdk.outputs",
                 role_policy_statements=[
                     iam.PolicyStatement(
                         actions=["sts:AssumeRole"],
@@ -77,9 +68,6 @@ class CdkServerlessCharityPipelineStack(Stack):
                         }
                     )
                 ],
-                # build_environment=codebuild.BuildEnvironment(
-                #     privileged=True
-                # )
             )
         )
 
@@ -87,7 +75,7 @@ class CdkServerlessCharityPipelineStack(Stack):
         # Region
         env=stack
 
-        infrastructure = InfrastructurePipelineStage(self, 'InfrastructureDeploy', env, branchname)
+        infrastructure = InfrastructurePipelineStage(self, "drem-backend-" + branchname, env, branchname)
         infrastructure_stage = pipeline.add_stage(infrastructure)
 
         # Add Generate Amplify Config and Deploy to S3
@@ -98,7 +86,7 @@ class CdkServerlessCharityPipelineStack(Stack):
                 ),
                 commands=[
                     "echo $sourceBucketName",
-                    "aws cloudformation describe-stacks --stack-name InfrastructureDeploy-drem-backend-{0} --query 'Stacks[0].Outputs' > cfn.outputs".format(branchname),
+                    "aws cloudformation describe-stacks --stack-name drem-backend-{0}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs".format(branchname),
                     "pwd",
                     "ls -lah",
                     "python generate_amplify_config_cfn.py",
@@ -111,13 +99,7 @@ class CdkServerlessCharityPipelineStack(Stack):
                 env_from_cfn_outputs={
                     "sourceBucketName": infrastructure.sourceBucketName,
                     "distributionId": infrastructure.distributionId,
-                    # "stackRegion": infrastructure.stackRegion,
-                    # "userPoolId": infrastructure.userPoolId,
-                    # "userPoolWebClientId": infrastructure.userPoolWebClientId,
-                    # "identityPoolId": infrastructure.identityPoolId,
-                    # "apiUrl": infrastructure.apiUrl
                 },
-                #additional_artifacts=[source_artifact],
                 role_policy_statements=[
                     iam.PolicyStatement(
                         effect=iam.Effect.ALLOW,
