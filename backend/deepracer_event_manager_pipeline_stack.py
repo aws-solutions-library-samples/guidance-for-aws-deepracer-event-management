@@ -58,18 +58,18 @@ class CdkServerlessCharityPipelineStack(Stack):
                     "pwd",
                     "ls -lah",
                 ],
-                # partial_build_spec=codebuild.BuildSpec.from_object({
-                #         "reports": {
-                #             "pytest_reports": {
-                #                 "files": [
-                #                     "unittest-report.xml",
-                #                 ],
-                #                 "base-directory": "./reports",
-                #                 "file-format": "JUNITXML"
+                partial_build_spec=codebuild.BuildSpec.from_object({
+                        "reports": {
+                            "pytest_reports": {
+                                "files": [
+                                    '"unittest-report.xml"'
+                                ],
+                                "base-directory": "./reports",
+                                "file-format": "JUNITXML"
         
-                #             }
-                #         }
-                # }),
+                            }
+                        }
+                }),
                 role_policy_statements=[
                     iam.PolicyStatement(
                         actions=["sts:AssumeRole"],
