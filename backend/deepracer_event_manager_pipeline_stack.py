@@ -53,7 +53,7 @@ class CdkServerlessCharityPipelineStack(Stack):
                     "pip install -r requirements-dev.txt", 
                     # "npm ci", 
                     # "npm run build", 
-                    "python -m pytest --junitxml=./reports/unittest-report.xml",
+                    "python -m pytest --junitxml=reports/unittest-report.xml",
                     "npx cdk synth",
                     "pwd",
                     "ls -lah",
@@ -62,9 +62,9 @@ class CdkServerlessCharityPipelineStack(Stack):
                         "reports": {
                             "pytest_reports": {
                                 "files": [
-                                    '"unittest-report.xml"'
+                                        "unittest-report.xml"
                                 ],
-                                "base-directory": "./reports",
+                                "base-directory": "reports",
                                 "file-format": "JUNITXML"
         
                             }
