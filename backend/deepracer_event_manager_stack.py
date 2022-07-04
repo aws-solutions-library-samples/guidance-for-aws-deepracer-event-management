@@ -206,6 +206,8 @@ class CdkDeepRacerEventManagerStack(Stack):
                 ignore_public_acls=True,
                 restrict_public_buckets=True
             ),
+            auto_delete_objects=True,
+            removal_policy=RemovalPolicy.DESTROY,
         )
         self.source_bucket = source_bucket
 
@@ -280,7 +282,8 @@ class CdkDeepRacerEventManagerStack(Stack):
             ),
             mfa=cognito.Mfa.OFF,
             self_sign_up_enabled=True,
-            auto_verify=cognito.AutoVerifiedAttrs(email=True)
+            auto_verify=cognito.AutoVerifiedAttrs(email=True),
+            removal_policy=RemovalPolicy.DESTROY,
         )
 
         ## Cognito Client
