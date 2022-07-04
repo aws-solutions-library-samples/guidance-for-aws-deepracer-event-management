@@ -57,6 +57,7 @@ class CdkServerlessCharityPipelineStack(Stack):
                     "npx cdk synth",
                     "pwd",
                     "ls -lah",
+                    "ls $CODEBUILD_SRC_DIR/reports"
                 ],
                 partial_build_spec=codebuild.BuildSpec.from_object({
                         "reports": {
