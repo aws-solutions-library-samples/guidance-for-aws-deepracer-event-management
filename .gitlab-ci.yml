@@ -7,6 +7,7 @@ zip_repo:
     - main
     - release
     - unittest
+    - cdk-pipeline-askwith
   stage: zip
   image:
     name: ubuntu
@@ -24,6 +25,7 @@ upload_to_s3:
     - main
     - release
     - unittest
+    - cdk-pipeline-askwith
   stage: upload
   image:
     name: amazon/aws-cli
