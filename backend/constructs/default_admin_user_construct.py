@@ -56,7 +56,7 @@ class DefaultAdminUser(Construct):
 
         return AwsSdkCall(
             action='adminCreateUser',
-            service='cognito-idp',
+            service='CognitoIdentityServiceProvider',
             parameters=create_params,
             physical_resource_id=PhysicalResourceId.of('myAutomationExecution')
         )
@@ -70,7 +70,7 @@ class DefaultAdminUser(Construct):
 
         return AwsSdkCall(
             action='adminDeleteUser',
-            service='cognito-idp',
+            service='CognitoIdentityServiceProvider',
             parameters=delete_params,
             physical_resource_id=PhysicalResourceId.of('myAutomationExecution')
         )
