@@ -12,7 +12,7 @@ from aws_cdk import (
 
 from constructs import Construct
 
-from backend.constructs.default_admin_user_construct import DefaultAdminUser
+from backend.default_admin_user_construct import DefaultAdminUser
 
 
 def default_admin_user_custom_resource(self, name: str): 

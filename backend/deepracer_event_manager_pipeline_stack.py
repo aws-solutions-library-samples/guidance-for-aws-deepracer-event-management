@@ -24,9 +24,9 @@ class InfrastructurePipelineStage(Stage):
         self.sourceBucketName = stack.sourceBucketName
         self.distributionId = stack.distributionId
         self.stackRegion = stack.stackRegion
-        self.userPoolId = stack.userManagement.user_pool.userPoolId
-        self.userPoolWebClientId = stack.userManagement.user_pool_client_web.userPoolWebClientId
-        self.identityPoolId = stack.userManagement.identity_pool.identityPoolId
+        self.userPoolId = stack.userPoolId
+        self.userPoolWebClientId = stack.userPoolWebClientId
+        self.identityPoolId = stack.identityPoolId
         self.apiUrl = stack.apiUrl
 
 class CdkServerlessCharityPipelineStack(Stack):
