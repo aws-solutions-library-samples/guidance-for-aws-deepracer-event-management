@@ -368,20 +368,20 @@ class CdkDeepRacerEventManagerStack(Stack):
             value=stack.region
         )
 
-        # self.userPoolId = CfnOutput(
-        #     self, "userPoolId",
-        #     value=user_pool.user_pool_id
-        # )
+        self.userPoolId = CfnOutput(
+            self, "userPoolId",
+            value=self.userManagement.user_pool.user_pool_id
+        )
 
-        # self.userPoolWebClientId = CfnOutput(
-        #     self, "userPoolWebClientId",
-        #     value=user_pool_client_web.user_pool_client_id
-        # )
+        self.userPoolWebClientId = CfnOutput(
+            self, "userPoolWebClientId",
+            value=self.userManagement.user_pool_client_web.user_pool_client_id
+        )
 
-        # self.identityPoolId = CfnOutput(
-        #     self, "identityPoolId",
-        #     value=identity_pool.ref
-        # )
+        self.identityPoolId = CfnOutput(
+            self, "identityPoolId",
+            value=self.userManagement.identity_pool.ref
+        )
 
         self.apiUrl = CfnOutput(
             self, "apiUrl",
