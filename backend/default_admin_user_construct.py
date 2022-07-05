@@ -51,7 +51,7 @@ class DefaultAdminUser(Construct):
                     'Value': 'esbjj@amazon.com'
                 },
             ],
-            "MessageAction": "SUPPRESS"
+            "MessageAction": "SUPPRESS",
             "TemporaryPassword": "DremAdmin0!"
         }
 
