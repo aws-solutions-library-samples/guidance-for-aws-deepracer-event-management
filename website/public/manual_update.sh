@@ -155,6 +155,15 @@ echo 'Updating...'
 apt clean && apt update
 apt-get install -y aws-deepracer*
 
+# Offtrack detection
+# TODO Make this optional
+echo 'Installing off track'
+wget https://d1rhbaf1udr7m1.cloudfront.net/packages/offtrack/aws-deepracer-core_2.0.x.x_amd64.deb
+wget https://d1rhbaf1udr7m1.cloudfront.net/packages/offtrack/aws-deepracer-device-console_2.0.x.x_amd64.deb
+
+sudo dpkg -i aws-deepracer-core_2.0.x.x_amd64.deb
+sudo dpkg -i aws-deepracer-device-console_2.0.x.x_amd64.deb
+
 echo 'Restarting services'
 systemctl restart deepracer-core
 
