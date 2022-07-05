@@ -25,7 +25,7 @@ class DefaultAdminUser(Construct):
     def __init__(self, scope: Construct, id: str, user_pool: cognito.UserPool, email:str) -> None:
         super().__init__(scope, id)
 
-        AwsCustomResource(self,'AdminUserCustomResource',
+        cr = AwsCustomResource(self,'AdminUserCustomResource',
             policy=AwsCustomResourcePolicy.from_sdk_calls(
                 resources=AwsCustomResourcePolicy.ANY_RESOURCE
             ),
@@ -36,11 +36,15 @@ class DefaultAdminUser(Construct):
             resource_type='Custom::AdminUserCustomResource'
         )
 
+     #   username = cr.get_response_field('User.Username')
+     #   return username
+
 
     def create(self, user_pool_id: str, email: str):
-        create_params = {
+        username = 'admin'
+        create_user_params = {
             "UserPoolId": user_pool_id,
-            "Username": 'admin',
+            "Username": username,
             "UserAttributes": [
                 {
                     'Name': 'email_verified',
@@ -55,12 +59,27 @@ class DefaultAdminUser(Construct):
             "TemporaryPassword": "DremAdmin0!"
         }
 
-        return AwsSdkCall(
+        result_create_user = AwsSdkCall(
             action='adminCreateUser',
             service='CognitoIdentityServiceProvider',
-            parameters=create_params,
+            parameters=create_user_params,
             physical_resource_id=PhysicalResourceId.of(f'{user_pool_id}:admin') # TODO how to get id/username from the response?
         )
+
+        assign_user_to_group_params = {
+            "UserPoolId": user_pool_id,
+            "Username": username,
+            "GroupName": 'admin' #TODO add as input to Custom resource
+        }
+
+        AwsSdkCall(
+            action='adminAddUserToGroup',
+            service='CognitoIdentityServiceProvider',
+            parameters=assign_user_to_group_params,
+            physical_resource_id=PhysicalResourceId.of(f'{user_pool_id}:admin:group') # TODO how to get id/username from the response?
+        )
+
+        return result_create_user
 
 
     def delete(self, user_pool_id):
