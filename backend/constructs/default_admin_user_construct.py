@@ -51,7 +51,7 @@ class DefaultAdminUser(Construct):
                     'Value': email
                 },
             ],
-            "TemporaryPassword": "DREMADMIN0!"
+            "TemporaryPassword": "DremAdmin0!"
         }
 
         return AwsSdkCall(
