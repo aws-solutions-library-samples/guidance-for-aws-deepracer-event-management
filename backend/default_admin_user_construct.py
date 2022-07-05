@@ -48,9 +48,10 @@ class DefaultAdminUser(Construct):
                 },
                 {
                     'Name': 'email',
-                    'Value': email
+                    'Value': 'esbjj@amazon.com'
                 },
             ],
+            "MessageAction": "SUPPRESS"
             "TemporaryPassword": "DremAdmin0!"
         }
 
@@ -58,7 +59,7 @@ class DefaultAdminUser(Construct):
             action='adminCreateUser',
             service='CognitoIdentityServiceProvider',
             parameters=create_params,
-            physical_resource_id=PhysicalResourceId.of('myAutomationExecution')
+            physical_resource_id=PhysicalResourceId.of(f'{user_pool_id}:admin') # TODO how to get id/username from the response?
         )
 
 
@@ -72,5 +73,5 @@ class DefaultAdminUser(Construct):
             action='adminDeleteUser',
             service='CognitoIdentityServiceProvider',
             parameters=delete_params,
-            physical_resource_id=PhysicalResourceId.of('myAutomationExecution')
+            physical_resource_id=PhysicalResourceId.of(f'{user_pool_id}:admin') # TODO how to get the id/username from the response?
         )
