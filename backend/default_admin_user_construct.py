@@ -63,7 +63,7 @@ class DefaultAdminUser(Construct):
             action='adminCreateUser',
             service='CognitoIdentityServiceProvider',
             parameters=create_user_params,
-            physical_resource_id=PhysicalResourceId.of('myAutomationExecutionGroup') # TODO how to get id/username from the response?
+            physical_resource_id=PhysicalResourceId.of(f'{user_pool_id}:admin') # TODO how to get id/username from the response?
         )
 
         assign_user_to_group_params = {
@@ -76,7 +76,7 @@ class DefaultAdminUser(Construct):
             action='adminAddUserToGroup',
             service='CognitoIdentityServiceProvider',
             parameters=assign_user_to_group_params,
-            physical_resource_id=PhysicalResourceId.of('myAutomationExecution') # TODO how to get id/username from the response?
+            physical_resource_id=PhysicalResourceId.of(f'{user_pool_id}:group') # TODO how to get id/username from the response?
         )
 
         return result_create_user
@@ -92,5 +92,5 @@ class DefaultAdminUser(Construct):
             action='adminDeleteUser',
             service='CognitoIdentityServiceProvider',
             parameters=delete_params,
-            physical_resource_id=PhysicalResourceId.of('myAutomationExecution') # TODO how to get the id/username from the response?
+            physical_resource_id=PhysicalResourceId.of(f'{user_pool_id}:admin') # TODO how to get the id/username from the response?
         )
