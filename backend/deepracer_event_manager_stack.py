@@ -5,6 +5,7 @@ from aws_cdk import (
     CfnOutput,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
+    aws_s3_deployment as s3_deployment,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as cloudfront_origins,
     aws_cognito as cognito,
@@ -551,6 +552,18 @@ class CdkDeepRacerEventManagerStack(Stack):
         ## RUM
         cw_rum_app_monitor = CwRumAppMonitor(self, 'CwRumAppMonitor',
             domain_name=distribution.distribution_domain_name
+        )
+
+        ## Deploy Default Models
+        models_deployment = s3_deployment.BucketDeployment(self, 'ModelsDeploy', 
+            sources= [
+                s3_deployment.Source.asset(
+                    path='./backend/default_models',
+                ),
+            ],
+            destination_bucket=models_bucket,
+            destination_key_prefix='private/{}:00000000-0000-0000-0000-000000000000/default/models/'.format(stack.region),
+            retain_on_delete=False,
         )
 
         ## End RUM
