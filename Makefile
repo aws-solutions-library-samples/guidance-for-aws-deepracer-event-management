@@ -33,8 +33,9 @@ manual.clean:		## Tear down the stack, only do this if you're really sure
 	cdk destroy  --context manual_deploy=True 
 
 local.install:		## Install Python and Javascript dependencies + Generate Config from deployed backend
-	pip install -r requirements.txt
+	pip install -r requirements-dev.txt
 	npm install -g aws-cdk
+	npm install --prefix website
 	echo "{}" > website/src/config.json
 	branch=`cat branch.txt` && aws cloudformation describe-stacks --stack-name drem-backend-$$branch-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
 	python generate_amplify_config_cfn.py
