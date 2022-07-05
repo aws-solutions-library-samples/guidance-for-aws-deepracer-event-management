@@ -32,7 +32,7 @@ class CdkDeepRacerEventManagerFEDeployStack(Stack):
                 ),
             ],
             destination_bucket= source_bucket,
-            distribution= distribution, 
+            distribution= distribution,
             distribution_paths= ['/*'], # paths to invalidate in CF cache
         )
 
