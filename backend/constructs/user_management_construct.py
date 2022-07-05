@@ -55,12 +55,14 @@ class UserManagement(Construct):
             auto_verify=cognito.AutoVerifiedAttrs(email=True),
             removal_policy=RemovalPolicy.DESTROY,
         )
+        self.user_pool=user_pool
 
         ## Cognito Client
         user_pool_client_web = cognito.UserPoolClient(self, "UserPoolClientWeb",
             user_pool=user_pool,
             prevent_user_existence_errors=True
         )
+        self.user_pool_client_web=user_pool_client_web
 
         cfn_user_pool_client_web = user_pool_client_web.node.default_child
         cfn_user_pool_client_web.callback_ur_ls=["https://" + distribution.distribution_domain_name,"http://localhost:3000"]
@@ -76,6 +78,7 @@ class UserManagement(Construct):
                 )
             ]
         )
+        self.identity_pool=identity_pool
 
         ## Cognito Identity Pool Authenitcated Role
         id_pool_auth_user_role = iam.Role(self, "CognitoDefaultAuthenticatedRole",
@@ -259,20 +262,5 @@ class UserManagement(Construct):
             )
         )
 
-        DefaultAdminUser(self, 'DefaultAdminUser', user_pool, 'esbjj@amazon.com')
-
-        ## Outputs
-        self.userPoolId = CfnOutput(
-            self, "userPoolId",
-            value=user_pool.user_pool_id
-        )
-
-        self.userPoolWebClientId = CfnOutput(
-            self, "userPoolWebClientId",
-            value=user_pool_client_web.user_pool_client_id
-        )
-
-        self.identityPoolId = CfnOutput(
-            self, "identityPoolId",
-            value=identity_pool.ref
-        )
+        admin_email = 'esbjj@amazon.com'
+        DefaultAdminUser(self, 'DefaultAdminUser', user_pool, admin_email)
