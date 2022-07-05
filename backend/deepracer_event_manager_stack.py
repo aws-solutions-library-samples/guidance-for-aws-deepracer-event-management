@@ -470,8 +470,8 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         # Add a default Admin user to the system
-        # admin_email='esbjj@amazon.com'
-        # DefaultAdminUser(self, 'DefaultAdminUser', user_pool, admin_email)
+        admin_email='esbjj@amazon.com'
+        DefaultAdminUser(self, 'DefaultAdminUser', user_pool, admin_email)
 
         # API Gateway
         api = apig.RestApi(self, 'apiGateway',
