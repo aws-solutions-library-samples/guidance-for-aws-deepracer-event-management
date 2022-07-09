@@ -46,6 +46,10 @@ if [ $OPTIND -eq 1 ]; then
     usage
 fi
 
+# Disable IPV6 on all interfaces
+cp /etc/sysctl.conf ${backupDir}/sysctl.conf.bak
+printf "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
+
 # Sort out the Wifi (if we have SSID + Password)
 if [ ${ssid} != NULL ] && [ ${wifiPass} != NULL ]; then
     echo "Please 'forget' the currently connected WiFi - a new service based connection will be created as part of the updates performed by this script."
@@ -155,18 +159,6 @@ echo 'Updating...'
 apt clean && apt update
 apt-get install -y aws-deepracer*
 
-# Offtrack detection
-# TODO Make this optional
-echo 'Installing off track'
-wget https://d1rhbaf1udr7m1.cloudfront.net/packages/offtrack/aws-deepracer-core_2.0.x.x_amd64.deb
-wget https://d1rhbaf1udr7m1.cloudfront.net/packages/offtrack/aws-deepracer-device-console_2.0.x.x_amd64.deb
-
-sudo dpkg -i aws-deepracer-core_2.0.x.x_amd64.deb
-sudo dpkg -i aws-deepracer-device-console_2.0.x.x_amd64.deb
-
-echo 'Restarting services'
-systemctl restart deepracer-core
-
 # If changing hostname need to change the flag in network_config.py
 # /opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py
 # SET_HOSTNAME_TO_CHASSIS_SERIAL_NUMBER = False
@@ -182,7 +174,20 @@ if [ $DISTRIB_RELEASE = "20.04" ]; then
         rm /opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py
         cat ${backupDir}/network_config.py.bak | sed -e "s/SET_HOSTNAME_TO_CHASSIS_SERIAL_NUMBER = True/SET_HOSTNAME_TO_CHASSIS_SERIAL_NUMBER = False/" > /opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py
     fi
+
+    # Offtrack detection
+    # TODO Make this optional
+    echo 'Installing off track'
+    wget https://d1rhbaf1udr7m1.cloudfront.net/packages/offtrack/aws-deepracer-core_2.0.x.x_amd64.deb
+    wget https://d1rhbaf1udr7m1.cloudfront.net/packages/offtrack/aws-deepracer-device-console_2.0.x.x_amd64.deb
+
+    sudo dpkg -i aws-deepracer-core_2.0.x.x_amd64.deb
+    sudo dpkg -i aws-deepracer-device-console_2.0.x.x_amd64.deb
+
 fi
+
+echo 'Restarting services'
+systemctl restart deepracer-core
 
 # Install ssm-agent -> https://snapcraft.io/install/amazon-ssm-agent/ubuntu
 mkdir /tmp/ssm
