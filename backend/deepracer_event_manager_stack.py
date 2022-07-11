@@ -44,8 +44,13 @@ class CdkDeepRacerEventManagerStack(Stack):
             removal_policy=RemovalPolicy.DESTROY,
             lifecycle_rules=[
                 s3.LifecycleRule(
-                    abort_incomplete_multipart_upload_after=Duration.days(1),
-                    expiration=Duration.days(15)
+                    expiration=Duration.days(15),
+                    tag_filters={ 
+                        'lifecycle': 'true'
+                    }
+                ),
+                s3.LifecycleRule(
+                    abort_incomplete_multipart_upload_after=Duration.days(1)
                 )
             ]
         )
@@ -359,6 +364,7 @@ class CdkDeepRacerEventManagerStack(Stack):
                     "s3:GetObject",
                     "s3:PutObject",
                     "s3:DeleteObject",
+                    "s3:PutObjectTagging"
                 ],
                 resources=[
                     models_bucket.bucket_arn + "/private/${cognito-identity.amazonaws.com:sub}",
@@ -452,6 +458,7 @@ class CdkDeepRacerEventManagerStack(Stack):
                     "s3:GetObject",
                     "s3:PutObject",
                     "s3:DeleteObject",
+                    "s3:PutObjectTagging"
                 ],
                 resources=[
                     models_bucket.bucket_arn + "/private/${cognito-identity.amazonaws.com:sub}",

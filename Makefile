@@ -29,6 +29,10 @@ infra.deploy:
 	echo "{}" > website/src/config.json
 	branch=`cat branch.txt` && cdk deploy drem-backend-$$branch-infrastructure --require-approval never --context manual_deploy=True 
 
+infra.synth:
+	echo "{}" > website/src/config.json
+	branch=`cat branch.txt` && cdk synth drem-backend-$$branch-infrastructure --require-approval never --context manual_deploy=True 
+
 manual.clean:		## Tear down the stack, only do this if you're really sure
 	cdk destroy  --context manual_deploy=True 
 
