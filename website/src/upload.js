@@ -48,6 +48,7 @@ class Upload extends Component {
         await Storage.put((s3path), file, {
           level: 'private',
           contentType: file.type,
+          tagging: 'lifecycle=true',
           progressCallback(progress) {
             var currentpercent = Math.round(progress.loaded/progress.total*100)
             localthis.setState({percent: currentpercent})
