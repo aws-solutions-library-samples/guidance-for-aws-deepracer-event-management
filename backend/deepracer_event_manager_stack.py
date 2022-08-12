@@ -21,7 +21,7 @@ from aws_cdk import (
 from constructs import Construct
 
 from backend.cwrum_construct import CwRumAppMonitor
-from backend.UserPoolUser import UserPoolUser
+from backend.user_pool_user import UserPoolUser
 from cdk_serverless_clamscan import ServerlessClamscan
 
 class CdkDeepRacerEventManagerStack(Stack):
@@ -470,7 +470,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         # Add a default Admin user to the system
-        UserPoolUser(self, 'DefaulAdminUser',
+        UserPoolUser(self, 'DefaultAdminUser',
             username='Admin',
             password='DeepRacer0!',
             user_pool=user_pool,

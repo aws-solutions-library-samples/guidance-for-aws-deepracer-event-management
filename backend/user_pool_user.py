@@ -32,7 +32,7 @@ class UserPoolUser(Construct):
                 service='CognitoIdentityServiceProvider',
                 action='adminCreateUser',
                 parameters = {
-                    'UserPoolId': user_pool.userPoolId,
+                    'UserPoolId': user_pool.user_pool_id,
                     'Username': username,
                     'MessageAction': 'SUPPRESS',
                     'TemporaryPassword': password,
@@ -43,7 +43,7 @@ class UserPoolUser(Construct):
                 service="CognitoIdentityServiceProvider",
                 action="adminDeleteUser",
                 parameters= {
-                        'UserPoolId': user_pool.userPoolId,
+                        'UserPoolId': user_pool.user_pool_id,
                         'Username': username,
                     }
             ),
@@ -58,7 +58,7 @@ class UserPoolUser(Construct):
                 service= 'CognitoIdentityServiceProvider',
                 action= 'adminSetUserPassword',
                 parameters= {
-                    'UserPoolId': user_pool.userPoolId,
+                    'UserPoolId': user_pool.user_pool_id,
                     'Username': username,
                     'Password': password,
                     'Permanent': True,
@@ -72,7 +72,7 @@ class UserPoolUser(Construct):
         # If a Group Name is provided, also add the user to this Cognito UserPool Group
         if (group_name):
             user_to_admins_group_attachment = CfnUserPoolUserToGroupAttachment(self, 'AttachAdminToAdminsGroup', 
-                user_pool_id=user_pool.userPoolId,
+                user_pool_id=user_pool.user_pool_id,
                 group_name=group_name,
                 username=username,
             )
