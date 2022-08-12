@@ -850,7 +850,7 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         CfnOutput(
             self, "DefaultAdminUserUsername",
-            value=default_admin_user_password
+            value=default_admin_user_name
         )
 
         CfnOutput(
