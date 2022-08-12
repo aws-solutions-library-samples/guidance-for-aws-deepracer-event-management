@@ -15,8 +15,6 @@ cdk.outputs
 cdk.context.json
 cfn.outputs
 
-lambda/get_smg_trains_simple/images
-lambda/get_smg_trains_simple/data.json
 node_modules
 
 # IDE
