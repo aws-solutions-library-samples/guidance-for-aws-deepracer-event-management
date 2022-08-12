@@ -470,9 +470,12 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         # Add a default Admin user to the system
+        default_admin_user_name = 'Admin'
+        default_admin_user_password = 'DeepRacer0!'
+
         UserPoolUser(self, 'DefaultAdminUser',
-            username='Admin',
-            password='DeepRacer0!',
+            username=default_admin_user_name,
+            password=default_admin_user_password,
             user_pool=user_pool,
             group_name=user_pool_group.ref
         )
@@ -567,6 +570,16 @@ class CdkDeepRacerEventManagerStack(Stack):
         CfnOutput(
             self, "CFURL",
             value="https://" + distribution.distribution_domain_name
+        )
+
+        CfnOutput(
+            self, "DefaultAdminUserUsername",
+            value=default_admin_user_password
+        )
+
+        CfnOutput(
+            self, "DefaultAdminUserPassword",
+            value=default_admin_user_password
         )
 
         self.sourceBucketName = CfnOutput(
