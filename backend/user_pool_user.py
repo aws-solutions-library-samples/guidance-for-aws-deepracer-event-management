@@ -1,4 +1,4 @@
-'''Based on this javascript Github project https://github.com/awesome-cdk/cdk-userpool-user'''
+'''Based on this javascript Github project https://github.com/awesome-cdk/cdk-userpool-user '''
 
 from aws_cdk.custom_resources import (
     AwsCustomResource,
