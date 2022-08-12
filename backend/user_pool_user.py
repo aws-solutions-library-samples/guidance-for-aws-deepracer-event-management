@@ -1,3 +1,5 @@
+'''Based on this javascript Github project https://github.com/awesome-cdk/cdk-userpool-user'''
+
 from aws_cdk.custom_resources import (
     AwsCustomResource,
     AwsCustomResourcePolicy,
@@ -17,7 +19,7 @@ class UserPoolUser(Construct):
         Creates a user in the provided Cognito User pool
     '''
 
-    def __init__(self, scope: Construct, password: str, username: str, user_pool: IUserPool, group_name: str) -> None:
+    def __init__(self, scope: Construct, id: str, username: str, password: str, user_pool: IUserPool, group_name: str) -> None:
         super().__init__(scope, id)
 
         #Create the user inside the Cognito user pool using Lambda backed AWS Custom resource
@@ -62,7 +64,7 @@ class UserPoolUser(Construct):
             ),
             install_latest_aws_sdk=True
         )
-        admin_set_user_password.node.addDependency(admin_create_user)
+        admin_set_user_password.node.add_dependency(admin_create_user)
 
         # If a Group Name is provided, also add the user to this Cognito UserPool Group
         if group_name:
@@ -71,6 +73,6 @@ class UserPoolUser(Construct):
                 group_name=group_name,
                 username=username,
             )
-            user_to_admins_group_attachment.node.addDependency(admin_create_user)
-            user_to_admins_group_attachment.node.addDependency(admin_set_user_password)
-            user_to_admins_group_attachment.node.addDependency(user_pool)
+            user_to_admins_group_attachment.node.add_dependency(admin_create_user)
+            user_to_admins_group_attachment.node.add_dependency(admin_set_user_password)
+            user_to_admins_group_attachment.node.add_dependency(user_pool)
