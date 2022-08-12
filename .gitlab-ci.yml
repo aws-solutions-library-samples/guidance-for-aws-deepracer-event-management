@@ -7,10 +7,12 @@ zip_repo:
     - main
     - release
     - unittest
+    - users
+    - cdk-pipeline-askwith
   stage: zip
   image:
     name: ubuntu
-  script: 
+  script:
     - apt-get -y update
     - apt-get -y install zip
     - echo $CI_COMMIT_REF_NAME > branch.txt
@@ -24,6 +26,8 @@ upload_to_s3:
     - main
     - release
     - unittest
+    - users
+    - cdk-pipeline-askwith
   stage: upload
   image:
     name: amazon/aws-cli
@@ -33,5 +37,4 @@ upload_to_s3:
     - ls drem.zip -lah
     - echo $AWS_DEFAULT_REGION
     - aws s3 cp drem.zip s3://$AWS_S3_BUCKET/$CI_COMMIT_REF_NAME/
-    
-    
+

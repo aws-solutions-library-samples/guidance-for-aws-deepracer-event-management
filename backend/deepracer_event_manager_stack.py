@@ -1,3 +1,4 @@
+import http
 from aws_cdk import (
     Stack,
     RemovalPolicy,
@@ -5,6 +6,7 @@ from aws_cdk import (
     CfnOutput,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
+    aws_s3_deployment as s3_deployment,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as cloudfront_origins,
     aws_cognito as cognito,
@@ -44,8 +46,13 @@ class CdkDeepRacerEventManagerStack(Stack):
             removal_policy=RemovalPolicy.DESTROY,
             lifecycle_rules=[
                 s3.LifecycleRule(
-                    abort_incomplete_multipart_upload_after=Duration.days(1),
-                    expiration=Duration.days(15)
+                    expiration=Duration.days(15),
+                    tag_filters={ 
+                        'lifecycle': 'true'
+                    }
+                ),
+                s3.LifecycleRule(
+                    abort_incomplete_multipart_upload_after=Duration.days(1)
                 )
             ]
         )
@@ -359,6 +366,7 @@ class CdkDeepRacerEventManagerStack(Stack):
                     "s3:GetObject",
                     "s3:PutObject",
                     "s3:DeleteObject",
+                    "s3:PutObjectTagging"
                 ],
                 resources=[
                     models_bucket.bucket_arn + "/private/${cognito-identity.amazonaws.com:sub}",
@@ -397,7 +405,6 @@ class CdkDeepRacerEventManagerStack(Stack):
                 )
             },
         )
-
 
         ## Admin Users Group Role
         admin_user_role = iam.Role(self, "AdminUserRole",
@@ -452,6 +459,7 @@ class CdkDeepRacerEventManagerStack(Stack):
                     "s3:GetObject",
                     "s3:PutObject",
                     "s3:DeleteObject",
+                    "s3:PutObjectTagging"
                 ],
                 resources=[
                     models_bucket.bucket_arn + "/private/${cognito-identity.amazonaws.com:sub}",
@@ -469,7 +477,197 @@ class CdkDeepRacerEventManagerStack(Stack):
             precedence=1
         )
 
-        # Add a default Admin user to the system
+        # Lambda
+        ## List users Function
+        get_users_function = lambda_python.PythonFunction(self, "get_users_function",
+            entry="backend/lambdas/get_users_function/",
+            description="List the users in cognito",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=Duration.minutes(1),
+            runtime=awslambda.Runtime.PYTHON_3_8,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64,
+            environment={
+                "user_pool_id": user_pool.user_pool_id
+            }
+        )
+        get_users_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "cognito-idp:ListUsers",
+                ],
+                resources=[
+                    user_pool.user_pool_arn
+                ]
+            )
+        )
+
+        ## Get group details Function
+        get_groups_group_function = lambda_python.PythonFunction(self, "get_groups_group_function",
+            entry="backend/lambdas/get_groups_group_function/",
+            description="Get the group details from cognito",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=Duration.minutes(1),
+            runtime=awslambda.Runtime.PYTHON_3_8,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64,
+            environment={
+                "user_pool_id": user_pool.user_pool_id
+            }
+        )
+        get_groups_group_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "cognito-idp:ListUsersInGroup",
+                ],
+                resources=[
+                    user_pool.user_pool_arn
+                ]
+            )
+        )
+
+        ## Delete groups group Function
+        delete_groups_group_function = lambda_python.PythonFunction(self, "delete_groups_group_function",
+            entry="backend/lambdas/delete_groups_group_function/",
+            description="Delete a group from cognito",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=Duration.minutes(1),
+            runtime=awslambda.Runtime.PYTHON_3_8,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64,
+            environment={
+                "user_pool_id": user_pool.user_pool_id
+            }
+        )
+        delete_groups_group_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "cognito-idp:DeleteGroup",
+                ],
+                resources=[
+                    user_pool.user_pool_arn
+                ]
+            )
+        )
+
+        ## Delete groups group user Function
+        delete_groups_group_user_function = lambda_python.PythonFunction(self, "delete_groups_group_user_function",
+            entry="backend/lambdas/delete_groups_group_user_function/",
+            description="Remove a user from a group in cognito",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=Duration.minutes(1),
+            runtime=awslambda.Runtime.PYTHON_3_8,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64,
+            environment={
+                "user_pool_id": user_pool.user_pool_id
+            }
+        )
+        delete_groups_group_user_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "cognito-idp:AdminRemoveUserFromGroup",
+                ],
+                resources=[
+                    user_pool.user_pool_arn
+                ]
+            )
+        )
+
+        # Get groups Function
+        get_groups_function = lambda_python.PythonFunction(self, "get_groups_function",
+            entry="backend/lambdas/get_groups_function/",
+            description="List the groups in cognito",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=Duration.minutes(1),
+            runtime=awslambda.Runtime.PYTHON_3_8,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64,
+            environment={
+                "user_pool_id": user_pool.user_pool_id
+            }
+        )
+        get_groups_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "cognito-idp:ListGroups",
+                ],
+                resources=[
+                    user_pool.user_pool_arn
+                ]
+            )
+        )
+
+        ## Put groups group Function
+        put_groups_group_function = lambda_python.PythonFunction(self, "put_groups_group_function",
+            entry="backend/lambdas/put_groups_group_function/",
+            description="Add a group to cognito",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=Duration.minutes(1),
+            runtime=awslambda.Runtime.PYTHON_3_8,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64,
+            environment={
+                "user_pool_id": user_pool.user_pool_id
+            }
+        )
+        put_groups_group_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "cognito-idp:CreateGroup",
+                ],
+                resources=[
+                    user_pool.user_pool_arn
+                ]
+            )
+        )
+
+        ## Post groups group user Function
+        post_groups_group_user_function = lambda_python.PythonFunction(self, "post_groups_group_user_function",
+            entry="backend/lambdas/post_groups_group_user_function/",
+            description="Add a user to a group in cognito",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=Duration.minutes(1),
+            runtime=awslambda.Runtime.PYTHON_3_8,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=128,
+            architecture=awslambda.Architecture.ARM_64,
+            environment={
+                "user_pool_id": user_pool.user_pool_id
+            }
+        )
+        post_groups_group_user_function.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "cognito-idp:AdminAddUserToGroup",
+                ],
+                resources=[
+                    user_pool.user_pool_arn
+                ]
+            )
+        )
+
+         # Add a default Admin user to the system
         default_admin_user_name = 'Admin'
         default_admin_user_password = 'DeepRacer0!'
 
@@ -479,8 +677,8 @@ class CdkDeepRacerEventManagerStack(Stack):
             user_pool=user_pool,
             group_name=user_pool_group.ref
         )
-
-        # API Gateway
+        
+        ## API Gateway
         api = apig.RestApi(self, 'apiGateway',
             rest_api_name=stack.stack_name,
             deploy_options=apig.StageOptions(
@@ -498,7 +696,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         api_models = api.root.add_resource('models')
-        crud_models_method = api_models.add_method(
+        models_method = api_models.add_method(
             http_method="GET",
             integration=apig.LambdaIntegration(handler=models_function),
             authorization_type=apig.AuthorizationType.IAM
@@ -508,6 +706,65 @@ class CdkDeepRacerEventManagerStack(Stack):
         cars_method = api_cars.add_method(
             http_method="GET",
             integration=apig.LambdaIntegration(handler=cars_function),
+            authorization_type=apig.AuthorizationType.IAM
+        )
+
+        api_users = api.root.add_resource('users')
+        users_method = api_users.add_method(
+            http_method="GET",
+            integration=apig.LambdaIntegration(handler=get_users_function),
+            authorization_type=apig.AuthorizationType.IAM
+        )
+
+        # /admin
+        api_admin = api.root.add_resource('admin')
+
+        # GET /admin/groups
+        api_admin_groups = api_admin.add_resource('groups')
+        api_admin_groups.add_method(
+            http_method="GET",
+            integration=apig.LambdaIntegration(handler=get_groups_function),
+            authorization_type=apig.AuthorizationType.IAM
+        )
+
+        # PUT /admin/groups
+        api_admin_groups.add_method(
+            http_method="PUT",
+            integration=apig.LambdaIntegration(handler=put_groups_group_function),
+            authorization_type=apig.AuthorizationType.IAM
+        )
+
+        # /admin/groups/{groupname}
+        group = api_admin_groups.add_resource("{groupname}")
+
+        # GET /admin/groups/{groupname}
+        group.add_method(
+            http_method="GET",
+            integration=apig.LambdaIntegration(handler=get_groups_group_function),
+            authorization_type=apig.AuthorizationType.IAM
+        )
+
+        # DELETE /admin/groups/{groupname}
+        group.add_method(
+            http_method="DELETE",
+            integration=apig.LambdaIntegration(handler=delete_groups_group_function),
+            authorization_type=apig.AuthorizationType.IAM
+        )
+
+        # POST /admin/groups/{groupname}
+        group.add_method(
+            http_method="POST",
+            integration=apig.LambdaIntegration(handler=post_groups_group_user_function),
+            authorization_type=apig.AuthorizationType.IAM
+        )
+
+        # /admin/groups/{groupname}/{username}
+        group_user = group.add_resource("{username}")
+
+        # DELETE /admin/groups/{groupname}/{username}
+        group_user.add_method(
+            http_method="DELETE",
+            integration=apig.LambdaIntegration(handler=delete_groups_group_user_function),
             authorization_type=apig.AuthorizationType.IAM
         )
 
@@ -539,8 +796,8 @@ class CdkDeepRacerEventManagerStack(Stack):
             authorization_type=apig.AuthorizationType.IAM
         )
 
-
         ## Grant API Invoke permissions to admin users
+        # TODO: Ensure only users in the correct group can call the API endpoints
         # https://aws.amazon.com/blogs/compute/secure-api-access-with-amazon-cognito-federated-identities-amazon-cognito-user-pools-and-amazon-api-gateway/
         admin_user_role.add_to_policy(
             iam.PolicyStatement(
@@ -555,6 +812,13 @@ class CdkDeepRacerEventManagerStack(Stack):
                     api.arn_for_execute_api(method='POST',path='/cars/upload/status'),
                     api.arn_for_execute_api(method='POST',path='/cars/delete_all_models'),
                     api.arn_for_execute_api(method='POST',path='/cars/create_ssm_activation'),
+                    api.arn_for_execute_api(method='GET',path='/users'),
+                    api.arn_for_execute_api(method='GET',path='/admin/groups'),
+                    api.arn_for_execute_api(method='POST',path='/admin/groups'),
+                    api.arn_for_execute_api(method='DELETE',path='/admin/groups'),
+                    api.arn_for_execute_api(method='GET',path='/admin/groups/*'),
+                    api.arn_for_execute_api(method='POST',path='/admin/groups/*'),
+                    api.arn_for_execute_api(method='DELETE',path='/admin/groups/*'),
                 ],
             )
         )
@@ -562,6 +826,18 @@ class CdkDeepRacerEventManagerStack(Stack):
         ## RUM
         cw_rum_app_monitor = CwRumAppMonitor(self, 'CwRumAppMonitor',
             domain_name=distribution.distribution_domain_name
+        )
+
+        ## Deploy Default Models
+        models_deployment = s3_deployment.BucketDeployment(self, 'ModelsDeploy',
+            sources= [
+                s3_deployment.Source.asset(
+                    path='./backend/default_models',
+                ),
+            ],
+            destination_bucket=models_bucket,
+            destination_key_prefix='private/{}:00000000-0000-0000-0000-000000000000/default/models/'.format(stack.region),
+            retain_on_delete=False,
         )
 
         ## End RUM

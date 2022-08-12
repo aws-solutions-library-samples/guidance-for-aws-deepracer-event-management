@@ -15,10 +15,10 @@ pipeline.clean: 	## Destroys the CDK pipeline
 manual.deploy: frontend.deploy		## Deploy the application directly from command line (note this will not be compatible with a pipeline deploy)
 
 frontend.deploy: frontend.config
-	branch=`cat branch.txt` && cdk deploy drem-frontend-$$branch --require-approval never --context manual_deploy=True 
+	branch=`cat branch.txt` && cdk deploy drem-frontend-$$branch --require-approval never --context manual_deploy=True
 
 frontend.only.deploy:
-	branch=`cat branch.txt` && cdk deploy drem-frontend-$$branch --require-approval never --context manual_deploy=True 
+	branch=`cat branch.txt` && cdk deploy drem-frontend-$$branch --require-approval never --context manual_deploy=True
 
 frontend.config: infra.deploy
 	branch=`cat branch.txt` && aws cloudformation describe-stacks --stack-name drem-backend-$$branch-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
@@ -27,14 +27,19 @@ frontend.config: infra.deploy
 
 infra.deploy:
 	echo "{}" > website/src/config.json
-	branch=`cat branch.txt` && cdk deploy drem-backend-$$branch-infrastructure --require-approval never --context manual_deploy=True 
+	branch=`cat branch.txt` && cdk deploy drem-backend-$$branch-infrastructure --require-approval never --context manual_deploy=True
+
+infra.synth:
+	echo "{}" > website/src/config.json
+	branch=`cat branch.txt` && cdk synth drem-backend-$$branch-infrastructure --require-approval never --context manual_deploy=True 
 
 manual.clean:		## Tear down the stack, only do this if you're really sure
-	cdk destroy  --context manual_deploy=True 
+	cdk destroy  --context manual_deploy=True
 
 local.install:		## Install Python and Javascript dependencies + Generate Config from deployed backend
-	pip install -r requirements.txt
+	pip install -r requirements-dev.txt
 	npm install -g aws-cdk
+	npm install --prefix website
 	echo "{}" > website/src/config.json
 	branch=`cat branch.txt` && aws cloudformation describe-stacks --stack-name drem-backend-$$branch-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
 	python generate_amplify_config_cfn.py
