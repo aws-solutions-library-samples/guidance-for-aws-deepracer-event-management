@@ -21,7 +21,7 @@ from aws_cdk import (
 from constructs import Construct
 
 from backend.cwrum_construct import CwRumAppMonitor
-from backend.default_admin_user_construct import DefaultAdminUser
+from backend.UserPoolUser import UserPoolUser
 from cdk_serverless_clamscan import ServerlessClamscan
 
 class CdkDeepRacerEventManagerStack(Stack):
@@ -470,8 +470,12 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         # Add a default Admin user to the system
-        admin_email='esbjj@amazon.com'
-        DefaultAdminUser(self, 'DefaultAdminUser', user_pool, admin_email)
+        UserPoolUser(self, 'DefaulAdminUser',
+            username='Admin',
+            password='DeepRacer0!',
+            user_pool=user_pool,
+            group_name=user_pool_group.ref
+        )
 
         # API Gateway
         api = apig.RestApi(self, 'apiGateway',
