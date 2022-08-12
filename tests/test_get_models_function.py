@@ -55,13 +55,12 @@ def test_lambda_handler_file_found(s3_client):
     result = lambda_handler('Dummy Context', 'Dummy event')
     assert len(json.loads(result['body'])) == 2 #check that two files was returned
 
-#The lambda_handler throws a KeyError if there is no files, should it not just return an empty list???
-# @mock_s3
-# def test_lambda_handler_file_not_found(s3_client):
-#     from backend.lambdas.get_models_function.index import lambda_handler
+@mock_s3
+def test_lambda_handler_file_not_found(s3_client):
+    from backend.lambdas.get_models_function.index import lambda_handler
     
-#     # We need to create the bucket since this is all in Moto's 'virtual' AWS account
-#     s3_client.create_bucket(Bucket=BUCKET_NAME)
+    # We need to create the bucket since this is all in Moto's 'virtual' AWS account
+    s3_client.create_bucket(Bucket=BUCKET_NAME)
 
-#     result = lambda_handler('Dummy Context', 'Dummy event')
-#     assert len(json.loads(result['body'])) == 0 #check that no files was returned
+    result = lambda_handler('Dummy Context', 'Dummy event')
+    assert len(json.loads(result['body'])) == 0 #check that no files was returned
