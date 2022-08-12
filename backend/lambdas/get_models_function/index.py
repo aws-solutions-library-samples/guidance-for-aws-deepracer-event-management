@@ -19,19 +19,22 @@ def json_serial(obj):
 
 def lambda_handler(event, context):
     # function goes here
-    
+ 
     response = client_s3.list_objects_v2(
         Bucket=bucket,
         Prefix='private/',
     )
-    logger.info(response['Contents'])
+    contents = []
+    if 'Contents' in response:
+        contents = response['Contents']
+        logger.info(contents)
 
     return {
-        'headers': { 
+        'headers': {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin" : "*", # Required for CORS support to work
             "Access-Control-Allow-Credentials" : True # Required for cookies, authorization headers with HTTPS 
         },
         'statusCode': 200,
-        'body': json.dumps(response['Contents'], default=json_serial)
+        'body': json.dumps(contents, default=json_serial)
     }
