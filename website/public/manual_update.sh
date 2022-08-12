@@ -174,16 +174,6 @@ if [ $DISTRIB_RELEASE = "20.04" ]; then
         rm /opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py
         cat ${backupDir}/network_config.py.bak | sed -e "s/SET_HOSTNAME_TO_CHASSIS_SERIAL_NUMBER = True/SET_HOSTNAME_TO_CHASSIS_SERIAL_NUMBER = False/" > /opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py
     fi
-
-    # Offtrack detection
-    # TODO Make this optional
-    echo 'Installing off track'
-    wget https://d1rhbaf1udr7m1.cloudfront.net/packages/offtrack/aws-deepracer-core_2.0.x.x_amd64.deb
-    wget https://d1rhbaf1udr7m1.cloudfront.net/packages/offtrack/aws-deepracer-device-console_2.0.x.x_amd64.deb
-
-    sudo dpkg -i aws-deepracer-core_2.0.x.x_amd64.deb
-    sudo dpkg -i aws-deepracer-device-console_2.0.x.x_amd64.deb
-
 fi
 
 echo 'Restarting services'
