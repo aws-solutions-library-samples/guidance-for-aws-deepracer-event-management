@@ -12,6 +12,7 @@
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^14.4.3",
     "aws-amplify": "^4.3.30",
+    "dayjs": "^1.11.5",
     "i18next": "^21.9.0",
     "i18next-browser-languagedetector": "^6.1.5",
     "i18next-http-backend": "^1.4.1",
