@@ -24,12 +24,19 @@ if os.path.exists(branch_file_name):
         branchname = branch_file.read().splitlines()[0]
         print("Branch Name: " + branchname)
 else:
-    sys.exit('{} does not exist, please create and populate with the branch name you are working on.'.format(branch_file_name)) 
+    sys.exit('{} does not exist, please create and populate with the branch name you are working on.'.format(branch_file_name))
 
 app = App()
 manual_deploy = False
 if app.node.try_get_context("manual_deploy") == 'True':
     manual_deploy = True
+
+# DREM1
+# Needs an empty config.json
+# echo "{}" > website/src/config.json
+# Deploy the stacks
+# infrastructure = CdkDeepRacerEventManagerStack(app, "CdkDeepRacerEventManagerStack", env=env)
+# CdkDeepRacerEventManagerFEDeployStack(app, "CdkDeepRacerEventManagerFEDeployStack", env=env, source_bucket=infrastructure.source_bucket, distribution=infrastructure.distribution)
 
 if manual_deploy:
     print('Manual deploy')
