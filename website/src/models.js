@@ -4,8 +4,16 @@ import React, { Component } from 'react';
 import { Auth, Storage } from 'aws-amplify';
 import { Table, Button } from 'semantic-ui-react';
 
-//import CarModelUploadModal from "./carModelUploadModal.js";
-//import { ConsoleLogger } from '@aws-amplify/core';
+import dayjs from 'dayjs';
+
+// day.js
+var advancedFormat = require('dayjs/plugin/advancedFormat')
+var utc = require('dayjs/plugin/utc')
+var timezone = require('dayjs/plugin/timezone') // dependent on utc plugin
+
+dayjs.extend(advancedFormat)
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 //const path = require('path')
 class Models extends Component {
@@ -71,7 +79,8 @@ class Models extends Component {
       const modelKeyPieces = (model.key.split('/'))
       var modelName = modelKeyPieces[modelKeyPieces.length - 1]
       return <Table.Row key={i} >
-        <Table.Cell>{modelName} </Table.Cell>
+        <Table.Cell>{modelName}</Table.Cell>
+        <Table.Cell>{dayjs(model.lastModified).format('YYYY-MM-DD HH:mm:ss (z)')}</Table.Cell>
         <Table.Cell><Button negative circular icon='delete' onClick={(event) => this.onDeleteClickHandler(model)}/></Table.Cell>
       </Table.Row>
     }.bind(this));
@@ -83,6 +92,7 @@ class Models extends Component {
       <Table.Header>
           <Table.Row>
             <Table.HeaderCell>Name</Table.HeaderCell>
+            <Table.HeaderCell>Date / Time Uploaded</Table.HeaderCell>
             <Table.HeaderCell>Delete</Table.HeaderCell>
           </Table.Row>
         </Table.Header>

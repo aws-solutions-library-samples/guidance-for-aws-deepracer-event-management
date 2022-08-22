@@ -5,6 +5,17 @@ import { Container, Header, Table, Icon, Menu, Input } from 'semantic-ui-react';
 import CarModelUploadModal from "./carModelUploadModal.js";
 import { useTable, useSortBy, useRowSelect, useFilters } from 'react-table'
 
+import dayjs from 'dayjs';
+
+// day.js
+var advancedFormat = require('dayjs/plugin/advancedFormat')
+var utc = require('dayjs/plugin/utc')
+var timezone = require('dayjs/plugin/timezone') // dependent on utc plugin
+
+dayjs.extend(advancedFormat)
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
 const IndeterminateCheckbox = React.forwardRef(
   ({ indeterminate, ...rest }, ref) => {
     const defaultRef = React.useRef()
@@ -49,20 +60,20 @@ function AdminModels() {
   useEffect(() => {
     async function getModels() {
       console.log("Collecting models...")
-    
+
       const apiName = 'deepracerEventManager';
       const apiPath = 'models';
-    
+
       const response = await API.get(apiName, apiPath);
       setData(response);
     }
 
     async function getCars() {
       console.log("Collecting cars...")
-    
+
       const apiName = 'deepracerEventManager';
       const apiPath = 'cars';
-    
+
       const response = await API.get(apiName, apiPath);
       setCars(response);
     }
@@ -85,6 +96,14 @@ function AdminModels() {
         accessor: (row) => {
           const modelKeyPieces = (row.Key.split('/'));
           return modelKeyPieces[modelKeyPieces.length - 1].split('.')[0];
+        },
+      },
+      {
+        Header: 'Date / Time Uploaded',
+        disableFilters: true,
+        accessor: (row) => {
+          const modelDate = dayjs(row.LastModified).format('YYYY-MM-DD HH:mm:ss (z)');
+          return modelDate;
         },
       },
     ],
@@ -140,7 +159,7 @@ function AdminModels() {
       ])
     }
   )
-  
+
   return (
     <>
       <Header as='h1' icon textAlign='center'>Admin Models</Header>
@@ -150,8 +169,8 @@ function AdminModels() {
             <Table.Row {...headerGroup.getHeaderGroupProps()}>
               {headerGroup.headers.map(column => (
                 <Table.HeaderCell {...column.getHeaderProps(column.getSortByToggleProps())}>
-                  {column.render('Header')}
-                  <span>
+                  <div>
+                    {column.render('Header')}
                     {column.canSort
                       ? column.isSorted
                         ? column.isSortedDesc
@@ -159,8 +178,8 @@ function AdminModels() {
                           : <Icon name='sort up' />
                         : <Icon disabled name='sort' />
                       : ''}
-                  </span>
-                  <div>{column.canFilter ? column.render('Filter') : null}</div>
+                    {column.canFilter ? column.render('Filter') : null}
+                  </div>
                 </Table.HeaderCell>
               ))}
             </Table.Row>
@@ -179,7 +198,7 @@ function AdminModels() {
           })}
         </Table.Body>
       </Table>
-      
+
       <Menu fixed='bottom'>
         <Container>
           <Menu.Item>

@@ -18,6 +18,7 @@ import { Home } from './home.js';
 import { Models } from './models.js';
 import { AdminModels } from './admin/models.js';
 import { AdminCars } from './admin/cars.js';
+import { AdminUsers } from './admin/users.js';
 import { AdminActivation } from './admin/generate_activation.js';
 import { Upload } from './upload.js';
 
@@ -42,6 +43,7 @@ function MenuRoutes() {
     <Route path="/upload" element={<Upload />} />
     <Route path="/admin/models" element={<AdminModels />} />
     <Route path="/admin/cars" element={<AdminCars />} />
+    <Route path="/admin/users" element={<AdminUsers />} />
     <Route path="/admin/generate_activation" element={<AdminActivation />} />
     <Route exact path="/" element={<Home />} />
   </Routes>;
@@ -88,11 +90,13 @@ class FixedMenuLayout extends Component {
             <Dropdown.Item as={Link} to='/admin/models'>Models</Dropdown.Item>
             <Dropdown.Item as={Link} to='/admin/cars'>Cars</Dropdown.Item>
             <Dropdown.Item as={Link} to='/admin/generate_activation'>Generate Activation</Dropdown.Item>
+            <Dropdown.Divider />
+            <Dropdown.Item as={Link} to='/admin/users'>Users</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
       </React.Fragment>
     }
-  
+
     return (
       <div>
         <Router>
