@@ -96,19 +96,27 @@ class CdkServerlessCharityPipelineStack(Stack):
         infrastructure_stage.add_post(
             pipelines.CodeBuildStep("DeployAmplifyToS3",
                 build_environment=codebuild.BuildEnvironment(
-                    privileged=True
+                    build_image=codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0
+                ),
+                input=pipelines.CodePipelineSource.s3(
+                    bucket=s3_repo_bucket,
+                    object_key=branchname + "/drem.zip",
+                    trigger=codepipeline_actions.S3Trigger.POLL
                 ),
                 commands=[
-                    "echo $sourceBucketName",
-                    "aws cloudformation describe-stacks --stack-name drem-backend-{0}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs".format(branchname),
+                    "python -m venv venv",
+                    ". venv/bin/activate",
+                    "pip install --upgrade pip",
+                    "pip install -r requirements-dev.txt", 
+                    # Node update
+                    "n stable",
+                    "node --version",
+                    # Python
+                    "python -m pytest --junitxml=reports/unittest-report.xml",
+                    "npx cdk synth",
                     "pwd",
                     "ls -lah",
-                    "python generate_amplify_config_cfn.py",
-                    "python update_index_html_with_script_tag_cfn.py",
-                    "cd ./website",
-                    "docker run --rm -v $(pwd):/foo -w /foo public.ecr.aws/sam/build-nodejs14.x bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
-                    "aws s3 sync ./build/ s3://$sourceBucketName/ --delete",
-                    "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'"
+                    "ls $CODEBUILD_SRC_DIR/reports"
                 ],
                 env_from_cfn_outputs={
                     "sourceBucketName": infrastructure.sourceBucketName,
