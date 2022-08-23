@@ -1,9 +1,9 @@
-import http
 from aws_cdk import (
     Stack,
     RemovalPolicy,
     Duration,
     CfnOutput,
+    DockerImage,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
     aws_s3_deployment as s3_deployment,
@@ -84,7 +84,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             architecture=awslambda.Architecture.ARM_64,
             environment={
                 "bucket": models_bucket.bucket_name
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
         )
 
         #permissions for s3 bucket read
@@ -99,7 +102,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64
+            architecture=awslambda.Architecture.ARM_64,
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
         )
         cars_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -123,7 +129,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             architecture=awslambda.Architecture.ARM_64,
             environment={
                 "bucket": models_bucket.bucket_name
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
         )
         upload_model_to_car_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -146,6 +155,9 @@ class CdkDeepRacerEventManagerStack(Stack):
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
             architecture=awslambda.Architecture.ARM_64,
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
         )
         upload_model_to_car_status_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -168,7 +180,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=256,
-            architecture=awslambda.Architecture.ARM_64
+            architecture=awslambda.Architecture.ARM_64,
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
         )
         delete_all_models_from_car_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -190,7 +205,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             runtime=awslambda.Runtime.PYTHON_3_8,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64
+            architecture=awslambda.Architecture.ARM_64,
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
         )
         create_ssm_activation_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -491,7 +509,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             architecture=awslambda.Architecture.ARM_64,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
         )
         get_users_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -518,7 +539,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             architecture=awslambda.Architecture.ARM_64,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
         )
         get_groups_group_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -545,7 +569,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             architecture=awslambda.Architecture.ARM_64,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
         )
         delete_groups_group_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -572,7 +599,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             architecture=awslambda.Architecture.ARM_64,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
         )
         delete_groups_group_user_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -599,7 +629,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             architecture=awslambda.Architecture.ARM_64,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
         )
         get_groups_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -626,7 +659,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             architecture=awslambda.Architecture.ARM_64,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
         )
         put_groups_group_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -653,7 +689,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             architecture=awslambda.Architecture.ARM_64,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
         )
         post_groups_group_user_function.add_to_role_policy(
             iam.PolicyStatement(
