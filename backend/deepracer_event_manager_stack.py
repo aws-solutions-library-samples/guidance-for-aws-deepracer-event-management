@@ -72,6 +72,19 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
 
         ### Lambda
+        helper_funcations_layer = lambda_python.PythonLayerVersion(self, 'helper_functions_v2',
+            entry="backend/lambdas/helper_functions_layer/http_response/",
+            compatible_architectures=[
+                awslambda.Architecture.ARM_64
+            ],
+            compatible_runtimes=[
+                awslambda.Runtime.PYTHON_3_8
+            ],
+            bundling=lambda_python.BundlingOptions(
+                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+            )
+        )
+
         ## Models Function
         models_function = lambda_python.PythonFunction(self, "get_models_function",
             entry="backend/lambdas/get_models_function/",
