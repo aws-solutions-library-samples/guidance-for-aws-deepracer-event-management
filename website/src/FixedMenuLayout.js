@@ -106,13 +106,13 @@ class FixedMenuLayout extends Component {
                 <Image size='mini' src='/logo.png' style={{ marginRight: '1.5em' }} />
                 DREM
               </Menu.Item>
-              <Menu.Item as={Link} name='Upload' to='/upload' ></Menu.Item>
-              <Menu.Item as={Link} name='Models' to='/models'></Menu.Item>
+              <Menu.Item as={Link} to='/upload' icon='upload' name='Upload' />
+              <Menu.Item as={Link} to='/models' icon='folder' name='Models' />
               {menuAdminDropdown}
 
               <Menu.Menu position='right'>
-                <Menu.Item as='a' name={this.props.user}></Menu.Item>
-                <Menu.Item as='a' name='Sign Out' onClick={this.props.signout}></Menu.Item>
+                <Menu.Item as='a' icon='user' name={this.props.user} />
+                <Menu.Item as='a' icon='sign out alternate' name='Sign Out' onClick={this.props.signout} />
               </Menu.Menu>
             </Container>
           </Menu>

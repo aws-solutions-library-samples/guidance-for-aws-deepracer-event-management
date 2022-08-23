@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { API } from 'aws-amplify';
 import { Header, Table, Icon, Button, Input } from 'semantic-ui-react';
 import { useTable, useSortBy, useRowSelect, useFilters } from 'react-table'
-
+import { Auth } from 'aws-amplify';
 
 function DefaultColumnFilter({
   column: { filterValue, preFilteredRows, setFilter },
@@ -16,7 +16,7 @@ function DefaultColumnFilter({
       onChange={e => {
         setFilter(e.target.value || undefined) // Set undefined to remove the filter entirely
       }}
-      placeholder={`Search ${count} records...`}
+      placeholder={`Search ${count} users...`}
     />
   )
 }
@@ -37,7 +37,8 @@ function AdminUsers() {
       const users = userRsponse.map(u =>
         ({
           ...u,
-          isAdmin: false
+          isAdmin: false,
+          currentUser: false,
         })
       )
 
@@ -46,8 +47,15 @@ function AdminUsers() {
       // TODO: check the status code
       const adminResponse = await API.get(apiName, apiAdminPath);
       adminResponse.forEach(admin => {
-        const i = users.findIndex((user => user.Username == admin.Username));
+        const i = users.findIndex((user => user.Username === admin.Username));
         users[i].isAdmin = true;
+      });
+
+      // Need to get the current user and flag them in the data
+      // (Current user can't remove themselves from a group they are members of)
+      Auth.currentAuthenticatedUser().then(loggedInUser => {
+        const i = users.findIndex((user => user.Username === loggedInUser.username));
+        users[i].currentUser = true;
       });
 
       setData(users);
@@ -78,6 +86,9 @@ function AdminUsers() {
       };
       groupUserResponse = await API.post(apiName, apiGroupUserPath, params)
     }
+    // TODO: Check the status code.
+    console.log(groupUserResponse)
+
     // need to reload the user data
     setRefreshKey(oldKey => oldKey +1)
   }
@@ -87,29 +98,37 @@ function AdminUsers() {
       {
         Header: 'User',
         accessor: (row) => {
-          return row.Username
+          if (row.currentUser) {
+            return row.Username + ' (You)'
+          } else {
+            return row.Username
+          }
         }
       },
       {
         Header: 'Admin',
         disableFilters: true,
         accessor: (row) => {
-          if (row.isAdmin) {
+          if (row.currentUser) {
             return (
-              <Button positive circular icon='check circle' id='{row.Username}' onClick={(c) => { ToggleUserGroup(row) }}/>
+              <Icon color='blue' size='big' name='user circle' id='{row.Username}' />
             )
           } else {
-            return (
-              <Button negative circular icon='delete' id='{row.Username}' onClick={(c) => { ToggleUserGroup(row) }}/>
-            )
+            if (row.isAdmin) {
+              return (
+                <Button circular color='green' size='large' icon='check' id='{row.Username}' onClick={(c) => { ToggleUserGroup(row) }} />
+              )
+            } else {
+              return (
+                <Button circular color='red' size='large' icon='delete' id='{row.Username}' onClick={(c) => { ToggleUserGroup(row) }} />
+              )
+            }
           }
         }
       }
     ],
     []
   )
-
-  // Cell: ({ e }) => (<a href="#" className="btn btn-info" onClick={(c) => { debugger; console.log(e.cn); console.log(e); console.log(c) }}> Users </a>)
 
   const defaultColumn = React.useMemo(
     () => ({
@@ -147,8 +166,8 @@ function AdminUsers() {
             <Table.Row {...headerGroup.getHeaderGroupProps()}>
               {headerGroup.headers.map(column => (
                 <Table.HeaderCell {...column.getHeaderProps(column.getSortByToggleProps())}>
-                  {column.render('Header')}
-                  <span>
+                  <div>
+                    {column.render('Header')}
                     {column.canSort
                       ? column.isSorted
                         ? column.isSortedDesc
@@ -156,8 +175,8 @@ function AdminUsers() {
                           : <Icon name='sort up' />
                         : <Icon disabled name='sort' />
                       : ''}
-                  </span>
-                  <div>{column.canFilter ? column.render('Filter') : null}</div>
+                    {column.canFilter ? column.render('Filter') : null}
+                  </div>
                 </Table.HeaderCell>
               ))}
             </Table.Row>
