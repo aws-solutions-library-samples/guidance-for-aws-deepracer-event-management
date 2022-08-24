@@ -72,18 +72,27 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
 
         ### Lambda
+        ## Common Config
+        lambda_architecture = awslambda.Architecture.ARM_64
+        lambda_runtime = awslambda.Runtime.PYTHON_3_8
+        lambda_bundling_image = DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+
+        ## Layers
+
         helper_funcations_layer = lambda_python.PythonLayerVersion(self, 'helper_functions_v2',
             entry="backend/lambdas/helper_functions_layer/http_response/",
             compatible_architectures=[
-                awslambda.Architecture.ARM_64
+                lambda_architecture
             ],
             compatible_runtimes=[
-                awslambda.Runtime.PYTHON_3_8
+                lambda_runtime
             ],
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
+
+        ## Functions
 
         ## Models Function
         models_function = lambda_python.PythonFunction(self, "get_models_function",
@@ -91,15 +100,15 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "bucket": models_bucket.bucket_name
             },
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
 
@@ -112,12 +121,12 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
         cars_function.add_to_role_policy(
@@ -136,15 +145,15 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "bucket": models_bucket.bucket_name
             },
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
         upload_model_to_car_function.add_to_role_policy(
@@ -164,12 +173,12 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
         upload_model_to_car_status_function.add_to_role_policy(
@@ -190,12 +199,12 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=256,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
         delete_all_models_from_car_function.add_to_role_policy(
@@ -215,12 +224,12 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
         create_ssm_activation_function.add_to_role_policy(
@@ -516,15 +525,15 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
             },
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
         get_users_function.add_to_role_policy(
@@ -546,15 +555,15 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
             },
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
         get_groups_group_function.add_to_role_policy(
@@ -576,15 +585,15 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
             },
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
         delete_groups_group_function.add_to_role_policy(
@@ -606,15 +615,15 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
             },
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
         delete_groups_group_user_function.add_to_role_policy(
@@ -636,15 +645,15 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
             },
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
         get_groups_function.add_to_role_policy(
@@ -666,15 +675,15 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
             },
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
         put_groups_group_function.add_to_role_policy(
@@ -696,15 +705,15 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
             },
             bundling=lambda_python.BundlingOptions(
-                image=DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+                image=lambda_bundling_image
             )
         )
         post_groups_group_user_function.add_to_role_policy(
