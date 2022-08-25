@@ -86,9 +86,6 @@ function AdminUsers() {
       };
       groupUserResponse = await API.post(apiName, apiGroupUserPath, params)
     }
-    // TODO: Check the status code.
-    console.log(groupUserResponse)
-
     // need to reload the user data
     setRefreshKey(oldKey => oldKey +1)
   }
@@ -111,7 +108,7 @@ function AdminUsers() {
         accessor: (row) => {
           if (row.currentUser) {
             return (
-              <Icon color='blue' size='big' name='user circle' id='{row.Username}' />
+              <Button circular color='blue' size='large' icon='dont' id='{row.Username}' disabled='true' />
             )
           } else {
             if (row.isAdmin) {
