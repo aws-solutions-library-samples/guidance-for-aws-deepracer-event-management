@@ -15,12 +15,18 @@ from constructs import Construct
 
 from backend.deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
 
+
+# Constants
+NODE_VERSION = "16.17.0"  # other possible options: stable, latest, lts
+CDK_VERSION = "2.34.2"    # other possible options: latest
+
+
 class InfrastructurePipelineStage(Stage):
     def __init__(self, scope: Construct, construct_id: str, env: Environment, branchname: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         stack = CdkDeepRacerEventManagerStack(self, "infrastructure", env=env)
-        
+
         self.sourceBucketName = stack.sourceBucketName
         self.distributionId = stack.distributionId
         self.stackRegion = stack.stackRegion
@@ -41,6 +47,9 @@ class CdkServerlessCharityPipelineStack(Stack):
         pipeline = pipelines.CodePipeline(self, "Pipeline",
             docker_enabled_for_synth=True,
             synth=pipelines.CodeBuildStep("SynthAndDeployBackend",
+                build_environment=codebuild.BuildEnvironment(
+                    build_image=codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0
+                ),
                 input=pipelines.CodePipelineSource.s3(
                     bucket=s3_repo_bucket,
                     object_key=branchname + "/drem.zip",
@@ -50,14 +59,13 @@ class CdkServerlessCharityPipelineStack(Stack):
                     "python -m venv venv",
                     ". venv/bin/activate",
                     "pip install --upgrade pip",
-                    "pip install -r requirements-dev.txt", 
-                    # "npm ci", 
-                    # "npm run build", 
-                    "python -m pytest --junitxml=reports/unittest-report.xml",
-                    "npx cdk synth",
-                    "pwd",
-                    "ls -lah",
-                    "ls $CODEBUILD_SRC_DIR/reports"
+                    "pip install -r requirements-dev.txt",
+                    # Node update
+                    f"n {NODE_VERSION}",
+                    "node --version",
+                    # Python unit tests
+                    "python -m pytest",
+                    f"npx cdk@{CDK_VERSION} synth",
                 ],
                 partial_build_spec=codebuild.BuildSpec.from_object({
                         "reports": {
@@ -67,7 +75,7 @@ class CdkServerlessCharityPipelineStack(Stack):
                                 ],
                                 "base-directory": "reports",
                                 "file-format": "JUNITXML"
-        
+
                             }
                         }
                 }),
@@ -141,5 +149,3 @@ class CdkServerlessCharityPipelineStack(Stack):
                 ]
             )
         )
-
-        

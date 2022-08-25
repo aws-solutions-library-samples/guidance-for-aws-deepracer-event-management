@@ -22,3 +22,5 @@ node_modules
 .coverage
 
 branch.txt
+reports
+htmlcov

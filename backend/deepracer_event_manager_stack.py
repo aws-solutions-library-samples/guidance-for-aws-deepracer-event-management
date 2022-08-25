@@ -1,9 +1,9 @@
-import http
 from aws_cdk import (
     Stack,
     RemovalPolicy,
     Duration,
     CfnOutput,
+    DockerImage,
     aws_s3 as s3,
     aws_s3_notifications as s3_notifications,
     aws_s3_deployment as s3_deployment,
@@ -47,7 +47,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             lifecycle_rules=[
                 s3.LifecycleRule(
                     expiration=Duration.days(15),
-                    tag_filters={ 
+                    tag_filters={
                         'lifecycle': 'true'
                     }
                 ),
@@ -63,7 +63,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             buckets=bucketList,
         )
         infected_topic = sns.Topic(self, "rInfectedTopic")
-        if sc.infected_rule != None:
+        if sc.infected_rule is not None:
             sc.infected_rule.add_target(
                 events_targets.SnsTopic(
                     infected_topic,
@@ -72,19 +72,45 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
 
         ### Lambda
+        ## Common Config
+        lambda_architecture = awslambda.Architecture.ARM_64
+        lambda_runtime = awslambda.Runtime.PYTHON_3_8
+        lambda_bundling_image = DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+
+        ## Layers
+
+        helper_funcations_layer = lambda_python.PythonLayerVersion(self, 'helper_functions_v2',
+            entry="backend/lambdas/helper_functions_layer/http_response/",
+            compatible_architectures=[
+                lambda_architecture
+            ],
+            compatible_runtimes=[
+                lambda_runtime
+            ],
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            )
+        )
+
+        ## Functions
+
         ## Models Function
         models_function = lambda_python.PythonFunction(self, "get_models_function",
             entry="backend/lambdas/get_models_function/",
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "bucket": models_bucket.bucket_name
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_funcations_layer]
         )
 
         #permissions for s3 bucket read
@@ -96,10 +122,14 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64
+            architecture=lambda_architecture,
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_funcations_layer]
         )
         cars_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -117,13 +147,17 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "bucket": models_bucket.bucket_name
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_funcations_layer]
         )
         upload_model_to_car_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -142,10 +176,14 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_funcations_layer]
         )
         upload_model_to_car_status_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -165,10 +203,14 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=256,
-            architecture=awslambda.Architecture.ARM_64
+            architecture=lambda_architecture,
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_funcations_layer]
         )
         delete_all_models_from_car_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -187,10 +229,14 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64
+            architecture=lambda_architecture,
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_funcations_layer]
         )
         create_ssm_activation_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -485,13 +531,17 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_funcations_layer]
         )
         get_users_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -512,13 +562,17 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_funcations_layer]
         )
         get_groups_group_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -539,13 +593,17 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_funcations_layer]
         )
         delete_groups_group_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -566,13 +624,17 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_funcations_layer]
         )
         delete_groups_group_user_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -593,13 +655,17 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_funcations_layer]
         )
         get_groups_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -620,13 +686,17 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_funcations_layer]
         )
         put_groups_group_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -647,13 +717,17 @@ class CdkDeepRacerEventManagerStack(Stack):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=awslambda.Runtime.PYTHON_3_8,
+            runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=awslambda.Architecture.ARM_64,
+            architecture=lambda_architecture,
             environment={
                 "user_pool_id": user_pool.user_pool_id
-            }
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_funcations_layer]
         )
         post_groups_group_user_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -677,7 +751,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             user_pool=user_pool,
             group_name=user_pool_group.ref
         )
-        
+
         ## API Gateway
         api = apig.RestApi(self, 'apiGateway',
             rest_api_name=stack.stack_name,
