@@ -1,4 +1,3 @@
-from os import name
 from aws_cdk import (
     Stack,
     Stage,
@@ -18,7 +17,7 @@ from backend.deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
 
 # Constants
 NODE_VERSION = "16.17.0"  # other possible options: stable, latest, lts
-CDK_VERSION = "2.34.2"    # other possible options: latest
+CDK_VERSION = "2.38.1"    # other possible options: latest
 
 
 class InfrastructurePipelineStage(Stage):
@@ -94,8 +93,10 @@ class CdkServerlessCharityPipelineStack(Stack):
         )
 
         ## Dev Stage
-        # Region
-        env=stack
+        env={
+            'account': stack.account,
+            'region': stack.region
+        }
 
         infrastructure = InfrastructurePipelineStage(self, "drem-backend-" + branchname, env, branchname)
         infrastructure_stage = pipeline.add_stage(infrastructure)

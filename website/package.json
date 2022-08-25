@@ -2,7 +2,10 @@
   "name": "drem",
   "description": "DeepRacer Event Manager",
   "contributors": [
-    "David Smith <dasmthc@amazon.com "
+    "David Smith <dasmthc@amazon.com>",
+    "Steven Askwith <askwith@amazon.com>",
+    "Chris Scudder <csj@amazon.com>",
+    "Johan Esbjorner <esbjj@amazon.com>"
   ],
   "version": "0.1.0",
   "private": true,
