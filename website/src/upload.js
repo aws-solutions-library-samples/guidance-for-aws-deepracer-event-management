@@ -76,6 +76,20 @@ class Upload extends Component {
     }
 
     render() {
+      let buttonStateEnabled = <div>
+          <Button
+            content="Choose File"
+            labelPosition="left"
+            icon="file"
+            onClick={() => this.fileInputRef.current.click()}
+          />
+          <input
+            ref={this.fileInputRef}
+            type="file" accept='application/gzip,application/tar'
+            hidden
+            onChange={(e) => this.onChange(e)}
+          />
+        </div>;
       let buttonstate;
       let progressbar;
       if (100 > this.state.percent && this.state.percent > 0 ) {
@@ -88,27 +102,14 @@ class Upload extends Component {
             </Message.Content>
           </Message>;
         progressbar = <Progress percent={this.state.percent} indicating progress='percent'/>;
+        this.setState({result: ''});
       }
       else if (100 === this.state.percent){
-        buttonstate = null;
+        buttonstate = buttonStateEnabled;
         progressbar = null;
       }
       else {
-        buttonstate =
-          <div>
-            <Button
-              content="Choose File"
-              labelPosition="left"
-              icon="file"
-              onClick={() => this.fileInputRef.current.click()}
-            />
-            <input
-              ref={this.fileInputRef}
-              type="file" accept='application/gzip,application/tar'
-              hidden
-              onChange={(e) => this.onChange(e)}
-            />
-          </div>
+        buttonstate = buttonStateEnabled;
         progressbar = <Progress percent={this.state.percent} indicating progress='percent'/>;
       }
 
