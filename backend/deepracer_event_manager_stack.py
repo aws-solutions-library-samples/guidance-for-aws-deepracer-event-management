@@ -79,7 +79,7 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         ## Layers
 
-        helper_funcations_layer = lambda_python.PythonLayerVersion(self, 'helper_functions_v2',
+        helper_funcations_layer = lambda_python.PythonLayerVersion(self, 'helper_functions',
             entry="backend/lambdas/helper_functions_layer/http_response/",
             compatible_architectures=[
                 lambda_architecture
