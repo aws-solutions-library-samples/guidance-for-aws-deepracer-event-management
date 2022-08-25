@@ -27,7 +27,7 @@ def lambda_handler(event, context):
         # TODO: Deal with the exceptions correctly
         # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cognito-idp.html#CognitoIdentityProvider.Client.admin_remove_user_from_group
 
-        http_response.repsone(204, "")
+        http_response.response(204, "")
 
     except Exception as error:
         logger.error(error)
