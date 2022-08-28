@@ -31,7 +31,7 @@ infra.deploy:
 
 infra.synth:
 	echo "{}" > website/src/config.json
-	branch=`cat branch.txt` && cdk synth drem-backend-$$branch-infrastructure --require-approval never --context manual_deploy=True 
+	branch=`cat branch.txt` && cdk synth drem-backend-$$branch-infrastructure --require-approval never --context manual_deploy=True
 
 manual.clean:		## Tear down the stack, only do this if you're really sure
 	cdk destroy  --context manual_deploy=True
@@ -51,6 +51,6 @@ local.run:		## Run the frontend application locally for development
 local.clean:		## Renmove everything
 	pip freeze | grep -v "^-e" | xargs pip uninstall -y
 	pip uninstall deepracer_event_manager -y
-	rm -rf node_modules
+	rm -rf website/node_modules
 
 .NOTPARALLEL:

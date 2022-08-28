@@ -78,8 +78,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         lambda_bundling_image = DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
 
         ## Layers
-
-        helper_funcations_layer = lambda_python.PythonLayerVersion(self, 'helper_functions',
+        helper_functions_layer = lambda_python.PythonLayerVersion(self, 'helper_functions_v2',
             entry="backend/lambdas/helper_functions_layer/http_response/",
             compatible_architectures=[
                 lambda_architecture
@@ -90,6 +89,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             )
+        )
+
+        powertools_layer = lambda_python.PythonLayerVersion.from_layer_version_arn(self, 'lambda_powertools',
+            layer_version_arn='arn:aws:lambda:{}:017000801446:layer:AWSLambdaPowertoolsPython:33'.format(stack.region)
         )
 
         ## Functions
@@ -110,7 +113,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
-            layers=[helper_funcations_layer]
+            layers=[helper_functions_layer, powertools_layer]
         )
 
         #permissions for s3 bucket read
@@ -129,7 +132,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
-            layers=[helper_funcations_layer]
+            layers=[helper_functions_layer, powertools_layer]
         )
         cars_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -157,7 +160,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
-            layers=[helper_funcations_layer]
+            layers=[helper_functions_layer, powertools_layer]
         )
         upload_model_to_car_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -183,7 +186,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
-            layers=[helper_funcations_layer]
+            layers=[helper_functions_layer, powertools_layer]
         )
         upload_model_to_car_status_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -210,7 +213,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
-            layers=[helper_funcations_layer]
+            layers=[helper_functions_layer, powertools_layer]
         )
         delete_all_models_from_car_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -236,7 +239,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
-            layers=[helper_funcations_layer]
+            layers=[helper_functions_layer, powertools_layer]
         )
         create_ssm_activation_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -272,6 +275,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         distribution = cloudfront.CloudFrontWebDistribution(self, "Distribution",
+            http_version=cloudfront.HttpVersion("HTTP2"),
             origin_configs=[{
                 "behaviors": [{
                     "isDefaultBehavior": True
@@ -541,7 +545,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
-            layers=[helper_funcations_layer]
+            layers=[helper_functions_layer, powertools_layer]
         )
         get_users_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -555,7 +559,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
         )
 
-        ## Get group details Function
+        ## GET groups users Function
         get_groups_group_function = lambda_python.PythonFunction(self, "get_groups_group_function",
             entry="backend/lambdas/get_groups_group_function/",
             description="Get the group details from cognito",
@@ -572,7 +576,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
-            layers=[helper_funcations_layer]
+            layers=[helper_functions_layer, powertools_layer]
         )
         get_groups_group_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -586,10 +590,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
         )
 
-        ## Delete groups group Function
-        delete_groups_group_function = lambda_python.PythonFunction(self, "delete_groups_group_function",
-            entry="backend/lambdas/delete_groups_group_function/",
-            description="Delete a group from cognito",
+        ## Post groups group user Function
+        post_groups_group_user_function = lambda_python.PythonFunction(self, "post_groups_group_user_function",
+            entry="backend/lambdas/post_groups_group_user_function/",
+            description="Add a user to a group in cognito",
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
@@ -603,13 +607,13 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
-            layers=[helper_funcations_layer]
+            layers=[helper_functions_layer, powertools_layer]
         )
-        delete_groups_group_function.add_to_role_policy(
+        post_groups_group_user_function.add_to_role_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
                 actions=[
-                    "cognito-idp:DeleteGroup",
+                    "cognito-idp:AdminAddUserToGroup",
                 ],
                 resources=[
                     user_pool.user_pool_arn
@@ -634,7 +638,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
-            layers=[helper_funcations_layer]
+            layers=[helper_functions_layer, powertools_layer]
         )
         delete_groups_group_user_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -665,7 +669,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
-            layers=[helper_funcations_layer]
+            layers=[helper_functions_layer, powertools_layer]
         )
         get_groups_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -696,7 +700,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
-            layers=[helper_funcations_layer]
+            layers=[helper_functions_layer, powertools_layer]
         )
         put_groups_group_function.add_to_role_policy(
             iam.PolicyStatement(
@@ -710,10 +714,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
         )
 
-        ## Post groups group user Function
-        post_groups_group_user_function = lambda_python.PythonFunction(self, "post_groups_group_user_function",
-            entry="backend/lambdas/post_groups_group_user_function/",
-            description="Add a user to a group in cognito",
+        ## Delete groups group Function
+        delete_groups_group_function = lambda_python.PythonFunction(self, "delete_groups_group_function",
+            entry="backend/lambdas/delete_groups_group_function/",
+            description="Delete a group from cognito",
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
@@ -727,13 +731,13 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
-            layers=[helper_funcations_layer]
+            layers=[helper_functions_layer, powertools_layer]
         )
-        post_groups_group_user_function.add_to_role_policy(
+        delete_groups_group_function.add_to_role_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
                 actions=[
-                    "cognito-idp:AdminAddUserToGroup",
+                    "cognito-idp:DeleteGroup",
                 ],
                 resources=[
                     user_pool.user_pool_arn
@@ -901,6 +905,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         cw_rum_app_monitor = CwRumAppMonitor(self, 'CwRumAppMonitor',
             domain_name=distribution.distribution_domain_name
         )
+        ## End RUM
 
         ## Deploy Default Models
         models_deployment = s3_deployment.BucketDeployment(self, 'ModelsDeploy',
@@ -913,8 +918,6 @@ class CdkDeepRacerEventManagerStack(Stack):
             destination_key_prefix='private/{}:00000000-0000-0000-0000-000000000000/default/models/'.format(stack.region),
             retain_on_delete=False,
         )
-
-        ## End RUM
 
         ## Outputs
         CfnOutput(

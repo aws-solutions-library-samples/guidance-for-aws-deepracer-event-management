@@ -1,20 +1,20 @@
-import logging
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.typing import LambdaContext
 import boto3
 import os
+import simplejson as json
 import http_response
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
+logger = Logger()
 client_cognito = boto3.client('cognito-idp')
 user_pool_id = os.environ["user_pool_id"]
 
 
-def lambda_handler(event, context):
+@logger.inject_lambda_context
+def lambda_handler(event: dict, context: LambdaContext) -> str:
     try:
         # TODO: Probably need to change this to a paging request so the frontend
         #       can send a request for the next page
-        # TODO: Check the response back and handle appropriately
 
         paginator = client_cognito.get_paginator('list_users')
         response_iterator = paginator.paginate(
@@ -36,7 +36,7 @@ def lambda_handler(event, context):
         #     UserPoolId=user_pool_id,
         #     Limit=10
         # )
-        # logger.info(response)
+        # logger.info(json.dumps(response))
 
         return http_response.response(200, all_users)
 

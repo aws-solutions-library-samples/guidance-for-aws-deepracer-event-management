@@ -1,15 +1,16 @@
-import logging
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.typing import LambdaContext
 import simplejson as json
 import boto3
 import http_response
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
+logger = Logger()
 client_ssm = boto3.client('ssm')
 
 
-def lambda_handler(event, context):
+@logger.inject_lambda_context
+def lambda_handler(event: dict, context: LambdaContext) -> str:
+
     try:
         logger.info(json.dumps(event))
 

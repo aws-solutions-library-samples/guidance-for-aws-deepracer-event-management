@@ -19,6 +19,8 @@ import { Models } from './models.js';
 import { AdminModels } from './admin/models.js';
 import { AdminCars } from './admin/cars.js';
 import { AdminUsers } from './admin/users.js';
+import { AdminGroups } from './admin/groups.js';
+import { AdminGroupsDetail } from './admin/groups/detail.js';
 import { AdminActivation } from './admin/generate_activation.js';
 import { Upload } from './upload.js';
 
@@ -38,15 +40,19 @@ function usePageViews() {
 
 function MenuRoutes() {
   usePageViews();
-  return <Routes>
-    <Route path="/models" element={<Models />} />
-    <Route path="/upload" element={<Upload />} />
-    <Route path="/admin/models" element={<AdminModels />} />
-    <Route path="/admin/cars" element={<AdminCars />} />
-    <Route path="/admin/users" element={<AdminUsers />} />
-    <Route path="/admin/generate_activation" element={<AdminActivation />} />
-    <Route exact path="/" element={<Home />} />
-  </Routes>;
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="models" element={<Models />} />
+      <Route path="upload" element={<Upload />} />
+      <Route path="admin/models" element={<AdminModels />} />
+      <Route path="admin/cars" element={<AdminCars />} />
+      <Route path="admin/users" element={<AdminUsers />} />
+      <Route path="admin/groups" element={<AdminGroups />} />
+      <Route path="admin/groups/:groupName" element={<AdminGroupsDetail />} />
+      <Route path="admin/generate_activation" element={<AdminActivation />} />
+    </Routes>
+  );
 }
 
 class FixedMenuLayout extends Component {
@@ -87,11 +93,12 @@ class FixedMenuLayout extends Component {
       var menuAdminDropdown = <React.Fragment>
         <Dropdown item simple text='Admin'>
           <Dropdown.Menu>
-            <Dropdown.Item as={Link} to='/admin/models'>Models</Dropdown.Item>
-            <Dropdown.Item as={Link} to='/admin/cars'>Cars</Dropdown.Item>
-            <Dropdown.Item as={Link} to='/admin/generate_activation'>Generate Activation</Dropdown.Item>
+            <Dropdown.Item as={Link} to='/admin/models' icon='folder' text='All Models' />
+            <Dropdown.Item as={Link} to='/admin/cars' icon='car' text='Cars' />
+            <Dropdown.Item as={Link} to='/admin/generate_activation' icon='plus' text='Generate Activation' />
             <Dropdown.Divider />
-            <Dropdown.Item as={Link} to='/admin/users'>Users</Dropdown.Item>
+            {/* <Dropdown.Item as={Link} to='/admin/users' icon='user' text='Users' /> */}
+            <Dropdown.Item as={Link} to='/admin/groups' icon='users' text='Groups' />
           </Dropdown.Menu>
         </Dropdown>
       </React.Fragment>
