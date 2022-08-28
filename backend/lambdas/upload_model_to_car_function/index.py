@@ -1,20 +1,20 @@
-import logging
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.typing import LambdaContext
 import simplejson as json
 import boto3
 import os
 from botocore.exceptions import ClientError
 import http_response
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
+logger = Logger()
 client_ssm = boto3.client('ssm')
 bucket = os.environ["bucket"]
 
 
-def lambda_handler(event, context):
+@logger.inject_lambda_context
+def lambda_handler(event: dict, context: LambdaContext) -> str:
     try:
-        logger.info(json.dumps(event))
+        logger.info(event)
 
         body_parameters = json.loads(event['body'])
         instance_id = body_parameters['InstanceId']
@@ -42,10 +42,10 @@ def lambda_handler(event, context):
                 ExpiresIn=300
             )
         except ClientError as e:
-            logging.error(e)
+            logger.error(e)
             status_code = 500
 
-        logger.info(json.dumps(presigned_url))
+        logger.info(presigned_url)
 
         extract_command = "zxvf"
         if (key.endswith('.tar')):
@@ -66,11 +66,6 @@ def lambda_handler(event, context):
         )
         command_id = response['Command']['CommandId']
         logger.info(command_id)
-        #output = client_ssm.get_command_invocation(
-        #    CommandId=command_id,
-        #    InstanceId=instance_id,
-        #)
-        #logger.info(output)
 
         return http_response.response(status_code, command_id)
 

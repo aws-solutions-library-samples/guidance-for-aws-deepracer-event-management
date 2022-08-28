@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from "react-router-dom";
 import { API } from 'aws-amplify';
-import { Header, Table, Icon, Button, Input } from 'semantic-ui-react';
+import { Header, Table, Icon, Button, Input, Breadcrumb } from 'semantic-ui-react';
 import { useTable, useSortBy, useRowSelect, useFilters } from 'react-table'
 import { Auth } from 'aws-amplify';
+import { useParams } from 'react-router-dom'
 
 function DefaultColumnFilter({
   column: { filterValue, preFilteredRows, setFilter },
@@ -21,10 +23,14 @@ function DefaultColumnFilter({
   )
 }
 
-function AdminUsers() {
+function AdminGroupsDetail() {
+  const { groupName } = useParams();
+
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+
+
 
   const apiName = 'deepracerEventManager';
 
@@ -36,17 +42,16 @@ function AdminUsers() {
       const users = userRsponse.map(u =>
         ({
           ...u,
-          isAdmin: false,
+          isMember: false,
           currentUser: false,
         })
       )
 
-      const apiAdminPath = 'admin/groups/admin';
-
-      const adminResponse = await API.get(apiName, apiAdminPath);
-      adminResponse.forEach(admin => {
-        const i = users.findIndex((user => user.Username === admin.Username));
-        users[i].isAdmin = true;
+      const apiGroupPath = 'admin/groups/' + groupName;
+      const groupResponse = await API.get(apiName, apiGroupPath);
+      groupResponse.forEach(group => {
+        const i = users.findIndex((user => user.Username === group.Username));
+        users[i].isMember = true;
       });
 
       // Need to get the current user and flag them in the data
@@ -61,7 +66,6 @@ function AdminUsers() {
     }
 
     getUsers();
-
     return() => {
       // Unmounting
     }
@@ -72,11 +76,11 @@ function AdminUsers() {
     const apiName = 'deepracerEventManager';
     let groupUserResponse = '';
 
-    if (user.isAdmin) {
-      const apiGroupUserPath = 'admin/groups/admin/' + user.Username;
+    if (user.isMember) {
+      const apiGroupUserPath = 'admin/groups/' + groupName + '/' + user.Username;
       groupUserResponse = await API.del(apiName, apiGroupUserPath)
     } else {
-      const apiGroupUserPath = 'admin/groups/admin';
+      const apiGroupUserPath = 'admin/groups/' + groupName;
       const params = {
         body: {
           username: user.Username
@@ -84,6 +88,7 @@ function AdminUsers() {
       };
       groupUserResponse = await API.post(apiName, apiGroupUserPath, params)
     }
+
     // need to reload the user data
     setRefreshKey(oldKey => oldKey +1)
   }
@@ -109,7 +114,7 @@ function AdminUsers() {
               <Button circular color='blue' size='large' icon='dont' id='{row.Username}' disabled='true' />
             )
           } else {
-            if (row.isAdmin) {
+            if (row.isMember) {
               return (
                 <Button circular color='green' size='large' icon='check' id='{row.Username}' onClick={(c) => { ToggleUserGroup(row) }} />
               )
@@ -151,7 +156,14 @@ function AdminUsers() {
 
   return (
     <>
-      <Header as='h1' icon textAlign='center'>Users</Header>
+      <Breadcrumb>
+        <Breadcrumb.Section>Admin</Breadcrumb.Section>
+        <Breadcrumb.Divider />
+        <Breadcrumb.Section link><Link to='/admin/groups/'>Groups</Link></Breadcrumb.Section>
+        <Breadcrumb.Divider />
+        <Breadcrumb.Section active>{groupName}</Breadcrumb.Section>
+      </Breadcrumb>
+      <Header as='h1' icon textAlign='center'>Group "{groupName}" Admin</Header>
       {isLoading ? (
         <div>Loading data...</div>
       ) : (
@@ -195,4 +207,4 @@ function AdminUsers() {
   )
 }
 
-export {AdminUsers}
+export {AdminGroupsDetail}

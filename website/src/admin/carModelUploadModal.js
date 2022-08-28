@@ -42,7 +42,7 @@ class CarModelUploadModal extends Component {
 
     //console.log('Models in array: ' + models.length)
     if (this.state.uploadStatus !== "InProgress"){
-      this.setState({ 
+      this.setState({
         uploadStatus: "InProgress",
       });
       //console.log(this.state.uploadStatus + " !== InProgress")
@@ -54,19 +54,19 @@ class CarModelUploadModal extends Component {
       else {
         clearInterval(this.interval); // stop poll
         this.setState({ dimmerActive: false });
-      }      
+      }
     } else {
       this.uploadModelToCarStatus(this.state.CurrentInstanceId, this.state.CommandId, this.state.CurrentModel);
     }
   }
 
-  uploadModelToCar= async (car, model) => { 
+  uploadModelToCar= async (car, model) => {
     //console.log(car.InstanceId)
     //console.log(model.Key)
 
     const apiName = 'deepracerEventManager';
     const apiPath = 'cars/upload';
-    const myInit = { 
+    const myInit = {
       body: {
         InstanceId: car.InstanceId,
         key: model.Key
@@ -75,23 +75,23 @@ class CarModelUploadModal extends Component {
 
     let response = await API.post(apiName, apiPath, myInit);
     //console.log(response)
-    this.setState({ 
+    this.setState({
       result: response,
       CommandId: response,
       CurrentInstanceId: car.InstanceId,
       CurrentModel: model,
       uploadStatus: "InProgress",
-      dimmerActive: true, 
+      dimmerActive: true,
     });
   }
 
-  uploadModelToCarStatus= async (InstanceId, CommandId, model) => { 
+  uploadModelToCarStatus= async (InstanceId, CommandId, model) => {
     //console.log(InstanceId)
     //console.log(CommandId)
 
     const apiName = 'deepracerEventManager';
     const apiPath = 'cars/upload/status';
-    const myInit = { 
+    const myInit = {
       body: {
         InstanceId: InstanceId,
         CommandId: CommandId
@@ -126,7 +126,7 @@ class CarModelUploadModal extends Component {
       tempResultsArray.push(resultToAdd)
     };
 
-    this.setState({ 
+    this.setState({
       result: response,
       uploadStatus: response,
       results: tempResultsArray
@@ -167,13 +167,14 @@ class CarModelUploadModal extends Component {
         return <Table key={i}>
           <Table.Body>
             <Table.Row key={i} >
-              <Table.Cell textAlign='left'><Header as='h3'>{car.ComputerName} - {car.IPAddress}</Header></Table.Cell>
-              <Table.Cell textAlign='right'><Button content="Upload" labelPosition='right' icon='upload' onClick={() => {
-                this.setState({ 
+              <Table.Cell><Header as='h3'>{car.InstanceId}</Header></Table.Cell>
+              <Table.Cell><Header as='h3'>{car.Name} - {car.IPAddress}</Header></Table.Cell>
+              <Table.Cell><Button content="Upload" labelPosition='right' icon='upload' onClick={() => {
+                this.setState({
                   result: <p>Submitting Job...</p>,
                   open: false,
                   resultOpen: true,
-                  results: [], 
+                  results: [],
                 });
                 this.startModelUploadsToCar(car, this.props.models);
                 }} positive /></Table.Cell>
@@ -197,13 +198,13 @@ class CarModelUploadModal extends Component {
 
     var resultModalContent = ""
     if (this.state.dimmerActive) {
-      resultModalContent = 
+      resultModalContent =
         <Container>
           {resultRows}
           <Dimmer active inverted>
             <Loader size='large'>{this.state.result}</Loader>
           </Dimmer>
-        </Container>    
+        </Container>
     }
     else{
       resultModalContent = <Container>
@@ -236,7 +237,7 @@ class CarModelUploadModal extends Component {
           </Modal.Content>
           <Modal.Actions>
             <Button color='red' onClick={() => {
-              this.setState({ open: false }); 
+              this.setState({ open: false });
               this.setState({ result: "" });
             }}>Close</Button>
           </Modal.Actions>
@@ -253,7 +254,7 @@ class CarModelUploadModal extends Component {
         </Modal.Content>
         <Modal.Actions>
           <Button color='red' onClick={() => {
-            this.setState({ resultOpen: false }); 
+            this.setState({ resultOpen: false });
             this.setState({ result: "" });
             clearInterval(this.interval); // stop poll
           }}>Close</Button>
