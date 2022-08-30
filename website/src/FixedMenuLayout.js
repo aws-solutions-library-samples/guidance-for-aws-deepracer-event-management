@@ -17,6 +17,7 @@ import { Auth } from 'aws-amplify';
 import { Home } from './home.js';
 import { Models } from './models.js';
 import { AdminModels } from './admin/models.js';
+import { AdminQuarantine } from './admin/quarantine.js';
 import { AdminCars } from './admin/cars.js';
 import { AdminUsers } from './admin/users.js';
 import { AdminGroups } from './admin/groups.js';
@@ -46,6 +47,7 @@ function MenuRoutes() {
       <Route path="models" element={<Models />} />
       <Route path="upload" element={<Upload />} />
       <Route path="admin/models" element={<AdminModels />} />
+      <Route path="/admin/quarantine" element={<AdminQuarantine />} />
       <Route path="admin/cars" element={<AdminCars />} />
       <Route path="admin/users" element={<AdminUsers />} />
       <Route path="admin/groups" element={<AdminGroups />} />
@@ -94,6 +96,7 @@ class FixedMenuLayout extends Component {
         <Dropdown item simple text='Admin'>
           <Dropdown.Menu>
             <Dropdown.Item as={Link} to='/admin/models' icon='folder' text='All Models' />
+            <Dropdown.Item as={Link} to='/admin/quarantine' icon='bug' text='Quarantined Models' />
             <Dropdown.Item as={Link} to='/admin/cars' icon='car' text='Cars' />
             <Dropdown.Item as={Link} to='/admin/generate_activation' icon='plus' text='Generate Activation' />
             <Dropdown.Divider />

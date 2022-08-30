@@ -31,7 +31,6 @@ function AdminGroupsDetail() {
   const [refreshKey, setRefreshKey] = useState(0);
 
 
-
   const apiName = 'deepracerEventManager';
 
   useEffect(() => {
@@ -74,11 +73,10 @@ function AdminGroupsDetail() {
 
   const ToggleUserGroup = async(user) => {
     const apiName = 'deepracerEventManager';
-    let groupUserResponse = '';
 
     if (user.isMember) {
       const apiGroupUserPath = 'admin/groups/' + groupName + '/' + user.Username;
-      groupUserResponse = await API.del(apiName, apiGroupUserPath)
+      await API.del(apiName, apiGroupUserPath)
     } else {
       const apiGroupUserPath = 'admin/groups/' + groupName;
       const params = {
@@ -86,7 +84,7 @@ function AdminGroupsDetail() {
           username: user.Username
         },
       };
-      groupUserResponse = await API.post(apiName, apiGroupUserPath, params)
+      await API.post(apiName, apiGroupUserPath, params)
     }
 
     // need to reload the user data
