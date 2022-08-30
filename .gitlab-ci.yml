@@ -8,6 +8,7 @@ zip_repo:
     - release
     - unittest
     - users
+    - virusscan
     - cdk-pipeline-askwith
   stage: zip
   image:
@@ -27,6 +28,7 @@ upload_to_s3:
     - release
     - unittest
     - users
+    - virusscan
     - cdk-pipeline-askwith
   stage: upload
   image:

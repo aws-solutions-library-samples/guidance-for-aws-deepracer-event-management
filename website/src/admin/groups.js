@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import { API } from 'aws-amplify';
-import { Header, Table, Icon, Button, Input, Breadcrumb } from 'semantic-ui-react';
+import { Header, Table, Icon, Input, Breadcrumb } from 'semantic-ui-react';
 import { useTable, useSortBy, useRowSelect, useFilters } from 'react-table'
 
 function DefaultColumnFilter({

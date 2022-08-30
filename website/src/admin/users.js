@@ -70,11 +70,10 @@ function AdminUsers() {
 
   const ToggleUserGroup = async(user) => {
     const apiName = 'deepracerEventManager';
-    let groupUserResponse = '';
 
     if (user.isAdmin) {
       const apiGroupUserPath = 'admin/groups/admin/' + user.Username;
-      groupUserResponse = await API.del(apiName, apiGroupUserPath)
+      await API.del(apiName, apiGroupUserPath)
     } else {
       const apiGroupUserPath = 'admin/groups/admin';
       const params = {
@@ -82,7 +81,7 @@ function AdminUsers() {
           username: user.Username
         },
       };
-      groupUserResponse = await API.post(apiName, apiGroupUserPath, params)
+      await API.post(apiName, apiGroupUserPath, params)
     }
     // need to reload the user data
     setRefreshKey(oldKey => oldKey +1)
