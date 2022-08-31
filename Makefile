@@ -31,26 +31,30 @@ infra.deploy:
 
 infra.synth:
 	echo "{}" > website/src/config.json
-	branch=`cat branch.txt` && cdk synth drem-backend-$$branch-infrastructure --require-approval never --context manual_deploy=True 
+	branch=`cat branch.txt` && cdk synth drem-backend-$$branch-infrastructure --require-approval never --context manual_deploy=True
 
 manual.clean:		## Tear down the stack, only do this if you're really sure
 	cdk destroy  --context manual_deploy=True
+
+local.setup: local.install local.config
 
 local.install:		## Install Python and Javascript dependencies + Generate Config from deployed backend
 	pip install -r requirements-dev.txt
 	npm install -g aws-cdk
 	npm install --prefix website
+
+local.config:		## Setup local config based on branch
 	echo "{}" > website/src/config.json
 	branch=`cat branch.txt` && aws cloudformation describe-stacks --stack-name drem-backend-$$branch-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
 	python generate_amplify_config_cfn.py
 	python update_index_html_with_script_tag_cfn.py
 
-local.run:		## Run the frontend application locally for development
+local.run:			## Run the frontend application locally for development
 	npm start --prefix website
 
-local.clean:		## Renmove everything
+.PHONY: local.clean
+local.clean:		## Remove local packages and modules
 	pip freeze | grep -v "^-e" | xargs pip uninstall -y
-	pip uninstall deepracer_event_manager -y
-	rm -rf node_modules
+	rm -rf website/node_modules
 
 .NOTPARALLEL:

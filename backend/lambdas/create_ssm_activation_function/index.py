@@ -1,18 +1,19 @@
-import logging
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.typing import LambdaContext
 import simplejson as json
 import boto3
 import os
 from datetime import datetime
 import http_response
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = Logger()
 region = os.environ['AWS_REGION']
 
 
-def lambda_handler(event, context):
+@logger.inject_lambda_context
+def lambda_handler(event: dict, context: LambdaContext) -> str:
     try:
-        logger.info(json.dumps(event))
+        logger.info(event)
 
         body_parameters = json.loads(event['body'])
         hostname = body_parameters['hostname']
@@ -40,7 +41,7 @@ def lambda_handler(event, context):
         )
 
         response['region'] = region  # Add the region to the response
-        logger.info(json.dumps(response))
+        logger.info(response)
 
         return http_response.response(200, response)
 
