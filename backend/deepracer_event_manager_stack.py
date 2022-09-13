@@ -37,6 +37,7 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         # Upload S3 bucket
         models_bucket = s3.Bucket(self, 'models_bucket',
+            encryption=s3.BucketEncryption.S3_MANAGED,
             block_public_access=s3.BlockPublicAccess(
                 block_public_acls=True,
                 block_public_policy=True,
@@ -59,6 +60,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         infected_bucket = s3.Bucket(self, 'infected_bucket',
+            encryption=s3.BucketEncryption.S3_MANAGED,
             block_public_access=s3.BlockPublicAccess(
                 block_public_acls=True,
                 block_public_policy=True,
@@ -315,6 +317,7 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         ## S3
         source_bucket = s3.Bucket(self, "Bucket",
+            encryption=s3.BucketEncryption.S3_MANAGED,
             block_public_access=s3.BlockPublicAccess(
                 block_public_acls=True,
                 block_public_policy=True,
