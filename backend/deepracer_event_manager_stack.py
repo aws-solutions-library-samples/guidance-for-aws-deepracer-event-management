@@ -58,6 +58,24 @@ class CdkDeepRacerEventManagerStack(Stack):
             ]
         )
 
+        logs_bucket.policy.document.add_statements(
+            iam.PolicyStatement(
+                sid="AllowSSLRequestsOnly",
+                effect=iam.Effect.DENY,
+                principals=[iam.AnyPrincipal()],
+                actions=["s3:*"],
+                resources=[
+                    logs_bucket.bucket_arn,
+                    logs_bucket.bucket_arn + '/*'
+                ],
+                conditions={
+                    "NumericLessThan": {
+                        "s3:TlsVersion": "1.2"
+                    }
+                }
+            )
+        )
+
         # Upload S3 bucket
         models_bucket = s3.Bucket(self, 'models_bucket',
             encryption=s3.BucketEncryption.S3_MANAGED,
@@ -84,6 +102,24 @@ class CdkDeepRacerEventManagerStack(Stack):
             ]
         )
 
+        models_bucket.policy.document.add_statements(
+            iam.PolicyStatement(
+                sid="AllowSSLRequestsOnly",
+                effect=iam.Effect.DENY,
+                principals=[iam.AnyPrincipal()],
+                actions=["s3:*"],
+                resources=[
+                    models_bucket.bucket_arn,
+                    models_bucket.bucket_arn + '/*'
+                ],
+                conditions={
+                    "NumericLessThan": {
+                        "s3:TlsVersion": "1.2"
+                    }
+                }
+            )
+        )
+
         infected_bucket = s3.Bucket(self, 'infected_bucket',
             encryption=s3.BucketEncryption.S3_MANAGED,
             server_access_logs_bucket=logs_bucket,
@@ -104,6 +140,24 @@ class CdkDeepRacerEventManagerStack(Stack):
                     abort_incomplete_multipart_upload_after=Duration.days(1)
                 )
             ]
+        )
+
+        infected_bucket.policy.document.add_statements(
+            iam.PolicyStatement(
+                sid="AllowSSLRequestsOnly",
+                effect=iam.Effect.DENY,
+                principals=[iam.AnyPrincipal()],
+                actions=["s3:*"],
+                resources=[
+                    infected_bucket.bucket_arn,
+                    infected_bucket.bucket_arn + '/*'
+                ],
+                conditions={
+                    "NumericLessThan": {
+                        "s3:TlsVersion": "1.2"
+                    }
+                }
+            )
         )
 
         ### Lambda
@@ -357,6 +411,24 @@ class CdkDeepRacerEventManagerStack(Stack):
             removal_policy=RemovalPolicy.DESTROY,
         )
         self.source_bucket = source_bucket
+
+        source_bucket.policy.document.add_statements(
+            iam.PolicyStatement(
+                sid="AllowSSLRequestsOnly",
+                effect=iam.Effect.DENY,
+                principals=[iam.AnyPrincipal()],
+                actions=["s3:*"],
+                resources=[
+                    source_bucket.bucket_arn,
+                    source_bucket.bucket_arn + '/*'
+                ],
+                conditions={
+                    "NumericLessThan": {
+                        "s3:TlsVersion": "1.2"
+                    }
+                }
+            )
+        )
 
         ## CloudFront and OAI
         ## L2 Experimental variant CF + OAI
