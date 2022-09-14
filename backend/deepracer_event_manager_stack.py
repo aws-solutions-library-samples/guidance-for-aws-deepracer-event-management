@@ -37,6 +37,7 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         # Upload S3 bucket
         models_bucket = s3.Bucket(self, 'models_bucket',
+            encryption=s3.BucketEncryption.S3_MANAGED,
             block_public_access=s3.BlockPublicAccess(
                 block_public_acls=True,
                 block_public_policy=True,
@@ -59,6 +60,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         infected_bucket = s3.Bucket(self, 'infected_bucket',
+            encryption=s3.BucketEncryption.S3_MANAGED,
             block_public_access=s3.BlockPublicAccess(
                 block_public_acls=True,
                 block_public_policy=True,
@@ -315,6 +317,7 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         ## S3
         source_bucket = s3.Bucket(self, "Bucket",
+            encryption=s3.BucketEncryption.S3_MANAGED,
             block_public_access=s3.BlockPublicAccess(
                 block_public_acls=True,
                 block_public_policy=True,
@@ -332,33 +335,32 @@ class CdkDeepRacerEventManagerStack(Stack):
             comment=stack.stack_name
         )
 
-        distribution = cloudfront.CloudFrontWebDistribution(self, "Distribution",
-            http_version=cloudfront.HttpVersion("HTTP2"),
-            origin_configs=[{
-                "behaviors": [{
-                    "isDefaultBehavior": True
-                }],
-                "s3OriginSource": {
-                    "s3BucketSource": source_bucket,
-                    "originAccessIdentity": origin_access_identity
-                },
-            }],
-            error_configurations=[
-                {
-                    "errorCode": 403,
-                    "responseCode": 200,
-                    "responsePagePath": "/index.html"
-                },
-            #     {
-            #         "errorCode": 404,
-            #         "responseCode": 200,
-            #         "responsePagePath": "/errors/404.html"
-            #     }
-            ],
+        distribution = cloudfront.Distribution(self, "Distribution",
+            default_behavior=cloudfront.BehaviorOptions(
+                origin=cloudfront_origins.S3Origin(
+                    bucket=source_bucket, 
+                    origin_access_identity=origin_access_identity
+                ),
+                response_headers_policy=cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_AND_SECURITY_HEADERS,
+                viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+            ),
+            http_version=cloudfront.HttpVersion.HTTP2_AND_3,
             default_root_object="index.html",
             price_class=cloudfront.PriceClass.PRICE_CLASS_100,
-            viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+            error_responses=[
+                cloudfront.ErrorResponse(
+                    http_status=403,
+                    response_http_status=200,
+                    response_page_path="/index.html"
+                ),
+                # cloudfront.ErrorResponse(
+                #     http_status=404,
+                #     response_http_status=200,
+                #     response_page_path="/errors/404.html"
+                # )
+            ]
         )
+
         self.distribution = distribution
 
         models_bucket.add_cors_rule(
