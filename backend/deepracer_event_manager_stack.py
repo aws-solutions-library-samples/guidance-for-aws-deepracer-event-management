@@ -20,6 +20,7 @@ from aws_cdk import (
     aws_events_targets as events_targets,
     aws_sns as sns,
     aws_lambda_destinations as lambda_destinations,
+    aws_logs as logs,
 )
 from constructs import Construct
 
@@ -35,9 +36,33 @@ class CdkDeepRacerEventManagerStack(Stack):
         ## setup for pseudo parameters
         stack = Stack.of(self)
 
+        ## Logs Bucket
+        logs_bucket = s3.Bucket(self, 'logs_bucket',
+            encryption=s3.BucketEncryption.S3_MANAGED,
+            server_access_logs_prefix='access-logs/logs_bucket/',
+            block_public_access=s3.BlockPublicAccess(
+                block_public_acls=True,
+                block_public_policy=True,
+                ignore_public_acls=True,
+                restrict_public_buckets=True
+            ),
+            auto_delete_objects=True,
+            removal_policy=RemovalPolicy.DESTROY,
+            lifecycle_rules=[
+                s3.LifecycleRule(
+                    expiration=Duration.days(30)
+                ),
+                s3.LifecycleRule(
+                    abort_incomplete_multipart_upload_after=Duration.days(1)
+                )
+            ]
+        )
+
         # Upload S3 bucket
         models_bucket = s3.Bucket(self, 'models_bucket',
             encryption=s3.BucketEncryption.S3_MANAGED,
+            server_access_logs_bucket=logs_bucket,
+            server_access_logs_prefix='access-logs/models_bucket/',
             block_public_access=s3.BlockPublicAccess(
                 block_public_acls=True,
                 block_public_policy=True,
@@ -61,6 +86,8 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         infected_bucket = s3.Bucket(self, 'infected_bucket',
             encryption=s3.BucketEncryption.S3_MANAGED,
+            server_access_logs_bucket=logs_bucket,
+            server_access_logs_prefix='access-logs/infected_bucket/',
             block_public_access=s3.BlockPublicAccess(
                 block_public_acls=True,
                 block_public_policy=True,
@@ -318,6 +345,8 @@ class CdkDeepRacerEventManagerStack(Stack):
         ## S3
         source_bucket = s3.Bucket(self, "Bucket",
             encryption=s3.BucketEncryption.S3_MANAGED,
+            server_access_logs_bucket=logs_bucket,
+            server_access_logs_prefix='access-logs/source_bucket/',
             block_public_access=s3.BlockPublicAccess(
                 block_public_acls=True,
                 block_public_policy=True,
@@ -347,6 +376,8 @@ class CdkDeepRacerEventManagerStack(Stack):
             http_version=cloudfront.HttpVersion.HTTP2_AND_3,
             default_root_object="index.html",
             price_class=cloudfront.PriceClass.PRICE_CLASS_100,
+            log_bucket=logs_bucket,
+            log_file_prefix='access-logs/cf_distribution/',
             error_responses=[
                 cloudfront.ErrorResponse(
                     http_status=403,
@@ -485,27 +516,27 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
         )
 
-        ## Cognito Identity Pool Unauthenitcated Role
-        id_pool_unauth_user_role = iam.Role(self, "CognitoDefaultUnauthenticatedRole",
-            assumed_by=iam.FederatedPrincipal(
-                federated="cognito-identity.amazonaws.com",
-                conditions={
-                    "StringEquals": {
-                        "cognito-identity.amazonaws.com:aud": identity_pool.ref,
-                    },
-                    "ForAnyValue:StringLike": {
-                        "cognito-identity.amazonaws.com:amr": "unauthenticated",
-                    },
-                },
-                assume_role_action="sts:AssumeRoleWithWebIdentity"
-            )
-        )
+        # ## Cognito Identity Pool Unauthenitcated Role
+        # id_pool_unauth_user_role = iam.Role(self, "CognitoDefaultUnauthenticatedRole",
+        #     assumed_by=iam.FederatedPrincipal(
+        #         federated="cognito-identity.amazonaws.com",
+        #         conditions={
+        #             "StringEquals": {
+        #                 "cognito-identity.amazonaws.com:aud": identity_pool.ref,
+        #             },
+        #             "ForAnyValue:StringLike": {
+        #                 "cognito-identity.amazonaws.com:amr": "unauthenticated",
+        #             },
+        #         },
+        #         assume_role_action="sts:AssumeRoleWithWebIdentity"
+        #     )
+        # )
 
         cognito.CfnIdentityPoolRoleAttachment(self, "IdentityPoolRoleAttachment",
             identity_pool_id=identity_pool.ref,
             roles={
                 "authenticated": id_pool_auth_user_role.role_arn,
-                "unauthenticated": id_pool_unauth_user_role.role_arn,
+                #"unauthenticated": id_pool_unauth_user_role.role_arn,
             },
             role_mappings={
                 "role_mapping": cognito.CfnIdentityPoolRoleAttachment.RoleMappingProperty(
@@ -817,12 +848,28 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         ## API Gateway
+        apig_log_group = logs.LogGroup(self, "apig_log_group",
+            retention=logs.RetentionDays.ONE_MONTH
+        )
         api = apig.RestApi(self, 'apiGateway',
             rest_api_name=stack.stack_name,
             deploy_options=apig.StageOptions(
                 throttling_rate_limit=10,
                 throttling_burst_limit=20,
-                tracing_enabled=True
+                tracing_enabled=True,
+                access_log_destination=apig.LogGroupLogDestination(apig_log_group),
+                access_log_format=apig.AccessLogFormat.json_with_standard_fields(
+                    caller=True,
+                    http_method=True,
+                    ip=True,
+                    protocol=True,
+                    request_time=True,
+                    resource_path=True,
+                    response_length=True,
+                    status=True,
+                    user=True
+                ),
+                logging_level=apig.MethodLoggingLevel.ERROR
             ),
             default_cors_preflight_options=apig.CorsOptions(
                 allow_origins=[
