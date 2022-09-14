@@ -109,8 +109,8 @@ class CdkDeepRacerEventManagerStack(Stack):
         ### Lambda
         ## Common Config
         lambda_architecture = awslambda.Architecture.ARM_64
-        lambda_runtime = awslambda.Runtime.PYTHON_3_8
-        lambda_bundling_image = DockerImage.from_registry('public.ecr.aws/sam/build-python3.8:latest-arm64')
+        lambda_runtime = awslambda.Runtime.PYTHON_3_9
+        lambda_bundling_image = DockerImage.from_registry('public.ecr.aws/sam/build-python3.9:latest-arm64')
 
         ## Layers
         helper_functions_layer = lambda_python.PythonLayerVersion(self, 'helper_functions_v2',
