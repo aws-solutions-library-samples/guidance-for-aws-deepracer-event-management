@@ -505,6 +505,14 @@ class CdkDeepRacerEventManagerStack(Stack):
             self_sign_up_enabled=True,
             auto_verify=cognito.AutoVerifiedAttrs(email=True),
             removal_policy=RemovalPolicy.DESTROY,
+            password_policy=cognito.PasswordPolicy(
+                min_length=8,
+                require_lowercase=True,
+                require_uppercase=True,
+                require_digits=True,
+                require_symbols=True,
+                temp_password_validity=Duration.days(2)
+            )
         )
 
         ## Cognito Client
