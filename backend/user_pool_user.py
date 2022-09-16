@@ -7,6 +7,7 @@ from aws_cdk.custom_resources import (
     PhysicalResourceId,
 )
 from aws_cdk.aws_cognito import (
+    CfnUserPoolUser,
     CfnUserPoolUserToGroupAttachment,
     IUserPool
 )
@@ -76,3 +77,26 @@ class UserPoolUser(Construct):
             user_to_admins_group_attachment.node.add_dependency(admin_create_user)
             user_to_admins_group_attachment.node.add_dependency(admin_set_user_password)
             user_to_admins_group_attachment.node.add_dependency(user_pool)
+
+        admin_user = CfnUserPoolUser(self, 'admin_user',
+            username='test',
+            user_pool_id=user_pool.user_pool_id,
+            desired_delivery_mediums=['EMAIL'],
+            user_attributes=[CfnUserPoolUser.AttributeTypeProperty(
+                name='email',
+                value='askwith@amazon.co.uk'
+            )],
+        )
+
+        # If a Group Name is provided, also add the user to this Cognito UserPool Group
+        if group_name:
+            user_to_group_attachment = CfnUserPoolUserToGroupAttachment(self, 'user_to_group_attachment',
+                user_pool_id=user_pool.user_pool_id,
+                group_name=group_name,
+                username=admin_user.username,
+            )
+            # user_to_group_attachment.node.add_dependency(admin_create_user)
+            # user_to_group_attachment.node.add_dependency(admin_set_user_password)
+            # user_to_group_attachment.node.add_dependency(user_pool)
+
+
