@@ -95,8 +95,7 @@ class UserPoolUser(Construct):
                 group_name=group_name,
                 username=admin_user.username,
             )
-            # user_to_group_attachment.node.add_dependency(admin_create_user)
-            # user_to_group_attachment.node.add_dependency(admin_set_user_password)
-            # user_to_group_attachment.node.add_dependency(user_pool)
+            user_to_group_attachment.node.add_dependency(admin_user)
+            user_to_group_attachment.node.add_dependency(user_pool)
 
 
