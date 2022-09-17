@@ -920,12 +920,12 @@ class CdkDeepRacerEventManagerStack(Stack):
         default_admin_user_name = 'admin'
         default_admin_email = email
 
-        UserPoolUser(self, 'DefaultAdminUser',
-            username=default_admin_user_name,
-            email=default_admin_email,
-            user_pool=user_pool,
-            group_name=user_pool_group.ref
-        )
+        # UserPoolUser(self, 'DefaultAdminUser',
+        #     username=default_admin_user_name,
+        #     email=default_admin_email,
+        #     user_pool=user_pool,
+        #     group_name=user_pool_group.ref
+        # )
 
         ## API Gateway
         apig_log_group = logs.LogGroup(self, "apig_log_group",
