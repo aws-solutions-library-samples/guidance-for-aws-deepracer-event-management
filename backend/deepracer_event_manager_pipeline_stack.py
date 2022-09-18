@@ -21,10 +21,10 @@ CDK_VERSION = "2.38.1"    # other possible options: latest
 
 
 class InfrastructurePipelineStage(Stage):
-    def __init__(self, scope: Construct, construct_id: str, env: Environment, branchname: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, env: Environment, branchname: str, email: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        stack = CdkDeepRacerEventManagerStack(self, "infrastructure", env=env)
+        stack = CdkDeepRacerEventManagerStack(self, "infrastructure", email=email, env=env)
 
         self.sourceBucketName = stack.sourceBucketName
         self.distributionId = stack.distributionId
@@ -36,7 +36,7 @@ class InfrastructurePipelineStage(Stage):
 
 class CdkServerlessCharityPipelineStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, branchname: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, branchname: str, email: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         ## setup for pseudo parameters
@@ -98,7 +98,7 @@ class CdkServerlessCharityPipelineStack(Stack):
             'region': stack.region
         }
 
-        infrastructure = InfrastructurePipelineStage(self, "drem-backend-" + branchname, env, branchname)
+        infrastructure = InfrastructurePipelineStage(self, "drem-backend-" + branchname, env, branchname, email)
         infrastructure_stage = pipeline.add_stage(infrastructure)
 
         # Add Generate Amplify Config and Deploy to S3

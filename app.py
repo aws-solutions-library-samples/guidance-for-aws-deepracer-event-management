@@ -20,13 +20,22 @@ env=Environment(
 
 branch_file_name = 'branch.txt'
 if os.path.exists(branch_file_name):
-    with open('branch.txt') as branch_file:
+    with open(branch_file_name) as branch_file:
         branchname = branch_file.read().splitlines()[0]
         print("Branch Name: " + branchname)
 else:
     sys.exit('{} does not exist, please create and populate with the branch name you are working on.'.format(branch_file_name))
 
+email_file_name = 'email.txt'
+if os.path.exists(email_file_name):
+    with open(email_file_name) as email_file:
+        email = email_file.read().splitlines()[0]
+        print("email Name: " + email)
+else:
+    sys.exit('{} does not exist, please create and populate with the admin email address.'.format(email_file_name))
+
 app = App()
+
 manual_deploy = False
 if app.node.try_get_context("manual_deploy") == 'True':
     manual_deploy = True
@@ -44,6 +53,6 @@ if manual_deploy:
     CdkDeepRacerEventManagerFEDeployStack(app, "drem-frontend-" + branchname, env=env, source_bucket=infrastructure.source_bucket, distribution=infrastructure.distribution)
 else:
     print('Pipeline deploy')
-    CdkServerlessCharityPipelineStack(app, "drem-pipeline-" + branchname, branchname=branchname, env=env)
+    CdkServerlessCharityPipelineStack(app, "drem-pipeline-" + branchname, branchname=branchname, email=email, env=env)
 
 app.synth()
