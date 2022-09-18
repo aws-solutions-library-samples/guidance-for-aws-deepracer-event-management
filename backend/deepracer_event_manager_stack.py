@@ -30,7 +30,7 @@ from cdk_serverless_clamscan import ServerlessClamscan
 
 class CdkDeepRacerEventManagerStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, email: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         ## setup for pseudo parameters
@@ -917,12 +917,12 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
          # Add a default Admin user to the system
-        default_admin_user_name = 'Admin'
-        default_admin_user_password = 'DeepRacer0!'
+        default_admin_user_name = 'admin'
+        default_admin_email = email
 
         UserPoolUser(self, 'DefaultAdminUser',
             username=default_admin_user_name,
-            password=default_admin_user_password,
+            email=default_admin_email,
             user_pool=user_pool,
             group_name=user_pool_group.ref
         )
@@ -1126,8 +1126,8 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         CfnOutput(
-            self, "DefaultAdminUserPassword",
-            value=default_admin_user_password
+            self, "DefaultAdminEmail",
+            value=default_admin_email
         )
 
         self.sourceBucketName = CfnOutput(
