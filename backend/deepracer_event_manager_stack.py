@@ -512,6 +512,17 @@ class CdkDeepRacerEventManagerStack(Stack):
                 require_digits=True,
                 require_symbols=True,
                 temp_password_validity=Duration.days(2)
+            ),
+            user_invitation=cognito.UserInvitationConfig(
+                email_subject="Invite to join DREM",
+                email_body="Hello {username}, you have been invited to join DREM. \nYour temporary password is \n\n{####}\n\n" + "https://" + distribution.distribution_domain_name,
+                sms_message="Hello {username}, your temporary password for DREM is {####}"
+            ),
+            user_verification=cognito.UserVerificationConfig(
+                email_subject="Verify your email for DREM",
+                email_body="Thanks for signing up to DREM \n\nYour verification code is \n{####}",
+                email_style=cognito.VerificationEmailStyle.CODE,
+                sms_message="Thanks for signing up to DREM. Your verification code is {####}"
             )
         )
 
