@@ -563,18 +563,6 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
         )
 
-        # id_pool_auth_user_role.add_to_policy(
-        #     iam.PolicyStatement(
-        #         effect=iam.Effect.ALLOW,
-        #         actions=[
-        #             "mobileanalytics:PutEvents",
-        #             "cognito-sync:*",
-        #             "cognito-identity:*",
-        #         ],
-        #         resources=["*"],
-        #     )
-        # )
-
         ##read/write own bucket only
         id_pool_auth_user_role.add_to_policy(
             iam.PolicyStatement(
@@ -653,18 +641,6 @@ class CdkDeepRacerEventManagerStack(Stack):
                 assume_role_action="sts:AssumeRoleWithWebIdentity"
             )
         )
-
-        # admin_user_role.add_to_policy(
-        #     iam.PolicyStatement(
-        #         effect=iam.Effect.ALLOW,
-        #         actions=[
-        #             "mobileanalytics:PutEvents",
-        #             "cognito-sync:*",
-        #             "cognito-identity:*",
-        #         ],
-        #         resources=["*"],
-        #     )
-        # )
 
         models_bucket.grant_read(admin_user_role, '*')
 
