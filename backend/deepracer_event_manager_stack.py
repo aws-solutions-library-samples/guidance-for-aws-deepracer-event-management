@@ -5,7 +5,6 @@ from aws_cdk import (
     CfnOutput,
     DockerImage,
     aws_s3 as s3,
-    aws_s3_notifications as s3_notifications,
     aws_s3_deployment as s3_deployment,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as cloudfront_origins,
@@ -13,12 +12,7 @@ from aws_cdk import (
     aws_iam as iam,
     aws_lambda_python_alpha as lambda_python,
     aws_lambda as awslambda,
-    aws_dynamodb as dynamodb,
     aws_apigateway as apig,
-    aws_rum as rum,
-    aws_events as events,
-    aws_events_targets as events_targets,
-    aws_sns as sns,
     aws_lambda_destinations as lambda_destinations,
     aws_logs as logs,
 )
@@ -27,6 +21,8 @@ from constructs import Construct
 from backend.cwrum_construct import CwRumAppMonitor
 from backend.user_pool_user import UserPoolUser
 from cdk_serverless_clamscan import ServerlessClamscan
+
+from cdk_nag import NagSuppressions
 
 class CdkDeepRacerEventManagerStack(Stack):
 
@@ -40,12 +36,8 @@ class CdkDeepRacerEventManagerStack(Stack):
         logs_bucket = s3.Bucket(self, 'logs_bucket',
             encryption=s3.BucketEncryption.S3_MANAGED,
             server_access_logs_prefix='access-logs/logs_bucket/',
-            block_public_access=s3.BlockPublicAccess(
-                block_public_acls=True,
-                block_public_policy=True,
-                ignore_public_acls=True,
-                restrict_public_buckets=True
-            ),
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            enforce_ssl=True,
             auto_delete_objects=True,
             removal_policy=RemovalPolicy.DESTROY,
             lifecycle_rules=[
@@ -81,12 +73,8 @@ class CdkDeepRacerEventManagerStack(Stack):
             encryption=s3.BucketEncryption.S3_MANAGED,
             server_access_logs_bucket=logs_bucket,
             server_access_logs_prefix='access-logs/models_bucket/',
-            block_public_access=s3.BlockPublicAccess(
-                block_public_acls=True,
-                block_public_policy=True,
-                ignore_public_acls=True,
-                restrict_public_buckets=True
-            ),
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            enforce_ssl=True,
             auto_delete_objects=True,
             removal_policy=RemovalPolicy.DESTROY,
             lifecycle_rules=[
@@ -124,12 +112,8 @@ class CdkDeepRacerEventManagerStack(Stack):
             encryption=s3.BucketEncryption.S3_MANAGED,
             server_access_logs_bucket=logs_bucket,
             server_access_logs_prefix='access-logs/infected_bucket/',
-            block_public_access=s3.BlockPublicAccess(
-                block_public_acls=True,
-                block_public_policy=True,
-                ignore_public_acls=True,
-                restrict_public_buckets=True
-            ),
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            enforce_ssl=True,
             auto_delete_objects=True,
             removal_policy=RemovalPolicy.DESTROY,
             lifecycle_rules=[
@@ -401,12 +385,8 @@ class CdkDeepRacerEventManagerStack(Stack):
             encryption=s3.BucketEncryption.S3_MANAGED,
             server_access_logs_bucket=logs_bucket,
             server_access_logs_prefix='access-logs/source_bucket/',
-            block_public_access=s3.BlockPublicAccess(
-                block_public_acls=True,
-                block_public_policy=True,
-                ignore_public_acls=True,
-                restrict_public_buckets=True
-            ),
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            enforce_ssl=True,
             auto_delete_objects=True,
             removal_policy=RemovalPolicy.DESTROY,
         )
@@ -439,7 +419,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         distribution = cloudfront.Distribution(self, "Distribution",
             default_behavior=cloudfront.BehaviorOptions(
                 origin=cloudfront_origins.S3Origin(
-                    bucket=source_bucket, 
+                    bucket=source_bucket,
                     origin_access_identity=origin_access_identity
                 ),
                 response_headers_policy=cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_AND_SECURITY_HEADERS,
@@ -461,6 +441,18 @@ class CdkDeepRacerEventManagerStack(Stack):
                 #     response_http_status=200,
                 #     response_page_path="/errors/404.html"
                 # )
+            ]
+        )
+
+        NagSuppressions.add_resource_suppressions(distribution,
+            suppressions=[{
+                "id": 'AwsSolutions-CFR1',
+                "reason": 'Cloudfront geo restriction not needed for DREM use case'
+            },
+            {
+                "id":'AwsSolutions-CFR2',
+                "reason":'DREM use case does not warrant for usage of AWS WAF'
+            }
             ]
         )
 
@@ -524,6 +516,18 @@ class CdkDeepRacerEventManagerStack(Stack):
                 email_style=cognito.VerificationEmailStyle.CODE,
                 sms_message="Thanks for signing up to DREM. Your verification code is {####}"
             )
+        )
+
+        NagSuppressions.add_resource_suppressions(user_pool,
+            suppressions=[{
+                "id": 'AwsSolutions-COG2',
+                "reason": 'users only sign up and us DREM for a short period of time, all users are deleted after 10 days inactivity'
+            },
+            {
+                "id":'AwsSolutions-COG3',
+                "reason":'users only sign up and us DREM for a short period of time, all users are deleted after 10 days inactivity'
+            }
+            ]
         )
 
         ## Cognito Client
@@ -947,6 +951,70 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
         )
 
+        #API Validation models
+        hostname_model = api.add_model("hostanameModel",
+            content_type="application/json",
+            schema=apig.JsonSchema(
+                schema=apig.JsonSchemaVersion.DRAFT4,
+                type=apig.JsonSchemaType.OBJECT,
+                properties={
+                    "hostname": apig.JsonSchema(type=apig.JsonSchemaType.STRING),
+                }
+            )
+        )
+
+        username_model = api.add_model("UsernameModel",
+            content_type="application/json",
+            schema=apig.JsonSchema(
+                schema=apig.JsonSchemaVersion.DRAFT4,
+                type=apig.JsonSchemaType.OBJECT,
+                properties={
+                    "username": apig.JsonSchema(type=apig.JsonSchemaType.STRING),
+                }
+            )
+        )
+
+        instanceid_commandid_model = api.add_model("IanstanceIdCommandIdModel",
+            content_type="application/json",
+            schema=apig.JsonSchema(
+                schema=apig.JsonSchemaVersion.DRAFT4,
+                type=apig.JsonSchemaType.OBJECT,
+                properties={
+                    "InstanceId": apig.JsonSchema(type=apig.JsonSchemaType.STRING),
+                    "CommandId": apig.JsonSchema(type=apig.JsonSchemaType.STRING),
+                }
+            )
+        )
+
+        instanceid_model = api.add_model("InstanceIdModel",
+            content_type="application/json",
+            schema=apig.JsonSchema(
+                schema=apig.JsonSchemaVersion.DRAFT4,
+                type=apig.JsonSchemaType.OBJECT,
+                properties={
+                    "InstanceId": apig.JsonSchema(type=apig.JsonSchemaType.STRING),
+                }
+            )
+        )
+
+        username_groupname_model = api.add_model("UsernameGroupnameModel",
+            content_type="application/json",
+            schema=apig.JsonSchema(
+                schema=apig.JsonSchemaVersion.DRAFT4,
+                type=apig.JsonSchemaType.OBJECT,
+                properties={
+                    "username": apig.JsonSchema(type=apig.JsonSchemaType.STRING),
+                    "groupname": apig.JsonSchema(type=apig.JsonSchemaType.STRING),
+                }
+            )
+        )
+
+        body_validator = apig.RequestValidator(self, 'BodyValidator',
+            rest_api=api,
+            validate_request_body=True
+        )
+
+
         api_models = api.root.add_resource('models')
         models_method = api_models.add_method(
             http_method="GET",
@@ -1014,7 +1082,11 @@ class CdkDeepRacerEventManagerStack(Stack):
         group.add_method(
             http_method="POST",
             integration=apig.LambdaIntegration(handler=post_groups_group_user_function),
-            authorization_type=apig.AuthorizationType.IAM
+            authorization_type=apig.AuthorizationType.IAM,
+            request_models={
+                "application/json": username_groupname_model
+            },
+            request_validator=body_validator
         )
 
         # /admin/groups/{groupname}/{username}
@@ -1027,32 +1099,52 @@ class CdkDeepRacerEventManagerStack(Stack):
             authorization_type=apig.AuthorizationType.IAM
         )
 
+
         api_cars_upload = api_cars.add_resource('upload')
         cars_upload_method = api_cars_upload.add_method(
             http_method="POST",
             integration=apig.LambdaIntegration(handler=upload_model_to_car_function),
-            authorization_type=apig.AuthorizationType.IAM
+            authorization_type=apig.AuthorizationType.IAM,
+            request_models={
+                "application/json": instanceid_model
+            },
+            request_validator=body_validator
         )
+
 
         api_cars_delete_all_models = api_cars.add_resource('delete_all_models')
         cars_delete_all_models_method = api_cars_delete_all_models.add_method(
             http_method="POST",
             integration=apig.LambdaIntegration(handler=delete_all_models_from_car_function),
-            authorization_type=apig.AuthorizationType.IAM
+            authorization_type=apig.AuthorizationType.IAM,
+            request_models={
+                "application/json": instanceid_model
+            },
+            request_validator=body_validator
         )
 
+
+        ### Create SSM Activation Method
         api_cars_create_ssm_activation = api_cars.add_resource('create_ssm_activation')
         api_cars_create_ssm_activation_method = api_cars_create_ssm_activation.add_method(
             http_method="POST",
             integration=apig.LambdaIntegration(handler=create_ssm_activation_function),
-            authorization_type=apig.AuthorizationType.IAM
+            authorization_type=apig.AuthorizationType.IAM,
+            request_models={
+                "application/json": hostname_model
+            },
+            request_validator=body_validator
         )
 
         api_cars_upload_status = api_cars_upload.add_resource('status')
         cars_upload_staus_method = api_cars_upload_status.add_method(
             http_method="POST",
             integration=apig.LambdaIntegration(handler=upload_model_to_car_status_function),
-            authorization_type=apig.AuthorizationType.IAM
+            authorization_type=apig.AuthorizationType.IAM,
+            request_models={
+                "application/json": instanceid_commandid_model
+            },
+            request_validator=body_validator
         )
 
         ## Grant API Invoke permissions to admin users

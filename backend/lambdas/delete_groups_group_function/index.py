@@ -19,5 +19,5 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         return http_response.response(response['ResponseMetadata']['HTTPStatusCode'], response)
 
     except Exception as error:
-        logger.error(error)
+        logger.exception(error)
         return http_response.response(500, error)

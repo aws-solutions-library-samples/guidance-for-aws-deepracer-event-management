@@ -24,5 +24,5 @@ def lambda_handler(event, context):
         return http_response.response(200, contents)
 
     except Exception as error:
-        logger.error(error)
+        logger.exception(error)
         return http_response.response(500, error)

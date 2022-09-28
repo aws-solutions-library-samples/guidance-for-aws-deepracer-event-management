@@ -1,5 +1,7 @@
 import os
 import pytest
+from datetime import datetime, date
+import http_response
 
 BUCKET_NAME = "test-bucket"
 
@@ -14,16 +16,41 @@ def mock_os_env():
     os.environ["AWS_SESSION_TOKEN"] = 'testing'
     os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
 
+def test_response_no_message():
+    response = http_response.response(200)
+    assert response['body'] == '{"message": ""}'
+
+def test_response_string_message():
+    response = http_response.response(200, 'test')
+    assert response['body'] == '{"message": "test"}'
+
+def test_response_name_error_exception_message():
+    try:
+        raise NameError('exception message')
+    except NameError as e:
+        response = http_response.response(500, e)
+        assert response['body'] == '{"message": "exception message"}'
+
+def test_response_exception_message():
+    try:
+        raise Exception('exception message')
+    except Exception as e:
+        response = http_response.response(500, e)
+        assert response['body'] == '{"message": "exception message"}'
+
+def test_response_error_code_200():
+    response = http_response.response(200)
+    assert response['statusCode'] == 200
+
+def test_response_error_code_500():
+    response = http_response.response(500)
+    assert response['statusCode'] == 500
 
 def test_json_serial_datettime():
-    from datetime import datetime
-    from http_response import json_serial
     now = datetime.now()
-    assert type(json_serial(now)) is str
+    assert type(http_response.json_serial(now)) is str
 
 
 def test_json_serial_date():
-    from datetime import date
-    from http_response import json_serial
     _date = date.fromtimestamp(1656493067)
-    assert type(json_serial(_date)) is str
+    assert type(http_response.json_serial(_date)) is str

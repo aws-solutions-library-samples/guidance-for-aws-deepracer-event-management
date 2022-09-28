@@ -4,6 +4,7 @@ pytest==7.1.2
 pytest-cov==3.0.0
 moto[all]
 boto3
+cdk-nag
 
 # lambda layer dependencies used during unit testing
 -r ./backend/lambdas/helper_functions_layer/http_response/requirements.txt
