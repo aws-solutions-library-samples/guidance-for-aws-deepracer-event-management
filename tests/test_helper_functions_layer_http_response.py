@@ -18,25 +18,25 @@ def mock_os_env():
 
 def test_response_no_message():
     response = http_response.response(200)
-    assert response['body'] == '{"message": ""}'
+    assert response['body'] == 'null'
 
 def test_response_string_message():
-    response = http_response.response(200, 'test')
-    assert response['body'] == '{"message": "test"}'
+    response = http_response.response(200, "test")
+    assert response['body'] == '"test"'
 
 def test_response_name_error_exception_message():
     try:
         raise NameError('exception message')
     except NameError as e:
         response = http_response.response(500, e)
-        assert response['body'] == '{"message": "exception message"}'
+        assert response['body'] == '{"error_message": "exception message"}'
 
 def test_response_exception_message():
     try:
         raise Exception('exception message')
     except Exception as e:
         response = http_response.response(500, e)
-        assert response['body'] == '{"message": "exception message"}'
+        assert response['body'] == '{"error_message": "exception message"}'
 
 def test_response_error_code_200():
     response = http_response.response(200)
