@@ -21,6 +21,7 @@ from constructs import Construct
 from backend.cwrum_construct import CwRumAppMonitor
 from backend.user_pool_user import UserPoolUser
 from cdk_serverless_clamscan import ServerlessClamscan
+from backend.terms_n_conditions.tnc_construct import TermsAndConditions
 
 from cdk_nag import NagSuppressions
 
@@ -457,6 +458,8 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         self.distribution = distribution
+
+        TermsAndConditions(self, 'TnC', logs_bucket=logs_bucket, distribution=distribution)
 
         models_bucket.add_cors_rule(
             allowed_headers=["*"],
