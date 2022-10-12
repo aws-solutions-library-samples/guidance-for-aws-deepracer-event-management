@@ -20,7 +20,6 @@ const components = {
       </View>
     );
   },
-
   SignUp: {
     FormFields() {
       const { validationErrors } = useAuthenticator();
