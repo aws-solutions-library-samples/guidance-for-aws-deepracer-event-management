@@ -32,7 +32,7 @@ def lambda_handler(event, context):
                     ]
                 }
             )
-            
+
             #copy the file from source to infected bucket
             copy_request = s3.copy_object(
                 Bucket=dest_bucket,
@@ -43,9 +43,9 @@ def lambda_handler(event, context):
 
             #delete original file
             s3.delete_object(Bucket=source_bucket, Key=s3_object)
-        
+
         return http_response.response(200, {})
 
     except Exception as error:
-        logger.error(error)
+        logger.exception(error)
         return http_response.response(500, error)

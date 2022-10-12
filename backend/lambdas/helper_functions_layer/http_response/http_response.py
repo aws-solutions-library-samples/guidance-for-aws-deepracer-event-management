@@ -3,8 +3,15 @@ import simplejson as json
 
 
 def response(code, message=None):
-    if message is None:
-        message = ""
+
+    code = int(code)
+    if code >= 400:
+        if message is None:
+            message = {"error_message": ""}
+        elif isinstance(message, str):
+            message = {"error_message": message}
+        elif isinstance(message, Exception):
+            message = {"error_message": message.args[0]}
 
     return {
         'headers': {

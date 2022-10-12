@@ -2,6 +2,7 @@ from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
 import simplejson as json
 import boto3
+from botocore.exceptions import ClientError
 import os
 import http_response
 
@@ -13,21 +14,34 @@ user_pool_id = os.environ["user_pool_id"]
 @logger.inject_lambda_context
 def lambda_handler(event: dict, context: LambdaContext) -> str:
     try:
-        post_data = json.loads(event['body'])
-        if 'groupname' in event['pathParameters']:
-            groupname = event['pathParameters']['groupname']
-        if 'username' in event['body']:
-            username = post_data['username']
+        if event['pathParameters'] is None:
+            return http_response.response(400, 'bad input')
 
-        response = client_cognito.admin_add_user_to_group(
-            UserPoolId=user_pool_id,
-            Username=username,
-            GroupName=groupname,
-        )
-        logger.info(response)
+        path_parameters = event['pathParameters']
+        body_parameters = json.loads(event['body'])
 
-        return http_response.response(response['ResponseMetadata']['HTTPStatusCode'])
+        if not path_parameters['groupname'] or not body_parameters['username']:
+            return http_response.response(400, 'bad input')
+
+        groupname = path_parameters['groupname']
+        username = body_parameters['username']
+
+        try:
+            response = client_cognito.admin_add_user_to_group(
+                UserPoolId=user_pool_id,
+                Username=username,
+                GroupName=groupname,
+            )
+            logger.info(response)
+
+            return http_response.response(response['ResponseMetadata']['HTTPStatusCode'])
+
+        except ClientError as e:
+            logger.exception(e.response)
+            error_message = e.response['Error']['Message']
+            http_status_code = e.response['ResponseMetadata']['HTTPStatusCode']
+            return http_response.response(http_status_code, error_message)
 
     except Exception as error:
-        logger.error(error)
+        logger.exception(error)
         return http_response.response(500, error)

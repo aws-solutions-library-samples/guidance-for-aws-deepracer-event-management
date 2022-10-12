@@ -20,7 +20,6 @@ const components = {
       </View>
     );
   },
-  
   SignUp: {
     FormFields() {
       const { validationErrors } = useAuthenticator();
@@ -48,7 +47,7 @@ const components = {
 
     return (
       <View textAlign="center" padding={tokens.space.large}>
-        <Link href="/terms">
+        <Link href="/terms_and_conditions.html" target="_blank">
           Terms and Conditions
         </Link>
       </View>
@@ -58,8 +57,8 @@ const components = {
 
 export default function App() {
   return (
-    <Authenticator 
-      components={components} 
+    <Authenticator
+      components={components}
       services={{
         async validateCustomSignUp(formData) {
           if (!formData.acknowledgement) {
@@ -69,9 +68,9 @@ export default function App() {
           }
         },
       }}
-      hideSignUp={false} 
+      hideSignUp={false}
       signUpAttributes={['email']}
-    > 
+    >
       {({ signOut, user }) => (
         <main>
           <FixedMenuLayout user={user.username} signout={signOut}/>
