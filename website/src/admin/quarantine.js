@@ -1,7 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { API } from 'aws-amplify';
-import { Header, Table, Icon, Input } from 'semantic-ui-react';
-import { useTable, useSortBy, useRowSelect, useFilters } from 'react-table'
+import { useCollection } from '@cloudscape-design/collection-hooks';
+import {
+  Button,
+  CollectionPreferences,
+  Header,
+  Grid,
+  Pagination,
+  Table,
+  TextFilter,
+} from '@cloudscape-design/components';
+
+import { ContentHeader } from '../components/ContentHeader';
+import {
+  AdminModelsColumnsConfig,
+  DefaultPreferences,
+  EmptyState,
+  MatchesCountText,
+  PageSizePreference,
+  WrapLines,
+} from '../components/TableConfig';
 
 import dayjs from 'dayjs';
 
@@ -14,26 +32,9 @@ dayjs.extend(advancedFormat)
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
-// Define a default UI for filtering
-function DefaultColumnFilter({
-  column: { filterValue, preFilteredRows, setFilter },
-}) {
-  const count = preFilteredRows.length
-
-  return (
-    <Input
-      icon={{ name: 'search', circular: true }}
-      value={filterValue || ''}
-      onChange={e => {
-        setFilter(e.target.value || undefined) // Set undefined to remove the filter entirely
-      }}
-      placeholder={`Search ${count} records...`}
-    />
-  )
-}
-
-function AdminQuarantine() {
-  const [data, setData] = useState([]);
+export function AdminQuarantine() {
+  const [allItems, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function getQuarantinedModels() {
@@ -43,106 +44,135 @@ function AdminQuarantine() {
       const apiPath = 'admin/quarantinedmodels';
 
       const response = await API.get(apiName, apiPath);
-      setData(response);
+      var models = response.map(function (model, i) {
+        const modelKeyPieces = (model.Key.split('/'))
+        return {
+          id: i,
+          userName: modelKeyPieces[modelKeyPieces.length - 3],
+          modelName: modelKeyPieces[modelKeyPieces.length - 1],
+          modelDate: dayjs(model.LastModified).format('YYYY-MM-DD HH:mm:ss (z)')
+        }
+      })
+      setItems(models);
+
+      setIsLoading(false);
     }
 
     getQuarantinedModels();
+
+    return() => {
+      // Unmounting
+    }
   },[])
 
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: 'User',
-        accessor: (row) => {
-          const modelKeyPieces = (row.Key.split('/'));
-          return modelKeyPieces[modelKeyPieces.length - 3];
-        },
-      },
-      {
-        Header: 'Model',
-        accessor: (row) => {
-          const modelKeyPieces = (row.Key.split('/'));
-          return modelKeyPieces[modelKeyPieces.length - 1].split('.')[0];
-        },
-      },
-      {
-        Header: 'Date / Time Uploaded',
-        disableFilters: true,
-        accessor: (row) => {
-          const modelDate = dayjs(row.LastModified).format('YYYY-MM-DD HH:mm:ss (z)');
-          return modelDate;
-        },
-      },
-    ],
-    []
-  )
+  const [preferences, setPreferences] = useState({
+    ...DefaultPreferences,
+    visibleContent: ['userName', 'modelName', 'modelDate'],
+  });
 
-  const defaultColumn = React.useMemo(
-    () => ({
-      // Let's set up our default Filter UI
-      Filter: DefaultColumnFilter,
-    }),
-    []
-  )
-
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-    //state: { selectedRowIds },
-  } = useTable(
+  const {items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
+    allItems,
     {
-      columns,
-      data,
-      defaultColumn, // Be sure to pass the defaultColumn option
-    },
-    useFilters,
-    useSortBy,
-    useRowSelect
-  )
+      filtering: {
+        empty: (
+          <EmptyState
+            title="No models"
+            subtitle="No quarantined models to display."
+          />
+        ),
+        noMatch: (
+          <EmptyState
+            title="No matches"
+            subtitle="We can’t find a match."
+            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+          />
+        ),
+      },
+      pagination: { pageSize: preferences.pageSize },
+      sorting: { defaultState: { sortingColumn: AdminModelsColumnsConfig[1] } },
+      selection: {},
+    }
+  );
+  const { selectedItems } = collectionProps;
+
+  const visibleContentOptions = [
+    {
+      label: 'Model information',
+      options: [
+        {
+          id: 'modelName',
+          label: 'Model name',
+          editable: false,
+        },
+        {
+          id: 'modelDate',
+          label: 'Upload date',
+        }
+      ]
+    }
+  ]
 
   return (
     <>
-      <Header as='h1' icon textAlign='center'>Quarantined Models</Header>
-      <Table celled striped {...getTableProps()}>
-        <Table.Header>
-          {headerGroups.map(headerGroup => (
-            <Table.Row {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map(column => (
-                <Table.HeaderCell {...column.getHeaderProps(column.getSortByToggleProps())}>
-                  <div>
-                    {column.render('Header')}
-                    {column.canSort
-                      ? column.isSorted
-                        ? column.isSortedDesc
-                          ? <Icon name='sort down' />
-                          : <Icon name='sort up' />
-                        : <Icon disabled name='sort' />
-                      : ''}
-                    {column.canFilter ? column.render('Filter') : null}
-                  </div>
-                </Table.HeaderCell>
-              ))}
-            </Table.Row>
-          ))}
-        </Table.Header>
-        <Table.Body {...getTableBodyProps()}>
-          {rows.map((row, i) => {
-            prepareRow(row)
-            return (
-              <Table.Row {...row.getRowProps()}>
-                {row.cells.map(cell => {
-                  return <Table.Cell {...cell.getCellProps()}>{cell.render('Cell')}</Table.Cell>
-                })}
-              </Table.Row>
-            )
-          })}
-        </Table.Body>
-      </Table>
-    </>
-  )
-}
+      <ContentHeader
+        header="Quarantined Models"
+        description="List of all quarantined models."
+        breadcrumbs={[
+          { text: "Home", href: "/" },
+          { text: "Admin", href: "/admin/home" },
+          { text: "Quarantined Models" },
+        ]}
+      />
 
-export {AdminQuarantine}
+      <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+        <div></div>
+        <Table
+          {...collectionProps}
+          header={
+            <Header
+              counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
+            >
+              Models
+            </Header>
+          }
+          columnDefinitions={AdminModelsColumnsConfig}
+          items={items}
+          pagination={
+            <Pagination {...paginationProps}
+            ariaLabels={{
+              nextPageLabel: 'Next page',
+              previousPageLabel: 'Previous page',
+              pageLabel: pageNumber => `Go to page ${pageNumber}`,
+            }}
+          />}
+          filter={
+            <TextFilter
+              {...filterProps}
+              countText={MatchesCountText(filteredItemsCount)}
+              filteringAriaLabel='Filter models'
+            />
+          }
+          loading={isLoading}
+          loadingText="Loading models"
+          visibleColumns={preferences.visibleContent}
+          preferences={
+            <CollectionPreferences
+              title='Preferences'
+              confirmLabel='Confirm'
+              cancelLabel='Cancel'
+              onConfirm={({ detail }) => setPreferences(detail)}
+              preferences={preferences}
+              pageSizePreference={PageSizePreference('models')}
+              visibleContentPreference={{
+                title: 'Select visible columns',
+                options: visibleContentOptions,
+              }}
+              wrapLinesPreference={WrapLines}
+            />
+          }
+        />
+      </Grid>
+    </>
+  );
+
+}

@@ -1,127 +1,84 @@
-
-import React, { Component } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 import { Auth, Storage } from 'aws-amplify';
-import { Button, Progress, Message, Icon } from 'semantic-ui-react';
 
-class Upload extends Component {
-    constructor(props) {
-      super(props);
-      this.containerDiv = React.createRef();
-      this.state = {
-        percent: 0,
-        result: '',
-        filename: '',
-        username: '',
-      };
-    }
+import { ContentHeader } from './components/ContentHeader';
+import {
+  Button,
+  FormField,
+  Grid,
+  SpaceBetween,
+} from '@cloudscape-design/components';
+import { FileUploadStatus } from "./components/FileUploadStatus";
 
-    fileInputRef = React.createRef();
+export function Upload() {
+  const [username, setUsername] = useState();
+  const [uploadFiles, setUploadFiles] = useState({});
+  const fileInputRef = useRef(null);
 
-    _isMounted = false;
+  useEffect(() => {
+    const getData = async() => {
 
-    async componentDidMount() {
-      this._isMounted = true;
-
-      // get user's username
       Auth.currentAuthenticatedUser().then(user => {
-        //console.log(user)
-        const username = user.username;
-        //console.log('username: ' + username)
-        if (this._isMounted && username !== undefined ) {
-          this.setState({ username: username });
-        }
+        setUsername(user.username);
       })
     }
 
-    async componentWillUnmount() {
-      this._isMounted = false;
-    }
+    getData();
 
-    async onChange(e) {
-        const file = e.target.files[0];
-        console.log(file)
-        const filename_nospace = file.name.replace(/ /g,"_")
-        this.setState({filename: filename_nospace})
-        const localthis = this;
-        var s3path = this.state.username + "/models/" + filename_nospace
-        console.log("s3path: " + s3path)
-        await Storage.put((s3path), file, {
-          level: 'private',
-          contentType: file.type,
-          tagging: 'lifecycle=true',
-          progressCallback(progress) {
-            var currentpercent = Math.round(progress.loaded/progress.total*100)
-            localthis.setState({percent: currentpercent})
-            console.log('Uploading:' + localthis.state.percent)
-          },
-        }).then (result => {
-          this.setState({result:
-            <Message success>
-            <Message.Header>Uploaded</Message.Header>
-            <p>{this.state.filename}</p>
-          </Message>
-          })
-          console.log(result)
-          }
-        ).catch(err => {
-          this.setState({result:
-          <Message negative>
-            <Message.Header>Error whilst uploading</Message.Header>
-            <p>{this.state.filename}</p>
-          </Message>
-          })
-          console.log(err)
-          }
-        );
+    return() => {
+      // Unmounting
     }
+  },[])
 
-    render() {
-      let buttonStateEnabled = <div>
-          <Button
-            content="Choose File"
-            labelPosition="left"
-            icon="file"
-            onClick={() => this.fileInputRef.current.click()}
-          />
+  const handleFileUpload = (e) => {
+    setUploadFiles(e.target.files);
+  }
+
+  return (
+    <>
+      <ContentHeader
+        header="Upload models"
+        description="Upload models into DREM ready for racing on the track."
+        breadcrumbs={[
+          { text: "Home", href: "/" },
+          { text: "Upload models", href: "/upload"}
+        ]}
+      />
+
+      <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+      <div></div>
+      <FormField
+        constraintText='model-name.tar.gz'
+        description='Upload physical model for racing on the track'
+        label='Upload model'
+      >
+        <Button
+          iconName='upload'
+          onClick={() => fileInputRef.current.click()}
+        >Choose model file(s)
           <input
-            ref={this.fileInputRef}
-            type="file" accept='application/gzip,application/tar'
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            accept='application/gzip,application/tar'
+            multiple
             hidden
-            onChange={(e) => this.onChange(e)}
           />
-        </div>;
-      let buttonstate;
-      let progressbar;
-      if (100 > this.state.percent && this.state.percent > 0 ) {
-        buttonstate =
-          <Message icon>
-            <Icon name='circle notched' loading />
-            <Message.Content>
-              <Message.Header>Uploading</Message.Header>
-              <p>{this.state.filename}</p>
-            </Message.Content>
-          </Message>;
-        progressbar = <Progress percent={this.state.percent} indicating progress='percent'/>;
-        this.setState({result: ''});
-      }
-      else if (100 === this.state.percent){
-        buttonstate = buttonStateEnabled;
-        progressbar = null;
-      }
-      else {
-        buttonstate = buttonStateEnabled;
-        progressbar = <Progress percent={this.state.percent} indicating progress='percent'/>;
-      }
+        </Button>
+      </FormField>
+      </Grid>
 
-      return (
-          <div>
-            <p><b>Note:</b> Models are only kept for 15 days from initial upload before being removed.</p>
-            {progressbar}
-            {this.state.result}
-            {buttonstate}
-          </div>
-      )
-    }
+      <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+        <div></div>
+        <SpaceBetween direction="vertical" size="s">
+
+        {Object.keys(uploadFiles).map((i) => {
+          return (
+            <FileUploadStatus file={uploadFiles[i]} username={username} />
+          );
+        })}
+        </SpaceBetween>
+      </Grid>
+    </>
+  )
 }
-
-export {Upload}
