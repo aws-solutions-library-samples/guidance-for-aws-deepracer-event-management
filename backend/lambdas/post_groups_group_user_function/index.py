@@ -1,46 +1,47 @@
-import logging
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.typing import LambdaContext
 import simplejson as json
 import boto3
+from botocore.exceptions import ClientError
 import os
-from datetime import date, datetime
+import http_response
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
+logger = Logger()
 client_cognito = boto3.client('cognito-idp')
 user_pool_id = os.environ["user_pool_id"]
 
-def json_serial(obj):
-    """JSON serializer for objects not serializable by default json code"""
 
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    raise TypeError ("Type %s not serializable" % type(obj))
+@logger.inject_lambda_context
+def lambda_handler(event: dict, context: LambdaContext) -> str:
+    try:
+        if event['pathParameters'] is None:
+            return http_response.response(400, 'bad input')
 
-def lambda_handler(event, context):
-    # function goes here
+        path_parameters = event['pathParameters']
+        body_parameters = json.loads(event['body'])
 
-    post_data = json.loads(event['body'])
-    if 'groupname' in event['pathParameters']:
-        groupname = event['pathParameters']['groupname']
-    if 'username' in event['body']:
-        username = post_data['username']
+        if not path_parameters['groupname'] or not body_parameters['username']:
+            return http_response.response(400, 'bad input')
 
-    response = client_cognito.admin_add_user_to_group(
-        UserPoolId=user_pool_id,
-        Username=username,
-        GroupName=groupname,
-    )
-    logger.info(response)
+        groupname = path_parameters['groupname']
+        username = body_parameters['username']
 
-    #TODO: Deal with the exceptions correctly
-    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cognito-idp.html#CognitoIdentityProvider.Client.admin_add_user_to_group
+        try:
+            response = client_cognito.admin_add_user_to_group(
+                UserPoolId=user_pool_id,
+                Username=username,
+                GroupName=groupname,
+            )
+            logger.info(response)
 
-    return {
-        "headers": {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin" : "*", # Required for CORS support to work
-            "Access-Control-Allow-Credentials" : True # Required for cookies, authorization headers with HTTPS
-        },
-        "statusCode": 200
-    }
+            return http_response.response(response['ResponseMetadata']['HTTPStatusCode'])
+
+        except ClientError as e:
+            logger.exception(e.response)
+            error_message = e.response['Error']['Message']
+            http_status_code = e.response['ResponseMetadata']['HTTPStatusCode']
+            return http_response.response(http_status_code, error_message)
+
+    except Exception as error:
+        logger.exception(error)
+        return http_response.response(500, error)

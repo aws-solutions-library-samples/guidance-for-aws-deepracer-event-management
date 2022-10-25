@@ -1,8 +1,28 @@
-
-
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Auth, Storage } from 'aws-amplify';
-import { Table, Button } from 'semantic-ui-react';
+import { useCollection } from '@cloudscape-design/collection-hooks';
+import {
+  Button,
+  CollectionPreferences,
+  Grid,
+  Header,
+  Pagination,
+  Table,
+  TextFilter,
+  SpaceBetween,
+} from '@cloudscape-design/components';
+
+import { ContentHeader } from './components/ContentHeader';
+import {
+  DefaultPreferences,
+  EmptyState,
+  MatchesCountText,
+  PageSizePreference,
+  UserModelsColumnsConfig,
+  WrapLines,
+} from './components/TableConfig';
+
+import DeleteModelModal from './components/DeleteModelModal';
 
 import dayjs from 'dayjs';
 
@@ -15,102 +35,174 @@ dayjs.extend(advancedFormat)
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
-//const path = require('path')
-class Models extends Component {
-  constructor(props) {
-    super(props);
-    this.containerDiv = React.createRef();
-    this.state = {
-      percent: 0,
-      result: '',
-      filename: '',
-      models: [],
-      view: 'list',
-      username: '',
-    };
-  }
+export function Models() {
+  const [allItems, setItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedModelsBtn, setSelectedModelsBtn] = useState(true);
 
-  componentDidMount = async () => {
-    // Models
-    async function getModels(outerThis) {
-      // get user's username
+  useEffect(() => {
+    const getData = async() => {
+
       Auth.currentAuthenticatedUser().then(user => {
-        //console.log(user)
         const username = user.username;
         const s3Path = username + "/models";
-        console.log("s3Path: " + s3Path);
         Storage.list(s3Path, { level: 'private' }).then(models => {
-          console.log(models)
-          if(models !== undefined){
-            outerThis.setState({ models: models });
+          if (models !== undefined) {
+            var userModels = models.map(function (model, i) {
+              const modelKeyPieces = (model.key.split('/'))
+              return {
+                key: model.key,
+                modelName: modelKeyPieces[modelKeyPieces.length - 1],
+                modelDate: dayjs(model.lastModified).format('YYYY-MM-DD HH:mm:ss (z)')
+              }
+            })
+            setItems(userModels);
+            setIsLoading(false);
           }
         })
       })
+      .catch((err) => {
+        console.log(err);
+      })
     }
 
-    // Collect Car data
-    this.setState({ files: [] })
+    getData();
 
-    // Collect Models
-    getModels(this);
-
-    this._isMounted = true;
-  }
-
-  componentWillUnmount() {
-    this._isMounted = false;
-  }
-
-  onDeleteClickHandler = async(clickitem) => {
-    async function deleteImage(key) {
-      return await Storage.remove(key, { level: 'private' })
+    return() => {
+      // Unmounting
     }
+  },[]);
 
-    console.log(clickitem['key'])
-
-    let response = await deleteImage(clickitem['key'])
-    console.log(response)
-
-    this.componentDidMount()
-  }
-
-  render() {
-    var tablerows = this.state.models.map(function (model, i) {
-      const modelKeyPieces = (model.key.split('/'))
-      var modelName = modelKeyPieces[modelKeyPieces.length - 1]
-      return <Table.Row key={i} >
-        <Table.Cell>{modelName}</Table.Cell>
-        <Table.Cell>{dayjs(model.lastModified).format('YYYY-MM-DD HH:mm:ss (z)')}</Table.Cell>
-        <Table.Cell><Button negative circular icon='delete' onClick={(event) => this.onDeleteClickHandler(model)}/></Table.Cell>
-      </Table.Row>
-    }.bind(this));
-
-    let content = ''
-
-    if (this.state.view === 'list'){
-      content = <Table celled striped>
-      <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Name</Table.HeaderCell>
-            <Table.HeaderCell>Date / Time Uploaded</Table.HeaderCell>
-            <Table.HeaderCell>Delete</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {tablerows}
-        </Table.Body>
-      </Table>
-    }
-
-
-
-    return (
-      <div>
-        <p><b>Note:</b> Models are only kept for 15 days from initial upload before being removed.</p>
-        {content}
-      </div>
+  const removeItem = (key) => {
+    setSelectedModelsBtn(true);
+    setItems(items =>
+      items.filter(items => items.key !== key)
+    )
+    setSelectedItems(items =>
+      items.filter(items => items.key !== key)
     )
   }
-}
 
-export {Models}
+  const [preferences, setPreferences] = useState({
+    ...DefaultPreferences,
+    visibleContent: ['modelName', 'modelDate'],
+  });
+
+  const {items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
+    allItems,
+    {
+      filtering: {
+        empty: (
+          <EmptyState
+            title="No models"
+            subtitle="No models to display."
+          />
+        ),
+        noMatch: (
+          <EmptyState
+            title="No matches"
+            subtitle="We can’t find a match."
+            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+          />
+        ),
+      },
+      pagination: { pageSize: preferences.pageSize },
+      sorting: { defaultState: { sortingColumn: UserModelsColumnsConfig[1] } },
+      selection: {},
+    }
+  );
+
+  const visibleContentOptions = [
+    {
+      label: 'Model information',
+      options: [
+        {
+          id: 'modelName',
+          label: 'Model name',
+          editable: false,
+        },
+        {
+          id: 'modelDate',
+          label: 'Upload date',
+        }
+      ]
+    }
+  ]
+
+  return (
+    <>
+      <ContentHeader
+        header="Models"
+        description="List of your uploaded models."
+        breadcrumbs={[
+          { text: "Home", href: "/" },
+          { text: "Models" },
+        ]}
+      />
+
+      <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+      <div></div>
+        <Table
+          {...collectionProps}
+          header={
+            <Header
+              counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
+              actions={
+                <SpaceBetween direction="horizontal" size="xs">
+                  <DeleteModelModal disabled={selectedModelsBtn} selectedItems={selectedItems} removeItem={removeItem} variant="primary" />
+                </SpaceBetween>
+              }
+            >
+              Models
+            </Header>
+          }
+          columnDefinitions={UserModelsColumnsConfig}
+          items={items}
+          pagination={
+            <Pagination {...paginationProps}
+            ariaLabels={{
+              nextPageLabel: 'Next page',
+              previousPageLabel: 'Previous page',
+              pageLabel: pageNumber => `Go to page ${pageNumber}`,
+            }}
+          />}
+          filter={
+            <TextFilter
+              {...filterProps}
+              countText={MatchesCountText(filteredItemsCount)}
+              filteringAriaLabel='Filter models'
+            />
+          }
+          loading={isLoading}
+          loadingText='Loading models'
+          visibleColumns={preferences.visibleContent}
+          selectedItems={selectedItems}
+          selectionType='multi'
+          trackBy='key'
+          onSelectionChange={({ detail: { selectedItems } }) => {
+            setSelectedItems(selectedItems)
+            selectedItems.length ? setSelectedModelsBtn(false) : setSelectedModelsBtn(true)
+          }}
+          resizableColumns
+          preferences={
+            <CollectionPreferences
+              title='Preferences'
+              confirmLabel='Confirm'
+              cancelLabel='Cancel'
+              onConfirm={({ detail }) => setPreferences(detail)}
+              preferences={preferences}
+              pageSizePreference={PageSizePreference('models')}
+              visibleContentPreference={{
+                title: 'Select visible columns',
+                options: visibleContentOptions,
+              }}
+              wrapLinesPreference={WrapLines}
+            />
+          }
+        />
+      </Grid>
+    </>
+  );
+
+}

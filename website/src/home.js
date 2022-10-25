@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { Image } from 'semantic-ui-react';
 
 const Home = () => {
-  //const [count, setCount] = React.useState(0); // state
 
   return (
-    <Image alt="DeepRacer Logo" src="/logo-bw.png" size='large' centered />
+    <>
+      <img src="/logo-bw.png" alt="Logo" width={450} height={450} class="center awsui-util-hide-in-dark-mode"/>
+    </>
   );
  };
 

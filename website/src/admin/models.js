@@ -1,9 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { API } from 'aws-amplify';
-import { Container, Header, Table, Icon, Menu, Input } from 'semantic-ui-react';
+import { useCollection } from '@cloudscape-design/collection-hooks';
+import {
+  Button,
+  CollectionPreferences,
+  Header,
+  Grid,
+  Pagination,
+  Table,
+  TextFilter,
+  SpaceBetween,
+} from '@cloudscape-design/components';
+
+import { ContentHeader } from '../components/ContentHeader';
+import {
+  AdminModelsColumnsConfig,
+  DefaultPreferences,
+  EmptyState,
+  MatchesCountText,
+  PageSizePreference,
+  WrapLines,
+} from '../components/TableConfig';
 
 import CarModelUploadModal from "./carModelUploadModal.js";
-import { useTable, useSortBy, useRowSelect, useFilters } from 'react-table'
+import DeleteModelModal from '../components/DeleteModelModal';
 
 import dayjs from 'dayjs';
 
@@ -16,218 +36,174 @@ dayjs.extend(advancedFormat)
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
-const IndeterminateCheckbox = React.forwardRef(
-  ({ indeterminate, ...rest }, ref) => {
-    const defaultRef = React.useRef()
-    const resolvedRef = ref || defaultRef
-
-    React.useEffect(() => {
-      resolvedRef.current.indeterminate = indeterminate
-    }, [resolvedRef, indeterminate])
-
-    return (
-      <>
-        <input type="checkbox" ref={resolvedRef} {...rest} />
-        {/* <Checkbox ref={resolvedRef} {...rest}/> */}
-      </>
-    )
-  }
-)
-
-// Define a default UI for filtering
-function DefaultColumnFilter({
-  column: { filterValue, preFilteredRows, setFilter },
-}) {
-  const count = preFilteredRows.length
-
-  return (
-    <Input
-      icon={{ name: 'search', circular: true }}
-      value={filterValue || ''}
-      onChange={e => {
-        setFilter(e.target.value || undefined) // Set undefined to remove the filter entirely
-      }}
-      placeholder={`Search ${count} records...`}
-    />
-  )
-}
-
-function AdminModels() {
-  const [data, setData] = useState([]);
+export function AdminModels() {
+  const [allItems, setItems] = useState([]);
   const [cars, setCars] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedModelsBtn, setSelectedModelsBtn] = useState(true);
 
 
   useEffect(() => {
-    async function getModels() {
+    async function getData() {
       console.log("Collecting models...")
-
       const apiName = 'deepracerEventManager';
       const apiPath = 'models';
 
       const response = await API.get(apiName, apiPath);
-      setData(response);
-    }
+      var models = response.map(function (model, i) {
+        // TODO: Fix inconsistency in model.Key / model.key in /admin/model.js and /models.js
+        const modelKeyPieces = (model.Key.split('/'))
+        return {
+          key: model.Key,
+          userName: modelKeyPieces[modelKeyPieces.length - 3],
+          modelName: modelKeyPieces[modelKeyPieces.length - 1],
+          modelDate: dayjs(model.LastModified).format('YYYY-MM-DD HH:mm:ss (z)')
+        }
+      })
+      setItems(models);
 
-    async function getCars() {
       console.log("Collecting cars...")
+      const apiCarPath = 'cars';
 
-      const apiName = 'deepracerEventManager';
-      const apiPath = 'cars';
+      const cars = await API.get(apiName, apiCarPath);
+      setCars(cars);
 
-      const response = await API.get(apiName, apiPath);
-      setCars(response);
+      setIsLoading(false);
     }
 
-    getModels();
-    getCars();
+    getData();
+
+    return() => {
+      // Unmounting
+    }
   },[])
 
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: 'User',
-        accessor: (row) => {
-          const modelKeyPieces = (row.Key.split('/'));
-          return modelKeyPieces[modelKeyPieces.length - 3];
-        },
-      },
-      {
-        Header: 'Model',
-        accessor: (row) => {
-          const modelKeyPieces = (row.Key.split('/'));
-          return modelKeyPieces[modelKeyPieces.length - 1].split('.')[0];
-        },
-      },
-      {
-        Header: 'Date / Time Uploaded',
-        disableFilters: true,
-        accessor: (row) => {
-          const modelDate = dayjs(row.LastModified).format('YYYY-MM-DD HH:mm:ss (z)');
-          return modelDate;
-        },
-      },
-    ],
-    []
-  )
+  const [preferences, setPreferences] = useState({
+    ...DefaultPreferences,
+    visibleContent: ['userName', 'modelName', 'modelDate'],
+  });
 
-  const defaultColumn = React.useMemo(
-    () => ({
-      // Let's set up our default Filter UI
-      Filter: DefaultColumnFilter,
-    }),
-    []
-  )
-
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-    selectedFlatRows,
-    //state: { selectedRowIds },
-  } = useTable(
+  const {items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
+    allItems,
     {
-      columns,
-      data,
-      defaultColumn, // Be sure to pass the defaultColumn option
-    },
-    useFilters,
-    useSortBy,
-    useRowSelect,
-    hooks => {
-      hooks.visibleColumns.push(columns => [
-        // Let's make a column for selection
-        {
-          id: 'selection',
-          // The header can use the table's getToggleAllRowsSelectedProps method
-          // to render a checkbox
-          Header: ({ getToggleAllRowsSelectedProps }) => (
-            <div>
-              <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
-            </div>
-          ),
-          // The cell can use the individual row's getToggleRowSelectedProps method
-          // to the render a checkbox
-          Cell: ({ row }) => (
-            <div>
-              <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
-            </div>
-          ),
-        },
-        ...columns,
-      ])
+      filtering: {
+        empty: (
+          <EmptyState
+            title="No models"
+            subtitle="No models to display."
+          />
+        ),
+        noMatch: (
+          <EmptyState
+            title="No matches"
+            subtitle="We can’t find a match."
+            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+          />
+        ),
+      },
+      pagination: { pageSize: preferences.pageSize },
+      sorting: { defaultState: { sortingColumn: AdminModelsColumnsConfig[1] } },
+      selection: {},
     }
-  )
+  );
+  const [selectedItems, setSelectedItems] = useState([]);
+
+  const visibleContentOptions = [
+    {
+      label: 'Model information',
+      options: [
+        {
+          id: 'userName',
+          label: 'User name',
+          editable: false,
+        },
+        {
+          id: 'modelName',
+          label: 'Model name',
+          editable: false,
+        },
+        {
+          id: 'modelDate',
+          label: 'Upload date',
+        }
+      ]
+    }
+  ]
 
   return (
     <>
-      <Header as='h1' icon textAlign='center'>Admin Models</Header>
-      <Table celled striped {...getTableProps()}>
-        <Table.Header>
-          {headerGroups.map(headerGroup => (
-            <Table.Row {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map(column => (
-                <Table.HeaderCell {...column.getHeaderProps(column.getSortByToggleProps())}>
-                  <div>
-                    {column.render('Header')}
-                    {column.canSort
-                      ? column.isSorted
-                        ? column.isSortedDesc
-                          ? <Icon name='sort down' />
-                          : <Icon name='sort up' />
-                        : <Icon disabled name='sort' />
-                      : ''}
-                    {column.canFilter ? column.render('Filter') : null}
-                  </div>
-                </Table.HeaderCell>
-              ))}
-            </Table.Row>
-          ))}
-        </Table.Header>
-        <Table.Body {...getTableBodyProps()}>
-          {rows.map((row, i) => {
-            prepareRow(row)
-            return (
-              <Table.Row {...row.getRowProps()}>
-                {row.cells.map(cell => {
-                  return <Table.Cell {...cell.getCellProps()}>{cell.render('Cell')}</Table.Cell>
-                })}
-              </Table.Row>
-            )
-          })}
-        </Table.Body>
-      </Table>
+      <ContentHeader
+        header="All Models"
+        description="List of all uploaded models."
+        breadcrumbs={[
+          { text: "Home", href: "/" },
+          { text: "Admin", href: "/admin/home" },
+          { text: "Models" },
+        ]}
+      />
 
-      <Menu fixed='bottom'>
-        <Container>
-          <Menu.Item>
-            <CarModelUploadModal cars={cars} models={selectedFlatRows} />
-          </Menu.Item>
-        </Container>
-      </Menu>
-
-      <Container textAlign='center'>
-        <br></br>
-        <br></br>
-      </Container>
-      {/* <p>Selected Rows: {Object.keys(selectedRowIds).length}</p>
-      <pre>
-        <code>
-          {JSON.stringify(
-            {
-              selectedRowIds: selectedRowIds,
-              'selectedFlatRows[].original': selectedFlatRows.map(
-                d => d.original
-              ),
-            },
-            null,
-            2
-          )}
-        </code>
-      </pre> */}
+      <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+      <div></div>
+        <Table
+          {...collectionProps}
+          header={
+            <Header
+              counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
+              actions={
+                <SpaceBetween direction="horizontal" size="xs">
+                  <CarModelUploadModal disabled={selectedModelsBtn} selectedModels={selectedItems} cars={cars}></CarModelUploadModal>
+                </SpaceBetween>
+              }
+            >
+              Models
+            </Header>
+          }
+          columnDefinitions={AdminModelsColumnsConfig}
+          items={items}
+          pagination={
+            <Pagination {...paginationProps}
+            ariaLabels={{
+              nextPageLabel: 'Next page',
+              previousPageLabel: 'Previous page',
+              pageLabel: pageNumber => `Go to page ${pageNumber}`,
+            }}
+          />}
+          filter={
+            <TextFilter
+              {...filterProps}
+              countText={MatchesCountText(filteredItemsCount)}
+              filteringAriaLabel='Filter models'
+            />
+          }
+          loading={isLoading}
+          loadingText='Loading models'
+          visibleColumns={preferences.visibleContent}
+          selectedItems={selectedItems}
+          selectionType='multi'
+          trackBy={'key'}
+          onSelectionChange={({ detail: { selectedItems } }) => {
+            setSelectedItems(selectedItems)
+            selectedItems.length ? setSelectedModelsBtn(false) : setSelectedModelsBtn(true)
+          }}
+          resizableColumns
+          preferences={
+            <CollectionPreferences
+              title='Preferences'
+              confirmLabel='Confirm'
+              cancelLabel='Cancel'
+              onConfirm={({ detail }) => setPreferences(detail)}
+              preferences={preferences}
+              pageSizePreference={PageSizePreference('models')}
+              visibleContentPreference={{
+                title: 'Select visible columns',
+                options: visibleContentOptions,
+              }}
+              wrapLinesPreference={WrapLines}
+            />
+          }
+        />
+      </Grid>
     </>
-  )
-}
+  );
 
-export {AdminModels}
+}

@@ -1,0 +1,12 @@
+[tool.pytest.ini_options]
+addopts = "--cov --cov-report html --junitxml=reports/unittest-report.xml"
+testpaths = [
+    "tests"
+]
+pythonpath = [
+    ".",
+    "./backend/lambdas/helper_functions_layer/http_response"
+]
+
+[tool.coverage.run]
+source = ["backend/lambdas"]

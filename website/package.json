@@ -2,30 +2,34 @@
   "name": "drem",
   "description": "DeepRacer Event Manager",
   "contributors": [
-    "David Smith <dasmthc@amazon.com "
+    "David Smith <dasmthc@amazon.com>",
+    "Steven Askwith <askwith@amazon.com>",
+    "Chris Scudder <csj@amazon.com>",
+    "Johan Esbjorner <esbjj@amazon.com>"
   ],
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@aws-amplify/ui-react": "^3.4.0",
+    "@aws-amplify/ui-react": "^3.5.9",
+    "@cloudscape-design/collection-hooks": "^1.0.10",
+    "@cloudscape-design/components": "^3.0.85",
+    "@cloudscape-design/global-styles": "^1.0.1",
     "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.3.0",
+    "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
-    "aws-amplify": "^4.3.30",
-    "dayjs": "^1.11.5",
-    "i18next": "^21.9.0",
-    "i18next-browser-languagedetector": "^6.1.5",
-    "i18next-http-backend": "^1.4.1",
-    "mapbox-gl": "^1.13.2",
+    "aws-amplify": "^4.3.39",
+    "dayjs": "^1.11.6",
+    "i18next": "^22.0.2",
+    "i18next-browser-languagedetector": "^6.1.8",
+    "i18next-http-backend": "^1.4.4",
+    "mapbox-gl": "^2.10.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-i18next": "^11.18.3",
-    "react-router-dom": "^6.2.1",
+    "react-i18next": "^12.0.0",
+    "react-router-dom": "^6.4.2",
     "react-scripts": "^5.0.1",
     "react-table": "^7.8.0",
-    "semantic-ui-css": "git+https://github.com/Semantic-Org/Semantic-UI-CSS.git",
-    "semantic-ui-react": "^2.1.3",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^3.0.4"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -50,5 +54,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@svgr/webpack": "^6.4.0"
+  },
+  "overrides": {
+    "@svgr/webpack": "$@svgr/webpack"
   }
 }

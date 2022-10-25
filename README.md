@@ -2,11 +2,11 @@
 # Welcome to DeepRacer Event Manager (DREM)
 
 ## PreReqs
-Docker Desktop  
-Python (Tested with 3.9.10)  
-CDK (Tested with 2.16.0)  
+Docker Desktop
+Python (Tested with 3.9.10)
+CDK (Tested with 2.16.0)
 
-## Install 
+## Install
 
 Create a virtualenv on MacOS and Linux if you haven't already:
 
@@ -37,7 +37,7 @@ $ pip install -r requirements.txt      # For CDK deployment
 Run unit tests
 
 ```
-$ pytest --cov
+$ pytest
 ```
 
 At this point, set your default account and region and then you can deploy DREM by simply running make.
@@ -55,13 +55,11 @@ $ make
 
 ## Useful commands
 
- * `make all` 
+ * `make all`
     * deploy all stacks to your default AWS account/region
- * `make frontend.only.deploy` 
+ * `make frontend.only.deploy`
     * deploy only the frontend
     * requires that you have already completed a full `make` to ensure the backend is already deployed and the local config files have been generated
 
 ## SES + Cognito
 [Setup Guide](./SES.md)
-
-

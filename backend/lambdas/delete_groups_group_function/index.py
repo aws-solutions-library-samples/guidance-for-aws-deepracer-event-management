@@ -1,33 +1,23 @@
-import logging
-import simplejson as json
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.typing import LambdaContext
 import boto3
 import os
-from datetime import date, datetime
+import http_response
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = Logger()
 
 client_cognito = boto3.client('cognito-idp')
 user_pool_id = os.environ["user_pool_id"]
 
-def json_serial(obj):
-    """JSON serializer for objects not serializable by default json code"""
 
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    raise TypeError ("Type %s not serializable" % type(obj))
+@logger.inject_lambda_context
+def lambda_handler(event: dict, context: LambdaContext) -> str:
+    try:
+        response = {}
+        logger.info(response)
 
-def lambda_handler(event, context):
-    # function goes here
-    response = {}
-    logger.info(response)
+        return http_response.response(response['ResponseMetadata']['HTTPStatusCode'], response)
 
-    return {
-        "headers": {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin" : "*", # Required for CORS support to work
-            "Access-Control-Allow-Credentials" : True # Required for cookies, authorization headers with HTTPS
-        },
-        "statusCode": 200,
-        "body": json.dumps(response, default=json_serial)
-    }
+    except Exception as error:
+        logger.exception(error)
+        return http_response.response(500, error)

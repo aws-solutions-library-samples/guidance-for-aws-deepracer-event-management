@@ -6,9 +6,9 @@ zip_repo:
   only:
     - main
     - release
-    - unittest
-    - users
+    - esbjj
     - cdk-pipeline-askwith
+    - cdk-pipeline-dasmthc
   stage: zip
   image:
     name: ubuntu
@@ -16,6 +16,7 @@ zip_repo:
     - apt-get -y update
     - apt-get -y install zip
     - echo $CI_COMMIT_REF_NAME > branch.txt
+    - echo $EMAIL > email.txt
     - zip -r drem.zip .
   artifacts:
     paths:
@@ -25,9 +26,9 @@ upload_to_s3:
   only:
     - main
     - release
-    - unittest
-    - users
+    - esbjj
     - cdk-pipeline-askwith
+    - cdk-pipeline-dasmthc
   stage: upload
   image:
     name: amazon/aws-cli

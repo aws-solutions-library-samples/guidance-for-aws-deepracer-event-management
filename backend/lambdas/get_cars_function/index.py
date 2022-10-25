@@ -1,41 +1,30 @@
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.typing import LambdaContext
 import logging
-import simplejson as json
 import boto3
-from datetime import date, datetime
+import http_response
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
+logger = Logger()
 client_ssm = boto3.client('ssm')
 
-def json_serial(obj):
-    """JSON serializer for objects not serializable by default json code"""
 
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    raise TypeError ("Type %s not serializable" % type(obj))
+@logger.inject_lambda_context
+def lambda_handler(event: dict, context: LambdaContext) -> str:
+    try:
+        response = client_ssm.describe_instance_information(
+            Filters=[
+                {
+                    'Key': 'PingStatus',
+                    'Values': [
+                        'Online',
+                    ]
+                },
+            ],
+        )
+        logger.info(response['InstanceInformationList'])
 
-def lambda_handler(event, context):
-    # function goes here
-    response = client_ssm.describe_instance_information(
-        Filters=[
-            {
-                'Key': 'PingStatus',
-                'Values': [
-                    'Online',
-                ]
-            },
-        ],
-    )
-    logger.info(response['InstanceInformationList'])
+        return http_response.response(200, response['InstanceInformationList'])
 
-    return {
-        'headers': { 
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin" : "*", # Required for CORS support to work
-            "Access-Control-Allow-Credentials" : True # Required for cookies, authorization headers with HTTPS 
-        },
-        'statusCode': 200,
-        'body': json.dumps(response['InstanceInformationList'], default=json_serial)
-        #'body': response
-    }
+    except Exception as error:
+        logger.exception(error)
+        return http_response.response(500, error)
