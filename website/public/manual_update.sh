@@ -121,7 +121,7 @@ IFS=' ' read -ra encryptedPass <<< $tempPass
 cp /opt/aws/deepracer/password.txt ${backupDir}/password.txt.bak
 printf "${encryptedPass[0]}" > /opt/aws/deepracer/password.txt
 
-# Check version and perform any version specific actions (looking at you 16.04)
+# Check version
 . /etc/lsb-release
 if [ $DISTRIB_RELEASE = "16.04" ]; then
     echo 'Ubuntu 16.04 detected'
@@ -141,8 +141,15 @@ else
 fi
 
 echo 'Updating...'
-apt clean && apt update
-apt-get install -y aws-deepracer*
+
+# Update Ubuntu
+sudo apt-get upgrade -o Dpkg::Options::="--force-overwrite"
+
+# Update DeepRacer
+sudo apt-get install aws-deepracer-* -o Dpkg::Options::="--force-overwrite"
+
+# Remove redundant packages
+sudo apt autoremove
 
 # If changing hostname need to change the flag in network_config.py
 # /opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py
@@ -155,9 +162,10 @@ if [ $DISTRIB_RELEASE = "20.04" ]; then
         rm /etc/hosts
         cat ${backupDir}/hosts.bak | sed -e "s/${oldHost}/${varHost}/" > /etc/hosts
 
-        cp /opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py ${backupDir}/network_config.py.bak
-        rm /opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py
-        cat ${backupDir}/network_config.py.bak | sed -e "s/SET_HOSTNAME_TO_CHASSIS_SERIAL_NUMBER = True/SET_HOSTNAME_TO_CHASSIS_SERIAL_NUMBER = False/" > /opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py
+        cp ${systemPath}/network_monitor_module/network_config.py ${backupDir}/network_config.py.bak
+        rm ${systemPath}/network_monitor_module/network_config.py
+        cat ${backupDir}/network_config.py.bak | sed -e "s/SET_HOSTNAME_TO_CHASSIS_SERIAL_NUMBER = True/SET_HOSTNAME_TO_CHASSIS_SERIAL_NUMBER = False/" > ${systemPath}/network_monitor_module/network_config.py
+
     fi
 
     # Disable software_update
@@ -166,9 +174,6 @@ if [ $DISTRIB_RELEASE = "20.04" ]; then
     cat ${backupDir}/software_update_config.py.bak | sed -e "s/ENABLE_PERIODIC_SOFTWARE_UPDATE = True/ENABLE_PERIODIC_SOFTWARE_UPDATE = False/" > ${systemPath}/software_update_module/software_update_config.py
 
 fi
-
-echo 'Restarting services'
-systemctl restart deepracer-core
 
 # Install ssm-agent -> https://snapcraft.io/install/amazon-ssm-agent/ubuntu
 mkdir /tmp/ssm
@@ -260,9 +265,8 @@ systemctl stop cups-browsed
 #  [ + ]  whoopsie
 
 # Restart services
+echo 'Restarting services'
 systemctl restart deepracer-core
 service nginx restart
 
-# Done
-echo 'Remember to "forget" the wifi being used to update the car if it is not the wifi that will be used for the event.'
-echo 'Please log into the car console and change the car LED colour to preference'
+echo "Done!"

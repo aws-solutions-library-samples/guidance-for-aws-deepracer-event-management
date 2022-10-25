@@ -1,93 +1,83 @@
-import React, { Component } from 'react';
+import React, { Component, useState, useEffect, useRef } from 'react';
 import { API } from 'aws-amplify';
-import { Label, Message, Icon, Dimmer, Loader, Header, Table, Button, Modal, Container } from 'semantic-ui-react'
 
-class CarModelUploadModal extends Component {
-  constructor(props) {
-    super(props);
-    this.containerDiv = React.createRef();
-    this.state = {
-      open: false,
-      resultOpen: false,
-      result: "",
-      results: [],
-      CurrentInstanceId: "",
-      CurrentModel: "",
-      CommandId: "",
-      uploadStatus: "",
-      count: 0,
-      delay: 1000,
-      dimmerActive: false,
-      uploadButtonDisabled: true,
-    };
-  }
+import {
+  Button,
+  SpaceBetween,
+  Box,
+  Modal,
+  Alert,
+  Table,
+  Header,
+  ProgressBar
+} from '@cloudscape-design/components';
 
-  componentDidMount = async () => {
-    this.setState({ result: <p>Mounted</p> })
-  }
+// https://overreacted.io/making-setinterval-declarative-with-react-hooks/
+function useInterval(callback, delay) {
+  const savedCallback = useRef();
 
-  startModelUploadsToCar = async (car, models) => {
-    this.setState({
-      car: car,
-      models: models,
-    })
-    this.interval = setInterval(this.startModelUploadsToCarTick, this.state.delay); // start poll
-  }
+  // Remember the latest callback.
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
 
-  startModelUploadsToCarTick = () => {
-    let models = this.state.models
-    this.setState({
-      count: this.state.count + 1
-    });
-
-    //console.log('Models in array: ' + models.length)
-    if (this.state.uploadStatus !== "InProgress"){
-      this.setState({
-        uploadStatus: "InProgress",
-      });
-      //console.log(this.state.uploadStatus + " !== InProgress")
-      if(models.length > 0) {
-        let model = models.pop();
-        //console.log('POP!');
-        this.uploadModelToCar(this.state.car, model.original);
-      }
-      else {
-        clearInterval(this.interval); // stop poll
-        this.setState({ dimmerActive: false });
-      }
-    } else {
-      this.uploadModelToCarStatus(this.state.CurrentInstanceId, this.state.CommandId, this.state.CurrentModel);
+  // Set up the interval.
+  useEffect(() => {
+    function tick() {
+      savedCallback.current();
     }
-  }
+    if (delay !== null) {
+      let id = setInterval(tick, delay);
+      return () => clearInterval(id);
+    }
+  }, [delay]);
+}
 
-  uploadModelToCar= async (car, model) => {
+const StatusModelContent = (props) => {
+  const [seconds, setSeconds] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState('');
+  //const [selectedCars, setSelectedCars] = useState([]);
+  const [result, setResult] = useState('');
+  const [results, setResults] = useState([]);
+  const [commandId, setCommandId] = useState('');
+  const [currentInstanceId, setCurrentInstanceId] = useState('');
+  const [currentModel, setCurrentModel] = useState('');
+
+  async function uploadModelToCar(car, model) {
     //console.log(car.InstanceId)
-    //console.log(model.Key)
+    //console.log(model.key)
 
     const apiName = 'deepracerEventManager';
     const apiPath = 'cars/upload';
     const myInit = {
       body: {
         InstanceId: car.InstanceId,
-        key: model.Key
+        key: model.key
       }
     };
 
     let response = await API.post(apiName, apiPath, myInit);
-    //console.log(response)
-    this.setState({
-      result: response,
-      CommandId: response,
-      CurrentInstanceId: car.InstanceId,
-      CurrentModel: model,
-      uploadStatus: "InProgress",
-      dimmerActive: true,
-    });
+    //console.log(response);
+    //console.log(response.CommandId);
+    setResult(response);
+    setCommandId(response);
+    
+    setCurrentInstanceId(car.InstanceId);
+    
+    setCurrentModel(model);
+    setUploadStatus("InProgress");
+    //setDimmerActive(true);
   }
 
-  uploadModelToCarStatus= async (InstanceId, CommandId, model) => {
-    //console.log(InstanceId)
-    //console.log(CommandId)
+  async function uploadModelToCarStatus(InstanceId, CommandId, model) {
+    //console.log("InstanceId: " + InstanceId)
+    //console.log("CommandId: " + CommandId)
+    //console.log(model)
+
+    if(InstanceId === '' || CommandId === '')
+    {
+      return [];
+    }
 
     const apiName = 'deepracerEventManager';
     const apiPath = 'cars/upload/status';
@@ -101,7 +91,7 @@ class CarModelUploadModal extends Component {
     let response = await API.post(apiName, apiPath, myInit);
     //console.log(response)
 
-    const modelKeyPieces = (model.Key.split('/'));
+    const modelKeyPieces = (model.key.split('/'));
     let modelUser = modelKeyPieces[modelKeyPieces.length - 3];
     let modelName = modelKeyPieces[modelKeyPieces.length - 1];
 
@@ -110,14 +100,14 @@ class CarModelUploadModal extends Component {
     //console.log(resultToAdd);
 
     let updatedElement = false;
-    for (const currentResult in this.state.results) {
-      if (this.state.results[currentResult].CommandId === CommandId) {
+    for (const currentResult in results) {
+      if (results[currentResult].CommandId === CommandId) {
         //console.log('update');
         tempResultsArray.push(resultToAdd);
         updatedElement = true;
       } else {
         //console.log('dont update');
-        tempResultsArray.push(this.state.results[currentResult])
+        tempResultsArray.push(results[currentResult])
       }
     };
 
@@ -126,143 +116,188 @@ class CarModelUploadModal extends Component {
       tempResultsArray.push(resultToAdd)
     };
 
-    this.setState({
-      result: response,
-      uploadStatus: response,
-      results: tempResultsArray
-    });
+    setResult(response)
+    setUploadStatus(response)
+    setResults(tempResultsArray)
+
     return response;
   }
 
-  componentWillUnmount() {
-    clearInterval(this.interval);
-  }
+  useInterval(() => {
+    // Your custom logic here
+    setSeconds(seconds + 1);
+    //console.log("useInterval seconds: " + seconds)
 
-  render(){
-    //let cars = collectCars()
-    //let cars = [];
-    //console.log(cars.cars);
-    //console.log('model')
-    //console.log(this.props.models.length)
-    //console.log(this.props.cars.length)
-
-
-    //enable/disable upload button
-    let uploadButtonDisabled = true
-    if (this.props.models.length > 0) {
-      uploadButtonDisabled = false;
+    let models = props.selectedModels;
+    let car = props.selectedCars[0];
+    //console.log(models);
+    //console.log(car);
+  
+    //console.log('Models in array: ' + models.length)
+    if (uploadStatus !== "InProgress") {
+      //console.log(uploadStatus + " !== InProgress")
+      if(models.length > 0) {
+        setUploadStatus("InProgress");
+        let model = models.pop();
+        //console.log('POP!');
+        uploadModelToCar(car, model);
+      }
+      else {
+        //console.log('uploadStatus: ' + 'Complete');
+        //setDimmerActive(false);
+      }
     } else {
-      uploadButtonDisabled = true;
+      uploadModelToCarStatus(currentInstanceId, commandId, currentModel);
     }
 
-    // default modal when no cars are online
-    var modaltable = <Message negative icon>
-      <Icon name='exclamation' />
-      <Message.Header>No DeepRacer cars are online</Message.Header>
-    </Message>
+  }, 1000);
 
-    // if cars are online, display the car picker modal
-    if (this.props.cars.length > 0){
-      modaltable = this.props.cars.map(function (car, i) {
-        return <Table key={i}>
-          <Table.Body>
-            <Table.Row key={i} >
-              <Table.Cell><Header as='h3'>{car.InstanceId}</Header></Table.Cell>
-              <Table.Cell><Header as='h3'>{car.Name} - {car.IPAddress}</Header></Table.Cell>
-              <Table.Cell><Button content="Upload" labelPosition='right' icon='upload' onClick={() => {
-                this.setState({
-                  result: <p>Submitting Job...</p>,
-                  open: false,
-                  resultOpen: true,
-                  results: [],
-                });
-                this.startModelUploadsToCar(car, this.props.models);
-                }} positive /></Table.Cell>
-            </Table.Row>
-          </Table.Body>
-        </Table>
-      }.bind(this));
-    }
+  // body of ticker code
 
-    let resultRows = this.state.results.map(function (result, i) {
-      return <Table key={i}>
-        <Table.Body>
-          <Table.Row key={i} >
-            <Table.Cell textAlign='left'>{result.ModelName} </Table.Cell>
-            <Table.Cell textAlign='center'>{result.CommandId} </Table.Cell>
-            <Table.Cell textAlign='right'>{result.Status} </Table.Cell>
-          </Table.Row>
-        </Table.Body>
-      </Table>
-    });
-
-    var resultModalContent = ""
-    if (this.state.dimmerActive) {
-      resultModalContent =
-        <Container>
-          {resultRows}
-          <Dimmer active inverted>
-            <Loader size='large'>{this.state.result}</Loader>
-          </Dimmer>
-        </Container>
-    }
-    else{
-      resultModalContent = <Container>
-        {resultRows}
-      </Container>
-    }
-
-    return (
-      <>
-        <Modal
-          onClose={() => this.setState({ open: false })}
-          onOpen={() => this.setState({ open: true })}
-          open={this.state.open}
-          trigger={
-            // <Button content="Upload" labelPosition='left' positive icon='upload' />
-            <Button as='div' labelPosition='right' disabled={uploadButtonDisabled}>
-              <Button icon positive>
-                <Icon name='upload' />
-                Upload
-              </Button>
-              <Label as='a' basic pointing='left'>
-                {this.props.models.length}
-              </Label>
-            </Button>
+  return (
+    <div>
+      <Table
+        columnDefinitions={[
+          {
+            id: "ModelName",
+            header: "ModelName",
+            cell: item => item.ModelName || "-",
+            sortingField: "ModelName"
+          },
+          {
+            id: "CommandId",
+            header: "CommandId",
+            cell: item => item.CommandId || "-",
+            sortingField: "CommandId"
+          },
+          {
+            id: "Status",
+            header: "Status",
+            cell: item => item.Status || "-",
+            sortingField: "Status"
           }
-        >
-          <Modal.Header>Select a Car</Modal.Header>
-          <Modal.Content>
-            {modaltable}
-          </Modal.Content>
-          <Modal.Actions>
-            <Button color='red' onClick={() => {
-              this.setState({ open: false });
-              this.setState({ result: "" });
-            }}>Close</Button>
-          </Modal.Actions>
-        </Modal>
+        ]}
+        items={results}
+        loadingText="Loading resources"
+        sortingDisabled
+        empty={
+          <Alert
+            visible={true}
+            dismissAriaLabel="Close alert"
+            header="Starting"
+          >
+            Please wait whilst model upload jobs are submitted
+          </Alert>
+        }
+        header={
+          <ProgressBar value={(((props.modelsTotalCount-props.selectedModels.length)/props.modelsTotalCount)*100)} />
+        }
+      />  
 
-        <Modal
-        onClose={() => this.setState({ resultOpen: false })}
-        onOpen={() => this.setState({ resultOpen: true })}
-        open={this.state.resultOpen}
-        >
-        <Modal.Header>Upload Result</Modal.Header>
-        <Modal.Content>
-          {resultModalContent}
-        </Modal.Content>
-        <Modal.Actions>
-          <Button color='red' onClick={() => {
-            this.setState({ resultOpen: false });
-            this.setState({ result: "" });
-            clearInterval(this.interval); // stop poll
-          }}>Close</Button>
-        </Modal.Actions>
-        </Modal>
-      </>
-    )
-  }
+    </div>
+  );
+};
+
+export default (props) => {
+  const [visible, setVisible] = useState(false);
+  const [statusModelVisible, setStatusModelVisible] = useState(false);
+  const [modalContent, setModalContent] = useState(modalTable);
+  const [selectedCars, setSelectedCars] = useState([]);
+
+  var models = [...props.selectedModels]; //clone models array
+
+  // default modal content
+  var modalTable = <Table
+    onSelectionChange={({ detail }) => {
+      setSelectedCars(detail.selectedItems);
+    }}
+    selectedItems={selectedCars}
+    selectionType="single"
+    columnDefinitions={[
+      {
+        id: "InstanceId",
+        header: "InstanceId",
+        cell: item => item.InstanceId || "-",
+        sortingField: "InstanceId"
+      },
+      {
+        id: "Name",
+        header: "Name",
+        cell: item => item.Name || "-",
+        sortingField: "Name"
+      }
+    ]}
+    items={props.cars}
+    loadingText="Loading resources"
+    sortingDisabled
+    empty={
+      <Alert
+        visible={true}
+        dismissAriaLabel="Close alert"
+        header="No cars are online"
+      >
+        Check your cars are registered to DREM and are connected to the internet
+      </Alert>
+    }
+  />
+
+  return (
+    <>
+      <Button disabled={props.disabled} variant="primary" onClick={() => {
+        setVisible(true);
+      }}>Upload models to car</Button>
+
+      {/* modal 1 */}
+      <Modal 
+        size='large'
+        onDismiss={() => {
+          setVisible(false);
+        }}
+        visible={visible}
+        closeAriaLabel="Close modal"
+        footer={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button variant="link" onClick={() => {
+                setVisible(false);
+              }} >Cancel</Button>
+              <Button variant="primary" onClick={() => {
+                //uploadModelToCar();
+                setVisible(false);
+                setModalContent(<StatusModelContent selectedModels={models} selectedCars={selectedCars} modelsTotalCount={props.selectedModels.length} ></StatusModelContent>);
+                setStatusModelVisible(true);
+              }}>Ok</Button>
+            </SpaceBetween>
+          </Box>
+        }
+        header="Select a car"
+      >
+        {modalTable}
+      </Modal>
+
+      {/* modal 2 */}
+      <Modal
+        size='max'
+        onDismiss={() => {
+          setModalContent('');
+          setStatusModelVisible(false);
+        }}
+        visible={statusModelVisible}
+        closeAriaLabel="Close modal"
+        footer={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button variant="primary" onClick={() => {
+                setModalContent('');
+                setStatusModelVisible(false);
+              }}>Ok</Button>
+            </SpaceBetween>
+          </Box>
+        }
+        header="Upload to car status"
+      >
+        {modalContent}
+      </Modal>
+    </>
+  );
 }
-
-export default CarModelUploadModal

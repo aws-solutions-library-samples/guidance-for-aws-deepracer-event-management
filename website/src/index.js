@@ -3,7 +3,9 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import 'semantic-ui-css/semantic.min.css'
+
+import "@cloudscape-design/global-styles/index.css"
+import '@cloudscape-design/global-styles/dark-mode-utils.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

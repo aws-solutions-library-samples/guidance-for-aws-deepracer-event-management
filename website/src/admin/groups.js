@@ -1,29 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
 import { API } from 'aws-amplify';
-import { Header, Table, Icon, Input, Breadcrumb } from 'semantic-ui-react';
-import { useTable, useSortBy, useRowSelect, useFilters } from 'react-table'
+import { useCollection } from '@cloudscape-design/collection-hooks';
+import {
+  Button,
+  CollectionPreferences,
+  Grid,
+  Header,
+  Link,
+  Pagination,
+  SpaceBetween,
+  Table,
+  TextFilter,
+} from '@cloudscape-design/components';
 
-function DefaultColumnFilter({
-  column: { filterValue, preFilteredRows, setFilter },
-}) {
-  const count = preFilteredRows.length
+import { ContentHeader } from '../components/ContentHeader';
+import {
+  DefaultPreferences,
+  EmptyState,
+  MatchesCountText,
+  PageSizePreference,
+  WrapLines,
+} from '../components/TableConfig';
 
-  return (
-    <Input
-      icon={{ name: 'search', circular: true }}
-      value={filterValue || ''}
-      onChange={e => {
-        setFilter(e.target.value || undefined) // Set undefined to remove the filter entirely
-      }}
-      placeholder={`Search ${count} groups...`}
-    />
-  )
-}
+import dayjs from 'dayjs';
 
-function AdminGroups() {
-  const [data, setData] = useState([]);
+// day.js
+var advancedFormat = require('dayjs/plugin/advancedFormat')
+var utc = require('dayjs/plugin/utc')
+var timezone = require('dayjs/plugin/timezone') // dependent on utc plugin
+
+dayjs.extend(advancedFormat)
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+export function AdminGroups() {
+  const [allItems, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedItems, setSelectedItems] = useState([]);
 
   const apiName = 'deepracerEventManager';
 
@@ -31,10 +44,8 @@ function AdminGroups() {
     const getData = async() => {
       const apiPath = 'admin/groups';
 
-      // TODO: check the status code
       const groups = await API.get(apiName, apiPath);
-      setData(groups.Groups);
-
+      setItems(groups.Groups);
       setIsLoading(false);
     }
 
@@ -46,120 +57,144 @@ function AdminGroups() {
 
   },[]);
 
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: 'Name',
-        accessor: (row) => {
-          return (
-            <>
-            <Link to={{ pathname: `/admin/groups/${row.GroupName }` }} >{row.GroupName}</Link>
-            </>
-          )
-        }
-      },
-      {
-        Header: 'Description',
-        disableFilters: true,
-        disableSortBy: true,
-        accessor: (row) => {
-          return row.Description
-        }
-      // },
-      // {
-      //   Header: 'Actions',
-      //   disableFilters: true,
-      //   disableSortBy: true,
-      //   accessor: (row) => {
-      //     if (row.GroupName === "admin") {
-      //       return "Default admin group"
-      //     } else {
-      //       return (
-      //         <>
-      //         <Button circular color='blue' size='large' icon='edit' id='{row.GroupName}' />
-      //         <Button circular color='red' size='large' icon='delete' id='{row.GroupName}' />
-      //         </>
-      //       )
-      //     }
-      //   }
-      }
-    ],
-    []
-  )
+  const [preferences, setPreferences] = useState({
+    ...DefaultPreferences,
+    visibleContent: ['groupName', 'description'],
+  });
 
-  const defaultColumn = React.useMemo(
-    () => ({
-      Filter: DefaultColumnFilter,
-    }),
-    []
-  )
-
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-  } = useTable(
+  const columnsConfig = [
     {
-      columns,
-      data,
-      defaultColumn,
+      id: 'groupName',
+      header: 'Group name',
+      cell: item => (
+        <div>
+          <Link href={window.location.href + "/" + item.GroupName}>{item.GroupName}</Link>
+        </div>
+      ),
     },
-    useFilters,
-    useSortBy,
-    useRowSelect
-  )
+    {
+      id: 'description',
+      header: 'Description',
+      cell: item => item.description || '-',
+      sortingField: 'description',
+    },
+    {
+      id: 'creationDate',
+      header: 'Creation date',
+      cell: item => dayjs(item.creationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      sortingField: 'creationDate',
+    }
+  ];
+
+  const visibleContentOptions = [
+    {
+      label: 'Group information',
+      options: [
+        {
+          id: 'groupName',
+          label: 'Group name',
+          editable: false,
+        },
+        {
+          id: 'description',
+          label: 'Description',
+          editable: false,
+        },
+        {
+          id: 'creationDate',
+          label: 'Creation date',
+        }
+      ]
+    }
+  ]
+
+  const {items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
+    allItems,
+    {
+      filtering: {
+        empty: (
+          <EmptyState
+            title="No groups"
+            subtitle="No groups have been defined."
+          />
+        ),
+        noMatch: (
+          <EmptyState
+            title="No matches"
+            subtitle="We can’t find a match."
+            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+          />
+        ),
+      },
+      pagination: { pageSize: preferences.pageSize },
+      sorting: { defaultState: { sortingColumn: columnsConfig[0] } },
+      selection: {},
+    }
+  );
 
   return (
     <>
-      <Breadcrumb>
-        <Breadcrumb.Section>Admin</Breadcrumb.Section>
-        <Breadcrumb.Divider />
-        <Breadcrumb.Section active><Link to='/admin/groups/'>Groups</Link></Breadcrumb.Section>
-      </Breadcrumb>
-      <Header as='h1' icon textAlign='center'>Groups</Header>
-      {isLoading ? (
-        <div>Loading data...</div>
-      ) : (
-        <Table celled striped {...getTableProps()}>
-          <Table.Header>
-            {headerGroups.map(headerGroup => (
-              <Table.Row {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map(column => (
-                  <Table.HeaderCell {...column.getHeaderProps(column.getSortByToggleProps())}>
-                    <div>
-                      {column.render('Header')}
-                      {column.canSort
-                        ? column.isSorted
-                          ? column.isSortedDesc
-                            ? <Icon name='sort down' />
-                            : <Icon name='sort up' />
-                          : <Icon disabled name='sort' />
-                        : ''}
-                      {column.canFilter ? column.render('Filter') : null}
-                    </div>
-                  </Table.HeaderCell>
-                ))}
-              </Table.Row>
-            ))}
-          </Table.Header>
-          <Table.Body {...getTableBodyProps()}>
-            {rows.map((row, i) => {
-              prepareRow(row)
-              return (
-                <Table.Row {...row.getRowProps()}>
-                  {row.cells.map(cell => {
-                    return <Table.Cell {...cell.getCellProps()}>{cell.render('Cell')}</Table.Cell>
-                  })}
-                </Table.Row>
-              )
-            })}
-          </Table.Body>
-        </Table>
-      )}
-    </>
-  )
-}
+      <ContentHeader
+        header="Groups admin"
+        description="List of user groups."
+        breadcrumbs={[
+          { text: "Home", href: "/" },
+          { text: "Admin", href: "/admin/home" },
+          { text: "Groups" }
+        ]}
+      />
 
-export {AdminGroups}
+      <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+        <div></div>
+        <Table
+          {...collectionProps}
+          header={
+            <Header
+              counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
+            >
+              Groups
+            </Header>
+          }
+          columnDefinitions={columnsConfig}
+          items={items}
+          pagination={
+            <Pagination {...paginationProps}
+            ariaLabels={{
+              nextPageLabel: 'Next page',
+              previousPageLabel: 'Previous page',
+              pageLabel: pageNumber => `Go to page ${pageNumber}`,
+            }}
+          />}
+          filter={
+            <TextFilter
+              {...filterProps}
+              countText={MatchesCountText(filteredItemsCount)}
+              filteringAriaLabel='Filter models'
+            />
+          }
+          loading={isLoading}
+          loadingText='Loading groups'
+          visibleColumns={preferences.visibleContent}
+          selectedItems={selectedItems}
+          trackBy='GroupName'
+          resizableColumns
+          preferences={
+            <CollectionPreferences
+              title='Preferences'
+              confirmLabel='Confirm'
+              cancelLabel='Cancel'
+              onConfirm={({ detail }) => setPreferences(detail)}
+              preferences={preferences}
+              pageSizePreference={PageSizePreference('groups')}
+              visibleContentPreference={{
+                title: 'Select visible columns',
+                options: visibleContentOptions,
+              }}
+              wrapLinesPreference={WrapLines}
+            />
+          }
+        />
+      </Grid>
+    </>
+  );
+}

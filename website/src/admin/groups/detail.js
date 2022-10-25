@@ -1,40 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from "react-router-dom";
-import { API } from 'aws-amplify';
-import { Header, Table, Icon, Button, Input, Breadcrumb } from 'semantic-ui-react';
-import { useTable, useSortBy, useRowSelect, useFilters } from 'react-table'
-import { Auth } from 'aws-amplify';
+import React, { useEffect, useState } from 'react';
+import { API, Auth } from 'aws-amplify';
 import { useParams } from 'react-router-dom'
+import { useCollection } from '@cloudscape-design/collection-hooks';
+import {
+  Button,
+  CollectionPreferences,
+  Grid,
+  Header,
+  Icon,
+  Pagination,
+  StatusIndicator,
+  Table,
+  TextFilter,
+  Toggle,
+} from '@cloudscape-design/components';
 
-function DefaultColumnFilter({
-  column: { filterValue, preFilteredRows, setFilter },
-}) {
-  const count = preFilteredRows.length
+import { ContentHeader } from '../../components/ContentHeader';
+import {
+  DefaultPreferences,
+  EmptyState,
+  MatchesCountText,
+  PageSizePreference,
+  WrapLines,
+} from '../../components/TableConfig';
 
-  return (
-    <Input
-      icon={{ name: 'search', circular: true }}
-      value={filterValue || ''}
-      onChange={e => {
-        setFilter(e.target.value || undefined) // Set undefined to remove the filter entirely
-      }}
-      placeholder={`Search ${count} users...`}
-    />
-  )
-}
+import dayjs from 'dayjs';
 
-function AdminGroupsDetail() {
+// day.js
+var advancedFormat = require('dayjs/plugin/advancedFormat')
+var utc = require('dayjs/plugin/utc')
+var timezone = require('dayjs/plugin/timezone') // dependent on utc plugin
+
+dayjs.extend(advancedFormat)
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+export function AdminGroupsDetail() {
   const { groupName } = useParams();
-
-  const [data, setData] = useState([]);
+  const [allItems, setItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
 
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const apiName = 'deepracerEventManager';
 
   useEffect(() => {
-    const getUsers = async() => {
+    const getData = async() => {
       const apiUserPath = 'users';
 
       const userRsponse = await API.get(apiName, apiUserPath);
@@ -44,7 +56,7 @@ function AdminGroupsDetail() {
           isMember: false,
           currentUser: false,
         })
-      )
+      );
 
       const apiGroupPath = 'admin/groups/' + groupName;
       const groupResponse = await API.get(apiName, apiGroupPath);
@@ -60,23 +72,25 @@ function AdminGroupsDetail() {
         users[i].currentUser = true;
       });
 
-      setData(users);
+      setItems(users);
       setIsLoading(false);
     }
 
-    getUsers();
+    getData();
     return() => {
       // Unmounting
     }
 
   },[refreshKey]);
 
-  const ToggleUserGroup = async(user) => {
+  const toggleUser = (user) => {
     const apiName = 'deepracerEventManager';
+
+    // Check user is not attempting to remove self
 
     if (user.isMember) {
       const apiGroupUserPath = 'admin/groups/' + groupName + '/' + user.Username;
-      await API.del(apiName, apiGroupUserPath)
+      API.del(apiName, apiGroupUserPath)
     } else {
       const apiGroupUserPath = 'admin/groups/' + groupName;
       const params = {
@@ -84,125 +98,187 @@ function AdminGroupsDetail() {
           username: user.Username
         },
       };
-      await API.post(apiName, apiGroupUserPath, params)
+      API.post(apiName, apiGroupUserPath, params)
     }
 
     // need to reload the user data
-    setRefreshKey(oldKey => oldKey +1)
+    setRefreshKey(refreshKey + 1);
   }
 
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: 'User',
-        accessor: (row) => {
-          if (row.currentUser) {
-            return row.Username + ' (You)'
-          } else {
-            return row.Username
+  const userToggle = (user) => {
+    if (!user.currentUser) {
+      return (
+        <Toggle
+          onChange={({}) =>
+            toggleUser(user)
           }
-        }
-      },
-      {
-        Header: 'Admin',
-        disableFilters: true,
-        accessor: (row) => {
-          if (row.currentUser) {
-            return (
-              <Button circular color='blue' size='large' icon='dont' id='{row.Username}' disabled='true' />
-            )
-          } else {
-            if (row.isMember) {
-              return (
-                <Button circular color='green' size='large' icon='check' id='{row.Username}' onClick={(c) => { ToggleUserGroup(row) }} />
-              )
-            } else {
-              return (
-                <Button circular color='red' size='large' icon='delete' id='{row.Username}' onClick={(c) => { ToggleUserGroup(row) }} />
-              )
-            }
-          }
-        }
-      }
-    ],
-    []
-  )
+          checked={user.isMember}
+        />
+      )
+    } else {
+      return ( <Icon name='user-profile' />)
+    };
+  }
 
-  const defaultColumn = React.useMemo(
-    () => ({
-      Filter: DefaultColumnFilter,
-    }),
-    []
-  )
+  const [preferences, setPreferences] = useState({
+    ...DefaultPreferences,
+    visibleContent: ['userName', 'isMember'],
+  });
 
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-  } = useTable(
+  const columnsConfig = [
     {
-      columns,
-      data,
-      defaultColumn,
+      id: 'userName',
+      header: 'User name',
+      cell: item => item.Username,
+      sortingField: 'userName',
     },
-    useFilters,
-    useSortBy,
-    useRowSelect
-  )
+    {
+      id: 'userCreationDate',
+      header: 'Creation date',
+      cell: item => dayjs(item.UserCreateDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      sortingField: 'userCreationDate',
+    },
+    {
+      id: 'userLastModifiedDate',
+      header: 'Last modified date',
+      cell: item => dayjs(item.UserLastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      sortingField: 'userLastModifiedDate',
+    },
+    {
+      id: 'isMember',
+      header: 'Group member?',
+      cell: item => userToggle(item),
+      sortingField: 'isMember'
+    },
+    {
+      id: 'isEnabled',
+      header: 'User enabled?',
+      cell: item => <StatusIndicator {...isMemberIndicator[item.Enabled]} />,
+      sortingField: 'isEnabled'
+    }
+  ];
+
+  const visibleContentOptions = [
+    {
+      label: 'User information',
+      options: [
+        {
+          id: 'userName',
+          label: 'User name',
+          editable: false,
+        },
+        {
+          id: 'userCreationDate',
+          label: 'Creation date',
+        },
+        {
+          id: 'userLastModifiedDate',
+          label: 'Last modified date',
+        },
+        {
+          id: 'isMember',
+          label: 'Group member?',
+        },
+        {
+          id: 'isEnabled',
+          label: 'User enabled',
+        }
+      ]
+    }
+  ]
+
+  const {items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
+    allItems,
+    {
+      filtering: {
+        empty: (
+          <EmptyState
+            title="No users"
+            subtitle="No users have been defined."
+          />
+        ),
+        noMatch: (
+          <EmptyState
+            title="No matches"
+            subtitle="We can’t find a match."
+            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+          />
+        ),
+      },
+      pagination: { pageSize: preferences.pageSize },
+      sorting: { defaultState: { sortingColumn: columnsConfig[0] } },
+      selection: {},
+    }
+  );
+
+  const isMemberIndicator = {
+    true: { type: 'success', children: ''},
+    false: { type: 'error', children: ''},
+  };
 
   return (
     <>
-      <Breadcrumb>
-        <Breadcrumb.Section>Admin</Breadcrumb.Section>
-        <Breadcrumb.Divider />
-        <Breadcrumb.Section link><Link to='/admin/groups/'>Groups</Link></Breadcrumb.Section>
-        <Breadcrumb.Divider />
-        <Breadcrumb.Section active>{groupName}</Breadcrumb.Section>
-      </Breadcrumb>
-      <Header as='h1' icon textAlign='center'>Group "{groupName}" Admin</Header>
-      {isLoading ? (
-        <div>Loading data...</div>
-      ) : (
-      <Table celled striped {...getTableProps()}>
-        <Table.Header>
-          {headerGroups.map(headerGroup => (
-            <Table.Row {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map(column => (
-                <Table.HeaderCell {...column.getHeaderProps(column.getSortByToggleProps())}>
-                  <div>
-                    {column.render('Header')}
-                    {column.canSort
-                      ? column.isSorted
-                        ? column.isSortedDesc
-                          ? <Icon name='sort down' />
-                          : <Icon name='sort up' />
-                        : <Icon disabled name='sort' />
-                      : ''}
-                    {column.canFilter ? column.render('Filter') : null}
-                  </div>
-                </Table.HeaderCell>
-              ))}
-            </Table.Row>
-          ))}
-        </Table.Header>
-        <Table.Body {...getTableBodyProps()}>
-          {rows.map((row, i) => {
-            prepareRow(row)
-            return (
-              <Table.Row {...row.getRowProps()}>
-                {row.cells.map(cell => {
-                  return <Table.Cell {...cell.getCellProps()}>{cell.render('Cell')}</Table.Cell>
-                })}
-              </Table.Row>
-            )
-          })}
-        </Table.Body>
-      </Table>
-      )}
-    </>
-  )
-}
+      <ContentHeader
+        header={"Group '"  + groupName + "' admin"}
+        description={"Add / remove users from the '" + groupName + "' group."}
+        breadcrumbs={[
+          { text: "Home", href: "/" },
+          { text: "Admin", href: "/admin/home" },
+          { text: "Groups", href: "/admin/groups" },
+          { text: groupName }
+        ]}
+      />
 
-export {AdminGroupsDetail}
+      <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+        <div></div>
+        <Table
+          {...collectionProps}
+          header={
+            <Header
+              counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
+            >
+              Groups
+            </Header>
+          }
+          columnDefinitions={columnsConfig}
+          items={items}
+          pagination={
+            <Pagination {...paginationProps}
+            ariaLabels={{
+              nextPageLabel: 'Next page',
+              previousPageLabel: 'Previous page',
+              pageLabel: pageNumber => `Go to page ${pageNumber}`,
+            }}
+          />}
+          filter={
+            <TextFilter
+              {...filterProps}
+              countText={MatchesCountText(filteredItemsCount)}
+              filteringAriaLabel='Filter users'
+            />
+          }
+          loading={isLoading}
+          loadingText='Loading users'
+          visibleColumns={preferences.visibleContent}
+          trackBy='Username'
+          resizableColumns
+          preferences={
+            <CollectionPreferences
+              title='Preferences'
+              confirmLabel='Confirm'
+              cancelLabel='Cancel'
+              onConfirm={({ detail }) => setPreferences(detail)}
+              preferences={preferences}
+              pageSizePreference={PageSizePreference('users')}
+              visibleContentPreference={{
+                title: 'Select visible columns',
+                options: visibleContentOptions,
+              }}
+              wrapLinesPreference={WrapLines}
+            />
+          }
+        />
+      </Grid>
+    </>
+  );
+}

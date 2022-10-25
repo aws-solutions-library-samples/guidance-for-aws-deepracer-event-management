@@ -5,8 +5,7 @@ import Amplify from 'aws-amplify';
 import { Authenticator, View, useTheme, useAuthenticator, CheckboxField, Link } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 
-import FixedMenuLayout from './FixedMenuLayout.js';
-import { Image } from 'semantic-ui-react'
+import TopNav from './components/TopNav.js';
 
 Amplify.configure(awsconfig);
 
@@ -15,9 +14,7 @@ const components = {
     const { tokens } = useTheme();
 
     return (
-      <View textAlign="center" padding={tokens.space.large}>
-        <Image alt="DeepRacer Logo" src="/logo-bw.png" size='large' centered />
-      </View>
+      <img src="/logo-bw.png" alt="Logo" width={378} height={378} class="center"/>
     );
   },
   SignUp: {
@@ -73,7 +70,7 @@ export default function App() {
     >
       {({ signOut, user }) => (
         <main>
-          <FixedMenuLayout user={user.username} signout={signOut}/>
+          <TopNav user={user.username} signout={signOut}/>
         </main>
       )}
     </Authenticator>
