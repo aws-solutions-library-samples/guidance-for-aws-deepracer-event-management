@@ -117,7 +117,7 @@ class AdminActivation extends Component {
             { text: "Car activiation" }
           ]}
         />
-        <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 1 }]}>
+        <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
           <div></div>
           <SpaceBetween direction="vertical" size="l">
 
@@ -160,7 +160,7 @@ class AdminActivation extends Component {
 
             <Container>
 
-            <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+            <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2}]}>
                 <Header variant='h3'>Script</Header>
                 <Container>
                   <Box color='text-status-info' textAlign='center'>
@@ -182,7 +182,7 @@ class AdminActivation extends Component {
               </Grid>
 
               <ExpandableSection header="Advanced">
-                <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+                <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2}]}>
                   <Header variant='h3'>Code</Header>
                   <Container>
                     <Box color='text-status-info' textAlign='center'>
@@ -203,7 +203,7 @@ class AdminActivation extends Component {
                   </Popover>
                 </Grid>
 
-                <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+                <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2}]}>
                   <Header variant='h3'>Id</Header>
                   <Container>
                     <Box color='text-status-info' textAlign='center'>
@@ -224,7 +224,7 @@ class AdminActivation extends Component {
                   </Popover>
                 </Grid>
 
-                <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+                <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2}]}>
                   <Header variant='h3'>SSM Only</Header>
                   <Container>
                     <Box color='text-status-info' textAlign='center'>
