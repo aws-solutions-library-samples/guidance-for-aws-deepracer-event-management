@@ -159,70 +159,8 @@ class AdminActivation extends Component {
             </Form>
 
             <Container>
-              <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
-                <Header variant='h3'>Code</Header>
-                <Container>
-                  <Box color='text-status-info' textAlign='center'>
-                    {this.state.loading}
-                    <code>
-                      {this.state.ActivationCode}
-                    </code>
-                  </Box>
-                </Container>
-                <Popover dismissButton={false} position="right" size="small" triggerType="custom"
-                  content={
-                    <StatusIndicator type="success">
-                      copied to clipboard
-                    </StatusIndicator>
-                  }
-                >
-                  <Button iconName='copy' onClick={() => {navigator.clipboard.writeText(this.state.ActivationCode)}}>Copy</Button>
-                </Popover>
-              </Grid>
 
-              <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
-                <Header variant='h3'>Id</Header>
-                <Container>
-                  <Box color='text-status-info' textAlign='center'>
-                    {this.state.loading}
-                    <code>
-                      {this.state.ActivationId}
-                    </code>
-                  </Box>
-                </Container>
-                <Popover dismissButton={false} position="right" size="small" triggerType="custom"
-                  content={
-                    <StatusIndicator type="success">
-                      copied to clipboard
-                    </StatusIndicator>
-                  }
-                >
-                  <Button iconName='copy' onClick={() => {navigator.clipboard.writeText(this.state.ActivationId)}}>Copy</Button>
-                </Popover>
-              </Grid>
-
-              <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
-                <Header variant='h3'>SSM Only</Header>
-                <Container>
-                  <Box color='text-status-info' textAlign='center'>
-                    {this.state.loading}
-                    <code>
-                      {this.state.SSMCommand}
-                    </code>
-                  </Box>
-                </Container>
-                <Popover dismissButton={false} position="right" size="small" triggerType="custom"
-                  content={
-                    <StatusIndicator type="success">
-                      copied to clipboard
-                    </StatusIndicator>
-                  }
-                >
-                  <Button iconName='copy' onClick={() => {navigator.clipboard.writeText(this.state.SSMCommand)}}>Copy</Button>
-                </Popover>
-              </Grid>
-
-              <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+            <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
                 <Header variant='h3'>Script</Header>
                 <Container>
                   <Box color='text-status-info' textAlign='center'>
@@ -242,6 +180,73 @@ class AdminActivation extends Component {
                   <Button iconName='copy' onClick={() => {navigator.clipboard.writeText(this.state.UpdateCommand)}}>Copy</Button>
                 </Popover>
               </Grid>
+
+              <ExpandableSection header="Advanced">
+                <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+                  <Header variant='h3'>Code</Header>
+                  <Container>
+                    <Box color='text-status-info' textAlign='center'>
+                      {this.state.loading}
+                      <code>
+                        {this.state.ActivationCode}
+                      </code>
+                    </Box>
+                  </Container>
+                  <Popover dismissButton={false} position="right" size="small" triggerType="custom"
+                    content={
+                      <StatusIndicator type="success">
+                        copied to clipboard
+                      </StatusIndicator>
+                    }
+                  >
+                    <Button iconName='copy' onClick={() => {navigator.clipboard.writeText(this.state.ActivationCode)}}>Copy</Button>
+                  </Popover>
+                </Grid>
+
+                <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+                  <Header variant='h3'>Id</Header>
+                  <Container>
+                    <Box color='text-status-info' textAlign='center'>
+                      {this.state.loading}
+                      <code>
+                        {this.state.ActivationId}
+                      </code>
+                    </Box>
+                  </Container>
+                  <Popover dismissButton={false} position="right" size="small" triggerType="custom"
+                    content={
+                      <StatusIndicator type="success">
+                        copied to clipboard
+                      </StatusIndicator>
+                    }
+                  >
+                    <Button iconName='copy' onClick={() => {navigator.clipboard.writeText(this.state.ActivationId)}}>Copy</Button>
+                  </Popover>
+                </Grid>
+
+                <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+                  <Header variant='h3'>SSM Only</Header>
+                  <Container>
+                    <Box color='text-status-info' textAlign='center'>
+                      {this.state.loading}
+                      <code>
+                        {this.state.SSMCommand}
+                      </code>
+                    </Box>
+                  </Container>
+                  <Popover dismissButton={false} position="right" size="small" triggerType="custom"
+                    content={
+                      <StatusIndicator type="success">
+                        copied to clipboard
+                      </StatusIndicator>
+                    }
+                  >
+                    <Button iconName='copy' onClick={() => {navigator.clipboard.writeText(this.state.SSMCommand)}}>Copy</Button>
+                  </Popover>
+                </Grid>
+              </ExpandableSection>
+
+              
             </Container>
 
             <Grid gridDefinition={[{ colspan: 4 }, { colspan: 4 }, { colspan: 4 }]}>
