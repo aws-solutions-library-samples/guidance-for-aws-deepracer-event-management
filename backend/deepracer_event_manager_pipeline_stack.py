@@ -15,7 +15,7 @@ from backend.deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
 
 # Constants
 NODE_VERSION = "16.17.0"  # other possible options: stable, latest, lts
-CDK_VERSION = "2.38.1"    # other possible options: latest
+CDK_VERSION = "2.47.0"    # other possible options: latest
 
 
 class InfrastructurePipelineStage(Stage):
