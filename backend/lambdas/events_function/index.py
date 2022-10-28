@@ -36,6 +36,8 @@ def getAllEvents():
 
 @app.resolver(type_name="Mutation", field_name="addEvent")
 def addEvent(eventName: str, tracks=None):
+    #TODO add regular expression for tag validation
+    #TODO verify that the wanted tag is not already in use for another track
     eventId = str(uuid.uuid4())
     createdAt = datetime.utcnow().isoformat() + 'Z'
     item = {'eventId': eventId, 'eventName': eventName,
