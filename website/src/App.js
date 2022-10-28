@@ -14,7 +14,7 @@ const components = {
     const { tokens } = useTheme();
 
     return (
-      <img src="/logo-bw.png" alt="Logo" width={378} height={378} class="center"/>
+      <img src="/logo-bw.png" alt="Logo" width={300} height={300} class="center"/>
     );
   },
   SignUp: {

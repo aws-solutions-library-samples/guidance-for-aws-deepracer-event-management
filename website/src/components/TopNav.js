@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Auth,  API, graphqlOperation } from 'aws-amplify';
 import { getAllEvents } from '../graphql/queries'
 
@@ -20,7 +20,12 @@ import { AdminGroupsDetail } from '../admin/groups/detail.js';
 import { AdminActivation } from '../admin/carActivation.js';
 import { Upload } from '../upload.js';
 
-import { Container, TopNavigation } from "@cloudscape-design/components";
+import {
+  Container,
+  TopNavigation,
+  AppLayout,
+  SideNavigation
+} from "@cloudscape-design/components";
 
 function cwr(operation, payload){
   // Instrument Routing to Record Page Views
@@ -65,7 +70,8 @@ class TopNav extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      groups: []
+      groups: [],
+      navigationOpen: true,
     };
   }
   _isMounted = false;
@@ -90,45 +96,23 @@ class TopNav extends React.Component {
   }
 
   render() {
-    var menuAdminDropdown = {}
+    let navItems = [
+      {type: "link", text: "Upload", href: "/upload"},
+      {type: "link", text: "Models", href: "/models"},
+    ];
+
     if ( this.state.groups.includes('admin') ) {
-      menuAdminDropdown = {
-        type: "menu-dropdown",
-        text: "Admin",
-        iconName: "key",
+      navItems.push({
+        type: 'section',
+        text: 'Admin',
         items: [
-          {
-            id: "admin-all-models",
-            iconName: "folder",
-            text: "All Models",
-            href: "/admin/models"
-          },
-          {
-            id: "admin-quarantined-models",
-            iconName: "bug",
-            text: "Quarantined models",
-            href: "/admin/quarantine"
-          },
-          {
-            id: "admin-cars",
-            iconName: "car",
-            text: "Cars",
-            href: "/admin/cars"
-          },
-          {
-            id: "admin-generate-activiation",
-            iconName: "plus",
-            text: "Car activiation",
-            href: "/admin/car_activation"
-          },
-          {
-            id: "admin-groups",
-            iconName: "users",
-            text: "Groups",
-            href: "/admin/groups"
-          }
-        ]
-      }
+          {type: "link",text: "All Models",href: "/admin/models"},
+          {type: "link",text: "Quarantined models",href: "/admin/quarantine"},
+          {type: "link",text: "Cars",href: "/admin/cars"},
+          {type: "link",text: "Car activiation",href: "/admin/car_activation"},
+          {type: "link",text: "Groups",href: "/admin/groups"}
+        ],
+      })
     }
 
     return (
@@ -144,21 +128,6 @@ class TopNav extends React.Component {
               }
             }}
             utilities={[
-              {
-                type: "button",
-                iconName: "upload",
-                text: "Upload",
-                ariaLabel: "Upload",
-                href: "/upload"
-              },
-              {
-                type: "button",
-                iconName: "folder",
-                text: "Models",
-                ariaLabel: "Models",
-                href: "/models"
-              },
-              menuAdminDropdown,
               {
                 type: "menu-dropdown",
                 text: this.props.user,
@@ -186,11 +155,25 @@ class TopNav extends React.Component {
               overflowMenuDismissIconAriaLabel: "Close menu"
             }}
           />
-        </div>
 
-        <Container>
-          <MenuRoutes />
-        </Container>
+        </div>
+        <AppLayout
+          //stickyNotifications
+          toolsHide
+          //headerSelector="#header"
+          ariaLabels={{ navigationClose: 'close' }}
+          navigationOpen={this.state.navigationOpen}
+          navigation={
+            <SideNavigation
+              activeHref={window.location.pathname}
+              items={navItems}
+            />
+          }
+          //breadcrumbs={<BreadcrumbGroup items={breadcrumbs} expandAriaLabel="Show path" ariaLabel="Breadcrumbs" />}
+          contentType="table"
+          content={<MenuRoutes />}
+          onNavigationChange={({ detail }) => this.setState({ navigationOpen: detail.open })}
+        />
       </Router>
     )
   }

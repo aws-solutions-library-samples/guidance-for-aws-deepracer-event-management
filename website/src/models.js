@@ -141,7 +141,7 @@ export function Models() {
         ]}
       />
 
-      <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+      <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
       <div></div>
         <Table
           {...collectionProps}
