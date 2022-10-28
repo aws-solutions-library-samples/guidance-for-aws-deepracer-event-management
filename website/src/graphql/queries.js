@@ -5,12 +5,12 @@ export const getAllEvents = /* GraphQL */ `
   query GetAllEvents {
     getAllEvents {
       createdAt
+      eventId
       eventName
-      id
       tracks {
-        id
-        tag
+        trackId
         trackName
+        trackTag
       }
     }
   }

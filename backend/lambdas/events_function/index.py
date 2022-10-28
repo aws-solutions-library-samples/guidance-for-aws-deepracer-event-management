@@ -59,11 +59,11 @@ def udpateEvent(eventId: str, eventName: str, tracks):
     logger.info(f'udpateEvent: eventId={eventId}')
     #TODO make so that only attibutes which are provided is updated
 
-    response = table.update_item(
+    response = ddbTable.update_item(
         Key={
             'eventId': eventId
         },
-        UpdateExpression='SET eventName=: newName, tracks=:newTracks',
+        UpdateExpression='SET eventName= :newName, tracks= :newTracks',
         ExpressionAttributeValues={
             ':newName': eventName,
             ':newTracks': tracks
