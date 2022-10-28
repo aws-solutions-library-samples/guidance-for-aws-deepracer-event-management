@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Auth } from 'aws-amplify';
+import { Auth,  API, graphqlOperation } from 'aws-amplify';
+import { getAllEvents } from '../graphql/queries'
 
 import {
   BrowserRouter as Router,
@@ -59,6 +60,12 @@ function MenuRoutes() {
   );
 }
 
+async function getEvents()  {
+  const response = await API.graphql(graphqlOperation(getAllEvents));
+  console.log(response.data.getAllEvents)
+  // TODO implement logic for setting the active event
+};
+
 class TopNav extends React.Component {
   constructor(props) {
     super(props);
@@ -79,6 +86,7 @@ class TopNav extends React.Component {
       // console.log(groups)
       if (this._isMounted && groups !== undefined ) {
         this.setState({ groups: groups })
+        this.setState( {events: getEvents()})
       }
     })
   }

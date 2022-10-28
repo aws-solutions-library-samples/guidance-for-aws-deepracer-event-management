@@ -1,0 +1,77 @@
+type EventConfiguration {
+	id: ID!
+	raceTime: Float!
+}
+
+type Lap {
+	raceId: ID
+	lapId: ID!
+	time: Float!
+	resets: Int!
+	crashes: Int!
+	isValid: Boolean!
+}
+
+input LapInput {
+	time: Float!
+	resets: Int!
+	crashes: Int!
+	isValid: Boolean!
+}
+
+type LeaderBoardEntry {
+	username: String!
+	time: Float!
+}
+
+input LeaderBoardEntryInput {
+	username: String!
+	time: Float!
+}
+
+type Mutation {
+	## Leaderboard
+	newFastestLapForUser(entry: LeaderBoardEntryInput!): LeaderBoardEntry
+	## Admin
+	##addRaceConfiguration(raceTime: Float!): EventConfiguration
+	##updateRaceConfiguration(id: ID!, raceTime: Float!): EventConfiguration
+	deleteLapForUser(username: ID!, raceId: ID!, lapId: ID!): Lap
+	deleteRaceForUser(username: ID!, raceId: ID!): Race
+	## Time keeper
+	addRace(race: RaceInput): Race
+}
+
+type Subscription {
+	onNewFastestLapForUser: LeaderBoardEntry
+		@aws_subscribe(mutations: ["newFastestLapForUser"])
+}
+
+type Query {
+	## Leaderboard
+	getLeaderBoardEntries: [LeaderBoardEntry]
+	### Admin
+	getRacesForUser(username: String!): [Race]
+	## Time keeper
+	getAllRacers: [User]
+}
+
+type Race {
+	id: ID!
+	laps: [Lap]
+}
+
+input RaceInput {
+	username: String!
+	laps: [LapInput]
+}
+
+type User {
+	username: String!
+	email: String
+}
+
+schema {
+	query: Query
+	mutation: Mutation
+	subscription: Subscription
+}
