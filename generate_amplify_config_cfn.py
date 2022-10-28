@@ -6,6 +6,8 @@ with open('cfn.outputs') as json_file:
     for key in data:
         if key['OutputKey'].startswith('apiGatewayEndpoint'):
              apiGatewayEndpoint = key['OutputValue']
+        if key['OutputKey'].startswith('appsyncEndpoint'):
+             appsyncEndpoint = key['OutputValue']
         if key['OutputKey'] == 'distributionId':
             distributionId = key['OutputValue']
         if key['OutputKey'] == 'stackRegion':
@@ -46,7 +48,10 @@ with open('cfn.outputs') as json_file:
                     "endpoint": apiGatewayEndpoint,
                     "region": region
                 }
-            ]
+            ],
+            "aws_appsync_graphqlEndpoint": appsyncEndpoint,
+            "aws_appsync_region": region,
+            "aws_appsync_authenticationType": "AWS_IAM"
         }
     }
 

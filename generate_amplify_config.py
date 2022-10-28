@@ -26,7 +26,10 @@ with open('cdk.outputs') as json_file:
                     "endpoint": data[apiGatewayEndpoint_key],
                     "region": data['region']
                 }
-            ]
+            ],
+            "aws_appsync_graphqlEndpoint": data['appsyncEndpoint_key'],
+            "aws_appsync_region": data['region'],
+            "aws_appsync_authenticationType": "AWS_IAM"
         }
     }
 

@@ -25,3 +25,4 @@ branch.txt
 email.txt
 reports
 htmlcov
+website/src/graphql/schema.graphql
