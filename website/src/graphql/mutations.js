@@ -5,76 +5,45 @@ export const addEvent = /* GraphQL */ `
   mutation AddEvent($eventName: String!, $tracks: [TrackInput]) {
     addEvent(eventName: $eventName, tracks: $tracks) {
       createdAt
+      eventId
       eventName
-      id
       tracks {
-        id
-        tag
+        trackId
         trackName
+        trackTag
       }
-    }
-  }
-`;
-export const addTrack = /* GraphQL */ `
-  mutation AddTrack(
-    $eventId: String!
-    $trackName: String!
-    $trackTag: String!
-  ) {
-    addTrack(eventId: $eventId, trackName: $trackName, trackTag: $trackTag) {
-      id
-      tag
-      trackName
     }
   }
 `;
 export const deleteEvent = /* GraphQL */ `
-  mutation DeleteEvent($id: String!) {
-    deleteEvent(id: $id) {
+  mutation DeleteEvent($eventId: String!) {
+    deleteEvent(eventId: $eventId) {
       createdAt
+      eventId
       eventName
-      id
       tracks {
-        id
-        tag
+        trackId
         trackName
+        trackTag
       }
-    }
-  }
-`;
-export const deleteTrack = /* GraphQL */ `
-  mutation DeleteTrack($eventId: String!, $id: String!) {
-    deleteTrack(eventId: $eventId, id: $id) {
-      id
-      tag
-      trackName
     }
   }
 `;
 export const updateEvent = /* GraphQL */ `
   mutation UpdateEvent(
+    $eventId: String!
     $eventName: String
-    $id: String!
     $tracks: [TrackInput]
   ) {
-    updateEvent(eventName: $eventName, id: $id, tracks: $tracks) {
+    updateEvent(eventId: $eventId, eventName: $eventName, tracks: $tracks) {
       createdAt
+      eventId
       eventName
-      id
       tracks {
-        id
-        tag
+        trackId
         trackName
+        trackTag
       }
-    }
-  }
-`;
-export const updateTrack = /* GraphQL */ `
-  mutation UpdateTrack($id: String!, $trackName: String, $trackTag: String) {
-    updateTrack(id: $id, trackName: $trackName, trackTag: $trackTag) {
-      id
-      tag
-      trackName
     }
   }
 `;

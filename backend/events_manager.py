@@ -27,7 +27,7 @@ class EventsManager(Construct):
 
         events_table = dynamodb.Table(self, "EventsTable",
                                       partition_key=dynamodb.Attribute(
-                                          name="id", type=dynamodb.AttributeType.STRING),
+                                          name="eventId", type=dynamodb.AttributeType.STRING),
                                       billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
                                       encryption=dynamodb.TableEncryption.AWS_MANAGED
                                       )
@@ -70,20 +70,20 @@ class EventsManager(Construct):
         track_object_type = appsync.ObjectType("Track",
                                                definition={
                                                    "trackName": appsync.GraphqlType.string(),
-                                                   "id": appsync.GraphqlType.id(),
-                                                   "tag": appsync.GraphqlType.string()
+                                                   "trackId": appsync.GraphqlType.id(),
+                                                   "trackTag": appsync.GraphqlType.string()
                                                })
 
         track_input_type = appsync.InputType('TrackInput',
                                              definition={
                                                  "trackName": appsync.GraphqlType.string(),
-                                                 "tag": appsync.GraphqlType.string()
+                                                 "trackTag": appsync.GraphqlType.string()
                                              })
 
         events_object_Type = appsync.ObjectType("Event",
                                                 definition={
                                                     "eventName": appsync.GraphqlType.string(),
-                                                    "id": appsync.GraphqlType.id(),
+                                                    "eventId": appsync.GraphqlType.id(),
                                                     "createdAt": appsync.GraphqlType.aws_date_time(),
                                                     "tracks": track_object_type.attribute(is_list=True)
                                                 })
@@ -106,13 +106,13 @@ class EventsManager(Construct):
             data_source=events_data_source
         ))
         api.add_mutation("deleteEvent", appsync.ResolvableField(
-            args={'id': appsync.GraphqlType.string(is_required=True)},
+            args={'eventId': appsync.GraphqlType.string(is_required=True)},
             return_type=events_object_Type.attribute(),
             data_source=events_data_source
         ))
         api.add_mutation("updateEvent", appsync.ResolvableField(
             args={
-                'id': appsync.GraphqlType.string(is_required=True),
+                'eventId': appsync.GraphqlType.string(is_required=True),
                 'eventName': appsync.GraphqlType.string(),
                 'tracks': track_input_type.attribute(is_list=True)
             },
@@ -121,32 +121,32 @@ class EventsManager(Construct):
         ))
 
         # Track Methods
-        api.add_mutation("addTrack", appsync.ResolvableField(
-            args={
-                'eventId': appsync.GraphqlType.string(is_required=True),
-                'trackName': appsync.GraphqlType.string(is_required=True),
-                'trackTag': appsync.GraphqlType.string(is_required=True)
-            },
-            return_type=track_object_type.attribute(),
-            data_source=events_data_source
-        ))
-        api.add_mutation("deleteTrack", appsync.ResolvableField(
-            args={
-                'id': appsync.GraphqlType.string(is_required=True),
-                'eventId': appsync.GraphqlType.string(is_required=True)
-            },
-            return_type=track_object_type.attribute(),
-            data_source=events_data_source
-        ))
-        api.add_mutation("updateTrack", appsync.ResolvableField(
-            args={
-                'id':  appsync.GraphqlType.string(is_required=True),
-                'trackName': appsync.GraphqlType.string(),
-                'trackTag': appsync.GraphqlType.string()
-            },
-            return_type=track_object_type.attribute(),
-            data_source=events_data_source
-        ))
+        # api.add_mutation("addTrack", appsync.ResolvableField(
+        #     args={
+        #         'eventId': appsync.GraphqlType.string(is_required=True),
+        #         'name': appsync.GraphqlType.string(is_required=True),
+        #         'tag': appsync.GraphqlType.string(is_required=True)
+        #     },
+        #     return_type=track_object_type.attribute(),
+        #     data_source=events_data_source
+        # ))
+        # api.add_mutation("deleteTrack", appsync.ResolvableField(
+        #     args={
+        #         'id': appsync.GraphqlType.string(is_required=True),
+        #         'eventId': appsync.GraphqlType.string(is_required=True)
+        #     },
+        #     return_type=track_object_type.attribute(),
+        #     data_source=events_data_source
+        # ))
+        # api.add_mutation("updateTrack", appsync.ResolvableField(
+        #     args={
+        #         'id':  appsync.GraphqlType.string(is_required=True),
+        #         'name': appsync.GraphqlType.string(),
+        #         'tag': appsync.GraphqlType.string()
+        #     },
+        #     return_type=track_object_type.attribute(),
+        #     data_source=events_data_source
+        # ))
 
         # Grant access so API methods can be invoked
         for role in roles_to_grant_invoke_access:
@@ -161,9 +161,9 @@ class EventsManager(Construct):
                         f'{api.arn}/types/Mutation/fields/addEvent',
                         f'{api.arn}/types/Mutation/fields/deleteEvent',
                         f'{api.arn}/types/Mutation/fields/updateEvent',
-                        f'{api.arn}/types/Mutation/fields/addTrack',
-                        f'{api.arn}/types/Mutation/fields/deleteTrack',
-                        f'{api.arn}/types/Mutation/fields/updateTrack',
+                        # f'{api.arn}/types/Mutation/fields/addTrack',
+                        # f'{api.arn}/types/Mutation/fields/deleteTrack',
+                        # f'{api.arn}/types/Mutation/fields/updateTrack',
                     ],
                 )
             )

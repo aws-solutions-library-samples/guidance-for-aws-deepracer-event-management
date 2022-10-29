@@ -20,8 +20,8 @@ import { AdminGroupsDetail } from '../admin/groups/detail.js';
 import { AdminActivation } from '../admin/carActivation.js';
 import { Upload } from '../upload.js';
 
-import { 
-  Container, 
+import {
+  Container,
   TopNavigation,
   AppLayout,
   SideNavigation
@@ -155,7 +155,7 @@ class TopNav extends React.Component {
               overflowMenuDismissIconAriaLabel: "Close menu"
             }}
           />
-          
+
         </div>
         <AppLayout
           //stickyNotifications
@@ -164,8 +164,8 @@ class TopNav extends React.Component {
           ariaLabels={{ navigationClose: 'close' }}
           navigationOpen={this.state.navigationOpen}
           navigation={
-            <SideNavigation 
-              activeHref={window.location.pathname} 
+            <SideNavigation
+              activeHref={window.location.pathname}
               items={navItems}
             />
           }
