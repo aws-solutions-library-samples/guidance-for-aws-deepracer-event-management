@@ -105,11 +105,21 @@ class EventsManager(Construct):
             return_type=events_object_Type.attribute(),
             data_source=events_data_source
         ))
+        api.add_subscription('addedEvent', appsync.ResolvableField(
+            return_type=events_object_Type.attribute(),
+            directives= [appsync.Directive.subscribe('addEvent')]
+        ))
+
         api.add_mutation("deleteEvent", appsync.ResolvableField(
             args={'eventId': appsync.GraphqlType.string(is_required=True)},
             return_type=events_object_Type.attribute(),
             data_source=events_data_source
         ))
+        api.add_subscription('deletedEvent', appsync.ResolvableField(
+            return_type=events_object_Type.attribute(),
+            directives= [appsync.Directive.subscribe('deleteEvent')]
+        ))
+
         api.add_mutation("updateEvent", appsync.ResolvableField(
             args={
                 'eventId': appsync.GraphqlType.string(is_required=True),
@@ -119,34 +129,10 @@ class EventsManager(Construct):
             return_type=events_object_Type.attribute(),
             data_source=events_data_source
         ))
-
-        # Track Methods
-        # api.add_mutation("addTrack", appsync.ResolvableField(
-        #     args={
-        #         'eventId': appsync.GraphqlType.string(is_required=True),
-        #         'name': appsync.GraphqlType.string(is_required=True),
-        #         'tag': appsync.GraphqlType.string(is_required=True)
-        #     },
-        #     return_type=track_object_type.attribute(),
-        #     data_source=events_data_source
-        # ))
-        # api.add_mutation("deleteTrack", appsync.ResolvableField(
-        #     args={
-        #         'id': appsync.GraphqlType.string(is_required=True),
-        #         'eventId': appsync.GraphqlType.string(is_required=True)
-        #     },
-        #     return_type=track_object_type.attribute(),
-        #     data_source=events_data_source
-        # ))
-        # api.add_mutation("updateTrack", appsync.ResolvableField(
-        #     args={
-        #         'id':  appsync.GraphqlType.string(is_required=True),
-        #         'name': appsync.GraphqlType.string(),
-        #         'tag': appsync.GraphqlType.string()
-        #     },
-        #     return_type=track_object_type.attribute(),
-        #     data_source=events_data_source
-        # ))
+        api.add_subscription('updatedEvent', appsync.ResolvableField(
+            return_type=events_object_Type.attribute(),
+            directives= [appsync.Directive.subscribe('updateEvent')]
+        ))
 
         # Grant access so API methods can be invoked
         for role in roles_to_grant_invoke_access:
@@ -159,11 +145,13 @@ class EventsManager(Construct):
                     resources=[
                         f'{api.arn}/types/Query/fields/getAllEvents',
                         f'{api.arn}/types/Mutation/fields/addEvent',
+                        f'{api.arn}/types/Subscription/fields/addedEvent',
+
                         f'{api.arn}/types/Mutation/fields/deleteEvent',
+                        f'{api.arn}/types/Subscription/fields/deletedEvent',
+
                         f'{api.arn}/types/Mutation/fields/updateEvent',
-                        # f'{api.arn}/types/Mutation/fields/addTrack',
-                        # f'{api.arn}/types/Mutation/fields/deleteTrack',
-                        # f'{api.arn}/types/Mutation/fields/updateTrack',
+                        f'{api.arn}/types/Subscription/fields/updatedEvent',
                     ],
                 )
             )
