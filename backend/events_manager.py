@@ -66,6 +66,7 @@ class EventsManager(Construct):
         events_data_source = api.add_lambda_data_source(
             'EventsDataSource', events_handler)
 
+        none_data_source = api.add_none_data_source('none')
         # Define API Schema
         track_object_type = appsync.ObjectType("Track",
                                                definition={
@@ -107,8 +108,17 @@ class EventsManager(Construct):
         ))
         api.add_subscription('addedEvent', appsync.ResolvableField(
             return_type=events_object_Type.attribute(),
-            directives= [appsync.Directive.subscribe('addEvent')],
-            data_source= api.add_none_data_source('addedEventNoneSource')
+            data_source=none_data_source,
+            request_mapping_template=appsync.MappingTemplate.from_string(
+                '''{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments.entry)
+                    }'''
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_string(
+                '''$util.toJson($context.result)'''
+            ),
+            directives=[appsync.Directive.subscribe('addEvent')]
         ))
 
         api.add_mutation("deleteEvent", appsync.ResolvableField(
@@ -118,8 +128,17 @@ class EventsManager(Construct):
         ))
         api.add_subscription('deletedEvent', appsync.ResolvableField(
             return_type=events_object_Type.attribute(),
-            directives= [appsync.Directive.subscribe('deleteEvent')],
-            data_source= api.add_none_data_source('deletedEventNoneSource')
+            data_source=none_data_source,
+            request_mapping_template=appsync.MappingTemplate.from_string(
+                '''{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments.entry)
+                    }'''
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_string(
+                '''$util.toJson($context.result)'''
+            ),
+            directives=[appsync.Directive.subscribe('deleteEvent')]
         ))
 
         api.add_mutation("updateEvent", appsync.ResolvableField(
@@ -133,8 +152,17 @@ class EventsManager(Construct):
         ))
         api.add_subscription('updatedEvent', appsync.ResolvableField(
             return_type=events_object_Type.attribute(),
-            directives= [appsync.Directive.subscribe('updateEvent')],
-            data_source= api.add_none_data_source('updatedEventNoneSource')
+            data_source=none_data_source,
+            request_mapping_template=appsync.MappingTemplate.from_string(
+                '''{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments.entry)
+                    }'''
+            ),
+            response_mapping_template=appsync.MappingTemplate.from_string(
+                '''$util.toJson($context.result)'''
+            ),
+            directives=[appsync.Directive.subscribe('updateEvent')]
         ))
 
         # Grant access so API methods can be invoked
@@ -154,7 +182,12 @@ class EventsManager(Construct):
                         f'{api.arn}/types/Subscription/fields/deletedEvent',
 
                         f'{api.arn}/types/Mutation/fields/updateEvent',
+                        f'{api.arn}/types/Subscription/fields/addedEvent',
+                        f'{api.arn}/types/Subscription/fields/deletedEvent',
                         f'{api.arn}/types/Subscription/fields/updatedEvent',
+                        # f'{api.arn}/types/Mutation/fields/addTrack',
+                        # f'{api.arn}/types/Mutation/fields/deleteTrack',
+                        # f'{api.arn}/types/Mutation/fields/updateTrack',
                     ],
                 )
             )

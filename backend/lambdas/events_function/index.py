@@ -5,7 +5,6 @@ from aws_lambda_powertools.logging import correlation_paths
 from aws_lambda_powertools.event_handler import AppSyncResolver
 import boto3
 from boto3.dynamodb.conditions import Key
-import decimal
 import os
 import uuid
 from datetime import datetime
@@ -17,6 +16,11 @@ app = AppSyncResolver()
 EVENTS_DDB_TABLE_NAME = os.environ['DDB_TABLE']
 dynamodb = boto3.resource('dynamodb')
 ddbTable = dynamodb.Table(EVENTS_DDB_TABLE_NAME)
+
+session = boto3.session.Session()
+credentials = session.get_credentials()
+region = session.region_name or 'eu-west-1'
+graphql_endpoint = os.environ.get('APPSYNC_URL', None)
 
 
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
@@ -36,8 +40,8 @@ def getAllEvents():
 
 @app.resolver(type_name="Mutation", field_name="addEvent")
 def addEvent(eventName: str, tracks=None):
-    #TODO add regular expression for tag validation
-    #TODO verify that the wanted tag is not already in use for another track
+    # TODO add regular expression for tag validation
+    # TODO verify that the wanted tag is not already in use for another track
     eventId = str(uuid.uuid4())
     createdAt = datetime.utcnow().isoformat() + 'Z'
     item = {'eventId': eventId, 'eventName': eventName,
@@ -59,7 +63,7 @@ def deleteEvent(eventId: str):
 @app.resolver(type_name="Mutation", field_name="updateEvent")
 def udpateEvent(eventId: str, eventName: str, tracks):
     logger.info(f'udpateEvent: eventId={eventId}')
-    #TODO make so that only attibutes which are provided is updated
+    # TODO make so that only attributes which are provided is updated
 
     response = ddbTable.update_item(
         Key={
@@ -73,25 +77,3 @@ def udpateEvent(eventId: str, eventName: str, tracks):
         ReturnValues="UPDATED_NEW"
     )
     return {'eventId': eventId}
-
-
-# @app.resolver(type_name="Mutation", field_name="addTrack")
-# def addTrack(eventId: str, name: str, tag: str):
-#     trackId = str(uuid.uuid4())
-#     # TODO create track in DDB
-#     response = {'id': trackId, 'eventId': eventId,
-#                 'name': trackName, 'tag': trackTag}
-#     logger.info(f'addEvent: response={response}')
-#     return response
-
-
-# @app.resolver(type_name="Mutation", field_name="deleteTrack")
-# def deleteTrack(trackId: str):
-#     # TODO delete track in DDB
-#     return {'id': trackId}
-
-
-# @app.resolver(type_name="Mutation", field_name="updateTrack")
-# def udpateTrack(trackId: str):
-#     # TODO update event in DDB
-#     return {'id': trackId}
