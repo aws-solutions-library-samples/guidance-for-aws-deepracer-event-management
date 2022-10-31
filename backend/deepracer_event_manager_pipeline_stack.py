@@ -113,6 +113,7 @@ class CdkServerlessCharityPipelineStack(Stack):
                     "python generate_amplify_config_cfn.py",
                     "python update_index_html_with_script_tag_cfn.py",
                     "cd ./website",
+                    "npm install -g @aws-amplify/cli",
                     "amplify codegen",
                     "docker run --rm -v $(pwd):/foo -w /foo public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
                     "aws s3 sync ./build/ s3://$sourceBucketName/ --delete",
