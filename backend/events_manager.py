@@ -107,7 +107,8 @@ class EventsManager(Construct):
         ))
         api.add_subscription('addedEvent', appsync.ResolvableField(
             return_type=events_object_Type.attribute(),
-            directives= [appsync.Directive.subscribe('addEvent')]
+            directives= [appsync.Directive.subscribe('addEvent')],
+            data_source= api.add_none_data_source('none')
         ))
 
         api.add_mutation("deleteEvent", appsync.ResolvableField(
@@ -117,7 +118,8 @@ class EventsManager(Construct):
         ))
         api.add_subscription('deletedEvent', appsync.ResolvableField(
             return_type=events_object_Type.attribute(),
-            directives= [appsync.Directive.subscribe('deleteEvent')]
+            directives= [appsync.Directive.subscribe('deleteEvent')],
+            data_source= api.add_none_data_source('none')
         ))
 
         api.add_mutation("updateEvent", appsync.ResolvableField(
@@ -131,7 +133,8 @@ class EventsManager(Construct):
         ))
         api.add_subscription('updatedEvent', appsync.ResolvableField(
             return_type=events_object_Type.attribute(),
-            directives= [appsync.Directive.subscribe('updateEvent')]
+            directives= [appsync.Directive.subscribe('updateEvent')],
+            data_source= api.add_none_data_source('none')
         ))
 
         # Grant access so API methods can be invoked
