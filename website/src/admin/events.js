@@ -19,6 +19,7 @@ import {
   Table,
   Alert,
 } from '@cloudscape-design/components';
+import { useCollection } from '@cloudscape-design/collection-hooks';
 
 export function AdminEvents() {
   const [events, setEvents] = useState([]);
@@ -51,7 +52,7 @@ export function AdminEvents() {
       .graphql(graphqlOperation(subscriptions.addedEvent))
       .subscribe({
         next: (event) => {
-          console.log(event);
+          //console.log(event);
           setEvents([...events,event.value.data.addedEvent]);
         }
       });
@@ -80,9 +81,9 @@ export function AdminEvents() {
       .graphql(graphqlOperation(subscriptions.deletedEvent))
       .subscribe({
         next: (event) => {
-          console.log(event.value.data.deletedEvent.eventId);
+          //console.log(event.value.data.deletedEvent.eventId);
           const index = events.map(e => e.eventId).indexOf(event.value.data.deletedEvent.eventId);
-          console.log(index);
+          //console.log(index);
           var tempEvents = [...events];
           if (index !== -1) {
             tempEvents.splice(index,1);
@@ -107,6 +108,33 @@ export function AdminEvents() {
     });
     //console.log(response.data.deleteEvent);
   }
+
+  const columnDefinitions = [
+    {
+      id: "eventName",
+      header: "eventName",
+      cell: item => item.eventName || "-",
+      sortingField: "eventName"
+    },
+    {
+      id: "eventId",
+      header: "eventId",
+      cell: item => item.eventId || "-",
+    },
+    {
+      id: "createdAt",
+      header: "createdAt",
+      cell: item => item.createdAt || "-",
+      sortingField: "createdAt"
+    }
+  ]
+
+  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
+    events,
+    {
+      sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
+    }
+  );
 
   return (
     <>
@@ -145,34 +173,16 @@ export function AdminEvents() {
           </Container>
 
           <Table
+            {...collectionProps}
             onSelectionChange={({ detail }) => {
               setSelectedEvent(detail.selectedItems);
               setDeleteButtonDisabled(false);
             }}
             selectedItems={selectedEvent}
             selectionType="single"
-            columnDefinitions={[
-              {
-                id: "eventName",
-                header: "eventName",
-                cell: item => item.eventName || "-",
-                //sortingField: "eventName"
-              },
-              {
-                id: "eventId",
-                header: "eventId",
-                cell: item => item.eventId || "-",
-              },
-              {
-                id: "createdAt",
-                header: "createdAt",
-                cell: item => item.createdAt || "-",
-                //sortingField: "createdAt"
-              }
-            ]}
-            items={events}
+            columnDefinitions={columnDefinitions}
+            items={items}
             loadingText="Loading resources"
-            sortingDisabled
             empty={
               <Alert
                 visible={true}
