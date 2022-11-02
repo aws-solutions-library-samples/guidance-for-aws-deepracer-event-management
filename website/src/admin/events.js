@@ -23,6 +23,9 @@ import {
 export function AdminEvents() {
   const [events, setEvents] = useState([]);
   const [newEvent, setNewEvent] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState([]);
+  const [addButtonDisabled, setAddButtonDisabled] = useState(true);
+  const [deleteButtonDisabled, setDeleteButtonDisabled] = useState(true);
 
   // initial data load
   useEffect(() => {
@@ -71,6 +74,40 @@ export function AdminEvents() {
     return response;
   }
 
+  // subscribe to delte data changes and delete them from local array
+  useEffect(() => {
+    const subscription = API
+      .graphql(graphqlOperation(subscriptions.deletedEvent))
+      .subscribe({
+        next: (event) => {
+          console.log(event.value.data.deletedEvent.eventId);
+          const index = events.map(e => e.eventId).indexOf(event.value.data.deletedEvent.eventId);
+          console.log(index);
+          var tempEvents = [...events];
+          if (index !== -1) {
+            tempEvents.splice(index,1);
+            setEvents(tempEvents);
+          }
+        }
+      });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [events]); 
+
+  // Delete Event
+  async function deleteEvent() {
+    //console.log(selectedEvent[0].eventId);
+    const response = await API.graphql({
+      query: mutations.deleteEvent, 
+      variables: {
+        eventId: selectedEvent[0].eventId
+      }
+    });
+    //console.log(response.data.deleteEvent);
+  }
+
   return (
     <>
       <ContentHeader
@@ -90,7 +127,7 @@ export function AdminEvents() {
           <Form
             actions={
               <SpaceBetween direction="horizontal" size="xs">
-                <Button variant='primary' onClick={() => {
+                <Button disabled={addButtonDisabled} variant='primary' onClick={() => {
                   addEvent(newEvent); 
                 }}>Add Event</Button>
               </SpaceBetween>
@@ -99,7 +136,8 @@ export function AdminEvents() {
               <SpaceBetween direction="vertical" size="l">
                 <FormField label="New Event">
                   <Input value={newEvent} placeholder='Awesome Event' onChange={event => {
-                    setNewEvent(event.detail.value)
+                    setNewEvent(event.detail.value);
+                    if (newEvent.length > 0){setAddButtonDisabled(false)};
                   }} />
                 </FormField>
               </SpaceBetween>
@@ -107,24 +145,29 @@ export function AdminEvents() {
           </Container>
 
           <Table
+            onSelectionChange={({ detail }) => {
+              setSelectedEvent(detail.selectedItems);
+              setDeleteButtonDisabled(false);
+            }}
+            selectedItems={selectedEvent}
+            selectionType="single"
             columnDefinitions={[
               {
                 id: "eventName",
                 header: "eventName",
                 cell: item => item.eventName || "-",
-                sortingField: "eventName"
+                //sortingField: "eventName"
               },
               {
                 id: "eventId",
                 header: "eventId",
                 cell: item => item.eventId || "-",
-                sortingField: "eventId"
               },
               {
                 id: "createdAt",
                 header: "createdAt",
                 cell: item => item.createdAt || "-",
-                sortingField: "createdAt"
+                //sortingField: "createdAt"
               }
             ]}
             items={events}
@@ -140,8 +183,14 @@ export function AdminEvents() {
               </Alert>
             }
             header={
-              <Header>Events</Header>
-            }
+              <Header 
+              actions={
+                <Button disabled={deleteButtonDisabled} variant='primary' onClick={() => {
+                  deleteEvent(); 
+                }}>Delete Event</Button>
+              }
+              >Events</Header>
+            } 
           />  
         </SpaceBetween>
         <div></div>
