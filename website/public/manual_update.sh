@@ -143,13 +143,13 @@ fi
 echo 'Updating...'
 
 # Update Ubuntu
-sudo apt-get upgrade -o Dpkg::Options::="--force-overwrite"
+sudo apt-get upgrade -y -o Dpkg::Options::="--force-overwrite"
 
 # Update DeepRacer
-sudo apt-get install aws-deepracer-* -o Dpkg::Options::="--force-overwrite"
+sudo apt-get install -y aws-deepracer-* -o Dpkg::Options::="--force-overwrite"
 
 # Remove redundant packages
-sudo apt autoremove
+sudo apt -y autoremove
 
 # If changing hostname need to change the flag in network_config.py
 # /opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py
