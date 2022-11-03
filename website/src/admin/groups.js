@@ -176,6 +176,7 @@ export function AdminGroups() {
           loadingText='Loading groups'
           visibleColumns={preferences.visibleContent}
           selectedItems={selectedItems}
+          stickyHeader='true'
           trackBy='GroupName'
           resizableColumns
           preferences={

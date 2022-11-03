@@ -179,6 +179,7 @@ export function Models() {
           visibleColumns={preferences.visibleContent}
           selectedItems={selectedItems}
           selectionType='multi'
+          stickyHeader='true'
           trackBy='key'
           onSelectionChange={({ detail: { selectedItems } }) => {
             setSelectedItems(selectedItems)
