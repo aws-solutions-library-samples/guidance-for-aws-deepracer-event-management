@@ -102,7 +102,7 @@ export function AdminModels() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: AdminModelsColumnsConfig[3], sortingDescending: true } },
+      sorting: { defaultState: { sortingColumn: AdminModelsColumnsConfig[3] } },
       selection: {},
     }
   );

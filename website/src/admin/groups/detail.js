@@ -260,6 +260,7 @@ export function AdminGroupsDetail() {
           loading={isLoading}
           loadingText='Loading users'
           visibleColumns={preferences.visibleContent}
+          stickyHeader='true'
           trackBy='Username'
           resizableColumns
           preferences={
