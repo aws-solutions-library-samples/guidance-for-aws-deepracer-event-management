@@ -28,6 +28,8 @@ with open('cfn.outputs') as json_file:
             userPoolId = key['OutputValue']
         if key['OutputKey'] == 'identityPoolId':
             identityPoolId = key['OutputValue']
+        if key['OutputKey'] == 'appsyncId':
+            appsyncId = key['OutputValue']
 
     output_data = {
         "Auth": {
@@ -59,3 +61,6 @@ with open('cfn.outputs') as json_file:
 
     with open('website/src/config.json', 'w') as outfile:
         json.dump(output_data, outfile, indent=4)
+
+    with open('./appsyncId.txt', 'w') as outfile:
+        outfile.write(appsyncId)

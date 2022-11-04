@@ -15,6 +15,23 @@ export const addEvent = /* GraphQL */ `
     }
   }
 `;
+export const carActivation = /* GraphQL */ `
+  mutation CarActivation(
+    $eventId: ID!
+    $eventName: String!
+    $hostname: String!
+  ) {
+    carActivation(
+      eventId: $eventId
+      eventName: $eventName
+      hostname: $hostname
+    ) {
+      activationCode
+      activationId
+      region
+    }
+  }
+`;
 export const deleteEvent = /* GraphQL */ `
   mutation DeleteEvent($eventId: String!) {
     deleteEvent(eventId: $eventId) {

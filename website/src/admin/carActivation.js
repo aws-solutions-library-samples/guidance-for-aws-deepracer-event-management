@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { API } from 'aws-amplify';
+import { API, } from 'aws-amplify';
 import { ContentHeader } from '../components/ContentHeader';
 import { ListOfEvents } from '../components/ListOfEvents.js';
+//import * as queries from '../graphql/queries';
+import * as mutations from '../graphql/mutations';
+//import * as subscriptions from '../graphql/subscriptions'
 
 import {
   Grid,
@@ -18,7 +21,6 @@ import {
   StatusIndicator,
   TextContent,
   Box,
-  Spinner
 } from '@cloudscape-design/components';
 
 export function AdminActivation(props) {
@@ -56,29 +58,21 @@ export function AdminActivation(props) {
   },[events])
 
   async function getActivation() {
-    const apiName = 'deepracerEventManager';
-    const apiPath = 'cars/create_ssm_activation';
-
-    setButtonDisabled(true);
-    setLoading(<Spinner />)
-
-    const myInit = {
-      body: {
-        hostname: hostname,
-        password: password,
-        ssid: ssid,
-        wifiPass: wifiPass
+    const apiResponse = await API.graphql({
+      query: mutations.carActivation,
+      variables: {
+        eventId: dropDownSelectedItem.eventId,
+        eventName: dropDownSelectedItem.eventName,
+        hostname: hostname
       }
-    };
-
-    let response = await API.post(apiName, apiPath, myInit);
-
+    });
+    const response = apiResponse['data']['carActivation']
     setResult(response);
-    setActivationCode(response['ActivationCode']);
-    setActivationId(response['ActivationId']);
+    setActivationCode(response['activationCode']);
+    setActivationId(response['activationId']);
     setRegion(response['region']);
-    setSsmCommand('sudo amazon-ssm-agent -register -code "'+ response['ActivationCode'] +'" -id "'+ response['ActivationId'] +'" -region "'+ response['region'] +'"');
-    setUpdateCommand('curl -O ' + window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '') + '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -p ' + password + ' -h ' + hostname + ' -c '+ response['ActivationCode'] +' -i '+ response['ActivationId'] +' -r '+ response['region'] +' -s '+ ssid +' -w '+ wifiPass);
+    setSsmCommand('sudo amazon-ssm-agent -register -code "'+ response['activationCode'] +'" -id "'+ response['activationId'] +'" -region "'+ response['region'] +'"');
+    setUpdateCommand('curl -O ' + window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '') + '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -p ' + password + ' -h ' + hostname + ' -c '+ response['activationCode'] +' -i '+ response['activationId'] +' -r '+ response['region'] +' -s '+ ssid +' -w '+ wifiPass);
     setLoading("");
   }
 

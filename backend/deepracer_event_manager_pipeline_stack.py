@@ -112,12 +112,11 @@ class CdkServerlessCharityPipelineStack(Stack):
                     "ls -lah",
                     "python generate_amplify_config_cfn.py",
                     "python update_index_html_with_script_tag_cfn.py",
-                    "cd ./website",
-                    #"cd src/graphql",
-                    #"npm install -g @aws-amplify/cli",
-                    #"<TODO download schema.graphql"
-                    #"amplify codegen",
-                    #"cd ../..",
+                    "cd ./website/src/graphql",
+                    "npm install -g @aws-amplify/cli",
+                    "appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $appsyncId --format SDL ./website/src/graphql/schema.graphql",
+	                "amplify codegen",
+                    "cd ../..",
                     "docker run --rm -v $(pwd):/foo -w /foo public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
                     "aws s3 sync ./build/ s3://$sourceBucketName/ --delete",
                     "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'"
