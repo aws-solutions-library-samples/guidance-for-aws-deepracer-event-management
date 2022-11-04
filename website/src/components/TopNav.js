@@ -63,7 +63,7 @@ function MenuRoutes() {
 
 export function TopNav(props) {
   const [groups, setGroups] = useState([]);
-  const [navigationOpen, setNavigationOpen] = useState([]);
+  const [navigationOpen, setNavigationOpen] = useState(true);
 
   // Config Groups
   useEffect(() => {
@@ -100,7 +100,7 @@ export function TopNav(props) {
   }
 
   return (
-    <Router>
+    <div>
       <div id="h" style={{ position: 'sticky', top: 0, zIndex: 1002 }}>
         <TopNavigation
           identity={{
@@ -155,10 +155,10 @@ export function TopNav(props) {
         }
         //breadcrumbs={<BreadcrumbGroup items={breadcrumbs} expandAriaLabel="Show path" ariaLabel="Breadcrumbs" />}
         contentType="table"
-        content={<MenuRoutes />}
+        content={<Router><MenuRoutes /></Router>}
         onNavigationChange={({ detail }) => setNavigationOpen(detail.open)}
       />
-    </Router>
+    </div>
   )
   
 }
