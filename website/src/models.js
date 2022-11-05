@@ -108,7 +108,7 @@ export function Models() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: UserModelsColumnsConfig[1] } },
+      sorting: { defaultState: { sortingColumn: UserModelsColumnsConfig[2], isDescending: true } },
       selection: {},
     }
   );
