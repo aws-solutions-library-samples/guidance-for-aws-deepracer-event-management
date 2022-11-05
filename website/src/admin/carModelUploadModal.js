@@ -225,6 +225,12 @@ export default (props) => {
         header: "Name",
         cell: item => item.Name || "-",
         sortingField: "Name"
+      },
+      {
+        id: "eventName",
+        header: "Event name",
+        cell: item => item.eventName || "-",
+        sortingField: "eventName"
       }
     ]}
     items={props.cars}
