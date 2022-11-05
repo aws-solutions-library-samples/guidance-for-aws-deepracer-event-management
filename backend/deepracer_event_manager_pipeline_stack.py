@@ -102,6 +102,9 @@ class CdkServerlessCharityPipelineStack(Stack):
         # Add Generate Amplify Config and Deploy to S3
         infrastructure_stage.add_post(
             pipelines.CodeBuildStep("DeployAmplifyToS3",
+                install_commands=[
+                    "npm install -g @aws-amplify/cli",
+                ],
                 build_environment=codebuild.BuildEnvironment(
                     privileged=True
                 ),
