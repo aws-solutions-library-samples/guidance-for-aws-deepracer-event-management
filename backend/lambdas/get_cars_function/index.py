@@ -11,6 +11,7 @@ client_ssm = boto3.client('ssm')
 @logger.inject_lambda_context
 def lambda_handler(event: dict, context: LambdaContext) -> str:
     try:
+        return_array=[]
         response = client_ssm.describe_instance_information(
             Filters=[
                 {
@@ -28,9 +29,18 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                 ResourceType='ManagedInstance',
                 ResourceId=resource['SourceId'],
             )
-            logger.log(tags_response)
+            #logger.info(tags_response)
+            #resource['TagList']=tags_response['TagList']
+            
+            for tag in tags_response['TagList']:
+                if tag['Key'] == 'eventName':
+                    resource['eventName']=tag['Value']
+                elif tag['Key'] == 'eventId':
+                    resource['eventId']=tag['Value']
+            
+            return_array.append(resource)
 
-        return http_response.response(200, response['InstanceInformationList'])
+        return http_response.response(200, return_array)
 
     except Exception as error:
         logger.exception(error)

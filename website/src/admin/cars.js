@@ -60,7 +60,7 @@ export function AdminCars() {
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
-    visibleContent: ['instanceId', 'carName', 'carIp'],
+    visibleContent: ['instanceId', 'carName', 'eventName'],
   });
 
   const columnsConfig = [
@@ -75,6 +75,12 @@ export function AdminCars() {
       header: 'Car name',
       cell: item => item.ComputerName || '-',
       sortingField: 'carName',
+    },
+    {
+      id: 'eventName',
+      header: 'Event name',
+      cell: item => item.eventName || '-',
+      sortingField: 'eventName',
     },
     {
       id: 'carIp',
@@ -99,7 +105,13 @@ export function AdminCars() {
       header: 'Last ping time',
       cell: item => dayjs(item.lastPingDateTime).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'lastPingDateTime',
-    }
+    },
+    {
+      id: 'eventId',
+      header: 'Event ID',
+      cell: item => item.eventId || '-',
+      sortingField: 'eventId',
+    },
   ];
 
   const visibleContentOptions = [
@@ -117,6 +129,11 @@ export function AdminCars() {
           editable: false,
         },
         {
+          id: 'eventName',
+          label: 'Event name',
+          editable: true,
+        },
+        {
           id: 'carIp',
           label: 'Car IP',
         },
@@ -131,7 +148,11 @@ export function AdminCars() {
         {
           id: 'lastPingDateTime',
           label: 'Last ping time',
-        }
+        },
+        {
+          id: 'eventId',
+          label: 'Event ID',
+        },
       ]
     }
   ]
