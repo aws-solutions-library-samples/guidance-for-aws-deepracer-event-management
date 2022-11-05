@@ -148,6 +148,13 @@ class CdkServerlessCharityPipelineStack(Stack):
                             "cloudformation:DescribeStacks"
                         ],
                         resources=["*"]
+                    ),
+                                        iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        actions=[
+                            "appsync:GetIntrospectionSchema"
+                        ],
+                        resources=["*"]
                     )
                 ]
             )
