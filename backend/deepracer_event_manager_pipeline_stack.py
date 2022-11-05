@@ -118,7 +118,7 @@ class CdkServerlessCharityPipelineStack(Stack):
                     #"npm install -g @aws-amplify/cli",
                     "appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $appsyncId --format SDL ./website/src/graphql/schema.graphql",
                     "cd ./website/src/graphql",
-	                "npx amplify codegen",
+	                "amplify codegen",
                     "ls -lah",
                     "cd ../..",
                     "docker run --rm -v $(pwd):/foo -w /foo public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
