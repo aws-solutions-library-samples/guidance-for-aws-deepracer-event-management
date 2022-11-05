@@ -26,4 +26,7 @@ email.txt
 reports
 htmlcov
 website/src/graphql/schema.graphql
+website/src/graphql/mutations.js
+website/src/graphql/queries.js
+website/src/graphql/subscriptions.js
 appsyncId.txt
