@@ -267,7 +267,8 @@ class CdkDeepRacerEventManagerStack(Stack):
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
                 actions=[
-                    "ssm:DescribeInstanceInformation"
+                    "ssm:DescribeInstanceInformation",
+                    "ssm:ListTagsForResource"
                 ],
                 resources=["*"],
             )

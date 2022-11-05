@@ -22,6 +22,13 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
             ],
         )
         logger.info(response['InstanceInformationList'])
+        
+        for resource in response['InstanceInformationList']:
+            tags_response = client_ssm.list_tags_for_resource(
+                ResourceType='ManagedInstance',
+                ResourceId=resource['SourceId'],
+            )
+            logger.log(tags_response)
 
         return http_response.response(200, response['InstanceInformationList'])
 

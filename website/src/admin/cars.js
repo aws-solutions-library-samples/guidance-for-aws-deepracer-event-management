@@ -47,6 +47,7 @@ export function AdminCars() {
       const apiPath = 'cars';
 
       const response = await API.get(apiName, apiPath);
+      //console.log(response)
       setItems(response);
     }
     getData();
