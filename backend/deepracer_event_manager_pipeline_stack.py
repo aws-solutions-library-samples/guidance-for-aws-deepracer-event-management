@@ -149,7 +149,7 @@ class CdkServerlessCharityPipelineStack(Stack):
                         ],
                         resources=["*"]
                     ),
-                                        iam.PolicyStatement(
+                    iam.PolicyStatement(
                         effect=iam.Effect.ALLOW,
                         actions=[
                             "appsync:GetIntrospectionSchema"
