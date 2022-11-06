@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { API } from 'aws-amplify';
+import * as queries from '../graphql/queries';
+//import * as mutations from '../graphql/mutations';
+//import * as subscriptions from '../graphql/subscriptions'
+
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
@@ -41,19 +45,18 @@ export function AdminCars() {
   const [selectedItems, setSelectedItems] = useState([]);
 
   useEffect(() => {
-    // Get Cars
-    async function getData() {
-      const apiName = 'deepracerEventManager';
-      const apiPath = 'cars';
-
-      const response = await API.get(apiName, apiPath);
-      //console.log(response)
-      setItems(response);
+    // Get CarsOnline
+    async function carsOnline() {
+      const response = await API.graphql({
+        query: queries.carsOnline
+      });
+      //console.log('carsOnline');
+      setItems(response.data.carsOnline);
     }
-    getData();
+    carsOnline();
     setIsLoading(false);
 
-    return() => {
+    return () => {
       // Unmounting
     }
   },[])

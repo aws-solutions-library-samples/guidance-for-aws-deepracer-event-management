@@ -24,7 +24,7 @@ from cdk_serverless_clamscan import ServerlessClamscan
 from backend.terms_n_conditions.tnc_construct import TermsAndConditions
 from backend.graphql_api.api import API as graphqlApi
 from backend.events_manager import EventsManager
-from backend.car_activation import CarActivation
+from backend.cars_manager import CarManager
 
 from cdk_nag import NagSuppressions
 
@@ -247,32 +247,6 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         #permissions for s3 bucket read
         infected_bucket.grant_read(quarantined_models_function, 'private/*')
-
-        ## Cars Function
-        cars_function = lambda_python.PythonFunction(self, "get_cars_function",
-            entry="backend/lambdas/get_cars_function/",
-            index="index.py",
-            handler="lambda_handler",
-            timeout=Duration.minutes(1),
-            runtime=lambda_runtime,
-            tracing=awslambda.Tracing.ACTIVE,
-            memory_size=128,
-            architecture=lambda_architecture,
-            bundling=lambda_python.BundlingOptions(
-                image=lambda_bundling_image
-            ),
-            layers=[helper_functions_layer, powertools_layer]
-        )
-        cars_function.add_to_role_policy(
-            iam.PolicyStatement(
-                effect=iam.Effect.ALLOW,
-                actions=[
-                    "ssm:DescribeInstanceInformation",
-                    "ssm:ListTagsForResource"
-                ],
-                resources=["*"],
-            )
-        )
 
         ## upload_model_to_car_function
         upload_model_to_car_function = lambda_python.PythonFunction(self, "upload_model_to_car_function",
@@ -900,7 +874,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         ## Appsync API
         appsync_api = graphqlApi(self, 'AppsyncApi')
         EventsManager(self, 'EventsManager', api=appsync_api.api, user_pool=user_pool, roles_to_grant_invoke_access=[admin_user_role])
-        CarActivation(self, 'CarActivation', api=appsync_api.api, roles_to_grant_invoke_access=[admin_user_role])
+        CarManager(self, 'CarManager', api=appsync_api.api, roles_to_grant_invoke_access=[admin_user_role])
 
         ## API Gateway
         apig_log_group = logs.LogGroup(self, "apig_log_group",
@@ -1007,11 +981,6 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         api_cars = api.root.add_resource('cars')
-        cars_method = api_cars.add_method(
-            http_method="GET",
-            integration=apig.LambdaIntegration(handler=cars_function),
-            authorization_type=apig.AuthorizationType.IAM
-        )
 
         api_users = api.root.add_resource('users')
         users_method = api_users.add_method(
@@ -1129,7 +1098,6 @@ class CdkDeepRacerEventManagerStack(Stack):
                 ],
                 resources=[
                     api.arn_for_execute_api(method='GET',path='/models'),
-                    api.arn_for_execute_api(method='GET',path='/cars'),
                     api.arn_for_execute_api(method='POST',path='/cars/upload'),
                     api.arn_for_execute_api(method='POST',path='/cars/upload/status'),
                     api.arn_for_execute_api(method='POST',path='/cars/delete_all_models'),
