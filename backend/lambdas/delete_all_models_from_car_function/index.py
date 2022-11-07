@@ -25,7 +25,8 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                 InstanceIds=[instance_id],
                 DocumentName="AWS-RunShellScript",
                 Parameters={'commands': [
-                    "rm -rf /opt/aws/deepracer/artifacts/*"
+                    "rm -rf /opt/aws/deepracer/artifacts/*",
+                    "rm -rf /root/.ros/log/*"
                 ]}
             )
             command_id = response['Command']['CommandId']

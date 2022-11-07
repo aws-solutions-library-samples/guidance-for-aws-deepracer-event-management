@@ -233,6 +233,7 @@ export function AdminCars() {
           loadingText='Loading cars'
           visibleColumns={preferences.visibleContent}
           selectionType='multi'
+          stickyHeader='true'
           trackBy='InstanceId'
           selectedItems={selectedItems}
           onSelectionChange={({ detail: { selectedItems } }) => {

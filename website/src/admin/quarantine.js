@@ -89,7 +89,7 @@ export function AdminQuarantine() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: AdminModelsColumnsConfig[1] } },
+      sorting: { defaultState: { sortingColumn: AdminModelsColumnsConfig[3], isDescending: true } },
       selection: {},
     }
   );

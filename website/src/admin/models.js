@@ -110,7 +110,7 @@ export function AdminModels() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: AdminModelsColumnsConfig[1] } },
+      sorting: { defaultState: { sortingColumn: AdminModelsColumnsConfig[3], isDescending: true } },
       selection: {},
     }
   );
@@ -188,6 +188,7 @@ export function AdminModels() {
           visibleColumns={preferences.visibleContent}
           selectedItems={selectedItems}
           selectionType='multi'
+          stickyHeader='true'
           trackBy={'key'}
           onSelectionChange={({ detail: { selectedItems } }) => {
             setSelectedItems(selectedItems)
