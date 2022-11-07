@@ -63,7 +63,7 @@ export function AdminCars() {
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
-    visibleContent: ['instanceId', 'carName', 'eventName'],
+    visibleContent: ['instanceId', 'carName', 'eventName','carIp'],
   });
 
   const columnsConfig = [

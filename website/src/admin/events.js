@@ -19,8 +19,17 @@ import {
   ExpandableSection,
   Table,
   Alert,
+  TextFilter
 } from '@cloudscape-design/components';
 import { useCollection } from '@cloudscape-design/collection-hooks';
+
+import {
+  DefaultPreferences,
+  EmptyState,
+  MatchesCountText,
+  PageSizePreference,
+  WrapLines,
+} from '../components/TableConfig';
 
 export function AdminEvents() {
   //const [events, setEvents] = useState([]);
@@ -56,6 +65,11 @@ export function AdminEvents() {
     //console.log(response.data.deleteEvent);
   }
 
+  const [preferences, setPreferences] = useState({
+    ...DefaultPreferences,
+    //visibleContent: ['instanceId', 'carName', 'eventName','carIp'],
+  });
+
   const columnDefinitions = [
     {
       id: "eventName",
@@ -79,9 +93,55 @@ export function AdminEvents() {
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
     events,
     {
+      filtering: {
+        empty: (
+          <EmptyState
+            title="No Events"
+            subtitle="Please create an event."
+          />
+        ),
+        noMatch: (
+          <EmptyState
+            title="No matches"
+            subtitle="We can’t find a match."
+            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+          />
+        ),
+      },
+      pagination: { pageSize: preferences.pageSize },
       sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
+      selection: {},
     }
   );
+
+  const eventsTable = <Table
+    {...collectionProps}
+    onSelectionChange={({ detail }) => {
+      setSelectedEvent(detail.selectedItems);
+      setDeleteButtonDisabled(false);
+    }}
+    selectedItems={selectedEvent}
+    selectionType="single"
+    columnDefinitions={columnDefinitions}
+    items={items}
+    loadingText="Loading resources"
+    filter={
+      <TextFilter
+        {...filterProps}
+        countText={MatchesCountText(filteredItemsCount)}
+        filteringAriaLabel='Filter cars'
+      />
+    }
+    header={
+      <Header 
+      actions={
+        <Button disabled={deleteButtonDisabled} variant='primary' onClick={() => {
+          deleteEvent(); 
+        }}>Delete Event</Button>
+      }
+      >Events</Header>
+    } 
+  />
 
   return (
     <>
@@ -119,36 +179,7 @@ export function AdminEvents() {
           </Form>
           </Container>
 
-          <Table
-            {...collectionProps}
-            onSelectionChange={({ detail }) => {
-              setSelectedEvent(detail.selectedItems);
-              setDeleteButtonDisabled(false);
-            }}
-            selectedItems={selectedEvent}
-            selectionType="single"
-            columnDefinitions={columnDefinitions}
-            items={items}
-            loadingText="Loading resources"
-            empty={
-              <Alert
-                visible={true}
-                dismissAriaLabel="Close alert"
-                header="No Events"
-              >
-                Please create your first event
-              </Alert>
-            }
-            header={
-              <Header 
-              actions={
-                <Button disabled={deleteButtonDisabled} variant='primary' onClick={() => {
-                  deleteEvent(); 
-                }}>Delete Event</Button>
-              }
-              >Events</Header>
-            } 
-          />  
+          {eventsTable}
         </SpaceBetween>
         <div></div>
       </Grid>
