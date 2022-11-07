@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { API } from 'aws-amplify';
+import * as queries from '../graphql/queries';
+//import * as mutations from '../graphql/mutations';
+//import * as subscriptions from '../graphql/subscriptions'
+
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
@@ -42,7 +46,6 @@ export function AdminModels() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedModelsBtn, setSelectedModelsBtn] = useState(true);
 
-
   useEffect(() => {
     async function getData() {
       console.log("Collecting models...")
@@ -63,10 +66,15 @@ export function AdminModels() {
       setItems(models);
 
       console.log("Collecting cars...")
-      const apiCarPath = 'cars';
-
-      const cars = await API.get(apiName, apiCarPath);
-      setCars(cars);
+      // Get CarsOnline
+      async function carsOnline() {
+        const response = await API.graphql({
+          query: queries.carsOnline
+        });
+        //console.log('carsOnline');
+        setCars(response.data.carsOnline);
+      }
+      carsOnline();
 
       setIsLoading(false);
     }

@@ -10,7 +10,7 @@ from aws_cdk import Environment, App, Aspects
 from cdk_nag import AwsSolutionsChecks
 
 from backend.deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
-from backend.deepracer_event_manager_fe_deploy_stack import CdkDeepRacerEventManagerFEDeployStack
+#from backend.deepracer_event_manager_fe_deploy_stack import CdkDeepRacerEventManagerFEDeployStack
 from backend.deepracer_event_manager_pipeline_stack import CdkServerlessCharityPipelineStack
 
 # Region
@@ -44,7 +44,7 @@ if app.node.try_get_context("manual_deploy") == 'True':
 if manual_deploy:
     print('Manual deploy')
     infrastructure = CdkDeepRacerEventManagerStack(app, "drem-backend-" + branchname + "-infrastructure", email=email, env=env)
-    CdkDeepRacerEventManagerFEDeployStack(app, "drem-frontend-" + branchname, env=env, source_bucket=infrastructure.source_bucket, distribution=infrastructure.distribution)
+    #CdkDeepRacerEventManagerFEDeployStack(app, "drem-frontend-" + branchname, env=env, source_bucket=infrastructure.source_bucket, distribution=infrastructure.distribution)
 else:
     print('Pipeline deploy')
     CdkServerlessCharityPipelineStack(app, "drem-pipeline-" + branchname, branchname=branchname, email=email, env=env)
