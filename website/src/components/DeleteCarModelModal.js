@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { API } from 'aws-amplify';
-import { Storage } from 'aws-amplify';
 
 import {
   Box,
@@ -62,13 +61,11 @@ export default ({ disabled, selectedItems, variant }) => {
   },[cars])
 
   function modalOpen(selectedItems) {
-    console.log('open');
     setVisible(true);
     setCars(selectedItems);
   }
 
   function modalClose() {
-    console.log('close');
     setVisible(false);
   };
 
