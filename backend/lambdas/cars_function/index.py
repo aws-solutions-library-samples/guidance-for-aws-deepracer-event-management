@@ -52,27 +52,20 @@ def carOnline():
                     resource['eventId']=tag['Value']
             resource['IsLatestVersion']=str(resource['IsLatestVersion'])
 
-            data = {
-            "InstanceId": resource["InstanceId"],
-            "PingStatus": resource["PingStatus"],
-            "LastPingDateTime": resource["LastPingDateTime"].isoformat(),
-            "AgentVersion": resource["AgentVersion"],
-            "IsLatestVersion": resource["IsLatestVersion"],
-            "PlatformType": resource["PlatformType"],
-            "PlatformName": resource["PlatformName"],
-            "PlatformVersion": resource["PlatformVersion"],
-            "ActivationId": resource["ActivationId"],
-            "IamRole": resource["IamRole"],
-            "RegistrationDate": resource["RegistrationDate"].isoformat(),
-            "ResourceType": resource["ResourceType"],
-            "Name": resource["Name"],
-            "IPAddress": resource["IPAddress"],
-            "ComputerName": resource["ComputerName"],
-            #"SourceId": resource["SourceId"],
-            #"SourceType": resource["SourceType"],
-            "eventId": resource["eventId"],
-            "eventName": resource["eventName"],
-            }
+            data = {}
+
+            # keys to check
+            keys_to_check = ["InstanceId","PingStatus","AgentVersion","IsLatestVersion","PlatformType","PlatformVersion","ActivationId","IamRole","ResourceType","Name","IPAddress","ComputerName","SourceId","SourceType","eventId","eventName"]
+            for current_key in keys_to_check:
+                if current_key in resource:
+                    data[current_key] = resource[current_key]
+
+            # keys to check and handle datetime objects
+            keys_to_check = ["LastPingDateTime","RegistrationDate"]
+            for current_key in keys_to_check:
+                if current_key in resource:
+                    data[current_key] = resource[current_key].isoformat()
+            
             return_array.append(data)
         
         logger.info(return_array)
