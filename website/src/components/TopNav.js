@@ -14,13 +14,14 @@ import { AdminHome } from '../admin/home.js';
 import { AdminModels } from '../admin/models.js';
 import { AdminQuarantine } from '../admin/quarantine.js';
 import { AdminCars } from '../admin/cars.js';
+import { AdminEvents } from '../admin/events.js';
 import { AdminGroups } from '../admin/groups.js';
 import { AdminGroupsDetail } from '../admin/groups/detail.js';
 import { AdminActivation } from '../admin/carActivation.js';
 import { Upload } from '../upload.js';
+//import { ListOfEvents } from './ListOfEvents.js';
 
-import { 
-  Container, 
+import {
   TopNavigation,
   AppLayout,
   SideNavigation
@@ -51,6 +52,7 @@ function MenuRoutes() {
       <Route path="/admin/models" element={<AdminModels />} />
       <Route path="/admin/quarantine" element={<AdminQuarantine />} />
       <Route path="/admin/cars" element={<AdminCars />} />
+      <Route path="/admin/events" element={<AdminEvents />} />
       <Route path="/admin/groups" element={<AdminGroups />} />
       <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />
       <Route path="/admin/car_activation" element={<AdminActivation />} />
@@ -59,116 +61,106 @@ function MenuRoutes() {
   );
 }
 
-class TopNav extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      groups: [],
-      navigationOpen: true,
-    };
-  }
-  _isMounted = false;
+export function TopNav(props) {
+  const [groups, setGroups] = useState([]);
+  const [navigationOpen, setNavigationOpen] = useState(true);
 
-  componentDidMount() {
-    this._isMounted = true;
-
+  // Config Groups
+  useEffect(() => {
     Auth.currentAuthenticatedUser().then(user => {
-      // Returns an array of groups
       const groups = user.signInUserSession.accessToken.payload["cognito:groups"];
-      // console.log("User Groups: ")
-      // console.log(groups)
-      if (this._isMounted && groups !== undefined ) {
-        this.setState({ groups: groups })
+      if (groups !== undefined ) {
+        setGroups(groups)
       }
+    })
+
+    return () => {
+      // Unmounting
+    }
+  },[])
+
+  let navItems = [
+    {type: "link", text: "Upload", href: "/upload"},
+    {type: "link", text: "Models", href: "/models"},
+  ];
+
+  if ( groups.includes('admin') ) {
+    navItems.push({
+      type: 'section',
+      text: 'Admin',
+      items: [
+        {type: "link",text: "All Models",href: "/admin/models"},
+        {type: "link",text: "Quarantined models",href: "/admin/quarantine"},
+        {type: "link",text: "Events",href: "/admin/events"},
+        {type: "link",text: "Cars",href: "/admin/cars"},
+        {type: "link",text: "Car activiation",href: "/admin/car_activation"},
+        {type: "link",text: "Groups",href: "/admin/groups"}
+      ],
     })
   }
 
-  componentWillUnmount() {
-    this._isMounted = false;
-  }
-
-  render() {
-    let navItems = [
-      {type: "link", text: "Upload", href: "/upload"},
-      {type: "link", text: "Models", href: "/models"},
-    ];
-
-    if ( this.state.groups.includes('admin') ) {
-      navItems.push({
-        type: 'section',
-        text: 'Admin',
-        items: [
-          {type: "link",text: "All Models",href: "/admin/models"},
-          {type: "link",text: "Quarantined models",href: "/admin/quarantine"},
-          {type: "link",text: "Cars",href: "/admin/cars"},
-          {type: "link",text: "Car activiation",href: "/admin/car_activation"},
-          {type: "link",text: "Groups",href: "/admin/groups"}
-        ],
-      })
-    }
-
-    return (
-      <Router>
-        <div id="h" style={{ position: 'sticky', top: 0, zIndex: 1002 }}>
-          <TopNavigation
-            identity={{
-              href: "/",
-              title: "DREM",
-              logo: {
-                src: "/logo.png",
-                alt: "DREM"
-              }
-            }}
-            utilities={[
-              {
-                type: "menu-dropdown",
-                text: this.props.user,
-                iconName:"user-profile",
-                items: [
-                  {
-                    id: "signout",
-                    text: "Sign out",
-                  }
-                ],
-                onItemClick: ({detail}) => {
-                  // Perform actions based on the clicked item details
-                  if (detail.id === 'signout') {
-                    this.props.signout();
-                  }
+  return (
+    <div>
+      <div id="h" style={{ position: 'sticky', top: 0, zIndex: 1002 }}>
+        <TopNavigation
+          identity={{
+            href: "/",
+            title: "DREM",
+            logo: {
+              src: "/logo.png",
+              alt: "DREM"
+            }
+          }}
+          utilities={[
+            {
+              type: "menu-dropdown",
+              text: props.user,
+              iconName:"user-profile",
+              items: [
+                {
+                  id: "signout",
+                  text: "Sign out",
+                }
+              ],
+              onItemClick: ({detail}) => {
+                // Perform actions based on the clicked item details
+                if (detail.id === 'signout') {
+                  props.signout();
                 }
               }
-            ]}
-            i18nStrings={{
-              searchIconAriaLabel: "Search",
-              searchDismissIconAriaLabel: "Close search",
-              overflowMenuTriggerText: "More",
-              overflowMenuTitleText: "All",
-              overflowMenuBackIconAriaLabel: "Back",
-              overflowMenuDismissIconAriaLabel: "Close menu"
-            }}
-          />
-          
-        </div>
-        <AppLayout
-          //stickyNotifications
-          toolsHide
-          //headerSelector="#header"
-          ariaLabels={{ navigationClose: 'close' }}
-          navigationOpen={this.state.navigationOpen}
-          navigation={
-            <SideNavigation 
-              activeHref={window.location.pathname} 
-              items={navItems}
-            />
-          }
-          //breadcrumbs={<BreadcrumbGroup items={breadcrumbs} expandAriaLabel="Show path" ariaLabel="Breadcrumbs" />}
-          contentType="table"
-          content={<MenuRoutes />}
-          onNavigationChange={({ detail }) => this.setState({ navigationOpen: detail.open })}
+            }
+          ]}
+          i18nStrings={{
+            searchIconAriaLabel: "Search",
+            searchDismissIconAriaLabel: "Close search",
+            overflowMenuTriggerText: "More",
+            overflowMenuTitleText: "All",
+            overflowMenuBackIconAriaLabel: "Back",
+            overflowMenuDismissIconAriaLabel: "Close menu"
+          }}
         />
-      </Router>
-    )
-  }
+
+      </div>
+      <AppLayout
+        //stickyNotifications
+        toolsHide
+        //headerSelector="#header"
+        ariaLabels={{ navigationClose: 'close' }}
+        navigationOpen={navigationOpen}
+        navigation={
+          <SideNavigation
+            activeHref={window.location.pathname}
+            items={navItems}
+          />
+        }
+        //breadcrumbs={<BreadcrumbGroup items={breadcrumbs} expandAriaLabel="Show path" ariaLabel="Breadcrumbs" />}
+        contentType="table"
+        content={<Router><MenuRoutes /></Router>}
+        onNavigationChange={({ detail }) => setNavigationOpen(detail.open)}
+      />
+    </div>
+  )
+  
 }
 
 export default TopNav

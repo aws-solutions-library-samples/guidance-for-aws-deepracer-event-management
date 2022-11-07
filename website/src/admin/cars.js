@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { API } from 'aws-amplify';
+import * as queries from '../graphql/queries';
+//import * as mutations from '../graphql/mutations';
+//import * as subscriptions from '../graphql/subscriptions'
+
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
@@ -41,25 +45,25 @@ export function AdminCars() {
   const [selectedItems, setSelectedItems] = useState([]);
 
   useEffect(() => {
-    // Get Cars
-    async function getData() {
-      const apiName = 'deepracerEventManager';
-      const apiPath = 'cars';
-
-      const response = await API.get(apiName, apiPath);
-      setItems(response);
+    // Get CarsOnline
+    async function carsOnline() {
+      const response = await API.graphql({
+        query: queries.carsOnline
+      });
+      //console.log('carsOnline');
+      setItems(response.data.carsOnline);
     }
-    getData();
+    carsOnline();
     setIsLoading(false);
 
-    return() => {
+    return () => {
       // Unmounting
     }
   },[])
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
-    visibleContent: ['instanceId', 'carName', 'carIp'],
+    visibleContent: ['instanceId', 'carName', 'eventName','carIp'],
   });
 
   const columnsConfig = [
@@ -74,6 +78,12 @@ export function AdminCars() {
       header: 'Car name',
       cell: item => item.ComputerName || '-',
       sortingField: 'carName',
+    },
+    {
+      id: 'eventName',
+      header: 'Event name',
+      cell: item => item.eventName || '-',
+      sortingField: 'eventName',
     },
     {
       id: 'carIp',
@@ -98,7 +108,13 @@ export function AdminCars() {
       header: 'Last ping time',
       cell: item => dayjs(item.lastPingDateTime).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'lastPingDateTime',
-    }
+    },
+    {
+      id: 'eventId',
+      header: 'Event ID',
+      cell: item => item.eventId || '-',
+      sortingField: 'eventId',
+    },
   ];
 
   const visibleContentOptions = [
@@ -116,6 +132,11 @@ export function AdminCars() {
           editable: false,
         },
         {
+          id: 'eventName',
+          label: 'Event name',
+          editable: true,
+        },
+        {
           id: 'carIp',
           label: 'Car IP',
         },
@@ -130,7 +151,11 @@ export function AdminCars() {
         {
           id: 'lastPingDateTime',
           label: 'Last ping time',
-        }
+        },
+        {
+          id: 'eventId',
+          label: 'Event ID',
+        },
       ]
     }
   ]
