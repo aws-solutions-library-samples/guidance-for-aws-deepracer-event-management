@@ -46,7 +46,7 @@ class CdkServerlessCharityPipelineStack(Stack):
             synth=pipelines.CodeBuildStep("SynthAndDeployBackend",
                 build_environment=codebuild.BuildEnvironment(
                     build_image=codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0,
-                    compute_type=codebuild.ComputeType.MEDIUM
+                    compute_type=codebuild.ComputeType.LARGE
                 ),
                 input=pipelines.CodePipelineSource.s3(
                     bucket=s3_repo_bucket,
