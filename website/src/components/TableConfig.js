@@ -46,19 +46,25 @@ export const UserModelsColumnsConfig = [
     id: 'id',
     header: 'id',
     cell: item => item.id,
-  },
+    width: 200,
+    minWidth: 150,
+},
   {
     id: 'modelName',
     header: 'Model name',
     cell: item => item.modelName || '-',
     sortingField: 'modelName',
-  },
+    width: 200,
+    minWidth: 150,
+},
   {
     id: 'modelDate',
     header: 'Upload date',
     cell: item => item.modelDate || '-',
     sortingField: 'modelDate',
-  }
+    width: 200,
+    minWidth: 150,
+}
 ]
 
 export const AdminModelsColumnsConfig = [
@@ -66,23 +72,31 @@ export const AdminModelsColumnsConfig = [
     id: 'id',
     header: 'id',
     cell: item => item.id,
-  },
+    width: 200,
+    minWidth: 150,
+},
   {
     id: 'userName',
     header: 'User name',
     cell: item => item.userName || '-',
     sortingField: 'userName',
-  },
+    width: 200,
+    minWidth: 150,
+},
   {
     id: 'modelName',
     header: 'Model name',
     cell: item => item.modelName || '-',
     sortingField: 'modelName',
-  },
+    width: 200,
+    minWidth: 150,
+},
   {
     id: 'modelDate',
     header: 'Upload date',
     cell: item => item.modelDate || '-',
     sortingField: 'modelDate',
-  }
+    width: 200,
+    minWidth: 150,
+}
 ]

@@ -6,7 +6,7 @@ import {
   StatusIndicator
 } from "@cloudscape-design/components";
 
-export function FileUploadStatus(props) {
+export function ModelUploadStatus(props) {
   const file = props.file;
   const [percent, setPercent] = useState(0);
   const [status, setStatus] = useState('Pending');

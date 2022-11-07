@@ -108,7 +108,7 @@ export function Models() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: UserModelsColumnsConfig[1] } },
+      sorting: { defaultState: { sortingColumn: UserModelsColumnsConfig[2], isDescending: true } },
       selection: {},
     }
   );
@@ -179,12 +179,13 @@ export function Models() {
           visibleColumns={preferences.visibleContent}
           selectedItems={selectedItems}
           selectionType='multi'
-          trackBy='key'
+          stickyHeader='true'
+          trackBy='modelName'
+          resizableColumns
           onSelectionChange={({ detail: { selectedItems } }) => {
             setSelectedItems(selectedItems)
             selectedItems.length ? setSelectedModelsBtn(false) : setSelectedModelsBtn(true)
           }}
-          resizableColumns
           preferences={
             <CollectionPreferences
               title='Preferences'
