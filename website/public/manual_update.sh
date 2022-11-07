@@ -142,7 +142,11 @@ fi
 
 echo 'Updating...'
 
+# Update ROS cert
+curl https://repo.ros2.org/repos.key | sudo apt-key add -
+
 # Update Ubuntu
+# sudo apt-get update # <- Takes forever
 sudo apt-get upgrade -y -o Dpkg::Options::="--force-overwrite"
 
 # Update DeepRacer
