@@ -22,6 +22,9 @@ from backend.cwrum_construct import CwRumAppMonitor
 from backend.user_pool_user import UserPoolUser
 from cdk_serverless_clamscan import ServerlessClamscan
 from backend.terms_n_conditions.tnc_construct import TermsAndConditions
+from backend.graphql_api.api import API as graphqlApi
+from backend.events_manager import EventsManager
+from backend.cars_manager import CarManager
 
 from cdk_nag import NagSuppressions
 
@@ -275,35 +278,6 @@ class CdkDeepRacerEventManagerStack(Stack):
         #permissions for s3 bucket read
         infected_bucket.grant_read(quarantined_models_function, "private/*")
 
-        ## Cars Function
-        cars_function = lambda_python.PythonFunction(self, "get_cars_function",
-            entry="backend/lambdas/get_cars_function/",
-            index="index.py",
-            handler="lambda_handler",
-            timeout=Duration.minutes(1),
-            runtime=lambda_runtime,
-            tracing=awslambda.Tracing.ACTIVE,
-            memory_size=128,
-            architecture=lambda_architecture,
-            environment={
-                "POWERTOOLS_SERVICE_NAME": "get_cars",
-                "LOG_LEVEL": powertools_log_level
-            },
-            bundling=lambda_python.BundlingOptions(
-                image=lambda_bundling_image
-            ),
-            layers=[helper_functions_layer, powertools_layer]
-        )
-        cars_function.add_to_role_policy(
-            iam.PolicyStatement(
-                effect=iam.Effect.ALLOW,
-                actions=[
-                    "ssm:DescribeInstanceInformation"
-                ],
-                resources=["*"],
-            )
-        )
-
         ## upload_model_to_car_function
         upload_model_to_car_function = lambda_python.PythonFunction(self, "upload_model_to_car_function",
             entry="backend/lambdas/upload_model_to_car_function/",
@@ -391,37 +365,6 @@ class CdkDeepRacerEventManagerStack(Stack):
                 actions=[
                     "ssm:GetCommandInvocation",
                     "ssm:SendCommand",
-                ],
-                resources=["*"],
-            )
-        )
-
-        ## create ssm activation function
-        create_ssm_activation_function = lambda_python.PythonFunction(self, "create_ssm_activation_function",
-            entry="backend/lambdas/create_ssm_activation_function/",
-            index="index.py",
-            handler="lambda_handler",
-            timeout=Duration.minutes(1),
-            runtime=lambda_runtime,
-            tracing=awslambda.Tracing.ACTIVE,
-            memory_size=128,
-            architecture=lambda_architecture,
-            environment={
-                "POWERTOOLS_SERVICE_NAME": "create_ssm_activation",
-                "LOG_LEVEL": powertools_log_level
-            },
-            bundling=lambda_python.BundlingOptions(
-                image=lambda_bundling_image
-            ),
-            layers=[helper_functions_layer, powertools_layer]
-        )
-        create_ssm_activation_function.add_to_role_policy(
-            iam.PolicyStatement(
-                effect=iam.Effect.ALLOW,
-                actions=[
-                    "iam:PassRole",
-                    "ssm:AddTagsToResource",
-                    "ssm:CreateActivation"
                 ],
                 resources=["*"],
             )
@@ -1041,6 +984,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             user_pool=user_pool,
             group_name=admin_user_pool_group.ref
         )
+        ## Appsync API
+        appsync_api = graphqlApi(self, 'AppsyncApi')
+        EventsManager(self, 'EventsManager', api=appsync_api.api, user_pool=user_pool, roles_to_grant_invoke_access=[admin_user_role])
+        CarManager(self, 'CarManager', api=appsync_api.api, roles_to_grant_invoke_access=[admin_user_role])
 
         ## API Gateway
         apig_log_group = logs.LogGroup(self, "apig_log_group",
@@ -1146,12 +1093,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             authorization_type=apig.AuthorizationType.IAM
         )
 
-        api_cars = api.root.add_resource("cars")
-        cars_method = api_cars.add_method(
-            http_method="GET",
-            integration=apig.LambdaIntegration(handler=cars_function),
-            authorization_type=apig.AuthorizationType.IAM
-        )
+        api_cars = api.root.add_resource('cars')
 
         api_users = api.root.add_resource("users")
         users_method = api_users.add_method(
@@ -1247,20 +1189,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             request_validator=body_validator
         )
 
-
-        ### Create SSM Activation Method
-        api_cars_create_ssm_activation = api_cars.add_resource("create_ssm_activation")
-        api_cars_create_ssm_activation_method = api_cars_create_ssm_activation.add_method(
-            http_method="POST",
-            integration=apig.LambdaIntegration(handler=create_ssm_activation_function),
-            authorization_type=apig.AuthorizationType.IAM,
-            request_models={
-                "application/json": hostname_model
-            },
-            request_validator=body_validator
-        )
-
-        api_cars_upload_status = api_cars_upload.add_resource("status")
+        api_cars_upload_status = api_cars_upload.add_resource('status')
         cars_upload_staus_method = api_cars_upload_status.add_method(
             http_method="POST",
             integration=apig.LambdaIntegration(handler=upload_model_to_car_status_function),
@@ -1281,20 +1210,18 @@ class CdkDeepRacerEventManagerStack(Stack):
                     "execute-api:Invoke"
                 ],
                 resources=[
-                    api.arn_for_execute_api(method="GET",path="/models"),
-                    api.arn_for_execute_api(method="GET",path="/cars"),
-                    api.arn_for_execute_api(method="POST",path="/cars/upload"),
-                    api.arn_for_execute_api(method="POST",path="/cars/upload/status"),
-                    api.arn_for_execute_api(method="POST",path="/cars/delete_all_models"),
-                    api.arn_for_execute_api(method="POST",path="/cars/create_ssm_activation"),
-                    api.arn_for_execute_api(method="GET",path="/users"),
-                    api.arn_for_execute_api(method="GET",path="/admin/quarantinedmodels"),
-                    api.arn_for_execute_api(method="GET",path="/admin/groups"),
-                    api.arn_for_execute_api(method="POST",path="/admin/groups"),
-                    api.arn_for_execute_api(method="DELETE",path="/admin/groups"),
-                    api.arn_for_execute_api(method="GET",path="/admin/groups/*"),
-                    api.arn_for_execute_api(method="POST",path="/admin/groups/*"),
-                    api.arn_for_execute_api(method="DELETE",path="/admin/groups/*"),
+                    api.arn_for_execute_api(method='GET',path='/models'),
+                    api.arn_for_execute_api(method='POST',path='/cars/upload'),
+                    api.arn_for_execute_api(method='POST',path='/cars/upload/status'),
+                    api.arn_for_execute_api(method='POST',path='/cars/delete_all_models'),
+                    api.arn_for_execute_api(method='GET',path='/users'),
+                    api.arn_for_execute_api(method='GET',path='/admin/quarantinedmodels'),
+                    api.arn_for_execute_api(method='GET',path='/admin/groups'),
+                    api.arn_for_execute_api(method='POST',path='/admin/groups'),
+                    api.arn_for_execute_api(method='DELETE',path='/admin/groups'),
+                    api.arn_for_execute_api(method='GET',path='/admin/groups/*'),
+                    api.arn_for_execute_api(method='POST',path='/admin/groups/*'),
+                    api.arn_for_execute_api(method='DELETE',path='/admin/groups/*'),
                 ],
             )
         )
@@ -1386,4 +1313,14 @@ class CdkDeepRacerEventManagerStack(Stack):
         CfnOutput(
             self, "rumScript",
             value=cw_rum_app_monitor.script
+        )
+
+        CfnOutput(
+            self, "appsyncEndpoint",
+            value=appsync_api.api.graphql_url
+        )
+
+        CfnOutput(
+            self, "appsyncId",
+            value=appsync_api.api.api_id
         )

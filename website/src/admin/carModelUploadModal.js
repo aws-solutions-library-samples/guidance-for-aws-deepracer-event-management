@@ -1,4 +1,4 @@
-import React, { Component, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { API } from 'aws-amplify';
 
 import {
@@ -8,9 +8,18 @@ import {
   Modal,
   Alert,
   Table,
-  Header,
-  ProgressBar
+  ProgressBar,
+  TextFilter
 } from '@cloudscape-design/components';
+import { useCollection } from '@cloudscape-design/collection-hooks';
+
+import {
+  DefaultPreferences,
+  EmptyState,
+  MatchesCountText,
+  PageSizePreference,
+  WrapLines,
+} from '../components/TableConfig';
 
 // https://overreacted.io/making-setinterval-declarative-with-react-hooks/
 function useInterval(callback, delay) {
@@ -206,38 +215,66 @@ export default (props) => {
 
   var models = [...props.selectedModels]; //clone models array
 
+  const columnDefinitions = [
+    {
+      id: "InstanceId",
+      header: "InstanceId",
+      cell: item => item.InstanceId || "-",
+      sortingField: "InstanceId"
+    },
+    {
+      id: "Name",
+      header: "Name",
+      cell: item => item.Name || "-",
+      sortingField: "Name"
+    },
+    {
+      id: "eventName",
+      header: "Event name",
+      cell: item => item.eventName || "-",
+      sortingField: "eventName"
+    }
+  ]
+
+  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
+    props.cars,
+    {
+      filtering: {
+        empty: (
+          <EmptyState
+            title="No cars"
+            subtitle="No cars are currently online."
+          />
+        ),
+        noMatch: (
+          <EmptyState
+            title="No matches"
+            subtitle="We can’t find a match."
+            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+          />
+        ),
+      },
+      sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
+    }
+  );
+
   // default modal content
   var modalTable = <Table
+    {...collectionProps}
     onSelectionChange={({ detail }) => {
       setSelectedCars(detail.selectedItems);
     }}
     selectedItems={selectedCars}
     selectionType="single"
-    columnDefinitions={[
-      {
-        id: "InstanceId",
-        header: "InstanceId",
-        cell: item => item.InstanceId || "-",
-        sortingField: "InstanceId"
-      },
-      {
-        id: "Name",
-        header: "Name",
-        cell: item => item.Name || "-",
-        sortingField: "Name"
-      }
-    ]}
-    items={props.cars}
+    columnDefinitions={columnDefinitions}
+    items={items}
     loadingText="Loading resources"
-    sortingDisabled
-    empty={
-      <Alert
-        visible={true}
-        dismissAriaLabel="Close alert"
-        header="No cars are online"
-      >
-        Check your cars are registered to DREM and are connected to the internet
-      </Alert>
+    filter={
+      <TextFilter
+        {...filterProps}
+        countText={MatchesCountText(filteredItemsCount)}
+        filteringAriaLabel='Filter cars'
+      />
     }
   />
 

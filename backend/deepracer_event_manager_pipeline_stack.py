@@ -45,7 +45,7 @@ class CdkServerlessCharityPipelineStack(Stack):
             docker_enabled_for_synth=True,
             synth=pipelines.CodeBuildStep("SynthAndDeployBackend",
                 build_environment=codebuild.BuildEnvironment(
-                    build_image=codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0
+                    build_image=codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0,
                 ),
                 input=pipelines.CodePipelineSource.s3(
                     bucket=s3_repo_bucket,
@@ -102,8 +102,12 @@ class CdkServerlessCharityPipelineStack(Stack):
         # Add Generate Amplify Config and Deploy to S3
         infrastructure_stage.add_post(
             pipelines.CodeBuildStep("DeployAmplifyToS3",
+                install_commands=[
+                    "npm install -g @aws-amplify/cli",
+                ],
                 build_environment=codebuild.BuildEnvironment(
-                    privileged=True
+                    privileged=True,
+                    compute_type=codebuild.ComputeType.LARGE
                 ),
                 commands=[
                     "echo $sourceBucketName",
@@ -112,7 +116,13 @@ class CdkServerlessCharityPipelineStack(Stack):
                     "ls -lah",
                     "python generate_amplify_config_cfn.py",
                     "python update_index_html_with_script_tag_cfn.py",
-                    "cd ./website",
+                    #"npm install -g @aws-amplify/cli",
+                    "appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $appsyncId --format SDL ./website/src/graphql/schema.graphql",
+                    "cd ./website/src/graphql",
+	                "amplify codegen", # this is on purpose
+                    "amplify codegen", # I'm not repeating myself ;)
+                    "ls -lah",
+                    "cd ../..",
                     "docker run --rm -v $(pwd):/foo -w /foo public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
                     "aws s3 sync ./build/ s3://$sourceBucketName/ --delete",
                     "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'"
@@ -142,6 +152,13 @@ class CdkServerlessCharityPipelineStack(Stack):
                         effect=iam.Effect.ALLOW,
                         actions=[
                             "cloudformation:DescribeStacks"
+                        ],
+                        resources=["*"]
+                    ),
+                    iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        actions=[
+                            "appsync:GetIntrospectionSchema"
                         ],
                         resources=["*"]
                     )
