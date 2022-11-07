@@ -46,7 +46,6 @@ class CdkServerlessCharityPipelineStack(Stack):
             synth=pipelines.CodeBuildStep("SynthAndDeployBackend",
                 build_environment=codebuild.BuildEnvironment(
                     build_image=codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0,
-                    compute_type=codebuild.ComputeType.LARGE
                 ),
                 input=pipelines.CodePipelineSource.s3(
                     bucket=s3_repo_bucket,
@@ -107,7 +106,8 @@ class CdkServerlessCharityPipelineStack(Stack):
                     "npm install -g @aws-amplify/cli",
                 ],
                 build_environment=codebuild.BuildEnvironment(
-                    privileged=True
+                    privileged=True,
+                    compute_type=codebuild.ComputeType.LARGE
                 ),
                 commands=[
                     "echo $sourceBucketName",
