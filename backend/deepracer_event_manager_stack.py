@@ -34,9 +34,9 @@ class CdkDeepRacerEventManagerStack(Stack):
         stack = Stack.of(self)
 
         ## Logs Bucket
-        logs_bucket = s3.Bucket(self, 'logs_bucket',
+        logs_bucket = s3.Bucket(self, "logs_bucket",
             encryption=s3.BucketEncryption.S3_MANAGED,
-            server_access_logs_prefix='access-logs/logs_bucket/',
+            server_access_logs_prefix="access-logs/logs_bucket/",
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             enforce_ssl=True,
             auto_delete_objects=True,
@@ -59,7 +59,7 @@ class CdkDeepRacerEventManagerStack(Stack):
                 actions=["s3:*"],
                 resources=[
                     logs_bucket.bucket_arn,
-                    logs_bucket.bucket_arn + '/*'
+                    logs_bucket.bucket_arn + "/*"
                 ],
                 conditions={
                     "NumericLessThan": {
@@ -70,10 +70,10 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         # Upload S3 bucket
-        models_bucket = s3.Bucket(self, 'models_bucket',
+        models_bucket = s3.Bucket(self, "models_bucket",
             encryption=s3.BucketEncryption.S3_MANAGED,
             server_access_logs_bucket=logs_bucket,
-            server_access_logs_prefix='access-logs/models_bucket/',
+            server_access_logs_prefix="access-logs/models_bucket/",
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             enforce_ssl=True,
             auto_delete_objects=True,
@@ -82,7 +82,7 @@ class CdkDeepRacerEventManagerStack(Stack):
                 s3.LifecycleRule(
                     expiration=Duration.days(15),
                     tag_filters={
-                        'lifecycle': 'true'
+                        "lifecycle": "true"
                     }
                 ),
                 s3.LifecycleRule(
@@ -99,7 +99,7 @@ class CdkDeepRacerEventManagerStack(Stack):
                 actions=["s3:*"],
                 resources=[
                     models_bucket.bucket_arn,
-                    models_bucket.bucket_arn + '/*'
+                    models_bucket.bucket_arn + "/*"
                 ],
                 conditions={
                     "NumericLessThan": {
@@ -109,10 +109,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
         )
 
-        infected_bucket = s3.Bucket(self, 'infected_bucket',
+        infected_bucket = s3.Bucket(self, "infected_bucket",
             encryption=s3.BucketEncryption.S3_MANAGED,
             server_access_logs_bucket=logs_bucket,
-            server_access_logs_prefix='access-logs/infected_bucket/',
+            server_access_logs_prefix="access-logs/infected_bucket/",
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             enforce_ssl=True,
             auto_delete_objects=True,
@@ -135,7 +135,7 @@ class CdkDeepRacerEventManagerStack(Stack):
                 actions=["s3:*"],
                 resources=[
                     infected_bucket.bucket_arn,
-                    infected_bucket.bucket_arn + '/*'
+                    infected_bucket.bucket_arn + "/*"
                 ],
                 conditions={
                     "NumericLessThan": {
@@ -149,10 +149,10 @@ class CdkDeepRacerEventManagerStack(Stack):
         ## Common Config
         lambda_architecture = awslambda.Architecture.ARM_64
         lambda_runtime = awslambda.Runtime.PYTHON_3_9
-        lambda_bundling_image = DockerImage.from_registry('public.ecr.aws/sam/build-python3.9:latest-arm64')
+        lambda_bundling_image = DockerImage.from_registry("public.ecr.aws/sam/build-python3.9:latest-arm64")
 
         ## Layers
-        helper_functions_layer = lambda_python.PythonLayerVersion(self, 'helper_functions_v2',
+        helper_functions_layer = lambda_python.PythonLayerVersion(self, "helper_functions_v2",
             entry="backend/lambdas/helper_functions_layer/http_response/",
             compatible_architectures=[
                 lambda_architecture
@@ -165,12 +165,12 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
         )
 
-        powertools_layer = lambda_python.PythonLayerVersion.from_layer_version_arn(self, 'lambda_powertools',
-            layer_version_arn='arn:aws:lambda:{}:017000801446:layer:AWSLambdaPowertoolsPython:33'.format(stack.region)
+        powertools_layer = lambda_python.PythonLayerVersion.from_layer_version_arn(self, "lambda_powertools",
+            layer_version_arn="arn:aws:lambda:{}:017000801446:layer:AWSLambdaPowertoolsPythonV2-Arm64:11".format(stack.region)
         )
+        powertools_log_level = "INFO"
 
         ## Functions
-
         delete_infected_files_function = lambda_python.PythonFunction(self, "delete_infected_files_function",
             entry="backend/lambdas/delete_infected_files_function/",
             index="index.py",
@@ -185,21 +185,47 @@ class CdkDeepRacerEventManagerStack(Stack):
             ),
             layers=[helper_functions_layer],
             environment={
-                'MODELS_S3_BUCKET': models_bucket.bucket_name,
-                'INFECTED_S3_BUCKET': infected_bucket.bucket_name,
+                "MODELS_S3_BUCKET": models_bucket.bucket_name,
+                "INFECTED_S3_BUCKET": infected_bucket.bucket_name,
+                "POWERTOOLS_SERVICE_NAME": "delete_infected_files",
+                "LOG_LEVEL": powertools_log_level
             }
         )
 
-        models_bucket.grant_read_write(delete_infected_files_function, '*')
-        infected_bucket.grant_read_write(delete_infected_files_function, '*')
+        models_bucket.grant_read_write(delete_infected_files_function, "*")
+        infected_bucket.grant_read_write(delete_infected_files_function, "*")
 
-        #add clam av scan to S3 uploads bucket
+        # Add clam av scan to S3 uploads bucket
         bucketList = [ models_bucket ]
         sc = ServerlessClamscan(self, "rClamScan",
             buckets=bucketList,
             on_result=lambda_destinations.LambdaDestination(delete_infected_files_function),
             on_error=lambda_destinations.LambdaDestination(delete_infected_files_function),
         )
+
+        ## Check model md5 function
+        check_model_md5_function = lambda_python.PythonFunction(self, "check_model_md5_function",
+            entry="backend/lambdas/check_model_md5/",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=Duration.minutes(1),
+            runtime=lambda_runtime,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=128,
+            architecture=lambda_architecture,
+            environment={
+                "bucket": models_bucket.bucket_name,
+                "POWERTOOLS_SERVICE_NAME": "check_model_md5",
+                "LOG_LEVEL": powertools_log_level
+            },
+            bundling=lambda_python.BundlingOptions(
+                image=lambda_bundling_image
+            ),
+            layers=[helper_functions_layer, powertools_layer]
+        )
+
+        # Permissions for s3 bucket read
+        models_bucket.grant_read(check_model_md5_function, "private/*")
 
         ## Models Function
         models_function = lambda_python.PythonFunction(self, "get_models_function",
@@ -212,7 +238,9 @@ class CdkDeepRacerEventManagerStack(Stack):
             memory_size=128,
             architecture=lambda_architecture,
             environment={
-                "bucket": models_bucket.bucket_name
+                "bucket": models_bucket.bucket_name,
+                "POWERTOOLS_SERVICE_NAME": "get_models",
+                "LOG_LEVEL": powertools_log_level
             },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
@@ -220,8 +248,8 @@ class CdkDeepRacerEventManagerStack(Stack):
             layers=[helper_functions_layer, powertools_layer]
         )
 
-        #permissions for s3 bucket read
-        models_bucket.grant_read(models_function, 'private/*')
+        # Permissions for s3 bucket read
+        models_bucket.grant_read(models_function, "private/*")
 
         ## Quarantine Models Function
         quarantined_models_function = lambda_python.PythonFunction(self, "get_quarantined_models_function",
@@ -235,6 +263,8 @@ class CdkDeepRacerEventManagerStack(Stack):
             architecture=lambda_architecture,
             environment={
                 "infected_bucket": infected_bucket.bucket_name,
+                "POWERTOOLS_SERVICE_NAME": "get_quarantined_models",
+                "LOG_LEVEL": powertools_log_level
             },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
@@ -243,7 +273,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         #permissions for s3 bucket read
-        infected_bucket.grant_read(quarantined_models_function, 'private/*')
+        infected_bucket.grant_read(quarantined_models_function, "private/*")
 
         ## Cars Function
         cars_function = lambda_python.PythonFunction(self, "get_cars_function",
@@ -255,6 +285,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
             architecture=lambda_architecture,
+            environment={
+                "POWERTOOLS_SERVICE_NAME": "get_cars",
+                "LOG_LEVEL": powertools_log_level
+            },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
@@ -281,7 +315,9 @@ class CdkDeepRacerEventManagerStack(Stack):
             memory_size=128,
             architecture=lambda_architecture,
             environment={
-                "bucket": models_bucket.bucket_name
+                "bucket": models_bucket.bucket_name,
+                "POWERTOOLS_SERVICE_NAME": "upload_model_to_car",
+                "LOG_LEVEL": powertools_log_level
             },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
@@ -309,6 +345,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
             architecture=lambda_architecture,
+            environment={
+                "POWERTOOLS_SERVICE_NAME": "upload_model_to_car_status",
+                "LOG_LEVEL": powertools_log_level
+            },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
@@ -324,7 +364,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
         )
         #permissions for s3 bucket read
-        models_bucket.grant_read(upload_model_to_car_function, 'private/*')
+        models_bucket.grant_read(upload_model_to_car_function, "private/*")
 
         ## delete_all_models_from_car_function
         delete_all_models_from_car_function = lambda_python.PythonFunction(self, "delete_all_models_from_car_function",
@@ -336,6 +376,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=256,
             architecture=lambda_architecture,
+            environment={
+                "POWERTOOLS_SERVICE_NAME": "delete_all_models_from_car",
+                "LOG_LEVEL": powertools_log_level
+            },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
@@ -362,6 +406,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
             architecture=lambda_architecture,
+            environment={
+                "POWERTOOLS_SERVICE_NAME": "create_ssm_activation",
+                "LOG_LEVEL": powertools_log_level
+            },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
             ),
@@ -385,7 +433,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         source_bucket = s3.Bucket(self, "Bucket",
             encryption=s3.BucketEncryption.S3_MANAGED,
             server_access_logs_bucket=logs_bucket,
-            server_access_logs_prefix='access-logs/source_bucket/',
+            server_access_logs_prefix="access-logs/source_bucket/",
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             enforce_ssl=True,
             auto_delete_objects=True,
@@ -401,7 +449,7 @@ class CdkDeepRacerEventManagerStack(Stack):
                 actions=["s3:*"],
                 resources=[
                     source_bucket.bucket_arn,
-                    source_bucket.bucket_arn + '/*'
+                    source_bucket.bucket_arn + "/*"
                 ],
                 conditions={
                     "NumericLessThan": {
@@ -430,7 +478,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             default_root_object="index.html",
             price_class=cloudfront.PriceClass.PRICE_CLASS_100,
             log_bucket=logs_bucket,
-            log_file_prefix='access-logs/cf_distribution/',
+            log_file_prefix="access-logs/cf_distribution/",
             error_responses=[
                 cloudfront.ErrorResponse(
                     http_status=403,
@@ -447,19 +495,19 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         NagSuppressions.add_resource_suppressions(distribution,
             suppressions=[{
-                "id": 'AwsSolutions-CFR1',
-                "reason": 'Cloudfront geo restriction not needed for DREM use case'
+                "id": "AwsSolutions-CFR1",
+                "reason": "Cloudfront geo restriction not needed for DREM use case"
             },
             {
-                "id":'AwsSolutions-CFR2',
-                "reason":'DREM use case does not warrant for usage of AWS WAF'
+                "id":"AwsSolutions-CFR2",
+                "reason":"DREM use case does not warrant for usage of AWS WAF"
             }
             ]
         )
 
         self.distribution = distribution
 
-        TermsAndConditions(self, 'TnC', logs_bucket=logs_bucket, distribution=distribution)
+        TermsAndConditions(self, "TnC", logs_bucket=logs_bucket, distribution=distribution)
 
         models_bucket.add_cors_rule(
             allowed_headers=["*"],
@@ -487,7 +535,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         # cors=[s3.CorsRule(
         #     allowed_headers=["*"],
         #     allowed_methods=[s3.HttpMethods.PUT],
-        #     allowed_origins=[cors_internal_domain, 'https://'+api.rest_api_id+'.execute-api.'+cdk_stack.region+'.amazonaws.com'])
+        #     allowed_origins=[cors_internal_domain, "https://"+api.rest_api_id+".execute-api."+cdk_stack.region+".amazonaws.com"])
         # ]
 
         ## Cognito User Pool
@@ -523,12 +571,12 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         NagSuppressions.add_resource_suppressions(user_pool,
             suppressions=[{
-                "id": 'AwsSolutions-COG2',
-                "reason": 'users only sign up and us DREM for a short period of time, all users are deleted after 10 days inactivity'
+                "id": "AwsSolutions-COG2",
+                "reason": "users only sign up and us DREM for a short period of time, all users are deleted after 10 days inactivity"
             },
             {
-                "id":'AwsSolutions-COG3',
-                "reason":'users only sign up and us DREM for a short period of time, all users are deleted after 10 days inactivity'
+                "id":"AwsSolutions-COG3",
+                "reason":"users only sign up and us DREM for a short period of time, all users are deleted after 10 days inactivity"
             }
             ]
         )
@@ -627,8 +675,8 @@ class CdkDeepRacerEventManagerStack(Stack):
             role_mappings={
                 "role_mapping": cognito.CfnIdentityPoolRoleAttachment.RoleMappingProperty(
                     type="Token",
-                    identity_provider='{}:{}'.format(user_pool.user_pool_provider_name,user_pool_client_web.user_pool_client_id),
-                    ambiguous_role_resolution='AuthenticatedRole'
+                    identity_provider="{}:{}".format(user_pool.user_pool_provider_name,user_pool_client_web.user_pool_client_id),
+                    ambiguous_role_resolution="AuthenticatedRole"
                 )
             },
         )
@@ -649,7 +697,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
         )
 
-        models_bucket.grant_read(admin_user_role, '*')
+        models_bucket.grant_read(admin_user_role, "*")
 
         ##read/write own bucket only
         admin_user_role.add_to_policy(
@@ -684,11 +732,70 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         # Cognito User Group (Admin)
-        user_pool_group = cognito.CfnUserPoolGroup(self, "AdminGroup",
+        admin_user_pool_group = cognito.CfnUserPoolGroup(self, "AdminGroup",
             user_pool_id=user_pool.user_pool_id,
             description="Admin user group",
             group_name="admin",
             role_arn=admin_user_role.role_arn,
+            precedence=1
+        )
+
+        ## Operator Users Group Role
+        operator_user_role = iam.Role(self, "OperatorUserRole",
+            assumed_by=iam.FederatedPrincipal(
+                federated="cognito-identity.amazonaws.com",
+                conditions={
+                    "StringEquals": {
+                        "cognito-identity.amazonaws.com:aud": identity_pool.ref,
+                    },
+                    "ForAnyValue:StringLike": {
+                        "cognito-identity.amazonaws.com:amr": "authenticated",
+                    },
+                },
+                assume_role_action="sts:AssumeRoleWithWebIdentity"
+            )
+        )
+
+        models_bucket.grant_read(operator_user_role, "*")
+
+        ##read/write own bucket only
+        operator_user_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "s3:ListBucket",
+                ],
+                resources=[models_bucket.bucket_arn],
+                conditions={
+                    "StringLike": {
+                        "s3:prefix": ["private/${cognito-identity.amazonaws.com:sub}/*"],
+                    },
+                }
+            )
+        )
+
+        operator_user_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:DeleteObject",
+                    "s3:PutObjectTagging"
+                ],
+                resources=[
+                    models_bucket.bucket_arn + "/private/${cognito-identity.amazonaws.com:sub}",
+                    models_bucket.bucket_arn + "/private/${cognito-identity.amazonaws.com:sub}/*",
+                ],
+            )
+        )
+
+        # Cognito User Group (Operator)
+        operator_user_pool_group = cognito.CfnUserPoolGroup(self, "OperatorGroup",
+            user_pool_id=user_pool.user_pool_id,
+            description="Operator user group",
+            group_name="operator",
+            role_arn=operator_user_role.role_arn,
             precedence=1
         )
 
@@ -705,7 +812,9 @@ class CdkDeepRacerEventManagerStack(Stack):
             memory_size=128,
             architecture=lambda_architecture,
             environment={
-                "user_pool_id": user_pool.user_pool_id
+                "user_pool_id": user_pool.user_pool_id,
+                "POWERTOOLS_SERVICE_NAME": "get_users",
+                "LOG_LEVEL": powertools_log_level
             },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
@@ -736,7 +845,9 @@ class CdkDeepRacerEventManagerStack(Stack):
             memory_size=128,
             architecture=lambda_architecture,
             environment={
-                "user_pool_id": user_pool.user_pool_id
+                "user_pool_id": user_pool.user_pool_id,
+                "POWERTOOLS_SERVICE_NAME": "get_groups_group",
+                "LOG_LEVEL": powertools_log_level
             },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
@@ -767,7 +878,9 @@ class CdkDeepRacerEventManagerStack(Stack):
             memory_size=128,
             architecture=lambda_architecture,
             environment={
-                "user_pool_id": user_pool.user_pool_id
+                "user_pool_id": user_pool.user_pool_id,
+                "POWERTOOLS_SERVICE_NAME": "post_groups_group_user",
+                "LOG_LEVEL": powertools_log_level
             },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
@@ -798,7 +911,9 @@ class CdkDeepRacerEventManagerStack(Stack):
             memory_size=128,
             architecture=lambda_architecture,
             environment={
-                "user_pool_id": user_pool.user_pool_id
+                "user_pool_id": user_pool.user_pool_id,
+                "POWERTOOLS_SERVICE_NAME": "delete_groups_group_user",
+                "LOG_LEVEL": powertools_log_level
             },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
@@ -829,7 +944,9 @@ class CdkDeepRacerEventManagerStack(Stack):
             memory_size=128,
             architecture=lambda_architecture,
             environment={
-                "user_pool_id": user_pool.user_pool_id
+                "user_pool_id": user_pool.user_pool_id,
+                "POWERTOOLS_SERVICE_NAME": "get_groups",
+                "LOG_LEVEL": powertools_log_level
             },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
@@ -860,7 +977,9 @@ class CdkDeepRacerEventManagerStack(Stack):
             memory_size=128,
             architecture=lambda_architecture,
             environment={
-                "user_pool_id": user_pool.user_pool_id
+                "user_pool_id": user_pool.user_pool_id,
+                "POWERTOOLS_SERVICE_NAME": "put_groups_group",
+                "LOG_LEVEL": powertools_log_level
             },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
@@ -891,7 +1010,9 @@ class CdkDeepRacerEventManagerStack(Stack):
             memory_size=128,
             architecture=lambda_architecture,
             environment={
-                "user_pool_id": user_pool.user_pool_id
+                "user_pool_id": user_pool.user_pool_id,
+                "POWERTOOLS_SERVICE_NAME": "delete_groups_group",
+                "LOG_LEVEL": powertools_log_level
             },
             bundling=lambda_python.BundlingOptions(
                 image=lambda_bundling_image
@@ -911,21 +1032,21 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
          # Add a default Admin user to the system
-        default_admin_user_name = 'admin'
+        default_admin_user_name = "admin"
         default_admin_email = email
 
-        UserPoolUser(self, 'DefaultAdminUser',
+        UserPoolUser(self, "DefaultAdminUser",
             username=default_admin_user_name,
             email=default_admin_email,
             user_pool=user_pool,
-            group_name=user_pool_group.ref
+            group_name=admin_user_pool_group.ref
         )
 
         ## API Gateway
         apig_log_group = logs.LogGroup(self, "apig_log_group",
             retention=logs.RetentionDays.ONE_MONTH
         )
-        api = apig.RestApi(self, 'apiGateway',
+        api = apig.RestApi(self, "apiGateway",
             rest_api_name=stack.stack_name,
             deploy_options=apig.StageOptions(
                 throttling_rate_limit=10,
@@ -1012,27 +1133,27 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
         )
 
-        body_validator = apig.RequestValidator(self, 'BodyValidator',
+        body_validator = apig.RequestValidator(self, "BodyValidator",
             rest_api=api,
             validate_request_body=True
         )
 
 
-        api_models = api.root.add_resource('models')
+        api_models = api.root.add_resource("models")
         models_method = api_models.add_method(
             http_method="GET",
             integration=apig.LambdaIntegration(handler=models_function),
             authorization_type=apig.AuthorizationType.IAM
         )
 
-        api_cars = api.root.add_resource('cars')
+        api_cars = api.root.add_resource("cars")
         cars_method = api_cars.add_method(
             http_method="GET",
             integration=apig.LambdaIntegration(handler=cars_function),
             authorization_type=apig.AuthorizationType.IAM
         )
 
-        api_users = api.root.add_resource('users')
+        api_users = api.root.add_resource("users")
         users_method = api_users.add_method(
             http_method="GET",
             integration=apig.LambdaIntegration(handler=get_users_function),
@@ -1040,9 +1161,9 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         # /admin
-        api_admin = api.root.add_resource('admin')
+        api_admin = api.root.add_resource("admin")
 
-        api_admin_quarantined_models = api_admin.add_resource('quarantinedmodels')
+        api_admin_quarantined_models = api_admin.add_resource("quarantinedmodels")
         quarantined_models_method = api_admin_quarantined_models.add_method(
             http_method="GET",
             integration=apig.LambdaIntegration(handler=quarantined_models_function),
@@ -1050,7 +1171,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         # GET /admin/groups
-        api_admin_groups = api_admin.add_resource('groups')
+        api_admin_groups = api_admin.add_resource("groups")
         api_admin_groups.add_method(
             http_method="GET",
             integration=apig.LambdaIntegration(handler=get_groups_function),
@@ -1103,7 +1224,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
 
-        api_cars_upload = api_cars.add_resource('upload')
+        api_cars_upload = api_cars.add_resource("upload")
         cars_upload_method = api_cars_upload.add_method(
             http_method="POST",
             integration=apig.LambdaIntegration(handler=upload_model_to_car_function),
@@ -1115,7 +1236,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
 
-        api_cars_delete_all_models = api_cars.add_resource('delete_all_models')
+        api_cars_delete_all_models = api_cars.add_resource("delete_all_models")
         cars_delete_all_models_method = api_cars_delete_all_models.add_method(
             http_method="POST",
             integration=apig.LambdaIntegration(handler=delete_all_models_from_car_function),
@@ -1128,7 +1249,7 @@ class CdkDeepRacerEventManagerStack(Stack):
 
 
         ### Create SSM Activation Method
-        api_cars_create_ssm_activation = api_cars.add_resource('create_ssm_activation')
+        api_cars_create_ssm_activation = api_cars.add_resource("create_ssm_activation")
         api_cars_create_ssm_activation_method = api_cars_create_ssm_activation.add_method(
             http_method="POST",
             integration=apig.LambdaIntegration(handler=create_ssm_activation_function),
@@ -1139,7 +1260,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             request_validator=body_validator
         )
 
-        api_cars_upload_status = api_cars_upload.add_resource('status')
+        api_cars_upload_status = api_cars_upload.add_resource("status")
         cars_upload_staus_method = api_cars_upload_status.add_method(
             http_method="POST",
             integration=apig.LambdaIntegration(handler=upload_model_to_car_status_function),
@@ -1160,39 +1281,39 @@ class CdkDeepRacerEventManagerStack(Stack):
                     "execute-api:Invoke"
                 ],
                 resources=[
-                    api.arn_for_execute_api(method='GET',path='/models'),
-                    api.arn_for_execute_api(method='GET',path='/cars'),
-                    api.arn_for_execute_api(method='POST',path='/cars/upload'),
-                    api.arn_for_execute_api(method='POST',path='/cars/upload/status'),
-                    api.arn_for_execute_api(method='POST',path='/cars/delete_all_models'),
-                    api.arn_for_execute_api(method='POST',path='/cars/create_ssm_activation'),
-                    api.arn_for_execute_api(method='GET',path='/users'),
-                    api.arn_for_execute_api(method='GET',path='/admin/quarantinedmodels'),
-                    api.arn_for_execute_api(method='GET',path='/admin/groups'),
-                    api.arn_for_execute_api(method='POST',path='/admin/groups'),
-                    api.arn_for_execute_api(method='DELETE',path='/admin/groups'),
-                    api.arn_for_execute_api(method='GET',path='/admin/groups/*'),
-                    api.arn_for_execute_api(method='POST',path='/admin/groups/*'),
-                    api.arn_for_execute_api(method='DELETE',path='/admin/groups/*'),
+                    api.arn_for_execute_api(method="GET",path="/models"),
+                    api.arn_for_execute_api(method="GET",path="/cars"),
+                    api.arn_for_execute_api(method="POST",path="/cars/upload"),
+                    api.arn_for_execute_api(method="POST",path="/cars/upload/status"),
+                    api.arn_for_execute_api(method="POST",path="/cars/delete_all_models"),
+                    api.arn_for_execute_api(method="POST",path="/cars/create_ssm_activation"),
+                    api.arn_for_execute_api(method="GET",path="/users"),
+                    api.arn_for_execute_api(method="GET",path="/admin/quarantinedmodels"),
+                    api.arn_for_execute_api(method="GET",path="/admin/groups"),
+                    api.arn_for_execute_api(method="POST",path="/admin/groups"),
+                    api.arn_for_execute_api(method="DELETE",path="/admin/groups"),
+                    api.arn_for_execute_api(method="GET",path="/admin/groups/*"),
+                    api.arn_for_execute_api(method="POST",path="/admin/groups/*"),
+                    api.arn_for_execute_api(method="DELETE",path="/admin/groups/*"),
                 ],
             )
         )
 
         ## RUM
-        cw_rum_app_monitor = CwRumAppMonitor(self, 'CwRumAppMonitor',
+        cw_rum_app_monitor = CwRumAppMonitor(self, "CwRumAppMonitor",
             domain_name=distribution.distribution_domain_name
         )
         ## End RUM
 
         ## Deploy Default Models
-        models_deployment = s3_deployment.BucketDeployment(self, 'ModelsDeploy',
+        models_deployment = s3_deployment.BucketDeployment(self, "ModelsDeploy",
             sources= [
                 s3_deployment.Source.asset(
-                    path='./backend/default_models',
+                    path="./backend/default_models",
                 ),
             ],
             destination_bucket=models_bucket,
-            destination_key_prefix='private/{}:00000000-0000-0000-0000-000000000000/default/models/'.format(stack.region),
+            destination_key_prefix="private/{}:00000000-0000-0000-0000-000000000000/default/models/".format(stack.region),
             retain_on_delete=False,
         )
 

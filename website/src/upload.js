@@ -8,7 +8,7 @@ import {
   Grid,
   SpaceBetween,
 } from '@cloudscape-design/components';
-import { FileUploadStatus } from "./components/FileUploadStatus";
+import { ModelUploadStatus } from "./components/ModelUploadStatus";
 
 export function Upload() {
   const [username, setUsername] = useState();
@@ -74,7 +74,7 @@ export function Upload() {
 
         {Object.keys(uploadFiles).map((i) => {
           return (
-            <FileUploadStatus file={uploadFiles[i]} username={username} />
+            <ModelUploadStatus file={uploadFiles[i]} username={username} />
           );
         })}
         </SpaceBetween>

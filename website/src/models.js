@@ -180,12 +180,12 @@ export function Models() {
           selectedItems={selectedItems}
           selectionType='multi'
           stickyHeader='true'
-          trackBy='key'
+          trackBy='modelName'
+          resizableColumns
           onSelectionChange={({ detail: { selectedItems } }) => {
             setSelectedItems(selectedItems)
             selectedItems.length ? setSelectedModelsBtn(false) : setSelectedModelsBtn(true)
           }}
-          resizableColumns
           preferences={
             <CollectionPreferences
               title='Preferences'

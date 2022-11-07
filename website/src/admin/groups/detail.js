@@ -131,30 +131,40 @@ export function AdminGroupsDetail() {
       header: 'User name',
       cell: item => item.Username,
       sortingField: 'userName',
+      width: 200,
+      minWidth: 150,
     },
     {
       id: 'userCreationDate',
       header: 'Creation date',
       cell: item => dayjs(item.UserCreateDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'userCreationDate',
+      width: 200,
+      minWidth: 150,
     },
     {
       id: 'userLastModifiedDate',
       header: 'Last modified date',
       cell: item => dayjs(item.UserLastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'userLastModifiedDate',
+      width: 200,
+      minWidth: 150,
     },
     {
       id: 'isMember',
       header: 'Group member?',
       cell: item => userToggle(item),
-      sortingField: 'isMember'
+      sortingField: 'isMember',
+      width: 200,
+      minWidth: 150,
     },
     {
       id: 'isEnabled',
       header: 'User enabled?',
       cell: item => <StatusIndicator {...isMemberIndicator[item.Enabled]} />,
-      sortingField: 'isEnabled'
+      sortingField: 'isEnabled',
+      width: 200,
+      minWidth: 150,
     }
   ];
 
@@ -237,7 +247,7 @@ export function AdminGroupsDetail() {
             <Header
               counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
             >
-              Groups
+              Users
             </Header>
           }
           columnDefinitions={columnsConfig}

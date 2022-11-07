@@ -71,18 +71,33 @@ export function AdminGroups() {
           <Link href={window.location.href + "/" + item.GroupName}>{item.GroupName}</Link>
         </div>
       ),
+      sortingField: 'groupName',
+      width: 200,
+      minWidth: 150,
     },
     {
       id: 'description',
       header: 'Description',
-      cell: item => item.description || '-',
+      cell: item => item.Description || '-',
       sortingField: 'description',
+      width: 200,
+      minWidth: 150,
     },
     {
       id: 'creationDate',
       header: 'Creation date',
       cell: item => dayjs(item.creationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'creationDate',
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'lastModifiedDate',
+      header: 'Last modified date',
+      cell: item => dayjs(item.LastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      sortingField: 'lastModifiedDate',
+      width: 200,
+      minWidth: 150,
     }
   ];
 
@@ -103,6 +118,10 @@ export function AdminGroups() {
         {
           id: 'creationDate',
           label: 'Creation date',
+        },
+        {
+          id: 'lastModifiedDate',
+          label: 'Last modified date',
         }
       ]
     }
