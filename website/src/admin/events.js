@@ -18,8 +18,9 @@ import {
   Container,
   ExpandableSection,
   Table,
-  Alert,
-  TextFilter
+  Box,
+  TextFilter,
+  Modal
 } from '@cloudscape-design/components';
 import { useCollection } from '@cloudscape-design/collection-hooks';
 
@@ -34,23 +35,28 @@ import {
 export function AdminEvents() {
   //const [events, setEvents] = useState([]);
   const [newEvent, setNewEvent] = useState('');
+  const [newEventErrorText, setNewEventErrorText] = useState('');
   const [selectedEvent, setSelectedEvent] = useState([]);
   const [addButtonDisabled, setAddButtonDisabled] = useState(true);
   const [deleteButtonDisabled, setDeleteButtonDisabled] = useState(true);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const events = ListOfEvents();
 
   // Add Event
   async function addEvent(newEvent) {
-    //console.log(newEvent);
-    const response = await API.graphql({
-      query: mutations.addEvent,
-      variables: {
-        eventName: newEvent
-      }
-    });
-    //console.log('addEvent');
-    //console.log(response.data.addEvent);
-    return response;
+    if (newEvent.match(/^[a-zA-Z0-9-_]+$/)) { 
+      console.log('match')   
+      const response = await API.graphql({
+        query: mutations.addEvent,
+        variables: {
+          eventName: newEvent
+        }
+      });
+      setNewEventErrorText('')
+      return response;
+    } else {
+      setNewEventErrorText('Must match regex: ^[a-zA-Z0-9-_]+$')
+    }
   } 
 
   // Delete Event
@@ -62,6 +68,7 @@ export function AdminEvents() {
         eventId: selectedEvent[0].eventId
       }
     });
+    setDeleteButtonDisabled(true);
     //console.log(response.data.deleteEvent);
   }
 
@@ -135,9 +142,11 @@ export function AdminEvents() {
     header={
       <Header 
       actions={
-        <Button disabled={deleteButtonDisabled} variant='primary' onClick={() => {
-          deleteEvent(); 
-        }}>Delete Event</Button>
+        <SpaceBetween direction="horizontal" size="xs">
+          <Button disabled={deleteButtonDisabled} iconName='status-warning' onClick={() => {
+            setDeleteModalVisible(true); 
+          }}>Delete Event</Button>
+        </SpaceBetween>
       }
       >Events</Header>
     } 
@@ -169,7 +178,10 @@ export function AdminEvents() {
             }
           >
               <SpaceBetween direction="vertical" size="l">
-                <FormField label="New Event">
+                <FormField 
+                  label="New Event"
+                  errorText={newEventErrorText}
+                >
                   <Input value={newEvent} placeholder='Awesome Event' onChange={event => {
                     setNewEvent(event.detail.value);
                     if (newEvent.length > 0){setAddButtonDisabled(false)};
@@ -183,6 +195,28 @@ export function AdminEvents() {
         </SpaceBetween>
         <div></div>
       </Grid>
+      
+      {/* delete modal */}
+      <Modal
+        onDismiss={() => setDeleteModalVisible(false)}
+        visible={deleteModalVisible}
+        closeAriaLabel="Close modal"
+        footer={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button variant="link" onClick={() => setDeleteModalVisible(false)}>Cancel</Button>
+              <Button variant="primary" onClick={() => {
+                deleteEvent();
+                setDeleteModalVisible(false);
+              }}>Delete</Button>
+            </SpaceBetween>
+          </Box>
+        }
+        header="Delete event"
+      >
+        Are you sure you want to delete event(s): {selectedEvent.map(selectedEvent => { return selectedEvent.eventName + " " })}
+      </Modal>
     </>
+    
   )
 }
