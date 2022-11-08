@@ -44,16 +44,22 @@ export function AdminEvents() {
 
   // Add Event
   async function addEvent(newEvent) {
-    if (newEvent.match(/^[a-zA-Z0-9-_]+$/)) { 
-      console.log('match')   
-      const response = await API.graphql({
-        query: mutations.addEvent,
-        variables: {
-          eventName: newEvent
-        }
-      });
-      setNewEventErrorText('')
-      return response;
+    if (newEvent.match(/^[a-zA-Z0-9-_]+$/)) {
+      if ( events.map(events => { return events.eventName}).includes(newEvent) ) { 
+        //console.log('already exists');
+        setNewEventErrorText('Event already exists')
+      } else {
+        //console.log('match')   
+        const response = await API.graphql({
+          query: mutations.addEvent,
+          variables: {
+            eventName: newEvent
+          }
+        });
+        setNewEventErrorText('')
+        setNewEvent('')
+        return response;
+      }
     } else {
       setNewEventErrorText('Must match regex: ^[a-zA-Z0-9-_]+$')
     }
