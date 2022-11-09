@@ -6,7 +6,8 @@ from aws_cdk import (
     aws_codepipeline_actions as codepipeline_actions,
     pipelines as pipelines,
     aws_s3 as s3,
-    aws_iam as iam
+    aws_iam as iam,
+    aws_ssm as ssm
 )
 from constructs import Construct
 
@@ -40,7 +41,8 @@ class CdkServerlessCharityPipelineStack(Stack):
         ## setup for pseudo parameters
         stack = Stack.of(self)
 
-        s3_repo_bucket=s3.Bucket.from_bucket_arn(self, "S3RepoBucket", "arn:aws:s3:::drem-pipeline-zip-113122841518-eu-west-1")
+        s3_repo_bucket_parameter_store_value = ssm.StringParameter.value_from_lookup(self, "/drem/S3RepoBucket")
+        s3_repo_bucket=s3.Bucket.from_bucket_arn(self, "S3RepoBucket", s3_repo_bucket_parameter_store_value)
         pipeline = pipelines.CodePipeline(self, "Pipeline",
             docker_enabled_for_synth=True,
             synth=pipelines.CodeBuildStep("SynthAndDeployBackend",
