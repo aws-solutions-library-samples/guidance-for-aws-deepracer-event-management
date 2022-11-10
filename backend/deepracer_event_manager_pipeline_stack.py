@@ -41,8 +41,6 @@ class CdkServerlessCharityPipelineStack(Stack):
         ## setup for pseudo parameters
         stack = Stack.of(self)
 
-        #s3_repo_bucket_parameter_store_value = ssm.StringParameter.value_from_lookup(self, "/drem/S3RepoBucket")
-        #s3_repo_bucket_parameter_store_value = ssm.StringParameter.value_for_string_parameter(self, "/drem/S3RepoBucket", 1)
         s3_repo_bucket_parameter_store = ssm.StringParameter.from_string_parameter_attributes(self, "S3RepoBucketValue",
             parameter_name="/drem/S3RepoBucket"
         )
