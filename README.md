@@ -6,6 +6,8 @@ Docker Desktop
 Python (Tested with 3.9.10)
 CDK (Tested with 2.16.0)
 
+Create a Parameter Store Key called '/drem/S3RepoBucket' with a value of the S3 Bucket ARN for the codepipeline source e.g. 'arn:aws:s3:::drem-pipeline-zip-123456789012-eu-west-1'
+
 ## Install
 
 Create a virtualenv on MacOS and Linux if you haven't already:

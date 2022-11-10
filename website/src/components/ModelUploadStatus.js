@@ -10,31 +10,39 @@ export function ModelUploadStatus(props) {
   const file = props.file;
   const [percent, setPercent] = useState(0);
   const [status, setStatus] = useState('Pending');
+  const [statusIcon, setStatusIcon] = useState('pending');
 
-  const statusIcon = status.toLowerCase().replace(/\s/g, '-');
-  const s3path = props.username + "/models/" + file.name.replace(/\s/g, '_');
+  const s3path = props.username + "/models/" + file.name;
 
   // TODO - switch to flashbar with progres bar
   // https://cloudscape.design/components/flashbar/?tabId=playground&example=with-a-progress-bar
 
   useEffect(() => {
     const saveModel = async() => {
-      Storage.put((s3path), file, {
-        level: 'private',
-        contentType: file.type,
-        tagging: 'lifecycle=true',
-        progressCallback(progress) {
-          setStatus('In progress');
-          setPercent(Math.round(progress.loaded/progress.total*100))
-        }
-      }).then (result => {
-        console.log(result)
-        setStatus('Success');
-      }).catch (err => {
-        console.log(err)
-        setStatus('Error');
-      });
-
+      //const filename = s3path.split('/').slice(-1)[0]
+      console.log("s3path: " + file.name);
+      if (file.name.match(/^[a-zA-Z0-9-_.]+\.tar\.gz$/)) {
+        Storage.put((s3path), file, {
+          level: 'private',
+          contentType: file.type,
+          tagging: 'lifecycle=true',
+          progressCallback(progress) {
+            setStatus('In progress');
+            setPercent(Math.round(progress.loaded/progress.total*100))
+          }
+        }).then (result => {
+          console.log(result)
+          setStatus('Success');
+          setStatusIcon('success')
+        }).catch (err => {
+          console.log(err)
+          setStatus('Error');
+          setStatusIcon('error')
+        });
+      } else {
+        setStatus(file.name + ' does not match regex: ^[a-zA-Z0-9-_.]+\.tar\.gz$');
+        setStatusIcon('error')
+      }
     }
 
     saveModel();

@@ -12,7 +12,7 @@ import { ModelUploadStatus } from "./components/ModelUploadStatus";
 
 export function Upload() {
   const [username, setUsername] = useState();
-  const [uploadFiles, setUploadFiles] = useState({});
+  const [uploadFiles, setUploadFiles] = useState([]);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -54,7 +54,10 @@ export function Upload() {
       >
         <Button
           iconName='upload'
-          onClick={() => fileInputRef.current.click()}
+          onClick={() => {
+            setUploadFiles([]);
+            fileInputRef.current.click();
+          }}
         >Choose model file(s)
           <input
             type="file"
