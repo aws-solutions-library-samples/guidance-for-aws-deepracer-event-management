@@ -145,9 +145,9 @@ echo 'Updating...'
 # Update ROS cert
 curl https://repo.ros2.org/repos.key | sudo apt-key add -
 
-# Update Ubuntu
-# sudo apt-get update # <- Takes forever
-sudo apt-get upgrade -y -o Dpkg::Options::="--force-overwrite"
+# Update Ubuntu - removed for now as it takes so long
+# sudo apt-get update
+# sudo apt-get upgrade -y -o Dpkg::Options::="--force-overwrite"
 
 # Update DeepRacer
 sudo apt-get install -y aws-deepracer-* -o Dpkg::Options::="--force-overwrite"
