@@ -76,9 +76,10 @@ export function AdminModels() {
       }
       carsOnline();
 
+
       setIsLoading(false);
     }
-
+    console.log(cars)
     getData();
 
     return() => {

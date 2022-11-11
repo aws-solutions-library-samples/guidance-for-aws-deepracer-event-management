@@ -18,6 +18,8 @@ import {
 
 import { ContentHeader } from '../components/ContentHeader';
 import {
+  CarColumnsConfig,
+  CarVisibleContentOptions,
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
@@ -63,102 +65,8 @@ export function AdminCars() {
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
-    visibleContent: ['instanceId', 'carName', 'eventName','carIp'],
+    visibleContent: ['carName', 'eventName','carIp'],
   });
-
-  const columnsConfig = [
-    {
-      id: 'instanceId',
-      header: 'Instance',
-      cell: item => item.InstanceId,
-      sortingField: 'key',
-    },
-    {
-      id: 'carName',
-      header: 'Car name',
-      cell: item => item.ComputerName || '-',
-      sortingField: 'carName',
-    },
-    {
-      id: 'eventName',
-      header: 'Event name',
-      cell: item => item.eventName || '-',
-      sortingField: 'eventName',
-    },
-    {
-      id: 'carIp',
-      header: 'IP address',
-      cell: item => item.IPAddress || '-',
-      sortingField: 'carIp',
-    },
-    {
-      id: 'agentVersion',
-      header: 'Agent version',
-      cell: item => item.AgentVersion || '-',
-      sortingField: 'agentVersion',
-    },
-    {
-      id: 'registrationDate',
-      header: 'Registration date',
-      cell: item => dayjs(item.RegistrationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
-      sortingField: 'registrationDate',
-    },
-    {
-      id: 'lastPingDateTime',
-      header: 'Last ping time',
-      cell: item => dayjs(item.lastPingDateTime).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
-      sortingField: 'lastPingDateTime',
-    },
-    {
-      id: 'eventId',
-      header: 'Event ID',
-      cell: item => item.eventId || '-',
-      sortingField: 'eventId',
-    },
-  ];
-
-  const visibleContentOptions = [
-    {
-      label: 'Model information',
-      options: [
-        {
-          id: 'instanceId',
-          label: 'Instance',
-          editable: false,
-        },
-        {
-          id: 'carName',
-          label: 'Car name',
-          editable: false,
-        },
-        {
-          id: 'eventName',
-          label: 'Event name',
-          editable: true,
-        },
-        {
-          id: 'carIp',
-          label: 'Car IP',
-        },
-        {
-          id: 'agentVersion',
-          label: 'Agent version',
-        },
-        {
-          id: 'registrationDate',
-          label: 'Registration date',
-        },
-        {
-          id: 'lastPingDateTime',
-          label: 'Last ping time',
-        },
-        {
-          id: 'eventId',
-          label: 'Event ID',
-        },
-      ]
-    }
-  ]
 
   const {items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
     allItems,
@@ -179,7 +87,7 @@ export function AdminCars() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[1] } },
+      sorting: { defaultState: { sortingColumn: CarColumnsConfig[1] } },
       selection: {},
     }
   );
@@ -212,7 +120,7 @@ export function AdminCars() {
               Cars
             </Header>
           }
-          columnDefinitions={columnsConfig}
+          columnDefinitions={CarColumnsConfig}
           items={items}
           pagination={
             <Pagination {...paginationProps}
@@ -251,7 +159,7 @@ export function AdminCars() {
               pageSizePreference={PageSizePreference('cars')}
               visibleContentPreference={{
                 title: 'Select visible columns',
-                options: visibleContentOptions,
+                options: CarVisibleContentOptions,
               }}
               wrapLinesPreference={WrapLines}
             />

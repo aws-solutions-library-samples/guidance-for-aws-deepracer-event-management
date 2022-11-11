@@ -2,24 +2,38 @@ import React, { useState, useEffect, useRef } from 'react';
 import { API } from 'aws-amplify';
 
 import {
-  Button,
-  SpaceBetween,
-  Box,
-  Modal,
   Alert,
-  Table,
+  Box,
+  Button,
+  CollectionPreferences,
+  Modal,
   ProgressBar,
+  SpaceBetween,
+  Table,
   TextFilter
 } from '@cloudscape-design/components';
 import { useCollection } from '@cloudscape-design/collection-hooks';
 
 import {
+  CarColumnsConfig,
+  CarVisibleContentOptions,
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
   PageSizePreference,
   WrapLines,
 } from '../components/TableConfig';
+
+import dayjs from 'dayjs';
+
+// day.js
+var advancedFormat = require('dayjs/plugin/advancedFormat')
+var utc = require('dayjs/plugin/utc')
+var timezone = require('dayjs/plugin/timezone') // dependent on utc plugin
+
+dayjs.extend(advancedFormat)
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 // https://overreacted.io/making-setinterval-declarative-with-react-hooks/
 function useInterval(callback, delay) {
@@ -45,8 +59,7 @@ function useInterval(callback, delay) {
 const StatusModelContent = (props) => {
   const [seconds, setSeconds] = useState(0);
   const [uploadStatus, setUploadStatus] = useState('');
-  //const [selectedCars, setSelectedCars] = useState([]);
-  const [result, setResult] = useState('');
+  const [result, setResult] = useState([]);
   const [results, setResults] = useState([]);
   const [commandId, setCommandId] = useState('');
   const [currentInstanceId, setCurrentInstanceId] = useState('');
@@ -70,9 +83,9 @@ const StatusModelContent = (props) => {
     //console.log(response.CommandId);
     setResult(response);
     setCommandId(response);
-    
+
     setCurrentInstanceId(car.InstanceId);
-    
+
     setCurrentModel(model);
     setUploadStatus("InProgress");
     //setDimmerActive(true);
@@ -83,7 +96,7 @@ const StatusModelContent = (props) => {
     //console.log("CommandId: " + CommandId)
     //console.log(model)
 
-    if(InstanceId === '' || CommandId === '')
+    if (InstanceId === '' || CommandId === '')
     {
       return [];
     }
@@ -141,7 +154,7 @@ const StatusModelContent = (props) => {
     let car = props.selectedCars[0];
     //console.log(models);
     //console.log(car);
-  
+
     //console.log('Models in array: ' + models.length)
     if (uploadStatus !== "InProgress") {
       //console.log(uploadStatus + " !== InProgress")
@@ -201,7 +214,7 @@ const StatusModelContent = (props) => {
         header={
           <ProgressBar value={(((props.modelsTotalCount-props.selectedModels.length)/props.modelsTotalCount)*100)} />
         }
-      />  
+      />
 
     </div>
   );
@@ -215,26 +228,10 @@ export default (props) => {
 
   var models = [...props.selectedModels]; //clone models array
 
-  const columnDefinitions = [
-    {
-      id: "InstanceId",
-      header: "InstanceId",
-      cell: item => item.InstanceId || "-",
-      sortingField: "InstanceId"
-    },
-    {
-      id: "Name",
-      header: "Name",
-      cell: item => item.Name || "-",
-      sortingField: "Name"
-    },
-    {
-      id: "eventName",
-      header: "Event name",
-      cell: item => item.eventName || "-",
-      sortingField: "eventName"
-    }
-  ]
+  const [preferences, setPreferences] = useState({
+    ...DefaultPreferences,
+    visibleContent: ['carName', 'eventName','carIp'],
+  });
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
     props.cars,
@@ -254,7 +251,7 @@ export default (props) => {
           />
         ),
       },
-      sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
+      sorting: { defaultState: { sortingColumn: CarColumnsConfig[1] } },
     }
   );
 
@@ -266,9 +263,10 @@ export default (props) => {
     }}
     selectedItems={selectedCars}
     selectionType="single"
-    columnDefinitions={columnDefinitions}
+    columnDefinitions={CarColumnsConfig}
     items={items}
-    loadingText="Loading resources"
+    loadingText="Loading cars"
+    visibleColumns={preferences.visibleContent}
     filter={
       <TextFilter
         {...filterProps}
@@ -276,7 +274,23 @@ export default (props) => {
         filteringAriaLabel='Filter cars'
       />
     }
-  />
+    resizableColumns
+    preferences={
+      <CollectionPreferences
+        title='Preferences'
+        confirmLabel='Confirm'
+        cancelLabel='Cancel'
+        onConfirm={({ detail }) => setPreferences(detail)}
+        preferences={preferences}
+        pageSizePreference={PageSizePreference('cars')}
+        visibleContentPreference={{
+          title: 'Select visible columns',
+          options: CarVisibleContentOptions,
+        }}
+        wrapLinesPreference={WrapLines}
+      />
+    }
+/>
 
   return (
     <>
@@ -285,7 +299,7 @@ export default (props) => {
       }}>Upload models to car</Button>
 
       {/* modal 1 */}
-      <Modal 
+      <Modal
         size='large'
         onDismiss={() => {
           setVisible(false);
