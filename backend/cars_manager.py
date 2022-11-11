@@ -137,6 +137,9 @@ class CarManager(Construct):
 
         # Event methods (input data)
         api.add_query("carsOnline", appsync.ResolvableField(
+            args={
+                "online": appsync.GraphqlType.boolean(is_required=True),
+            },
             return_type=car_online_object_type.attribute(is_list=True),
             data_source=cars_online_data_source
         ))

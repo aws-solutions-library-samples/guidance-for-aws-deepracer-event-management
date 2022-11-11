@@ -7,6 +7,7 @@ import * as queries from '../graphql/queries';
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
+  ButtonDropdown,
   CollectionPreferences,
   Header,
   Grid,
@@ -45,23 +46,30 @@ export function AdminCars() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCarsBtn, setSelectedCarsBtn] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [online, setOnline] = useState("Online");
+
+  // Get Cars
+  async function getCars() {
+    var onlineBool = true;
+    if (online !== "Online") {
+      onlineBool = false
+    };
+    const response = await API.graphql({
+      query: queries.carsOnline,
+      variables: {online: onlineBool}
+    });
+    setIsLoading(false);
+    setItems(response.data.carsOnline);
+  }
 
   useEffect(() => {
-    // Get CarsOnline
-    async function carsOnline() {
-      const response = await API.graphql({
-        query: queries.carsOnline
-      });
-      //console.log('carsOnline');
-      setItems(response.data.carsOnline);
-    }
-    carsOnline();
-    setIsLoading(false);
-
+    getCars();
     return () => {
       // Unmounting
     }
-  },[])
+  },[online])
+
+
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
@@ -113,6 +121,18 @@ export function AdminCars() {
               counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
+                    <ButtonDropdown
+                      items={[
+                          { text: "Online", id: "Online", disabled: false },
+                          { text: "Offline", id: "Offline", disabled: false },
+                      ]}
+                      onItemClick={({detail}) => {
+                        setOnline(detail.id);
+                        setIsLoading(true);
+                      }}
+                    >
+                    {online}
+                    </ButtonDropdown>
                   <DeleteCarModelModal disabled={selectedCarsBtn} selectedItems={selectedItems} variant="primary" />
                 </SpaceBetween>
               }
