@@ -7,6 +7,7 @@ import * as queries from '../graphql/queries';
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
+  ButtonDropdown,
   CollectionPreferences,
   Header,
   Grid,
@@ -27,7 +28,7 @@ import {
   WrapLines,
 } from '../components/TableConfig';
 
-import DeleteCarModelModal from '../components/DeleteCarModelModal';
+import EditCarModelModal from '../components/EditCarModelModal';
 
 import dayjs from 'dayjs';
 
@@ -43,32 +44,57 @@ dayjs.extend(timezone)
 export function AdminCars() {
   const [allItems, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCarsBtn, setSelectedCarsBtn] = useState(true);
+  const [selectedCarsBtnDisabled, setSelectedCarsBtnDisabled] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [online, setOnline] = useState("Online");
+  const [onlineBool, setOnlineBool] = useState(true);
+  const [refresh, setRefresh] = useState(false);
+
+  // Get Cars
+  async function getCars() {
+    var thisOnlineBool = true;
+    if (online !== "Online") {
+      setOnlineBool(false);
+      thisOnlineBool = false;
+    } else {
+      setOnlineBool(true);
+    }
+    const response = await API.graphql({
+      query: queries.carsOnline,
+      variables: { online: thisOnlineBool }
+    });
+    setSelectedCarsBtnDisabled(true);
+    setSelectedItems([]);
+    setIsLoading(false);
+    setItems(response.data.carsOnline);
+  }
 
   useEffect(() => {
-    // Get CarsOnline
-    async function carsOnline() {
-      const response = await API.graphql({
-        query: queries.carsOnline
-      });
-      //console.log('carsOnline');
-      setItems(response.data.carsOnline);
-    }
-    carsOnline();
-    setIsLoading(false);
-
+    getCars();
     return () => {
       // Unmounting
     }
-  },[])
+  }, [online])
+
+  useEffect(() => {
+    if (refresh) {
+      setIsLoading(true);
+      getCars();
+      setRefresh(false);
+    }
+    return () => {
+      // Unmounting
+    }
+  }, [refresh])
+
+
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
-    visibleContent: ['carName', 'eventName','carIp'],
+    visibleContent: ['carName', 'eventName', 'carIp'],
   });
 
-  const {items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
+  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
     allItems,
     {
       filtering: {
@@ -113,7 +139,19 @@ export function AdminCars() {
               counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
-                  <DeleteCarModelModal disabled={selectedCarsBtn} selectedItems={selectedItems} variant="primary" />
+                  <ButtonDropdown
+                    items={[
+                      { text: "Online", id: "Online", disabled: false },
+                      { text: "Offline", id: "Offline", disabled: false },
+                    ]}
+                    onItemClick={({ detail }) => {
+                      setOnline(detail.id);
+                      setIsLoading(true);
+                    }}
+                  >
+                    {online}
+                  </ButtonDropdown>
+                  <EditCarModelModal disabled={selectedCarsBtnDisabled} setRefresh={setRefresh} selectedItems={selectedItems} online={onlineBool} variant="primary" />
                 </SpaceBetween>
               }
             >
@@ -124,12 +162,12 @@ export function AdminCars() {
           items={items}
           pagination={
             <Pagination {...paginationProps}
-            ariaLabels={{
-              nextPageLabel: 'Next page',
-              previousPageLabel: 'Previous page',
-              pageLabel: pageNumber => `Go to page ${pageNumber}`,
-            }}
-          />}
+              ariaLabels={{
+                nextPageLabel: 'Next page',
+                previousPageLabel: 'Previous page',
+                pageLabel: pageNumber => `Go to page ${pageNumber}`,
+              }}
+            />}
           filter={
             <TextFilter
               {...filterProps}
@@ -146,7 +184,7 @@ export function AdminCars() {
           selectedItems={selectedItems}
           onSelectionChange={({ detail: { selectedItems } }) => {
             setSelectedItems(selectedItems)
-            selectedItems.length ? setSelectedCarsBtn(false) : setSelectedCarsBtn(true)
+            selectedItems.length ? setSelectedCarsBtnDisabled(false) : setSelectedCarsBtnDisabled(true)
           }}
           resizableColumns
           preferences={

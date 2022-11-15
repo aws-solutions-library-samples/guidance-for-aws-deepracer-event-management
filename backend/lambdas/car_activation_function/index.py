@@ -43,11 +43,11 @@ def carActivation(hostname: str, eventName: str, eventId: str):
                     'Key': 'Type',
                     'Value': 'deepracer'
                 },
-                                {
+                {
                     'Key': 'eventName',
                     'Value': eventName
                 },
-                                {
+                {
                     'Key': 'eventId',
                     'Value': eventId
                 },

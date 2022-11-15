@@ -70,7 +70,8 @@ export function AdminModels() {
       // Get CarsOnline
       async function carsOnline() {
         const response = await API.graphql({
-          query: queries.carsOnline
+          query: queries.carsOnline,
+          variables: {online: true}
         });
         setCars(response.data.carsOnline);
       }
