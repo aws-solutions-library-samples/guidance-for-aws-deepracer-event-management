@@ -99,14 +99,18 @@ class CarManager(Construct):
                 effect=iam.Effect.ALLOW,
                 actions=[
                     "ssm:DescribeInstanceInformation",
-                    "ssm:ListTagsForResource"
+                    "ssm:ListTagsForResource",
+                    "ssm:AddTagsToResource",
+                    "ssm:RemoveTagsFromResource",
+                    "ssm:SendCommand",
+                    "ssm:GetCommandInvocation",
                 ],
                 resources=["*"],
             )
         )
 
         # Define the data source for the API
-        cars_online_data_source = api.add_lambda_data_source('cars_online_data_source', cars_function_handler)
+        cars_data_source = api.add_lambda_data_source('cars_data_source', cars_function_handler)
 
         # Define API Schema (returned data)
         car_online_object_type = appsync.ObjectType("carOnline",
@@ -141,7 +145,25 @@ class CarManager(Construct):
                 "online": appsync.GraphqlType.boolean(is_required=True),
             },
             return_type=car_online_object_type.attribute(is_list=True),
-            data_source=cars_online_data_source
+            data_source=cars_data_source
+        ))
+
+        api.add_mutation("carUpdates", appsync.ResolvableField(
+            args={
+                "resourceIds": appsync.GraphqlType.string(is_list=True, is_required=True),
+                "eventId":appsync.GraphqlType.string(is_required=True),
+                "eventName": appsync.GraphqlType.string(is_required=True),
+            },
+            return_type=appsync.GraphqlType.aws_json(),
+            data_source=cars_data_source
+        ))
+
+        api.add_mutation("carDeleteAllModels", appsync.ResolvableField(
+            args={
+                "resourceIds": appsync.GraphqlType.string(is_list=True, is_required=True),
+            },
+            return_type=appsync.GraphqlType.aws_json(),
+            data_source=cars_data_source
         ))
 
 
@@ -157,6 +179,8 @@ class CarManager(Construct):
                     resources=[
                         f'{api.arn}/types/Mutation/fields/carActivation',
                         f'{api.arn}/types/Query/fields/carsOnline',
+                        f'{api.arn}/types/Mutation/fields/carUpdate',
+                        f'{api.arn}/types/Mutation/fields/carDeleteAllModels',
                     ],
                 )
             )

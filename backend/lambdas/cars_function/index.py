@@ -7,6 +7,7 @@ import boto3
 import simplejson as json
 #import os
 from datetime import date, datetime
+from typing import List
 
 tracer = Tracer()
 logger = Logger()
@@ -102,6 +103,60 @@ def carOnline(online: str):
         
         logger.info(return_array)
         return return_array
+
+    except Exception as error:
+        logger.exception(error)
+        return error
+
+@app.resolver(type_name="Mutation", field_name="carUpdates")
+def carUpdates(resourceIds: List[str], eventId: str, eventName: str):
+    try:
+        logger.info(resourceIds)
+
+        for resource_id in resourceIds:
+            response = client_ssm.add_tags_to_resource(
+                ResourceType='ManagedInstance',
+                ResourceId=resource_id,
+                Tags=[
+                    {
+                        'Key': 'eventId',
+                        'Value': eventId
+                    },
+                    {
+                        'Key': 'eventName',
+                        'Value': eventName
+                    },
+                ]
+            )
+            
+            logger.info(response)
+        return {'result': 'success'}
+
+    except Exception as error:
+        logger.exception(error)
+        return error
+
+@app.resolver(type_name="Mutation", field_name="carDeleteAllModels")
+def carDeleteAllModels(resourceIds: List[str]):
+    try:
+        logger.info(resourceIds)
+
+        for instance_id in resourceIds:
+            # empty the artifacts folder
+            logger.info(instance_id)
+
+            response = client_ssm.send_command(
+                InstanceIds=[instance_id],
+                DocumentName="AWS-RunShellScript",
+                Parameters={'commands': [
+                    "rm -rf /opt/aws/deepracer/artifacts/*",
+                    "rm -rf /root/.ros/log/*"
+                ]}
+            )
+            #command_id = response['Command']['CommandId']
+            logger.info(response)
+
+        return {'result': 'success'}
 
     except Exception as error:
         logger.exception(error)
