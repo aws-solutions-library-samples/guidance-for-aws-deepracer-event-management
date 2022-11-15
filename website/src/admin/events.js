@@ -45,11 +45,11 @@ export function AdminEvents() {
   // Add Event
   async function addEvent(newEvent) {
     if (newEvent.match(/^[a-zA-Z0-9-_]+$/)) {
-      if ( events.map(events => { return events.eventName}).includes(newEvent) ) { 
+      if (events.map(events => { return events.eventName }).includes(newEvent)) {
         //console.log('already exists');
         setNewEventErrorText('Event already exists')
       } else {
-        //console.log('match')   
+        //console.log('match')
         const response = await API.graphql({
           query: mutations.addEvent,
           variables: {
@@ -63,13 +63,13 @@ export function AdminEvents() {
     } else {
       setNewEventErrorText('Must match regex: ^[a-zA-Z0-9-_]+$')
     }
-  } 
+  }
 
   // Delete Event
   async function deleteEvent() {
     //console.log(selectedEvent[0].eventId);
     const response = await API.graphql({
-      query: mutations.deleteEvent, 
+      query: mutations.deleteEvent,
       variables: {
         eventId: selectedEvent[0].eventId
       }
@@ -80,24 +80,24 @@ export function AdminEvents() {
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
-    //visibleContent: ['instanceId', 'carName', 'eventName','carIp'],
+    visibleContent: ['eventName', 'eventId', 'createdAt'],
   });
 
   const columnDefinitions = [
     {
       id: "eventName",
-      header: "eventName",
+      header: "Event name",
       cell: item => item.eventName || "-",
       sortingField: "eventName"
     },
     {
       id: "eventId",
-      header: "eventId",
+      header: "Event ID",
       cell: item => item.eventId || "-",
     },
     {
       id: "createdAt",
-      header: "createdAt",
+      header: "Created at",
       cell: item => item.createdAt || "-",
       sortingField: "createdAt"
     }
@@ -146,16 +146,16 @@ export function AdminEvents() {
       />
     }
     header={
-      <Header 
-      actions={
-        <SpaceBetween direction="horizontal" size="xs">
-          <Button disabled={deleteButtonDisabled} iconName='status-warning' onClick={() => {
-            setDeleteModalVisible(true); 
-          }}>Delete Event</Button>
-        </SpaceBetween>
-      }
+      <Header
+        actions={
+          <SpaceBetween direction="horizontal" size="xs">
+            <Button disabled={deleteButtonDisabled} iconName='status-warning' onClick={() => {
+              setDeleteModalVisible(true);
+            }}>Delete Event</Button>
+          </SpaceBetween>
+        }
       >Events</Header>
-    } 
+    }
   />
 
   return (
@@ -173,35 +173,35 @@ export function AdminEvents() {
         <div></div>
         <SpaceBetween direction="vertical" size="l">
 
-        <Container textAlign='center'>
-          <Form
-            actions={
-              <SpaceBetween direction="horizontal" size="xs">
-                <Button disabled={addButtonDisabled} variant='primary' onClick={() => {
-                  addEvent(newEvent); 
-                }}>Add Event</Button>
-              </SpaceBetween>
-            }
-          >
+          <Container textAlign='center'>
+            <Form
+              actions={
+                <SpaceBetween direction="horizontal" size="xs">
+                  <Button disabled={addButtonDisabled} variant='primary' onClick={() => {
+                    addEvent(newEvent);
+                  }}>Add Event</Button>
+                </SpaceBetween>
+              }
+            >
               <SpaceBetween direction="vertical" size="l">
-                <FormField 
+                <FormField
                   label="New Event"
                   errorText={newEventErrorText}
                 >
                   <Input value={newEvent} placeholder='Awesome Event' onChange={event => {
                     setNewEvent(event.detail.value);
-                    if (newEvent.length > 0){setAddButtonDisabled(false)};
+                    if (newEvent.length > 0) { setAddButtonDisabled(false) };
                   }} />
                 </FormField>
               </SpaceBetween>
-          </Form>
+            </Form>
           </Container>
 
           {eventsTable}
         </SpaceBetween>
         <div></div>
       </Grid>
-      
+
       {/* delete modal */}
       <Modal
         onDismiss={() => setDeleteModalVisible(false)}
@@ -220,9 +220,9 @@ export function AdminEvents() {
         }
         header="Delete event"
       >
-        Are you sure you want to delete event(s): {selectedEvent.map(selectedEvent => { return selectedEvent.eventName + " " })}
+        Are you sure you want to delete event(s): <br></br> {selectedEvent.map(selectedEvent => { return selectedEvent.eventName + " " })}
       </Modal>
     </>
-    
+
   )
 }

@@ -57,6 +57,16 @@ export function AdminActivation(props) {
     }
   },[events])
 
+  // watch properties for changes and enable generate button if required
+  useEffect(() => {
+    if (password!=='' && hostname!=='' && dropDownSelectedItem.eventName !== 'Select Event') {
+      setButtonDisabled(false);
+    }
+    return () => {
+      // Unmounting
+    }
+  },[password,hostname,dropDownSelectedItem])
+
   async function getActivation() {
     const apiResponse = await API.graphql({
       query: mutations.carActivation,
@@ -76,11 +86,7 @@ export function AdminActivation(props) {
     setLoading("");
   }
 
-  function checkForEmptyFields(e) {
-    if (password!=='' && hostname!=='' && dropDownSelectedItem.eventName !== 'Select Event') {
-      setButtonDisabled(false);
-    }
-  }
+
 
   return (
     <>
@@ -120,13 +126,11 @@ export function AdminActivation(props) {
                 <FormField label="Hostname" errorText={hostnameErrorMessage}>
                   <Input value={hostname} placeholder='deepracer01' onChange={event => {
                     setHostname(event.detail.value);
-                    checkForEmptyFields();
                   }}/>
                 </FormField>
                 <FormField label="Password" errorText={passwordErrorMessage}>
                   <Input value={password} placeholder='password' onChange={event => {
                     setPassword(event.detail.value);
-                    checkForEmptyFields();
                   }}/>
                 </FormField>
                 

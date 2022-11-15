@@ -1,5 +1,16 @@
 import { Box } from "@cloudscape-design/components";
 
+import dayjs from 'dayjs';
+
+// day.js
+var advancedFormat = require('dayjs/plugin/advancedFormat')
+var utc = require('dayjs/plugin/utc')
+var timezone = require('dayjs/plugin/timezone') // dependent on utc plugin
+
+dayjs.extend(advancedFormat)
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
 export function EmptyState({ title, subtitle, action }) {
   return (
     <Box textAlign="center" color="inherit">
@@ -40,6 +51,108 @@ export const WrapLines = {
   label: 'Wrap lines',
   description: 'Check to see all the text and wrap the lines',
 }
+
+export const CarColumnsConfig = [
+  {
+    id: 'instanceId',
+    header: 'Instance',
+    cell: item => item.InstanceId,
+    sortingField: 'key',
+    width: 200,
+    minWidth: 150,
+  },
+  {
+    id: 'carName',
+    header: 'Host name',
+    cell: item => item.ComputerName || '-',
+    sortingField: 'carName',
+    width: 200,
+    minWidth: 150,
+  },
+  {
+    id: 'eventName',
+    header: 'Event name',
+    cell: item => item.eventName || '-',
+    sortingField: 'eventName',
+    width: 200,
+    minWidth: 150,
+  },
+  {
+    id: 'carIp',
+    header: 'IP address',
+    cell: item => item.IPAddress || '-',
+    sortingField: 'carIp',
+    width: 200,
+    minWidth: 150,
+  },
+  {
+    id: 'agentVersion',
+    header: 'Agent version',
+    cell: item => item.AgentVersion || '-',
+    sortingField: 'agentVersion',
+  },
+  {
+    id: 'registrationDate',
+    header: 'Registration date',
+    cell: item => dayjs(item.RegistrationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+    sortingField: 'registrationDate',
+  },
+  {
+    id: 'lastPingDateTime',
+    header: 'Last ping time',
+    cell: item => dayjs(item.lastPingDateTime).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+    sortingField: 'lastPingDateTime',
+  },
+  {
+    id: 'eventId',
+    header: 'Event ID',
+    cell: item => item.eventId || '-',
+    sortingField: 'eventId',
+  }
+]
+
+export const CarVisibleContentOptions = [
+  {
+    label: 'Car information',
+    options: [
+      {
+        id: 'instanceId',
+        label: 'Instance',
+        editable: true,
+      },
+      {
+        id: 'carName',
+        label: 'Host name',
+        editable: false,
+      },
+      {
+        id: 'eventName',
+        label: 'Event name',
+        editable: true,
+      },
+      {
+        id: 'carIp',
+        label: 'Car IP',
+      },
+      {
+        id: 'agentVersion',
+        label: 'Agent version',
+      },
+      {
+        id: 'registrationDate',
+        label: 'Registration date',
+      },
+      {
+        id: 'lastPingDateTime',
+        label: 'Last ping time',
+      },
+      {
+        id: 'eventId',
+        label: 'Event ID',
+      },
+    ]
+  }
+]
 
 export const UserModelsColumnsConfig = [
   {

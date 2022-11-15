@@ -64,34 +64,35 @@ export function AdminModels() {
         }
       })
       setItems(models);
+      console.log(allItems);
 
       console.log("Collecting cars...")
       // Get CarsOnline
       async function carsOnline() {
         const response = await API.graphql({
-          query: queries.carsOnline
+          query: queries.carsOnline,
+          variables: {online: true}
         });
-        //console.log('carsOnline');
         setCars(response.data.carsOnline);
       }
       carsOnline();
 
       setIsLoading(false);
     }
-
+    console.log(cars)
     getData();
 
-    return() => {
+    return () => {
       // Unmounting
     }
-  },[])
+  }, [])
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
     visibleContent: ['userName', 'modelName', 'modelDate'],
   });
 
-  const {items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
+  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
     allItems,
     {
       filtering: {
@@ -151,7 +152,7 @@ export function AdminModels() {
       />
 
       <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
-      <div></div>
+        <div></div>
         <Table
           {...collectionProps}
           header={
@@ -170,12 +171,12 @@ export function AdminModels() {
           items={items}
           pagination={
             <Pagination {...paginationProps}
-            ariaLabels={{
-              nextPageLabel: 'Next page',
-              previousPageLabel: 'Previous page',
-              pageLabel: pageNumber => `Go to page ${pageNumber}`,
-            }}
-          />}
+              ariaLabels={{
+                nextPageLabel: 'Next page',
+                previousPageLabel: 'Previous page',
+                pageLabel: pageNumber => `Go to page ${pageNumber}`,
+              }}
+            />}
           filter={
             <TextFilter
               {...filterProps}

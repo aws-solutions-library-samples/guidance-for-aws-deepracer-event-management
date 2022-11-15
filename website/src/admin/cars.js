@@ -7,6 +7,7 @@ import * as queries from '../graphql/queries';
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
+  ButtonDropdown,
   CollectionPreferences,
   Header,
   Grid,
@@ -18,6 +19,8 @@ import {
 
 import { ContentHeader } from '../components/ContentHeader';
 import {
+  CarColumnsConfig,
+  CarVisibleContentOptions,
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
@@ -25,7 +28,7 @@ import {
   WrapLines,
 } from '../components/TableConfig';
 
-import DeleteCarModelModal from '../components/DeleteCarModelModal';
+import EditCarModelModal from '../components/EditCarModelModal';
 
 import dayjs from 'dayjs';
 
@@ -41,126 +44,57 @@ dayjs.extend(timezone)
 export function AdminCars() {
   const [allItems, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCarsBtn, setSelectedCarsBtn] = useState(true);
+  const [selectedCarsBtnDisabled, setSelectedCarsBtnDisabled] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [online, setOnline] = useState("Online");
+  const [onlineBool, setOnlineBool] = useState(true);
+  const [refresh, setRefresh] = useState(false);
+
+  // Get Cars
+  async function getCars() {
+    var thisOnlineBool = true;
+    if (online !== "Online") {
+      setOnlineBool(false);
+      thisOnlineBool = false;
+    } else {
+      setOnlineBool(true);
+    }
+    const response = await API.graphql({
+      query: queries.carsOnline,
+      variables: { online: thisOnlineBool }
+    });
+    setSelectedCarsBtnDisabled(true);
+    setSelectedItems([]);
+    setIsLoading(false);
+    setItems(response.data.carsOnline);
+  }
 
   useEffect(() => {
-    // Get CarsOnline
-    async function carsOnline() {
-      const response = await API.graphql({
-        query: queries.carsOnline
-      });
-      //console.log('carsOnline');
-      setItems(response.data.carsOnline);
-    }
-    carsOnline();
-    setIsLoading(false);
-
+    getCars();
     return () => {
       // Unmounting
     }
-  },[])
+  }, [online])
+
+  useEffect(() => {
+    if (refresh) {
+      setIsLoading(true);
+      getCars();
+      setRefresh(false);
+    }
+    return () => {
+      // Unmounting
+    }
+  }, [refresh])
+
+
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
-    visibleContent: ['instanceId', 'carName', 'eventName','carIp'],
+    visibleContent: ['carName', 'eventName', 'carIp'],
   });
 
-  const columnsConfig = [
-    {
-      id: 'instanceId',
-      header: 'Instance',
-      cell: item => item.InstanceId,
-      sortingField: 'key',
-    },
-    {
-      id: 'carName',
-      header: 'Car name',
-      cell: item => item.ComputerName || '-',
-      sortingField: 'carName',
-    },
-    {
-      id: 'eventName',
-      header: 'Event name',
-      cell: item => item.eventName || '-',
-      sortingField: 'eventName',
-    },
-    {
-      id: 'carIp',
-      header: 'IP address',
-      cell: item => item.IPAddress || '-',
-      sortingField: 'carIp',
-    },
-    {
-      id: 'agentVersion',
-      header: 'Agent version',
-      cell: item => item.AgentVersion || '-',
-      sortingField: 'agentVersion',
-    },
-    {
-      id: 'registrationDate',
-      header: 'Registration date',
-      cell: item => dayjs(item.RegistrationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
-      sortingField: 'registrationDate',
-    },
-    {
-      id: 'lastPingDateTime',
-      header: 'Last ping time',
-      cell: item => dayjs(item.lastPingDateTime).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
-      sortingField: 'lastPingDateTime',
-    },
-    {
-      id: 'eventId',
-      header: 'Event ID',
-      cell: item => item.eventId || '-',
-      sortingField: 'eventId',
-    },
-  ];
-
-  const visibleContentOptions = [
-    {
-      label: 'Model information',
-      options: [
-        {
-          id: 'instanceId',
-          label: 'Instance',
-          editable: false,
-        },
-        {
-          id: 'carName',
-          label: 'Car name',
-          editable: false,
-        },
-        {
-          id: 'eventName',
-          label: 'Event name',
-          editable: true,
-        },
-        {
-          id: 'carIp',
-          label: 'Car IP',
-        },
-        {
-          id: 'agentVersion',
-          label: 'Agent version',
-        },
-        {
-          id: 'registrationDate',
-          label: 'Registration date',
-        },
-        {
-          id: 'lastPingDateTime',
-          label: 'Last ping time',
-        },
-        {
-          id: 'eventId',
-          label: 'Event ID',
-        },
-      ]
-    }
-  ]
-
-  const {items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
+  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
     allItems,
     {
       filtering: {
@@ -179,7 +113,7 @@ export function AdminCars() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[1] } },
+      sorting: { defaultState: { sortingColumn: CarColumnsConfig[1] } },
       selection: {},
     }
   );
@@ -205,23 +139,35 @@ export function AdminCars() {
               counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
-                  <DeleteCarModelModal disabled={selectedCarsBtn} selectedItems={selectedItems} variant="primary" />
+                  <ButtonDropdown
+                    items={[
+                      { text: "Online", id: "Online", disabled: false },
+                      { text: "Offline", id: "Offline", disabled: false },
+                    ]}
+                    onItemClick={({ detail }) => {
+                      setOnline(detail.id);
+                      setIsLoading(true);
+                    }}
+                  >
+                    {online}
+                  </ButtonDropdown>
+                  <EditCarModelModal disabled={selectedCarsBtnDisabled} setRefresh={setRefresh} selectedItems={selectedItems} online={onlineBool} variant="primary" />
                 </SpaceBetween>
               }
             >
               Cars
             </Header>
           }
-          columnDefinitions={columnsConfig}
+          columnDefinitions={CarColumnsConfig}
           items={items}
           pagination={
             <Pagination {...paginationProps}
-            ariaLabels={{
-              nextPageLabel: 'Next page',
-              previousPageLabel: 'Previous page',
-              pageLabel: pageNumber => `Go to page ${pageNumber}`,
-            }}
-          />}
+              ariaLabels={{
+                nextPageLabel: 'Next page',
+                previousPageLabel: 'Previous page',
+                pageLabel: pageNumber => `Go to page ${pageNumber}`,
+              }}
+            />}
           filter={
             <TextFilter
               {...filterProps}
@@ -238,7 +184,7 @@ export function AdminCars() {
           selectedItems={selectedItems}
           onSelectionChange={({ detail: { selectedItems } }) => {
             setSelectedItems(selectedItems)
-            selectedItems.length ? setSelectedCarsBtn(false) : setSelectedCarsBtn(true)
+            selectedItems.length ? setSelectedCarsBtnDisabled(false) : setSelectedCarsBtnDisabled(true)
           }}
           resizableColumns
           preferences={
@@ -251,7 +197,7 @@ export function AdminCars() {
               pageSizePreference={PageSizePreference('cars')}
               visibleContentPreference={{
                 title: 'Select visible columns',
-                options: visibleContentOptions,
+                options: CarVisibleContentOptions,
               }}
               wrapLinesPreference={WrapLines}
             />
