@@ -31,9 +31,12 @@ class CarManager(Construct):
         )
         powertools_layer = lambda_python.PythonLayerVersion.from_layer_version_arn(
             self,
-            "powertools",
-            "arn:aws:lambda:eu-west-1:017000801446:layer:AWSLambdaPowertoolsPython:3",
+            "lambda_powertools",
+            layer_version_arn="arn:aws:lambda:{}:017000801446:layer:AWSLambdaPowertoolsPythonV2-Arm64:11".format(
+                stack.region
+            ),
         )
+        powertools_log_level = "INFO"
 
         ## car_activation method
         car_activation_handler = lambda_python.PythonFunction(
@@ -50,6 +53,10 @@ class CarManager(Construct):
             architecture=lambda_architecture,
             bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
             layers=[powertools_layer],
+            environment={
+                "POWERTOOLS_SERVICE_NAME": "car_activation",
+                "LOG_LEVEL": powertools_log_level,
+            },
         )
 
         car_activation_handler.add_to_role_policy(
@@ -110,6 +117,10 @@ class CarManager(Construct):
             architecture=lambda_architecture,
             bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
             layers=[powertools_layer],
+            environment={
+                "POWERTOOLS_SERVICE_NAME": "car_function",
+                "LOG_LEVEL": powertools_log_level,
+            },
         )
 
         cars_function_handler.add_to_role_policy(
