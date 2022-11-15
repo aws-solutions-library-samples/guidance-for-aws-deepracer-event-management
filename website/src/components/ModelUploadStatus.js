@@ -18,39 +18,39 @@ export function ModelUploadStatus(props) {
   // https://cloudscape.design/components/flashbar/?tabId=playground&example=with-a-progress-bar
 
   useEffect(() => {
-    const saveModel = async() => {
+    const saveModel = async () => {
       //const filename = s3path.split('/').slice(-1)[0]
       console.log("s3path: " + file.name);
-      if (file.name.match(/^[a-zA-Z0-9-_.]+\.tar\.gz$/)) {
+      if (file.name.match(/^[a-zA-Z0-9-_]+\.tar\.gz$/)) {
         Storage.put((s3path), file, {
           level: 'private',
           contentType: file.type,
           tagging: 'lifecycle=true',
           progressCallback(progress) {
             setStatus('In progress');
-            setPercent(Math.round(progress.loaded/progress.total*100))
+            setPercent(Math.round(progress.loaded / progress.total * 100))
           }
-        }).then (result => {
+        }).then(result => {
           console.log(result)
           setStatus('Success');
           setStatusIcon('success')
-        }).catch (err => {
+        }).catch(err => {
           console.log(err)
           setStatus('Error');
           setStatusIcon('error')
         });
       } else {
-        setStatus(file.name + ' does not match regex: ^[a-zA-Z0-9-_.]+\.tar\.gz$');
+        setStatus(file.name + ' does not match regex: ^[a-zA-Z0-9-_]+\.tar\.gz$');
         setStatusIcon('error')
       }
     }
 
     saveModel();
 
-    return() => {
+    return () => {
       // Unmounting
     }
-  },[])
+  }, [])
 
   return (
     <React.Fragment key={file.name}>
@@ -65,7 +65,7 @@ export function ModelUploadStatus(props) {
           {file.name}
         </div>
         <div>
-          {(file.size/1024/1024).toFixed(2)} Mb
+          {(file.size / 1024 / 1024).toFixed(2)} Mb
         </div>
       </Container>
     </React.Fragment>
