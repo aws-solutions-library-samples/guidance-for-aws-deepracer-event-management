@@ -221,7 +221,7 @@ class CarManager(Construct):
                     resources=[
                         f"{api.arn}/types/Mutation/fields/carActivation",
                         f"{api.arn}/types/Query/fields/carsOnline",
-                        f"{api.arn}/types/Mutation/fields/carUpdate",
+                        f"{api.arn}/types/Mutation/fields/carUpdates",
                         f"{api.arn}/types/Mutation/fields/carDeleteAllModels",
                     ],
                 )

@@ -45,7 +45,7 @@ export function AdminEvents() {
   // Add Event
   async function addEvent(newEvent) {
     if (newEvent.match(/^[a-zA-Z0-9-_]+$/)) {
-      if ( events.map(events => { return events.eventName}).includes(newEvent) ) {
+      if (events.map(events => { return events.eventName }).includes(newEvent)) {
         //console.log('already exists');
         setNewEventErrorText('Event already exists')
       } else {
@@ -147,13 +147,13 @@ export function AdminEvents() {
     }
     header={
       <Header
-      actions={
-        <SpaceBetween direction="horizontal" size="xs">
-          <Button disabled={deleteButtonDisabled} iconName='status-warning' onClick={() => {
-            setDeleteModalVisible(true);
-          }}>Delete Event</Button>
-        </SpaceBetween>
-      }
+        actions={
+          <SpaceBetween direction="horizontal" size="xs">
+            <Button disabled={deleteButtonDisabled} iconName='status-warning' onClick={() => {
+              setDeleteModalVisible(true);
+            }}>Delete Event</Button>
+          </SpaceBetween>
+        }
       >Events</Header>
     }
   />
@@ -173,16 +173,16 @@ export function AdminEvents() {
         <div></div>
         <SpaceBetween direction="vertical" size="l">
 
-        <Container textAlign='center'>
-          <Form
-            actions={
-              <SpaceBetween direction="horizontal" size="xs">
-                <Button disabled={addButtonDisabled} variant='primary' onClick={() => {
-                  addEvent(newEvent);
-                }}>Add Event</Button>
-              </SpaceBetween>
-            }
-          >
+          <Container textAlign='center'>
+            <Form
+              actions={
+                <SpaceBetween direction="horizontal" size="xs">
+                  <Button disabled={addButtonDisabled} variant='primary' onClick={() => {
+                    addEvent(newEvent);
+                  }}>Add Event</Button>
+                </SpaceBetween>
+              }
+            >
               <SpaceBetween direction="vertical" size="l">
                 <FormField
                   label="New Event"
@@ -190,11 +190,11 @@ export function AdminEvents() {
                 >
                   <Input value={newEvent} placeholder='Awesome Event' onChange={event => {
                     setNewEvent(event.detail.value);
-                    if (newEvent.length > 0){setAddButtonDisabled(false)};
+                    if (newEvent.length > 0) { setAddButtonDisabled(false) };
                   }} />
                 </FormField>
               </SpaceBetween>
-          </Form>
+            </Form>
           </Container>
 
           {eventsTable}
@@ -220,7 +220,7 @@ export function AdminEvents() {
         }
         header="Delete event"
       >
-        Are you sure you want to delete event(s): {selectedEvent.map(selectedEvent => { return selectedEvent.eventName + " " })}
+        Are you sure you want to delete event(s): <br></br> {selectedEvent.map(selectedEvent => { return selectedEvent.eventName + " " })}
       </Modal>
     </>
 
