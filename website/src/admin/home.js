@@ -62,6 +62,7 @@ export function AdminHome() {
         ]}
         header={<Header>DREM Admin</Header>}
       />
+      <div></div>
     </Grid>
   );
 }
