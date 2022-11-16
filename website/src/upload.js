@@ -16,7 +16,7 @@ export function Upload() {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    const getData = async() => {
+    const getData = async () => {
 
       Auth.currentAuthenticatedUser().then(user => {
         setUsername(user.username);
@@ -25,10 +25,10 @@ export function Upload() {
 
     getData();
 
-    return() => {
+    return () => {
       // Unmounting
     }
-  },[])
+  }, [])
 
   const handleFileUpload = (e) => {
     setUploadFiles(e.target.files);
@@ -41,46 +41,48 @@ export function Upload() {
         description="Upload models into DREM ready for racing on the track."
         breadcrumbs={[
           { text: "Home", href: "/" },
-          { text: "Upload models", href: "/upload"}
+          { text: "Upload models", href: "/upload" }
         ]}
       />
 
       <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
-      <div></div>
-      <FormField
-        constraintText='model-name.tar.gz'
-        description='Upload physical model for racing on the track'
-        label='Upload model'
-      >
-        <Button
-          iconName='upload'
-          onClick={() => {
-            setUploadFiles([]);
-            fileInputRef.current.click();
-          }}
-        >Choose model file(s)
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            accept='application/gzip,application/tar'
-            multiple
-            hidden
-          />
-        </Button>
-      </FormField>
+        <div></div>
+        <FormField
+          constraintText='model-name.tar.gz'
+          description='Upload physical model for racing on the track'
+          label='Upload model'
+        >
+          <Button
+            iconName='upload'
+            onClick={() => {
+              setUploadFiles([]);
+              fileInputRef.current.click();
+            }}
+          >Choose model file(s)
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept='application/gzip,application/tar'
+              multiple
+              hidden
+            />
+          </Button>
+        </FormField>
+        <div></div>
       </Grid>
 
       <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
         <div></div>
         <SpaceBetween direction="vertical" size="s">
 
-        {Object.keys(uploadFiles).map((i) => {
-          return (
-            <ModelUploadStatus file={uploadFiles[i]} username={username} />
-          );
-        })}
+          {Object.keys(uploadFiles).map((i) => {
+            return (
+              <ModelUploadStatus file={uploadFiles[i]} username={username} />
+            );
+          })}
         </SpaceBetween>
+        <div></div>
       </Grid>
     </>
   )

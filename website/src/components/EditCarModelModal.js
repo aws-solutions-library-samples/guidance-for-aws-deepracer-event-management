@@ -24,7 +24,9 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
 
   const [dropDownEvents, setDropDownEvents] = useState([{ id: 'none', text: 'none' }]);
   const [dropDownSelectedItem, setDropDownSelectedItem] = useState({ eventName: 'Select Event' })
-  const events = ListOfEvents();
+
+  const [isLoading, setIsLoading] = useState(true);
+  const events = ListOfEvents(setIsLoading);
 
   // convert events data to dropdown format
   useEffect(() => {

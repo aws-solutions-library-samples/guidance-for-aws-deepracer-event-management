@@ -38,34 +38,38 @@ export function AdminActivation(props) {
   const [loading, setLoading] = useState("");
   const [hostnameErrorMessage, setHostnameErrorMessage] = useState();
   const [passwordErrorMessage, setPasswordErrorMessage] = useState();
-  
-  const [dropDownEvents, setDropDownEvents] = useState([{id: 'none', text: 'none'}]);
-  const [dropDownSelectedItem, setDropDownSelectedItem] = useState({eventName: 'Select Event'})
-  const events = ListOfEvents();
-  
+
+  const [dropDownEvents, setDropDownEvents] = useState([{ id: 'none', text: 'none' }]);
+  const [dropDownSelectedItem, setDropDownSelectedItem] = useState({ eventName: 'Select Event' })
+
+  const [isLoading, setIsLoading] = useState(true);
+  const events = ListOfEvents(setIsLoading);
+
 
   // convert events data to dropdown format
   useEffect(() => {
     if (events.length > 0) {
-      setDropDownEvents(events.map(thisEvent => { return { 
-        id: thisEvent.eventId, 
-        text: thisEvent.eventName 
-      }; }));
+      setDropDownEvents(events.map(thisEvent => {
+        return {
+          id: thisEvent.eventId,
+          text: thisEvent.eventName
+        };
+      }));
     }
     return () => {
       // Unmounting
     }
-  },[events])
+  }, [events])
 
   // watch properties for changes and enable generate button if required
   useEffect(() => {
-    if (password!=='' && hostname!=='' && dropDownSelectedItem.eventName !== 'Select Event') {
+    if (password !== '' && hostname !== '' && dropDownSelectedItem.eventName !== 'Select Event') {
       setButtonDisabled(false);
     }
     return () => {
       // Unmounting
     }
-  },[password,hostname,dropDownSelectedItem])
+  }, [password, hostname, dropDownSelectedItem])
 
   async function getActivation() {
     const apiResponse = await API.graphql({
@@ -81,8 +85,8 @@ export function AdminActivation(props) {
     setActivationCode(response['activationCode']);
     setActivationId(response['activationId']);
     setRegion(response['region']);
-    setSsmCommand('sudo amazon-ssm-agent -register -code "'+ response['activationCode'] +'" -id "'+ response['activationId'] +'" -region "'+ response['region'] +'"');
-    setUpdateCommand('curl -O ' + window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '') + '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -p ' + password + ' -h ' + hostname + ' -c '+ response['activationCode'] +' -i '+ response['activationId'] +' -r '+ response['region'] +' -s '+ ssid +' -w '+ wifiPass);
+    setSsmCommand('sudo amazon-ssm-agent -register -code "' + response['activationCode'] + '" -id "' + response['activationId'] + '" -region "' + response['region'] + '"');
+    setUpdateCommand('curl -O ' + window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '') + '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -p ' + password + ' -h ' + hostname + ' -c ' + response['activationCode'] + ' -i ' + response['activationId'] + ' -r ' + response['region'] + ' -s ' + ssid + ' -w ' + wifiPass);
     setLoading("");
   }
 
@@ -106,16 +110,16 @@ export function AdminActivation(props) {
           <Form
             actions={
               <SpaceBetween direction="horizontal" size="xs">
-                <Button variant='primary' onClick={() => {getActivation();}} disabled={buttonDisabled}>Generate</Button>
+                <Button variant='primary' onClick={() => { getActivation(); }} disabled={buttonDisabled}>Generate</Button>
               </SpaceBetween>
             }
-            >
+          >
             <Container textAlign='center'>
               <SpaceBetween direction="vertical" size="l">
-              <FormField label='Event'>
+                <FormField label='Event'>
                   <ButtonDropdown
                     items={dropDownEvents}
-                    onItemClick={({detail}) => {
+                    onItemClick={({ detail }) => {
                       const index = events.map(e => e.eventId).indexOf(detail.id);
                       setDropDownSelectedItem(events[index]);
                     }}
@@ -126,25 +130,25 @@ export function AdminActivation(props) {
                 <FormField label="Hostname" errorText={hostnameErrorMessage}>
                   <Input value={hostname} placeholder='deepracer01' onChange={event => {
                     setHostname(event.detail.value);
-                  }}/>
+                  }} />
                 </FormField>
                 <FormField label="Password" errorText={passwordErrorMessage}>
                   <Input value={password} placeholder='password' onChange={event => {
                     setPassword(event.detail.value);
-                  }}/>
+                  }} />
                 </FormField>
-                
+
 
                 <ExpandableSection header="Optional WiFi config for networks with hidden SSIDs">
                   <FormField label='SSID'>
                     <Input value={ssid} placeholder='ssid' onChange={event => {
-                    setSsid(event.detail.value);
-                  }}/>
+                      setSsid(event.detail.value);
+                    }} />
                   </FormField>
                   <FormField label='WiFi Password'>
                     <Input value={wifiPass} placeholder='wifimagic' onChange={event => {
-                    setWifiPass(event.detail.value);
-                  }}/>
+                      setWifiPass(event.detail.value);
+                    }} />
                   </FormField>
                 </ExpandableSection>
               </SpaceBetween>
@@ -153,7 +157,7 @@ export function AdminActivation(props) {
 
           <Container>
 
-          <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2}]}>
+            <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
               <Header variant='h3'>Script</Header>
               <Container>
                 <Box color='text-status-info' textAlign='center'>
@@ -170,12 +174,12 @@ export function AdminActivation(props) {
                   </StatusIndicator>
                 }
               >
-                <Button iconName='copy' onClick={() => {navigator.clipboard.writeText(updateCommand)}}>Copy</Button>
+                <Button iconName='copy' onClick={() => { navigator.clipboard.writeText(updateCommand) }}>Copy</Button>
               </Popover>
             </Grid>
 
             <ExpandableSection header="Advanced">
-              <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2}]}>
+              <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
                 <Header variant='h3'>Code</Header>
                 <Container>
                   <Box color='text-status-info' textAlign='center'>
@@ -192,11 +196,11 @@ export function AdminActivation(props) {
                     </StatusIndicator>
                   }
                 >
-                  <Button iconName='copy' onClick={() => {navigator.clipboard.writeText(activationCode)}}>Copy</Button>
+                  <Button iconName='copy' onClick={() => { navigator.clipboard.writeText(activationCode) }}>Copy</Button>
                 </Popover>
               </Grid>
 
-              <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2}]}>
+              <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
                 <Header variant='h3'>Id</Header>
                 <Container>
                   <Box color='text-status-info' textAlign='center'>
@@ -213,11 +217,11 @@ export function AdminActivation(props) {
                     </StatusIndicator>
                   }
                 >
-                  <Button iconName='copy' onClick={() => {navigator.clipboard.writeText(activationId)}}>Copy</Button>
+                  <Button iconName='copy' onClick={() => { navigator.clipboard.writeText(activationId) }}>Copy</Button>
                 </Popover>
               </Grid>
 
-              <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2}]}>
+              <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
                 <Header variant='h3'>SSM Only</Header>
                 <Container>
                   <Box color='text-status-info' textAlign='center'>
@@ -234,25 +238,25 @@ export function AdminActivation(props) {
                     </StatusIndicator>
                   }
                 >
-                  <Button iconName='copy' onClick={() => {navigator.clipboard.writeText(ssmCommand)}}>Copy</Button>
+                  <Button iconName='copy' onClick={() => { navigator.clipboard.writeText(ssmCommand) }}>Copy</Button>
                 </Popover>
               </Grid>
             </ExpandableSection>
 
-            
+
           </Container>
 
           <Grid gridDefinition={[{ colspan: 4 }, { colspan: 4 }, { colspan: 4 }]}>
             <div></div>
             <div>
-          <Button href="/manual_update.sh" iconAlign="right" iconName="external">manual_update.sh script</Button>
-          <TextContent><p><b>Note:</b> This script will disable the car GUI</p></TextContent>
-          </div>
-        </Grid>
-      </SpaceBetween>
-      <div></div>
+              <Button href="/manual_update.sh" iconAlign="right" iconName="external">manual_update.sh script</Button>
+              <TextContent><p><b>Note:</b> This script will disable the car GUI</p></TextContent>
+            </div>
+          </Grid>
+        </SpaceBetween>
+        <div></div>
       </Grid>
     </>
   )
-  
+
 }

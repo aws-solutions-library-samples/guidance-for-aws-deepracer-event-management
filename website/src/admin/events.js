@@ -40,7 +40,9 @@ export function AdminEvents() {
   const [addButtonDisabled, setAddButtonDisabled] = useState(true);
   const [deleteButtonDisabled, setDeleteButtonDisabled] = useState(true);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const events = ListOfEvents();
+
+  const [isLoading, setIsLoading] = useState(true);
+  const events = ListOfEvents(setIsLoading);
 
   // Add Event
   async function addEvent(newEvent) {
@@ -137,6 +139,7 @@ export function AdminEvents() {
     selectionType="single"
     columnDefinitions={columnDefinitions}
     items={items}
+    loading={isLoading}
     loadingText="Loading resources"
     filter={
       <TextFilter

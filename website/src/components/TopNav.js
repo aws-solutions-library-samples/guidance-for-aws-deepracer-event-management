@@ -27,7 +27,7 @@ import {
   SideNavigation
 } from "@cloudscape-design/components";
 
-function cwr(operation, payload){
+function cwr(operation, payload) {
   // Instrument Routing to Record Page Views
   // https://github.com/aws-observability/aws-rum-web/blob/main/docs/cdn_react.md
   return void 0;
@@ -69,7 +69,7 @@ export function TopNav(props) {
   useEffect(() => {
     Auth.currentAuthenticatedUser().then(user => {
       const groups = user.signInUserSession.accessToken.payload["cognito:groups"];
-      if (groups !== undefined ) {
+      if (groups !== undefined) {
         setGroups(groups)
       }
     })
@@ -77,24 +77,24 @@ export function TopNav(props) {
     return () => {
       // Unmounting
     }
-  },[])
+  }, [])
 
   let navItems = [
-    {type: "link", text: "Upload", href: "/upload"},
-    {type: "link", text: "Models", href: "/models"},
+    { type: "link", text: "Upload", href: "/upload" },
+    { type: "link", text: "Models", href: "/models" },
   ];
 
-  if ( groups.includes('admin') ) {
+  if (groups.includes('admin')) {
     navItems.push({
       type: 'section',
       text: 'Admin',
       items: [
-        {type: "link",text: "All Models",href: "/admin/models"},
-        {type: "link",text: "Quarantined models",href: "/admin/quarantine"},
-        {type: "link",text: "Events",href: "/admin/events"},
-        {type: "link",text: "Cars",href: "/admin/cars"},
-        {type: "link",text: "Car activiation",href: "/admin/car_activation"},
-        {type: "link",text: "Groups",href: "/admin/groups"}
+        { type: "link", text: "All Models", href: "/admin/models" },
+        { type: "link", text: "Quarantined models", href: "/admin/quarantine" },
+        { type: "link", text: "Events", href: "/admin/events" },
+        { type: "link", text: "Cars", href: "/admin/cars" },
+        { type: "link", text: "Car activiation", href: "/admin/car_activation" },
+        { type: "link", text: "Groups", href: "/admin/groups" }
       ],
     })
   }
@@ -115,14 +115,14 @@ export function TopNav(props) {
             {
               type: "menu-dropdown",
               text: props.user,
-              iconName:"user-profile",
+              iconName: "user-profile",
               items: [
                 {
                   id: "signout",
                   text: "Sign out",
                 }
               ],
-              onItemClick: ({detail}) => {
+              onItemClick: ({ detail }) => {
                 // Perform actions based on the clicked item details
                 if (detail.id === 'signout') {
                   props.signout();
@@ -160,7 +160,7 @@ export function TopNav(props) {
       />
     </div>
   )
-  
+
 }
 
 export default TopNav
