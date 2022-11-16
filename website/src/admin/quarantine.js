@@ -60,17 +60,17 @@ export function AdminQuarantine() {
 
     getQuarantinedModels();
 
-    return() => {
+    return () => {
       // Unmounting
     }
-  },[])
+  }, [])
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
     visibleContent: ['userName', 'modelName', 'modelDate'],
   });
 
-  const {items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
+  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
     allItems,
     {
       filtering: {
@@ -139,12 +139,12 @@ export function AdminQuarantine() {
           items={items}
           pagination={
             <Pagination {...paginationProps}
-            ariaLabels={{
-              nextPageLabel: 'Next page',
-              previousPageLabel: 'Previous page',
-              pageLabel: pageNumber => `Go to page ${pageNumber}`,
-            }}
-          />}
+              ariaLabels={{
+                nextPageLabel: 'Next page',
+                previousPageLabel: 'Previous page',
+                pageLabel: pageNumber => `Go to page ${pageNumber}`,
+              }}
+            />}
           filter={
             <TextFilter
               {...filterProps}
@@ -171,6 +171,7 @@ export function AdminQuarantine() {
             />
           }
         />
+        <div></div>
       </Grid>
     </>
   );

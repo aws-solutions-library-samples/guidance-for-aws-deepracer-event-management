@@ -41,7 +41,7 @@ export function AdminGroups() {
   const apiName = 'deepracerEventManager';
 
   useEffect(() => {
-    const getData = async() => {
+    const getData = async () => {
       const apiPath = 'admin/groups';
 
       const groups = await API.get(apiName, apiPath);
@@ -51,11 +51,11 @@ export function AdminGroups() {
 
     getData();
 
-    return() => {
+    return () => {
       // Unmounting
     }
 
-  },[]);
+  }, []);
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
@@ -127,7 +127,7 @@ export function AdminGroups() {
     }
   ]
 
-  const {items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
+  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
     allItems,
     {
       filtering: {
@@ -178,12 +178,12 @@ export function AdminGroups() {
           items={items}
           pagination={
             <Pagination {...paginationProps}
-            ariaLabels={{
-              nextPageLabel: 'Next page',
-              previousPageLabel: 'Previous page',
-              pageLabel: pageNumber => `Go to page ${pageNumber}`,
-            }}
-          />}
+              ariaLabels={{
+                nextPageLabel: 'Next page',
+                previousPageLabel: 'Previous page',
+                pageLabel: pageNumber => `Go to page ${pageNumber}`,
+              }}
+            />}
           filter={
             <TextFilter
               {...filterProps}
@@ -214,6 +214,7 @@ export function AdminGroups() {
             />
           }
         />
+        <div></div>
       </Grid>
     </>
   );
