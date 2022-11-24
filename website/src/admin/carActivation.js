@@ -36,8 +36,8 @@ export function AdminActivation(props) {
   const [updateCommand, setUpdateCommand] = useState("");
   const [buttonDisabled, setButtonDisabled] = useState(true);
   const [loading, setLoading] = useState("");
-  const [hostnameErrorMessage, setHostnameErrorMessage] = useState();
-  const [passwordErrorMessage, setPasswordErrorMessage] = useState();
+  const [hostnameErrorMessage, setHostnameErrorMessage] = useState("");
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
 
   const [dropDownEvents, setDropDownEvents] = useState([{ id: 'none', text: 'none' }]);
   const [dropDownSelectedItem, setDropDownSelectedItem] = useState({ eventName: 'Select Event' })
