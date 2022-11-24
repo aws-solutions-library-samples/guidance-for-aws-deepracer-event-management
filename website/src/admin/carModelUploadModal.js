@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { API } from 'aws-amplify';
+//import * as queries from '../graphql/queries';
+import * as mutations from '../graphql/mutations';
+//import * as subscriptions from '../graphql/subscriptions'
 
 import {
   Alert,
@@ -10,7 +13,8 @@ import {
   ProgressBar,
   SpaceBetween,
   Table,
-  TextFilter
+  TextFilter,
+  Checkbox
 } from '@cloudscape-design/components';
 import { useCollection } from '@cloudscape-design/collection-hooks';
 
@@ -96,8 +100,7 @@ const StatusModelContent = (props) => {
     //console.log("CommandId: " + CommandId)
     //console.log(model)
 
-    if (InstanceId === '' || CommandId === '')
-    {
+    if (InstanceId === '' || CommandId === '') {
       return [];
     }
 
@@ -117,7 +120,7 @@ const StatusModelContent = (props) => {
     let modelUser = modelKeyPieces[modelKeyPieces.length - 3];
     let modelName = modelKeyPieces[modelKeyPieces.length - 1];
 
-    let resultToAdd = {"ModelName": (modelUser + '-' + modelName), "CommandId": CommandId, "Status": response};
+    let resultToAdd = { "ModelName": (modelUser + '-' + modelName), "CommandId": CommandId, "Status": response };
     let tempResultsArray = [];
     //console.log(resultToAdd);
 
@@ -134,7 +137,7 @@ const StatusModelContent = (props) => {
     };
 
     // if result hasn't been updated because it doesn't exist, add the element
-    if(!updatedElement) {
+    if (!updatedElement) {
       tempResultsArray.push(resultToAdd)
     };
 
@@ -158,7 +161,7 @@ const StatusModelContent = (props) => {
     //console.log('Models in array: ' + models.length)
     if (uploadStatus !== "InProgress") {
       //console.log(uploadStatus + " !== InProgress")
-      if(models.length > 0) {
+      if (models.length > 0) {
         setUploadStatus("InProgress");
         let model = models.pop();
         //console.log('POP!');
@@ -212,7 +215,7 @@ const StatusModelContent = (props) => {
           </Alert>
         }
         header={
-          <ProgressBar value={(((props.modelsTotalCount-props.selectedModels.length)/props.modelsTotalCount)*100)} />
+          <ProgressBar value={(((props.modelsTotalCount - props.selectedModels.length) / props.modelsTotalCount) * 100)} />
         }
       />
 
@@ -222,16 +225,30 @@ const StatusModelContent = (props) => {
 
 export default (props) => {
   const [visible, setVisible] = useState(false);
-  const [statusModelVisible, setStatusModelVisible] = useState(false);
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState(modalTable);
   const [selectedCars, setSelectedCars] = useState([]);
+  const [checked, setChecked] = useState(false);
 
   var models = [...props.selectedModels]; //clone models array
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
-    visibleContent: ['carName', 'eventName','carIp'],
+    visibleContent: ['carName', 'eventName', 'carIp'],
   });
+
+  // delete models from Cars
+  async function carDeleteAllModels() {
+    const InstanceIds = selectedCars.map(i => i.InstanceId);
+
+    const response = await API.graphql({
+      query: mutations.carDeleteAllModels,
+      variables: { resourceIds: InstanceIds }
+    });
+    setModalContent(<StatusModelContent selectedModels={models} selectedCars={selectedCars} modelsTotalCount={props.selectedModels.length} ></StatusModelContent>);
+
+  }
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
     props.cars,
@@ -290,7 +307,7 @@ export default (props) => {
         wrapLinesPreference={WrapLines}
       />
     }
-/>
+  />
 
   return (
     <>
@@ -303,20 +320,36 @@ export default (props) => {
         size='large'
         onDismiss={() => {
           setVisible(false);
+          setChecked(false);
         }}
         visible={visible}
         closeAriaLabel="Close modal"
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
+              <Checkbox
+                onChange={({ detail }) =>
+                  setChecked(detail.checked)
+                }
+                checked={checked}
+              >
+                Clear car models first?
+              </Checkbox>
               <Button variant="link" onClick={() => {
                 setVisible(false);
+                setChecked(false);
               }} >Cancel</Button>
               <Button variant="primary" onClick={() => {
                 //uploadModelToCar();
                 setVisible(false);
-                setModalContent(<StatusModelContent selectedModels={models} selectedCars={selectedCars} modelsTotalCount={props.selectedModels.length} ></StatusModelContent>);
-                setStatusModelVisible(true);
+
+                if (checked) {
+                  setDeleteModalVisible(true);
+                  setChecked(false);
+                } else {
+                  setModalContent(<StatusModelContent selectedModels={models} selectedCars={selectedCars} modelsTotalCount={props.selectedModels.length} ></StatusModelContent>);
+                  setStatusModalVisible(true);
+                }
               }}>Ok</Button>
             </SpaceBetween>
           </Box>
@@ -331,16 +364,16 @@ export default (props) => {
         size='max'
         onDismiss={() => {
           setModalContent('');
-          setStatusModelVisible(false);
+          setStatusModalVisible(false);
         }}
-        visible={statusModelVisible}
+        visible={statusModalVisible}
         closeAriaLabel="Close modal"
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
               <Button variant="primary" onClick={() => {
                 setModalContent('');
-                setStatusModelVisible(false);
+                setStatusModalVisible(false);
               }}>Ok</Button>
             </SpaceBetween>
           </Box>
@@ -348,6 +381,30 @@ export default (props) => {
         header="Upload to car status"
       >
         {modalContent}
+      </Modal>
+
+      {/* modal 3 - Delete All Models on Car */}
+      <Modal
+        onDismiss={() => setDeleteModalVisible(false)}
+        visible={deleteModalVisible}
+        closeAriaLabel="Close modal"
+        footer={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button variant="link" onClick={() => {
+                setDeleteModalVisible(false);
+              }}>Cancel</Button>
+              <Button variant="primary" onClick={() => {
+                carDeleteAllModels();
+                setDeleteModalVisible(false);
+                setStatusModalVisible(true);
+              }}>Delete and Upload</Button>
+            </SpaceBetween>
+          </Box>
+        }
+        header="Delete models on cars"
+      >
+        Are you sure you want to delete models on Cars(s): <br></br> {selectedCars.map(selectedCars => { return selectedCars.ComputerName + " " })}
       </Modal>
     </>
   );
