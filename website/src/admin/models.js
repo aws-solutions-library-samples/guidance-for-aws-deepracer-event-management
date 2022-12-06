@@ -160,6 +160,10 @@ export function AdminModels() {
               counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
+                  <Button onClick={() => {
+                    setSelectedItems([]);
+                    setSelectedModelsBtn(true);
+                  }}>Clear selected</Button>
                   <CarModelUploadModal disabled={selectedModelsBtn} selectedModels={selectedItems} cars={cars}></CarModelUploadModal>
                 </SpaceBetween>
               }
