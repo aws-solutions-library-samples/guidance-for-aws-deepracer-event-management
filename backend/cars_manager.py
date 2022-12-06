@@ -110,7 +110,7 @@ class CarManager(Construct):
             description="Cars Function",
             index="index.py",
             handler="lambda_handler",
-            timeout=Duration.minutes(1),
+            timeout=Duration.minutes(5),
             runtime=lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
