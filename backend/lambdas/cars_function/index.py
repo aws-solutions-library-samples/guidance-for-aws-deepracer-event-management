@@ -78,7 +78,9 @@ def carOnline(online: str):
                         resource["eventName"] = tag["Value"]
                     elif tag["Key"] == "eventId":
                         resource["eventId"] = tag["Value"]
-                resource["IsLatestVersion"] = str(resource["IsLatestVersion"])
+
+                if "IsLatestVersion" in resource:
+                    resource["IsLatestVersion"] = str(resource["IsLatestVersion"])
 
                 data = {}
 
