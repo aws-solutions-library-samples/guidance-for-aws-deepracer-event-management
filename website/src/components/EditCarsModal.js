@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { API } from 'aws-amplify';
-import { ListOfEvents } from './ListOfEvents.js';
+import { ListOfFleets } from './ListOfFleets.js';
 
 //import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
@@ -22,26 +22,26 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
 
-  const [dropDownEvents, setDropDownEvents] = useState([{ id: 'none', text: 'none' }]);
-  const [dropDownSelectedItem, setDropDownSelectedItem] = useState({ eventName: 'Select Event' })
+  const [dropDownFleets, setDropDownFleets] = useState([{ id: 'none', text: 'none' }]);
+  const [dropDownSelectedItem, setDropDownSelectedItem] = useState({ fleetName: 'Select Fleet' })
 
   const [isLoading, setIsLoading] = useState(true);
-  const events = ListOfEvents(setIsLoading);
+  const fleets = ListOfFleets(setIsLoading);
 
-  // convert events data to dropdown format
+  // convert fleets data to dropdown format
   useEffect(() => {
-    if (events.length > 0) {
-      setDropDownEvents(events.map(thisEvent => {
+    if (fleets.length > 0) {
+      setDropDownFleets(fleets.map(thisFleet => {
         return {
-          id: thisEvent.eventId,
-          text: thisEvent.eventName
+          id: thisFleet.fleetId,
+          text: thisFleet.fleetName
         };
       }));
     }
     return () => {
       // Unmounting
     }
-  }, [events])
+  }, [fleets])
 
   function modalOpen(selectedItems) {
     setVisible(true);
@@ -70,14 +70,14 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
       query: mutations.carUpdates,
       variables: {
         resourceIds: InstanceIds,
-        eventName: dropDownSelectedItem.eventName,
-        eventId: dropDownSelectedItem.eventId,
+        fleetName: dropDownSelectedItem.fleetName,
+        fleetId: dropDownSelectedItem.fleetId,
       }
     });
 
     setVisible(false);
     setRefresh(true);
-    setDropDownSelectedItem({ eventName: 'Select Event' });
+    setDropDownSelectedItem({ fleetName: 'Select Fleet' });
   }
 
   return (
@@ -103,16 +103,16 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
         <SpaceBetween direction="vertical" size="xs">
 
           <Container>
-            <FormField label='Events'>
+            <FormField label='Fleets'>
               <SpaceBetween direction="horizontal" size="xs">
                 <ButtonDropdown
-                  items={dropDownEvents}
+                  items={dropDownFleets}
                   onItemClick={({ detail }) => {
-                    const index = events.map(e => e.eventId).indexOf(detail.id);
-                    setDropDownSelectedItem(events[index]);
+                    const index = fleets.map(e => e.fleetId).indexOf(detail.id);
+                    setDropDownSelectedItem(fleets[index]);
                   }}
                 >
-                  {dropDownSelectedItem.eventName}
+                  {dropDownSelectedItem.fleetName}
                 </ButtonDropdown>
                 <Button variant="primary" onClick={() => {
                   carUpdates();

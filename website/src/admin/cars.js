@@ -28,7 +28,7 @@ import {
   WrapLines,
 } from '../components/TableConfig';
 
-import EditCarModelModal from '../components/EditCarModelModal';
+import EditCarsModal from '../components/EditCarsModal';
 
 import dayjs from 'dayjs';
 
@@ -91,7 +91,7 @@ export function AdminCars() {
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
-    visibleContent: ['carName', 'eventName', 'carIp'],
+    visibleContent: ['carName', 'fleetName', 'carIp'],
   });
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
@@ -151,7 +151,7 @@ export function AdminCars() {
                   >
                     {online}
                   </ButtonDropdown>
-                  <EditCarModelModal disabled={selectedCarsBtnDisabled} setRefresh={setRefresh} selectedItems={selectedItems} online={onlineBool} variant="primary" />
+                  <EditCarsModal disabled={selectedCarsBtnDisabled} setRefresh={setRefresh} selectedItems={selectedItems} online={onlineBool} variant="primary" />
                 </SpaceBetween>
               }
             >

@@ -24,6 +24,7 @@ from cdk_serverless_clamscan import ServerlessClamscan
 from backend.terms_n_conditions.tnc_construct import TermsAndConditions
 from backend.graphql_api.api import API as graphqlApi
 from backend.events_manager import EventsManager
+from backend.fleets_manager import FleetsManager
 from backend.cars_manager import CarManager
 
 from cdk_nag import NagSuppressions
@@ -1032,8 +1033,10 @@ class CdkDeepRacerEventManagerStack(Stack):
             user_pool=user_pool,
             group_name=admin_user_pool_group.ref,
         )
+
         ## Appsync API
         appsync_api = graphqlApi(self, "AppsyncApi")
+
         EventsManager(
             self,
             "EventsManager",
@@ -1041,6 +1044,15 @@ class CdkDeepRacerEventManagerStack(Stack):
             user_pool=user_pool,
             roles_to_grant_invoke_access=[admin_user_role],
         )
+
+        FleetsManager(
+            self,
+            "FleetsManager",
+            api=appsync_api.api,
+            user_pool=user_pool,
+            roles_to_grant_invoke_access=[admin_user_role],
+        )
+
         CarManager(
             self,
             "CarManager",

@@ -13,8 +13,8 @@ app = AppSyncResolver()
 
 session = boto3.session.Session()
 credentials = session.get_credentials()
-region = session.region_name or 'eu-west-1'
-graphql_endpoint = os.environ.get('APPSYNC_URL', None)
+region = session.region_name or "eu-west-1"
+graphql_endpoint = os.environ.get("APPSYNC_URL", None)
 
 
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
@@ -22,42 +22,31 @@ graphql_endpoint = os.environ.get('APPSYNC_URL', None)
 def lambda_handler(event, context):
     return app.resolve(event, context)
 
+
 @app.resolver(type_name="Mutation", field_name="carActivation")
-def carActivation(hostname: str, eventName: str, eventId: str):
+def carActivation(hostname: str, fleetName: str, fleetId: str):
     try:
-        client = boto3.client('ssm')
+        client = boto3.client("ssm")
         now = datetime.now()
         datestr = now.strftime("%Y-%m-%d-%H:%M")
 
         response = client.create_activation(
-            Description='Hybrid activation for DREM',
-            DefaultInstanceName=hostname + ' - ' + datestr,
-            IamRole='service-role/AmazonEC2RunCommandRoleForManagedInstances',
+            Description="Hybrid activation for DREM",
+            DefaultInstanceName=hostname + " - " + datestr,
+            IamRole="service-role/AmazonEC2RunCommandRoleForManagedInstances",
             RegistrationLimit=1,
             Tags=[
-                {
-                    'Key': 'Name',
-                    'Value': hostname + ' - ' + datestr
-                },
-                {
-                    'Key': 'Type',
-                    'Value': 'deepracer'
-                },
-                {
-                    'Key': 'eventName',
-                    'Value': eventName
-                },
-                {
-                    'Key': 'eventId',
-                    'Value': eventId
-                },
-            ]
+                {"Key": "Name", "Value": hostname + " - " + datestr},
+                {"Key": "Type", "Value": "deepracer"},
+                {"Key": "fleetName", "Value": fleetName},
+                {"Key": "fleetId", "Value": fleetId},
+            ],
         )
 
         return_data = {
-            'region': region,
-            'activationCode': response['ActivationCode'],
-            'activationId': response['ActivationId'],
+            "region": region,
+            "activationCode": response["ActivationCode"],
+            "activationId": response["ActivationId"],
         }
 
         logger.info(return_data)

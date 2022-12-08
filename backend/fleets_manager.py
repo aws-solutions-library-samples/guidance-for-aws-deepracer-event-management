@@ -15,7 +15,7 @@ from aws_cdk import (
 from constructs import Construct
 
 
-class EventsManager(Construct):
+class FleetsManager(Construct):
     def __init__(
         self,
         scope: Construct,
@@ -29,11 +29,11 @@ class EventsManager(Construct):
 
         stack = Stack.of(self)
 
-        events_table = dynamodb.Table(
+        fleets_table = dynamodb.Table(
             self,
-            "EventsTable",
+            "FleetsTable",
             partition_key=dynamodb.Attribute(
-                name="eventId", type=dynamodb.AttributeType.STRING
+                name="fleetId", type=dynamodb.AttributeType.STRING
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             encryption=dynamodb.TableEncryption.AWS_MANAGED,
@@ -45,11 +45,11 @@ class EventsManager(Construct):
             "public.ecr.aws/sam/build-python3.9:latest-arm64"
         )
 
-        events_handler = lambda_python.PythonFunction(
+        fleets_handler = lambda_python.PythonFunction(
             self,
-            "eventsFunction",
-            entry="backend/lambdas/events_function/",
-            description="Events Resolver",
+            "fleetsFunction",
+            entry="backend/lambdas/fleets_function/",
+            description="Fleets Resolver",
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
@@ -67,74 +67,54 @@ class EventsManager(Construct):
                 )
             ],
             environment={
-                "DDB_TABLE": events_table.table_name,
+                "DDB_TABLE": fleets_table.table_name,
                 "user_pool_id": user_pool.user_pool_id,
             },
         )
 
-        events_table.grant_read_write_data(events_handler)
+        fleets_table.grant_read_write_data(fleets_handler)
 
         # Define the data source for the API
-        events_data_source = api.add_lambda_data_source(
-            "EventsDataSource", events_handler
+        fleets_data_source = api.add_lambda_data_source(
+            "FleetsDataSource", fleets_handler
         )
 
-        none_data_source = api.add_none_data_source("events_none")
+        none_data_source = api.add_none_data_source("fleets_none")
         # Define API Schema
-        track_object_type = appsync.ObjectType(
-            "Track",
-            definition={
-                "trackName": appsync.GraphqlType.string(),
-                "trackId": appsync.GraphqlType.id(),
-                "trackTag": appsync.GraphqlType.string(),
-            },
-        )
 
-        track_input_type = appsync.InputType(
-            "TrackInput",
+        fleets_object_Type = appsync.ObjectType(
+            "Fleet",
             definition={
-                "trackName": appsync.GraphqlType.string(),
-                "trackTag": appsync.GraphqlType.string(),
-            },
-        )
-
-        events_object_Type = appsync.ObjectType(
-            "Event",
-            definition={
-                "eventName": appsync.GraphqlType.string(),
-                "eventId": appsync.GraphqlType.id(),
+                "fleetName": appsync.GraphqlType.string(),
+                "fleetId": appsync.GraphqlType.id(),
                 "createdAt": appsync.GraphqlType.aws_date_time(),
-                "tracks": track_object_type.attribute(is_list=True),
             },
         )
 
-        api.add_type(track_object_type)
-        api.add_type(track_input_type)
-        api.add_type(events_object_Type)
+        api.add_type(fleets_object_Type)
 
-        # Event methods
+        # Fleet methods
         api.add_query(
-            "getAllEvents",
+            "getAllFleets",
             appsync.ResolvableField(
-                return_type=events_object_Type.attribute(is_list=True),
-                data_source=events_data_source,
+                return_type=fleets_object_Type.attribute(is_list=True),
+                data_source=fleets_data_source,
             ),
         )
         api.add_mutation(
-            "addEvent",
+            "addFleet",
             appsync.ResolvableField(
                 args={
-                    "eventName": appsync.GraphqlType.string(is_required=True),
-                    "tracks": track_input_type.attribute(is_list=True),
+                    "fleetName": appsync.GraphqlType.string(is_required=True),
                 },
-                return_type=events_object_Type.attribute(),
-                data_source=events_data_source,
+                return_type=fleets_object_Type.attribute(),
+                data_source=fleets_data_source,
             ),
         )
         api.add_subscription(
-            "addedEvent",
+            "addedFleet",
             appsync.ResolvableField(
-                return_type=events_object_Type.attribute(),
+                return_type=fleets_object_Type.attribute(),
                 data_source=none_data_source,
                 request_mapping_template=appsync.MappingTemplate.from_string(
                     """{
@@ -145,22 +125,22 @@ class EventsManager(Construct):
                 response_mapping_template=appsync.MappingTemplate.from_string(
                     """$util.toJson($context.result)"""
                 ),
-                directives=[appsync.Directive.subscribe("addEvent")],
+                directives=[appsync.Directive.subscribe("addFleet")],
             ),
         )
 
         api.add_mutation(
-            "deleteEvent",
+            "deleteFleet",
             appsync.ResolvableField(
-                args={"eventId": appsync.GraphqlType.string(is_required=True)},
-                return_type=events_object_Type.attribute(),
-                data_source=events_data_source,
+                args={"fleetId": appsync.GraphqlType.string(is_required=True)},
+                return_type=fleets_object_Type.attribute(),
+                data_source=fleets_data_source,
             ),
         )
         api.add_subscription(
-            "deletedEvent",
+            "deletedFleet",
             appsync.ResolvableField(
-                return_type=events_object_Type.attribute(),
+                return_type=fleets_object_Type.attribute(),
                 data_source=none_data_source,
                 request_mapping_template=appsync.MappingTemplate.from_string(
                     """{
@@ -171,26 +151,25 @@ class EventsManager(Construct):
                 response_mapping_template=appsync.MappingTemplate.from_string(
                     """$util.toJson($context.result)"""
                 ),
-                directives=[appsync.Directive.subscribe("deleteEvent")],
+                directives=[appsync.Directive.subscribe("deleteFleet")],
             ),
         )
 
         api.add_mutation(
-            "updateEvent",
+            "updateFleet",
             appsync.ResolvableField(
                 args={
-                    "eventId": appsync.GraphqlType.string(is_required=True),
-                    "eventName": appsync.GraphqlType.string(),
-                    "tracks": track_input_type.attribute(is_list=True),
+                    "fleetId": appsync.GraphqlType.string(is_required=True),
+                    "fleetName": appsync.GraphqlType.string(),
                 },
-                return_type=events_object_Type.attribute(),
-                data_source=events_data_source,
+                return_type=fleets_object_Type.attribute(),
+                data_source=fleets_data_source,
             ),
         )
         api.add_subscription(
-            "updatedEvent",
+            "updatedFleet",
             appsync.ResolvableField(
-                return_type=events_object_Type.attribute(),
+                return_type=fleets_object_Type.attribute(),
                 data_source=none_data_source,
                 request_mapping_template=appsync.MappingTemplate.from_string(
                     """{
@@ -201,7 +180,7 @@ class EventsManager(Construct):
                 response_mapping_template=appsync.MappingTemplate.from_string(
                     """$util.toJson($context.result)"""
                 ),
-                directives=[appsync.Directive.subscribe("updateEvent")],
+                directives=[appsync.Directive.subscribe("updateFleet")],
             ),
         )
 
@@ -212,18 +191,15 @@ class EventsManager(Construct):
                     effect=iam.Effect.ALLOW,
                     actions=["appsync:GraphQL"],
                     resources=[
-                        f"{api.arn}/types/Query/fields/getAllEvents",
-                        f"{api.arn}/types/Mutation/fields/addEvent",
-                        f"{api.arn}/types/Subscription/fields/addedEvent",
-                        f"{api.arn}/types/Mutation/fields/deleteEvent",
-                        f"{api.arn}/types/Subscription/fields/deletedEvent",
-                        f"{api.arn}/types/Mutation/fields/updateEvent",
-                        f"{api.arn}/types/Subscription/fields/addedEvent",
-                        f"{api.arn}/types/Subscription/fields/deletedEvent",
-                        f"{api.arn}/types/Subscription/fields/updatedEvent",
-                        # f'{api.arn}/types/Mutation/fields/addTrack',
-                        # f'{api.arn}/types/Mutation/fields/deleteTrack',
-                        # f'{api.arn}/types/Mutation/fields/updateTrack',
+                        f"{api.arn}/types/Query/fields/getAllFleets",
+                        f"{api.arn}/types/Mutation/fields/addFleet",
+                        f"{api.arn}/types/Subscription/fields/addedFleet",
+                        f"{api.arn}/types/Mutation/fields/deleteFleet",
+                        f"{api.arn}/types/Subscription/fields/deletedFleet",
+                        f"{api.arn}/types/Mutation/fields/updateFleet",
+                        f"{api.arn}/types/Subscription/fields/addedFleet",
+                        f"{api.arn}/types/Subscription/fields/deletedFleet",
+                        f"{api.arn}/types/Subscription/fields/updatedFleet",
                     ],
                 )
             )

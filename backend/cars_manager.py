@@ -94,8 +94,8 @@ class CarManager(Construct):
             appsync.ResolvableField(
                 args={
                     "hostname": appsync.GraphqlType.string(is_required=True),
-                    "eventId": appsync.GraphqlType.id(is_required=True),
-                    "eventName": appsync.GraphqlType.string(is_required=True),
+                    "fleetId": appsync.GraphqlType.id(is_required=True),
+                    "fleetName": appsync.GraphqlType.string(is_required=True),
                 },
                 return_type=car_activation_object_type.attribute(),
                 data_source=car_activation_data_source,
@@ -164,8 +164,8 @@ class CarManager(Construct):
                 "ComputerName": appsync.GraphqlType.string(),
                 # "SourceId": appsync.GraphqlType.string(),
                 # "SourceType": appsync.GraphqlType.string(),
-                "eventId": appsync.GraphqlType.id(),
-                "eventName": appsync.GraphqlType.string(),
+                "fleetId": appsync.GraphqlType.id(),
+                "fleetName": appsync.GraphqlType.string(),
             },
         )
 
@@ -190,8 +190,8 @@ class CarManager(Construct):
                     "resourceIds": appsync.GraphqlType.string(
                         is_list=True, is_required=True
                     ),
-                    "eventId": appsync.GraphqlType.string(is_required=True),
-                    "eventName": appsync.GraphqlType.string(is_required=True),
+                    "fleetId": appsync.GraphqlType.string(is_required=True),
+                    "fleetName": appsync.GraphqlType.string(is_required=True),
                 },
                 return_type=appsync.GraphqlType.aws_json(),
                 data_source=cars_data_source,

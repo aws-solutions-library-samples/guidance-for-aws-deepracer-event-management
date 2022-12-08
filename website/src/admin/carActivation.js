@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { API, } from 'aws-amplify';
 import { ContentHeader } from '../components/ContentHeader';
-import { ListOfEvents } from '../components/ListOfEvents.js';
+import { ListOfFleets } from '../components/ListOfFleets';
 //import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 //import * as subscriptions from '../graphql/subscriptions'
@@ -39,31 +39,31 @@ export function AdminActivation(props) {
   const [hostnameErrorMessage, setHostnameErrorMessage] = useState("");
   const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
 
-  const [dropDownEvents, setDropDownEvents] = useState([{ id: 'none', text: 'none' }]);
-  const [dropDownSelectedItem, setDropDownSelectedItem] = useState({ eventName: 'Select Event' })
+  const [dropDownFleets, setDropDownFleets] = useState([{ id: 'none', text: 'none' }]);
+  const [dropDownSelectedItem, setDropDownSelectedItem] = useState({ fleetName: 'Select Fleet' })
 
   const [isLoading, setIsLoading] = useState(true);
-  const events = ListOfEvents(setIsLoading);
+  const fleets = ListOfFleets(setIsLoading);
 
 
-  // convert events data to dropdown format
+  // convert fleets data to dropdown format
   useEffect(() => {
-    if (events.length > 0) {
-      setDropDownEvents(events.map(thisEvent => {
+    if (fleets.length > 0) {
+      setDropDownFleets(fleets.map(thisFleet => {
         return {
-          id: thisEvent.eventId,
-          text: thisEvent.eventName
+          id: thisFleet.fleetId,
+          text: thisFleet.fleetName
         };
       }));
     }
     return () => {
       // Unmounting
     }
-  }, [events])
+  }, [fleets])
 
   // watch properties for changes and enable generate button if required
   useEffect(() => {
-    if (password !== '' && hostname !== '' && dropDownSelectedItem.eventName !== 'Select Event') {
+    if (password !== '' && hostname !== '' && dropDownSelectedItem.fleetName !== 'Select Fleet') {
       setButtonDisabled(false);
     }
     return () => {
@@ -75,8 +75,8 @@ export function AdminActivation(props) {
     const apiResponse = await API.graphql({
       query: mutations.carActivation,
       variables: {
-        eventId: dropDownSelectedItem.eventId,
-        eventName: dropDownSelectedItem.eventName,
+        fleetId: dropDownSelectedItem.fleetId,
+        fleetName: dropDownSelectedItem.fleetName,
         hostname: hostname
       }
     });
@@ -116,38 +116,38 @@ export function AdminActivation(props) {
           >
             <Container textAlign='center'>
               <SpaceBetween direction="vertical" size="l">
-                <FormField label='Event'>
+                <FormField label='Fleet'>
                   <ButtonDropdown
-                    items={dropDownEvents}
+                    items={dropDownFleets}
                     onItemClick={({ detail }) => {
-                      const index = events.map(e => e.eventId).indexOf(detail.id);
-                      setDropDownSelectedItem(events[index]);
+                      const index = fleets.map(e => e.fleetId).indexOf(detail.id);
+                      setDropDownSelectedItem(fleets[index]);
                     }}
                   >
-                    {dropDownSelectedItem.eventName}
+                    {dropDownSelectedItem.fleetName}
                   </ButtonDropdown>
                 </FormField>
                 <FormField label="Hostname" errorText={hostnameErrorMessage}>
-                  <Input value={hostname} placeholder='deepracer01' onChange={event => {
-                    setHostname(event.detail.value);
+                  <Input value={hostname} placeholder='deepracer01' onChange={fleet => {
+                    setHostname(fleet.detail.value);
                   }} />
                 </FormField>
                 <FormField label="Password" errorText={passwordErrorMessage}>
-                  <Input value={password} placeholder='password' onChange={event => {
-                    setPassword(event.detail.value);
+                  <Input value={password} placeholder='password' onChange={fleet => {
+                    setPassword(fleet.detail.value);
                   }} />
                 </FormField>
 
 
                 <ExpandableSection header="Optional WiFi config for networks with hidden SSIDs">
                   <FormField label='SSID'>
-                    <Input value={ssid} placeholder='ssid' onChange={event => {
-                      setSsid(event.detail.value);
+                    <Input value={ssid} placeholder='ssid' onChange={fleet => {
+                      setSsid(fleet.detail.value);
                     }} />
                   </FormField>
                   <FormField label='WiFi Password'>
-                    <Input value={wifiPass} placeholder='wifimagic' onChange={event => {
-                      setWifiPass(event.detail.value);
+                    <Input value={wifiPass} placeholder='wifimagic' onChange={fleet => {
+                      setWifiPass(fleet.detail.value);
                     }} />
                   </FormField>
                 </ExpandableSection>
