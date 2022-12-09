@@ -34,7 +34,7 @@ export const DefaultPreferences = {
   wrapLines: false,
 }
 
-export function PageSizePreference(label='items') {
+export function PageSizePreference(label = 'items') {
   const pageSize = {
     title: 'Select page size',
     options: [
@@ -70,10 +70,10 @@ export const CarColumnsConfig = [
     minWidth: 150,
   },
   {
-    id: 'eventName',
-    header: 'Event name',
-    cell: item => item.eventName || '-',
-    sortingField: 'eventName',
+    id: 'fleetName',
+    header: 'Fleet name',
+    cell: item => item.fleetName || '-',
+    sortingField: 'fleetName',
     width: 200,
     minWidth: 150,
   },
@@ -104,10 +104,10 @@ export const CarColumnsConfig = [
     sortingField: 'lastPingDateTime',
   },
   {
-    id: 'eventId',
-    header: 'Event ID',
-    cell: item => item.eventId || '-',
-    sortingField: 'eventId',
+    id: 'fleetId',
+    header: 'Fleet ID',
+    cell: item => item.fleetId || '-',
+    sortingField: 'fleetId',
   }
 ]
 
@@ -126,8 +126,8 @@ export const CarVisibleContentOptions = [
         editable: false,
       },
       {
-        id: 'eventName',
-        label: 'Event name',
+        id: 'fleetName',
+        label: 'Fleet name',
         editable: true,
       },
       {
@@ -147,8 +147,8 @@ export const CarVisibleContentOptions = [
         label: 'Last ping time',
       },
       {
-        id: 'eventId',
-        label: 'Event ID',
+        id: 'fleetId',
+        label: 'Fleet ID',
       },
     ]
   }
@@ -161,7 +161,7 @@ export const UserModelsColumnsConfig = [
     cell: item => item.id,
     width: 200,
     minWidth: 150,
-},
+  },
   {
     id: 'modelName',
     header: 'Model name',
@@ -169,7 +169,7 @@ export const UserModelsColumnsConfig = [
     sortingField: 'modelName',
     width: 200,
     minWidth: 150,
-},
+  },
   {
     id: 'modelDate',
     header: 'Upload date',
@@ -177,7 +177,7 @@ export const UserModelsColumnsConfig = [
     sortingField: 'modelDate',
     width: 200,
     minWidth: 150,
-}
+  }
 ]
 
 export const AdminModelsColumnsConfig = [
@@ -187,7 +187,7 @@ export const AdminModelsColumnsConfig = [
     cell: item => item.id,
     width: 200,
     minWidth: 150,
-},
+  },
   {
     id: 'userName',
     header: 'User name',
@@ -195,7 +195,7 @@ export const AdminModelsColumnsConfig = [
     sortingField: 'userName',
     width: 200,
     minWidth: 150,
-},
+  },
   {
     id: 'modelName',
     header: 'Model name',
@@ -203,7 +203,7 @@ export const AdminModelsColumnsConfig = [
     sortingField: 'modelName',
     width: 200,
     minWidth: 150,
-},
+  },
   {
     id: 'modelDate',
     header: 'Upload date',
@@ -211,5 +211,5 @@ export const AdminModelsColumnsConfig = [
     sortingField: 'modelDate',
     width: 200,
     minWidth: 150,
-}
+  }
 ]

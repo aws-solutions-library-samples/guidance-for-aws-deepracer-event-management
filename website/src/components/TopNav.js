@@ -15,6 +15,7 @@ import { AdminModels } from '../admin/models.js';
 import { AdminQuarantine } from '../admin/quarantine.js';
 import { AdminCars } from '../admin/cars.js';
 import { AdminEvents } from '../admin/events.js';
+import { AdminFleets } from '../admin/fleets.js';
 import { AdminGroups } from '../admin/groups.js';
 import { AdminGroupsDetail } from '../admin/groups/detail.js';
 import { AdminActivation } from '../admin/carActivation.js';
@@ -53,6 +54,7 @@ function MenuRoutes() {
       <Route path="/admin/quarantine" element={<AdminQuarantine />} />
       <Route path="/admin/cars" element={<AdminCars />} />
       <Route path="/admin/events" element={<AdminEvents />} />
+      <Route path="/admin/fleets" element={<AdminFleets />} />
       <Route path="/admin/groups" element={<AdminGroups />} />
       <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />
       <Route path="/admin/car_activation" element={<AdminActivation />} />
@@ -92,6 +94,7 @@ export function TopNav(props) {
         { type: "link", text: "All Models", href: "/admin/models" },
         { type: "link", text: "Quarantined models", href: "/admin/quarantine" },
         { type: "link", text: "Events", href: "/admin/events" },
+        { type: "link", text: "Fleets", href: "/admin/fleets" },
         { type: "link", text: "Cars", href: "/admin/cars" },
         { type: "link", text: "Car activiation", href: "/admin/car_activation" },
         { type: "link", text: "Groups", href: "/admin/groups" }

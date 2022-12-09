@@ -74,10 +74,10 @@ def carOnline(online: str):
                 # resource['TagList']=tags_response['TagList']
 
                 for tag in tags_response["TagList"]:
-                    if tag["Key"] == "eventName":
-                        resource["eventName"] = tag["Value"]
-                    elif tag["Key"] == "eventId":
-                        resource["eventId"] = tag["Value"]
+                    if tag["Key"] == "fleetName":
+                        resource["fleetName"] = tag["Value"]
+                    elif tag["Key"] == "fleetId":
+                        resource["fleetId"] = tag["Value"]
 
                 if "IsLatestVersion" in resource:
                     resource["IsLatestVersion"] = str(resource["IsLatestVersion"])
@@ -100,8 +100,8 @@ def carOnline(online: str):
                     "ComputerName",
                     "SourceId",
                     "SourceType",
-                    "eventId",
-                    "eventName",
+                    "fleetId",
+                    "fleetName",
                 ]
                 for current_key in keys_to_check:
                     if current_key in resource:
@@ -131,7 +131,7 @@ def carOnline(online: str):
 
 
 @app.resolver(type_name="Mutation", field_name="carUpdates")
-def carUpdates(resourceIds: List[str], eventId: str, eventName: str):
+def carUpdates(resourceIds: List[str], fleetId: str, fleetName: str):
     try:
         logger.info(resourceIds)
 
@@ -140,8 +140,8 @@ def carUpdates(resourceIds: List[str], eventId: str, eventName: str):
                 ResourceType="ManagedInstance",
                 ResourceId=resource_id,
                 Tags=[
-                    {"Key": "eventId", "Value": eventId},
-                    {"Key": "eventName", "Value": eventName},
+                    {"Key": "fleetId", "Value": fleetId},
+                    {"Key": "fleetName", "Value": fleetName},
                 ],
             )
 
