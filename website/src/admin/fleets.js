@@ -112,7 +112,7 @@ export function AdminFleets() {
         empty: (
           <EmptyState
             title="No Fleets"
-            subtitle="Please create an fleet."
+            subtitle="Please create a fleet."
           />
         ),
         noMatch: (
@@ -191,7 +191,7 @@ export function AdminFleets() {
                   label="New Fleet"
                   errorText={newFleetErrorText}
                 >
-                  <Input value={newFleet} placeholder='Awesome Fleet' onChange={fleet => {
+                  <Input value={newFleet} placeholder='AwesomeFleet' onChange={fleet => {
                     setNewFleet(fleet.detail.value);
                     if (newFleet.length > 0) { setAddButtonDisabled(false) };
                   }} />

@@ -46,38 +46,16 @@ if [ $OPTIND -eq 1 ]; then
     usage
 fi
 
-# Script for setting taillight led color
-mkdir /etc/deepracer-taillight
-cat > /etc/deepracer-taillight/set-led-color.sh << EOF
-#!/bin/bash
-
-redValue=0
-blueValue=0
-greenValue=0
-
-while getopts r:b:g: arg; do
-    case \${arg} in
-        r) redValue=\${OPTARG};;
-        b) blueValue=\${OPTARG};;
-        g) greenValue=\${OPTARG};;
-    esac
-done
-
-if [ -z "\$HOME" ]; then
-        export HOME="/home/deepracer"
-fi
-
-source /opt/ros/foxy/setup.bash 
-source /opt/intel/openvino_2021/bin/setupvars.sh
-source /opt/aws/deepracer/lib/local_setup.bash
-
-ros2 service call /servo_pkg/set_led_state deepracer_interfaces_pkg/srv/SetLedCtrlSrv "{red: \$redValue, blue: \$blueValue, green: \$greenValue}"
-EOF
-chmod u+x /etc/deepracer-taillight/set-led-color.sh
+# Stop DeepRacer Stack
+systemctl stop deepracer-core
 
 # Disable IPV6 on all interfaces
 cp /etc/sysctl.conf ${backupDir}/sysctl.conf.bak
 printf "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
+
+# Grant deepracer user sudoers rights
+echo deepracer ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/deepracer
+chmod 0440 /etc/sudoers.d/deepracer
 
 # Sort out the Wifi (if we have SSID + Password)
 if [ ${ssid} != NULL ] && [ ${wifiPass} != NULL ]; then
@@ -250,6 +228,35 @@ cat ${backupDir}/default.bak | sed -e "s/auth_request \/auth;/#auth_request \/au
 cp $webserverPath/login.py ${backupDir}/login.py.bak
 rm $webserverPath/login.py
 cat ${backupDir}/login.py.bak | sed -e "s/datetime.timedelta(hours=1)/datetime.timedelta(hours=12)/" > $webserverPath/login.py
+
+# Script for setting taillight led color
+mkdir /etc/deepracer-taillight
+cat > /etc/deepracer-taillight/set-led-color.sh << EOF
+#!/bin/bash
+
+redValue=0
+blueValue=0
+greenValue=0
+
+while getopts r:b:g: arg; do
+    case \${arg} in
+        r) redValue=\${OPTARG};;
+        b) blueValue=\${OPTARG};;
+        g) greenValue=\${OPTARG};;
+    esac
+done
+
+if [ -z "\$HOME" ]; then
+        export HOME="/home/deepracer"
+fi
+
+source /opt/ros/foxy/setup.bash
+source /opt/intel/openvino_2021/bin/setupvars.sh
+source /opt/aws/deepracer/lib/local_setup.bash
+
+ros2 service call /servo_pkg/set_led_state deepracer_interfaces_pkg/srv/SetLedCtrlSrv "{red: \$redValue, blue: \$blueValue, green: \$greenValue}"
+EOF
+chmod u+x /etc/deepracer-taillight/set-led-color.sh
 
 # Disable Gnome and other services
 # - to enable gnome - systemctl set-default graphical

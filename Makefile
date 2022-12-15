@@ -39,6 +39,7 @@ manual.clean:		## Tear down the stack, only do this if you're really sure
 local.setup: local.install local.config
 
 local.install:		## Install Python and Javascript dependencies + Generate Config from deployed backend
+	pip install --upgrade pip
 	pip install -r requirements-dev.txt
 	npm install -g aws-cdk
 	npm install --prefix website

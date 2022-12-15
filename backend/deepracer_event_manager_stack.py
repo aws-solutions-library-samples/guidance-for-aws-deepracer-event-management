@@ -5,10 +5,12 @@ from aws_cdk import (
     CfnOutput,
     DockerImage,
     aws_s3 as s3,
+    aws_s3_notifications as s3n,
     aws_s3_deployment as s3_deployment,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as cloudfront_origins,
     aws_cognito as cognito,
+    aws_dynamodb as dynamodb,
     aws_iam as iam,
     aws_lambda_python_alpha as lambda_python,
     aws_lambda as awslambda,
@@ -20,12 +22,14 @@ from constructs import Construct
 
 from backend.cwrum_construct import CwRumAppMonitor
 from backend.user_pool_user import UserPoolUser
+
 from cdk_serverless_clamscan import ServerlessClamscan
 from backend.terms_n_conditions.tnc_construct import TermsAndConditions
 from backend.graphql_api.api import API as graphqlApi
 from backend.events_manager import EventsManager
 from backend.fleets_manager import FleetsManager
-from backend.cars_manager import CarManager
+from backend.cars_manager import CarsManager
+from backend.models_manager import ModelsManager
 
 from cdk_nag import NagSuppressions
 
@@ -68,7 +72,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
         )
 
-        # Upload S3 bucket
+        # Models S3 bucket
         models_bucket = s3.Bucket(
             self,
             "models_bucket",
@@ -192,6 +196,18 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
         powertools_log_level = "INFO"
 
+        # Models table, used by delete_infected_files_function and also models_manager
+        models_table = dynamodb.Table(
+            self,
+            "ModelsTable",
+            partition_key=dynamodb.Attribute(
+                name="modelId", type=dynamodb.AttributeType.STRING
+            ),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            encryption=dynamodb.TableEncryption.AWS_MANAGED,
+            stream=dynamodb.StreamViewType.NEW_IMAGE,
+        )
+
         ## Functions
         print_label_function = lambda_python.PythonFunction(
             self,
@@ -214,6 +230,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             },
         )
 
+        # Bucket permissions
         labels_bucket.grant_read_write(print_label_function, "*")
 
         delete_infected_files_function = lambda_python.PythonFunction(
@@ -227,18 +244,21 @@ class CdkDeepRacerEventManagerStack(Stack):
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=256,
             architecture=lambda_architecture,
-            bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
-            layers=[helper_functions_layer],
             environment={
+                "DDB_TABLE": models_table.table_name,
                 "MODELS_S3_BUCKET": models_bucket.bucket_name,
                 "INFECTED_S3_BUCKET": infected_bucket.bucket_name,
                 "POWERTOOLS_SERVICE_NAME": "delete_infected_files",
                 "LOG_LEVEL": powertools_log_level,
             },
+            bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
+            layers=[helper_functions_layer, powertools_layer],
         )
 
+        # Bucket and DynamoDB permissions
         models_bucket.grant_read_write(delete_infected_files_function, "*")
         infected_bucket.grant_read_write(delete_infected_files_function, "*")
+        models_table.grant_read_write_data(delete_infected_files_function)
 
         # Add clam av scan to S3 uploads bucket
         bucketList = [models_bucket]
@@ -253,30 +273,6 @@ class CdkDeepRacerEventManagerStack(Stack):
                 delete_infected_files_function
             ),
         )
-
-        ## Check model md5 function
-        check_model_md5_function = lambda_python.PythonFunction(
-            self,
-            "check_model_md5_function",
-            entry="backend/lambdas/check_model_md5/",
-            index="index.py",
-            handler="lambda_handler",
-            timeout=Duration.minutes(1),
-            runtime=lambda_runtime,
-            tracing=awslambda.Tracing.ACTIVE,
-            memory_size=128,
-            architecture=lambda_architecture,
-            environment={
-                "MODELS_S3_BUCKET": models_bucket.bucket_name,
-                "POWERTOOLS_SERVICE_NAME": "check_model_md5",
-                "LOG_LEVEL": powertools_log_level,
-            },
-            bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
-            layers=[helper_functions_layer, powertools_layer],
-        )
-
-        # Permissions for s3 bucket read
-        models_bucket.grant_read(check_model_md5_function, "private/*")
 
         ## Models Function
         models_function = lambda_python.PythonFunction(
@@ -1036,12 +1032,19 @@ class CdkDeepRacerEventManagerStack(Stack):
 
         ## Appsync API
         appsync_api = graphqlApi(self, "AppsyncApi")
+        none_data_source = appsync_api.api.add_none_data_source("none")
 
         EventsManager(
             self,
             "EventsManager",
             api=appsync_api.api,
+            none_data_source=none_data_source,
             user_pool=user_pool,
+            powertools_layer=powertools_layer,
+            powertools_log_level=powertools_log_level,
+            lambda_architecture=lambda_architecture,
+            lambda_runtime=lambda_runtime,
+            lambda_bundling_image=lambda_bundling_image,
             roles_to_grant_invoke_access=[admin_user_role],
         )
 
@@ -1049,14 +1052,31 @@ class CdkDeepRacerEventManagerStack(Stack):
             self,
             "FleetsManager",
             api=appsync_api.api,
+            none_data_source=none_data_source,
             user_pool=user_pool,
             roles_to_grant_invoke_access=[admin_user_role],
         )
 
-        CarManager(
+        CarsManager(
             self,
-            "CarManager",
+            "CarsManager",
             api=appsync_api.api,
+            roles_to_grant_invoke_access=[admin_user_role],
+        )
+
+        ModelsManager(
+            self,
+            "ModelsManager",
+            api=appsync_api.api,
+            none_data_source=none_data_source,
+            models_bucket=models_bucket,
+            models_table=models_table,
+            helper_functions_layer=helper_functions_layer,
+            powertools_layer=powertools_layer,
+            powertools_log_level=powertools_log_level,
+            lambda_architecture=lambda_architecture,
+            lambda_runtime=lambda_runtime,
+            lambda_bundling_image=lambda_bundling_image,
             roles_to_grant_invoke_access=[admin_user_role],
         )
 

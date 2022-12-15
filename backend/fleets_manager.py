@@ -21,6 +21,7 @@ class FleetsManager(Construct):
         scope: Construct,
         id: str,
         api: appsync.IGraphqlApi,
+        none_data_source: appsync.IGraphqlApi,
         user_pool: cognito.IUserPool,
         roles_to_grant_invoke_access: list[iam.IRole],
         **kwargs,
@@ -79,7 +80,6 @@ class FleetsManager(Construct):
             "FleetsDataSource", fleets_handler
         )
 
-        none_data_source = api.add_none_data_source("fleets_none")
         # Define API Schema
 
         fleets_object_Type = appsync.ObjectType(

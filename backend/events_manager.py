@@ -21,7 +21,13 @@ class EventsManager(Construct):
         scope: Construct,
         id: str,
         api: appsync.IGraphqlApi,
+        none_data_source: appsync.IGraphqlApi,
         user_pool: cognito.IUserPool,
+        powertools_layer: lambda_python.PythonLayerVersion,
+        powertools_log_level: str,
+        lambda_architecture: awslambda.Architecture,
+        lambda_runtime: awslambda.Runtime,
+        lambda_bundling_image: DockerImage,
         roles_to_grant_invoke_access: list[iam.IRole],
         **kwargs,
     ):
@@ -39,12 +45,6 @@ class EventsManager(Construct):
             encryption=dynamodb.TableEncryption.AWS_MANAGED,
         )
 
-        lambda_architecture = awslambda.Architecture.ARM_64
-        lambda_runtime = awslambda.Runtime.PYTHON_3_9
-        lambda_bundling_image = DockerImage.from_registry(
-            "public.ecr.aws/sam/build-python3.9:latest-arm64"
-        )
-
         events_handler = lambda_python.PythonFunction(
             self,
             "eventsFunction",
@@ -58,17 +58,12 @@ class EventsManager(Construct):
             memory_size=128,
             architecture=lambda_architecture,
             bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
-            # layers=[helper_functions_layer, powertools_layer]
-            layers=[
-                lambda_python.PythonLayerVersion.from_layer_version_arn(
-                    self,
-                    "powertools",
-                    "arn:aws:lambda:eu-west-1:017000801446:layer:AWSLambdaPowertoolsPython:3",
-                )
-            ],
+            layers=[powertools_layer],
             environment={
                 "DDB_TABLE": events_table.table_name,
                 "user_pool_id": user_pool.user_pool_id,
+                "POWERTOOLS_SERVICE_NAME": "events_resolver",
+                "LOG_LEVEL": powertools_log_level,
             },
         )
 
@@ -79,7 +74,6 @@ class EventsManager(Construct):
             "EventsDataSource", events_handler
         )
 
-        none_data_source = api.add_none_data_source("events_none")
         # Define API Schema
         track_object_type = appsync.ObjectType(
             "Track",
