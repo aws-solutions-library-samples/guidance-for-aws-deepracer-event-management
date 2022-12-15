@@ -211,6 +211,30 @@ class CarManager(Construct):
             ),
         )
 
+        api.add_mutation(
+            "carSetTaillightColor",
+            appsync.ResolvableField(
+                args={
+                    "resourceIds": appsync.GraphqlType.string(
+                        is_list=True, is_required=True
+                    ),
+                    "selectedColor": appsync.GraphqlType.string(
+                        is_list=False, is_required=True
+                    ),
+                },
+                return_type=appsync.GraphqlType.aws_json(),
+                data_source=cars_data_source,
+            ),
+        )
+
+        api.add_query(
+            "availableTaillightColors",
+            appsync.ResolvableField(
+                return_type=appsync.GraphqlType.aws_json(),
+                data_source=cars_data_source,
+            ),
+        )
+
         ## All Methods...
         # Grant access so API methods can be invoked
         for role in roles_to_grant_invoke_access:
@@ -223,6 +247,8 @@ class CarManager(Construct):
                         f"{api.arn}/types/Query/fields/carsOnline",
                         f"{api.arn}/types/Mutation/fields/carUpdates",
                         f"{api.arn}/types/Mutation/fields/carDeleteAllModels",
+                        f"{api.arn}/types/Mutation/fields/carSetTaillightColor",
+                        f"{api.arn}/types/Query/fields/availableTaillightColors",
                     ],
                 )
             )

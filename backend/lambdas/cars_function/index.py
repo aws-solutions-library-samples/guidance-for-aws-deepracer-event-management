@@ -18,6 +18,18 @@ logger = Logger()
 client_ssm = boto3.client("ssm")
 
 
+colors = {
+    "blue": {"blue_pwm": 9999825, "green_pwm": 0, "red_pwm": 0},
+    "red": {"blue_pwm": 0, "green_pwm": 0, "red_pwm": 9999825},
+    "marigold": {"blue_pwm": 0, "green_pwm": 5097950, "red_pwm": 9999825},
+    "orchid purple": {"blue_pwm": 5019520, "green_pwm": 0, "red_pwm": 5019520},
+    "sky blue": {"blue_pwm": 9999825, "green_pwm": 5646960, "red_pwm": 1176450},
+    "green": {"blue_pwm": 0, "green_pwm": 9882180, "red_pwm": 4862660},
+    "violet": {"blue_pwm": 9999825, "green_pwm": 0, "red_pwm": 9999825},
+    "lime": {"blue_pwm": 0, "green_pwm": 9999825, "red_pwm": 9999825},
+}
+
+
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
 @tracer.capture_lambda_handler
 def lambda_handler(event, context):
@@ -180,3 +192,33 @@ def carDeleteAllModels(resourceIds: List[str]):
     except Exception as error:
         logger.exception(error)
         return error
+
+
+@app.resolver(type_name="Mutation", field_name="carSetTaillightColor")
+def carSetTaillightColor(resourceIds: List[str], selectedColor: str):
+    try:
+        logger.info(resourceIds)
+
+        color = colors.get(selectedColor.lower())
+        if color == None:
+            color = colors.get("Blue")
+
+        for instance_id in resourceIds:
+            response = client_ssm.send_command(
+                InstanceIds=[instance_id],
+                DocumentName="AWS-RunShellScript",
+                Parameters={
+                    "commands": [
+                        f"/etc/deepracer-taillight/set-led-color.sh -r {color['red_pwm']} -b {color['blue_pwm']} -g {color['green_pwm']} > /dev/null",
+                    ]
+                },
+            )
+            return {"result": "success"}
+    except Exception as error:
+        logger.exception(error)
+        return error
+
+
+@app.resolver(type_name="Query", field_name="availableTaillightColors")
+def availableTaillightColors():
+    return list(colors.keys())
