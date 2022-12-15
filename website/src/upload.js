@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Auth, Storage } from 'aws-amplify';
+import { Auth } from 'aws-amplify';
 
 import { ContentHeader } from './components/ContentHeader';
 import {
@@ -12,15 +12,19 @@ import { ModelUploadStatus } from "./components/ModelUploadStatus";
 
 export function Upload() {
   const [username, setUsername] = useState();
+  const [identityId, setIdentityId] = useState();
   const [uploadFiles, setUploadFiles] = useState([]);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     const getData = async () => {
 
-      Auth.currentAuthenticatedUser().then(user => {
-        setUsername(user.username);
-      })
+      Auth.currentAuthenticatedUser()
+        .then((user) => setUsername(user.username)
+      );
+      Auth.currentCredentials()
+        .then((creds) => setIdentityId(creds.identityId)
+      );
     }
 
     getData();
@@ -78,7 +82,7 @@ export function Upload() {
 
           {Object.keys(uploadFiles).map((i) => {
             return (
-              <ModelUploadStatus file={uploadFiles[i]} username={username} />
+              <ModelUploadStatus file={uploadFiles[i]} username={username} identityId={identityId}/>
             );
           })}
         </SpaceBetween>

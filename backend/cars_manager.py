@@ -11,7 +11,7 @@ from aws_cdk import (
 from constructs import Construct
 
 
-class CarManager(Construct):
+class CarsManager(Construct):
     def __init__(
         self,
         scope: Construct,

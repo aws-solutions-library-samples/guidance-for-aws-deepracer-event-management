@@ -19,8 +19,7 @@ export function ModelUploadStatus(props) {
 
   useEffect(() => {
     const saveModel = async () => {
-      //const filename = s3path.split('/').slice(-1)[0]
-      console.log("s3path: " + file.name);
+
       if (file.name.match(/^[a-zA-Z0-9-_]+\.tar\.gz$/)) {
         Storage.put((s3path), file, {
           level: 'private',
@@ -33,9 +32,10 @@ export function ModelUploadStatus(props) {
         }).then(result => {
           console.log(result)
           setStatus('Success');
-          setStatusIcon('success')
+          setStatusIcon('success');
+
         }).catch(err => {
-          console.log(err)
+          console.log(err);
           setStatus('Error');
           setStatusIcon('error')
         });

@@ -60,6 +60,7 @@ export function AdminEvents() {
         });
         setNewEventErrorText('')
         setNewEvent('')
+        console.log(response);
         return response;
       }
     } else {
@@ -129,38 +130,6 @@ export function AdminEvents() {
     }
   );
 
-  const eventsTable = <Table
-    {...collectionProps}
-    onSelectionChange={({ detail }) => {
-      setSelectedEvent(detail.selectedItems);
-      setDeleteButtonDisabled(false);
-    }}
-    selectedItems={selectedEvent}
-    selectionType="single"
-    columnDefinitions={columnDefinitions}
-    items={items}
-    loading={isLoading}
-    loadingText="Loading resources"
-    filter={
-      <TextFilter
-        {...filterProps}
-        countText={MatchesCountText(filteredItemsCount)}
-        filteringAriaLabel='Filter cars'
-      />
-    }
-    header={
-      <Header
-        actions={
-          <SpaceBetween direction="horizontal" size="xs">
-            <Button disabled={deleteButtonDisabled} iconName='status-warning' onClick={() => {
-              setDeleteModalVisible(true);
-            }}>Delete Event</Button>
-          </SpaceBetween>
-        }
-      >Events</Header>
-    }
-  />
-
   return (
     <>
       <ContentHeader
@@ -191,7 +160,7 @@ export function AdminEvents() {
                   label="New Event"
                   errorText={newEventErrorText}
                 >
-                  <Input value={newEvent} placeholder='Awesome Event' onChange={event => {
+                  <Input value={newEvent} placeholder='AwesomeEvent' onChange={event => {
                     setNewEvent(event.detail.value);
                     if (newEvent.length > 0) { setAddButtonDisabled(false) };
                   }} />
@@ -200,7 +169,37 @@ export function AdminEvents() {
             </Form>
           </Container>
 
-          {eventsTable}
+          <Table
+            {...collectionProps}
+            onSelectionChange={({ detail }) => {
+              setSelectedEvent(detail.selectedItems);
+              setDeleteButtonDisabled(false);
+            }}
+            selectedItems={selectedEvent}
+            selectionType="single"
+            columnDefinitions={columnDefinitions}
+            items={items}
+            loading={isLoading}
+            loadingText="Loading resources"
+            filter={
+              <TextFilter
+                {...filterProps}
+                countText={MatchesCountText(filteredItemsCount)}
+                filteringAriaLabel='Filter cars'
+              />
+            }
+            header={
+              <Header
+                actions={
+                  <SpaceBetween direction="horizontal" size="xs">
+                    <Button disabled={deleteButtonDisabled} iconName='status-warning' onClick={() => {
+                      setDeleteModalVisible(true);
+                    }}>Delete Event</Button>
+                  </SpaceBetween>
+                }
+              >Events</Header>
+            }
+          />
         </SpaceBetween>
         <div></div>
       </Grid>
