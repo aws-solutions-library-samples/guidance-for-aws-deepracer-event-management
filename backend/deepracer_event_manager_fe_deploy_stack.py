@@ -1,12 +1,7 @@
-from aws_cdk import (
-    Stack,
-    BundlingOptions,
-    DockerImage,
-    aws_s3 as s3,
-    aws_cloudfront as cloudfront,
-    aws_s3_deployment as s3_deployment,
-)
-
+from aws_cdk import BundlingOptions, DockerImage, Stack
+from aws_cdk import aws_cloudfront as cloudfront
+from aws_cdk import aws_s3 as s3
+from aws_cdk import aws_s3_deployment as s3_deployment
 from constructs import Construct
 
 

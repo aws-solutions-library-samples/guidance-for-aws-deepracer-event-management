@@ -1,10 +1,11 @@
+import os
+
+import boto3
+import http_response
+import simplejson as json
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
-import simplejson as json
-import boto3
-import os
 from botocore.exceptions import ClientError
-import http_response
 
 logger = Logger()
 client_ssm = boto3.client("ssm")
@@ -61,10 +62,10 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                         filename, foldername
                     ),
                     "rm /tmp/{0}".format(filename),
-                    "mv /opt/aws/deepracer/artifacts/{0}/agent/model.pb /opt/aws/deepracer/artifacts/{0}/model.pb".format(
-                        foldername
-                    ),
-                    "md5sum /opt/aws/deepracer/artifacts/{0}/model.pb | awk '{{ print $1 }}' > /opt/aws/deepracer/artifacts/{0}/checksum.txt".format(
+                    "mv /opt/aws/deepracer/artifacts/{0}/agent/model.pb"
+                    " /opt/aws/deepracer/artifacts/{0}/model.pb".format(foldername),
+                    "md5sum /opt/aws/deepracer/artifacts/{0}/model.pb | awk '{{ print"
+                    " $1 }}' > /opt/aws/deepracer/artifacts/{0}/checksum.txt".format(
                         foldername
                     ),
                 ]

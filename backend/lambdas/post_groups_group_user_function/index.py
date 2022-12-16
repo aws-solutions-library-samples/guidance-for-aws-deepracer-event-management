@@ -1,10 +1,11 @@
+import os
+
+import boto3
+import http_response
+import simplejson as json
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
-import simplejson as json
-import boto3
 from botocore.exceptions import ClientError
-import os
-import http_response
 
 logger = Logger()
 client_cognito = boto3.client("cognito-idp")

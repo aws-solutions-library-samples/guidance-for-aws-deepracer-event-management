@@ -1,8 +1,8 @@
-from aws_lambda_powertools import Logger
-from aws_lambda_powertools.utilities.typing import LambdaContext
-import simplejson as json
 import boto3
 import http_response
+import simplejson as json
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.typing import LambdaContext
 
 logger = Logger()
 client_ssm = boto3.client("ssm")

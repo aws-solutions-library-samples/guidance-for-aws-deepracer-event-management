@@ -1,17 +1,16 @@
 """Based on this javascript Github project https://github.com/awesome-cdk/cdk-userpool-user """
 
+from aws_cdk.aws_cognito import (
+    CfnUserPoolUser,
+    CfnUserPoolUserToGroupAttachment,
+    IUserPool,
+)
 from aws_cdk.custom_resources import (
     AwsCustomResource,
     AwsCustomResourcePolicy,
     AwsSdkCall,
     PhysicalResourceId,
 )
-from aws_cdk.aws_cognito import (
-    CfnUserPoolUser,
-    CfnUserPoolUserToGroupAttachment,
-    IUserPool,
-)
-
 from constructs import Construct
 
 

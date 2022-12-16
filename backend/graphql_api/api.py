@@ -1,7 +1,8 @@
-from os import path, getcwd
+from os import getcwd, path
 
-from aws_cdk import Stack, aws_appsync_alpha as appsync, aws_logs as logs
-
+from aws_cdk import Stack
+from aws_cdk import aws_appsync_alpha as appsync
+from aws_cdk import aws_logs as logs
 from constructs import Construct
 
 

@@ -1,15 +1,11 @@
 import decimal
 
 # from constructs import Construct
-from aws_cdk import (
-    Stack,
-    RemovalPolicy,
-    aws_cloudfront as cloudfront,
-    aws_cloudfront_origins as cloudfront_origins,
-    aws_s3 as s3,
-    aws_s3_deployment as s3_deployment,
-)
-
+from aws_cdk import RemovalPolicy, Stack
+from aws_cdk import aws_cloudfront as cloudfront
+from aws_cdk import aws_cloudfront_origins as cloudfront_origins
+from aws_cdk import aws_s3 as s3
+from aws_cdk import aws_s3_deployment as s3_deployment
 from constructs import Construct
 
 

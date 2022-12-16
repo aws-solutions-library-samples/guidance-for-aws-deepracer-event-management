@@ -1,6 +1,7 @@
 import logging
-import boto3
 import os
+
+import boto3
 import http_response
 
 logger = logging.getLogger()

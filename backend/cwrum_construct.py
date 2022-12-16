@@ -1,15 +1,11 @@
 import decimal
 
 # from constructs import Construct
-from aws_cdk import (
-    Stack,
-    RemovalPolicy,
-    aws_iam as iam,
-    aws_cognito as cognito,
-    aws_rum as rum,
-    custom_resources,
-)
-
+from aws_cdk import RemovalPolicy, Stack
+from aws_cdk import aws_cognito as cognito
+from aws_cdk import aws_iam as iam
+from aws_cdk import aws_rum as rum
+from aws_cdk import custom_resources
 from constructs import Construct
 
 

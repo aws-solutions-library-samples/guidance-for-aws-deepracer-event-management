@@ -1,9 +1,10 @@
+import os
+
+import boto3
+import http_response
+import simplejson as json
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
-import boto3
-import os
-import simplejson as json
-import http_response
 
 logger = Logger()
 client_cognito = boto3.client("cognito-idp")

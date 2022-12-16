@@ -1,10 +1,11 @@
+import os
 from ast import And
+
+import boto3
+import http_response
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
-import boto3
 from botocore.exceptions import ClientError
-import os
-import http_response
 
 logger = Logger()
 client_cognito = boto3.client("cognito-idp")
