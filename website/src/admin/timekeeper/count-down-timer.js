@@ -5,14 +5,16 @@ const CountDownTimer = (props) => {
   const [timerId, setTimerId] = useState();
   const [time, setTime] = useState(props.duration);
 
-  useEffect(() => {
-    if (props.isReset === true) {
-      setTime(props.duration);
-    }
-  }, [props.isReset, props.duration]);
+  const { isRunning, duration, isReset, onExpire } = props;
 
   useEffect(() => {
-    if (props.isRunning) {
+    if (isReset === true) {
+      setTime(duration);
+    }
+  }, [isReset, duration]);
+
+  useEffect(() => {
+    if (isRunning) {
       console.log('Starting race timer');
       const timeDecrease = 1000;
       if (!timerId) {
@@ -21,7 +23,7 @@ const CountDownTimer = (props) => {
             let newTime = previousTime - timeDecrease;
             if (newTime <= 0) {
               newTime = 0;
-              props.onExpire(true);
+              onExpire(true);
               clearInterval(timerId);
               setTimerId(null);
             }
@@ -35,7 +37,7 @@ const CountDownTimer = (props) => {
       clearInterval(timerId);
       setTimerId(null);
     }
-  }, [props.isRunning, timerId]);
+  }, [isRunning, timerId, onExpire]);
 
   const convertMsToString = (timeInMS) => {
     const seconds = Math.floor(timeInMS / 1000);
