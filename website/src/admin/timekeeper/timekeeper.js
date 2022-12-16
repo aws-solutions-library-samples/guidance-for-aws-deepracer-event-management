@@ -19,13 +19,14 @@ const Timekeeper = () => {
   const [timerIsReset, SetTimerIsReset] = useState(false);
 
   const [username, SetUsername] = useState();
-  const [currentLap, SetCurrentLap] = useState({
+  const lapTemplate = {
     id: null,
     time: 0,
     resets: 0,
     crashes: 0,
     isValid: false,
-  });
+  };
+  const [currentLap, SetCurrentLap] = useState(lapTemplate);
 
   const [laps, SetLaps] = useState([]);
   const [fastestLap, SetFastestLap] = useState([]);
@@ -98,7 +99,7 @@ const Timekeeper = () => {
     SetLaps((prevState) => {
       return [...prevState, currentLapStats];
     });
-    SetCurrentLap({ id: null, time: 0, resets: 0, crashes: 0, isValid: false });
+    SetCurrentLap(lapTemplate);
     resetCarResetCounter();
     resetLapTimer();
 
@@ -178,7 +179,7 @@ const Timekeeper = () => {
     resetLapTimer();
     SetLaps([]);
     SetIsLastLap(false);
-    SetCurrentLap({ id: null, time: 0, resets: 0, crashes: 0, isValid: false });
+    SetCurrentLap(lapTemplate);
 
     // Restart racer selection
     SetEndSessionModalIsVisible(false);
