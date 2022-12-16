@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { API, graphqlOperation } from 'aws-amplify';
+import { API } from 'aws-amplify';
+import React, { useState } from 'react';
 //import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 //import * as subscriptions from '../graphql/subscriptions'
@@ -7,30 +7,23 @@ import * as mutations from '../graphql/mutations';
 import { ContentHeader } from '../components/ContentHeader';
 import { ListOfFleets } from '../components/ListOfFleets';
 
-import {
-  Button,
-  Form,
-  Header,
-  Grid,
-  SpaceBetween,
-  FormField,
-  Input,
-  Container,
-  ExpandableSection,
-  Table,
-  Box,
-  TextFilter,
-  Modal
-} from '@cloudscape-design/components';
 import { useCollection } from '@cloudscape-design/collection-hooks';
-
 import {
-  DefaultPreferences,
-  EmptyState,
-  MatchesCountText,
-  PageSizePreference,
-  WrapLines,
-} from '../components/TableConfig';
+  Box,
+  Button,
+  Container,
+  Form,
+  FormField,
+  Grid,
+  Header,
+  Input,
+  Modal,
+  SpaceBetween,
+  Table,
+  TextFilter,
+} from '@cloudscape-design/components';
+
+import { DefaultPreferences, EmptyState, MatchesCountText } from '../components/TableConfig';
 
 export function AdminFleets() {
   //const [fleets, setFleets] = useState([]);
@@ -47,23 +40,29 @@ export function AdminFleets() {
   // Add Fleet
   async function addFleet(newFleet) {
     if (newFleet.match(/^[a-zA-Z0-9-_]+$/)) {
-      if (fleets.map(fleets => { return fleets.fleetName }).includes(newFleet)) {
+      if (
+        fleets
+          .map((fleets) => {
+            return fleets.fleetName;
+          })
+          .includes(newFleet)
+      ) {
         //console.log('already exists');
-        setNewFleetErrorText('Fleet already exists')
+        setNewFleetErrorText('Fleet already exists');
       } else {
         //console.log('match')
         const response = await API.graphql({
           query: mutations.addFleet,
           variables: {
-            fleetName: newFleet
-          }
+            fleetName: newFleet,
+          },
         });
-        setNewFleetErrorText('')
-        setNewFleet('')
+        setNewFleetErrorText('');
+        setNewFleet('');
         return response;
       }
     } else {
-      setNewFleetErrorText('Must match regex: ^[a-zA-Z0-9-_]+$')
+      setNewFleetErrorText('Must match regex: ^[a-zA-Z0-9-_]+$');
     }
   }
 
@@ -73,8 +72,8 @@ export function AdminFleets() {
     const response = await API.graphql({
       query: mutations.deleteFleet,
       variables: {
-        fleetId: selectedFleet[0].fleetId
-      }
+        fleetId: selectedFleet[0].fleetId,
+      },
     });
     setDeleteButtonDisabled(true);
     //console.log(response.data.deleteFleet);
@@ -87,34 +86,28 @@ export function AdminFleets() {
 
   const columnDefinitions = [
     {
-      id: "fleetName",
-      header: "Fleet name",
-      cell: item => item.fleetName || "-",
-      sortingField: "fleetName"
+      id: 'fleetName',
+      header: 'Fleet name',
+      cell: (item) => item.fleetName || '-',
+      sortingField: 'fleetName',
     },
     {
-      id: "fleetId",
-      header: "Fleet ID",
-      cell: item => item.fleetId || "-",
+      id: 'fleetId',
+      header: 'Fleet ID',
+      cell: (item) => item.fleetId || '-',
     },
     {
-      id: "createdAt",
-      header: "Created at",
-      cell: item => item.createdAt || "-",
-      sortingField: "createdAt"
-    }
-  ]
+      id: 'createdAt',
+      header: 'Created at',
+      cell: (item) => item.createdAt || '-',
+      sortingField: 'createdAt',
+    },
+  ];
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
-    fleets,
-    {
+  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
+    useCollection(fleets, {
       filtering: {
-        empty: (
-          <EmptyState
-            title="No Fleets"
-            subtitle="Please create a fleet."
-          />
-        ),
+        empty: <EmptyState title="No Fleets" subtitle="Please create an fleet." />,
         noMatch: (
           <EmptyState
             title="No matches"
@@ -126,40 +119,49 @@ export function AdminFleets() {
       pagination: { pageSize: preferences.pageSize },
       sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
       selection: {},
-    }
-  );
+    });
 
-  const fleetsTable = <Table
-    {...collectionProps}
-    onSelectionChange={({ detail }) => {
-      setSelectedFleet(detail.selectedItems);
-      setDeleteButtonDisabled(false);
-    }}
-    selectedItems={selectedFleet}
-    selectionType="single"
-    columnDefinitions={columnDefinitions}
-    items={items}
-    loading={isLoading}
-    loadingText="Loading resources"
-    filter={
-      <TextFilter
-        {...filterProps}
-        countText={MatchesCountText(filteredItemsCount)}
-        filteringAriaLabel='Filter cars'
-      />
-    }
-    header={
-      <Header
-        actions={
-          <SpaceBetween direction="horizontal" size="xs">
-            <Button disabled={deleteButtonDisabled} iconName='status-warning' onClick={() => {
-              setDeleteModalVisible(true);
-            }}>Delete Fleet</Button>
-          </SpaceBetween>
-        }
-      >Fleets</Header>
-    }
-  />
+  const fleetsTable = (
+    <Table
+      {...collectionProps}
+      onSelectionChange={({ detail }) => {
+        setSelectedFleet(detail.selectedItems);
+        setDeleteButtonDisabled(false);
+      }}
+      selectedItems={selectedFleet}
+      selectionType="single"
+      columnDefinitions={columnDefinitions}
+      items={items}
+      loading={isLoading}
+      loadingText="Loading resources"
+      filter={
+        <TextFilter
+          {...filterProps}
+          countText={MatchesCountText(filteredItemsCount)}
+          filteringAriaLabel="Filter cars"
+        />
+      }
+      header={
+        <Header
+          actions={
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                disabled={deleteButtonDisabled}
+                iconName="status-warning"
+                onClick={() => {
+                  setDeleteModalVisible(true);
+                }}
+              >
+                Delete Fleet
+              </Button>
+            </SpaceBetween>
+          }
+        >
+          Fleets
+        </Header>
+      }
+    />
+  );
 
   return (
     <>
@@ -167,34 +169,42 @@ export function AdminFleets() {
         header="Fleets admin"
         description="List of Fleets."
         breadcrumbs={[
-          { text: "Home", href: "/" },
-          { text: "Admin", href: "/admin/home" },
-          { text: "Groups" }
+          { text: 'Home', href: '/' },
+          { text: 'Admin', href: '/admin/home' },
+          { text: 'Groups' },
         ]}
       />
       <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
         <div></div>
         <SpaceBetween direction="vertical" size="l">
-
-          <Container textAlign='center'>
+          <Container textAlign="center">
             <Form
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
-                  <Button disabled={addButtonDisabled} variant='primary' onClick={() => {
-                    addFleet(newFleet);
-                  }}>Add Fleet</Button>
+                  <Button
+                    disabled={addButtonDisabled}
+                    variant="primary"
+                    onClick={() => {
+                      addFleet(newFleet);
+                    }}
+                  >
+                    Add Fleet
+                  </Button>
                 </SpaceBetween>
               }
             >
               <SpaceBetween direction="vertical" size="l">
-                <FormField
-                  label="New Fleet"
-                  errorText={newFleetErrorText}
-                >
-                  <Input value={newFleet} placeholder='AwesomeFleet' onChange={fleet => {
-                    setNewFleet(fleet.detail.value);
-                    if (newFleet.length > 0) { setAddButtonDisabled(false) };
-                  }} />
+                <FormField label="New Fleet" errorText={newFleetErrorText}>
+                  <Input
+                    value={newFleet}
+                    placeholder="Awesome Fleet"
+                    onChange={(fleet) => {
+                      setNewFleet(fleet.detail.value);
+                      if (newFleet.length > 0) {
+                        setAddButtonDisabled(false);
+                      }
+                    }}
+                  />
                 </FormField>
               </SpaceBetween>
             </Form>
@@ -213,19 +223,28 @@ export function AdminFleets() {
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="link" onClick={() => setDeleteModalVisible(false)}>Cancel</Button>
-              <Button variant="primary" onClick={() => {
-                deleteFleet();
-                setDeleteModalVisible(false);
-              }}>Delete</Button>
+              <Button variant="link" onClick={() => setDeleteModalVisible(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  deleteFleet();
+                  setDeleteModalVisible(false);
+                }}
+              >
+                Delete
+              </Button>
             </SpaceBetween>
           </Box>
         }
         header="Delete fleet"
       >
-        Are you sure you want to delete fleet(s): <br></br> {selectedFleet.map(selectedFleet => { return selectedFleet.fleetName + " " })}
+        Are you sure you want to delete fleet(s): <br></br>{' '}
+        {selectedFleet.map((selectedFleet) => {
+          return selectedFleet.fleetName + ' ';
+        })}
       </Modal>
     </>
-
-  )
+  );
 }

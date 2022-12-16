@@ -1,18 +1,13 @@
-from aws_cdk import (
-    Stack,
-    Stage,
-    Environment,
-    aws_codebuild as codebuild,
-    aws_codepipeline_actions as codepipeline_actions,
-    pipelines as pipelines,
-    aws_s3 as s3,
-    aws_iam as iam,
-    aws_ssm as ssm,
-)
+from aws_cdk import Environment, Stack, Stage
+from aws_cdk import aws_codebuild as codebuild
+from aws_cdk import aws_codepipeline_actions as codepipeline_actions
+from aws_cdk import aws_iam as iam
+from aws_cdk import aws_s3 as s3
+from aws_cdk import aws_ssm as ssm
+from aws_cdk import pipelines as pipelines
 from constructs import Construct
 
 from backend.deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
-
 
 # Constants
 NODE_VERSION = "16.17.0"  # other possible options: stable, latest, lts
@@ -133,23 +128,34 @@ class CdkServerlessCharityPipelineStack(Stack):
                 ),
                 commands=[
                     "echo $sourceBucketName",
-                    "aws cloudformation describe-stacks --stack-name drem-backend-{0}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs".format(
-                        branchname
-                    ),
+                    "aws cloudformation describe-stacks --stack-name"
+                    " drem-backend-{0}-infrastructure --query 'Stacks[0].Outputs' >"
+                    " cfn.outputs".format(branchname),
                     "pwd",
                     "ls -lah",
                     "python generate_amplify_config_cfn.py",
                     "python update_index_html_with_script_tag_cfn.py",
                     # "npm install -g @aws-amplify/cli",
-                    "appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $appsyncId --format SDL ./website/src/graphql/schema.graphql",
+                    (
+                        "appsyncId=`cat appsyncId.txt` && aws appsync"
+                        " get-introspection-schema --api-id $appsyncId --format SDL"
+                        " ./website/src/graphql/schema.graphql"
+                    ),
                     "cd ./website/src/graphql",
                     "amplify codegen",  # this is on purpose
                     "amplify codegen",  # I'm not repeating myself ;)
                     "ls -lah",
                     "cd ../..",
-                    "docker run --rm -v $(pwd):/foo -w /foo public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
+                    (
+                        "docker run --rm -v $(pwd):/foo -w /foo"
+                        " public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install"
+                        " --cache /tmp/empty-cache && npm run build'"
+                    ),
                     "aws s3 sync ./build/ s3://$sourceBucketName/ --delete",
-                    "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'",
+                    (
+                        "aws cloudfront create-invalidation --distribution-id"
+                        " $distributionId --paths '/*'"
+                    ),
                 ],
                 env_from_cfn_outputs={
                     "sourceBucketName": infrastructure.sourceBucketName,

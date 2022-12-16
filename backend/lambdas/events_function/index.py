@@ -1,11 +1,13 @@
-from aws_lambda_powertools import Tracer, Logger
-from aws_lambda_powertools.logging import correlation_paths
-from aws_lambda_powertools.event_handler import AppSyncResolver
-import boto3
-from boto3.dynamodb.conditions import Key
+#!/usr/bin/python3
+# encoding=utf-8
 import os
 import uuid
 from datetime import datetime
+
+import boto3
+from aws_lambda_powertools import Logger, Tracer
+from aws_lambda_powertools.event_handler import AppSyncResolver
+from aws_lambda_powertools.logging import correlation_paths
 
 tracer = Tracer()
 logger = Logger()
@@ -37,16 +39,13 @@ def getAllEvents():
 
 
 @app.resolver(type_name="Mutation", field_name="addEvent")
-def addEvent(eventName: str, tracks=None):
-    # TODO add regular expression for tag validation
-    # TODO verify that the wanted tag is not already in use for another track
+def addEvent(**args):
     eventId = str(uuid.uuid4())
     createdAt = datetime.utcnow().isoformat() + "Z"
     item = {
+        **args,
         "eventId": eventId,
-        "eventName": eventName,
         "createdAt": createdAt,
-        "tracks": tracks,
     }
     response = ddbTable.put_item(Item=item)
     logger.info(f"ddb put response: {response}")
@@ -63,14 +62,27 @@ def deleteEvent(eventId: str):
 
 
 @app.resolver(type_name="Mutation", field_name="updateEvent")
-def udpateEvent(eventId: str, eventName: str, tracks):
+def udpateEvent(
+    eventId: str,
+    eventName: str,
+    raceTimeInSec: int,
+    numberOfResets: int,
+    fleetId: str = None,
+):
     logger.info(f"udpateEvent: eventId={eventId}")
-    # TODO make so that only attributes which are provided is updated
-
     response = ddbTable.update_item(
         Key={"eventId": eventId},
-        UpdateExpression="SET eventName= :newName, tracks= :newTracks",
-        ExpressionAttributeValues={":newName": eventName, ":newTracks": tracks},
-        ReturnValues="UPDATED_NEW",
+        UpdateExpression=(
+            "SET eventName= :newName, raceTimeInSec= :newraceTimeInSec, numberOfResets="
+            " :newNumberOfResets, fleetId= :fleetId"
+        ),
+        ExpressionAttributeValues={
+            ":newName": eventName,
+            ":newraceTimeInSec": raceTimeInSec,
+            ":newNumberOfResets": numberOfResets,
+            ":fleetId": fleetId,
+        },
+        ReturnValues="ALL_NEW",
     )
-    return {"eventId": eventId}
+    updatedEvent = response["Attributes"]
+    return updatedEvent

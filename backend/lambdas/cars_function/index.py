@@ -1,14 +1,9 @@
-#!/usr/bin/python3
-# encoding=utf-8
-from aws_lambda_powertools import Tracer, Logger
-from aws_lambda_powertools.logging import correlation_paths
-from aws_lambda_powertools.event_handler import AppSyncResolver
-import boto3
-import simplejson as json
-
-# import os
-from datetime import date, datetime
 from typing import List
+
+import boto3
+from aws_lambda_powertools import Logger, Tracer
+from aws_lambda_powertools.event_handler import AppSyncResolver
+from aws_lambda_powertools.logging import correlation_paths
 
 tracer = Tracer()
 logger = Logger()
@@ -209,7 +204,11 @@ def carSetTaillightColor(resourceIds: List[str], selectedColor: str):
                 DocumentName="AWS-RunShellScript",
                 Parameters={
                     "commands": [
-                        f"/etc/deepracer-taillight/set-led-color.sh -r {color['red_pwm']} -b {color['blue_pwm']} -g {color['green_pwm']} > /dev/null",
+                        (
+                            "/etc/deepracer-taillight/set-led-color.sh -r"
+                            f" {color['red_pwm']} -b {color['blue_pwm']} -g"
+                            f" {color['green_pwm']} > /dev/null"
+                        ),
                     ]
                 },
             )
