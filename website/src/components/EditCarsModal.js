@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { API } from 'aws-amplify';
 import { ListOfFleets } from './ListOfFleets.js';
 
-//import * as queries from '../graphql/queries';
+import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 //import * as subscriptions from '../graphql/subscriptions'
 
@@ -21,9 +21,11 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
   //const [cars, setCars] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-
   const [dropDownFleets, setDropDownFleets] = useState([{ id: 'none', text: 'none' }]);
-  const [dropDownSelectedItem, setDropDownSelectedItem] = useState({ fleetName: 'Select Fleet' })
+  const [dropDownSelectedItem, setDropDownSelectedItem] = useState({ fleetName: 'Select Fleet' });
+
+  const [dropDownColors, setDropDownColors] = useState([{ id: 'blue', text: 'blue' }]);
+  const [dropDownSelectedColor, setDropDownSelectedColor] = useState({ id: 'Select Color', text: 'Select Color' });
 
   const [isLoading, setIsLoading] = useState(true);
   const fleets = ListOfFleets(setIsLoading);
@@ -80,6 +82,45 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
     setDropDownSelectedItem({ fleetName: 'Select Fleet' });
   }
 
+  // get color options when component is mounted
+  useEffect(() => {
+    // Get Colors
+    async function getAvailableTaillightColors() {
+      const response = await API.graphql({
+        query: queries.availableTaillightColors
+      });
+      const colors = JSON.parse(response.data.availableTaillightColors);
+      setDropDownColors(colors.map(thisColor => {
+        return {
+          id: thisColor,
+          text: thisColor
+        };
+      }));
+    }
+    getAvailableTaillightColors();
+
+    return () => {
+      // Unmounting
+    }
+  }, [])
+
+  // Update Tail Light Colors on Cars
+  async function carColorUpdates() {
+    const InstanceIds = selectedItems.map(i => i.InstanceId);
+
+    const response = await API.graphql({
+      query: mutations.carSetTaillightColor,
+      variables: {
+        resourceIds: InstanceIds,
+        selectedColor: dropDownSelectedColor.id,
+      }
+    });
+
+    setVisible(false);
+    setRefresh(true);
+    setDropDownSelectedColor({ id: 'Select Color', text: 'Select Color' });
+  }
+
   return (
     <>
       <Button disabled={disabled} variant={variant} onClick={() => {
@@ -116,7 +157,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                 </ButtonDropdown>
                 <Button variant="primary" onClick={() => {
                   carUpdates();
-                }}>Update Cars</Button>
+                }}>Update Fleets</Button>
               </SpaceBetween>
             </FormField>
           </Container>
@@ -130,14 +171,27 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
             </FormField>
           </Container>
 
-          {/* <Container>
+          <Container>
             <FormField label='Tail Light'>
-              Coming Soon...
+              <SpaceBetween direction="horizontal" size="xs">
+                <ButtonDropdown
+                  items={dropDownColors}
+                  onItemClick={({ detail }) => {
+                    const index = dropDownColors.map(e => e.id).indexOf(detail.id);
+                    setDropDownSelectedColor(dropDownColors[index]);
+                  }}
+                >
+                  {dropDownSelectedColor.id}
+                </ButtonDropdown>
+                <Button disabled={!online} variant="primary" onClick={() => {
+                  carColorUpdates();
+                }}>Update Tail lights</Button>
+              </SpaceBetween>
             </FormField>
           </Container>
 
-          <Container>
-            <FormField label='Labels'>
+          {/* <Container>
+            <FormField label='Label Printing'>
               Coming Soon...
             </FormField>
           </Container> */}
