@@ -1,7 +1,7 @@
 import { API, graphqlOperation } from 'aws-amplify';
 import { useEffect, useState } from 'react';
 import * as queries from '../graphql/queries';
-//import * as mutations from '../graphql/mutations';
+// import * as mutations from '../graphql/mutations';
 import * as subscriptions from '../graphql/subscriptions';
 
 export function ListOfEvents(setIsLoading) {
@@ -14,8 +14,8 @@ export function ListOfEvents(setIsLoading) {
       const response = await API.graphql({
         query: queries.getAllEvents,
       });
-      //console.log('getAllEvents');
-      //console.log(response.data.getAllEvents);
+      // console.log('getAllEvents');
+      // console.log(response.data.getAllEvents);
       setEvents([...response.data.getAllEvents]);
       setIsLoading(false);
     }
@@ -30,7 +30,7 @@ export function ListOfEvents(setIsLoading) {
   useEffect(() => {
     const subscription = API.graphql(graphqlOperation(subscriptions.addedEvent)).subscribe({
       next: (event) => {
-        //console.log(event);
+        // console.log(event);
         setEvents([...events, event.value.data.addedEvent]);
       },
     });
@@ -44,9 +44,9 @@ export function ListOfEvents(setIsLoading) {
   useEffect(() => {
     const subscription = API.graphql(graphqlOperation(subscriptions.deletedEvent)).subscribe({
       next: (event) => {
-        //console.log(event.value.data.deletedEvent.eventId);
+        // console.log(event.value.data.deletedEvent.eventId);
         const index = events.map((e) => e.eventId).indexOf(event.value.data.deletedEvent.eventId);
-        //console.log(index);
+        // console.log(index);
         var tempEvents = [...events];
         if (index !== -1) {
           tempEvents.splice(index, 1);

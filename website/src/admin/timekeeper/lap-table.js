@@ -9,7 +9,7 @@ const LapTable = (props) => {
   useEffect(() => {
     if (laps.length) {
       const items = laps.map((lap) => {
-        //console.info(lap);
+        // console.info(lap);
         return {
           ...lap,
           id: lap.id + 1,

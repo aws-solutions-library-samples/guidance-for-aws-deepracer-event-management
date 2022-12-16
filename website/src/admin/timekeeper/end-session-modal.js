@@ -4,7 +4,7 @@ import {
   Modal,
   SpaceBetween,
   Spinner,
-  StatusIndicator,
+  StatusIndicator
 } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 

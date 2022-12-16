@@ -1,4 +1,4 @@
-import { AppLayout, SideNavigation, TopNavigation } from '@cloudscape-design/components';
+import { AppLayout, Badge, SideNavigation, TopNavigation } from '@cloudscape-design/components';
 import { Auth } from 'aws-amplify';
 import React, { useContext, useEffect, useState } from 'react';
 
@@ -18,12 +18,11 @@ import { Timekeeper } from '../admin/timekeeper/timekeeper';
 import { Home } from '../home.js';
 import { Models } from '../models.js';
 import { Upload } from '../upload.js';
-//import { ListOfEvents } from './ListOfEvents.js';
+// import { ListOfEvents } from './ListOfEvents.js';
 import useQuery from '../hooks/useQuery.js';
 import { eventContext } from '../store/EventProvider';
 import SideNavContext from '../store/SideNavContext.js';
 
-import { Badge } from '@cloudscape-design/components';
 import useLink from '../hooks/useLink.js';
 
 function cwr(operation, payload) {
@@ -201,9 +200,9 @@ export function TopNav(props) {
           />
         </div>
         <AppLayout
-          //stickyNotifications
+          // stickyNotifications
           toolsHide
-          //headerSelector="#header"
+          // headerSelector="#header"
           ariaLabels={{ navigationClose: 'close' }}
           navigationOpen={navigationOpen}
           navigation={
@@ -213,7 +212,7 @@ export function TopNav(props) {
               items={navItems}
             />
           }
-          //breadcrumbs={<BreadcrumbGroup items={breadcrumbs} expandAriaLabel="Show path" ariaLabel="Breadcrumbs" />}
+          // breadcrumbs={<BreadcrumbGroup items={breadcrumbs} expandAriaLabel="Show path" ariaLabel="Breadcrumbs" />}
           contentType="table"
           content={<MenuRoutes />}
           onNavigationChange={({ detail }) => setNavigationOpen(detail.open)}

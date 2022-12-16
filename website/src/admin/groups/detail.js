@@ -104,7 +104,7 @@ export function AdminGroupsDetail() {
 
   const userToggle = (user) => {
     if (!user.currentUser) {
-      return <Toggle onChange={({}) => toggleUser(user)} checked={user.isMember} />;
+      return <Toggle onChange={() => toggleUser(user)} checked={user.isMember} />;
     } else {
       return <Icon name="user-profile" />;
     }

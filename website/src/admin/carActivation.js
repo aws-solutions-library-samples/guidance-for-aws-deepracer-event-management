@@ -2,9 +2,9 @@ import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { ContentHeader } from '../components/ContentHeader';
 import { ListOfFleets } from '../components/ListOfFleets';
-//import * as queries from '../graphql/queries';
+// import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-//import * as subscriptions from '../graphql/subscriptions'
+// import * as subscriptions from '../graphql/subscriptions'
 
 import {
   Box,

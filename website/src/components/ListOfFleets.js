@@ -1,7 +1,7 @@
 import { API, graphqlOperation } from 'aws-amplify';
 import { useEffect, useState } from 'react';
 import * as queries from '../graphql/queries';
-//import * as mutations from '../graphql/mutations';
+// import * as mutations from '../graphql/mutations';
 import * as subscriptions from '../graphql/subscriptions';
 
 export function ListOfFleets(setIsLoading) {
@@ -14,8 +14,8 @@ export function ListOfFleets(setIsLoading) {
       const response = await API.graphql({
         query: queries.getAllFleets,
       });
-      //console.log('getAllFleets');
-      //console.log(response.data.getAllFleets);
+      // console.log('getAllFleets');
+      // console.log(response.data.getAllFleets);
       setFleets([...response.data.getAllFleets]);
       setIsLoading(false);
     }
@@ -30,7 +30,7 @@ export function ListOfFleets(setIsLoading) {
   useEffect(() => {
     const subscription = API.graphql(graphqlOperation(subscriptions.addedFleet)).subscribe({
       next: (fleet) => {
-        //console.log(fleet);
+        // console.log(fleet);
         setFleets([...fleets, fleet.value.data.addedFleet]);
       },
     });
@@ -44,9 +44,9 @@ export function ListOfFleets(setIsLoading) {
   useEffect(() => {
     const subscription = API.graphql(graphqlOperation(subscriptions.deletedFleet)).subscribe({
       next: (fleet) => {
-        //console.log(fleet.value.data.deletedFleet.fleetId);
+        // console.log(fleet.value.data.deletedFleet.fleetId);
         const index = fleets.map((e) => e.fleetId).indexOf(fleet.value.data.deletedFleet.fleetId);
-        //console.log(index);
+        // console.log(index);
         var tempFleets = [...fleets];
         if (index !== -1) {
           tempFleets.splice(index, 1);

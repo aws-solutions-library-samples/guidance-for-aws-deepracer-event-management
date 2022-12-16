@@ -1,8 +1,8 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useRef, useState } from 'react';
-//import * as queries from '../graphql/queries';
+// import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-//import * as subscriptions from '../graphql/subscriptions'
+// import * as subscriptions from '../graphql/subscriptions'
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
@@ -54,7 +54,7 @@ function useInterval(callback, delay) {
       savedCallback.current();
     }
     if (delay !== null) {
-      let id = setInterval(tick, delay);
+      const id = setInterval(tick, delay);
       return () => clearInterval(id);
     }
   }, [delay]);
@@ -70,8 +70,8 @@ const StatusModelContent = (props) => {
   const [currentModel, setCurrentModel] = useState('');
 
   async function uploadModelToCar(car, model) {
-    //console.log(car.InstanceId)
-    //console.log(model.key)
+    // console.log(car.InstanceId)
+    // console.log(model.key)
 
     const apiName = 'deepracerEventManager';
     const apiPath = 'cars/upload';
@@ -82,9 +82,9 @@ const StatusModelContent = (props) => {
       },
     };
 
-    let response = await API.post(apiName, apiPath, myInit);
-    //console.log(response);
-    //console.log(response.CommandId);
+    const response = await API.post(apiName, apiPath, myInit);
+    // console.log(response);
+    // console.log(response.CommandId);
     setResult(response);
     setCommandId(response);
 
@@ -92,13 +92,13 @@ const StatusModelContent = (props) => {
 
     setCurrentModel(model);
     setUploadStatus('InProgress');
-    //setDimmerActive(true);
+    // setDimmerActive(true);
   }
 
   async function uploadModelToCarStatus(InstanceId, CommandId, model) {
-    //console.log("InstanceId: " + InstanceId)
-    //console.log("CommandId: " + CommandId)
-    //console.log(model)
+    // console.log("InstanceId: " + InstanceId)
+    // console.log("CommandId: " + CommandId)
+    // console.log(model)
 
     if (InstanceId === '' || CommandId === '') {
       return [];
@@ -113,29 +113,29 @@ const StatusModelContent = (props) => {
       },
     };
 
-    let response = await API.post(apiName, apiPath, myInit);
-    //console.log(response)
+    const response = await API.post(apiName, apiPath, myInit);
+    // console.log(response)
 
     const modelKeyPieces = model.key.split('/');
-    let modelUser = modelKeyPieces[modelKeyPieces.length - 3];
-    let modelName = modelKeyPieces[modelKeyPieces.length - 1];
+    const modelUser = modelKeyPieces[modelKeyPieces.length - 3];
+    const modelName = modelKeyPieces[modelKeyPieces.length - 1];
 
-    let resultToAdd = {
+    const resultToAdd = {
       ModelName: modelUser + '-' + modelName,
       CommandId: CommandId,
       Status: response,
     };
-    let tempResultsArray = [];
-    //console.log(resultToAdd);
+    const tempResultsArray = [];
+    // console.log(resultToAdd);
 
     let updatedElement = false;
     for (const currentResult in results) {
       if (results[currentResult].CommandId === CommandId) {
-        //console.log('update');
+        // console.log('update');
         tempResultsArray.push(resultToAdd);
         updatedElement = true;
       } else {
-        //console.log('dont update');
+        // console.log('dont update');
         tempResultsArray.push(results[currentResult]);
       }
     }
@@ -155,24 +155,24 @@ const StatusModelContent = (props) => {
   useInterval(() => {
     // Your custom logic here
     setSeconds(seconds + 1);
-    //console.log("useInterval seconds: " + seconds)
+    // console.log("useInterval seconds: " + seconds)
 
-    let models = props.selectedModels;
-    let car = props.selectedCars[0];
-    //console.log(models);
-    //console.log(car);
+    const models = props.selectedModels;
+    const car = props.selectedCars[0];
+    // console.log(models);
+    // console.log(car);
 
-    //console.log('Models in array: ' + models.length)
+    // console.log('Models in array: ' + models.length)
     if (uploadStatus !== 'InProgress') {
-      //console.log(uploadStatus + " !== InProgress")
+      // console.log(uploadStatus + " !== InProgress")
       if (models.length > 0) {
         setUploadStatus('InProgress');
-        let model = models.pop();
-        //console.log('POP!');
+        const model = models.pop();
+        // console.log('POP!');
         uploadModelToCar(car, model);
       } else {
-        //console.log('uploadStatus: ' + 'Complete');
-        //setDimmerActive(false);
+        // console.log('uploadStatus: ' + 'Complete');
+        // setDimmerActive(false);
       }
     } else {
       uploadModelToCarStatus(currentInstanceId, commandId, currentModel);
@@ -233,7 +233,7 @@ export default (props) => {
   const [selectedCars, setSelectedCars] = useState([]);
   const [checked, setChecked] = useState(false);
 
-  var models = [...props.selectedModels]; //clone models array
+  var models = [...props.selectedModels]; // clone models array
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
@@ -350,7 +350,7 @@ export default (props) => {
               <Button
                 variant="primary"
                 onClick={() => {
-                  //uploadModelToCar();
+                  // uploadModelToCar();
                   setVisible(false);
 
                   if (checked) {

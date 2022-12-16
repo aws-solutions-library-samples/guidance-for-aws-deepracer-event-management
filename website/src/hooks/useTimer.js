@@ -1,4 +1,4 @@
-//TODO add paramter for counting up or down
+// TODO add paramter for counting up or down
 import { useState } from 'react';
 import useInterval from './useInterval';
 
@@ -41,7 +41,7 @@ export default function useTimer(interval = 27, direction = Direction.Up) {
     () => {
       const prev = prevTime ? prevTime : Date.now();
       const diffTime = Date.now() - prev;
-      let newMilliTime = undefined;
+      let newMilliTime;
       if (direction === Direction.Up) {
         newMilliTime = timeInMilliseconds + diffTime;
       } else {

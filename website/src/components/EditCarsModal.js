@@ -2,9 +2,9 @@ import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { ListOfFleets } from './ListOfFleets.js';
 
-//import * as queries from '../graphql/queries';
+// import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-//import * as subscriptions from '../graphql/subscriptions'
+// import * as subscriptions from '../graphql/subscriptions'
 
 import {
   Box,
@@ -18,7 +18,7 @@ import {
 
 export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
   const [visible, setVisible] = useState(false);
-  //const [cars, setCars] = useState(false);
+  // const [cars, setCars] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const [dropDownFleets, setDropDownFleets] = useState([{ id: 'none', text: 'none' }]);
@@ -46,7 +46,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
 
   function modalOpen(selectedItems) {
     setVisible(true);
-    //setCars(selectedItems);
+    // setCars(selectedItems);
   }
 
   function modalClose() {

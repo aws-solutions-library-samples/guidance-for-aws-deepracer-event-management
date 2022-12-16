@@ -1,8 +1,8 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import * as queries from '../graphql/queries';
-//import * as mutations from '../graphql/mutations';
-//import * as subscriptions from '../graphql/subscriptions'
+// import * as mutations from '../graphql/mutations';
+// import * as subscriptions from '../graphql/subscriptions'
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {

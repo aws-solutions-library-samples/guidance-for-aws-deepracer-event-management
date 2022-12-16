@@ -4,7 +4,7 @@ import { Box, Button, Modal, SpaceBetween } from '@cloudscape-design/components'
 
 export default ({ disabled, variant }) => {
   const [visible, setVisible] = useState(false);
-  const [msgs, setMsgs] = useState([]);
+  // const [msgs, setMsgs] = useState([]);
 
   function modealOpen() {
     setVisible(true);

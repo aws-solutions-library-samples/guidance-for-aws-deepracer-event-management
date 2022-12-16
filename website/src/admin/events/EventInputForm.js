@@ -42,7 +42,6 @@ const EventInputForm = forwardRef((props, ref) => {
   );
 
   useEffect(() => {
-    console.info(fleets);
     if (fleets) {
       setFleetsAsSelectOptions(
         fleets.map((fleet) => {
@@ -73,7 +72,7 @@ const EventInputForm = forwardRef((props, ref) => {
         })
         .includes(newEvent.eventName)
     ) {
-      //console.info(newEvent.eventName);
+      // console.info(newEvent.eventName);
       setNewEventNameErrorText('Event already exists');
       onButtonDisabled(true);
     } else {
@@ -100,7 +99,7 @@ const EventInputForm = forwardRef((props, ref) => {
           <FormField label="Racing time (in seconds)">
             <Input
               value={newEvent.raceTimeInSec}
-              //placeholder={defaultEvent.raceTimeInSec}
+              // placeholder={defaultEvent.raceTimeInSec}
               onChange={(event) => {
                 setNewEvent((prevState) => {
                   return { ...prevState, raceTimeInSec: event.detail.value };
@@ -124,7 +123,7 @@ const EventInputForm = forwardRef((props, ref) => {
           <Select
             selectedOption={selectedFleet}
             onChange={({ detail }) => {
-              //console.info('setting fleet ' + detail.selectedOption.label);
+              // console.info('setting fleet ' + detail.selectedOption.label);
               setNewEvent((prevState) => {
                 return { ...prevState, fleetId: detail.selectedOption.value };
               });

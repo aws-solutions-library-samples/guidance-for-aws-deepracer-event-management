@@ -78,7 +78,7 @@ export function AdminEvents() {
     });
     if (response.data) {
       const addedEvent = response.data.addEvent;
-      //console.info(addedEvent);
+      // console.info(addedEvent);
       setEvents((prevState) => {
         return [...prevState, addedEvent];
       });
@@ -87,7 +87,7 @@ export function AdminEvents() {
 
   // Delete Event
   async function deleteEvent() {
-    const response = await API.graphql({
+    await API.graphql({
       query: mutations.deleteEvent,
       variables: {
         eventId: SelectedEventInTable[0].eventId,
@@ -236,7 +236,7 @@ export function AdminEvents() {
       />
       <ContentHeader
         header="Events admin"
-        //description="List of Events."
+        // description="List of Events."
         breadcrumbs={[
           { text: 'Home', href: '/' },
           { text: 'Admin', href: '/admin/home' },

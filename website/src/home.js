@@ -8,7 +8,7 @@ const Home = () => {
         alt="Logo"
         width={450}
         height={450}
-        class="center awsui-util-hide-in-dark-mode"
+        className="center awsui-util-hide-in-dark-mode"
       />
     </>
   );

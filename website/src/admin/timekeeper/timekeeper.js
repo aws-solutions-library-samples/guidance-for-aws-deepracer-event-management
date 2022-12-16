@@ -31,7 +31,7 @@ const Timekeeper = () => {
   const [fastestLap, SetFastestLap] = useState([]);
 
   const connected = false; // TODO remove when activating websocket (automated timer)
-  //const { message, connected } = useWebsocket('ws://localhost:8080');
+  // const { message, connected } = useWebsocket('ws://localhost:8080');
   const { setNavigationOpen } = useContext(SideNavContext);
   const { events, selectedEvent, setSelectedEvent } = useContext(eventContext);
 
@@ -137,12 +137,10 @@ const Timekeeper = () => {
     if (username === undefined) {
       SetRacerSelectorModalIsVisible(true);
       pauseLapTimer();
+    } else if (lapTimerIsRunning) {
+      pauseLapTimer();
     } else {
-      if (lapTimerIsRunning) {
-        pauseLapTimer();
-      } else {
-        startLapTimer();
-      }
+      startLapTimer();
     }
   };
 

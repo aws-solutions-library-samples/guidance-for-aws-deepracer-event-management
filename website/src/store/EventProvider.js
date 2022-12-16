@@ -1,6 +1,6 @@
-import { createContext, useState } from 'react';
+import React, { createContext, useState } from 'react';
 
-//create a context, with createContext api
+// create a context, with createContext api
 export const eventContext = createContext();
 
 const EventProvider = (props) => {

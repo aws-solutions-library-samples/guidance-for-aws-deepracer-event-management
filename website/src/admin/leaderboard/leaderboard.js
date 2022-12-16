@@ -12,11 +12,11 @@ import styles from './leaderboard.module.css';
 const Leaderboard = () => {
   const [leaderboardEntries, SetleaderboardEntries] = useState([]);
   const [leaderboardListItems, SetLeaderboardListItems] = useState(<div></div>);
-  const [isSubscribed, SetIsSubscribed] = useState(false);
+  // const [isSubscribed, SetIsSubscribed] = useState(false);
   const [subscription, SetSubscription] = useState();
   const { setNavigationOpen } = useContext(SideNavContext);
   const { selectedEvent } = useContext(eventContext);
-  const [allLeaderboardEntriesFromBackend, loading] = useQuery('getLeaderBoardEntries', {
+  const [allLeaderboardEntriesFromBackend] = useQuery('getLeaderBoardEntries', {
     eventId: selectedEvent.eventId,
   });
 
@@ -52,7 +52,7 @@ const Leaderboard = () => {
       }
       SetSubscription(
         API.graphql(
-          //graphqlOperation(onNewFastestLapForUser, { eventId: selectedEvent.eventId })
+          // graphqlOperation(onNewFastestLapForUser, { eventId: selectedEvent.eventId })
           graphqlOperation(onNewFastestLapForUser)
         ).subscribe({
           next: ({ provider, value }) => {

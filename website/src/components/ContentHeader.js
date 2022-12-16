@@ -1,4 +1,5 @@
 import { BreadcrumbGroup, Grid, Header } from '@cloudscape-design/components';
+import React from 'react';
 
 export function ContentHeader(props) {
   return (
