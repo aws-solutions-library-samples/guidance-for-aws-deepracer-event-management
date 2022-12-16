@@ -6,14 +6,15 @@ import sys
 # the CDK's core module.  The following line also imports it as `core` for use
 # with examples from the CDK Developer's Guide, which are in the process of
 # being updated to use `cdk`.  You may delete this import if you don't need it.
-from aws_cdk import App, Aspects, Environment
-from cdk_nag import AwsSolutionsChecks
+from aws_cdk import App, Environment
 
 from backend.deepracer_event_manager_pipeline_stack import (
     CdkServerlessCharityPipelineStack,
 )
 from backend.deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
 
+# from aws_cdk import Aspects
+# from cdk_nag import AwsSolutionsChecks
 # from backend.deepracer_event_manager_fe_deploy_stack import (
 #     CdkDeepRacerEventManagerFEDeployStack,
 # )
@@ -68,5 +69,5 @@ else:
         app, "drem-pipeline-" + branchname, branchname=branchname, email=email, env=env
     )
 
-Aspects.of(app).add(AwsSolutionsChecks(verbose=True))
+# Aspects.of(app).add(AwsSolutionsChecks(verbose=True))
 app.synth()
