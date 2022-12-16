@@ -1,5 +1,3 @@
-import React, { useEffect, useState } from 'react';
-import { API } from 'aws-amplify';
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
@@ -8,10 +6,11 @@ import {
   Header,
   Link,
   Pagination,
-  SpaceBetween,
   Table,
   TextFilter,
 } from '@cloudscape-design/components';
+import { API } from 'aws-amplify';
+import React, { useEffect, useState } from 'react';
 
 import { ContentHeader } from '../components/ContentHeader';
 import {
@@ -25,13 +24,13 @@ import {
 import dayjs from 'dayjs';
 
 // day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat')
-var utc = require('dayjs/plugin/utc')
-var timezone = require('dayjs/plugin/timezone') // dependent on utc plugin
+var advancedFormat = require('dayjs/plugin/advancedFormat');
+var utc = require('dayjs/plugin/utc');
+var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
 
-dayjs.extend(advancedFormat)
-dayjs.extend(utc)
-dayjs.extend(timezone)
+dayjs.extend(advancedFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export function AdminGroups() {
   const [allItems, setItems] = useState([]);
@@ -47,14 +46,13 @@ export function AdminGroups() {
       const groups = await API.get(apiName, apiPath);
       setItems(groups.Groups);
       setIsLoading(false);
-    }
+    };
 
     getData();
 
     return () => {
       // Unmounting
-    }
-
+    };
   }, []);
 
   const [preferences, setPreferences] = useState({
@@ -66,9 +64,9 @@ export function AdminGroups() {
     {
       id: 'groupName',
       header: 'Group name',
-      cell: item => (
+      cell: (item) => (
         <div>
-          <Link href={window.location.href + "/" + item.GroupName}>{item.GroupName}</Link>
+          <Link href={window.location.href + '/' + item.GroupName}>{item.GroupName}</Link>
         </div>
       ),
       sortingField: 'groupName',
@@ -78,7 +76,7 @@ export function AdminGroups() {
     {
       id: 'description',
       header: 'Description',
-      cell: item => item.Description || '-',
+      cell: (item) => item.Description || '-',
       sortingField: 'description',
       width: 200,
       minWidth: 150,
@@ -86,7 +84,7 @@ export function AdminGroups() {
     {
       id: 'creationDate',
       header: 'Creation date',
-      cell: item => dayjs(item.creationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => dayjs(item.creationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'creationDate',
       width: 200,
       minWidth: 150,
@@ -94,11 +92,11 @@ export function AdminGroups() {
     {
       id: 'lastModifiedDate',
       header: 'Last modified date',
-      cell: item => dayjs(item.LastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => dayjs(item.LastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'lastModifiedDate',
       width: 200,
       minWidth: 150,
-    }
+    },
   ];
 
   const visibleContentOptions = [
@@ -122,21 +120,15 @@ export function AdminGroups() {
         {
           id: 'lastModifiedDate',
           label: 'Last modified date',
-        }
-      ]
-    }
-  ]
+        },
+      ],
+    },
+  ];
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
-    allItems,
-    {
+  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
+    useCollection(allItems, {
       filtering: {
-        empty: (
-          <EmptyState
-            title="No groups"
-            subtitle="No groups have been defined."
-          />
-        ),
+        empty: <EmptyState title="No groups" subtitle="No groups have been defined." />,
         noMatch: (
           <EmptyState
             title="No matches"
@@ -148,8 +140,7 @@ export function AdminGroups() {
       pagination: { pageSize: preferences.pageSize },
       sorting: { defaultState: { sortingColumn: columnsConfig[0] } },
       selection: {},
-    }
-  );
+    });
 
   return (
     <>
@@ -157,9 +148,9 @@ export function AdminGroups() {
         header="Groups admin"
         description="List of user groups."
         breadcrumbs={[
-          { text: "Home", href: "/" },
-          { text: "Admin", href: "/admin/home" },
-          { text: "Groups" }
+          { text: 'Home', href: '/' },
+          { text: 'Admin', href: '/admin/home' },
+          { text: 'Groups' },
         ]}
       />
 
@@ -169,7 +160,11 @@ export function AdminGroups() {
           {...collectionProps}
           header={
             <Header
-              counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
+              counter={
+                selectedItems.length
+                  ? `(${selectedItems.length}/${allItems.length})`
+                  : `(${allItems.length})`
+              }
             >
               Groups
             </Header>
@@ -177,32 +172,34 @@ export function AdminGroups() {
           columnDefinitions={columnsConfig}
           items={items}
           pagination={
-            <Pagination {...paginationProps}
+            <Pagination
+              {...paginationProps}
               ariaLabels={{
                 nextPageLabel: 'Next page',
                 previousPageLabel: 'Previous page',
-                pageLabel: pageNumber => `Go to page ${pageNumber}`,
+                pageLabel: (pageNumber) => `Go to page ${pageNumber}`,
               }}
-            />}
+            />
+          }
           filter={
             <TextFilter
               {...filterProps}
               countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel='Filter models'
+              filteringAriaLabel="Filter models"
             />
           }
           loading={isLoading}
-          loadingText='Loading groups'
+          loadingText="Loading groups"
           visibleColumns={preferences.visibleContent}
           selectedItems={selectedItems}
-          stickyHeader='true'
-          trackBy='GroupName'
+          stickyHeader="true"
+          trackBy="GroupName"
           resizableColumns
           preferences={
             <CollectionPreferences
-              title='Preferences'
-              confirmLabel='Confirm'
-              cancelLabel='Cancel'
+              title="Preferences"
+              confirmLabel="Confirm"
+              cancelLabel="Cancel"
               onConfirm={({ detail }) => setPreferences(detail)}
               preferences={preferences}
               pageSizePreference={PageSizePreference('groups')}

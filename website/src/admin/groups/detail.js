@@ -1,6 +1,3 @@
-import React, { useEffect, useState } from 'react';
-import { API, Auth } from 'aws-amplify';
-import { useParams } from 'react-router-dom'
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
@@ -14,6 +11,9 @@ import {
   TextFilter,
   Toggle,
 } from '@cloudscape-design/components';
+import { API, Auth } from 'aws-amplify';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 import { ContentHeader } from '../../components/ContentHeader';
 import {
@@ -27,13 +27,13 @@ import {
 import dayjs from 'dayjs';
 
 // day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat')
-var utc = require('dayjs/plugin/utc')
-var timezone = require('dayjs/plugin/timezone') // dependent on utc plugin
+var advancedFormat = require('dayjs/plugin/advancedFormat');
+var utc = require('dayjs/plugin/utc');
+var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
 
-dayjs.extend(advancedFormat)
-dayjs.extend(utc)
-dayjs.extend(timezone)
+dayjs.extend(advancedFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export function AdminGroupsDetail() {
   const { groupName } = useParams();
@@ -46,42 +46,39 @@ export function AdminGroupsDetail() {
   const apiName = 'deepracerEventManager';
 
   useEffect(() => {
-    const getData = async() => {
+    const getData = async () => {
       const apiUserPath = 'users';
 
       const userRsponse = await API.get(apiName, apiUserPath);
-      const users = userRsponse.map(u =>
-        ({
-          ...u,
-          isMember: false,
-          currentUser: false,
-        })
-      );
+      const users = userRsponse.map((u) => ({
+        ...u,
+        isMember: false,
+        currentUser: false,
+      }));
 
       const apiGroupPath = 'admin/groups/' + groupName;
       const groupResponse = await API.get(apiName, apiGroupPath);
-      groupResponse.forEach(group => {
-        const i = users.findIndex((user => user.Username === group.Username));
+      groupResponse.forEach((group) => {
+        const i = users.findIndex((user) => user.Username === group.Username);
         users[i].isMember = true;
       });
 
       // Need to get the current user and flag them in the data
       // (Current user can't remove themselves from a group they are members of)
-      Auth.currentAuthenticatedUser().then(loggedInUser => {
-        const i = users.findIndex((user => user.Username === loggedInUser.username));
+      Auth.currentAuthenticatedUser().then((loggedInUser) => {
+        const i = users.findIndex((user) => user.Username === loggedInUser.username);
         users[i].currentUser = true;
       });
 
       setItems(users);
       setIsLoading(false);
-    }
+    };
 
     getData();
-    return() => {
+    return () => {
       // Unmounting
-    }
-
-  },[refreshKey]);
+    };
+  }, [refreshKey]);
 
   const toggleUser = (user) => {
     const apiName = 'deepracerEventManager';
@@ -90,35 +87,28 @@ export function AdminGroupsDetail() {
 
     if (user.isMember) {
       const apiGroupUserPath = 'admin/groups/' + groupName + '/' + user.Username;
-      API.del(apiName, apiGroupUserPath)
+      API.del(apiName, apiGroupUserPath);
     } else {
       const apiGroupUserPath = 'admin/groups/' + groupName;
       const params = {
         body: {
-          username: user.Username
+          username: user.Username,
         },
       };
-      API.post(apiName, apiGroupUserPath, params)
+      API.post(apiName, apiGroupUserPath, params);
     }
 
     // need to reload the user data
     setRefreshKey(refreshKey + 1);
-  }
+  };
 
   const userToggle = (user) => {
     if (!user.currentUser) {
-      return (
-        <Toggle
-          onChange={({}) =>
-            toggleUser(user)
-          }
-          checked={user.isMember}
-        />
-      )
+      return <Toggle onChange={({}) => toggleUser(user)} checked={user.isMember} />;
     } else {
-      return ( <Icon name='user-profile' />)
-    };
-  }
+      return <Icon name="user-profile" />;
+    }
+  };
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
@@ -129,7 +119,7 @@ export function AdminGroupsDetail() {
     {
       id: 'userName',
       header: 'User name',
-      cell: item => item.Username,
+      cell: (item) => item.Username,
       sortingField: 'userName',
       width: 200,
       minWidth: 150,
@@ -137,7 +127,7 @@ export function AdminGroupsDetail() {
     {
       id: 'userCreationDate',
       header: 'Creation date',
-      cell: item => dayjs(item.UserCreateDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => dayjs(item.UserCreateDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'userCreationDate',
       width: 200,
       minWidth: 150,
@@ -145,7 +135,7 @@ export function AdminGroupsDetail() {
     {
       id: 'userLastModifiedDate',
       header: 'Last modified date',
-      cell: item => dayjs(item.UserLastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => dayjs(item.UserLastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'userLastModifiedDate',
       width: 200,
       minWidth: 150,
@@ -153,7 +143,7 @@ export function AdminGroupsDetail() {
     {
       id: 'isMember',
       header: 'Group member?',
-      cell: item => userToggle(item),
+      cell: (item) => userToggle(item),
       sortingField: 'isMember',
       width: 200,
       minWidth: 150,
@@ -161,11 +151,11 @@ export function AdminGroupsDetail() {
     {
       id: 'isEnabled',
       header: 'User enabled?',
-      cell: item => <StatusIndicator {...isMemberIndicator[item.Enabled]} />,
+      cell: (item) => <StatusIndicator {...isMemberIndicator[item.Enabled]} />,
       sortingField: 'isEnabled',
       width: 200,
       minWidth: 150,
-    }
+    },
   ];
 
   const visibleContentOptions = [
@@ -192,21 +182,15 @@ export function AdminGroupsDetail() {
         {
           id: 'isEnabled',
           label: 'User enabled',
-        }
-      ]
-    }
-  ]
+        },
+      ],
+    },
+  ];
 
-  const {items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
-    allItems,
-    {
+  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
+    useCollection(allItems, {
       filtering: {
-        empty: (
-          <EmptyState
-            title="No users"
-            subtitle="No users have been defined."
-          />
-        ),
+        empty: <EmptyState title="No users" subtitle="No users have been defined." />,
         noMatch: (
           <EmptyState
             title="No matches"
@@ -218,24 +202,23 @@ export function AdminGroupsDetail() {
       pagination: { pageSize: preferences.pageSize },
       sorting: { defaultState: { sortingColumn: columnsConfig[0] } },
       selection: {},
-    }
-  );
+    });
 
   const isMemberIndicator = {
-    true: { type: 'success', children: ''},
-    false: { type: 'error', children: ''},
+    true: { type: 'success', children: '' },
+    false: { type: 'error', children: '' },
   };
 
   return (
     <>
       <ContentHeader
-        header={"Group '"  + groupName + "' admin"}
+        header={"Group '" + groupName + "' admin"}
         description={"Add / remove users from the '" + groupName + "' group."}
         breadcrumbs={[
-          { text: "Home", href: "/" },
-          { text: "Admin", href: "/admin/home" },
-          { text: "Groups", href: "/admin/groups" },
-          { text: groupName }
+          { text: 'Home', href: '/' },
+          { text: 'Admin', href: '/admin/home' },
+          { text: 'Groups', href: '/admin/groups' },
+          { text: groupName },
         ]}
       />
 
@@ -245,7 +228,11 @@ export function AdminGroupsDetail() {
           {...collectionProps}
           header={
             <Header
-              counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
+              counter={
+                selectedItems.length
+                  ? `(${selectedItems.length}/${allItems.length})`
+                  : `(${allItems.length})`
+              }
             >
               Users
             </Header>
@@ -253,31 +240,33 @@ export function AdminGroupsDetail() {
           columnDefinitions={columnsConfig}
           items={items}
           pagination={
-            <Pagination {...paginationProps}
-            ariaLabels={{
-              nextPageLabel: 'Next page',
-              previousPageLabel: 'Previous page',
-              pageLabel: pageNumber => `Go to page ${pageNumber}`,
-            }}
-          />}
+            <Pagination
+              {...paginationProps}
+              ariaLabels={{
+                nextPageLabel: 'Next page',
+                previousPageLabel: 'Previous page',
+                pageLabel: (pageNumber) => `Go to page ${pageNumber}`,
+              }}
+            />
+          }
           filter={
             <TextFilter
               {...filterProps}
               countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel='Filter users'
+              filteringAriaLabel="Filter users"
             />
           }
           loading={isLoading}
-          loadingText='Loading users'
+          loadingText="Loading users"
           visibleColumns={preferences.visibleContent}
-          stickyHeader='true'
-          trackBy='Username'
+          stickyHeader="true"
+          trackBy="Username"
           resizableColumns
           preferences={
             <CollectionPreferences
-              title='Preferences'
-              confirmLabel='Confirm'
-              cancelLabel='Cancel'
+              title="Preferences"
+              confirmLabel="Confirm"
+              cancelLabel="Cancel"
               onConfirm={({ detail }) => setPreferences(detail)}
               preferences={preferences}
               pageSizePreference={PageSizePreference('users')}

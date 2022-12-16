@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { API } from 'aws-amplify';
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
   CollectionPreferences,
-  Header,
   Grid,
+  Header,
   Pagination,
   Table,
   TextFilter,
 } from '@cloudscape-design/components';
+import { API } from 'aws-amplify';
+import React, { useEffect, useState } from 'react';
 
 import { ContentHeader } from '../components/ContentHeader';
 import {
@@ -24,13 +24,13 @@ import {
 import dayjs from 'dayjs';
 
 // day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat')
-var utc = require('dayjs/plugin/utc')
-var timezone = require('dayjs/plugin/timezone') // dependent on utc plugin
+var advancedFormat = require('dayjs/plugin/advancedFormat');
+var utc = require('dayjs/plugin/utc');
+var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
 
-dayjs.extend(advancedFormat)
-dayjs.extend(utc)
-dayjs.extend(timezone)
+dayjs.extend(advancedFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export function AdminQuarantine() {
   const [allItems, setItems] = useState([]);
@@ -38,21 +38,21 @@ export function AdminQuarantine() {
 
   useEffect(() => {
     async function getQuarantinedModels() {
-      console.log("Collecting models...")
+      console.log('Collecting models...');
 
       const apiName = 'deepracerEventManager';
       const apiPath = 'admin/quarantinedmodels';
 
       const response = await API.get(apiName, apiPath);
       var models = response.map(function (model, i) {
-        const modelKeyPieces = (model.Key.split('/'))
+        const modelKeyPieces = model.Key.split('/');
         return {
           id: i,
           userName: modelKeyPieces[modelKeyPieces.length - 3],
           modelName: modelKeyPieces[modelKeyPieces.length - 1],
-          modelDate: dayjs(model.LastModified).format('YYYY-MM-DD HH:mm:ss (z)')
-        }
-      })
+          modelDate: dayjs(model.LastModified).format('YYYY-MM-DD HH:mm:ss (z)'),
+        };
+      });
       setItems(models);
 
       setIsLoading(false);
@@ -62,24 +62,18 @@ export function AdminQuarantine() {
 
     return () => {
       // Unmounting
-    }
-  }, [])
+    };
+  }, []);
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
     visibleContent: ['userName', 'modelName', 'modelDate'],
   });
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
-    allItems,
-    {
+  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
+    useCollection(allItems, {
       filtering: {
-        empty: (
-          <EmptyState
-            title="No models"
-            subtitle="No quarantined models to display."
-          />
-        ),
+        empty: <EmptyState title="No models" subtitle="No quarantined models to display." />,
         noMatch: (
           <EmptyState
             title="No matches"
@@ -91,8 +85,7 @@ export function AdminQuarantine() {
       pagination: { pageSize: preferences.pageSize },
       sorting: { defaultState: { sortingColumn: AdminModelsColumnsConfig[3], isDescending: true } },
       selection: {},
-    }
-  );
+    });
   const { selectedItems } = collectionProps;
 
   const visibleContentOptions = [
@@ -107,10 +100,10 @@ export function AdminQuarantine() {
         {
           id: 'modelDate',
           label: 'Upload date',
-        }
-      ]
-    }
-  ]
+        },
+      ],
+    },
+  ];
 
   return (
     <>
@@ -118,9 +111,9 @@ export function AdminQuarantine() {
         header="Quarantined Models"
         description="List of all quarantined models."
         breadcrumbs={[
-          { text: "Home", href: "/" },
-          { text: "Admin", href: "/admin/home" },
-          { text: "Quarantined Models" },
+          { text: 'Home', href: '/' },
+          { text: 'Admin', href: '/admin/home' },
+          { text: 'Quarantined Models' },
         ]}
       />
 
@@ -130,7 +123,11 @@ export function AdminQuarantine() {
           {...collectionProps}
           header={
             <Header
-              counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
+              counter={
+                selectedItems.length
+                  ? `(${selectedItems.length}/${allItems.length})`
+                  : `(${allItems.length})`
+              }
             >
               Models
             </Header>
@@ -138,18 +135,20 @@ export function AdminQuarantine() {
           columnDefinitions={AdminModelsColumnsConfig}
           items={items}
           pagination={
-            <Pagination {...paginationProps}
+            <Pagination
+              {...paginationProps}
               ariaLabels={{
                 nextPageLabel: 'Next page',
                 previousPageLabel: 'Previous page',
-                pageLabel: pageNumber => `Go to page ${pageNumber}`,
+                pageLabel: (pageNumber) => `Go to page ${pageNumber}`,
               }}
-            />}
+            />
+          }
           filter={
             <TextFilter
               {...filterProps}
               countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel='Filter models'
+              filteringAriaLabel="Filter models"
             />
           }
           loading={isLoading}
@@ -157,9 +156,9 @@ export function AdminQuarantine() {
           visibleColumns={preferences.visibleContent}
           preferences={
             <CollectionPreferences
-              title='Preferences'
-              confirmLabel='Confirm'
-              cancelLabel='Cancel'
+              title="Preferences"
+              confirmLabel="Confirm"
+              cancelLabel="Cancel"
               onConfirm={({ detail }) => setPreferences(detail)}
               preferences={preferences}
               pageSizePreference={PageSizePreference('models')}
@@ -175,5 +174,4 @@ export function AdminQuarantine() {
       </Grid>
     </>
   );
-
 }

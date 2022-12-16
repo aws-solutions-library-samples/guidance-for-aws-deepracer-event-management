@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
 import { API } from 'aws-amplify';
+import React, { useEffect, useState } from 'react';
 import * as queries from '../graphql/queries';
 //import * as mutations from '../graphql/mutations';
 //import * as subscriptions from '../graphql/subscriptions'
@@ -8,12 +8,12 @@ import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
   CollectionPreferences,
-  Header,
   Grid,
+  Header,
   Pagination,
+  SpaceBetween,
   Table,
   TextFilter,
-  SpaceBetween,
 } from '@cloudscape-design/components';
 
 import { ContentHeader } from '../components/ContentHeader';
@@ -26,19 +26,18 @@ import {
   WrapLines,
 } from '../components/TableConfig';
 
-import CarModelUploadModal from "./carModelUploadModal.js";
-import DeleteModelModal from '../components/DeleteModelModal';
+import CarModelUploadModal from './carModelUploadModal.js';
 
 import dayjs from 'dayjs';
 
 // day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat')
-var utc = require('dayjs/plugin/utc')
-var timezone = require('dayjs/plugin/timezone') // dependent on utc plugin
+var advancedFormat = require('dayjs/plugin/advancedFormat');
+var utc = require('dayjs/plugin/utc');
+var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
 
-dayjs.extend(advancedFormat)
-dayjs.extend(utc)
-dayjs.extend(timezone)
+dayjs.extend(advancedFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export function AdminModels() {
   const [allItems, setItems] = useState([]);
@@ -48,30 +47,30 @@ export function AdminModels() {
 
   useEffect(() => {
     async function getData() {
-      console.log("Collecting models...")
+      console.log('Collecting models...');
       const apiName = 'deepracerEventManager';
       const apiPath = 'models';
 
       const response = await API.get(apiName, apiPath);
       var models = response.map(function (model, i) {
         // TODO: Fix inconsistency in model.Key / model.key in /admin/model.js and /models.js
-        const modelKeyPieces = (model.Key.split('/'))
+        const modelKeyPieces = model.Key.split('/');
         return {
           key: model.Key,
           userName: modelKeyPieces[modelKeyPieces.length - 3],
           modelName: modelKeyPieces[modelKeyPieces.length - 1],
-          modelDate: dayjs(model.LastModified).format('YYYY-MM-DD HH:mm:ss (z)')
-        }
-      })
+          modelDate: dayjs(model.LastModified).format('YYYY-MM-DD HH:mm:ss (z)'),
+        };
+      });
       setItems(models);
       console.log(allItems);
 
-      console.log("Collecting cars...")
+      console.log('Collecting cars...');
       // Get CarsOnline
       async function carsOnline() {
         const response = await API.graphql({
           query: queries.carsOnline,
-          variables: { online: true }
+          variables: { online: true },
         });
         setCars(response.data.carsOnline);
       }
@@ -79,29 +78,23 @@ export function AdminModels() {
 
       setIsLoading(false);
     }
-    console.log(cars)
+    console.log(cars);
     getData();
 
     return () => {
       // Unmounting
-    }
-  }, [])
+    };
+  }, []);
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
     visibleContent: ['userName', 'modelName', 'modelDate'],
   });
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
-    allItems,
-    {
+  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
+    useCollection(allItems, {
       filtering: {
-        empty: (
-          <EmptyState
-            title="No models"
-            subtitle="No models to display."
-          />
-        ),
+        empty: <EmptyState title="No models" subtitle="No models to display." />,
         noMatch: (
           <EmptyState
             title="No matches"
@@ -113,8 +106,7 @@ export function AdminModels() {
       pagination: { pageSize: preferences.pageSize },
       sorting: { defaultState: { sortingColumn: AdminModelsColumnsConfig[3], isDescending: true } },
       selection: {},
-    }
-  );
+    });
   const [selectedItems, setSelectedItems] = useState([]);
 
   const visibleContentOptions = [
@@ -134,10 +126,10 @@ export function AdminModels() {
         {
           id: 'modelDate',
           label: 'Upload date',
-        }
-      ]
-    }
-  ]
+        },
+      ],
+    },
+  ];
 
   return (
     <>
@@ -145,9 +137,9 @@ export function AdminModels() {
         header="All Models"
         description="List of all uploaded models."
         breadcrumbs={[
-          { text: "Home", href: "/" },
-          { text: "Admin", href: "/admin/home" },
-          { text: "Models" },
+          { text: 'Home', href: '/' },
+          { text: 'Admin', href: '/admin/home' },
+          { text: 'Models' },
         ]}
       />
 
@@ -157,14 +149,26 @@ export function AdminModels() {
           {...collectionProps}
           header={
             <Header
-              counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
+              counter={
+                selectedItems.length
+                  ? `(${selectedItems.length}/${allItems.length})`
+                  : `(${allItems.length})`
+              }
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
-                  <Button onClick={() => {
-                    setSelectedItems([]);
-                    setSelectedModelsBtn(true);
-                  }}>Clear selected</Button>
-                  <CarModelUploadModal disabled={selectedModelsBtn} selectedModels={selectedItems} cars={cars}></CarModelUploadModal>
+                  <Button
+                    onClick={() => {
+                      setSelectedItems([]);
+                      setSelectedModelsBtn(true);
+                    }}
+                  >
+                    Clear selected
+                  </Button>
+                  <CarModelUploadModal
+                    disabled={selectedModelsBtn}
+                    selectedModels={selectedItems}
+                    cars={cars}
+                  ></CarModelUploadModal>
                 </SpaceBetween>
               }
             >
@@ -174,37 +178,39 @@ export function AdminModels() {
           columnDefinitions={AdminModelsColumnsConfig}
           items={items}
           pagination={
-            <Pagination {...paginationProps}
+            <Pagination
+              {...paginationProps}
               ariaLabels={{
                 nextPageLabel: 'Next page',
                 previousPageLabel: 'Previous page',
-                pageLabel: pageNumber => `Go to page ${pageNumber}`,
+                pageLabel: (pageNumber) => `Go to page ${pageNumber}`,
               }}
-            />}
+            />
+          }
           filter={
             <TextFilter
               {...filterProps}
               countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel='Filter models'
+              filteringAriaLabel="Filter models"
             />
           }
           loading={isLoading}
-          loadingText='Loading models'
+          loadingText="Loading models"
           visibleColumns={preferences.visibleContent}
           selectedItems={selectedItems}
-          selectionType='multi'
-          stickyHeader='true'
+          selectionType="multi"
+          stickyHeader="true"
           trackBy={'key'}
           onSelectionChange={({ detail: { selectedItems } }) => {
-            setSelectedItems(selectedItems)
-            selectedItems.length ? setSelectedModelsBtn(false) : setSelectedModelsBtn(true)
+            setSelectedItems(selectedItems);
+            selectedItems.length ? setSelectedModelsBtn(false) : setSelectedModelsBtn(true);
           }}
           resizableColumns
           preferences={
             <CollectionPreferences
-              title='Preferences'
-              confirmLabel='Confirm'
-              cancelLabel='Cancel'
+              title="Preferences"
+              confirmLabel="Confirm"
+              cancelLabel="Cancel"
               onConfirm={({ detail }) => setPreferences(detail)}
               preferences={preferences}
               pageSizePreference={PageSizePreference('models')}
@@ -220,5 +226,4 @@ export function AdminModels() {
       </Grid>
     </>
   );
-
 }

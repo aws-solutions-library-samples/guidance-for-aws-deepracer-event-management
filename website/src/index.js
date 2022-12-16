@@ -1,11 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
 import App from './App';
+import './index.css';
 import reportWebVitals from './reportWebVitals';
 
-import "@cloudscape-design/global-styles/index.css"
 import '@cloudscape-design/global-styles/dark-mode-utils.css';
+import '@cloudscape-design/global-styles/index.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
