@@ -15,7 +15,7 @@ def cwrum_custom_resource(self, name: str):
             "AppMonitor.Id"
         ),
         service="RUM",
-        action="getAppMonitor",  # https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/RUM.html#getAppMonitor-property
+        action="getAppMonitor",  # https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/RUM.html#getAppMonitor-property # noqa: E501
         parameters={
             "Name": name,
         },
@@ -51,7 +51,7 @@ class CwRumAppMonitor(Construct):
 
         stack = Stack.of(self)
 
-        ## RUM Cognito Identity Pool
+        # RUM Cognito Identity Pool
         rum_identity_pool = cognito.CfnIdentityPool(
             self,
             "CwRumIdentityPool",
@@ -59,7 +59,7 @@ class CwRumAppMonitor(Construct):
             allow_classic_flow=True,
         )
 
-        ## RUM Cognito Identity Pool Unauthenitcated Role
+        # RUM Cognito Identity Pool Unauthenitcated Role
         rum_id_pool_unauth_user_role = iam.Role(
             self,
             "CwRumCognitoDefaultUnauthenticatedRole",
@@ -88,7 +88,7 @@ class CwRumAppMonitor(Construct):
             },
         )
 
-        ## RUM App Monitor
+        # RUM App Monitor
         cfn_app_monitor = rum.CfnAppMonitor(
             self,
             "CfnAppMonitor",
@@ -120,7 +120,7 @@ class CwRumAppMonitor(Construct):
 
         self.name = cfn_app_monitor.ref
 
-        rum_script = "<script>(function(n,i,v,r,s,c,x,z){{x=window.AwsRumClient={{q:[],n:n,i:i,v:v,r:r,c:c}};window[n]=function(c,p){{x.q.push({{c:c,p:p}});}};z=document.createElement('script');z.async=true;z.src=s;document.head.insertBefore(z,document.getElementsByTagName('script')[0]);}})('cwr','{rum_app_monitor_id}','1.0.0','{region}','https://client.rum.us-east-1.amazonaws.com/1.0.2/cwr.js',{{sessionSampleRate:1,guestRoleArn:\"{rum_guest_role}\",identityPoolId:\"{rum_identity_pool_id}\",endpoint:\"https://dataplane.rum.eu-west-1.amazonaws.com\",telemetries:{rum_app_monitor_config_telemetries},allowCookies:{rum_app_monitor_config_cookies},enableXRay:{rum_app_monitor_config_x_ray}}});</script>".format(
+        rum_script = "<script>(function(n,i,v,r,s,c,x,z){{x=window.AwsRumClient={{q:[],n:n,i:i,v:v,r:r,c:c}};window[n]=function(c,p){{x.q.push({{c:c,p:p}});}};z=document.createElement('script');z.async=true;z.src=s;document.head.insertBefore(z,document.getElementsByTagName('script')[0]);}})('cwr','{rum_app_monitor_id}','1.0.0','{region}','https://client.rum.us-east-1.amazonaws.com/1.0.2/cwr.js',{{sessionSampleRate:1,guestRoleArn:\"{rum_guest_role}\",identityPoolId:\"{rum_identity_pool_id}\",endpoint:\"https://dataplane.rum.eu-west-1.amazonaws.com\",telemetries:{rum_app_monitor_config_telemetries},allowCookies:{rum_app_monitor_config_cookies},enableXRay:{rum_app_monitor_config_x_ray}}});</script>".format(  # noqa: E501
             rum_app_monitor_id=rum_app_monitor_id,
             region=stack.region,
             rum_guest_role=rum_id_pool_unauth_user_role.role_arn,

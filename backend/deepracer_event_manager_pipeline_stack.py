@@ -45,7 +45,7 @@ class CdkServerlessCharityPipelineStack(Stack):
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        ## setup for pseudo parameters
+        # setup for pseudo parameters
         stack = Stack.of(self)
 
         s3_repo_bucket_parameter_store = (
@@ -64,7 +64,7 @@ class CdkServerlessCharityPipelineStack(Stack):
             synth=pipelines.CodeBuildStep(
                 "SynthAndDeployBackend",
                 build_environment=codebuild.BuildEnvironment(
-                    build_image=codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0,
+                    build_image=codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0,  # noqa: E501
                 ),
                 input=pipelines.CodePipelineSource.s3(
                     bucket=s3_repo_bucket,
@@ -108,7 +108,7 @@ class CdkServerlessCharityPipelineStack(Stack):
             ),
         )
 
-        ## Dev Stage
+        # Dev Stage
         env = {"account": stack.account, "region": stack.region}
 
         infrastructure = InfrastructurePipelineStage(

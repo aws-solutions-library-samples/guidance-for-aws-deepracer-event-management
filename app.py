@@ -6,14 +6,19 @@ import sys
 # the CDK's core module.  The following line also imports it as `core` for use
 # with examples from the CDK Developer's Guide, which are in the process of
 # being updated to use `cdk`.  You may delete this import if you don't need it.
-from aws_cdk import App, Aspects, Environment
-from cdk_nag import AwsSolutionsChecks
+from aws_cdk import App, Environment
 
-# from backend.deepracer_event_manager_fe_deploy_stack import CdkDeepRacerEventManagerFEDeployStack
 from backend.deepracer_event_manager_pipeline_stack import (
     CdkServerlessCharityPipelineStack,
 )
 from backend.deepracer_event_manager_stack import CdkDeepRacerEventManagerStack
+
+# from aws_cdk import Aspects
+# from cdk_nag import AwsSolutionsChecks
+# from backend.deepracer_event_manager_fe_deploy_stack import (
+#     CdkDeepRacerEventManagerFEDeployStack,
+# )
+
 
 # Region
 env = Environment(account=os.environ["CDK_DEFAULT_ACCOUNT"], region="eu-west-1")
@@ -51,7 +56,13 @@ if manual_deploy:
     infrastructure = CdkDeepRacerEventManagerStack(
         app, "drem-backend-" + branchname + "-infrastructure", email=email, env=env
     )
-    # CdkDeepRacerEventManagerFEDeployStack(app, "drem-frontend-" + branchname, env=env, source_bucket=infrastructure.source_bucket, distribution=infrastructure.distribution)
+    # CdkDeepRacerEventManagerFEDeployStack(
+    #     app,
+    #     "drem-frontend-" + branchname,
+    #     env=env,
+    #     source_bucket=infrastructure.source_bucket,
+    #     distribution=infrastructure.distribution,
+    # )
 else:
     print("Pipeline deploy")
     CdkServerlessCharityPipelineStack(

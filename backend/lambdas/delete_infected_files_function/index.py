@@ -40,7 +40,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
             )
 
             # copy the file from source to infected bucket
-            copy_request = s3.copy_object(
+            s3.copy_object(
                 Bucket=dest_bucket,
                 CopySource={"Bucket": source_bucket, "Key": s3_object},
                 Key=s3_object,

@@ -1,6 +1,3 @@
-import decimal
-
-# from constructs import Construct
 from aws_cdk import RemovalPolicy, Stack
 from aws_cdk import aws_cloudfront as cloudfront
 from aws_cdk import aws_cloudfront_origins as cloudfront_origins

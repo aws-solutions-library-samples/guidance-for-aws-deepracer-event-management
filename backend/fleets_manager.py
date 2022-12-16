@@ -1,17 +1,10 @@
-from os import path, getcwd
-
-from aws_cdk import (
-    Stack,
-    Duration,
-    DockerImage,
-    aws_appsync_alpha as appsync,
-    aws_dynamodb as dynamodb,
-    aws_lambda_python_alpha as lambda_python,
-    aws_lambda as awslambda,
-    aws_cognito as cognito,
-    aws_iam as iam,
-)
-
+from aws_cdk import DockerImage, Duration
+from aws_cdk import aws_appsync_alpha as appsync
+from aws_cdk import aws_cognito as cognito
+from aws_cdk import aws_dynamodb as dynamodb
+from aws_cdk import aws_iam as iam
+from aws_cdk import aws_lambda as awslambda
+from aws_cdk import aws_lambda_python_alpha as lambda_python
 from constructs import Construct
 
 
@@ -27,8 +20,6 @@ class FleetsManager(Construct):
         **kwargs,
     ):
         super().__init__(scope, id, **kwargs)
-
-        stack = Stack.of(self)
 
         fleets_table = dynamodb.Table(
             self,
@@ -64,7 +55,7 @@ class FleetsManager(Construct):
                 lambda_python.PythonLayerVersion.from_layer_version_arn(
                     self,
                     "powertools",
-                    "arn:aws:lambda:eu-west-1:017000801446:layer:AWSLambdaPowertoolsPython:3",
+                    "arn:aws:lambda:eu-west-1:017000801446:layer:AWSLambdaPowertoolsPython:3",  # noqa: E501
                 )
             ],
             environment={

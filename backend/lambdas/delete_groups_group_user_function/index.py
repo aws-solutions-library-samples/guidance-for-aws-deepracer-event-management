@@ -1,5 +1,4 @@
 import os
-from ast import And
 
 import boto3
 import http_response

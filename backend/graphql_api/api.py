@@ -1,5 +1,3 @@
-from os import getcwd, path
-
 from aws_cdk import Stack
 from aws_cdk import aws_appsync_alpha as appsync
 from aws_cdk import aws_logs as logs
@@ -15,7 +13,6 @@ class API(Construct):
         self.api = appsync.GraphqlApi(
             self,
             "dremApi",
-            # schema=appsync.Schema.from_asset(path.join(getcwd(), "backend/leaderboard/schema.graphql")),
             authorization_config=appsync.AuthorizationConfig(
                 default_authorization=appsync.AuthorizationMode(
                     authorization_type=appsync.AuthorizationType.IAM

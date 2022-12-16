@@ -1,15 +1,13 @@
+import hashlib
+import os
+import tarfile
+from datetime import datetime
+
+import boto3
+import http_response
+import simplejson as json
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
-
-import simplejson as json
-import boto3
-import os
-import http_response
-import tarfile
-import hashlib
-from urllib.parse import unquote
-import uuid
-from datetime import datetime
 
 logger = Logger()
 
@@ -61,7 +59,11 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
             Key={
                 "modelId": model_id,
             },
-            UpdateExpression="SET racerName = :racerName, racerIdentityId = :racerIdentityId, md5Datetime = :md5Datetime, modelMD5 = :modelMD5, modelMetadataMD5 = :modelMetadataMD5",
+            UpdateExpression=(
+                "SET racerName = :racerName, racerIdentityId = :racerIdentityId,"
+                " md5Datetime = :md5Datetime, modelMD5 = :modelMD5, modelMetadataMD5 ="
+                " :modelMetadataMD5"
+            ),
             ExpressionAttributeValues={
                 ":racerName": racer_name,
                 ":racerIdentityId": racer_identity_id,

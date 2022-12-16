@@ -16,8 +16,8 @@ class CdkDeepRacerEventManagerFEDeployStack(Stack):
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        ## Deploy Website
-        deployment = s3_deployment.BucketDeployment(
+        # Deploy Website
+        s3_deployment.BucketDeployment(
             self,
             "DeployWebsite",
             sources=[

@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 # encoding=utf-8
-from aws_lambda_powertools import Tracer, Logger
-from aws_lambda_powertools.logging import correlation_paths
-from aws_lambda_powertools.event_handler import AppSyncResolver
-import boto3
-from boto3.dynamodb.conditions import Key
 import os
 import uuid
 from datetime import datetime
+
+import boto3
+from aws_lambda_powertools import Logger, Tracer
+from aws_lambda_powertools.event_handler import AppSyncResolver
+from aws_lambda_powertools.logging import correlation_paths
 
 tracer = Tracer()
 logger = Logger()
@@ -68,7 +68,7 @@ def udpateFleet(fleetId: str, fleetName: str, tracks):
     logger.info(f"udpateFleet: fleetId={fleetId}")
     # TODO make so that only attributes which are provided is updated
 
-    response = ddbTable.update_item(
+    ddbTable.update_item(
         Key={"fleetId": fleetId},
         UpdateExpression="SET fleetName= :newName",
         ExpressionAttributeValues={":newName": fleetName},

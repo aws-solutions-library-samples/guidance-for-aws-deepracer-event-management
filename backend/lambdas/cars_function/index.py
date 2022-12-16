@@ -34,7 +34,7 @@ def lambda_handler(event, context):
 @app.resolver(type_name="Query", field_name="carsOnline")
 def carOnline(online: str):
     try:
-        if online == False:
+        if online is False:
             PingStatusFilter = "ConnectionLost"
         else:
             PingStatusFilter = "Online"
@@ -195,11 +195,11 @@ def carSetTaillightColor(resourceIds: List[str], selectedColor: str):
         logger.info(resourceIds)
 
         color = colors.get(selectedColor.lower())
-        if color == None:
+        if color is None:
             color = colors.get("Blue")
 
         for instance_id in resourceIds:
-            response = client_ssm.send_command(
+            client_ssm.send_command(
                 InstanceIds=[instance_id],
                 DocumentName="AWS-RunShellScript",
                 Parameters={
