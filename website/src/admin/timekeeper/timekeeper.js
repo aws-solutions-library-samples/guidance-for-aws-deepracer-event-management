@@ -30,6 +30,8 @@ const Timekeeper = () => {
   const [laps, SetLaps] = useState([]);
   const [fastestLap, SetFastestLap] = useState([]);
 
+  const [isLastLap, SetIsLastLap] = useState(false);
+
   const connected = false; // TODO remove when activating websocket (automated timer)
   // const { message, connected } = useWebsocket('ws://localhost:8080');
   const { setNavigationOpen } = useContext(SideNavContext);
@@ -99,6 +101,11 @@ const Timekeeper = () => {
     SetCurrentLap({ id: null, time: 0, resets: 0, crashes: 0, isValid: false });
     resetCarResetCounter();
     resetLapTimer();
+
+    // Check if race is over and this is the last lap
+    if (isLastLap) {
+      pauseLapTimer();
+    }
   };
 
   const submitRaceHandler = () => {
@@ -113,7 +120,7 @@ const Timekeeper = () => {
 
   const raceIsOverHandler = () => {
     console.log('Race is over!');
-    pauseLapTimer();
+    SetIsLastLap(true);
   };
 
   const raceStartedHandler = (username) => {
@@ -170,6 +177,7 @@ const Timekeeper = () => {
     pauseLapTimer();
     resetLapTimer();
     SetLaps([]);
+    SetIsLastLap(false);
     SetCurrentLap({ id: null, time: 0, resets: 0, crashes: 0, isValid: false });
 
     // Restart racer selection
