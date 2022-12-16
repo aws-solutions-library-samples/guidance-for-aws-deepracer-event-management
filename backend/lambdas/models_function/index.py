@@ -1,12 +1,11 @@
-from aws_lambda_powertools import Logger, Tracer
-from aws_lambda_powertools.event_handler import AppSyncResolver
-from aws_lambda_powertools.logging import correlation_paths
-from aws_lambda_powertools.utilities.typing import LambdaContext
-import boto3
-from boto3.dynamodb.conditions import Key
 import os
 import uuid
 from datetime import datetime
+
+import boto3
+from aws_lambda_powertools import Logger, Tracer
+from aws_lambda_powertools.event_handler import AppSyncResolver
+from aws_lambda_powertools.logging import correlation_paths
 
 tracer = Tracer()
 logger = Logger()
@@ -44,7 +43,8 @@ def addModel(
     racerIdentityId: str,
 ):
     logger.info(
-        f"addModel: modelKey={modelKey}, racerName={racerName}, racerIdentityId={racerIdentityId}"
+        f"addModel: modelKey={modelKey}, racerName={racerName},"
+        f" racerIdentityId={racerIdentityId}"
     )
     item = {
         "modelId": str(uuid.uuid4()),
@@ -70,12 +70,16 @@ def deleteModel(modelId: str):
 @app.resolver(type_name="Mutation", field_name="updateModel")
 def udpateModel(modelId: str, modelMD5: str, modelMetadataMD5: str):
     logger.info(
-        f"udpateModel: modelId={modelId}, modelMD5={modelMD5}, modelMetadataMD5={modelMetadataMD5}"
+        f"udpateModel: modelId={modelId}, modelMD5={modelMD5},"
+        f" modelMetadataMD5={modelMetadataMD5}"
     )
 
-    response = ddbTable.update_item(
+    ddbTable.update_item(
         Key={"modelId": modelId},
-        UpdateExpression="SET md5Datetime= :md5DateTime, modelMD5= :modelMD5, modelMetadataMD5= :modelMetadataMD5",
+        UpdateExpression=(
+            "SET md5Datetime= :md5DateTime, modelMD5= :modelMD5, modelMetadataMD5="
+            " :modelMetadataMD5"
+        ),
         ExpressionAttributeValues={
             ":md5Datetime": datetime.utcnow().isoformat() + "Z",
             ":modelMD5": modelMD5,

@@ -1,21 +1,27 @@
-import './App.css';
-import React from 'react';
-import awsconfig from './config.json';
+import {
+  Authenticator,
+  CheckboxField,
+  Link,
+  useAuthenticator,
+  useTheme,
+  View,
+} from '@aws-amplify/ui-react';
 import Amplify from 'aws-amplify';
-import { Authenticator, View, useTheme, useAuthenticator, CheckboxField, Link } from '@aws-amplify/ui-react';
+import React from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import './App.css';
+
 import '@aws-amplify/ui-react/styles.css';
-
 import TopNav from './components/TopNav.js';
-
+import awsconfig from './config.json';
+import EventProvider from './store/EventProvider';
 Amplify.configure(awsconfig);
 
 const components = {
   Header() {
-    const { tokens } = useTheme();
+    // const { tokens } = useTheme();
 
-    return (
-      <img src="/logo-bw.png" alt="Logo" width={300} height={300} class="center"/>
-    );
+    return <img src="/logo-bw.png" alt="Logo" width={300} height={300} className="center" />;
   },
   SignUp: {
     FormFields() {
@@ -36,7 +42,7 @@ const components = {
           />
         </>
       );
-    }
+    },
   },
 
   Footer() {
@@ -50,7 +56,7 @@ const components = {
       </View>
     );
   },
-}
+};
 
 export default function App() {
   return (
@@ -70,7 +76,11 @@ export default function App() {
     >
       {({ signOut, user }) => (
         <main>
-          <TopNav user={user.username} signout={signOut}/>
+          <EventProvider>
+            <Router>
+              <TopNav user={user.username} signout={signOut} />
+            </Router>
+          </EventProvider>
         </main>
       )}
     </Authenticator>

@@ -1,12 +1,13 @@
+import os
+
+import boto3
+import http_response
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
-import boto3
-import os
-import http_response
 
 logger = Logger()
 
-client_cognito = boto3.client('cognito-idp')
+client_cognito = boto3.client("cognito-idp")
 user_pool_id = os.environ["user_pool_id"]
 
 
@@ -16,7 +17,9 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         response = {}
         logger.info(response)
 
-        return http_response.response(response['ResponseMetadata']['HTTPStatusCode'], response)
+        return http_response.response(
+            response["ResponseMetadata"]["HTTPStatusCode"], response
+        )
 
     except Exception as error:
         logger.exception(error)

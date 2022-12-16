@@ -4,7 +4,7 @@
 
 -   [Docker Desktop](https://www.docker.com/)
 -   [Python](https://www.python.org/) (Tested with 3.9.10)
--   [AWS CDK](https://aws.amazon.com/cdk/) (Tested with 2.16.0)
+-   [AWS CDK](https://aws.amazon.com/cdk/) (Tested with 2.47.0)
 
 Create a Parameter Store Key called '/drem/S3RepoBucket' with a value of the S3 Bucket ARN for the codepipeline source e.g. 'arn:aws:s3:::drem-pipeline-zip-123456789012-eu-west-1'
 
@@ -61,6 +61,53 @@ $ make
 1. Run `make local.config` to build the local config from the CloudFormation stack and create the GraphQL schema
 2. Run `make local.install` to install the internet
 3. Run `make local.run` to run the frontend locally
+
+## Setup development environment
+
+### Setup pre commit hooks
+
+-   create and activate a virtualenv
+-   install dependenies `$ pip install -r requirements-dev.txt `
+-   install pre-commit hooks`$ pre-commit install`
+
+The pre-commit hooks will only run towards changed files. You can manually run a pre-commit hook test without commiting the files by running `bash .git/hooks/pre-commit`
+
+### Setup vs code environment
+
+-   Install the vscode eslint and prettier extensions
+-   Add this to the vscode settings.json file for the workspace
+
+```
+{
+    "[javascript]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.eslint": true
+        }
+    },
+    "eslint.validate": [
+        "javascript"
+    ],
+    "editor.formatOnSave": true,
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--experimental-string-processing"
+    ],
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true,
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
+        "source.fixAll.eslint": true
+    },
+}
+```
+
+With these changes the python code will be autoformated on save according to blake and the imports will be sorted with isort
 
 ## Useful commands
 

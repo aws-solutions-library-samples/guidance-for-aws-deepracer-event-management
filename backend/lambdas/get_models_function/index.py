@@ -1,12 +1,13 @@
 import logging
-import boto3
 import os
+
+import boto3
 import http_response
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-client_s3 = boto3.client('s3')
+client_s3 = boto3.client("s3")
 bucket = os.environ["bucket"]
 
 
@@ -14,11 +15,11 @@ def lambda_handler(event, context):
     try:
         response = client_s3.list_objects_v2(
             Bucket=bucket,
-            Prefix='private/',
+            Prefix="private/",
         )
         contents = []
-        if 'Contents' in response:
-            contents = response['Contents']
+        if "Contents" in response:
+            contents = response["Contents"]
             logger.info(contents)
 
         return http_response.response(200, contents)

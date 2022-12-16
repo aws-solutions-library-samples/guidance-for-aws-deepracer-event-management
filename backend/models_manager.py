@@ -1,17 +1,12 @@
-from aws_cdk import (
-    Stack,
-    Duration,
-    DockerImage,
-    aws_appsync_alpha as appsync,
-    aws_dynamodb as dynamodb,
-    aws_lambda_event_sources as aws_lambda_event_sources,
-    aws_lambda_python_alpha as lambda_python,
-    aws_lambda as awslambda,
-    aws_iam as iam,
-    aws_s3 as s3,
-    aws_sqs as sqs,
-)
-
+from aws_cdk import DockerImage, Duration
+from aws_cdk import aws_appsync_alpha as appsync
+from aws_cdk import aws_dynamodb as dynamodb
+from aws_cdk import aws_iam as iam
+from aws_cdk import aws_lambda as awslambda
+from aws_cdk import aws_lambda_event_sources as aws_lambda_event_sources
+from aws_cdk import aws_lambda_python_alpha as lambda_python
+from aws_cdk import aws_s3 as s3
+from aws_cdk import aws_sqs as sqs
 from constructs import Construct
 
 
@@ -34,8 +29,6 @@ class ModelsManager(Construct):
         **kwargs,
     ):
         super().__init__(scope, id, **kwargs)
-
-        stack = Stack.of(self)
 
         models_md5_handler = lambda_python.PythonFunction(
             self,

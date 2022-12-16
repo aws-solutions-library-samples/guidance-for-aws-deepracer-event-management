@@ -1,23 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import { API } from 'aws-amplify';
-import * as queries from '../graphql/queries';
-//import * as mutations from '../graphql/mutations';
-//import * as subscriptions from '../graphql/subscriptions'
+// import * as mutations from '../graphql/mutations';
+// import * as subscriptions from '../graphql/subscriptions'
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
   ButtonDropdown,
   CollectionPreferences,
-  Header,
   Grid,
+  Header,
   Pagination,
   SpaceBetween,
   Table,
   TextFilter,
 } from '@cloudscape-design/components';
+import { API } from 'aws-amplify';
+import dayjs from 'dayjs';
+import React, { useEffect, useState } from 'react';
 
 import { ContentHeader } from '../components/ContentHeader';
+import EditCarsModal from '../components/EditCarsModal';
 import {
   CarColumnsConfig,
   CarVisibleContentOptions,
@@ -27,33 +28,30 @@ import {
   PageSizePreference,
   WrapLines,
 } from '../components/TableConfig';
-
-import EditCarsModal from '../components/EditCarsModal';
-
-import dayjs from 'dayjs';
+import * as queries from '../graphql/queries';
 
 // day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat')
-var utc = require('dayjs/plugin/utc')
-var timezone = require('dayjs/plugin/timezone') // dependent on utc plugin
+var advancedFormat = require('dayjs/plugin/advancedFormat');
+var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
+var utc = require('dayjs/plugin/utc');
 
-dayjs.extend(advancedFormat)
-dayjs.extend(utc)
-dayjs.extend(timezone)
+dayjs.extend(advancedFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export function AdminCars() {
   const [allItems, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCarsBtnDisabled, setSelectedCarsBtnDisabled] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [online, setOnline] = useState("Online");
+  const [online, setOnline] = useState('Online');
   const [onlineBool, setOnlineBool] = useState(true);
   const [refresh, setRefresh] = useState(false);
 
   // Get Cars
   async function getCars() {
     var thisOnlineBool = true;
-    if (online !== "Online") {
+    if (online !== 'Online') {
       setOnlineBool(false);
       thisOnlineBool = false;
     } else {
@@ -61,7 +59,7 @@ export function AdminCars() {
     }
     const response = await API.graphql({
       query: queries.carsOnline,
-      variables: { online: thisOnlineBool }
+      variables: { online: thisOnlineBool },
     });
     setSelectedCarsBtnDisabled(true);
     setSelectedItems([]);
@@ -73,8 +71,8 @@ export function AdminCars() {
     getCars();
     return () => {
       // Unmounting
-    }
-  }, [online])
+    };
+  }, [online]);
 
   useEffect(() => {
     if (refresh) {
@@ -84,26 +82,18 @@ export function AdminCars() {
     }
     return () => {
       // Unmounting
-    }
-  }, [refresh])
-
-
+    };
+  }, [refresh]);
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
     visibleContent: ['carName', 'fleetName', 'carIp'],
   });
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
-    allItems,
-    {
+  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
+    useCollection(allItems, {
       filtering: {
-        empty: (
-          <EmptyState
-            title="No cars"
-            subtitle="No cars are currently online."
-          />
-        ),
+        empty: <EmptyState title="No cars" subtitle="No cars are currently online." />,
         noMatch: (
           <EmptyState
             title="No matches"
@@ -115,8 +105,7 @@ export function AdminCars() {
       pagination: { pageSize: preferences.pageSize },
       sorting: { defaultState: { sortingColumn: CarColumnsConfig[1] } },
       selection: {},
-    }
-  );
+    });
 
   return (
     <>
@@ -124,9 +113,9 @@ export function AdminCars() {
         header="Cars"
         description="List of cars currently online."
         breadcrumbs={[
-          { text: "Home", href: "/" },
-          { text: "Admin", href: "/admin/home" },
-          { text: "Cars" },
+          { text: 'Home', href: '/' },
+          { text: 'Admin', href: '/admin/home' },
+          { text: 'Cars' },
         ]}
       />
 
@@ -136,13 +125,17 @@ export function AdminCars() {
           {...collectionProps}
           header={
             <Header
-              counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
+              counter={
+                selectedItems.length
+                  ? `(${selectedItems.length}/${allItems.length})`
+                  : `(${allItems.length})`
+              }
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
                   <ButtonDropdown
                     items={[
-                      { text: "Online", id: "Online", disabled: false },
-                      { text: "Offline", id: "Offline", disabled: false },
+                      { text: 'Online', id: 'Online', disabled: false },
+                      { text: 'Offline', id: 'Offline', disabled: false },
                     ]}
                     onItemClick={({ detail }) => {
                       setOnline(detail.id);
@@ -151,7 +144,13 @@ export function AdminCars() {
                   >
                     {online}
                   </ButtonDropdown>
-                  <EditCarsModal disabled={selectedCarsBtnDisabled} setRefresh={setRefresh} selectedItems={selectedItems} online={onlineBool} variant="primary" />
+                  <EditCarsModal
+                    disabled={selectedCarsBtnDisabled}
+                    setRefresh={setRefresh}
+                    selectedItems={selectedItems}
+                    online={onlineBool}
+                    variant="primary"
+                  />
                 </SpaceBetween>
               }
             >
@@ -161,37 +160,41 @@ export function AdminCars() {
           columnDefinitions={CarColumnsConfig}
           items={items}
           pagination={
-            <Pagination {...paginationProps}
+            <Pagination
+              {...paginationProps}
               ariaLabels={{
                 nextPageLabel: 'Next page',
                 previousPageLabel: 'Previous page',
-                pageLabel: pageNumber => `Go to page ${pageNumber}`,
+                pageLabel: (pageNumber) => `Go to page ${pageNumber}`,
               }}
-            />}
+            />
+          }
           filter={
             <TextFilter
               {...filterProps}
               countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel='Filter cars'
+              filteringAriaLabel="Filter cars"
             />
           }
           loading={isLoading}
-          loadingText='Loading cars'
+          loadingText="Loading cars"
           visibleColumns={preferences.visibleContent}
-          selectionType='multi'
-          stickyHeader='true'
-          trackBy='InstanceId'
+          selectionType="multi"
+          stickyHeader="true"
+          trackBy="InstanceId"
           selectedItems={selectedItems}
           onSelectionChange={({ detail: { selectedItems } }) => {
-            setSelectedItems(selectedItems)
-            selectedItems.length ? setSelectedCarsBtnDisabled(false) : setSelectedCarsBtnDisabled(true)
+            setSelectedItems(selectedItems);
+            selectedItems.length
+              ? setSelectedCarsBtnDisabled(false)
+              : setSelectedCarsBtnDisabled(true);
           }}
           resizableColumns
           preferences={
             <CollectionPreferences
-              title='Preferences'
-              confirmLabel='Confirm'
-              cancelLabel='Cancel'
+              title="Preferences"
+              confirmLabel="Confirm"
+              cancelLabel="Cancel"
               onConfirm={({ detail }) => setPreferences(detail)}
               preferences={preferences}
               pageSizePreference={PageSizePreference('cars')}

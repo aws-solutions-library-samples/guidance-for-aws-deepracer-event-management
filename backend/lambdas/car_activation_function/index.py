@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 # encoding=utf-8
-from aws_lambda_powertools import Tracer, Logger
-from aws_lambda_powertools.logging import correlation_paths
-from aws_lambda_powertools.event_handler import AppSyncResolver
-import boto3
 import os
 from datetime import datetime
+
+import boto3
+from aws_lambda_powertools import Logger, Tracer
+from aws_lambda_powertools.event_handler import AppSyncResolver
+from aws_lambda_powertools.logging import correlation_paths
 
 tracer = Tracer()
 logger = Logger()
@@ -13,6 +14,8 @@ app = AppSyncResolver()
 
 session = boto3.session.Session()
 credentials = session.get_credentials()
+region = session.region_name or "eu-west-1"
+graphql_endpoint = os.environ.get("APPSYNC_URL", None)
 region = session.region_name or "eu-west-1"
 graphql_endpoint = os.environ.get("APPSYNC_URL", None)
 

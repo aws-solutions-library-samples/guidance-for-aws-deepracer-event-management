@@ -8,5 +8,15 @@ pythonpath = [
     "./backend/lambdas/helper_functions_layer/http_response"
 ]
 
+
 [tool.coverage.run]
 source = ["backend/lambdas"]
+
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+experimental_string_processing = true

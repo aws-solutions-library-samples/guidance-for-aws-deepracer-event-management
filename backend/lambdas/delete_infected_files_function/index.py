@@ -1,13 +1,13 @@
-from aws_lambda_powertools import Logger
-from aws_lambda_powertools.utilities.typing import LambdaContext
-
-import simplejson as json
-import boto3
 import os
-import http_response
-from urllib.parse import unquote
 import uuid
 from datetime import datetime
+from urllib.parse import unquote
+
+import boto3
+import http_response
+import simplejson as json
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.typing import LambdaContext
 
 logger = Logger()
 
@@ -40,7 +40,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
             )
 
             # copy the file from source to infected bucket
-            copy_request = s3.copy_object(
+            s3.copy_object(
                 Bucket=dest_bucket,
                 CopySource={"Bucket": source_bucket, "Key": s3_object},
                 Key=s3_object,

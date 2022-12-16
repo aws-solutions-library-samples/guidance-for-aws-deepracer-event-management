@@ -18,7 +18,6 @@ cfn.outputs
 node_modules
 
 # IDE
-.vscode
 .coverage
 
 branch.txt

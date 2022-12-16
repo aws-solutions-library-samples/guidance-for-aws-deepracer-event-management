@@ -1,17 +1,10 @@
-from os import path, getcwd
-
-from aws_cdk import (
-    Stack,
-    Duration,
-    DockerImage,
-    aws_appsync_alpha as appsync,
-    aws_dynamodb as dynamodb,
-    aws_lambda_python_alpha as lambda_python,
-    aws_lambda as awslambda,
-    aws_cognito as cognito,
-    aws_iam as iam,
-)
-
+from aws_cdk import DockerImage, Duration
+from aws_cdk import aws_appsync_alpha as appsync
+from aws_cdk import aws_cognito as cognito
+from aws_cdk import aws_dynamodb as dynamodb
+from aws_cdk import aws_iam as iam
+from aws_cdk import aws_lambda as awslambda
+from aws_cdk import aws_lambda_python_alpha as lambda_python
 from constructs import Construct
 
 
@@ -32,8 +25,6 @@ class EventsManager(Construct):
         **kwargs,
     ):
         super().__init__(scope, id, **kwargs)
-
-        stack = Stack.of(self)
 
         events_table = dynamodb.Table(
             self,
@@ -75,35 +66,19 @@ class EventsManager(Construct):
         )
 
         # Define API Schema
-        track_object_type = appsync.ObjectType(
-            "Track",
-            definition={
-                "trackName": appsync.GraphqlType.string(),
-                "trackId": appsync.GraphqlType.id(),
-                "trackTag": appsync.GraphqlType.string(),
-            },
-        )
-
-        track_input_type = appsync.InputType(
-            "TrackInput",
-            definition={
-                "trackName": appsync.GraphqlType.string(),
-                "trackTag": appsync.GraphqlType.string(),
-            },
-        )
 
         events_object_Type = appsync.ObjectType(
             "Event",
             definition={
                 "eventName": appsync.GraphqlType.string(),
                 "eventId": appsync.GraphqlType.id(),
+                "fleetId": appsync.GraphqlType.id(),
                 "createdAt": appsync.GraphqlType.aws_date_time(),
-                "tracks": track_object_type.attribute(is_list=True),
+                "raceTimeInSec": appsync.GraphqlType.int(),
+                "numberOfResets": appsync.GraphqlType.int(),
             },
         )
 
-        api.add_type(track_object_type)
-        api.add_type(track_input_type)
         api.add_type(events_object_Type)
 
         # Event methods
@@ -119,7 +94,9 @@ class EventsManager(Construct):
             appsync.ResolvableField(
                 args={
                     "eventName": appsync.GraphqlType.string(is_required=True),
-                    "tracks": track_input_type.attribute(is_list=True),
+                    "raceTimeInSec": appsync.GraphqlType.int(),
+                    "numberOfResets": appsync.GraphqlType.int(),
+                    "fleetId": appsync.GraphqlType.id(),
                 },
                 return_type=events_object_Type.attribute(),
                 data_source=events_data_source,
@@ -174,8 +151,10 @@ class EventsManager(Construct):
             appsync.ResolvableField(
                 args={
                     "eventId": appsync.GraphqlType.string(is_required=True),
-                    "eventName": appsync.GraphqlType.string(),
-                    "tracks": track_input_type.attribute(is_list=True),
+                    "eventName": appsync.GraphqlType.string(is_required=True),
+                    "raceTimeInSec": appsync.GraphqlType.int(is_required=True),
+                    "numberOfResets": appsync.GraphqlType.int(is_required=True),
+                    "fleetId": appsync.GraphqlType.id(),
                 },
                 return_type=events_object_Type.attribute(),
                 data_source=events_data_source,

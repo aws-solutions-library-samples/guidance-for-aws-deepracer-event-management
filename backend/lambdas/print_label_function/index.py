@@ -1,12 +1,12 @@
-from aws_lambda_powertools import Logger
-from aws_lambda_powertools.utilities.typing import LambdaContext
-
-import simplejson as json
-import boto3
 import os
+import uuid
+
+import boto3
 import http_response
 import qrcode
-import uuid
+import simplejson as json
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.typing import LambdaContext
 from PIL import Image, ImageDraw, ImageFont
 
 logger = Logger()
@@ -77,7 +77,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         fill=(0, 0, 0),
     )
     qrimg = qrcode.make(
-        f"https://{device_event_ipaddress}?ddid={device_default_hostname}&dpwd={device_default_pwd}&epwd={device_event_password}&dremid={device_event_hostname}",
+        f"https://{device_event_ipaddress}?ddid={device_default_hostname}&dpwd={device_default_pwd}&epwd={device_event_password}&dremid={device_event_hostname}",  # noqa: E501
         box_size=6,
         border=0,
     )
@@ -106,7 +106,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
     # Upload to S3
     try:
         key = f"car-label/{filename}.png"
-        response = s3.upload_file(out_file, LABELS_S3_BUCKET, key)
+        s3.upload_file(out_file, LABELS_S3_BUCKET, key)
 
         # TODO check response before generating url
         presigned_url = s3.generate_presigned_url(

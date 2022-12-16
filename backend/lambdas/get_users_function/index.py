@@ -1,12 +1,12 @@
+import os
+
+import boto3
+import http_response
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
-import boto3
-import os
-import simplejson as json
-import http_response
 
 logger = Logger()
-client_cognito = boto3.client('cognito-idp')
+client_cognito = boto3.client("cognito-idp")
 user_pool_id = os.environ["user_pool_id"]
 
 
@@ -16,17 +16,17 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         # TODO: Probably need to change this to a paging request so the frontend
         #       can send a request for the next page
 
-        paginator = client_cognito.get_paginator('list_users')
+        paginator = client_cognito.get_paginator("list_users")
         response_iterator = paginator.paginate(
             UserPoolId=user_pool_id,
             PaginationConfig={
-                'PageSize': 30,
-            }
+                "PageSize": 30,
+            },
         )
 
         users = []
         for r in response_iterator:
-            users.append(r['Users'])
+            users.append(r["Users"])
 
         # Squash the list of lists
         all_users = [item for sublist in users for item in sublist]

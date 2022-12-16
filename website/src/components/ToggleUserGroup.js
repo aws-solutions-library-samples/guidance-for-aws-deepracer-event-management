@@ -1,16 +1,10 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import {
-  Box,
-  Button,
-  Flashbar,
-  Modal,
-  SpaceBetween,
-} from '@cloudscape-design/components';
+import { Box, Button, Modal, SpaceBetween } from '@cloudscape-design/components';
 
 export default ({ disabled, variant }) => {
   const [visible, setVisible] = useState(false);
-  const [msgs, setMsgs] = useState([]);
+  // const [msgs, setMsgs] = useState([]);
 
   function modalOpen() {
     setVisible(true);
@@ -18,13 +12,19 @@ export default ({ disabled, variant }) => {
 
   function modalClose() {
     setVisible(false);
-  };
+  }
 
   return (
     <>
-      <Button disabled={disabled} variant={variant} onClick={() => {
-        modalOpen()
-      }}>Toggle user</Button>
+      <Button
+        disabled={disabled}
+        variant={variant}
+        onClick={() => {
+          modalOpen();
+        }}
+      >
+        Toggle user
+      </Button>
 
       <Modal
         onDismiss={() => modalClose()}
@@ -33,15 +33,14 @@ export default ({ disabled, variant }) => {
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="primary" onClick={() => modalClose()}>Ok</Button>
+              <Button variant="primary" onClick={() => modalClose()}>
+                Ok
+              </Button>
             </SpaceBetween>
           </Box>
         }
         header="Toggle user"
-      >
-
-      </Modal>
-
+      ></Modal>
     </>
-  )
-}
+  );
+};

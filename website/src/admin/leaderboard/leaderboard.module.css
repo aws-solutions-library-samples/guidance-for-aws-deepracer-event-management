@@ -1,0 +1,113 @@
+ul {
+  padding-left: 0;
+  list-style: none;
+}
+
+.moduleBase {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 650;
+  perspective: 100vw;
+}
+
+.eventHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.eventDetails {
+  top: 4.5rem;
+  left: calc(50% - 50vmin + 22.5rem);
+  font-size: 5rem;
+  font-weight: bold;
+  font-style: italic;
+  text-transform: uppercase;
+  transition: opacity 200ms 500ms linear;
+}
+
+.moduleList {
+  top: 25rem;
+  left: 5rem;
+  right: 5rem;
+  transition: opacity 200ms 500ms linear;
+}
+.modulePosition {
+  margin-left: 2rem;
+}
+
+.moduleHeaders {
+  display: flex;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  font-size: 2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-style: italic;
+  height: 5rem;
+  letter-spacing: 0.15ch;
+  align-items: center;
+}
+
+.moduleRacer {
+  margin-left: 2rem;
+}
+
+.moduleResults {
+  margin-left: auto;
+  margin-right: 2rem;
+}
+.moduleTime {
+  text-align: right;
+  flex: 1 1 0px;
+  white-space: nowrap;
+  position: relative;
+}
+
+.liPosition {
+  margin-left: 2rem;
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.liRacer {
+  margin-left: 8rem;
+  font-weight: 300;
+}
+
+.liTime {
+  margin-left: auto;
+  margin-right: 2rem;
+  font-size: 1.4em;
+}
+
+.moduleRow {
+  width: 100%;
+  height: 3em;
+  line-height: 3em;
+  border-radius: 1.5rem;
+  background: rgba(113, 36, 131, 0.3);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, rgba(0, 255, 235, 0.2), rgba(117, 38, 134, 0.2));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 30%), 0 0.3rem 0.5rem rgb(0 0 0 / 50%);
+  font-size: 3rem;
+  z-index: 100;
+  transition: top 600ms ease, z-index 100ms 800ms linear, transform 300ms 500ms ease,
+    font-size 600ms ease;
+  margin: 10px;
+}
+
+.listEntry {
+  display: flex;
+  font-weight: bold;
+  font-size: 1.5em;
+  color: inherit;
+  transition: color 600ms linear;
+}
+
+.logoContainer {
+  height: 150vh;
+  width: 150vh;
+}

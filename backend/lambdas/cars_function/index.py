@@ -1,14 +1,9 @@
-#!/usr/bin/python3
-# encoding=utf-8
-from aws_lambda_powertools import Tracer, Logger
-from aws_lambda_powertools.logging import correlation_paths
-from aws_lambda_powertools.event_handler import AppSyncResolver
-import boto3
-import simplejson as json
-
-# import os
-from datetime import date, datetime
 from typing import List
+
+import boto3
+from aws_lambda_powertools import Logger, Tracer
+from aws_lambda_powertools.event_handler import AppSyncResolver
+from aws_lambda_powertools.logging import correlation_paths
 
 tracer = Tracer()
 logger = Logger()
@@ -39,7 +34,7 @@ def lambda_handler(event, context):
 @app.resolver(type_name="Query", field_name="carsOnline")
 def carOnline(online: str):
     try:
-        if online == False:
+        if online is False:
             PingStatusFilter = "ConnectionLost"
         else:
             PingStatusFilter = "Online"
@@ -200,11 +195,11 @@ def carSetTaillightColor(resourceIds: List[str], selectedColor: str):
         logger.info(resourceIds)
 
         color = colors.get(selectedColor.lower())
-        if color == None:
+        if color is None:
             color = colors.get("Blue")
 
         for instance_id in resourceIds:
-            response = client_ssm.send_command(
+            client_ssm.send_command(
                 InstanceIds=[instance_id],
                 DocumentName="AWS-RunShellScript",
                 Parameters={
@@ -214,7 +209,12 @@ def carSetTaillightColor(resourceIds: List[str], selectedColor: str):
                         "source /opt/ros/foxy/setup.bash",
                         "source /opt/intel/openvino_2021/bin/setupvars.sh",
                         "source /opt/aws/deepracer/lib/local_setup.bash",
-                        f"ros2 service call /servo_pkg/set_led_state deepracer_interfaces_pkg/srv/SetLedCtrlSrv \"{{red: {color['red_pwm']}, blue: {color['blue_pwm']}, green: {color['green_pwm']}}}\"",
+                        (
+                            "ros2 service call /servo_pkg/set_led_state"
+                            ' deepracer_interfaces_pkg/srv/SetLedCtrlSrv "{red:'
+                            f" {color['red_pwm']}, blue: {color['blue_pwm']}, green:"
+                            f" {color['green_pwm']}}}\""
+                        ),
                     ]
                 },
             )

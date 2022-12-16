@@ -1,13 +1,8 @@
-from aws_cdk import (
-    Stack,
-    Duration,
-    DockerImage,
-    aws_appsync_alpha as appsync,
-    aws_lambda_python_alpha as lambda_python,
-    aws_lambda as awslambda,
-    aws_iam as iam,
-)
-
+from aws_cdk import DockerImage, Duration, Stack
+from aws_cdk import aws_appsync_alpha as appsync
+from aws_cdk import aws_iam as iam
+from aws_cdk import aws_lambda as awslambda
+from aws_cdk import aws_lambda_python_alpha as lambda_python
 from constructs import Construct
 
 
@@ -32,13 +27,13 @@ class CarsManager(Construct):
         powertools_layer = lambda_python.PythonLayerVersion.from_layer_version_arn(
             self,
             "lambda_powertools",
-            layer_version_arn="arn:aws:lambda:{}:017000801446:layer:AWSLambdaPowertoolsPythonV2-Arm64:11".format(
+            layer_version_arn="arn:aws:lambda:{}:017000801446:layer:AWSLambdaPowertoolsPythonV2-Arm64:11".format(  # noqa: E501
                 stack.region
             ),
         )
         powertools_log_level = "INFO"
 
-        ## car_activation method
+        # car_activation method
         car_activation_handler = lambda_python.PythonFunction(
             self,
             "car_activation_handler",
@@ -102,7 +97,7 @@ class CarsManager(Construct):
             ),
         )
 
-        ## cars_function_handler
+        # cars_function_handler
         cars_function_handler = lambda_python.PythonFunction(
             self,
             "cars_function_handler",
@@ -235,7 +230,7 @@ class CarsManager(Construct):
             ),
         )
 
-        ## All Methods...
+        # All Methods...
         # Grant access so API methods can be invoked
         for role in roles_to_grant_invoke_access:
             role.add_to_policy(
