@@ -209,12 +209,12 @@ def carSetTaillightColor(resourceIds: List[str], selectedColor: str):
                 DocumentName="AWS-RunShellScript",
                 Parameters={
                     "commands": [
-                        "#!/bin/bash"
-                        'export HOME="/home/deepracer"'
-                        "source /opt/ros/foxy/setup.bash"
-                        "source /opt/intel/openvino_2021/bin/setupvars.sh"
-                        "source /opt/aws/deepracer/lib/local_setup.bash"
-                        f"ros2 service call /servo_pkg/set_led_state deepracer_interfaces_pkg/srv/SetLedCtrlSrv \"{'red': {color['red_pwm']}, 'blue': {color['blue_pwm']}, 'green': {color['green_pwm']}}\""
+                        "#!/bin/bash",
+                        'export HOME="/home/deepracer"',
+                        "source /opt/ros/foxy/setup.bash",
+                        "source /opt/intel/openvino_2021/bin/setupvars.sh",
+                        "source /opt/aws/deepracer/lib/local_setup.bash",
+                        f"ros2 service call /servo_pkg/set_led_state deepracer_interfaces_pkg/srv/SetLedCtrlSrv \"{{red: {color['red_pwm']}, blue: {color['blue_pwm']}, green: {color['green_pwm']}}}\"",
                     ]
                 },
             )
