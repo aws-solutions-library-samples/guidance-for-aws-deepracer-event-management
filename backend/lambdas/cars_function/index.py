@@ -204,10 +204,16 @@ def carSetTaillightColor(resourceIds: List[str], selectedColor: str):
                 DocumentName="AWS-RunShellScript",
                 Parameters={
                     "commands": [
+                        "#!/bin/bash",
+                        'export HOME="/home/deepracer"',
+                        "source /opt/ros/foxy/setup.bash",
+                        "source /opt/intel/openvino_2021/bin/setupvars.sh",
+                        "source /opt/aws/deepracer/lib/local_setup.bash",
                         (
-                            "/etc/deepracer-taillight/set-led-color.sh -r"
-                            f" {color['red_pwm']} -b {color['blue_pwm']} -g"
-                            f" {color['green_pwm']} > /dev/null"
+                            "ros2 service call /servo_pkg/set_led_state"
+                            ' deepracer_interfaces_pkg/srv/SetLedCtrlSrv "{red:'
+                            f" {color['red_pwm']}, blue: {color['blue_pwm']}, green:"
+                            f" {color['green_pwm']}}}\""
                         ),
                     ]
                 },
