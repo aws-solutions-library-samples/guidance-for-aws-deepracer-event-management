@@ -1,0 +1,83 @@
+{
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:jsx-a11y/recommended",
+    "plugin:import/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "overrides": [],
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "plugins": ["prettier"],
+  "rules": {
+    "import/default": "off",
+    "import/no-named-as-default-member": "off",
+    "import/namespace": "off",
+    "import/no-deprecated": "off",
+    "import/no-cycle": "off",
+    "import/no-extraneous-dependencies": "off",
+    "import/no-named-as-default": "off",
+    "import/prefer-default-export": "off",
+    "import/no-unresolved": ["error"],
+
+    "react/prop-types": "off",
+    "react/display-name": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "error",
+
+    "curly": ["error", "multi-line"],
+    "eol-last": "error",
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
+    "no-new-wrappers": "error",
+    "no-labels": "error",
+    "no-lonely-if": "error",
+    "no-eval": "error",
+    "no-prototype-builtins": "off",
+    "no-param-reassign": [
+      "error",
+      { "props": true, "ignorePropertyModificationsFor": ["state", "acc"] }
+    ],
+    "no-multiple-empty-lines": "error",
+    "no-trailing-spaces": ["error", { "ignoreComments": true }],
+    "no-underscore-dangle": "error",
+    "no-unused-expressions": "off",
+    "no-undef-init": "error",
+    "no-undef": "off",
+    "no-unneeded-ternary": "error",
+    "no-useless-computed-key": "error",
+    "no-useless-constructor": "error",
+    "no-useless-return": "error",
+    "no-var": "off",
+    "operator-linebreak": [
+      "error",
+      "after",
+      {
+        "overrides": {
+          "?": "ignore",
+          ":": "ignore"
+        }
+      }
+    ],
+    "prefer-object-spread": "error",
+    "object-shorthand": "off",
+    "one-var": ["error", "never"],
+    "prefer-const": "error",
+    "quote-props": ["off", "as-needed"],
+    "radix": "error",
+    "spaced-comment": ["error", "always"],
+    "prettier/prettier": ["error"]
+  }
+}
