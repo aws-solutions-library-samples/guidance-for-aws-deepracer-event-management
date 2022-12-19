@@ -1,16 +1,18 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import App from './App';
-import './index.css';
-import reportWebVitals from './reportWebVitals';
-
 import '@cloudscape-design/global-styles/dark-mode-utils.css';
 import '@cloudscape-design/global-styles/index.css';
+import React, { Suspense } from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+import './i18n';
+import './index.css';
+import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <Suspense fallback={null}>
+      <App />
+    </Suspense>
   </React.StrictMode>
 );
 

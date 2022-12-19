@@ -1,6 +1,7 @@
 import { API, graphqlOperation } from 'aws-amplify';
 import React, { useContext, useEffect, useState } from 'react';
 
+import { useTranslation } from 'react-i18next';
 import Logo from '../../assets/logo-bw.png';
 import { getLeaderBoardEntries } from '../../graphql/queries';
 import { onNewFastestLapForUser } from '../../graphql/subscriptions';
@@ -10,6 +11,7 @@ import SideNavContext from '../../store/SideNavContext';
 import styles from './leaderboard.module.css';
 
 const Leaderboard = () => {
+  const { t } = useTranslation();
   const [leaderboardEntries, SetleaderboardEntries] = useState([]);
   const [leaderboardListItems, SetLeaderboardListItems] = useState(<div></div>);
   // const [isSubscribed, SetIsSubscribed] = useState(false);
@@ -126,9 +128,9 @@ const Leaderboard = () => {
       {leaderboardEntries.length > 0 && (
         <div>
           <div className={styles.moduleHeaders}>
-            <div className={styles.modulePosition}>POSITION</div>
-            <div className={styles.moduleRacer}>RACER</div>
-            <div className={styles.moduleResults}>TIME</div>
+            <div className={styles.modulePosition}>{t('leaderboard.position')}</div>
+            <div className={styles.moduleRacer}>{t('leaderboard.racer')}</div>
+            <div className={styles.moduleResults}>{t('leaderboard.time')}</div>
           </div>
           <ul>{leaderboardListItems}</ul>
         </div>

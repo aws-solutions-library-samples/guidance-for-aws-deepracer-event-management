@@ -1,8 +1,8 @@
 import { API } from 'aws-amplify';
 import React, { useState } from 'react';
-//import * as queries from '../graphql/queries';
+import { useTranslation } from 'react-i18next';
+
 import * as mutations from '../graphql/mutations';
-//import * as subscriptions from '../graphql/subscriptions'
 
 import { ContentHeader } from '../components/ContentHeader';
 import { ListOfFleets } from '../components/ListOfFleets';
@@ -25,8 +25,9 @@ import {
 
 import { DefaultPreferences, EmptyState, MatchesCountText } from '../components/TableConfig';
 
-export function AdminFleets() {
-  //const [fleets, setFleets] = useState([]);
+const AdminFleets = () => {
+  const { t } = useTranslation();
+
   const [newFleet, setNewFleet] = useState('');
   const [newFleetErrorText, setNewFleetErrorText] = useState('');
   const [selectedFleet, setSelectedFleet] = useState([]);
@@ -47,10 +48,10 @@ export function AdminFleets() {
           })
           .includes(newFleet)
       ) {
-        //console.log('already exists');
-        setNewFleetErrorText('Fleet already exists');
+        // console.log('already exists');
+        setNewFleetErrorText(t('fleets.error-exists'));
       } else {
-        //console.log('match')
+        // console.log('match')
         const response = await API.graphql({
           query: mutations.addFleet,
           variables: {
@@ -62,13 +63,13 @@ export function AdminFleets() {
         return response;
       }
     } else {
-      setNewFleetErrorText('Must match regex: ^[a-zA-Z0-9-_]+$');
+      setNewFleetErrorText(t('fleets.error-text-regex'));
     }
   }
 
   // Delete Fleet
   async function deleteFleet() {
-    //console.log(selectedFleet[0].fleetId);
+    // console.log(selectedFleet[0].fleetId);
     const response = await API.graphql({
       query: mutations.deleteFleet,
       variables: {
@@ -76,7 +77,7 @@ export function AdminFleets() {
       },
     });
     setDeleteButtonDisabled(true);
-    //console.log(response.data.deleteFleet);
+    // console.log(response.data.deleteFleet);
   }
 
   const [preferences, setPreferences] = useState({
@@ -87,18 +88,18 @@ export function AdminFleets() {
   const columnDefinitions = [
     {
       id: 'fleetName',
-      header: 'Fleet name',
+      header: t('fleets.fleet-name'),
       cell: (item) => item.fleetName || '-',
       sortingField: 'fleetName',
     },
     {
       id: 'fleetId',
-      header: 'Fleet ID',
+      header: t('fleets.fleet-id'),
       cell: (item) => item.fleetId || '-',
     },
     {
       id: 'createdAt',
-      header: 'Created at',
+      header: t('fleets.created-at'),
       cell: (item) => item.createdAt || '-',
       sortingField: 'createdAt',
     },
@@ -107,12 +108,14 @@ export function AdminFleets() {
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(fleets, {
       filtering: {
-        empty: <EmptyState title="No Fleets" subtitle="Please create an fleet." />,
+        empty: <EmptyState title={t('fleets.no-fleet')} subtitle={t('fleets.no-fleet-message')} />,
         noMatch: (
           <EmptyState
-            title="No matches"
-            subtitle="We can’t find a match."
-            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+            title={t('models.no-matches')}
+            subtitle={t('models.we-cant-find-a-match')}
+            action={
+              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
+            }
           />
         ),
       },
@@ -133,12 +136,12 @@ export function AdminFleets() {
       columnDefinitions={columnDefinitions}
       items={items}
       loading={isLoading}
-      loadingText="Loading resources"
+      loadingText={t('fleets.loading')}
       filter={
         <TextFilter
           {...filterProps}
           countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel="Filter cars"
+          filteringAriaLabel={t('fleets.filter-caars')}
         />
       }
       header={
@@ -152,12 +155,12 @@ export function AdminFleets() {
                   setDeleteModalVisible(true);
                 }}
               >
-                Delete Fleet
+                {t('fleets.delete-fleet')}
               </Button>
             </SpaceBetween>
           }
         >
-          Fleets
+          {t('fleets.table-header')}
         </Header>
       }
     />
@@ -166,12 +169,12 @@ export function AdminFleets() {
   return (
     <>
       <ContentHeader
-        header="Fleets admin"
-        description="List of Fleets."
+        header={t('fleets.header')}
+        description={t('fleets.description')}
         breadcrumbs={[
-          { text: 'Home', href: '/' },
-          { text: 'Admin', href: '/admin/home' },
-          { text: 'Groups' },
+          { text: t('home.breadcrumb'), href: '/' },
+          { text: t('admin.breadcrumb'), href: '/admin/home' },
+          { text: t('fleets.breadcrumb') },
         ]}
       />
       <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
@@ -188,16 +191,16 @@ export function AdminFleets() {
                       addFleet(newFleet);
                     }}
                   >
-                    Add Fleet
+                    {t('fleets.add-fleet')}
                   </Button>
                 </SpaceBetween>
               }
             >
               <SpaceBetween direction="vertical" size="l">
-                <FormField label="New Fleet" errorText={newFleetErrorText}>
+                <FormField label={t('fleets.add-fleet')} errorText={newFleetErrorText}>
                   <Input
                     value={newFleet}
-                    placeholder="Awesome Fleet"
+                    placeholder={t('fleets.placeholder')}
                     onChange={(fleet) => {
                       setNewFleet(fleet.detail.value);
                       if (newFleet.length > 0) {
@@ -224,7 +227,7 @@ export function AdminFleets() {
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
               <Button variant="link" onClick={() => setDeleteModalVisible(false)}>
-                Cancel
+                {t('button.cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -233,18 +236,20 @@ export function AdminFleets() {
                   setDeleteModalVisible(false);
                 }}
               >
-                Delete
+                {t('button.delete')}
               </Button>
             </SpaceBetween>
           </Box>
         }
-        header="Delete fleet"
+        header={t('fleets.delete-fleet')}
       >
-        Are you sure you want to delete fleet(s): <br></br>{' '}
+        {t('fleets.delete-warning')}: <br></br>{' '}
         {selectedFleet.map((selectedFleet) => {
           return selectedFleet.fleetName + ' ';
         })}
       </Modal>
     </>
   );
-}
+};
+
+export { AdminFleets };

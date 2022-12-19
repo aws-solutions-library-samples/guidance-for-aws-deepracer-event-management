@@ -7,6 +7,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import * as mutations from '../../graphql/mutations';
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
+import { useTranslation } from 'react-i18next';
 import { ContentHeader } from '../../components/ContentHeader';
 import useQuery from '../../hooks/useQuery';
 import { eventContext } from '../../store/EventProvider';
@@ -28,7 +29,8 @@ import { DefaultPreferences, EmptyState, MatchesCountText } from '../../componen
 import { EditModal } from './EditModal';
 import { EventInputForm } from './EventInputForm';
 
-export function AdminEvents() {
+const AdminEvents = () => {
+  const { t } = useTranslation();
   const [SelectedEventInTable, setSelectedEventInTable] = useState([]);
   const [addButtonDisabled, setAddButtonDisabled] = useState(true);
   const [deleteButtonDisabled, setDeleteButtonDisabled] = useState(true);
@@ -113,25 +115,25 @@ export function AdminEvents() {
   const columnDefinitions = [
     {
       id: 'eventName',
-      header: 'Event name',
+      header: t('events.event-name'),
       cell: (item) => item.eventName || '-',
       sortingField: 'eventName',
     },
     {
       id: 'raceTimeInSec',
-      header: 'Race time in sec',
+      header: t('events.race-time-in-sec'),
       cell: (item) => item.raceTimeInSec || '-',
       sortingField: 'raceTimeInSec',
     },
     {
       id: 'numberOfResets',
-      header: 'No. of resets per lap',
+      header: t('events.resets-per-lap'),
       cell: (item) => item.numberOfResets || '-',
       sortingField: 'numberOfResets',
     },
     {
       id: 'fleet',
-      header: 'Fleet',
+      header: t('events.fleet'),
       cell: (item) => {
         if (allFleetsFromBackend) {
           const currentFleet = allFleetsFromBackend.find((fleet) => fleet.fleetId === item.fleetId);
@@ -145,13 +147,13 @@ export function AdminEvents() {
     },
     {
       id: 'createdAt',
-      header: 'Created at',
+      header: t('events.created-at'),
       cell: (item) => item.createdAt || '-',
       sortingField: 'createdAt',
     },
     {
       id: 'eventId',
-      header: 'Event ID',
+      header: t('events.event-id'),
       cell: (item) => item.eventId || '-',
     },
   ];
@@ -159,12 +161,14 @@ export function AdminEvents() {
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(events, {
       filtering: {
-        empty: <EmptyState title="No Events" subtitle="Please create an event." />,
+        empty: <EmptyState title={t('events.no-events')} subtitle={t('events.create-an-event')} />,
         noMatch: (
           <EmptyState
-            title="No matches"
-            subtitle="We can’t find a match."
-            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+            title={t('events.no-matches')}
+            subtitle={t('events.we-cant-find-a-match')}
+            action={
+              <Button onClick={() => actions.setFiltering('')}>{t('events.clear-filter')}</Button>
+            }
           />
         ),
       },
@@ -186,12 +190,12 @@ export function AdminEvents() {
       columnDefinitions={columnDefinitions}
       items={items}
       loading={loading}
-      loadingText="Loading resources"
+      loadingText={t('events.loading')}
       filter={
         <TextFilter
           {...filterProps}
           countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel="Filter cars"
+          filteringAriaLabel={t('events.filter')}
         />
       }
       header={
@@ -205,7 +209,7 @@ export function AdminEvents() {
                   setEditModalVisible(true);
                 }}
               >
-                Edit Event
+                {t('events.edit-event')}
               </Button>
               <Button
                 disabled={deleteButtonDisabled}
@@ -214,12 +218,12 @@ export function AdminEvents() {
                   setDeleteModalVisible(true);
                 }}
               >
-                Delete Event
+                {t('events.delete-event')}
               </Button>
             </SpaceBetween>
           }
         >
-          Events
+          {t('events.events-table')}
         </Header>
       }
     />
@@ -235,12 +239,12 @@ export function AdminEvents() {
         onEdit={editEventHandler}
       />
       <ContentHeader
-        header="Events admin"
-        // description="List of Events."
+        header={t('events.header')}
+        description={t('events.description')}
         breadcrumbs={[
-          { text: 'Home', href: '/' },
-          { text: 'Admin', href: '/admin/home' },
-          { text: 'Events' },
+          { text: t('home.breadcrumb'), href: '/' },
+          { text: t('admin.breadcrumb'), href: '/admin/home' },
+          { text: t('events.breadcrumb') },
         ]}
       />
       <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
@@ -251,7 +255,7 @@ export function AdminEvents() {
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
                   <Button disabled={addButtonDisabled} variant="primary" onClick={addEventHandler}>
-                    Add Event
+                    {t('events.add-event')}
                   </Button>
                 </SpaceBetween>
               }
@@ -279,7 +283,7 @@ export function AdminEvents() {
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
               <Button variant="link" onClick={() => setDeleteModalVisible(false)}>
-                Cancel
+                {t('button.cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -288,18 +292,20 @@ export function AdminEvents() {
                   setDeleteModalVisible(false);
                 }}
               >
-                Delete
+                {t('button.delete')}
               </Button>
             </SpaceBetween>
           </Box>
         }
-        header="Delete event"
+        header={t('events.delete-event')}
       >
-        Are you sure you want to delete event(s): <br></br>{' '}
+        {t('events.delete-warning')}: <br></br>{' '}
         {SelectedEventInTable.map((selectedEvent) => {
           return selectedEvent.eventName + ' ';
         })}
       </Modal>
     </>
   );
-}
+};
+
+export { AdminEvents };

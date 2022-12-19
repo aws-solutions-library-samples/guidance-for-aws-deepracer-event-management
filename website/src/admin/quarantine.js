@@ -11,6 +11,7 @@ import {
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 
+import { useTranslation } from 'react-i18next';
 import { ContentHeader } from '../components/ContentHeader';
 import {
   AdminModelsColumnsConfig,
@@ -32,7 +33,9 @@ dayjs.extend(advancedFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export function AdminQuarantine() {
+const AdminQuarantine = () => {
+  const { t } = useTranslation();
+
   const [allItems, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -70,36 +73,42 @@ export function AdminQuarantine() {
     visibleContent: ['userName', 'modelName', 'modelDate'],
   });
 
+  const adminModelsColsConfig = AdminModelsColumnsConfig();
+
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(allItems, {
       filtering: {
-        empty: <EmptyState title="No models" subtitle="No quarantined models to display." />,
+        empty: (
+          <EmptyState title={t('models.no-models')} subtitle={t('models.no-models-to-display')} />
+        ),
         noMatch: (
           <EmptyState
-            title="No matches"
-            subtitle="We can’t find a match."
-            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+            title={t('models.no-matches')}
+            subtitle={t('models.we-cant-find-a-match')}
+            action={
+              <Button onClick={() => actions.setFiltering('')}>{t('models.clear-filter')}</Button>
+            }
           />
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: AdminModelsColumnsConfig[3], isDescending: true } },
+      sorting: { defaultState: { sortingColumn: adminModelsColsConfig[3], isDescending: true } },
       selection: {},
     });
   const { selectedItems } = collectionProps;
 
   const visibleContentOptions = [
     {
-      label: 'Model information',
+      label: t('models.model-information'),
       options: [
         {
           id: 'modelName',
-          label: 'Model name',
+          label: t('models.model-name'),
           editable: false,
         },
         {
           id: 'modelDate',
-          label: 'Upload date',
+          label: t('models.upload-date'),
         },
       ],
     },
@@ -108,12 +117,12 @@ export function AdminQuarantine() {
   return (
     <>
       <ContentHeader
-        header="Quarantined Models"
-        description="List of all quarantined models."
+        header={t('quarantine.header')}
+        description={t('quarantine.list-of-all-models')}
         breadcrumbs={[
-          { text: 'Home', href: '/' },
-          { text: 'Admin', href: '/admin/home' },
-          { text: 'Quarantined Models' },
+          { text: t('home.breadcrumb'), href: '/' },
+          { text: t('admin.breadcrumb'), href: '/admin/home' },
+          { text: t('quarantine.breadcrumb') },
         ]}
       />
 
@@ -129,18 +138,18 @@ export function AdminQuarantine() {
                   : `(${allItems.length})`
               }
             >
-              Models
+              {t('quarantine.header')}
             </Header>
           }
-          columnDefinitions={AdminModelsColumnsConfig}
+          columnDefinitions={adminModelsColsConfig}
           items={items}
           pagination={
             <Pagination
               {...paginationProps}
               ariaLabels={{
-                nextPageLabel: 'Next page',
-                previousPageLabel: 'Previous page',
-                pageLabel: (pageNumber) => `Go to page ${pageNumber}`,
+                nextPageLabel: t('table.next-page'),
+                previousPageLabel: t('table.previous-page'),
+                pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
               }}
             />
           }
@@ -148,22 +157,22 @@ export function AdminQuarantine() {
             <TextFilter
               {...filterProps}
               countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel="Filter models"
+              filteringAriaLabel={t('models.filter-models')}
             />
           }
           loading={isLoading}
-          loadingText="Loading models"
+          loadingText={t('models.loading-models')}
           visibleColumns={preferences.visibleContent}
           preferences={
             <CollectionPreferences
-              title="Preferences"
-              confirmLabel="Confirm"
-              cancelLabel="Cancel"
+              title={t('table.preferences')}
+              confirmLabel={t('button.confirm')}
+              cancelLabel={t('button.cancel')}
               onConfirm={({ detail }) => setPreferences(detail)}
               preferences={preferences}
-              pageSizePreference={PageSizePreference('models')}
+              pageSizePreference={PageSizePreference(t('models.page-size-label'))}
               visibleContentPreference={{
-                title: 'Select visible columns',
+                title: t('table.select-visible-colunms'),
                 options: visibleContentOptions,
               }}
               wrapLinesPreference={WrapLines}
@@ -174,4 +183,6 @@ export function AdminQuarantine() {
       </Grid>
     </>
   );
-}
+};
+
+export { AdminQuarantine };

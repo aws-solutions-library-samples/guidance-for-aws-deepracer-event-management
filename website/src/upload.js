@@ -2,10 +2,13 @@ import { Auth } from 'aws-amplify';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Button, FormField, Grid, SpaceBetween } from '@cloudscape-design/components';
+import { useTranslation } from 'react-i18next';
 import { ContentHeader } from './components/ContentHeader';
 import { ModelUploadStatus } from './components/ModelUploadStatus';
 
-export function Upload() {
+const Upload = () => {
+  const { t } = useTranslation();
+
   const [username, setUsername] = useState();
   const [identityId, setIdentityId] = useState();
   const [uploadFiles, setUploadFiles] = useState([]);
@@ -31,20 +34,20 @@ export function Upload() {
   return (
     <>
       <ContentHeader
-        header="Upload models"
-        description="Upload models into DREM ready for racing on the track."
+        header={t('upload.header')}
+        description={t('upload.header-description')}
         breadcrumbs={[
-          { text: 'Home', href: '/' },
-          { text: 'Upload models', href: '/upload' },
+          { text: t('home.breadcrumb'), href: '/' },
+          { text: t('home.breadcrumb'), href: '/upload' },
         ]}
       />
 
       <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
         <div></div>
         <FormField
-          constraintText="model-name.tar.gz"
-          description="Upload physical model for racing on the track"
-          label="Upload model"
+          constraintText={t('upload.constraint-text')}
+          description={t('upload.constraint-description')}
+          label={t('upload.label')}
         >
           <Button
             iconName="upload"
@@ -53,7 +56,7 @@ export function Upload() {
               fileInputRef.current.click();
             }}
           >
-            Choose model file(s)
+            {t('upload.chose-file')}
             <input
               type="file"
               ref={fileInputRef}
@@ -76,6 +79,7 @@ export function Upload() {
                 file={uploadFiles[i]}
                 username={username}
                 identityId={identityId}
+                key={uploadFiles[i]}
               />
             );
           })}
@@ -84,4 +88,6 @@ export function Upload() {
       </Grid>
     </>
   );
-}
+};
+
+export { Upload };
