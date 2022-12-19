@@ -23,6 +23,7 @@ import useQuery from '../hooks/useQuery.js';
 import { eventContext } from '../store/EventProvider';
 import SideNavContext from '../store/SideNavContext.js';
 
+import { useTranslation } from 'react-i18next';
 import useLink from '../hooks/useLink.js';
 
 function cwr(operation, payload) {
@@ -63,6 +64,8 @@ function MenuRoutes() {
 }
 
 export function TopNav(props) {
+  const { t } = useTranslation();
+
   const [groups, setGroups] = useState([]);
   const [navigationOpen, setNavigationOpen] = useState(true);
   const { handleFollow } = useLink();
@@ -77,8 +80,8 @@ export function TopNav(props) {
     }
   }, [allEventsFromBackend, setEvents]);
 
-  // Config Groups
   useEffect(() => {
+    // Config Groups
     Auth.currentAuthenticatedUser().then((user) => {
       const groups = user.signInUserSession.accessToken.payload['cognito:groups'];
       if (groups !== undefined) {
@@ -92,58 +95,66 @@ export function TopNav(props) {
   }, []);
 
   const navItems = [
-    { type: 'link', text: 'Upload', href: '/upload' },
-    { type: 'link', text: 'Models', href: '/models' },
+    { type: 'link', text: t('topnav.upload'), href: '/upload' },
+    { type: 'link', text: t('topnav.models'), href: '/models' },
   ];
 
   if (groups.includes('admin')) {
     navItems.push({
       type: 'section',
-      text: 'Admin',
+      text: t('topnav.admin'),
       href: '/admin',
       items: [
         {
           type: 'expandable-link-group',
-          text: 'Models',
+          text: t('topnav.models'),
           items: [
-            { type: 'link', text: 'All Models', href: '/admin/models' },
-            { type: 'link', text: 'Quarantined models', href: '/admin/quarantine' },
+            { type: 'link', text: t('topnav.all-models'), href: '/admin/models' },
+            {
+              type: 'link',
+              text: t('topnav.quarantined-models'),
+              href: '/admin/quarantine',
+            },
           ],
         },
         {
           type: 'expandable-link-group',
-          text: 'Car management',
+          text: t('topnav.car-management'),
           items: [
-            { type: 'link', text: 'Fleets', href: '/admin/fleets' },
-            { type: 'link', text: 'Cars', href: '/admin/cars' },
-            { type: 'link', text: 'Car activiation', href: '/admin/car_activation' },
+            { type: 'link', text: t('topnav.fleets'), href: '/admin/fleets' },
+            { type: 'link', text: t('topnav.cars'), href: '/admin/cars' },
+            {
+              type: 'link',
+              text: t('topnav.car-activation'),
+              href: '/admin/car_activation',
+            },
           ],
         },
         {
           type: 'expandable-link-group',
-          text: 'Event',
+          text: t('topnav.event'),
           items: [
             {
               type: 'link',
-              text: 'Events',
+              text: t('topnav.events'),
               info: <Badge color="blue">Beta</Badge>,
               href: '/admin/events',
             },
             {
               type: 'link',
-              text: 'Time Keeper',
+              text: t('topnav.time-keeper'),
               info: <Badge color="blue">Beta</Badge>,
               href: '/admin/timekeeper',
             },
             {
               type: 'link',
-              text: 'Leaderboard',
+              text: t('topnav.leaderboard'),
               info: <Badge color="blue">Beta</Badge>,
               href: '/admin/leaderboard',
             },
           ],
         },
-        { type: 'link', text: 'Groups', href: '/admin/groups' },
+        { type: 'link', text: t('topnav.groups'), href: '/admin/groups' },
       ],
     });
   }
@@ -179,7 +190,7 @@ export function TopNav(props) {
                 items: [
                   {
                     id: 'signout',
-                    text: 'Sign out',
+                    text: t('topnav.sign-out'),
                   },
                 ],
                 onItemClick: ({ detail }) => {
@@ -190,12 +201,12 @@ export function TopNav(props) {
               },
             ]}
             i18nStrings={{
-              searchIconAriaLabel: 'Search',
-              searchDismissIconAriaLabel: 'Close search',
-              overflowMenuTriggerText: 'More',
-              overflowMenuTitleText: 'All',
-              overflowMenuBackIconAriaLabel: 'Back',
-              overflowMenuDismissIconAriaLabel: 'Close menu',
+              searchIconAriaLabel: t('topnav.search'),
+              searchDismissIconAriaLabel: t('topnav.close-search'),
+              overflowMenuTriggerText: t('topnav.more'),
+              overflowMenuTitleText: t('topnav.all'),
+              overflowMenuBackIconAriaLabel: t('topnav.back'),
+              overflowMenuDismissIconAriaLabel: t('topnav.close-menu'),
             }}
           />
         </div>

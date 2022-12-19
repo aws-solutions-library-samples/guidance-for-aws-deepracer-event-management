@@ -3,6 +3,7 @@
 import { Box, Button, Container, Grid, Header, SpaceBetween } from '@cloudscape-design/components';
 import React, { useContext, useEffect, useState } from 'react';
 
+import { useTranslation } from 'react-i18next';
 import useCounter from '../../hooks/useCounter';
 import useTimer from '../../hooks/useTimer';
 import { eventContext } from '../../store/EventProvider';
@@ -14,6 +15,7 @@ import { RacerSelectionModal } from './racer-selector-modal';
 import styles from './timekeeper.module.css';
 
 const Timekeeper = () => {
+  const { t } = useTranslation();
   const [racerSelecorModalIsVisible, SetRacerSelectorModalIsVisible] = useState(true);
   const [endSessionModalIsVisible, SetEndSessionModalIsVisible] = useState(false);
   const [timerIsReset, SetTimerIsReset] = useState(false);
@@ -158,7 +160,7 @@ const Timekeeper = () => {
 
   const racerSelectionModalDismissedHandler = () => {
     SetRacerSelectorModalIsVisible(false);
-    // TODO display warning that a racer need to be selected
+    // TODO display warning that a racer needs to be selected
   };
 
   const undoFalseFinishHandler = () => {
@@ -209,19 +211,19 @@ const Timekeeper = () => {
       <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
         <Container>
           <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-            <Header>Current Racer:</Header>
+            <Header>{t('timekeeper.current-racer')}:</Header>
             <Header>{username}</Header>
           </Grid>
           <hr></hr>
           <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }, { colspan: 6 }, { colspan: 6 }]}>
-            <Header>Time Left: </Header>
+            <Header>{t('timekeeper.time-left')}: </Header>
             <CountDownTimer
               duration={selectedEvent.raceTimeInSec * 1000}
               isReset={timerIsReset}
               isRunning={lapTimerIsRunning}
               onExpire={raceIsOverHandler}
             />
-            <Header>Current Lap:</Header>
+            <Header>{t('timekeeper.current-lap')}:</Header>
             <Header>
               {time.minutes}:{time.seconds}:{time.milliseconds}
             </Header>
@@ -245,18 +247,18 @@ const Timekeeper = () => {
             className={styles.root}
           >
             <Button onClick={captureNewLapHandler.bind(null, false)} disabled={!lapTimerIsRunning}>
-              DNF
+              {t('timekeeper.dnf')}
             </Button>
             <Button onClick={incrementCarResetCounter} disabled={!lapTimerIsRunning}>
-              Car Reset
+              {t('timekeeper.car-reset')}
             </Button>
             <Button onClick={captureNewLapHandler.bind(null, true)} disabled={!lapTimerIsRunning}>
-              Capture Lap
+              {t('timekeeper.capture-lap')}
             </Button>
             <div>{connected ? 'Automated timer connected' : 'Automated timer not connected'} </div>
             <hr></hr>
             <Grid>
-              <div>Resets:</div>
+              <div>{t('timekeeper.resets')}:</div>
               <div>
                 {carResetCounter}/{selectedEvent.numberOfResets}
               </div>
@@ -265,19 +267,23 @@ const Timekeeper = () => {
               -1
             </Button>
             <Button disabled={!lapTimerIsRunning} onClick={undoFalseFinishHandler}>
-              Undo false finish
+              {t('timekeeper.undo-false-finish')}
             </Button>
             <hr></hr>
-            <Button onClick={endSessionHandler}>End Race</Button>
+            <Button onClick={endSessionHandler}>{t('timekeeper.end-race')}</Button>
             <Button onClick={() => raceHandler()}>
-              {!lapTimerIsRunning ? 'Start Race' : 'Pause Race'}
+              {!lapTimerIsRunning ? t('timekeeper.start-race') : t('timekeeper.pause-race')}
             </Button>
           </Grid>
         </Container>
         <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }]}>
           <SpaceBetween size="m" direction="horizontal">
-            <LapTable header={'Fastest Lap'} laps={fastestLap} onAction={actionHandler} />
-            <LapTable header={'Recorded Laps'} laps={laps} onAction={actionHandler} />
+            <LapTable
+              header={t('timekeeper.fastest-lap')}
+              laps={fastestLap}
+              onAction={actionHandler}
+            />
+            <LapTable header={t('timekeeper.recorded-laps')} laps={laps} onAction={actionHandler} />
           </SpaceBetween>
         </Grid>
       </Grid>

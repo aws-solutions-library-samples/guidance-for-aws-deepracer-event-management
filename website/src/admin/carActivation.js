@@ -1,10 +1,9 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ContentHeader } from '../components/ContentHeader';
 import { ListOfFleets } from '../components/ListOfFleets';
-// import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-// import * as subscriptions from '../graphql/subscriptions'
 
 import {
   Box,
@@ -23,7 +22,9 @@ import {
   TextContent,
 } from '@cloudscape-design/components';
 
-export function AdminActivation(props) {
+const AdminActivation = (props) => {
+  const { t } = useTranslation();
+
   const [result, setResult] = useState('');
   const [activationCode, setActivationCode] = useState('');
   const [activationId, setActivationId] = useState('');
@@ -122,12 +123,12 @@ export function AdminActivation(props) {
   return (
     <>
       <ContentHeader
-        header="Car activation"
-        description="Create systems manager activation to register and update cars."
+        header={t('car-activation.header')}
+        description={t('car-activation.description')}
         breadcrumbs={[
-          { text: 'Home', href: '/' },
-          { text: 'Admin', href: '/admin/home' },
-          { text: 'Car activiation' },
+          { text: t('home.breadcrumb'), href: '/' },
+          { text: t('admin.breadcrumb'), href: '/admin/home' },
+          { text: t('car-activation.breadcrumb') },
         ]}
       />
       <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
@@ -143,14 +144,14 @@ export function AdminActivation(props) {
                   }}
                   disabled={buttonDisabled}
                 >
-                  Generate
+                  {t('car-activation.generate')}
                 </Button>
               </SpaceBetween>
             }
           >
             <Container textAlign="center">
               <SpaceBetween direction="vertical" size="l">
-                <FormField label="Fleet">
+                <FormField label={t('car-activation.fleet')}>
                   <ButtonDropdown
                     items={dropDownFleets}
                     onItemClick={({ detail }) => {
@@ -161,39 +162,39 @@ export function AdminActivation(props) {
                     {dropDownSelectedItem.fleetName}
                   </ButtonDropdown>
                 </FormField>
-                <FormField label="Hostname" errorText={hostnameErrorMessage}>
+                <FormField label={t('car-activation.hostname')} errorText={hostnameErrorMessage}>
                   <Input
                     value={hostname}
-                    placeholder="deepracer01"
+                    placeholder={t('car-activation.hostname-placeholder')}
                     onChange={(fleet) => {
                       setHostname(fleet.detail.value);
                     }}
                   />
                 </FormField>
-                <FormField label="Password" errorText={passwordErrorMessage}>
+                <FormField label={t('car-activation.password')} errorText={passwordErrorMessage}>
                   <Input
                     value={password}
-                    placeholder="password"
+                    placeholder={t('car-activation.password-placeholder')}
                     onChange={(fleet) => {
                       setPassword(fleet.detail.value);
                     }}
                   />
                 </FormField>
 
-                <ExpandableSection header="Optional WiFi config for networks with hidden SSIDs">
-                  <FormField label="SSID">
+                <ExpandableSection header={t('car-activation.wifi-config')}>
+                  <FormField label={t('car-activation.ssid')}>
                     <Input
                       value={ssid}
-                      placeholder="ssid"
+                      placeholder={t('car-activation.ssid-placeholder')}
                       onChange={(fleet) => {
                         setSsid(fleet.detail.value);
                       }}
                     />
                   </FormField>
-                  <FormField label="WiFi Password">
+                  <FormField label={t('car-activation.wifi')}>
                     <Input
                       value={wifiPass}
-                      placeholder="wifimagic"
+                      placeholder={t('car-activation.wifi-placeholder')}
                       onChange={(fleet) => {
                         setWifiPass(fleet.detail.value);
                       }}
@@ -206,7 +207,7 @@ export function AdminActivation(props) {
 
           <Container>
             <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
-              <Header variant="h3">Script</Header>
+              <Header variant="h3">{t('car-activation.script')}</Header>
               <Container>
                 <Box color="text-status-info" textAlign="center">
                   {loading}
@@ -218,7 +219,11 @@ export function AdminActivation(props) {
                 position="right"
                 size="small"
                 triggerType="custom"
-                content={<StatusIndicator type="success">copied to clipboard</StatusIndicator>}
+                content={
+                  <StatusIndicator type="success">
+                    {t('car-activation.copied-to-clipboard')}
+                  </StatusIndicator>
+                }
               >
                 <Button
                   iconName="copy"
@@ -226,7 +231,7 @@ export function AdminActivation(props) {
                     navigator.clipboard.writeText(updateCommand);
                   }}
                 >
-                  Copy
+                  {t('button.copy')}
                 </Button>
               </Popover>
             </Grid>
@@ -245,7 +250,11 @@ export function AdminActivation(props) {
                   position="right"
                   size="small"
                   triggerType="custom"
-                  content={<StatusIndicator type="success">copied to clipboard</StatusIndicator>}
+                  content={
+                    <StatusIndicator type="success">
+                      {t('car-activation.copied-to-clipboard')}
+                    </StatusIndicator>
+                  }
                 >
                   <Button
                     iconName="copy"
@@ -253,7 +262,7 @@ export function AdminActivation(props) {
                       navigator.clipboard.writeText(activationCode);
                     }}
                   >
-                    Copy
+                    {t('button.copy')}
                   </Button>
                 </Popover>
               </Grid>
@@ -271,7 +280,11 @@ export function AdminActivation(props) {
                   position="right"
                   size="small"
                   triggerType="custom"
-                  content={<StatusIndicator type="success">copied to clipboard</StatusIndicator>}
+                  content={
+                    <StatusIndicator type="success">
+                      {t('car-activation.copied-to-clipboard')}
+                    </StatusIndicator>
+                  }
                 >
                   <Button
                     iconName="copy"
@@ -279,13 +292,13 @@ export function AdminActivation(props) {
                       navigator.clipboard.writeText(activationId);
                     }}
                   >
-                    Copy
+                    {t('button.copy')}
                   </Button>
                 </Popover>
               </Grid>
 
               <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
-                <Header variant="h3">SSM Only</Header>
+                <Header variant="h3">{t('car-activation.ssm-only')}</Header>
                 <Container>
                   <Box color="text-status-info" textAlign="center">
                     {loading}
@@ -297,7 +310,11 @@ export function AdminActivation(props) {
                   position="right"
                   size="small"
                   triggerType="custom"
-                  content={<StatusIndicator type="success">copied to clipboard</StatusIndicator>}
+                  content={
+                    <StatusIndicator type="success">
+                      {t('car-activation.copied-to-clipboard')}
+                    </StatusIndicator>
+                  }
                 >
                   <Button
                     iconName="copy"
@@ -305,7 +322,7 @@ export function AdminActivation(props) {
                       navigator.clipboard.writeText(ssmCommand);
                     }}
                   >
-                    Copy
+                    {t('button.copy')}
                   </Button>
                 </Popover>
               </Grid>
@@ -316,12 +333,10 @@ export function AdminActivation(props) {
             <div></div>
             <div>
               <Button href="/manual_update.sh" iconAlign="right" iconName="external">
-                manual_update.sh script
+                manual_update.sh {t('car-activation.script-lower')}
               </Button>
               <TextContent>
-                <p>
-                  <b>Note:</b> This script will disable the car GUI
-                </p>
+                <p>{t('car-activation.script-warning')}</p>
               </TextContent>
             </div>
           </Grid>
@@ -330,4 +345,6 @@ export function AdminActivation(props) {
       </Grid>
     </>
   );
-}
+};
+
+export { AdminActivation };

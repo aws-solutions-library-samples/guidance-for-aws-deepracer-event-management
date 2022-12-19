@@ -13,6 +13,7 @@ import {
 } from '@cloudscape-design/components';
 import { API, Auth } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
 import { ContentHeader } from '../../components/ContentHeader';
@@ -36,9 +37,11 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export function AdminGroupsDetail() {
+  const { t } = useTranslation();
+
   const { groupName } = useParams();
   const [allItems, setItems] = useState([]);
-  const [selectedItems, setSelectedItems] = useState([]);
+  const [selectedItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [refreshKey, setRefreshKey] = useState(0);
@@ -78,7 +81,7 @@ export function AdminGroupsDetail() {
     return () => {
       // Unmounting
     };
-  }, [refreshKey]);
+  }, [refreshKey, groupName]);
 
   const toggleUser = (user) => {
     const apiName = 'deepracerEventManager';
@@ -118,7 +121,7 @@ export function AdminGroupsDetail() {
   const columnsConfig = [
     {
       id: 'userName',
-      header: 'User name',
+      header: t('groups.detail.header-name'),
       cell: (item) => item.Username,
       sortingField: 'userName',
       width: 200,
@@ -126,7 +129,7 @@ export function AdminGroupsDetail() {
     },
     {
       id: 'userCreationDate',
-      header: 'Creation date',
+      header: t('groups.detail.header-creation-date'),
       cell: (item) => dayjs(item.UserCreateDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'userCreationDate',
       width: 200,
@@ -134,7 +137,7 @@ export function AdminGroupsDetail() {
     },
     {
       id: 'userLastModifiedDate',
-      header: 'Last modified date',
+      header: t('groups.detail.header-last-modified-date'),
       cell: (item) => dayjs(item.UserLastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'userLastModifiedDate',
       width: 200,
@@ -142,7 +145,7 @@ export function AdminGroupsDetail() {
     },
     {
       id: 'isMember',
-      header: 'Group member?',
+      header: t('groups.detail.header-group-member'),
       cell: (item) => userToggle(item),
       sortingField: 'isMember',
       width: 200,
@@ -150,7 +153,7 @@ export function AdminGroupsDetail() {
     },
     {
       id: 'isEnabled',
-      header: 'User enabled?',
+      header: t('groups.detail.header-user-enabled'),
       cell: (item) => <StatusIndicator {...isMemberIndicator[item.Enabled]} />,
       sortingField: 'isEnabled',
       width: 200,
@@ -160,28 +163,28 @@ export function AdminGroupsDetail() {
 
   const visibleContentOptions = [
     {
-      label: 'User information',
+      label: t('groups.detail.infromation'),
       options: [
         {
           id: 'userName',
-          label: 'User name',
+          label: t('groups.detail.header-name'),
           editable: false,
         },
         {
           id: 'userCreationDate',
-          label: 'Creation date',
+          label: t('groups.detail.header-creation-date'),
         },
         {
           id: 'userLastModifiedDate',
-          label: 'Last modified date',
+          label: t('groups.detail.header-last-modified-date'),
         },
         {
           id: 'isMember',
-          label: 'Group member?',
+          label: t('groups.detail.header-group-member'),
         },
         {
           id: 'isEnabled',
-          label: 'User enabled',
+          label: t('groups.detail.header-user-enabled'),
         },
       ],
     },
@@ -190,12 +193,19 @@ export function AdminGroupsDetail() {
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(allItems, {
       filtering: {
-        empty: <EmptyState title="No users" subtitle="No users have been defined." />,
+        empty: (
+          <EmptyState
+            title={t('groups.no-users')}
+            subtitle={t('groups.no-users-have-been-defined')}
+          />
+        ),
         noMatch: (
           <EmptyState
-            title="No matches"
-            subtitle="We can’t find a match."
-            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+            title={t('models.no-matches')}
+            subtitle={t('models.we-cant-find-a-match')}
+            action={
+              <Button onClick={() => actions.setFiltering('')}>{t('models.clear-filter')}</Button>
+            }
           />
         ),
       },
@@ -212,12 +222,12 @@ export function AdminGroupsDetail() {
   return (
     <>
       <ContentHeader
-        header={"Group '" + groupName + "' admin"}
-        description={"Add / remove users from the '" + groupName + "' group."}
+        header={t('groups.detail.content-header', { groupName })}
+        description={t('groups.detail.content-description', { groupName })}
         breadcrumbs={[
-          { text: 'Home', href: '/' },
-          { text: 'Admin', href: '/admin/home' },
-          { text: 'Groups', href: '/admin/groups' },
+          { text: t('home.breadcrumb'), href: '/' },
+          { text: t('admin.breadcrumb'), href: '/admin/home' },
+          { text: t('groups.breadcrumb'), href: '/admin/groups' },
           { text: groupName },
         ]}
       />
@@ -234,7 +244,7 @@ export function AdminGroupsDetail() {
                   : `(${allItems.length})`
               }
             >
-              Users
+              {t('groups.detail.header')}
             </Header>
           }
           columnDefinitions={columnsConfig}
@@ -243,9 +253,9 @@ export function AdminGroupsDetail() {
             <Pagination
               {...paginationProps}
               ariaLabels={{
-                nextPageLabel: 'Next page',
-                previousPageLabel: 'Previous page',
-                pageLabel: (pageNumber) => `Go to page ${pageNumber}`,
+                nextPageLabel: t('table.next-page'),
+                previousPageLabel: t('table.previous-page'),
+                pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
               }}
             />
           }
@@ -253,25 +263,25 @@ export function AdminGroupsDetail() {
             <TextFilter
               {...filterProps}
               countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel="Filter users"
+              filteringAriaLabel={t('groups.detail.filter-users')}
             />
           }
           loading={isLoading}
-          loadingText="Loading users"
+          loadingText={t('groups.detail.loading-users')}
           visibleColumns={preferences.visibleContent}
           stickyHeader="true"
           trackBy="Username"
           resizableColumns
           preferences={
             <CollectionPreferences
-              title="Preferences"
-              confirmLabel="Confirm"
-              cancelLabel="Cancel"
+              title={t('table.preferences')}
+              confirmLabel={t('button.confirm')}
+              cancelLabel={t('button.cancel')}
               onConfirm={({ detail }) => setPreferences(detail)}
               preferences={preferences}
-              pageSizePreference={PageSizePreference('users')}
+              pageSizePreference={PageSizePreference(t('groups.detail.page-size-label'))}
               visibleContentPreference={{
-                title: 'Select visible columns',
+                title: t('table.select-visible-colunms'),
                 options: visibleContentOptions,
               }}
               wrapLinesPreference={WrapLines}

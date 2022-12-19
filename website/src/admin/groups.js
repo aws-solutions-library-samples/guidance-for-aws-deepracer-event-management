@@ -11,7 +11,7 @@ import {
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
-
+import { useTranslation } from 'react-i18next';
 import { ContentHeader } from '../components/ContentHeader';
 import {
   DefaultPreferences,
@@ -33,9 +33,11 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export function AdminGroups() {
+  const { t } = useTranslation();
+
   const [allItems, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedItems, setSelectedItems] = useState([]);
+  const [selectedItems] = useState([]);
 
   const apiName = 'deepracerEventManager';
 
@@ -63,7 +65,7 @@ export function AdminGroups() {
   const columnsConfig = [
     {
       id: 'groupName',
-      header: 'Group name',
+      header: t('groups.header-name'),
       cell: (item) => (
         <div>
           <Link href={window.location.href + '/' + item.GroupName}>{item.GroupName}</Link>
@@ -75,7 +77,7 @@ export function AdminGroups() {
     },
     {
       id: 'description',
-      header: 'Description',
+      header: t('groups.header-description'),
       cell: (item) => item.Description || '-',
       sortingField: 'description',
       width: 200,
@@ -83,7 +85,7 @@ export function AdminGroups() {
     },
     {
       id: 'creationDate',
-      header: 'Creation date',
+      header: t('groups.header-creation-date'),
       cell: (item) => dayjs(item.creationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'creationDate',
       width: 200,
@@ -91,7 +93,7 @@ export function AdminGroups() {
     },
     {
       id: 'lastModifiedDate',
-      header: 'Last modified date',
+      header: t('groups.header-last-modified-date'),
       cell: (item) => dayjs(item.LastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'lastModifiedDate',
       width: 200,
@@ -101,25 +103,25 @@ export function AdminGroups() {
 
   const visibleContentOptions = [
     {
-      label: 'Group information',
+      label: t('groups.information'),
       options: [
         {
           id: 'groupName',
-          label: 'Group name',
+          label: t('groups.header-name'),
           editable: false,
         },
         {
           id: 'description',
-          label: 'Description',
+          label: t('groups.header-description'),
           editable: false,
         },
         {
           id: 'creationDate',
-          label: 'Creation date',
+          label: t('groups.header-creation-date'),
         },
         {
           id: 'lastModifiedDate',
-          label: 'Last modified date',
+          label: t('groups.header-last-modified-date'),
         },
       ],
     },
@@ -128,12 +130,19 @@ export function AdminGroups() {
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(allItems, {
       filtering: {
-        empty: <EmptyState title="No groups" subtitle="No groups have been defined." />,
+        empty: (
+          <EmptyState
+            title={t('groups.no-groups')}
+            subtitle={t('groups.no-groups-have-been-defined')}
+          />
+        ),
         noMatch: (
           <EmptyState
-            title="No matches"
-            subtitle="We can’t find a match."
-            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+            title={t('models.no-matches')}
+            subtitle={t('models.we-cant-find-a-match')}
+            action={
+              <Button onClick={() => actions.setFiltering('')}>{t('models.clear-filter')}</Button>
+            }
           />
         ),
       },
@@ -145,12 +154,12 @@ export function AdminGroups() {
   return (
     <>
       <ContentHeader
-        header="Groups admin"
-        description="List of user groups."
+        header={t('groups.header')}
+        description={t('groups.description')}
         breadcrumbs={[
-          { text: 'Home', href: '/' },
-          { text: 'Admin', href: '/admin/home' },
-          { text: 'Groups' },
+          { text: t('home.breadcrumb'), href: '/' },
+          { text: t('admin.breadcrumb'), href: '/admin/home' },
+          { text: t('groups.breadcrumb') },
         ]}
       />
 
@@ -166,7 +175,7 @@ export function AdminGroups() {
                   : `(${allItems.length})`
               }
             >
-              Groups
+              {t('groups.header')}
             </Header>
           }
           columnDefinitions={columnsConfig}
@@ -175,9 +184,9 @@ export function AdminGroups() {
             <Pagination
               {...paginationProps}
               ariaLabels={{
-                nextPageLabel: 'Next page',
-                previousPageLabel: 'Previous page',
-                pageLabel: (pageNumber) => `Go to page ${pageNumber}`,
+                nextPageLabel: t('table.next-page'),
+                previousPageLabel: t('table.previous-page'),
+                pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
               }}
             />
           }
@@ -185,11 +194,11 @@ export function AdminGroups() {
             <TextFilter
               {...filterProps}
               countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel="Filter models"
+              filteringAriaLabel={t('groups.filter-groups')}
             />
           }
           loading={isLoading}
-          loadingText="Loading groups"
+          loadingText={t('groups.loading-groups')}
           visibleColumns={preferences.visibleContent}
           selectedItems={selectedItems}
           stickyHeader="true"
@@ -197,14 +206,14 @@ export function AdminGroups() {
           resizableColumns
           preferences={
             <CollectionPreferences
-              title="Preferences"
-              confirmLabel="Confirm"
-              cancelLabel="Cancel"
+              title={t('table.preferences')}
+              confirmLabel={t('button.confirm')}
+              cancelLabel={t('button.cancel')}
               onConfirm={({ detail }) => setPreferences(detail)}
               preferences={preferences}
-              pageSizePreference={PageSizePreference('groups')}
+              pageSizePreference={PageSizePreference(t('groups.page-size-label'))}
               visibleContentPreference={{
-                title: 'Select visible columns',
+                title: t('table.select-visible-colunms'),
                 options: visibleContentOptions,
               }}
               wrapLinesPreference={WrapLines}
