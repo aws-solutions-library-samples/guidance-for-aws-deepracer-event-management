@@ -42,26 +42,26 @@ const LapTable = (props) => {
       columnDefinitions={[
         {
           id: 'id',
-          header: t('timekeeper.laptable.lap-number'),
+          header: t('timekeeper.lap-table.lap-number'),
           cell: (item) => item.id || '',
           sortingField: 'id',
           width: '100px',
         },
         {
           id: 'time',
-          header: t('timekeeper.laptable.lap-time'),
+          header: t('timekeeper.lap-table.lap-time'),
           cell: (item) => item.time || '',
           sortingField: 'time',
         },
         {
           id: 'resets',
-          header: t('timekeeper.laptable.resets'),
+          header: t('timekeeper.lap-table.resets'),
           cell: (item) => item.resets || 0,
           sortingField: 'resets',
         },
         {
           id: 'actions',
-          header: t('timekeeper.laptable.actions'),
+          header: t('timekeeper.lap-table.actions'),
           cell: (item) => item.actions || '',
           width: '200px',
         },

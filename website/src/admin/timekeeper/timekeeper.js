@@ -36,8 +36,6 @@ const Timekeeper = () => {
   const [laps, SetLaps] = useState([]);
   const [fastestLap, SetFastestLap] = useState([]);
 
-  const [isLastLap, SetIsLastLap] = useState(false);
-
   const connected = false; // TODO remove when activating websocket (automated timer)
   // const { message, connected } = useWebsocket('ws://localhost:8080');
   const { setNavigationOpen } = useContext(SideNavContext);
@@ -55,7 +53,7 @@ const Timekeeper = () => {
   const raceTimerRef = useRef();
   const [overlayPublishTimerId, setoverlayPublishTimerId] = useState();
 
-  const [state, send] = useMachine(stateMachine, {
+  const [, send] = useMachine(stateMachine, {
     actions: {
       resetRace: () => {
         console.log('Reseting race state');
@@ -222,7 +220,6 @@ const Timekeeper = () => {
   // JSX
   return (
     <Box margin={{ top: 'l' }} textAlign="center">
-      STATE: {JSON.stringify(state.value)}
       <RacerSelectionModal
         onRacerSelected={(username) => send('READY', { username: username })}
         onDismiss={racerSelectionModalDismissedHandler}
@@ -282,7 +279,7 @@ const Timekeeper = () => {
             <Button onClick={() => send('CAPTURE_LAP', { isValid: false })}>
               {t('timekeeper.dnf')}
             </Button>
-            <Button onClick={incrementCarResetCounter}>{t('timekeeper.car-reset</Button>')}</Button>
+            <Button onClick={incrementCarResetCounter}>{t('timekeeper.car-reset')}</Button>
             <Button
               onClick={() => send('CAPTURE_LAP', { isValid: true })}
               disabled={!timersAreRunning}
