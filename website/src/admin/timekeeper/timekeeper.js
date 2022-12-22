@@ -51,7 +51,7 @@ const Timekeeper = () => {
   const raceTimerRef = useRef();
   let overlayPublishTimerId;
 
-  const [state, send] = useMachine(stateMachine, {
+  const [, send] = useMachine(stateMachine, {
     actions: {
       resetRace: () => {
         console.log('Reseting race state');
