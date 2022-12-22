@@ -1,5 +1,6 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+// import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
@@ -7,7 +8,9 @@ import reportWebVitals from './reportWebVitals';
 import '@cloudscape-design/global-styles/dark-mode-utils.css';
 import '@cloudscape-design/global-styles/index.css';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const rootElement = document.getElementById('root');
+const root = createRoot(rootElement);
+
 root.render(
   <React.StrictMode>
     <App />
