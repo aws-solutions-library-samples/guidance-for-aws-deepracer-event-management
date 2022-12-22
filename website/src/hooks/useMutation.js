@@ -22,5 +22,5 @@ export default function useMutation() {
     return mutateApi();
   };
 
-  return { send, loading };
+  return [send, loading];
 }

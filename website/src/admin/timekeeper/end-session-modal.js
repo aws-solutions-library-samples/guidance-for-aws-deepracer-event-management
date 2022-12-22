@@ -32,7 +32,7 @@ const EndSessionModal = (props) => {
     console.info('Submiting Race...');
     SetButtonsIsDisabled(true);
     const lapsToSubmit = laps.map((lap) => {
-      delete lap.id;
+      delete lap.id; // TODO how to solve this eslint error?
       return lap;
     });
     const response = send('addRace', {

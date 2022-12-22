@@ -3,7 +3,9 @@
 import { Box, Button, Container, Grid, Header, SpaceBetween } from '@cloudscape-design/components';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 
+import { useMachine } from '@xstate/react';
 import useCounter from '../../hooks/useCounter';
+import useMutation from '../../hooks/useMutation';
 import { eventContext } from '../../store/EventProvider';
 import SideNavContext from '../../store/SideNavContext';
 import { EndSessionModal } from './end-session-modal';
@@ -11,6 +13,7 @@ import { LapTable } from './lap-table';
 import LapTimer from './LapTimer';
 import { RacerSelectionModal } from './racer-selector-modal';
 import RaceTimer from './RaceTimer';
+import { stateMachine } from './stateMachine';
 import styles from './timekeeper.module.css';
 
 const Timekeeper = () => {
@@ -31,12 +34,11 @@ const Timekeeper = () => {
   const [laps, SetLaps] = useState([]);
   const [fastestLap, SetFastestLap] = useState([]);
 
-  const [isLastLap, SetIsLastLap] = useState(false);
-
   const connected = false; // TODO remove when activating websocket (automated timer)
   // const { message, connected } = useWebsocket('ws://localhost:8080');
   const { setNavigationOpen } = useContext(SideNavContext);
   const { events, selectedEvent, setSelectedEvent } = useContext(eventContext);
+  const [SendMutation] = useMutation();
 
   const [
     carResetCounter,
@@ -47,6 +49,80 @@ const Timekeeper = () => {
 
   const lapTimerRef = useRef();
   const raceTimerRef = useRef();
+  let overlayPublishTimerId;
+
+  const [state, send] = useMachine(stateMachine, {
+    actions: {
+      resetRace: () => {
+        console.log('Reseting race state');
+        SetUsername();
+        resetTimers();
+        resetLaps();
+
+        // Restart racer selection
+        SetEndSessionModalIsVisible(false);
+        SetRacerSelectorModalIsVisible(true);
+      },
+      readyToStart: (context, event) => {
+        console.log('readyToStart race for user ' + event.username);
+        console.log(context);
+        SetUsername(event.username);
+        resetTimers();
+        SetEndSessionModalIsVisible(false);
+        SetRacerSelectorModalIsVisible(false);
+      },
+      endRace: () => {
+        console.log('Ending race state');
+        SetEndSessionModalIsVisible(true);
+        SetRacerSelectorModalIsVisible(false);
+      },
+      startTimer: () => {
+        console.log('Start Timer state');
+        startTimers();
+      },
+      pauseTimer: () => {
+        console.log('Pause Timer state');
+        pauseTimers();
+      },
+      captureLap: (context, event) => {
+        console.log('Capturing new lap');
+        const lapId = laps.length;
+        const currentLapStats = {
+          ...currentLap,
+          resets: carResetCounter,
+          id: lapId,
+          time: lapTimerRef.current.getCurrentTimeInMs(),
+          isValid: event.lapIsValid,
+        };
+
+        SetLaps((prevState) => {
+          return [...prevState, currentLapStats];
+        });
+
+        // reset lap
+        SetCurrentLap(lapTemplate);
+        resetCarResetCounter();
+        lapTimerRef.current.reset();
+      },
+      startPublishOverlayInfo: () => {
+        console.info('Starting to publish overlay info...');
+        overlayPublishTimerId = setInterval(() => {
+          const overlayInfo = {
+            eventId: selectedEvent.eventId,
+            username: username,
+            timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
+            currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
+          };
+          console.log('Publishing overlay info: ' + JSON.stringify(overlayInfo));
+          SendMutation('updateOverlayInfo', overlayInfo);
+        }, 5000);
+      },
+      stopPublishOverlayInfo: () => {
+        console.log('Stop Publishing overlay info');
+        clearInterval(overlayPublishTimerId);
+      },
+    },
+  });
 
   // closes sidenav when time keeper page is open
   useEffect(() => {
@@ -86,51 +162,6 @@ const Timekeeper = () => {
     SetEndSessionModalIsVisible(true);
   };
 
-  const captureNewLapHandler = (lapIsValid) => {
-    const lapId = laps.length;
-    const currentLapStats = {
-      ...currentLap,
-      resets: carResetCounter,
-      id: lapId,
-      time: lapTimerRef.current.getCurrentTimeInMs(),
-      isValid: lapIsValid,
-    };
-
-    SetLaps((prevState) => {
-      return [...prevState, currentLapStats];
-    });
-    SetCurrentLap(lapTemplate);
-    resetCarResetCounter();
-    lapTimerRef.current.reset();
-
-    // Check if race is over and this is the last lap
-    if (isLastLap) {
-      pauseTimers();
-    }
-  };
-
-  const submitRaceHandler = () => {
-    console.log('Submit race');
-    resetRace();
-  };
-
-  const abandonRaceHandler = () => {
-    console.log('Abandon race');
-    resetRace();
-  };
-
-  const raceIsOverHandler = () => {
-    console.log('Race is over!');
-    SetIsLastLap(true);
-  };
-
-  const raceStartedHandler = (username) => {
-    console.log('Start race for user: ' + username);
-    SetUsername(username);
-    SetRacerSelectorModalIsVisible(false);
-    resetTimers();
-  };
-
   const actionHandler = (id) => {
     console.log('alter lap status for lap id: ' + id);
     const lapsCopy = [...laps];
@@ -140,25 +171,12 @@ const Timekeeper = () => {
     SetLaps(lapsCopy);
   };
 
-  const raceHandler = () => {
-    console.warn('username: ' + username);
-    if (username === undefined) {
-      SetRacerSelectorModalIsVisible(true);
-      resetTimers();
-    } else if (lapTimerRef.current.getIsRunning()) {
-      pauseTimers();
-    } else {
-      startTimers();
-    }
-  };
-
   const endSessionModalDismissed = () => {
     SetEndSessionModalIsVisible(false);
   };
 
   const racerSelectionModalDismissedHandler = () => {
     SetRacerSelectorModalIsVisible(false);
-    // TODO display warning that a racer need to be selected
   };
 
   const undoFalseFinishHandler = () => {
@@ -187,39 +205,35 @@ const Timekeeper = () => {
 
   const resetTimers = () => {
     pauseTimers();
+    console.log('RESET TIMERS, set race time: ' + selectedEvent.raceTimeInSec * 1000);
     raceTimerRef.current.reset(selectedEvent.raceTimeInSec * 1000);
     lapTimerRef.current.reset();
   };
 
   const resetLaps = () => {
     SetLaps([]);
-    SetIsLastLap(false);
+    // SetIsLastLap(false);
     SetCurrentLap(lapTemplate);
   };
 
-  const resetRace = () => {
-    console.log('Reseting race');
-    SetUsername();
-    resetTimers();
-    resetLaps();
-
-    // Restart racer selection
-    SetEndSessionModalIsVisible(false);
-    SetRacerSelectorModalIsVisible(true);
-  };
-
+  // JSX
   return (
     <Box margin={{ top: 'l' }} textAlign="center">
+      STATE: {JSON.stringify(state.value)}
       <RacerSelectionModal
-        onRacerSelected={raceStartedHandler}
+        onRacerSelected={(username) => send('READY', { username: username })}
         onDismiss={racerSelectionModalDismissedHandler}
         visible={racerSelecorModalIsVisible}
         events={events}
         onSelectedEvent={setSelectedEvent}
       />
       <EndSessionModal
-        onSubmitRace={submitRaceHandler}
-        onAbandonRace={abandonRaceHandler}
+        onSubmitRace={() => {
+          return send('END');
+        }}
+        onAbandonRace={() => {
+          return send('END');
+        }}
         onDismiss={endSessionModalDismissed}
         onAction={actionHandler}
         username={username}
@@ -236,7 +250,13 @@ const Timekeeper = () => {
           <hr></hr>
           <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }, { colspan: 6 }, { colspan: 6 }]}>
             <Header>Time Left: </Header>
-            <RaceTimer onExpire={raceIsOverHandler} ref={raceTimerRef} />
+            <RaceTimer
+              onExpire={() => {
+                console.log('RACE TIMER HAS EXPIRED!');
+                return send('EXPIRE');
+              }}
+              ref={raceTimerRef}
+            />
             <Header>Current Lap:</Header>
             <LapTimer ref={lapTimerRef} />
           </Grid>
@@ -257,9 +277,12 @@ const Timekeeper = () => {
             ]}
             className={styles.root}
           >
-            <Button onClick={captureNewLapHandler.bind(null, false)}>DNF</Button>
+            <Button onClick={() => send('CAPTURE_LAP', { isValid: false })}>DNF</Button>
             <Button onClick={incrementCarResetCounter}>Car Reset</Button>
-            <Button onClick={captureNewLapHandler.bind(null, true)} disabled={!timersAreRunning}>
+            <Button
+              onClick={() => send('CAPTURE_LAP', { isValid: true })}
+              disabled={!timersAreRunning}
+            >
               Capture Lap
             </Button>
             <div>{connected ? 'Automated timer connected' : 'Automated timer not connected'} </div>
@@ -274,7 +297,7 @@ const Timekeeper = () => {
             <Button onClick={undoFalseFinishHandler}>Undo false finish</Button>
             <hr></hr>
             <Button onClick={endSessionHandler}>End Race</Button>
-            <Button onClick={() => raceHandler()}>
+            <Button onClick={() => send('TOGGLE')}>
               {!timersAreRunning ? 'Start Race' : 'Pause Race'}
             </Button>
           </Grid>
