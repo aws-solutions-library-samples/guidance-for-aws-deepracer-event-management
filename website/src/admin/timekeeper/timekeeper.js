@@ -219,7 +219,6 @@ const Timekeeper = () => {
   // JSX
   return (
     <Box margin={{ top: 'l' }} textAlign="center">
-      STATE: {JSON.stringify(state.value)}
       <RacerSelectionModal
         onRacerSelected={(username) => send('READY', { username: username })}
         onDismiss={racerSelectionModalDismissedHandler}
