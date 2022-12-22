@@ -233,3 +233,60 @@ class Leaderboard(Construct):
                 data_source=laps_data_source,
             ),
         )
+
+        # broadcast Overlays
+        overlay_object_type = appsync.ObjectType(
+            "Overlay",
+            definition={
+                "eventId": appsync.GraphqlType.string(is_required=True),
+                "username": appsync.GraphqlType.string(is_required=True),
+                "timeLeftInMs": appsync.GraphqlType.float(is_required=True),
+                "currentLapTimeInMs": appsync.GraphqlType.float(is_required=True),
+            },
+        )
+
+        api.add_type(overlay_object_type)
+
+        api.add_mutation(
+            "updateOverlayInfo",
+            appsync.ResolvableField(
+                args={
+                    "eventId": appsync.GraphqlType.string(is_required=True),
+                    "username": appsync.GraphqlType.string(is_required=True),
+                    "timeLeftInMs": appsync.GraphqlType.float(is_required=True),
+                    "currentLapTimeInMs": appsync.GraphqlType.float(is_required=True),
+                },
+                return_type=overlay_object_type.attribute(),
+                data_source=none_data_source,
+                request_mapping_template=appsync.MappingTemplate.from_string(
+                    """{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments)
+                    }"""
+                ),
+                response_mapping_template=appsync.MappingTemplate.from_string(
+                    """$util.toJson($context.result)"""
+                ),
+            ),
+        )
+
+        api.add_subscription(
+            "onNewOverlayInfo",
+            appsync.ResolvableField(
+                args={
+                    "eventId": appsync.GraphqlType.id(is_required=True),
+                },
+                return_type=overlay_object_type.attribute(),
+                data_source=none_data_source,
+                request_mapping_template=appsync.MappingTemplate.from_string(
+                    """{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments.entry)
+                    }"""
+                ),
+                response_mapping_template=appsync.MappingTemplate.from_string(
+                    """$util.toJson($context.result)"""
+                ),
+                directives=[appsync.Directive.subscribe("updateOverlayInfo")],
+            ),
+        )

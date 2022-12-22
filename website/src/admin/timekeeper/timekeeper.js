@@ -1,22 +1,22 @@
 // TODO ensure automatic timer (websocket) is working properly
 
 import { Box, Button, Container, Grid, Header, SpaceBetween } from '@cloudscape-design/components';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 
 import useCounter from '../../hooks/useCounter';
-import useTimer from '../../hooks/useTimer';
 import { eventContext } from '../../store/EventProvider';
 import SideNavContext from '../../store/SideNavContext';
-import { CountDownTimer } from './count-down-timer';
 import { EndSessionModal } from './end-session-modal';
 import { LapTable } from './lap-table';
+import LapTimer from './LapTimer';
 import { RacerSelectionModal } from './racer-selector-modal';
+import RaceTimer from './RaceTimer';
 import styles from './timekeeper.module.css';
 
 const Timekeeper = () => {
   const [racerSelecorModalIsVisible, SetRacerSelectorModalIsVisible] = useState(true);
   const [endSessionModalIsVisible, SetEndSessionModalIsVisible] = useState(false);
-  const [timerIsReset, SetTimerIsReset] = useState(false);
+  const [timersAreRunning, SetTimersAreRunning] = useState(false);
 
   const [username, SetUsername] = useState();
   const lapTemplate = {
@@ -45,8 +45,8 @@ const Timekeeper = () => {
     resetCarResetCounter,
   ] = useCounter(0);
 
-  const [time, timeInMilliseconds, lapTimerIsRunning, startLapTimer, pauseLapTimer, resetLapTimer] =
-    useTimer(8);
+  const lapTimerRef = useRef();
+  const raceTimerRef = useRef();
 
   // closes sidenav when time keeper page is open
   useEffect(() => {
@@ -92,7 +92,7 @@ const Timekeeper = () => {
       ...currentLap,
       resets: carResetCounter,
       id: lapId,
-      time: timeInMilliseconds,
+      time: lapTimerRef.current.getCurrentTimeInMs(),
       isValid: lapIsValid,
     };
 
@@ -101,11 +101,11 @@ const Timekeeper = () => {
     });
     SetCurrentLap(lapTemplate);
     resetCarResetCounter();
-    resetLapTimer();
+    lapTimerRef.current.reset();
 
     // Check if race is over and this is the last lap
     if (isLastLap) {
-      pauseLapTimer();
+      pauseTimers();
     }
   };
 
@@ -128,7 +128,7 @@ const Timekeeper = () => {
     console.log('Start race for user: ' + username);
     SetUsername(username);
     SetRacerSelectorModalIsVisible(false);
-    SetTimerIsReset(false);
+    resetTimers();
   };
 
   const actionHandler = (id) => {
@@ -144,11 +144,11 @@ const Timekeeper = () => {
     console.warn('username: ' + username);
     if (username === undefined) {
       SetRacerSelectorModalIsVisible(true);
-      pauseLapTimer();
-    } else if (lapTimerIsRunning) {
-      pauseLapTimer();
+      resetTimers();
+    } else if (lapTimerRef.current.getIsRunning()) {
+      pauseTimers();
     } else {
-      startLapTimer();
+      startTimers();
     }
   };
 
@@ -164,22 +164,44 @@ const Timekeeper = () => {
   const undoFalseFinishHandler = () => {
     SetLaps((prevState) => {
       const updatedLaps = [...prevState];
-      const lastLap = updatedLaps.pop();
-      resetLapTimer(timeInMilliseconds + lastLap.time);
+      if (updatedLaps.length !== 0) {
+        const lastLap = updatedLaps.pop();
+        lapTimerRef.current.reset(lapTimerRef.current.getCurrentTimeInMs() + lastLap.time);
+      }
       return updatedLaps;
     });
   };
 
   // support functions
-  const resetRace = () => {
-    console.log('Reseting race');
-    SetUsername();
-    SetTimerIsReset(true);
-    pauseLapTimer();
-    resetLapTimer();
+  const startTimers = () => {
+    lapTimerRef.current.start();
+    raceTimerRef.current.start();
+    SetTimersAreRunning(true);
+  };
+
+  const pauseTimers = () => {
+    lapTimerRef.current.pause();
+    raceTimerRef.current.pause();
+    SetTimersAreRunning(false);
+  };
+
+  const resetTimers = () => {
+    pauseTimers();
+    raceTimerRef.current.reset(selectedEvent.raceTimeInSec * 1000);
+    lapTimerRef.current.reset();
+  };
+
+  const resetLaps = () => {
     SetLaps([]);
     SetIsLastLap(false);
     SetCurrentLap(lapTemplate);
+  };
+
+  const resetRace = () => {
+    console.log('Reseting race');
+    SetUsername();
+    resetTimers();
+    resetLaps();
 
     // Restart racer selection
     SetEndSessionModalIsVisible(false);
@@ -205,7 +227,6 @@ const Timekeeper = () => {
         selectedEvent={selectedEvent}
         visible={endSessionModalIsVisible}
       />
-
       <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
         <Container>
           <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
@@ -215,17 +236,9 @@ const Timekeeper = () => {
           <hr></hr>
           <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }, { colspan: 6 }, { colspan: 6 }]}>
             <Header>Time Left: </Header>
-            <CountDownTimer
-              duration={selectedEvent.raceTimeInSec * 1000}
-              isReset={timerIsReset}
-              isRunning={lapTimerIsRunning}
-              onExpire={raceIsOverHandler}
-            />
+            <RaceTimer onExpire={raceIsOverHandler} ref={raceTimerRef} />
             <Header>Current Lap:</Header>
-            <Header>
-              {time.minutes}:{time.seconds}:{time.milliseconds}
-            </Header>
-            {/* <LapTimer isReset={lapTimerIsReset} isRunning={lapTimerIsRunning} ref={lapTimerRef} /> */}
+            <LapTimer ref={lapTimerRef} />
           </Grid>
           <hr></hr>
           <Grid
@@ -244,13 +257,9 @@ const Timekeeper = () => {
             ]}
             className={styles.root}
           >
-            <Button onClick={captureNewLapHandler.bind(null, false)} disabled={!lapTimerIsRunning}>
-              DNF
-            </Button>
-            <Button onClick={incrementCarResetCounter} disabled={!lapTimerIsRunning}>
-              Car Reset
-            </Button>
-            <Button onClick={captureNewLapHandler.bind(null, true)} disabled={!lapTimerIsRunning}>
+            <Button onClick={captureNewLapHandler.bind(null, false)}>DNF</Button>
+            <Button onClick={incrementCarResetCounter}>Car Reset</Button>
+            <Button onClick={captureNewLapHandler.bind(null, true)} disabled={!timersAreRunning}>
               Capture Lap
             </Button>
             <div>{connected ? 'Automated timer connected' : 'Automated timer not connected'} </div>
@@ -261,16 +270,12 @@ const Timekeeper = () => {
                 {carResetCounter}/{selectedEvent.numberOfResets}
               </div>
             </Grid>
-            <Button onClick={decrementCarResetCounter} disabled={!lapTimerIsRunning}>
-              -1
-            </Button>
-            <Button disabled={!lapTimerIsRunning} onClick={undoFalseFinishHandler}>
-              Undo false finish
-            </Button>
+            <Button onClick={decrementCarResetCounter}>-1</Button>
+            <Button onClick={undoFalseFinishHandler}>Undo false finish</Button>
             <hr></hr>
             <Button onClick={endSessionHandler}>End Race</Button>
             <Button onClick={() => raceHandler()}>
-              {!lapTimerIsRunning ? 'Start Race' : 'Pause Race'}
+              {!timersAreRunning ? 'Start Race' : 'Pause Race'}
             </Button>
           </Grid>
         </Container>

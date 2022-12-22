@@ -632,20 +632,23 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         # #Cognito Identity Pool Unauthenitcated Role
-        # id_pool_unauth_user_role = iam.Role(self, "CognitoDefaultUnauthenticatedRole",
-        #     assumed_by=iam.FederatedPrincipal(
-        #         federated="cognito-identity.amazonaws.com",
-        #         conditions={
-        #             "StringEquals": {
-        #                 "cognito-identity.amazonaws.com:aud": identity_pool.ref,
-        #             },
-        #             "ForAnyValue:StringLike": {
-        #                 "cognito-identity.amazonaws.com:amr": "unauthenticated",
-        #             },
-        #         },
-        #         assume_role_action="sts:AssumeRoleWithWebIdentity"
-        #     )
-        # )
+        # needed for accessing stream overlays
+        id_pool_unauth_user_role = iam.Role(
+            self,
+            "CognitoDefaultUnauthenticatedRole",
+            assumed_by=iam.FederatedPrincipal(
+                federated="cognito-identity.amazonaws.com",
+                conditions={
+                    "StringEquals": {
+                        "cognito-identity.amazonaws.com:aud": identity_pool.ref,
+                    },
+                    "ForAnyValue:StringLike": {
+                        "cognito-identity.amazonaws.com:amr": "unauthenticated",
+                    },
+                },
+                assume_role_action="sts:AssumeRoleWithWebIdentity",
+            ),
+        )
 
         cognito.CfnIdentityPoolRoleAttachment(
             self,
@@ -653,7 +656,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             identity_pool_id=identity_pool.ref,
             roles={
                 "authenticated": id_pool_auth_user_role.role_arn,
-                # "unauthenticated": id_pool_unauth_user_role.role_arn,
+                "unauthenticated": id_pool_unauth_user_role.role_arn,
             },
             role_mappings={
                 "role_mapping": cognito.CfnIdentityPoolRoleAttachment.RoleMappingProperty(  # noqa: E501
@@ -1348,6 +1351,17 @@ class CdkDeepRacerEventManagerStack(Stack):
                 effect=iam.Effect.ALLOW,
                 actions=["appsync:GraphQL"],
                 resources=[f"{appsync_api.api.arn}/*"],
+            )
+        )
+
+        # TODO move this to the leaderboard construct
+        id_pool_unauth_user_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["appsync:GraphQL"],
+                resources=[
+                    f"{appsync_api.api.arn}/types/Subscription/fields/onNewOverlayInfo"
+                ],
             )
         )
 
