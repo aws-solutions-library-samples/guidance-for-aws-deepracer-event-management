@@ -97,7 +97,7 @@ class Leaderboard(Construct):
             "Lap",
             definition={
                 "raceId": appsync.GraphqlType.id(),
-                "lapId": appsync.GraphqlType.id(),
+                "id": appsync.GraphqlType.id(),
                 "time": appsync.GraphqlType.float(),
                 "resets": appsync.GraphqlType.int(),
                 "crashes": appsync.GraphqlType.int(),
@@ -109,7 +109,7 @@ class Leaderboard(Construct):
             "LapInput",
             definition={
                 "raceId": appsync.GraphqlType.id(),
-                "lapId": appsync.GraphqlType.id(),
+                "id": appsync.GraphqlType.id(),
                 "time": appsync.GraphqlType.float(),
                 "resets": appsync.GraphqlType.int(),
                 "crashes": appsync.GraphqlType.int(),
@@ -273,9 +273,9 @@ class Leaderboard(Construct):
         api.add_subscription(
             "onNewOverlayInfo",
             appsync.ResolvableField(
-                args={
-                    "eventId": appsync.GraphqlType.id(is_required=True),
-                },
+                # args={
+                #     "eventId": appsync.GraphqlType.id(is_required=True),
+                # },
                 return_type=overlay_object_type.attribute(),
                 data_source=none_data_source,
                 request_mapping_template=appsync.MappingTemplate.from_string(

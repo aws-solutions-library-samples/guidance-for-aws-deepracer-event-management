@@ -92,7 +92,7 @@ const Timekeeper = () => {
           resets: carResetCounter,
           id: lapId,
           time: lapTimerRef.current.getCurrentTimeInMs(),
-          isValid: event.lapIsValid,
+          isValid: event.isValid,
         };
 
         SetLaps((prevState) => {
@@ -106,16 +106,18 @@ const Timekeeper = () => {
       },
       startPublishOverlayInfo: () => {
         console.info('Starting to publish overlay info...');
-        overlayPublishTimerId = setInterval(() => {
-          const overlayInfo = {
-            eventId: selectedEvent.eventId,
-            username: username,
-            timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
-            currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
-          };
-          console.log('Publishing overlay info: ' + JSON.stringify(overlayInfo));
-          SendMutation('updateOverlayInfo', overlayInfo);
-        }, 5000);
+        if (!overlayPublishTimerId) {
+          overlayPublishTimerId = setInterval(() => {
+            const overlayInfo = {
+              eventId: selectedEvent.eventId,
+              username: username,
+              timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
+              currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
+            };
+            console.log('Publishing overlay info: ' + JSON.stringify(overlayInfo));
+            SendMutation('updateOverlayInfo', overlayInfo);
+          }, 5000);
+        }
       },
       stopPublishOverlayInfo: () => {
         console.log('Stop Publishing overlay info');

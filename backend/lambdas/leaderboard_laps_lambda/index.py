@@ -108,7 +108,7 @@ def addRace(eventId, username, laps):
         for lap in laps:
             logger.info(lap)
 
-            lapId = uuid.uuid4()
+            lapId = lap["id"]
             lap = __replace_floats_with_decimal(lap)
             lapTime = lap["time"]
 

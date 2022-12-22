@@ -15,7 +15,7 @@ export const stateMachine = createMachine({
       },
     },
     ReadyToStartRace: {
-      entry: ['readyToStart'],
+      entry: ['readyToStart', 'startPublishOverlayInfo'],
       on: {
         TOGGLE: 'RaceStarted',
         END: 'RaceReseted',
@@ -25,7 +25,7 @@ export const stateMachine = createMachine({
       initial: 'running',
       states: {
         running: {
-          entry: ['startTimer', 'startPublishOverlayInfo', assign({ raceTimeIsExpired: false })],
+          entry: ['startTimer', assign({ raceTimeIsExpired: false })],
           on: {
             TOGGLE: 'paused',
             EXPIRE: {

@@ -14,7 +14,7 @@ import { LapTable } from './lap-table';
 const EndSessionModal = (props) => {
   const [message, SetMessage] = useState('');
   const [buttonsIsDisabled, SetButtonsIsDisabled] = useState(false);
-  const { send, loading } = useMutation();
+  const [sendMutation, loading] = useMutation();
 
   const messageDisplayTime = 2500;
   const {
@@ -31,14 +31,14 @@ const EndSessionModal = (props) => {
   const submitRaceHandler = async () => {
     console.info('Submiting Race...');
     SetButtonsIsDisabled(true);
-    const lapsToSubmit = laps.map((lap) => {
-      delete lap.id; // TODO how to solve this eslint error?
-      return lap;
-    });
-    const response = send('addRace', {
+    // const lapsToSubmit = laps.map((lap) => {
+    //   delete lap.id; // TODO how to solve this eslint error?
+    //   return lap;
+    // });
+    const response = sendMutation('addRace', {
       eventId: selectedEvent.eventId,
       username: username,
-      laps: lapsToSubmit,
+      laps: laps,
     });
     if (response) {
       SetMessage(
