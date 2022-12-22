@@ -1,6 +1,7 @@
 import { Box } from '@cloudscape-design/components';
 import dayjs from 'dayjs';
 import React from 'react';
+import i18next from '../i18n';
 
 // day.js
 var advancedFormat = require('dayjs/plugin/advancedFormat');
@@ -26,7 +27,7 @@ export function EmptyState({ title, subtitle, action }) {
 }
 
 export function MatchesCountText(count) {
-  return count === 1 ? `1 match` : `${count} matches`;
+  return count === 1 ? `1 ${i18next.t('table.match')}` : `${count} ${i18next.t('table.matches')}`;
 }
 
 export const DefaultPreferences = {
@@ -36,7 +37,7 @@ export const DefaultPreferences = {
 
 export function PageSizePreference(label = 'items') {
   const pageSize = {
-    title: 'Select page size',
+    title: i18next.t('table.select-page-size'),
     options: [
       { value: 10, label: `10 ${label}` },
       { value: 20, label: `20 ${label}` },
@@ -48,14 +49,14 @@ export function PageSizePreference(label = 'items') {
 }
 
 export const WrapLines = {
-  label: 'Wrap lines',
-  description: 'Check to see all the text and wrap the lines',
+  label: i18next.t('table.wrap-lines'),
+  description: i18next.t('table.wrap-lines-description'),
 };
 
 export const CarColumnsConfig = [
   {
     id: 'instanceId',
-    header: 'Instance',
+    header: i18next.t('cars.instance'),
     cell: (item) => item.InstanceId,
     sortingField: 'key',
     width: 200,
@@ -63,7 +64,7 @@ export const CarColumnsConfig = [
   },
   {
     id: 'carName',
-    header: 'Host name',
+    header: i18next.t('cars.host-name'),
     cell: (item) => item.ComputerName || '-',
     sortingField: 'carName',
     width: 200,
@@ -71,7 +72,7 @@ export const CarColumnsConfig = [
   },
   {
     id: 'fleetName',
-    header: 'Fleet name',
+    header: i18next.t('cars.fleet-name'),
     cell: (item) => item.fleetName || '-',
     sortingField: 'fleetName',
     width: 200,
@@ -79,7 +80,7 @@ export const CarColumnsConfig = [
   },
   {
     id: 'carIp',
-    header: 'IP address',
+    header: i18next.t('cars.car-ip'),
     cell: (item) => item.IPAddress || '-',
     sortingField: 'carIp',
     width: 200,
@@ -87,25 +88,25 @@ export const CarColumnsConfig = [
   },
   {
     id: 'agentVersion',
-    header: 'Agent version',
+    header: i18next.t('cars.agent-version'),
     cell: (item) => item.AgentVersion || '-',
     sortingField: 'agentVersion',
   },
   {
     id: 'registrationDate',
-    header: 'Registration date',
+    header: i18next.t('cars.registration-date'),
     cell: (item) => dayjs(item.RegistrationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
     sortingField: 'registrationDate',
   },
   {
     id: 'lastPingDateTime',
-    header: 'Last ping time',
+    header: i18next.t('cars.last-ping-time'),
     cell: (item) => dayjs(item.lastPingDateTime).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
     sortingField: 'lastPingDateTime',
   },
   {
     id: 'fleetId',
-    header: 'Fleet ID',
+    header: i18next.t('cars.fleet-id'),
     cell: (item) => item.fleetId || '-',
     sortingField: 'fleetId',
   },
@@ -113,103 +114,109 @@ export const CarColumnsConfig = [
 
 export const CarVisibleContentOptions = [
   {
-    label: 'Car information',
+    label: i18next.t('cars.car-information'),
     options: [
       {
         id: 'instanceId',
-        label: 'Instance',
+        label: i18next.t('cars.instance'),
         editable: true,
       },
       {
         id: 'carName',
-        label: 'Host name',
+        label: i18next.t('cars.host-name'),
         editable: false,
       },
       {
         id: 'fleetName',
-        label: 'Fleet name',
+        label: i18next.t('cars.fleet-name'),
         editable: true,
       },
       {
         id: 'carIp',
-        label: 'Car IP',
+        label: i18next.t('cars.car-ip'),
       },
       {
         id: 'agentVersion',
-        label: 'Agent version',
+        label: i18next.t('cars.agent-version'),
       },
       {
         id: 'registrationDate',
-        label: 'Registration date',
+        label: i18next.t('cars.registration-date'),
       },
       {
         id: 'lastPingDateTime',
-        label: 'Last ping time',
+        label: i18next.t('cars.last-ping-time'),
       },
       {
         id: 'fleetId',
-        label: 'Fleet ID',
+        label: i18next.t('cars.fleet-id'),
       },
     ],
   },
 ];
 
-export const UserModelsColumnsConfig = [
-  {
-    id: 'id',
-    header: 'id',
-    cell: (item) => item.id,
-    width: 200,
-    minWidth: 150,
-  },
-  {
-    id: 'modelName',
-    header: 'Model name',
-    cell: (item) => item.modelName || '-',
-    sortingField: 'modelName',
-    width: 200,
-    minWidth: 150,
-  },
-  {
-    id: 'modelDate',
-    header: 'Upload date',
-    cell: (item) => item.modelDate || '-',
-    sortingField: 'modelDate',
-    width: 200,
-    minWidth: 150,
-  },
-];
+export function UserModelsColumnsConfig() {
+  const rowHeaders = [
+    {
+      id: 'id',
+      header: 'id',
+      cell: (item) => item.id,
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'modelName',
+      header: i18next.t('models.model-name'),
+      cell: (item) => item.modelName || '-',
+      sortingField: 'modelName',
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'modelDate',
+      header: i18next.t('models.upload-date'),
+      cell: (item) => item.modelDate || '-',
+      sortingField: 'modelDate',
+      width: 200,
+      minWidth: 150,
+    },
+  ];
+  return rowHeaders;
+}
 
-export const AdminModelsColumnsConfig = [
-  {
-    id: 'id',
-    header: 'id',
-    cell: (item) => item.id,
-    width: 200,
-    minWidth: 150,
-  },
-  {
-    id: 'userName',
-    header: 'User name',
-    cell: (item) => item.userName || '-',
-    sortingField: 'userName',
-    width: 200,
-    minWidth: 150,
-  },
-  {
-    id: 'modelName',
-    header: 'Model name',
-    cell: (item) => item.modelName || '-',
-    sortingField: 'modelName',
-    width: 200,
-    minWidth: 150,
-  },
-  {
-    id: 'modelDate',
-    header: 'Upload date',
-    cell: (item) => item.modelDate || '-',
-    sortingField: 'modelDate',
-    width: 200,
-    minWidth: 150,
-  },
-];
+export function AdminModelsColumnsConfig() {
+  const rowHeaders = [
+    {
+      id: 'id',
+      header: 'id',
+      cell: (item) => item.id,
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'userName',
+      header: i18next.t('models.user-name'),
+      cell: (item) => item.userName || '-',
+      sortingField: 'userName',
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'modelName',
+      header: i18next.t('models.model-name'),
+      cell: (item) => item.modelName || '-',
+      sortingField: 'modelName',
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'modelDate',
+      header: i18next.t('models.upload-date'),
+      cell: (item) => item.modelDate || '-',
+      sortingField: 'modelDate',
+      width: 200,
+      minWidth: 150,
+    },
+  ];
+  return rowHeaders;
+}

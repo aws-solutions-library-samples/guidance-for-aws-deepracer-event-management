@@ -17,6 +17,7 @@ import { API } from 'aws-amplify';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 
+import { useTranslation } from 'react-i18next';
 import { ContentHeader } from '../components/ContentHeader';
 import EditCarsModal from '../components/EditCarsModal';
 import {
@@ -39,7 +40,8 @@ dayjs.extend(advancedFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export function AdminCars() {
+const AdminCars = () => {
+  const { t } = useTranslation();
   const [allItems, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCarsBtnDisabled, setSelectedCarsBtnDisabled] = useState(true);
@@ -93,12 +95,14 @@ export function AdminCars() {
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(allItems, {
       filtering: {
-        empty: <EmptyState title="No cars" subtitle="No cars are currently online." />,
+        empty: <EmptyState title={t('cars.no-cars')} subtitle={t('cars.no-cars-message')} />,
         noMatch: (
           <EmptyState
-            title="No matches"
-            subtitle="We can’t find a match."
-            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+            title={t('models.no-matches')}
+            subtitle={t('models.we-cant-find-a-match')}
+            action={
+              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
+            }
           />
         ),
       },
@@ -110,12 +114,12 @@ export function AdminCars() {
   return (
     <>
       <ContentHeader
-        header="Cars"
-        description="List of cars currently online."
+        header={t('cars.header')}
+        description={t('cars.description')}
         breadcrumbs={[
-          { text: 'Home', href: '/' },
-          { text: 'Admin', href: '/admin/home' },
-          { text: 'Cars' },
+          { text: t('home.breadcrumb'), href: '/' },
+          { text: t('admin.breadcrumb'), href: '/admin/home' },
+          { text: t('cars.breadcrumb') },
         ]}
       />
 
@@ -134,8 +138,8 @@ export function AdminCars() {
                 <SpaceBetween direction="horizontal" size="xs">
                   <ButtonDropdown
                     items={[
-                      { text: 'Online', id: 'Online', disabled: false },
-                      { text: 'Offline', id: 'Offline', disabled: false },
+                      { text: t('cars.online'), id: 'Online', disabled: false },
+                      { text: t('cars.offline'), id: 'Offline', disabled: false },
                     ]}
                     onItemClick={({ detail }) => {
                       setOnline(detail.id);
@@ -154,7 +158,7 @@ export function AdminCars() {
                 </SpaceBetween>
               }
             >
-              Cars
+              {t('cars.header')}
             </Header>
           }
           columnDefinitions={CarColumnsConfig}
@@ -163,9 +167,9 @@ export function AdminCars() {
             <Pagination
               {...paginationProps}
               ariaLabels={{
-                nextPageLabel: 'Next page',
-                previousPageLabel: 'Previous page',
-                pageLabel: (pageNumber) => `Go to page ${pageNumber}`,
+                nextPageLabel: t('table.next-page'),
+                previousPageLabel: t('table.previous-page'),
+                pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
               }}
             />
           }
@@ -173,11 +177,11 @@ export function AdminCars() {
             <TextFilter
               {...filterProps}
               countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel="Filter cars"
+              filteringAriaLabel={t('cars.filter-cars')}
             />
           }
           loading={isLoading}
-          loadingText="Loading cars"
+          loadingText={t('cars.loading')}
           visibleColumns={preferences.visibleContent}
           selectionType="multi"
           stickyHeader="true"
@@ -192,14 +196,14 @@ export function AdminCars() {
           resizableColumns
           preferences={
             <CollectionPreferences
-              title="Preferences"
-              confirmLabel="Confirm"
-              cancelLabel="Cancel"
+              title={t('table.preferences')}
+              confirmLabel={t('button.confirm')}
+              cancelLabel={t('button.cancel')}
               onConfirm={({ detail }) => setPreferences(detail)}
               preferences={preferences}
-              pageSizePreference={PageSizePreference('cars')}
+              pageSizePreference={PageSizePreference(t('cars.page-size-label'))}
               visibleContentPreference={{
-                title: 'Select visible columns',
+                title: t('table.select-visible-colunms'),
                 options: CarVisibleContentOptions,
               }}
               wrapLinesPreference={WrapLines}
@@ -210,4 +214,6 @@ export function AdminCars() {
       </Grid>
     </>
   );
-}
+};
+
+export { AdminCars };

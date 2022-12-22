@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 // import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 // import * as subscriptions from '../graphql/subscriptions'
+import { useTranslation } from 'react-i18next';
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
@@ -61,6 +62,8 @@ function useInterval(callback, delay) {
 }
 
 const StatusModelContent = (props) => {
+  const { t } = useTranslation();
+
   const [seconds, setSeconds] = useState(0);
   const [uploadStatus, setUploadStatus] = useState('');
   const [result, setResult] = useState([]);
@@ -187,29 +190,29 @@ const StatusModelContent = (props) => {
         columnDefinitions={[
           {
             id: 'ModelName',
-            header: 'ModelName',
+            header: t('carmodelupload.modelname'),
             cell: (item) => item.ModelName || '-',
             sortingField: 'ModelName',
           },
           {
             id: 'CommandId',
-            header: 'CommandId',
+            header: t('carmodelupload.commandid'),
             cell: (item) => item.CommandId || '-',
             sortingField: 'CommandId',
           },
           {
             id: 'Status',
-            header: 'Status',
+            header: t('carmodelupload.status'),
             cell: (item) => item.Status || '-',
             sortingField: 'Status',
           },
         ]}
         items={results}
-        loadingText="Loading resources"
+        loadingText={t('carmodelupload.loading')}
         sortingDisabled
         empty={
           <Alert visible={true} dismissAriaLabel="Close alert" header="Starting">
-            Please wait whilst model upload jobs are submitted
+            {t('carmodelupload.please-wait')}
           </Alert>
         }
         header={
@@ -226,6 +229,8 @@ const StatusModelContent = (props) => {
 };
 
 export default (props) => {
+  const { t } = useTranslation();
+
   const [visible, setVisible] = useState(false);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -260,12 +265,18 @@ export default (props) => {
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(props.cars, {
       filtering: {
-        empty: <EmptyState title="No cars" subtitle="No cars are currently online." />,
+        empty: (
+          <EmptyState title={t('carmodelupload.no-cars')} subtitle={t('carmodelupload.online')} />
+        ),
         noMatch: (
           <EmptyState
-            title="No matches"
-            subtitle="We can’t find a match."
-            action={<Button onClick={() => actions.setFiltering('')}>Clear filter</Button>}
+            title={t('carmodelupload.no-matches')}
+            subtitle={t('carmodelupload.we-cant-find-a-match')}
+            action={
+              <Button onClick={() => actions.setFiltering('')}>
+                {t('carmodelupload.clear-filter')}
+              </Button>
+            }
           />
         ),
       },
@@ -283,26 +294,26 @@ export default (props) => {
       selectionType="single"
       columnDefinitions={CarColumnsConfig}
       items={items}
-      loadingText="Loading cars"
+      loadingText={t('carmodelupload.loading-cars')}
       visibleColumns={preferences.visibleContent}
       filter={
         <TextFilter
           {...filterProps}
           countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel="Filter cars"
+          filteringAriaLabel={t('carmodelupload.filter-cars')}
         />
       }
       resizableColumns
       preferences={
         <CollectionPreferences
-          title="Preferences"
-          confirmLabel="Confirm"
-          cancelLabel="Cancel"
+          title={t('table.preferences')}
+          confirmLabel={t('button.confirm')}
+          cancelLabel={t('button.cancel')}
           onConfirm={({ detail }) => setPreferences(detail)}
           preferences={preferences}
           pageSizePreference={PageSizePreference('cars')}
           visibleContentPreference={{
-            title: 'Select visible columns',
+            title: t('table.select-visible-colunms'),
             options: CarVisibleContentOptions,
           }}
           wrapLinesPreference={WrapLines}
@@ -320,7 +331,7 @@ export default (props) => {
           setVisible(true);
         }}
       >
-        Upload models to car
+        {t('carmodelupload.upload')}
       </Button>
 
       {/* modal 1 */}
@@ -336,7 +347,7 @@ export default (props) => {
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
               <Checkbox onChange={({ detail }) => setChecked(detail.checked)} checked={checked}>
-                Clear car models first?
+                {t('carmodelupload.clear')}
               </Checkbox>
               <Button
                 variant="link"
@@ -345,7 +356,7 @@ export default (props) => {
                   setChecked(false);
                 }}
               >
-                Cancel
+                {t('button.cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -368,12 +379,12 @@ export default (props) => {
                   }
                 }}
               >
-                Ok
+                {t('button.ok')}
               </Button>
             </SpaceBetween>
           </Box>
         }
-        header="Select a car"
+        header={t('carmodelupload.header')}
       >
         {modalTable}
       </Modal>
@@ -397,12 +408,12 @@ export default (props) => {
                   setStatusModalVisible(false);
                 }}
               >
-                Ok
+                {t('button.ok')}
               </Button>
             </SpaceBetween>
           </Box>
         }
-        header="Upload to car status"
+        header={t('carmodelupload.header-upload')}
       >
         {modalContent}
       </Modal>
@@ -421,7 +432,7 @@ export default (props) => {
                   setDeleteModalVisible(false);
                 }}
               >
-                Cancel
+                {t('button.cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -431,14 +442,14 @@ export default (props) => {
                   setStatusModalVisible(true);
                 }}
               >
-                Delete and Upload
+                {t('carmodelupload.header-delete-upload')}
               </Button>
             </SpaceBetween>
           </Box>
         }
-        header="Delete models on cars"
+        header={t('carmodelupload.header-delete')}
       >
-        Are you sure you want to delete models on Cars(s): <br></br>{' '}
+        {t('carmodelupload.header-delete-confirm')}: <br></br>{' '}
         {selectedCars.map((selectedCars) => {
           return selectedCars.ComputerName + ' ';
         })}

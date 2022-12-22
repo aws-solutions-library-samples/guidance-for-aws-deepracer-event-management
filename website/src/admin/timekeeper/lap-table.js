@@ -1,7 +1,9 @@
 import { Button, Header, Table } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const LapTable = (props) => {
+  const { t } = useTranslation();
   const [lapsJsx, SetLapsJsx] = useState([]);
 
   const { laps, onAction } = props;
@@ -40,32 +42,32 @@ const LapTable = (props) => {
       columnDefinitions={[
         {
           id: 'id',
-          header: 'Lap Number',
+          header: t('timekeeper.laptable.lap-number'),
           cell: (item) => item.id || '',
           sortingField: 'id',
           width: '100px',
         },
         {
           id: 'time',
-          header: 'Lap Time',
+          header: t('timekeeper.laptable.lap-time'),
           cell: (item) => item.time || '',
           sortingField: 'time',
         },
         {
           id: 'resets',
-          header: 'Resets',
+          header: t('timekeeper.laptable.resets'),
           cell: (item) => item.resets || 0,
           sortingField: 'resets',
         },
         {
           id: 'actions',
-          header: 'Actions',
+          header: t('timekeeper.laptable.actions'),
           cell: (item) => item.actions || '',
           width: '200px',
         },
       ]}
       items={lapsJsx}
-      loadingText="Loading resources"
+      loadingText={t('timekeeper.laptable.loading-reources')}
       sortingDisabled
       header={<Header> {props.header} </Header>}
     />

@@ -8,10 +8,12 @@ import {
   SpaceBetween,
 } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import useQuery from '../../hooks/useQuery';
 
 const RacerSelectionModal = (props) => {
+  const { t } = useTranslation();
   const emptySelection = { value: '', label: '' };
   const [selectedUser, SetSelectedUser] = useState({ value: '', label: '' });
   const [selectedEvent, SetSelectedEvent] = useState({ value: '', label: '' });
@@ -58,7 +60,7 @@ const RacerSelectionModal = (props) => {
         <Box float="right">
           <SpaceBetween direction="horizontal" size="xs">
             <Button variant="link" onClick={() => onDismiss()}>
-              Cancel
+              {t('button.cancel')}
             </Button>
             <Button
               variant="primary"
@@ -68,15 +70,15 @@ const RacerSelectionModal = (props) => {
                 SetSelectedUser(emptySelection);
               }}
             >
-              Ok
+              {t('button.ok')}
             </Button>
           </SpaceBetween>
         </Box>
       }
-      header="Get ready to race!"
+      header={t('timekeeper.racer-selector.get-ready')}
     >
       <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }]}>
-        <FormField label="Select event">
+        <FormField label={t('timekeeper.racer-selector.select-event')}>
           <Select
             selectedOption={selectedEvent}
             onChange={(detail) => {
@@ -90,24 +92,24 @@ const RacerSelectionModal = (props) => {
             options={events.map((event) => {
               return { label: event.eventName, value: event.eventId };
             })}
-            selectedAriaLabel="Selected"
+            selectedAriaLabel={t('timekeeper.racer-selector.selected')}
             filteringType="auto"
             virtualScroll
             invalid={eventIsInvalid}
-            loadingText="Loading events"
-            statusType={loading ? 'loading' : ''} // TODO fix properly, now use loading for fetching users
+            loadingText={t('timekeeper.racer-selector.loading-events')}
+            statusType={loading ? t('timekeeper.racer-selector.loading') : ''} // TODO fix properly, now use loading for fetching users
           />
         </FormField>
-        <FormField label="Select racer">
+        <FormField label={t('timekeeper.racer-selector.select-racer')}>
           <Select
             selectedOption={selectedUser}
             onChange={({ detail }) => SetSelectedUser(detail.selectedOption)}
             options={users}
-            selectedAriaLabel="Selected"
+            selectedAriaLabel={t('timekeeper.racer-selector.selected')}
             filteringType="auto"
             virtualScroll
             invalid={isInvalid}
-            loadingText="Loading racers"
+            loadingText={t('timekeeper.racer-selector.loading-racers')}
             statusType={loading ? 'loading' : ''}
           />
         </FormField>
