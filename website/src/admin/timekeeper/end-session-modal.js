@@ -31,10 +31,6 @@ const EndSessionModal = (props) => {
   const submitRaceHandler = async () => {
     console.info('Submiting Race...');
     SetButtonsIsDisabled(true);
-    // const lapsToSubmit = laps.map((lap) => {
-    //   delete lap.id; // TODO how to solve this eslint error?
-    //   return lap;
-    // });
     const response = sendMutation('addRace', {
       eventId: selectedEvent.eventId,
       username: username,
