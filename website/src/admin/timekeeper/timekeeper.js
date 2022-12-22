@@ -207,7 +207,6 @@ const Timekeeper = () => {
 
   const resetTimers = () => {
     pauseTimers();
-    console.log('RESET TIMERS, set race time: ' + selectedEvent.raceTimeInSec * 1000);
     raceTimerRef.current.reset(selectedEvent.raceTimeInSec * 1000);
     lapTimerRef.current.reset();
   };
@@ -253,7 +252,6 @@ const Timekeeper = () => {
             <Header>Time Left: </Header>
             <RaceTimer
               onExpire={() => {
-                console.log('RACE TIMER HAS EXPIRED!');
                 return send('EXPIRE');
               }}
               ref={raceTimerRef}

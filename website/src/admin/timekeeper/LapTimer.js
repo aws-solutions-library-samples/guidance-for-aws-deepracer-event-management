@@ -16,17 +16,17 @@ const LapTimer = forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => ({
     start() {
-      console.log('Start Timer');
+      // console.log('Start Timer');
       setIsRunning(true);
       setPrevTime(null);
       setTime(toTime(0));
     },
     pause() {
-      console.log('Pause Resume Timer');
+      // console.log('Pause Resume Timer');
       setIsRunning(false);
     },
     reset(startingTime = 0) {
-      console.log('Reset Timer');
+      // console.log('Reset Timer');
       setPrevTime(null);
       setTimeInMilliseconds(startingTime);
       setTime(toTime(startingTime));

@@ -31,7 +31,7 @@ const RacerSelectionModal = (props) => {
   }, [selectedEvent]);
 
   useEffect(() => {
-    console.info(allRacersFromBackend);
+    // console.info(allRacersFromBackend);
     if (allRacersFromBackend) {
       SetUsers(
         allRacersFromBackend.map((user) => {
@@ -81,7 +81,7 @@ const RacerSelectionModal = (props) => {
             selectedOption={selectedEvent}
             onChange={(detail) => {
               SetSelectedEvent(detail.detail.selectedOption);
-              console.info(detail.detail.selectedOption);
+              // console.info(detail.detail.selectedOption);
               const currentEvent = events.find(
                 (event) => event.eventId === detail.detail.selectedOption.value
               );

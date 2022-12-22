@@ -4,9 +4,9 @@ export default function useWebsocket(url) {
   const [message, setMessage] = useState();
   const [connected, setConnected] = useState(false);
   const wsClient = useRef();
-  console.info('wsClient:' + wsClient);
 
   useEffect(() => {
+    console.info('wsClient:' + wsClient);
     const connect = () => {
       try {
         console.info('Websocket trying to connect to server....');
@@ -51,7 +51,7 @@ export default function useWebsocket(url) {
         wsClient.current = undefined;
       }
     };
-  }, [wsClient, url]);
+  }, [url]);
 
   return { message, connected };
 }
