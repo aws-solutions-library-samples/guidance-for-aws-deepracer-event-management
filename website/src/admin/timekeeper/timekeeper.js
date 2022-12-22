@@ -49,9 +49,9 @@ const Timekeeper = () => {
 
   const lapTimerRef = useRef();
   const raceTimerRef = useRef();
-  let overlayPublishTimerId;
+  const [overlayPublishTimerId, setoverlayPublishTimerId] = useState();
 
-  const [, send] = useMachine(stateMachine, {
+  const [state, send] = useMachine(stateMachine, {
     actions: {
       resetRace: () => {
         console.log('Reseting race state');
@@ -105,23 +105,25 @@ const Timekeeper = () => {
         lapTimerRef.current.reset();
       },
       startPublishOverlayInfo: () => {
-        console.info('Starting to publish overlay info...');
         if (!overlayPublishTimerId) {
-          overlayPublishTimerId = setInterval(() => {
-            const overlayInfo = {
-              eventId: selectedEvent.eventId,
-              username: username,
-              timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
-              currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
-            };
-            console.log('Publishing overlay info: ' + JSON.stringify(overlayInfo));
-            SendMutation('updateOverlayInfo', overlayInfo);
-          }, 5000);
+          setoverlayPublishTimerId(
+            setInterval(() => {
+              const overlayInfo = {
+                eventId: selectedEvent.eventId,
+                username: username,
+                timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
+                currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
+              };
+              console.log('Publishing overlay info: ' + JSON.stringify(overlayInfo));
+              SendMutation('updateOverlayInfo', overlayInfo);
+            }, 5000)
+          );
+          console.log('starting new overlay publish timer, id=' + overlayPublishTimerId);
         }
       },
       stopPublishOverlayInfo: () => {
-        console.log('Stop Publishing overlay info');
-        clearInterval(overlayPublishTimerId);
+        console.log('Stop Publishing overlay info, id: ' + overlayPublishTimerId);
+        setoverlayPublishTimerId();
       },
     },
   });
@@ -160,10 +162,6 @@ const Timekeeper = () => {
   }, [laps]);
 
   // handlers functions
-  const endSessionHandler = () => {
-    SetEndSessionModalIsVisible(true);
-  };
-
   const actionHandler = (id) => {
     console.log('alter lap status for lap id: ' + id);
     const lapsCopy = [...laps];
@@ -220,6 +218,7 @@ const Timekeeper = () => {
   // JSX
   return (
     <Box margin={{ top: 'l' }} textAlign="center">
+      STATE: {JSON.stringify(state.value)}
       <RacerSelectionModal
         onRacerSelected={(username) => send('READY', { username: username })}
         onDismiss={racerSelectionModalDismissedHandler}
@@ -295,7 +294,8 @@ const Timekeeper = () => {
             <Button onClick={decrementCarResetCounter}>-1</Button>
             <Button onClick={undoFalseFinishHandler}>Undo false finish</Button>
             <hr></hr>
-            <Button onClick={endSessionHandler}>End Race</Button>
+            {/* <Button onClick={endSessionHandler}>End Race</Button> */}
+            <Button onClick={() => send('END')}>End Race</Button>
             <Button onClick={() => send('TOGGLE')}>
               {!timersAreRunning ? 'Start Race' : 'Pause Race'}
             </Button>
