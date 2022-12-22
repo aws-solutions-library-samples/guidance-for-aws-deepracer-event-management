@@ -3,28 +3,24 @@ import { useState } from 'react';
 
 import * as mutations from '../graphql/mutations';
 
-export default function useMutation(method) {
+export default function useMutation() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const send = (payload) => {
+  const send = (method, payload) => {
     const mutateApi = async () => {
       try {
         setLoading(true);
         const response = await API.graphql(graphqlOperation(mutations[method], payload));
         console.info(response);
         setLoading(false);
-        setError('');
+        return '';
       } catch (error) {
-        setError(error);
         setLoading(false);
+        return error;
       }
     };
-    mutateApi();
-    return () => {
-      // abort();
-    };
+    return mutateApi();
   };
 
-  return { send, loading, error };
+  return { send, loading };
 }
