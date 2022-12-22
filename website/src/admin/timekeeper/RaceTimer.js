@@ -22,7 +22,7 @@ const RaceTimer = forwardRef((props, ref) => {
     if (isExpired) {
       onExpire();
     }
-  }, [isExpired, onExpire]);
+  }, [isExpired]); // TODO why does this trigger all the time when onExpire is set as dependency
 
   useImperativeHandle(ref, () => ({
     start() {
