@@ -92,6 +92,8 @@ const AdminCars = () => {
     visibleContent: ['carName', 'fleetName', 'carIp'],
   });
 
+  const carColumnsConfig = CarColumnsConfig();
+
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(allItems, {
       filtering: {
@@ -107,7 +109,7 @@ const AdminCars = () => {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: CarColumnsConfig[1] } },
+      sorting: { defaultState: { sortingColumn: carColumnsConfig[1] } },
       selection: {},
     });
 
@@ -161,7 +163,7 @@ const AdminCars = () => {
               {t('cars.header')}
             </Header>
           }
-          columnDefinitions={CarColumnsConfig}
+          columnDefinitions={carColumnsConfig}
           items={items}
           pagination={
             <Pagination

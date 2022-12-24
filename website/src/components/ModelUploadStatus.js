@@ -1,8 +1,10 @@
 import { Container, ProgressBar, StatusIndicator } from '@cloudscape-design/components';
 import { Storage } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function ModelUploadStatus(props) {
+  const { t } = useTranslation();
   const file = props.file;
   const [percent, setPercent] = useState(0);
   const [status, setStatus] = useState('Pending');
@@ -21,22 +23,22 @@ export function ModelUploadStatus(props) {
           contentType: file.type,
           tagging: 'lifecycle=true',
           progressCallback(progress) {
-            setStatus('In progress');
+            setStatus(t('common.in-progress'));
             setPercent(Math.round((progress.loaded / progress.total) * 100));
           },
         })
           .then((result) => {
             console.log(result);
-            setStatus('Success');
+            setStatus(t('common.success'));
             setStatusIcon('success');
           })
           .catch((err) => {
             console.log(err);
-            setStatus('Error');
+            setStatus(t('common.error'));
             setStatusIcon('error');
           });
       } else {
-        setStatus(file.name + ' does not match regex: ^[a-zA-Z0-9-_]+.tar.gz$');
+        setStatus(file.name + ' ' + t('carmodelupload-modal.file-regex'));
         setStatusIcon('error');
       }
     };
