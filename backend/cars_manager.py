@@ -1,8 +1,13 @@
 from aws_cdk import DockerImage, Duration, Stack
 from aws_cdk import aws_appsync_alpha as appsync
+from aws_cdk import aws_dynamodb as dynamodb
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as awslambda
 from aws_cdk import aws_lambda_python_alpha as lambda_python
+from aws_cdk import aws_stepfunctions as step_functions
+from aws_cdk import aws_stepfunctions_tasks as step_functions_tasks
+from aws_cdk.aws_events import Rule, RuleTargetInput, Schedule
+from aws_cdk.aws_events_targets import SfnStateMachine
 from constructs import Construct
 
 
@@ -32,6 +37,109 @@ class CarsManager(Construct):
             ),
         )
         powertools_log_level = "INFO"
+
+        cars_table = dynamodb.Table(
+            self,
+            "CarsStatusTable",
+            partition_key=dynamodb.Attribute(
+                name="InstanceId", type=dynamodb.AttributeType.STRING
+            ),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            encryption=dynamodb.TableEncryption.AWS_MANAGED,
+        )
+
+        cars_table_ping_state_index_name = "pingStatus"
+        cars_table.add_global_secondary_index(
+            index_name=cars_table_ping_state_index_name,
+            partition_key=dynamodb.Attribute(
+                name="PingStatus", type=dynamodb.AttributeType.STRING
+            ),
+            sort_key=dynamodb.Attribute(
+                name="InstanceId", type=dynamodb.AttributeType.STRING
+            ),
+        )
+
+        car_status_update_handler = lambda_python.PythonFunction(
+            self,
+            "car_status_update_handler",
+            entry="backend/lambdas/car_status_update_function",
+            description="Car Status Updates",
+            index="index.py",
+            handler="lambda_handler",
+            timeout=Duration.minutes(1),
+            runtime=lambda_runtime,
+            tracing=awslambda.Tracing.ACTIVE,
+            memory_size=128,
+            architecture=lambda_architecture,
+            bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
+            layers=[powertools_layer],
+            environment={
+                "POWERTOOLS_SERVICE_NAME": "car_status_update",
+                "LOG_LEVEL": powertools_log_level,
+                "DDB_TABLE": cars_table.table_name,
+            },
+        )
+        cars_table.grant_write_data(car_status_update_handler)
+
+        car_status_update_handler.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "ssm:ListTagsForResource",
+                ],
+                resources=["*"],
+            )
+        )
+
+        status_update_job = step_functions_tasks.LambdaInvoke(
+            self,
+            "Update Status",
+            lambda_function=car_status_update_handler,
+            output_path="$.Payload",
+        )
+
+        describe_instance_information_task = step_functions_tasks.CallAwsService(
+            self,
+            "DescribeInstanceInformation",
+            service="ssm",
+            action="describeInstanceInformation",
+            iam_resources=["*"],
+            parameters={
+                "MaxResults": 50,
+                "NextToken.$": "$.NextToken",
+            },
+            result_path="$.Instances",
+        )
+
+        succeed_job = step_functions.Succeed(
+            self, "Succeeded", comment="AWS Batch Job succeeded"
+        )
+
+        definition = describe_instance_information_task.next(status_update_job).next(
+            step_functions.Choice(self, "Job done?")
+            .when(
+                step_functions.Condition.is_present("$.NextToken"),
+                describe_instance_information_task,
+            )
+            .otherwise(succeed_job)
+        )
+
+        car_status_update_SM = step_functions.StateMachine(
+            self, "CarStatusUpdater", definition=definition, timeout=Duration.minutes(3)
+        )
+
+        Rule(
+            self,
+            "CarStatusUpdateRule",
+            schedule=Schedule.rate(Duration.minutes(5)),
+            targets=[
+                SfnStateMachine(
+                    machine=car_status_update_SM,
+                    input=RuleTargetInput.from_object({"NextToken": ""}),
+                    retry_attempts=1,
+                )
+            ],
+        )
 
         # car_activation method
         car_activation_handler = lambda_python.PythonFunction(
@@ -115,6 +223,8 @@ class CarsManager(Construct):
             environment={
                 "POWERTOOLS_SERVICE_NAME": "car_function",
                 "LOG_LEVEL": powertools_log_level,
+                "DDB_TABLE": cars_table.table_name,
+                "DDB_PING_STATE_INDEX": cars_table_ping_state_index_name,
             },
         )
 
@@ -132,6 +242,7 @@ class CarsManager(Construct):
                 resources=["*"],
             )
         )
+        cars_table.grant_read_write_data(cars_function_handler)
 
         # Define the data source for the API
         cars_data_source = api.add_lambda_data_source(
@@ -155,7 +266,7 @@ class CarsManager(Construct):
                 "RegistrationDate": appsync.GraphqlType.string(),
                 "ResourceType": appsync.GraphqlType.string(),
                 "Name": appsync.GraphqlType.string(),
-                "IPAddress": appsync.GraphqlType.string(),
+                "IpAddress": appsync.GraphqlType.string(),
                 "ComputerName": appsync.GraphqlType.string(),
                 # "SourceId": appsync.GraphqlType.string(),
                 # "SourceType": appsync.GraphqlType.string(),
