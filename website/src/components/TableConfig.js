@@ -53,64 +53,67 @@ export const WrapLines = {
   description: i18next.t('table.wrap-lines-description'),
 };
 
-export const CarColumnsConfig = [
-  {
-    id: 'instanceId',
-    header: i18next.t('cars.instance'),
-    cell: (item) => item.InstanceId,
-    sortingField: 'key',
-    width: 200,
-    minWidth: 150,
-  },
-  {
-    id: 'carName',
-    header: i18next.t('cars.host-name'),
-    cell: (item) => item.ComputerName || '-',
-    sortingField: 'carName',
-    width: 200,
-    minWidth: 150,
-  },
-  {
-    id: 'fleetName',
-    header: i18next.t('cars.fleet-name'),
-    cell: (item) => item.fleetName || '-',
-    sortingField: 'fleetName',
-    width: 200,
-    minWidth: 150,
-  },
-  {
-    id: 'carIp',
-    header: i18next.t('cars.car-ip'),
-    cell: (item) => item.IPAddress || '-',
-    sortingField: 'carIp',
-    width: 200,
-    minWidth: 150,
-  },
-  {
-    id: 'agentVersion',
-    header: i18next.t('cars.agent-version'),
-    cell: (item) => item.AgentVersion || '-',
-    sortingField: 'agentVersion',
-  },
-  {
-    id: 'registrationDate',
-    header: i18next.t('cars.registration-date'),
-    cell: (item) => dayjs(item.RegistrationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
-    sortingField: 'registrationDate',
-  },
-  {
-    id: 'lastPingDateTime',
-    header: i18next.t('cars.last-ping-time'),
-    cell: (item) => dayjs(item.lastPingDateTime).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
-    sortingField: 'lastPingDateTime',
-  },
-  {
-    id: 'fleetId',
-    header: i18next.t('cars.fleet-id'),
-    cell: (item) => item.fleetId || '-',
-    sortingField: 'fleetId',
-  },
-];
+export function CarColumnsConfig() {
+  const rowHeaders = [
+    {
+      id: 'instanceId',
+      header: i18next.t('cars.instance'),
+      cell: (item) => item.InstanceId,
+      sortingField: 'key',
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'carName',
+      header: i18next.t('cars.host-name'),
+      cell: (item) => item.ComputerName || '-',
+      sortingField: 'carName',
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'fleetName',
+      header: i18next.t('cars.fleet-name'),
+      cell: (item) => item.fleetName || '-',
+      sortingField: 'fleetName',
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'carIp',
+      header: i18next.t('cars.car-ip'),
+      cell: (item) => item.IPAddress || '-',
+      sortingField: 'carIp',
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'agentVersion',
+      header: i18next.t('cars.agent-version'),
+      cell: (item) => item.AgentVersion || '-',
+      sortingField: 'agentVersion',
+    },
+    {
+      id: 'registrationDate',
+      header: i18next.t('cars.registration-date'),
+      cell: (item) => dayjs(item.RegistrationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      sortingField: 'registrationDate',
+    },
+    {
+      id: 'lastPingDateTime',
+      header: i18next.t('cars.last-ping-time'),
+      cell: (item) => dayjs(item.lastPingDateTime).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      sortingField: 'lastPingDateTime',
+    },
+    {
+      id: 'fleetId',
+      header: i18next.t('cars.fleet-id'),
+      cell: (item) => item.fleetId || '-',
+      sortingField: 'fleetId',
+    },
+  ];
+  return rowHeaders;
+}
 
 export const CarVisibleContentOptions = [
   {

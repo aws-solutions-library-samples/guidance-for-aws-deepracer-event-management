@@ -1,3 +1,4 @@
+import os
 from typing import List
 
 import boto3
@@ -10,7 +11,16 @@ logger = Logger()
 app = AppSyncResolver()
 
 logger = Logger()
+
+DDB_TABLE_NAME = os.environ["DDB_TABLE"]
+DDB_PING_STATE_INDEX_NAME = os.environ["DDB_PING_STATE_INDEX"]
+dynamodb = boto3.resource("dynamodb")
+client_dynamodb = boto3.client("dynamodb")
+ddbTable = dynamodb.Table(DDB_TABLE_NAME)
+paginator_dynamodb = client_dynamodb.get_paginator("query")
 client_ssm = boto3.client("ssm")
+
+ddbTable = dynamodb.Table(DDB_TABLE_NAME)
 
 
 colors = {
@@ -41,93 +51,26 @@ def carOnline(online: str):
 
         return_array = []
 
-        next_token = ""
+        paginateResult = paginator_dynamodb.paginate(
+            TableName=DDB_TABLE_NAME,
+            IndexName=DDB_PING_STATE_INDEX_NAME,
+            KeyConditionExpression="PingStatus=:ping_status",
+            ExpressionAttributeValues={":ping_status": {"S": PingStatusFilter}},
+        )
 
-        while next_token is not None:
-            if next_token == "":
-                response = client_ssm.describe_instance_information(
-                    Filters=[
-                        {
-                            "Key": "PingStatus",
-                            "Values": [
-                                PingStatusFilter,
-                            ],
-                        },
-                    ],
-                    MaxResults=50,
-                )
-            else:
-                response = client_ssm.describe_instance_information(
-                    Filters=[
-                        {
-                            "Key": "PingStatus",
-                            "Values": [
-                                PingStatusFilter,
-                            ],
-                        },
-                    ],
-                    MaxResults=50,
-                    NextToken=next_token,
-                )
+        for page in paginateResult:
+            logger.info(page)
 
-            # logger.info(response['InstanceInformationList'])
+            for item in page["Items"]:
+                new_item = {}
+                for key in item:
+                    new_item[key] = list(item[key].values())[0]
+                logger.info(new_item)
 
-            for resource in response["InstanceInformationList"]:
-                tags_response = client_ssm.list_tags_for_resource(
-                    ResourceType="ManagedInstance",
-                    ResourceId=resource["InstanceId"],
-                )
-                # logger.info(tags_response)
-                # resource['TagList']=tags_response['TagList']
+                if "IsLatestVersion" in new_item:
+                    new_item["IsLatestVersion"] = str(new_item["IsLatestVersion"])
 
-                for tag in tags_response["TagList"]:
-                    if tag["Key"] == "fleetName":
-                        resource["fleetName"] = tag["Value"]
-                    elif tag["Key"] == "fleetId":
-                        resource["fleetId"] = tag["Value"]
-
-                if "IsLatestVersion" in resource:
-                    resource["IsLatestVersion"] = str(resource["IsLatestVersion"])
-
-                data = {}
-
-                # keys to check
-                keys_to_check = [
-                    "InstanceId",
-                    "PingStatus",
-                    "AgentVersion",
-                    "IsLatestVersion",
-                    "PlatformType",
-                    "PlatformVersion",
-                    "ActivationId",
-                    "IamRole",
-                    "ResourceType",
-                    "Name",
-                    "IPAddress",
-                    "ComputerName",
-                    "SourceId",
-                    "SourceType",
-                    "fleetId",
-                    "fleetName",
-                ]
-                for current_key in keys_to_check:
-                    if current_key in resource:
-                        data[current_key] = resource[current_key]
-
-                # keys to check and handle datetime objects
-                keys_to_check = ["LastPingDateTime", "RegistrationDate"]
-                for current_key in keys_to_check:
-                    if current_key in resource:
-                        data[current_key] = resource[current_key].isoformat()
-
-                return_array.append(data)
-
-            if "NextToken" in response:
-                next_token = response["NextToken"]
-                print("Next Token: {}".format(next_token))
-                print("")
-            else:
-                break
+                return_array.append(new_item)
 
         logger.info(return_array)
         return return_array
@@ -153,6 +96,18 @@ def carUpdates(resourceIds: List[str], fleetId: str, fleetName: str):
             )
 
             logger.info(response)
+            partiQLQuery = (
+                f'UPDATE "{DDB_TABLE_NAME}" SET fleetId="{fleetId}" SET'
+                f' fleetName="{fleetName}" WHERE InstanceId = {resource_id}'
+            )
+            logger.info(partiQLQuery)
+            ddbTable.update_item(
+                Key={"InstanceId": resource_id},
+                UpdateExpression="set fleetId=:fId, fleetName=:fName",
+                ExpressionAttributeValues={":fId": fleetId, ":fName": fleetName},
+                ReturnValues="UPDATED_NEW",
+            )
+
         return {"result": "success"}
 
     except Exception as error:
