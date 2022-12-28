@@ -6,7 +6,7 @@ import {
   Spinner,
   StatusIndicator,
 } from '@cloudscape-design/components';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import useMutation from '../../hooks/useMutation';
@@ -16,7 +16,7 @@ const EndSessionModal = (props) => {
   const { t } = useTranslation();
   const [message, SetMessage] = useState('');
   const [buttonsIsDisabled, SetButtonsIsDisabled] = useState(false);
-  const [sendMutation, loading] = useMutation();
+  const [sendMutation, loading, errorMessage, data] = useMutation();
 
   const messageDisplayTime = 2500;
   const {
@@ -30,22 +30,15 @@ const EndSessionModal = (props) => {
     onAbandonRace,
   } = props;
 
-  const submitRaceHandler = async () => {
-    console.info('Submiting Race...');
-    SetButtonsIsDisabled(true);
-    const response = sendMutation('addRace', {
-      eventId: selectedEvent.eventId,
-      username: username,
-      laps: laps,
-    });
-    if (response) {
+  // Update submit message in modal depending on addRace mutation result
+  useEffect(() => {
+    if (data && data.errors) {
       SetMessage(
         <span>
           <StatusIndicator type="error">{t('timekeeper.end-session.error')}</StatusIndicator>
         </span>
       );
       setTimeout(() => {
-        onSubmitRace();
         SetMessage('');
         SetButtonsIsDisabled(false);
       }, messageDisplayTime);
@@ -58,8 +51,19 @@ const EndSessionModal = (props) => {
       setTimeout(() => {
         SetMessage('');
         SetButtonsIsDisabled(false);
+        onSubmitRace();
       }, messageDisplayTime);
     }
+  }, [data]);
+
+  const submitRaceHandler = async () => {
+    console.info('Submiting Race...');
+    SetButtonsIsDisabled(true);
+    sendMutation('addRace', {
+      eventId: selectedEvent.eventId,
+      username: username,
+      laps: laps,
+    });
   };
 
   const discardRaceHandler = () => {

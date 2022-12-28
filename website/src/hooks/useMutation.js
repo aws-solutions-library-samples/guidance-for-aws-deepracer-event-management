@@ -1,26 +1,29 @@
 import { API, graphqlOperation } from 'aws-amplify';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import * as mutations from '../graphql/mutations';
 
 export default function useMutation() {
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [data, setData] = useState();
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const send = (method, payload) => {
-    const mutateApi = async () => {
-      try {
-        setLoading(true);
-        const response = await API.graphql(graphqlOperation(mutations[method], payload));
-        console.info(response);
-        setLoading(false);
-        return '';
-      } catch (error) {
-        setLoading(false);
-        return error;
-      }
-    };
-    return mutateApi();
-  };
+  const send = useCallback(async (method, payload) => {
+    try {
+      setIsLoading(true);
+      const response = await API.graphql(graphqlOperation(mutations[method], payload));
+      setData({ ...response.data[method] });
+      setIsLoading(false);
+      setErrorMessage('');
+      console.info(response.data[method]);
+    } catch (error) {
+      console.info(error);
+      console.warn(error.errors[0].message);
+      setIsLoading(false);
+      setErrorMessage(error.errors[0].message);
+      setData();
+    }
+  }, []);
 
-  return [send, loading];
+  return [send, isLoading, errorMessage, data];
 }
