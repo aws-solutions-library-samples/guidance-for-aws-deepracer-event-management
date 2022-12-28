@@ -6,7 +6,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useMachine } from '@xstate/react';
 import { useTranslation } from 'react-i18next';
 import useCounter from '../../hooks/useCounter';
-import useMutation from '../../hooks/useMutation';
+// import useMutation from '../../hooks/useMutation';
 import { eventContext } from '../../store/EventProvider';
 import SideNavContext from '../../store/SideNavContext';
 import { EndSessionModal } from './end-session-modal';
@@ -40,7 +40,7 @@ const Timekeeper = () => {
   // const { message, connected } = useWebsocket('ws://localhost:8080');
   const { setNavigationOpen } = useContext(SideNavContext);
   const { events, selectedEvent, setSelectedEvent } = useContext(eventContext);
-  const [SendMutation] = useMutation();
+  // const [SendMutation] = useMutation();
 
   const [
     carResetCounter,
@@ -108,19 +108,19 @@ const Timekeeper = () => {
       },
       startPublishOverlayInfo: () => {
         if (!overlayPublishTimerId) {
-          setoverlayPublishTimerId(
-            setInterval(() => {
-              const overlayInfo = {
-                eventId: selectedEvent.eventId,
-                username: username,
-                timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
-                currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
-              };
-              console.log('Publishing overlay info: ' + JSON.stringify(overlayInfo));
-              SendMutation('updateOverlayInfo', overlayInfo);
-            }, 5000)
-          );
-          console.log('starting new overlay publish timer, id=' + overlayPublishTimerId);
+          // setoverlayPublishTimerId(
+          //   setInterval(() => {
+          //     const overlayInfo = {
+          //       eventId: selectedEvent.eventId,
+          //       username: username,
+          //       timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
+          //       currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
+          //     };
+          //     console.log('Publishing overlay info: ' + JSON.stringify(overlayInfo));
+          //     SendMutation('updateOverlayInfo', overlayInfo);
+          //   }, 5000)
+          // );
+          console.log('TODO: starting new overlay publish timer, id=' + overlayPublishTimerId);
         }
       },
       stopPublishOverlayInfo: () => {
