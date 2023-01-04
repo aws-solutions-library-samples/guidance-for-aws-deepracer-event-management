@@ -55,6 +55,7 @@ $ make
 3. `echo "branch-name" > branch.txt`
 4. `echo "email@domain.com" > email.txt` for the admin email address
 5. Run `make pipeline.deploy` from local to "bootstrap" the cdk pipeline for the users branch
+6. Run `infra.deploy` once to deploy the stack, subsequent pushes to git will autodeploy
 
 ## Local
 

@@ -115,48 +115,51 @@ export function CarColumnsConfig() {
   return rowHeaders;
 }
 
-export const CarVisibleContentOptions = [
-  {
-    label: i18next.t('cars.car-information'),
-    options: [
-      {
-        id: 'instanceId',
-        label: i18next.t('cars.instance'),
-        editable: true,
-      },
-      {
-        id: 'carName',
-        label: i18next.t('cars.host-name'),
-        editable: false,
-      },
-      {
-        id: 'fleetName',
-        label: i18next.t('cars.fleet-name'),
-        editable: true,
-      },
-      {
-        id: 'carIp',
-        label: i18next.t('cars.car-ip'),
-      },
-      {
-        id: 'agentVersion',
-        label: i18next.t('cars.agent-version'),
-      },
-      {
-        id: 'registrationDate',
-        label: i18next.t('cars.registration-date'),
-      },
-      {
-        id: 'lastPingDateTime',
-        label: i18next.t('cars.last-ping-time'),
-      },
-      {
-        id: 'fleetId',
-        label: i18next.t('cars.fleet-id'),
-      },
-    ],
-  },
-];
+export function CarVisibleContentOptions() {
+  const rowHeaders = [
+    {
+      label: i18next.t('cars.car-information'),
+      options: [
+        {
+          id: 'instanceId',
+          label: i18next.t('cars.instance'),
+          editable: true,
+        },
+        {
+          id: 'carName',
+          label: i18next.t('cars.host-name'),
+          editable: false,
+        },
+        {
+          id: 'fleetName',
+          label: i18next.t('cars.fleet-name'),
+          editable: true,
+        },
+        {
+          id: 'carIp',
+          label: i18next.t('cars.car-ip'),
+        },
+        {
+          id: 'agentVersion',
+          label: i18next.t('cars.agent-version'),
+        },
+        {
+          id: 'registrationDate',
+          label: i18next.t('cars.registration-date'),
+        },
+        {
+          id: 'lastPingDateTime',
+          label: i18next.t('cars.last-ping-time'),
+        },
+        {
+          id: 'fleetId',
+          label: i18next.t('cars.fleet-id'),
+        },
+      ],
+    },
+  ];
+  return rowHeaders;
+}
 
 export function UserModelsColumnsConfig() {
   const rowHeaders = [

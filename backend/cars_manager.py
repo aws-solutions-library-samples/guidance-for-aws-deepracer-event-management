@@ -1,9 +1,11 @@
-from aws_cdk import DockerImage, Duration, Stack
+from aws_cdk import DockerImage, Duration, RemovalPolicy
 from aws_cdk import aws_appsync_alpha as appsync
+from aws_cdk import aws_cloudwatch as cloudwatch
 from aws_cdk import aws_dynamodb as dynamodb
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_lambda as awslambda
 from aws_cdk import aws_lambda_python_alpha as lambda_python
+from aws_cdk import aws_ssm as ssm
 from aws_cdk import aws_stepfunctions as step_functions
 from aws_cdk import aws_stepfunctions_tasks as step_functions_tasks
 from aws_cdk.aws_events import Rule, RuleTargetInput, Schedule
@@ -17,26 +19,15 @@ class CarsManager(Construct):
         scope: Construct,
         id: str,
         api: appsync.IGraphqlApi,
+        powertools_layer: lambda_python.PythonLayerVersion,
+        powertools_log_level: str,
+        lambda_architecture: awslambda.Architecture,
+        lambda_runtime: awslambda.Runtime,
+        lambda_bundling_image: DockerImage,
         roles_to_grant_invoke_access: list[iam.IRole],
         **kwargs,
     ):
         super().__init__(scope, id, **kwargs)
-
-        stack = Stack.of(self)
-
-        lambda_architecture = awslambda.Architecture.ARM_64
-        lambda_runtime = awslambda.Runtime.PYTHON_3_9
-        lambda_bundling_image = DockerImage.from_registry(
-            "public.ecr.aws/sam/build-python3.9:latest-arm64"
-        )
-        powertools_layer = lambda_python.PythonLayerVersion.from_layer_version_arn(
-            self,
-            "lambda_powertools",
-            layer_version_arn="arn:aws:lambda:{}:017000801446:layer:AWSLambdaPowertoolsPythonV2-Arm64:11".format(  # noqa: E501
-                stack.region
-            ),
-        )
-        powertools_log_level = "INFO"
 
         cars_table = dynamodb.Table(
             self,
@@ -46,6 +37,7 @@ class CarsManager(Construct):
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             encryption=dynamodb.TableEncryption.AWS_MANAGED,
+            removal_policy=RemovalPolicy.DESTROY,
         )
 
         cars_table_ping_state_index_name = "pingStatus"

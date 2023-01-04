@@ -1,4 +1,4 @@
-from aws_cdk import DockerImage, Duration
+from aws_cdk import DockerImage, Duration, RemovalPolicy
 from aws_cdk import aws_appsync_alpha as appsync
 from aws_cdk import aws_cognito as cognito
 from aws_cdk import aws_dynamodb as dynamodb
@@ -34,6 +34,7 @@ class EventsManager(Construct):
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             encryption=dynamodb.TableEncryption.AWS_MANAGED,
+            removal_policy=RemovalPolicy.DESTROY,
         )
 
         events_handler = lambda_python.PythonFunction(
