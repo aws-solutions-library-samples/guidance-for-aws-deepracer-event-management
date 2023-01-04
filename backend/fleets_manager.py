@@ -1,4 +1,4 @@
-from aws_cdk import DockerImage, Duration
+from aws_cdk import DockerImage, Duration, RemovalPolicy
 from aws_cdk import aws_appsync_alpha as appsync
 from aws_cdk import aws_cognito as cognito
 from aws_cdk import aws_dynamodb as dynamodb
@@ -16,6 +16,11 @@ class FleetsManager(Construct):
         api: appsync.IGraphqlApi,
         none_data_source: appsync.IGraphqlApi,
         user_pool: cognito.IUserPool,
+        powertools_layer: lambda_python.PythonLayerVersion,
+        powertools_log_level: str,
+        lambda_architecture: awslambda.Architecture,
+        lambda_runtime: awslambda.Runtime,
+        lambda_bundling_image: DockerImage,
         roles_to_grant_invoke_access: list[iam.IRole],
         **kwargs,
     ):
@@ -29,12 +34,7 @@ class FleetsManager(Construct):
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             encryption=dynamodb.TableEncryption.AWS_MANAGED,
-        )
-
-        lambda_architecture = awslambda.Architecture.ARM_64
-        lambda_runtime = awslambda.Runtime.PYTHON_3_9
-        lambda_bundling_image = DockerImage.from_registry(
-            "public.ecr.aws/sam/build-python3.9:latest-arm64"
+            removal_policy=RemovalPolicy.DESTROY,
         )
 
         fleets_handler = lambda_python.PythonFunction(
@@ -50,17 +50,12 @@ class FleetsManager(Construct):
             memory_size=128,
             architecture=lambda_architecture,
             bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
-            # layers=[helper_functions_layer, powertools_layer]
-            layers=[
-                lambda_python.PythonLayerVersion.from_layer_version_arn(
-                    self,
-                    "powertools",
-                    "arn:aws:lambda:eu-west-1:017000801446:layer:AWSLambdaPowertoolsPython:3",  # noqa: E501
-                )
-            ],
+            layers=[powertools_layer],
             environment={
                 "DDB_TABLE": fleets_table.table_name,
                 "user_pool_id": user_pool.user_pool_id,
+                "POWERTOOLS_SERVICE_NAME": "fleets_resolver",
+                "LOG_LEVEL": powertools_log_level,
             },
         )
 

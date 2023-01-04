@@ -22,6 +22,8 @@ from backend.fleets_manager import FleetsManager
 from backend.graphql_api.api import API as graphqlApi
 from backend.leaderboard.leaderboard_construct import Leaderboard
 from backend.models_manager import ModelsManager
+
+# from backend.systems_manager import SystemsManager
 from backend.terms_n_conditions.tnc_construct import TermsAndConditions
 from backend.user_pool_user import UserPoolUser
 
@@ -198,6 +200,7 @@ class CdkDeepRacerEventManagerStack(Stack):
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             encryption=dynamodb.TableEncryption.AWS_MANAGED,
             stream=dynamodb.StreamViewType.NEW_IMAGE,
+            removal_policy=RemovalPolicy.DESTROY,
         )
 
         # Functions
@@ -1058,6 +1061,11 @@ class CdkDeepRacerEventManagerStack(Stack):
             api=appsync_api.api,
             none_data_source=none_data_source,
             user_pool=user_pool,
+            powertools_layer=powertools_layer,
+            powertools_log_level=powertools_log_level,
+            lambda_architecture=lambda_architecture,
+            lambda_runtime=lambda_runtime,
+            lambda_bundling_image=lambda_bundling_image,
             roles_to_grant_invoke_access=[admin_user_role],
         )
 
@@ -1065,8 +1073,15 @@ class CdkDeepRacerEventManagerStack(Stack):
             self,
             "CarsManager",
             api=appsync_api.api,
+            powertools_layer=powertools_layer,
+            powertools_log_level=powertools_log_level,
+            lambda_architecture=lambda_architecture,
+            lambda_runtime=lambda_runtime,
+            lambda_bundling_image=lambda_bundling_image,
             roles_to_grant_invoke_access=[admin_user_role],
         )
+
+        # SystemsManager(self, "SystemsManager")
 
         ModelsManager(
             self,

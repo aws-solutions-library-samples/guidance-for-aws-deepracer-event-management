@@ -262,6 +262,8 @@ export default (props) => {
     );
   }
 
+  const carColumnsConfig = CarColumnsConfig();
+
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(props.cars, {
       filtering: {
@@ -280,7 +282,7 @@ export default (props) => {
           />
         ),
       },
-      sorting: { defaultState: { sortingColumn: CarColumnsConfig[1] } },
+      sorting: { defaultState: { sortingColumn: carColumnsConfig[1] } },
     });
 
   // default modal content
@@ -292,7 +294,7 @@ export default (props) => {
       }}
       selectedItems={selectedCars}
       selectionType="single"
-      columnDefinitions={CarColumnsConfig}
+      columnDefinitions={carColumnsConfig}
       items={items}
       loadingText={t('carmodelupload.loading-cars')}
       visibleColumns={preferences.visibleContent}
@@ -314,7 +316,7 @@ export default (props) => {
           pageSizePreference={PageSizePreference('cars')}
           visibleContentPreference={{
             title: t('table.select-visible-colunms'),
-            options: CarVisibleContentOptions,
+            options: CarVisibleContentOptions(),
           }}
           wrapLinesPreference={WrapLines}
         />

@@ -206,7 +206,7 @@ const AdminCars = () => {
               pageSizePreference={PageSizePreference(t('cars.page-size-label'))}
               visibleContentPreference={{
                 title: t('table.select-visible-colunms'),
-                options: CarVisibleContentOptions,
+                options: CarVisibleContentOptions(),
               }}
               wrapLinesPreference={WrapLines}
             />
