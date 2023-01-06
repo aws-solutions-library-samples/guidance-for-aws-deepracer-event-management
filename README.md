@@ -42,12 +42,6 @@ Run unit tests
 $ pytest
 ```
 
-At this point, set your default account and region and then you can deploy DREM by simply running make.
-
-```
-$ make
-```
-
 ## Pipeline Deploy (Branch)
 
 1. Protect the branch through GitLab -> Settings -> [Repository](https://gitlab.aws.dev/dasmthc/deepracer-event-manager/-/settings/repository)
@@ -55,6 +49,7 @@ $ make
 3. `echo "branch-name" > branch.txt`
 4. `echo "email@domain.com" > email.txt` for the admin email address
 5. Run `make pipeline.deploy` from local to "bootstrap" the cdk pipeline for the users branch
+6. Run `make infra.deploy` to create the stack for DREM (this should be a one time operation)
 
 ## Local
 
