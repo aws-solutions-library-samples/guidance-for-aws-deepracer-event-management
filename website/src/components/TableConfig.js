@@ -1,6 +1,13 @@
-import { Box } from '@cloudscape-design/components';
+import {
+  Box,
+  Button,
+  CollectionPreferences,
+  Header,
+  Pagination,
+  SpaceBetween,
+} from '@cloudscape-design/components';
 import dayjs from 'dayjs';
-import React from 'react';
+import { default as React } from 'react';
 import i18next from '../i18n';
 
 // day.js
@@ -226,3 +233,89 @@ export function AdminModelsColumnsConfig() {
   ];
   return rowHeaders;
 }
+
+const ItemsCount = ({ nrSelectedItems, nrTotalItems }) => {
+  if (nrSelectedItems > 0) {
+    return `(${nrSelectedItems}/${nrTotalItems})`;
+  }
+  return `(${nrTotalItems})`;
+};
+
+const HeaderActions = ({ onEdit, onDelete, onAdd, nrSelectedItems }) => {
+  const disableEditButton = nrSelectedItems === 0 || nrSelectedItems > 1;
+  const disableDeleteButton = nrSelectedItems === 0;
+  return (
+    <SpaceBetween direction="horizontal" size="xs">
+      <Button disabled={disableEditButton} onClick={onEdit}>
+        {i18next.t('button.edit')}
+      </Button>
+      <Button disabled={disableDeleteButton} onClick={onDelete}>
+        {i18next.t('button.delete')}
+      </Button>
+      <Button variant="primary" onClick={onAdd}>
+        {i18next.t('button.create')}
+      </Button>
+    </SpaceBetween>
+  );
+};
+
+export const TableHeader = ({
+  onEdit,
+  onDelete,
+  onAdd,
+  nrSelectedItems,
+  nrTotalItems,
+  header,
+  actions = undefined,
+}) => {
+  return (
+    <Header
+      actions={
+        actions ? (
+          actions
+        ) : (
+          <HeaderActions
+            onAdd={onAdd}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            nrSelectedItems={nrSelectedItems}
+          />
+        )
+      }
+      counter={<ItemsCount nrTotalItems={nrTotalItems} nrSelectedItems={nrSelectedItems} />}
+    >
+      {header}
+    </Header>
+  );
+};
+
+export const TablePreferences = ({ preferences, setPreferences, contentOptions }) => {
+  return (
+    <CollectionPreferences
+      title={i18next.t('table.preferences')}
+      confirmLabel={i18next.t('button.confirm')}
+      cancelLabel={i18next.t('button.cancel')}
+      onConfirm={({ detail }) => setPreferences(detail)}
+      preferences={preferences}
+      pageSizePreference={PageSizePreference()}
+      visibleContentPreference={{
+        title: i18next.t('table.select-visible-colunms'),
+        options: contentOptions,
+      }}
+      wrapLinesPreference={WrapLines}
+    />
+  );
+};
+
+export const TablePagination = ({ paginationProps }) => {
+  return (
+    <Pagination
+      {...paginationProps}
+      ariaLabels={{
+        nextPageLabel: i18next.t('table.next-page'),
+        previousPageLabel: i18next.t('table.previous-page'),
+        pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
+      }}
+    />
+  );
+};

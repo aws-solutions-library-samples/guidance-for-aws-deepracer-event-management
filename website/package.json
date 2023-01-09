@@ -20,6 +20,7 @@
     "@xstate/react": "^3.0.1",
     "aws-amplify": "^4.3.39",
     "dayjs": "^1.11.6",
+    "i18n-iso-countries": "^7.5.0",
     "i18next": "^22.4.5",
     "i18next-browser-languagedetector": "^6.1.8",
     "i18next-http-backend": "^1.4.4",

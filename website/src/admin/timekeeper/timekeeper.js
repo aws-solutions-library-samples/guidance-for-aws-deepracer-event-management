@@ -1,6 +1,14 @@
 // TODO ensure automatic timer (websocket) is working properly
 
-import { Box, Button, Container, Grid, Header, SpaceBetween } from '@cloudscape-design/components';
+import {
+  Box,
+  Button,
+  ColumnLayout,
+  Container,
+  Grid,
+  Header,
+  SpaceBetween,
+} from '@cloudscape-design/components';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 
 import { useMachine } from '@xstate/react';
@@ -9,6 +17,7 @@ import useCounter from '../../hooks/useCounter';
 // import useMutation from '../../hooks/useMutation';
 import { eventContext } from '../../store/EventProvider';
 import SideNavContext from '../../store/SideNavContext';
+import { GetRaceResetsNameFromId, GetRaceTypeNameFromId } from '../events/race-config';
 import { EndSessionModal } from './end-session-modal';
 import { LapTable } from './lap-table';
 import LapTimer from './LapTimer';
@@ -40,7 +49,8 @@ const Timekeeper = () => {
   // const { message, connected } = useWebsocket('ws://localhost:8080');
   const { setNavigationOpen } = useContext(SideNavContext);
   const { events, selectedEvent, setSelectedEvent } = useContext(eventContext);
-  // const [SendMutation] = useMutation();
+  const raceType = GetRaceTypeNameFromId(selectedEvent.raceRankingMethod);
+  const allowedNrResets = GetRaceResetsNameFromId(selectedEvent.raceNumberOfResets);
 
   const [
     carResetCounter,
@@ -67,7 +77,6 @@ const Timekeeper = () => {
       },
       readyToStart: (context, event) => {
         console.log('readyToStart race for user ' + event.username);
-        console.log(context);
         SetUsername(event.username);
         resetTimers();
         SetEndSessionModalIsVisible(false);
@@ -88,13 +97,15 @@ const Timekeeper = () => {
       },
       captureLap: (context, event) => {
         console.log('Capturing new lap');
+        const isLapValid = event.isValid && carResetCounter < selectedEvent.raceNumberOfResets;
+
         const lapId = laps.length;
         const currentLapStats = {
           ...currentLap,
           resets: carResetCounter,
           id: lapId,
           time: lapTimerRef.current.getCurrentTimeInMs(),
-          isValid: event.isValid,
+          isValid: isLapValid,
         };
 
         SetLaps((prevState) => {
@@ -207,7 +218,7 @@ const Timekeeper = () => {
 
   const resetTimers = () => {
     pauseTimers();
-    raceTimerRef.current.reset(selectedEvent.raceTimeInSec * 1000);
+    raceTimerRef.current.reset(selectedEvent.raceTimeInMin * 60 * 1000);
     lapTimerRef.current.reset();
   };
 
@@ -241,79 +252,105 @@ const Timekeeper = () => {
         selectedEvent={selectedEvent}
         visible={endSessionModalIsVisible}
       />
-      <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+      <SpaceBetween size="l" direction="vertical">
         <Container>
-          <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-            <Header>{t('timekeeper.current-racer')}:</Header>
-            <Header>{username}</Header>
-          </Grid>
-          <hr></hr>
-          <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }, { colspan: 6 }, { colspan: 6 }]}>
-            <Header>{t('timekeeper.time-left')}: </Header>
-            <RaceTimer
-              onExpire={() => {
-                return send('EXPIRE');
-              }}
-              ref={raceTimerRef}
-            />
-            <Header>{t('timekeeper.current-lap')}:</Header>
-            <LapTimer ref={lapTimerRef} />
-          </Grid>
-          <hr></hr>
-          <Grid
-            gridDefinition={[
-              { colspan: 6 },
-              { colspan: 6 },
-              { colspan: 12 },
-              { colspan: 12 },
-              { colspan: 12 },
-              { colspan: 2 },
-              { colspan: 3 },
-              { colspan: 7 },
-              { colspan: 12 },
-              { colspan: 6 },
-              { colspan: 6 },
-            ]}
-            className={styles.root}
-          >
-            <Button onClick={() => send('CAPTURE_LAP', { isValid: false })}>
-              {t('timekeeper.dnf')}
-            </Button>
-            <Button onClick={incrementCarResetCounter}>{t('timekeeper.car-reset')}</Button>
-            <Button
-              onClick={() => send('CAPTURE_LAP', { isValid: true })}
-              disabled={!timersAreRunning}
-            >
-              {t('timekeeper.capture-lap')}
-            </Button>
-            <div>{connected ? 'Automated timer connected' : 'Automated timer not connected'} </div>
-            <hr></hr>
-            <Grid>
-              <div>{t('timekeeper.resets')}:</div>
-              <div>
-                {carResetCounter}/{selectedEvent.numberOfResets}
-              </div>
+          <ColumnLayout columns={2} variant="text-grid">
+            <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+              <Header variant="H3">Race format: </Header>
+              <Header variant="H3">{raceType} </Header>
             </Grid>
-            <Button onClick={decrementCarResetCounter}>-1</Button>
-            <Button onClick={undoFalseFinishHandler}>{t('timekeeper.undo-false-finish')}</Button>
-            <hr></hr>
-            <Button onClick={() => send('END')}>{t('timekeeper.end-race')}</Button>
-            <Button onClick={() => send('TOGGLE')}>
-              {!timersAreRunning ? t('timekeeper.start-race') : t('timekeeper.pause-race')}
-            </Button>
-          </Grid>
+            <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+              <Header variant="H3">Automated timer: </Header>
+              <Header variant="H3">{connected ? 'Connected' : 'Not connected'} </Header>
+            </Grid>
+          </ColumnLayout>
         </Container>
-        <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }]}>
-          <SpaceBetween size="m" direction="horizontal">
-            <LapTable
-              header={t('timekeeper.fastest-lap')}
-              laps={fastestLap}
-              onAction={actionHandler}
-            />
-            <LapTable header={t('timekeeper.recorded-laps')} laps={laps} onAction={actionHandler} />
-          </SpaceBetween>
+        <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+          <Container>
+            <SpaceBetween size="xs" direction="vertical">
+              <Grid
+                gridDefinition={[
+                  { colspan: 6 },
+                  { colspan: 6 },
+                  { colspan: 6 },
+                  { colspan: 6 },
+                  { colspan: 6 },
+                  { colspan: 6 },
+                ]}
+              >
+                <Header>{t('timekeeper.current-racer')}:</Header>
+                <Header variant="h2">{username}</Header>
+
+                <Header>{t('timekeeper.time-left')}: </Header>
+                <RaceTimer
+                  onExpire={() => {
+                    return send('EXPIRE');
+                  }}
+                  ref={raceTimerRef}
+                />
+                <Header>{t('timekeeper.current-lap')}:</Header>
+                <LapTimer ref={lapTimerRef} />
+              </Grid>
+            </SpaceBetween>
+            <hr></hr>
+            <Grid
+              gridDefinition={[
+                { colspan: 6 },
+                { colspan: 6 },
+                { colspan: 12 },
+                { colspan: 12 },
+                { colspan: 3 },
+                { colspan: 2 },
+                { colspan: 7 },
+                { colspan: 12 },
+                { colspan: 6 },
+                { colspan: 6 },
+              ]}
+              className={styles.root}
+            >
+              <Button onClick={() => send('CAPTURE_LAP', { isValid: false })}>
+                {t('timekeeper.dnf')}
+              </Button>
+              <Button onClick={incrementCarResetCounter}>{t('timekeeper.car-reset')}</Button>
+              <Button
+                onClick={() => send('CAPTURE_LAP', { isValid: true })}
+                disabled={!timersAreRunning}
+              >
+                {t('timekeeper.capture-lap')}
+              </Button>
+
+              <hr></hr>
+              <SpaceBetween>
+                <Header variant="h3">{t('timekeeper.resets')}:</Header>
+                <Header variant="H3">
+                  {carResetCounter}/{allowedNrResets}
+                </Header>
+              </SpaceBetween>
+              <Button onClick={decrementCarResetCounter}>-1</Button>
+              <Button onClick={undoFalseFinishHandler}>{t('timekeeper.undo-false-finish')}</Button>
+              <hr></hr>
+              <Button onClick={() => send('END')}>{t('timekeeper.end-race')}</Button>
+              <Button onClick={() => send('TOGGLE')}>
+                {!timersAreRunning ? t('timekeeper.start-race') : t('timekeeper.pause-race')}
+              </Button>
+            </Grid>
+          </Container>
+          <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }]}>
+            <SpaceBetween size="m" direction="horizontal">
+              <LapTable
+                header={t('timekeeper.fastest-lap')}
+                laps={fastestLap}
+                onAction={actionHandler}
+              />
+              <LapTable
+                header={t('timekeeper.recorded-laps')}
+                laps={laps}
+                onAction={actionHandler}
+              />
+            </SpaceBetween>
+          </Grid>
         </Grid>
-      </Grid>
+      </SpaceBetween>
     </Box>
   );
 };
