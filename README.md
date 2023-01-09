@@ -49,7 +49,7 @@ $ pytest
 3. `echo "branch-name" > branch.txt`
 4. `echo "email@domain.com" > email.txt` for the admin email address
 5. Run `make pipeline.deploy` from local to "bootstrap" the cdk pipeline for the users branch
-6. Run `make infra.deploy` to create the stack for DREM (this should be a one time operation)
+6. Once the pipeline is place push a change via a git and the pipeline will then build and deploy into your account
 
 ## Local
 
