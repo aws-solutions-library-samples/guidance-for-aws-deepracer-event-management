@@ -1,9 +1,10 @@
 import { API } from 'aws-amplify';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ContentHeader } from '../components/ContentHeader';
-import { ListOfFleets } from '../components/ListOfFleets';
+// import { ListOfFleets } from '../components/ListOfFleets';
 import * as mutations from '../graphql/mutations';
+import { fleetContext } from '../store/FleetProvider';
 
 import {
   Box,
@@ -44,7 +45,7 @@ const AdminActivation = (props) => {
   const [dropDownSelectedItem, setDropDownSelectedItem] = useState({ fleetName: 'Select Fleet' });
 
   const [isLoading, setIsLoading] = useState(true);
-  const fleets = ListOfFleets(setIsLoading);
+  const [fleets] = useContext(fleetContext);
 
   // convert fleets data to dropdown format
   useEffect(() => {

@@ -1,24 +1,23 @@
 import React, { createContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-// create a context, with createContext api
+import { useEventsApi } from '../hooks/useEventsApi';
+
 export const eventContext = createContext();
+
+const defaultEvent = (t) => {
+  return {
+    eventId: 'not-set',
+    eventName: t('event-provider.please-select-an-event'),
+  };
+};
 
 const EventProvider = (props) => {
   const { t } = useTranslation();
-  // this state will be shared with all components
-  const [events, setEvents] = useState([]);
-
-  const [selectedEvent, setSelectedEvent] = useState({
-    eventId: 'not-set',
-    eventName: t('event-provider.please-select-an-event'),
-    fleetId: '',
-    raceTimeInSec: 120,
-    numberOfResets: 99,
-  });
+  const [events, isLoading, errorMessage] = useEventsApi();
+  const [selectedEvent, setSelectedEvent] = useState(defaultEvent(t));
 
   return (
-    // this is the provider providing state
-    <eventContext.Provider value={{ events, setEvents, selectedEvent, setSelectedEvent }}>
+    <eventContext.Provider value={{ events, selectedEvent, setSelectedEvent }}>
       {props.children}
     </eventContext.Provider>
   );

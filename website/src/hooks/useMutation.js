@@ -11,6 +11,7 @@ export default function useMutation() {
   const send = useCallback(async (method, payload) => {
     try {
       setIsLoading(true);
+      setData();
       const response = await API.graphql(graphqlOperation(mutations[method], payload));
       setData({ ...response.data[method] });
       setIsLoading(false);

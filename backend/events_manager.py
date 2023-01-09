@@ -71,12 +71,16 @@ class EventsManager(Construct):
         events_object_Type = appsync.ObjectType(
             "Event",
             definition={
-                "eventName": appsync.GraphqlType.string(),
                 "eventId": appsync.GraphqlType.id(),
-                "fleetId": appsync.GraphqlType.id(),
                 "createdAt": appsync.GraphqlType.aws_date_time(),
-                "raceTimeInSec": appsync.GraphqlType.int(),
-                "numberOfResets": appsync.GraphqlType.int(),
+                "eventName": appsync.GraphqlType.string(),
+                "eventDate": appsync.GraphqlType.aws_date(),
+                "fleetId": appsync.GraphqlType.id(),
+                "countryCode": appsync.GraphqlType.string(),
+                "raceRankingMethod": appsync.GraphqlType.string(),
+                "raceTimeInMin": appsync.GraphqlType.int(),
+                "raceNumberOfResets": appsync.GraphqlType.int(),
+                "raceLapsToFinish": appsync.GraphqlType.int(),
             },
         )
 
@@ -95,16 +99,20 @@ class EventsManager(Construct):
             appsync.ResolvableField(
                 args={
                     "eventName": appsync.GraphqlType.string(is_required=True),
-                    "raceTimeInSec": appsync.GraphqlType.int(),
-                    "numberOfResets": appsync.GraphqlType.int(),
+                    "eventDate": appsync.GraphqlType.aws_date(),
                     "fleetId": appsync.GraphqlType.id(),
+                    "countryCode": appsync.GraphqlType.string(),
+                    "raceRankingMethod": appsync.GraphqlType.string(is_required=True),
+                    "raceTimeInMin": appsync.GraphqlType.int(is_required=True),
+                    "raceNumberOfResets": appsync.GraphqlType.int(is_required=True),
+                    "raceLapsToFinish": appsync.GraphqlType.int(is_required=True),
                 },
                 return_type=events_object_Type.attribute(),
                 data_source=events_data_source,
             ),
         )
         api.add_subscription(
-            "addedEvent",
+            "onAddedEvent",
             appsync.ResolvableField(
                 return_type=events_object_Type.attribute(),
                 data_source=none_data_source,
@@ -122,17 +130,17 @@ class EventsManager(Construct):
         )
 
         api.add_mutation(
-            "deleteEvent",
+            "deleteEvents",
             appsync.ResolvableField(
-                args={"eventId": appsync.GraphqlType.string(is_required=True)},
-                return_type=events_object_Type.attribute(),
+                args={"eventIds": appsync.GraphqlType.string(is_required_list=True)},
+                return_type=events_object_Type.attribute(is_list=True),
                 data_source=events_data_source,
             ),
         )
         api.add_subscription(
-            "deletedEvent",
+            "onDeletedEvents",
             appsync.ResolvableField(
-                return_type=events_object_Type.attribute(),
+                return_type=events_object_Type.attribute(is_list=True),
                 data_source=none_data_source,
                 request_mapping_template=appsync.MappingTemplate.from_string(
                     """{
@@ -143,7 +151,7 @@ class EventsManager(Construct):
                 response_mapping_template=appsync.MappingTemplate.from_string(
                     """$util.toJson($context.result)"""
                 ),
-                directives=[appsync.Directive.subscribe("deleteEvent")],
+                directives=[appsync.Directive.subscribe("deleteEvents")],
             ),
         )
 
@@ -152,17 +160,21 @@ class EventsManager(Construct):
             appsync.ResolvableField(
                 args={
                     "eventId": appsync.GraphqlType.string(is_required=True),
-                    "eventName": appsync.GraphqlType.string(is_required=True),
-                    "raceTimeInSec": appsync.GraphqlType.int(is_required=True),
-                    "numberOfResets": appsync.GraphqlType.int(is_required=True),
+                    "eventName": appsync.GraphqlType.string(),
+                    "eventDate": appsync.GraphqlType.aws_date(),
                     "fleetId": appsync.GraphqlType.id(),
+                    "countryCode": appsync.GraphqlType.string(),
+                    "raceRankingMethod": appsync.GraphqlType.string(),
+                    "raceTimeInMin": appsync.GraphqlType.int(),
+                    "raceNumberOfResets": appsync.GraphqlType.int(),
+                    "raceLapsToFinish": appsync.GraphqlType.int(),
                 },
                 return_type=events_object_Type.attribute(),
                 data_source=events_data_source,
             ),
         )
         api.add_subscription(
-            "updatedEvent",
+            "onUpdatedEvent",
             appsync.ResolvableField(
                 return_type=events_object_Type.attribute(),
                 data_source=none_data_source,

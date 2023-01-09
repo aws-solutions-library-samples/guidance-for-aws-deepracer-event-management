@@ -4,10 +4,15 @@ import React, { useContext, useEffect, useState } from 'react';
 
 import { Route, Routes, useLocation } from 'react-router-dom';
 
+import { useTranslation } from 'react-i18next';
 import { AdminActivation } from '../admin/carActivation.js';
 import { AdminCars } from '../admin/cars.js';
+import { CreateEvent } from '../admin/events/create-event.js';
+import { EditEvent } from '../admin/events/edit-event.js';
 import { AdminEvents } from '../admin/events/events.js';
-import { AdminFleets } from '../admin/fleets.js';
+import { CreateFleet } from '../admin/fleets/create-fleet.js';
+import { EditFleet } from '../admin/fleets/edit-fleet.js';
+import { AdminFleets } from '../admin/fleets/fleets.js';
 import { AdminGroups } from '../admin/groups.js';
 import { AdminGroupsDetail } from '../admin/groups/detail.js';
 import { AdminHome } from '../admin/home.js';
@@ -16,15 +21,11 @@ import { AdminModels } from '../admin/models.js';
 import { AdminQuarantine } from '../admin/quarantine.js';
 import { Timekeeper } from '../admin/timekeeper/timekeeper';
 import { Home } from '../home.js';
+import useLink from '../hooks/useLink.js';
 import { Models } from '../models.js';
-import { Upload } from '../upload.js';
-// import { ListOfEvents } from './ListOfEvents.js';
-import useQuery from '../hooks/useQuery.js';
 import { eventContext } from '../store/EventProvider';
 import SideNavContext from '../store/SideNavContext.js';
-
-import { useTranslation } from 'react-i18next';
-import useLink from '../hooks/useLink.js';
+import { Upload } from '../upload.js';
 
 function cwr(operation, payload) {
   // Instrument Routing to Record Page Views
@@ -52,7 +53,11 @@ function MenuRoutes() {
       <Route path="/admin/quarantine" element={<AdminQuarantine />} />
       <Route path="/admin/cars" element={<AdminCars />} />
       <Route path="/admin/events" element={<AdminEvents />} />
+      <Route path="/admin/events/create" element={<CreateEvent />} />
+      <Route path="/admin/events/edit" element={<EditEvent />} />
       <Route path="/admin/fleets" element={<AdminFleets />} />
+      <Route path="/admin/fleets/create" element={<CreateFleet />} />
+      <Route path="/admin/fleets/edit" element={<EditFleet />} />
       <Route path="/admin/groups" element={<AdminGroups />} />
       <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />
       <Route path="/admin/car_activation" element={<AdminActivation />} />
@@ -69,16 +74,8 @@ export function TopNav(props) {
   const [groups, setGroups] = useState([]);
   const [navigationOpen, setNavigationOpen] = useState(true);
   const { handleFollow } = useLink();
-  const [allEventsFromBackend] = useQuery('getAllEvents');
 
-  const { events, setEvents, selectedEvent, setSelectedEvent } = useContext(eventContext);
-
-  // Get all events from backend on inital load
-  useEffect(() => {
-    if (allEventsFromBackend) {
-      setEvents(allEventsFromBackend);
-    }
-  }, [allEventsFromBackend, setEvents]);
+  const { events, selectedEvent, setSelectedEvent } = useContext(eventContext);
 
   useEffect(() => {
     // Config Groups

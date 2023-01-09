@@ -74,6 +74,7 @@ class FleetsManager(Construct):
                 "fleetName": appsync.GraphqlType.string(),
                 "fleetId": appsync.GraphqlType.id(),
                 "createdAt": appsync.GraphqlType.aws_date_time(),
+                "carIds": appsync.GraphqlType.id(is_list=True),
             },
         )
 
@@ -92,13 +93,14 @@ class FleetsManager(Construct):
             appsync.ResolvableField(
                 args={
                     "fleetName": appsync.GraphqlType.string(is_required=True),
+                    "carIds": appsync.GraphqlType.string(is_list=True),
                 },
                 return_type=fleets_object_Type.attribute(),
                 data_source=fleets_data_source,
             ),
         )
         api.add_subscription(
-            "addedFleet",
+            "onAddedFleet",
             appsync.ResolvableField(
                 return_type=fleets_object_Type.attribute(),
                 data_source=none_data_source,
@@ -116,17 +118,17 @@ class FleetsManager(Construct):
         )
 
         api.add_mutation(
-            "deleteFleet",
+            "deleteFleets",
             appsync.ResolvableField(
-                args={"fleetId": appsync.GraphqlType.string(is_required=True)},
-                return_type=fleets_object_Type.attribute(),
+                args={"fleetIds": appsync.GraphqlType.string(is_required_list=True)},
+                return_type=fleets_object_Type.attribute(is_list=True),
                 data_source=fleets_data_source,
             ),
         )
         api.add_subscription(
-            "deletedFleet",
+            "onDeletedFleets",
             appsync.ResolvableField(
-                return_type=fleets_object_Type.attribute(),
+                return_type=fleets_object_Type.attribute(is_list=True),
                 data_source=none_data_source,
                 request_mapping_template=appsync.MappingTemplate.from_string(
                     """{
@@ -137,7 +139,7 @@ class FleetsManager(Construct):
                 response_mapping_template=appsync.MappingTemplate.from_string(
                     """$util.toJson($context.result)"""
                 ),
-                directives=[appsync.Directive.subscribe("deleteFleet")],
+                directives=[appsync.Directive.subscribe("deleteFleets")],
             ),
         )
 
@@ -147,13 +149,14 @@ class FleetsManager(Construct):
                 args={
                     "fleetId": appsync.GraphqlType.string(is_required=True),
                     "fleetName": appsync.GraphqlType.string(),
+                    "carIds": appsync.GraphqlType.id(is_list=True),
                 },
                 return_type=fleets_object_Type.attribute(),
                 data_source=fleets_data_source,
             ),
         )
         api.add_subscription(
-            "updatedFleet",
+            "onUpdatedFleet",
             appsync.ResolvableField(
                 return_type=fleets_object_Type.attribute(),
                 data_source=none_data_source,
