@@ -1,5 +1,6 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ListOfFleets } from './ListOfFleets.js';
 
 import * as mutations from '../graphql/mutations';
@@ -17,17 +18,20 @@ import {
 } from '@cloudscape-design/components';
 
 export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   // const [cars, setCars] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const [dropDownFleets, setDropDownFleets] = useState([{ id: 'none', text: 'none' }]);
-  const [dropDownSelectedItem, setDropDownSelectedItem] = useState({ fleetName: 'Select Fleet' });
+  const [dropDownSelectedItem, setDropDownSelectedItem] = useState({
+    fleetName: t('fleets.edit-cars.select-fleet'),
+  });
 
   const [dropDownColors, setDropDownColors] = useState([{ id: 'blue', text: 'blue' }]);
   const [dropDownSelectedColor, setDropDownSelectedColor] = useState({
-    id: 'Select Color',
-    text: 'Select Color',
+    id: t('fleets.edit-cars.select-color'),
+    text: t('fleets.edit-cars.select-color'),
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -84,7 +88,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
 
     setVisible(false);
     setRefresh(true);
-    setDropDownSelectedItem({ fleetName: 'Select Fleet' });
+    setDropDownSelectedItem({ fleetName: t('fleets.edit-cars.select-fleet') });
   }
 
   // get color options when component is mounted
@@ -125,7 +129,10 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
 
     setVisible(false);
     setRefresh(true);
-    setDropDownSelectedColor({ id: 'Select Color', text: 'Select Color' });
+    setDropDownSelectedColor({
+      id: t('fleets.edit-cars.select-color'),
+      text: t('fleets.edit-cars.select-color'),
+    });
   }
 
   return (
@@ -137,7 +144,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
           modalOpen(selectedItems);
         }}
       >
-        Edit Cars
+        {t('fleets.edit-cars.edit-cars')}
       </Button>
 
       {/* edit modal */}
@@ -149,12 +156,12 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
               <Button variant="secondary" onClick={() => modalClose()}>
-                Cancel
+                {t('button.cancel')}
               </Button>
             </SpaceBetween>
           </Box>
         }
-        header="Edit Cars"
+        header={t('fleets.edit-cars.edit-cars')}
       >
         <SpaceBetween direction="vertical" size="xs">
           <Container>
@@ -175,7 +182,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                     carUpdates();
                   }}
                 >
-                  Update Fleets
+                  {t('fleets.edit-cars.update-fleets')}
                 </Button>
               </SpaceBetween>
             </FormField>
@@ -191,7 +198,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                   setDeleteModalVisible(true);
                 }}
               >
-                Delete Models
+                {t('fleets.edit-cars.delete-models')}
               </Button>
             </FormField>
           </Container>
@@ -215,7 +222,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                     carColorUpdates();
                   }}
                 >
-                  Update Tail lights
+                  {t('fleets.edit-cars.update-tail-lights')}
                 </Button>
               </SpaceBetween>
             </FormField>
@@ -243,7 +250,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                   setDeleteModalVisible(false);
                 }}
               >
-                Cancel
+                {t('button.cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -252,7 +259,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                   setDeleteModalVisible(false);
                 }}
               >
-                Delete
+                {t('button.delete')}
               </Button>
             </SpaceBetween>
           </Box>
