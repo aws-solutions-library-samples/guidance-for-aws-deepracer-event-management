@@ -108,7 +108,9 @@ const AdminFleets = () => {
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(fleets, {
       filtering: {
-        empty: <EmptyState title={t('fleets.no-fleet')} subtitle={t('fleets.no-fleet-message')} />,
+        empty: (
+          <EmptyState title={t('fleets.no-fleets')} subtitle={t('fleets.no-fleets-message')} />
+        ),
         noMatch: (
           <EmptyState
             title={t('models.no-matches')}
