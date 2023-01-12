@@ -107,6 +107,44 @@ ul {
   transition: color 600ms linear;
 }
 
+.isNew {
+  z-index: 200;
+  transform: scale(1.1);
+}
+
+.gold, .silver, .bronze {
+  font-size: 4rem;
+}
+
+.gold .position, .silver .position, .bronze .position {
+  color: rgba(0,0,0,0.5);
+  text-shadow: 0 .3rem 0 rgba(255,255,255,0.7);
+}
+
+.gold .name, .silver .name, .bronze .name {
+  text-shadow: 0 .3rem .2rem rgba(0,0,0,0.3);
+}
+
+.bronze {
+  background: transparent;
+  background-image: linear-gradient(rgba(255,255,255,0.3),rgba(255,255,255,0)), linear-gradient(90deg,#FCAE4D,#672F04);
+}
+
+.silver {
+  background: transparent;
+  background-image: linear-gradient(rgba(255,255,255,0.3),rgba(255,255,255,0)), linear-gradient(90deg,#c1c1c5,#44464c);
+}
+
+.gold {
+  background: transparent;
+  background-image: linear-gradient(rgba(255,255,255,0.3),rgba(255,255,255,0)), linear-gradient(90deg,#f0ba0a,#C47400);
+}
+
+.highlight {
+  box-shadow: 0 0 0 .5rem #0095ff;
+}
+
+
 .logoContainer {
   height: 150vh;
   width: 150vh;

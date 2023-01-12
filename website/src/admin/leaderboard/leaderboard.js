@@ -1,6 +1,7 @@
 import { API, graphqlOperation } from 'aws-amplify';
 import React, { useContext, useEffect, useState } from 'react';
 
+import classnames from 'classnames';
 import { useTranslation } from 'react-i18next';
 import Logo from '../../assets/logo-bw.png';
 import { getLeaderBoardEntries } from '../../graphql/queries';
@@ -109,7 +110,16 @@ const Leaderboard = () => {
   useEffect(() => {
     console.log('Update leaderboard list items');
     const items = leaderboardEntries.map((entry, index) => (
-      <li key={entry.username} className={`${styles.listEntry} ${styles.moduleRow}`}>
+      <li
+        key={entry.username}
+        className={classnames(
+          styles.listEntry,
+          styles.moduleRow,
+          index === 0 && styles.gold,
+          index === 1 && styles.silver,
+          index === 2 && styles.bronze
+        )}
+      >
         <div className={styles.liPosition}>#{index + 1}</div>
         <div className={styles.liRacer}>{entry.username}</div>
         <div className={styles.liTime}>{convertMsToString(entry.time)}</div>
