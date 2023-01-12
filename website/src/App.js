@@ -14,7 +14,10 @@ import './App.css';
 import '@aws-amplify/ui-react/styles.css';
 import TopNav from './components/TopNav.js';
 import awsconfig from './config.json';
+import CarsProvider from './store/CarProvider';
 import EventProvider from './store/EventProvider';
+import { FleetProvider } from './store/FleetProvider';
+
 Amplify.configure(awsconfig);
 
 const components = {
@@ -76,11 +79,15 @@ export default function App() {
     >
       {({ signOut, user }) => (
         <main>
-          <EventProvider>
-            <Router>
-              <TopNav user={user.username} signout={signOut} />
-            </Router>
-          </EventProvider>
+          <CarsProvider>
+            <FleetProvider>
+              <EventProvider>
+                <Router>
+                  <TopNav user={user.username} signout={signOut} />
+                </Router>
+              </EventProvider>
+            </FleetProvider>
+          </CarsProvider>
         </main>
       )}
     </Authenticator>

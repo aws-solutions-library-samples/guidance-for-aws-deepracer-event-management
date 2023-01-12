@@ -39,7 +39,7 @@ def getAllFleets():
 
 
 @app.resolver(type_name="Mutation", field_name="addFleet")
-def addFleet(fleetName: str, tracks=None):
+def addFleet(fleetName: str, carIds: list[str] = []):
     # TODO add regular expression for tag validation
     # TODO verify that the wanted tag is not already in use for another track
     fleetId = str(uuid.uuid4())
@@ -48,6 +48,7 @@ def addFleet(fleetName: str, tracks=None):
         "fleetId": fleetId,
         "fleetName": fleetName,
         "createdAt": createdAt,
+        "carIds": carIds,
     }
     response = ddbTable.put_item(Item=item)
     logger.info(f"ddb put response: {response}")
@@ -55,23 +56,31 @@ def addFleet(fleetName: str, tracks=None):
     return item
 
 
-@app.resolver(type_name="Mutation", field_name="deleteFleet")
-def deleteFleet(fleetId: str):
-    logger.info(f"deleteFleet: fleetId={fleetId}")
-    response = ddbTable.delete_item(Key={"fleetId": fleetId})
-    logger.info(response)
-    return {"fleetId": fleetId}
+@app.resolver(type_name="Mutation", field_name="deleteFleets")
+def deleteFleets(fleetIds: list[str]):
+    logger.info(f"deleteFleets: fleetIds={fleetIds}")
+
+    fleets = []
+    for fleetId in fleetIds:
+        response = ddbTable.delete_item(Key={"fleetId": fleetId})
+        logger.info(response)
+        fleets.append({"fleetId": fleetId})
+    return fleets
 
 
 @app.resolver(type_name="Mutation", field_name="updateFleet")
-def udpateFleet(fleetId: str, fleetName: str, tracks):
+def udpateFleet(fleetId: str, fleetName: str, carIds: list[str] = []):
     logger.info(f"udpateFleet: fleetId={fleetId}")
-    # TODO make so that only attributes which are provided is updated
 
-    ddbTable.update_item(
+    response = ddbTable.update_item(
         Key={"fleetId": fleetId},
-        UpdateExpression="SET fleetName= :newName",
-        ExpressionAttributeValues={":newName": fleetName},
-        ReturnValues="UPDATED_NEW",
+        UpdateExpression="SET fleetName= :newName, carIds= :carIds",
+        ExpressionAttributeValues={
+            ":newName": fleetName,
+            ":carIds": carIds,
+        },
+        ReturnValues="ALL_NEW",
     )
-    return {"fleetId": fleetId}
+
+    updatedFleet = response["Attributes"]
+    return updatedFleet

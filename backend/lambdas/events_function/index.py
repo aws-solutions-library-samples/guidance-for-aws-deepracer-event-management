@@ -53,33 +53,48 @@ def addEvent(**args):
     return item
 
 
-@app.resolver(type_name="Mutation", field_name="deleteEvent")
-def deleteEvent(eventId: str):
-    logger.info(f"deleteEvent: eventId={eventId}")
-    response = ddbTable.delete_item(Key={"eventId": eventId})
-    logger.info(response)
-    return {"eventId": eventId}
+@app.resolver(type_name="Mutation", field_name="deleteEvents")
+def deleteEvents(eventIds: list[str]):
+    logger.info(f"deleteEvents: eventIds={eventIds}")
+
+    events = []
+    for eventId in eventIds:
+        response = ddbTable.delete_item(Key={"eventId": eventId})
+        logger.info(response)
+        events.append({"eventId": eventId})
+
+    return events
 
 
 @app.resolver(type_name="Mutation", field_name="updateEvent")
 def udpateEvent(
     eventId: str,
     eventName: str,
-    raceTimeInSec: int,
-    numberOfResets: int,
+    raceTimeInMin: int,
+    raceNumberOfResets: int,
+    raceLapsToFinish: int,
+    raceRankingMethod: int,
+    eventDate: str = None,
+    countryCode: str = None,
     fleetId: str = None,
 ):
     logger.info(f"udpateEvent: eventId={eventId}")
     response = ddbTable.update_item(
         Key={"eventId": eventId},
         UpdateExpression=(
-            "SET eventName= :newName, raceTimeInSec= :newraceTimeInSec, numberOfResets="
-            " :newNumberOfResets, fleetId= :fleetId"
+            "SET eventName= :newName, eventDate= :eventDate, countryCode= "
+            " :countryCode, raceTimeInMin= :raceTimeInMin, raceNumberOfResets="
+            " :raceNumberOfResets, raceLapsToFinish= :raceLapsToFinish,"
+            " raceRankingMethod= :raceRankingMethod, fleetId= :fleetId"
         ),
         ExpressionAttributeValues={
             ":newName": eventName,
-            ":newraceTimeInSec": raceTimeInSec,
-            ":newNumberOfResets": numberOfResets,
+            ":eventDate": eventDate,
+            ":countryCode": countryCode,
+            ":raceTimeInMin": raceTimeInMin,
+            ":raceNumberOfResets": raceNumberOfResets,
+            ":raceLapsToFinish": raceLapsToFinish,
+            ":raceRankingMethod": raceRankingMethod,
             ":fleetId": fleetId,
         },
         ReturnValues="ALL_NEW",

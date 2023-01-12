@@ -1,11 +1,10 @@
 import { API } from 'aws-amplify';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ListOfFleets } from './ListOfFleets.js';
+import { fleetContext } from '../store/FleetProvider';
 
 import * as mutations from '../graphql/mutations';
 import * as queries from '../graphql/queries';
-// import * as subscriptions from '../graphql/subscriptions'
 
 import {
   Box,
@@ -35,7 +34,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
   });
 
   const [isLoading, setIsLoading] = useState(true);
-  const fleets = ListOfFleets(setIsLoading);
+  const [fleets] = useContext(fleetContext);
 
   // convert fleets data to dropdown format
   useEffect(() => {

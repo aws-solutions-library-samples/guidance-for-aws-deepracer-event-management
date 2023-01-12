@@ -1,162 +1,87 @@
-// TODO add so that an existing event can be edited
-// TODO change all API call to useMutation custom hook
-// TODO add input validation for all input fields
-
 import { API } from 'aws-amplify';
-import React, { useContext, useEffect, useRef, useState } from 'react';
 import * as mutations from '../../graphql/mutations';
 
+import React, { useContext, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { useCollection } from '@cloudscape-design/collection-hooks';
+import { Box, Button, Modal, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
 import { ContentHeader } from '../../components/ContentHeader';
-import useQuery from '../../hooks/useQuery';
 import { eventContext } from '../../store/EventProvider';
+import { fleetContext } from '../../store/FleetProvider';
+import { ColumnDefinitions, VisibleContentOptions } from './events-table-config';
 
 import {
-  Box,
-  Button,
-  Container,
-  Form,
-  Grid,
-  Header,
-  Modal,
-  SpaceBetween,
-  Table,
-  TextFilter,
-} from '@cloudscape-design/components';
-
-import { DefaultPreferences, EmptyState, MatchesCountText } from '../../components/TableConfig';
-import { EditModal } from './EditModal';
-import { EventInputForm } from './EventInputForm';
+  DefaultPreferences,
+  EmptyState,
+  MatchesCountText,
+  TableHeader,
+  TablePagination,
+  TablePreferences,
+} from '../../components/TableConfig';
+import { useLocalStorage } from '../../hooks/useLocalStorage.js';
 
 const AdminEvents = () => {
   const { t } = useTranslation();
-  const [SelectedEventInTable, setSelectedEventInTable] = useState([]);
-  const [addButtonDisabled, setAddButtonDisabled] = useState(true);
-  const [deleteButtonDisabled, setDeleteButtonDisabled] = useState(true);
-  const [editButtonDisabled, setEditButtonDisabled] = useState(true);
+  const [SelectedEventsInTable, setSelectedEventsInTable] = useState([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [editModalVisible, setEditModalVisible] = useState(false);
 
-  const { events, setEvents } = useContext(eventContext);
-  const [allEventsFromBackend, loading] = useQuery('getAllEvents');
-  const [allFleetsFromBackend] = useQuery('getAllFleets');
+  const [preferences, setPreferences] = useLocalStorage('DREM-events-table-preferences', {
+    ...DefaultPreferences,
+    visibleContent: ['eventName', 'eventDate', 'createdAt'],
+  });
 
-  const newEventRef = useRef();
+  const { events } = useContext(eventContext);
+  const [fleets] = useContext(fleetContext);
 
-  useEffect(() => {
-    if (allEventsFromBackend) {
-      setEvents(allEventsFromBackend);
-    }
-  }, [allEventsFromBackend, setEvents]);
+  const navigate = useNavigate();
 
-  const addButtonDisabledHandler = (state) => {
-    setAddButtonDisabled(state);
-  };
-
-  const editEventHandler = async (updatedEvent) => {
-    const response = await API.graphql({
-      query: mutations.updateEvent,
-      variables: { ...updatedEvent },
-    });
-    if (response.data) {
-      const eventId = updatedEvent.eventId;
-      const updatedEvents = [...events];
-      const index = updatedEvents.findIndex((event) => event.eventId === eventId);
-      updatedEvents[index] = response.data.updateEvent;
-      setEvents(updatedEvents);
-    }
-    setEditModalVisible(false);
+  const editEventHandler = () => {
+    navigate('/admin/events/edit', { state: SelectedEventsInTable[0] });
   };
 
   // Add Event
-  async function addEventHandler() {
-    const event = newEventRef.current.getEvent();
-    const response = await API.graphql({
-      query: mutations.addEvent,
-      variables: {
-        ...event,
-      },
-    });
-    if (response.data) {
-      const addedEvent = response.data.addEvent;
-      // console.info(addedEvent);
-      setEvents((prevState) => {
-        return [...prevState, addedEvent];
-      });
-    }
-  }
+  const addEventHandler = () => {
+    navigate('/admin/events/create');
+  };
 
   // Delete Event
-  async function deleteEvent() {
+  async function deleteEvents() {
+    const eventIdsToDelete = SelectedEventsInTable.map((event) => event.eventId);
+
     await API.graphql({
-      query: mutations.deleteEvent,
+      query: mutations.deleteEvents,
       variables: {
-        eventId: SelectedEventInTable[0].eventId,
+        eventIds: eventIdsToDelete,
       },
     });
-    setEvents((prevState) => {
-      const index = events.findIndex((event) => event.eventId === SelectedEventInTable[0].eventId);
-      if (index > -1) {
-        const updatedState = [...prevState];
-        updatedState.splice(index, 1);
-        return updatedState;
-      }
-      return prevState;
-    });
-    setDeleteButtonDisabled(true);
+
+    // setEvents((prevState) => {
+    //   const indexes = [];
+    //   eventIdsToDelete.map((eventId) => {
+    //     const index = events.findIndex((event) => event.eventId === eventId);
+    //     if (index > -1) {
+    //       indexes.push(index);
+    //     }
+    //   });
+
+    //   // To make sure events with highest index are deleted first
+    //   indexes.sort().reverse();
+
+    //   if (indexes) {
+    //     const updatedState = [...prevState];
+    //     indexes.map((index) => updatedState.splice(index, 1));
+    //     return updatedState;
+    //   }
+    //   return prevState;
+    // });
+    setSelectedEventsInTable([]);
   }
 
-  const [preferences, setPreferences] = useState({
-    ...DefaultPreferences,
-    visibleContent: ['eventName', 'raceTimeInSec', 'createdAt'],
-  });
-
-  const columnDefinitions = [
-    {
-      id: 'eventName',
-      header: t('events.event-name'),
-      cell: (item) => item.eventName || '-',
-      sortingField: 'eventName',
-    },
-    {
-      id: 'raceTimeInSec',
-      header: t('events.race-time-in-sec'),
-      cell: (item) => item.raceTimeInSec || '-',
-      sortingField: 'raceTimeInSec',
-    },
-    {
-      id: 'numberOfResets',
-      header: t('events.resets-per-lap'),
-      cell: (item) => item.numberOfResets || '-',
-      sortingField: 'numberOfResets',
-    },
-    {
-      id: 'fleet',
-      header: t('events.fleet'),
-      cell: (item) => {
-        if (allFleetsFromBackend) {
-          const currentFleet = allFleetsFromBackend.find((fleet) => fleet.fleetId === item.fleetId);
-          if (currentFleet) {
-            return currentFleet.fleetName;
-          }
-        }
-        return '-';
-      },
-      sortingField: 'fleet',
-    },
-    {
-      id: 'createdAt',
-      header: t('events.created-at'),
-      cell: (item) => item.createdAt || '-',
-      sortingField: 'createdAt',
-    },
-    {
-      id: 'eventId',
-      header: t('events.event-id'),
-      cell: (item) => item.eventId || '-',
-    },
-  ];
+  // Table config
+  const columnDefinitions = ColumnDefinitions(fleets);
+  const visibleContentOptions = VisibleContentOptions();
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(events, {
@@ -164,10 +89,10 @@ const AdminEvents = () => {
         empty: <EmptyState title={t('events.no-events')} subtitle={t('events.create-an-event')} />,
         noMatch: (
           <EmptyState
-            title={t('events.no-matches')}
-            subtitle={t('events.we-cant-find-a-match')}
+            title={t('table.no-matches')}
+            subtitle={t('table.we-cant-find-a-match')}
             action={
-              <Button onClick={() => actions.setFiltering('')}>{t('events.clear-filter')}</Button>
+              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
             }
           />
         ),
@@ -181,16 +106,16 @@ const AdminEvents = () => {
     <Table
       {...collectionProps}
       onSelectionChange={({ detail }) => {
-        setSelectedEventInTable(detail.selectedItems);
-        setDeleteButtonDisabled(false);
-        setEditButtonDisabled(false);
+        setSelectedEventsInTable(detail.selectedItems);
       }}
-      selectedItems={SelectedEventInTable}
-      selectionType="single"
+      selectedItems={SelectedEventsInTable}
+      selectionType="multi"
       columnDefinitions={columnDefinitions}
       items={items}
-      loading={loading}
-      loadingText={t('events.loading')}
+      // loading={loading}
+      // loadingText={t('events.loading')}
+      stickyHeader="true"
+      trackBy="eventId"
       filter={
         <TextFilter
           {...filterProps}
@@ -199,45 +124,31 @@ const AdminEvents = () => {
         />
       }
       header={
-        <Header
-          actions={
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button
-                disabled={editButtonDisabled}
-                // iconName="status-warning"
-                onClick={() => {
-                  setEditModalVisible(true);
-                }}
-              >
-                {t('events.edit-event')}
-              </Button>
-              <Button
-                disabled={deleteButtonDisabled}
-                iconName="status-warning"
-                onClick={() => {
-                  setDeleteModalVisible(true);
-                }}
-              >
-                {t('events.delete-event')}
-              </Button>
-            </SpaceBetween>
-          }
-        >
-          {t('events.events-table')}
-        </Header>
+        <TableHeader
+          nrSelectedItems={SelectedEventsInTable.length}
+          nrTotalItems={events.length}
+          onEdit={editEventHandler}
+          onDelete={() => setDeleteModalVisible(true)}
+          onAdd={addEventHandler}
+          header={t('events.events-table')}
+        />
+      }
+      pagination={<TablePagination paginationProps={paginationProps} />}
+      visibleColumns={preferences.visibleContent}
+      resizableColumns
+      preferences={
+        <TablePreferences
+          preferences={preferences}
+          setPreferences={setPreferences}
+          contentOptions={visibleContentOptions}
+        />
       }
     />
   );
 
+  // JSX
   return (
     <>
-      <EditModal
-        visible={editModalVisible}
-        event={SelectedEventInTable[0]}
-        onDismiss={() => setEditModalVisible(false)}
-        fleets={allFleetsFromBackend}
-        onEdit={editEventHandler}
-      />
       <ContentHeader
         header={t('events.header')}
         description={t('events.description')}
@@ -247,32 +158,8 @@ const AdminEvents = () => {
           { text: t('events.breadcrumb') },
         ]}
       />
-      <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
-        <div></div>
-        <SpaceBetween direction="vertical" size="l">
-          <Container textAlign="center">
-            <Form
-              actions={
-                <SpaceBetween direction="horizontal" size="xs">
-                  <Button disabled={addButtonDisabled} variant="primary" onClick={addEventHandler}>
-                    {t('events.add-event')}
-                  </Button>
-                </SpaceBetween>
-              }
-            >
-              <EventInputForm
-                events={events}
-                ref={newEventRef}
-                fleets={allFleetsFromBackend}
-                onButtonDisabled={addButtonDisabledHandler}
-              />
-            </Form>
-          </Container>
 
-          {eventsTable}
-        </SpaceBetween>
-        <div></div>
-      </Grid>
+      {eventsTable}
 
       {/* delete modal */}
       <Modal
@@ -288,7 +175,7 @@ const AdminEvents = () => {
               <Button
                 variant="primary"
                 onClick={() => {
-                  deleteEvent();
+                  deleteEvents();
                   setDeleteModalVisible(false);
                 }}
               >
@@ -300,7 +187,7 @@ const AdminEvents = () => {
         header={t('events.delete-event')}
       >
         {t('events.delete-warning')}: <br></br>{' '}
-        {SelectedEventInTable.map((selectedEvent) => {
+        {SelectedEventsInTable.map((selectedEvent) => {
           return selectedEvent.eventName + ' ';
         })}
       </Modal>
