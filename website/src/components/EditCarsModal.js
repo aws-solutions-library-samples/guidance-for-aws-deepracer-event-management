@@ -264,9 +264,9 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
             </SpaceBetween>
           </Box>
         }
-        header="Delete models on cars"
+        header={t('fleets.edit-cars.delete-models-header')}
       >
-        Are you sure you want to delete models on Cars(s): <br></br>{' '}
+        {t('fleets.edit-cars.delete-models-message')}: <br></br>{' '}
         {selectedItems.map((selectedItems) => {
           return selectedItems.ComputerName + ' ';
         })}
