@@ -32,13 +32,11 @@ export const EditFleet = () => {
       });
     } else if (attr) {
       setFleetConfig((prevState) => {
-        console.log(merge({ ...prevState }, attr));
-
         return merge({ ...prevState }, attr);
       });
     }
   };
-  console.info('FLEET TO EDIT. ' + JSON.stringify(location.state));
+
   useEffect(() => {
     if (selectedFleet) {
       setFleetConfig(selectedFleet);
