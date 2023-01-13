@@ -4,7 +4,6 @@ import { CarTable } from '../../components/CarsTable';
 export const CarsPanel = ({ carIds, onChange }) => {
   const [selectedCars, setSelectedCars] = useState([]);
   const UpdateConfig = (attr) => {
-    console.log(attr);
     if (attr) {
       const carIds = attr.map((car) => car.InstanceId);
       onChange({ carIds: carIds });

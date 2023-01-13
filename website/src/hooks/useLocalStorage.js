@@ -23,6 +23,6 @@ export const useLocalStorage = (key, defaultValue) => {
     setValue(newValue);
     save(key, newValue);
   }
-  console.info(value);
+
   return [value, handleValueChange];
 };

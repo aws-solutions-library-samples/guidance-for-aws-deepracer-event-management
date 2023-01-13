@@ -55,9 +55,11 @@ export function PageSizePreference(label = 'items') {
   return pageSize;
 }
 
-export const WrapLines = {
-  label: i18next.t('table.wrap-lines'),
-  description: i18next.t('table.wrap-lines-description'),
+export const WrapLines = () => {
+  return {
+    label: i18next.t('table.wrap-lines'),
+    description: i18next.t('table.wrap-lines-description'),
+  };
 };
 
 export function CarColumnsConfig() {
@@ -290,6 +292,7 @@ export const TableHeader = ({
 };
 
 export const TablePreferences = ({ preferences, setPreferences, contentOptions }) => {
+  const wrapLines = WrapLines();
   return (
     <CollectionPreferences
       title={i18next.t('table.preferences')}
@@ -302,7 +305,7 @@ export const TablePreferences = ({ preferences, setPreferences, contentOptions }
         title: i18next.t('table.select-visible-colunms'),
         options: contentOptions,
       }}
-      wrapLinesPreference={WrapLines}
+      wrapLinesPreference={wrapLines}
     />
   );
 };
