@@ -16,6 +16,7 @@ import {
 import { API } from 'aws-amplify';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 import { useTranslation } from 'react-i18next';
 import { ContentHeader } from '../components/ContentHeader';
@@ -87,7 +88,7 @@ const AdminCars = () => {
     };
   }, [refresh]);
 
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useLocalStorage('DREM-cars-table-preferences', {
     ...DefaultPreferences,
     visibleContent: ['carName', 'fleetName', 'carIp'],
   });

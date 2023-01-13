@@ -100,7 +100,7 @@ export function useFleetsApi() {
         },
         error: (error) => {
           console.warn(error);
-          subscribe();
+          // subscribe();
         },
       });
     };

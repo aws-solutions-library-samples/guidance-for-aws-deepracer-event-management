@@ -39,6 +39,11 @@ export const CreateFleet = () => {
 
   const onCreateHandler = async () => {
     send('addFleet', fleetConfig);
+    send('carUpdates', {
+      resourceIds: fleetConfig.carIds,
+      fleetId: fleetConfig.fleetId,
+      fleetName: fleetConfig.fleetName,
+    });
   };
 
   const formIsValidHandler = () => {

@@ -129,6 +129,18 @@ class ModelsManager(Construct):
                 data_source=models_data_source,
             ),
         )
+
+        api.add_query(
+            "getModelsForUser",
+            appsync.ResolvableField(
+                args={
+                    "racerName": appsync.GraphqlType.string(is_required=True),
+                },
+                return_type=model_object_type.attribute(is_list=True),
+                data_source=models_data_source,
+            ),
+        )
+
         api.add_mutation(
             "addModel",
             appsync.ResolvableField(

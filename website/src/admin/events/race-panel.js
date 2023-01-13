@@ -7,15 +7,18 @@ import {
   SpaceBetween,
 } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   GetLapsOptionFromId,
   GetRaceTimeOptionFromId,
   GetRankingOptionFromId,
   GetResetOptionFromId,
+  GetTrackOptionFromId,
   LapConfig,
   RaceTimeConfig,
   RaceTypeConfig,
   ResetConfig,
+  TrackTypeConfig,
 } from './race-config';
 
 const RaceCustomizationsFooter = (props) => {
@@ -45,11 +48,12 @@ const DefaultRacingFooter = ({
   raceTimeOptions,
   resetOptions,
 }) => {
+  const { t } = useTranslation();
   return (
     <SpaceBetween size="l">
       <FormField
-        label="Time allowed per racer"
-        description="We suggest 3-5 minutes per racer depending on the complexity of track and potential number of racers."
+        label={t('events.race.race-time')}
+        description={t('events.race.race-time-description')}
       >
         <Select
           selectedOption={GetRaceTimeOptionFromId(raceTimeInMin)}
@@ -60,8 +64,8 @@ const DefaultRacingFooter = ({
         />
       </FormField>
       <FormField
-        label="Number of allowed resets per lap"
-        description="Defines how many times the car may go of track during a lap before the lap is disqualified."
+        label={t('events.race.resets-per-lap')}
+        description={t('events.race.resets-per-lap-description')}
       >
         <Select
           selectedOption={GetResetOptionFromId(allowedNrOfResets)}
@@ -79,8 +83,8 @@ const FinishXLapsFooter = ({ lapsToFinish, onChange, lapsToFinishOptions }) => {
   return (
     <SpaceBetween size="l">
       <FormField
-        label="Number of laps to finish"
-        description="Defines how many laps the car shall finish before the race is over."
+        label={t('events.race.laps-to-finish')}
+        description={t('events.race.laps-to-finish-description')}
       >
         <Select
           selectedOption={GetLapsOptionFromId(lapsToFinish)}
@@ -99,12 +103,15 @@ export const RacePanel = ({
   lapsToFinish,
   raceTimeInMin,
   rankingMethod,
+  trackType,
   onChange,
 }) => {
   const raceTimeOptions = RaceTimeConfig();
   const raceRankingOptions = RaceTypeConfig();
   const resetOptions = ResetConfig();
   const lapOptions = LapConfig();
+  const trackOptions = TrackTypeConfig();
+  const { t } = useTranslation();
 
   const UpdateConfig = (attr) => {
     onChange({ raceConfig: attr });
@@ -170,18 +177,32 @@ export const RacePanel = ({
       header={<Header variant="h2">Race settings</Header>}
       footer={<RaceCustomizationsFooter>{raceCustomizationsFooter}</RaceCustomizationsFooter>}
     >
-      <FormField
-        label="Choose race ranking method"
-        description="Define how the racers shall be ranked in the leaderboard"
-      >
-        <Select
-          selectedOption={GetRankingOptionFromId(rankingMethod)}
-          onChange={({ detail }) => UpdateConfig({ rankingMethod: detail.selectedOption.value })}
-          options={raceRankingOptions}
-          selectedAriaLabel="Selected"
-          filteringType="auto"
-        />
-      </FormField>
+      <SpaceBetween size="xl">
+        <FormField
+          label={t('events.tracks.choose')}
+          description={t('events.tracks.choose-description')}
+        >
+          <Select
+            selectedOption={GetTrackOptionFromId(trackType)}
+            onChange={({ detail }) => UpdateConfig({ trackType: detail.selectedOption.value })}
+            options={trackOptions}
+            selectedAriaLabel="Selected"
+            filteringType="auto"
+          />
+        </FormField>
+        <FormField
+          label={t('events.race.ranking-method')}
+          description={t('events.race.ranking-method-description')}
+        >
+          <Select
+            selectedOption={GetRankingOptionFromId(rankingMethod)}
+            onChange={({ detail }) => UpdateConfig({ rankingMethod: detail.selectedOption.value })}
+            options={raceRankingOptions}
+            selectedAriaLabel="Selected"
+            filteringType="auto"
+          />
+        </FormField>
+      </SpaceBetween>
     </Container>
   );
 };

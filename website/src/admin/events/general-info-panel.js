@@ -9,6 +9,7 @@ import {
 } from '@cloudscape-design/components';
 import { getNames, registerLocale } from 'i18n-iso-countries';
 import React, { useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { eventContext } from '../../store/EventProvider';
 
 export const EventInfoPanel = ({
@@ -22,6 +23,7 @@ export const EventInfoPanel = ({
   const [errorMessage, setErrorMessage] = useState();
   const [countryOptions, setCountryOptions] = useState();
   const { events } = useContext(eventContext);
+  const { t } = useTranslation();
 
   // Populate country options for select dropdown
   useEffect(() => {
@@ -80,29 +82,34 @@ export const EventInfoPanel = ({
   return (
     <Container header={<Header variant="h2">General settings</Header>}>
       <SpaceBetween size="l">
-        <FormField label="Name" description="The name of the Event." errorText={errorMessage}>
+        <FormField
+          label={t('events.event-name')}
+          description={t('events.event-name-description')}
+          errorText={errorMessage}
+        >
           <Input
-            placeholder="My awsome event"
+            placeholder={t('events.event-name-placeholder')}
             ariaRequired={true}
             value={eventName}
             onChange={(event) => UpdateConfig({ eventName: event.detail.value })}
           />
         </FormField>
 
-        <FormField label="Date" description="The date for when the event will be held">
+        <FormField label={t('events.event-date')} description={t('events.event-date-descriprion')}>
           <DatePicker
             onChange={({ detail }) => UpdateConfig({ eventDate: detail.value })}
             value={eventDate}
             openCalendarAriaLabel={(selectedDate) =>
-              'Choose event date' + (selectedDate ? `, selected date is ${selectedDate}` : '')
+              t('events.event-date-choose') +
+              (selectedDate ? `, ` + t('events.event-date-selected') + ` ${selectedDate}` : '')
             }
-            nextMonthAriaLabel="Next month"
-            placeholder="YYYY/MM/DD"
-            previousMonthAriaLabel="Previous month"
-            todayAriaLabel="Today"
+            nextMonthAriaLabel={t('events.event-date-next-month')}
+            placeholder={t('events.event-date-placeholder')}
+            previousMonthAriaLabel={t('events.event-date-previous-month')}
+            todayAriaLabel={t('events.event-date-today')}
           />
         </FormField>
-        <FormField label="Country" description="Where will the event be hosted">
+        <FormField label={t('events.country')} description={t('events.country-description')}>
           <Select
             selectedOption={GetCountryOptionFromId(countryCode)}
             onChange={({ detail }) => UpdateConfig({ countryCode: detail.selectedOption.value })}
