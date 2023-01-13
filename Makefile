@@ -52,7 +52,7 @@ local.config:		## Setup local config based on branch
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $$appsyncId --format SDL ./website/src/graphql/schema.graphql
 	cd website/src/graphql/ && amplify codegen
 
-local.run:			## Run the frontend application locally for development
+local.run:		## Run the frontend application locally for development
 	npm start --prefix website
 
 .PHONY: local.clean
