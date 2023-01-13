@@ -259,8 +259,8 @@
   "table.select-page-size": "Select page size",
   "table.select-visible-colunms": "Select visible colunms",
   "table.we-cant-find-a-match": "We can't find a match",
-  "table.wrap-lines-description": "Check to see all the text and wrap the lines",
   "table.wrap-lines": "Wrap lines",
+  "table.wrap-lines-description": "Check to see all the text and wrap the lines",
 
   "timekeeper.automated-timer-connected": "Automated timer connected",
   "timekeeper.automated-timer-not-connected": "Automated timer not connected",
