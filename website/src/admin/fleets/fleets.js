@@ -94,7 +94,7 @@ const AdminFleets = () => {
         <TextFilter
           {...filterProps}
           countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel={t('fleets.filter-caars')}
+          filteringAriaLabel={t('fleets.filter-cars')}
         />
       }
       header={

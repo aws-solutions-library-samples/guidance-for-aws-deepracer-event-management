@@ -150,6 +150,8 @@
   "fleets.fleet-id": "Fleet ID",
   "fleets.fleet-name": "Fleet name",
   "fleets.fleet-name-description": "The name of the Fleet.",
+  "fleets.no-fleet": "No Fleets",
+  "fleets.no-fleet-message": "Please create a fleet.",
   "fleets.fleet-name-placeholder": "My awsome fleet",
   "fleets.fleet-name-empty-message": "Fleet name cannot be empty",
   "fleets.header": "Fleets admin",
