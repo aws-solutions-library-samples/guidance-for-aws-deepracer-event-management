@@ -30,8 +30,6 @@ export const CreateFleet = () => {
       });
     } else if (attr) {
       setFleetConfig((prevState) => {
-        console.log(merge({ ...prevState }, attr));
-
         return merge({ ...prevState }, attr);
       });
     }
