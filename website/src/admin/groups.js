@@ -20,6 +20,7 @@ import {
   PageSizePreference,
   WrapLines,
 } from '../components/TableConfig';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 import dayjs from 'dayjs';
 
@@ -57,7 +58,7 @@ export function AdminGroups() {
     };
   }, []);
 
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useLocalStorage('DREM-groups-table-preferences', {
     ...DefaultPreferences,
     visibleContent: ['groupName', 'description'],
   });

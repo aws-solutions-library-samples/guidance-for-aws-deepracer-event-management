@@ -15,6 +15,7 @@ import { API, Auth } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
+import { useLocalStorage } from '../../hooks/useLocalStorage.js';
 
 import { ContentHeader } from '../../components/ContentHeader';
 import {
@@ -113,7 +114,7 @@ export function AdminGroupsDetail() {
     }
   };
 
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useLocalStorage('DREM-groups-details-table-preferences', {
     ...DefaultPreferences,
     visibleContent: ['userName', 'isMember'],
   });

@@ -1,5 +1,9 @@
 import i18next from '../../i18n';
-import { GetRaceResetsNameFromId, GetRaceTypeNameFromId } from './race-config';
+import {
+  GetRaceResetsNameFromId,
+  GetRaceTypeNameFromId,
+  GetTrackTypeNameFromId,
+} from './race-config';
 
 export const VisibleContentOptions = () => {
   return [
@@ -14,6 +18,10 @@ export const VisibleContentOptions = () => {
         {
           id: 'eventDate',
           label: i18next.t('events.event-date'),
+        },
+        {
+          id: 'trackType',
+          label: i18next.t('events.track-type'),
         },
         {
           id: 'rankingMethod',
@@ -63,6 +71,26 @@ export const ColumnDefinitions = (allCarFleets = undefined) => {
       sortingField: 'eventDate',
     },
     {
+      id: 'carFleet',
+      header: i18next.t('events.car-fleet'),
+      cell: (item) => {
+        if (allCarFleets) {
+          const currentFleet = allCarFleets.find((fleet) => fleet.fleetId === item.fleetId);
+          if (currentFleet) {
+            return currentFleet.fleetName;
+          }
+        }
+        return '-';
+      },
+      sortingField: 'fleet',
+    },
+    {
+      id: 'trackType',
+      header: i18next.t('events.track-type'),
+      cell: (item) => GetTrackTypeNameFromId(item.raceTrackType) || '-',
+      sortingField: 'trackType',
+    },
+    {
       id: 'rankingMethod',
       header: i18next.t('events.race.ranking-method'),
       cell: (item) => GetRaceTypeNameFromId(item.raceRankingMethod) || '-',
@@ -79,20 +107,6 @@ export const ColumnDefinitions = (allCarFleets = undefined) => {
       header: i18next.t('events.race.resets-per-lap'),
       cell: (item) => GetRaceResetsNameFromId(item.raceNumberOfResets) || '-',
       sortingField: 'raceNumberOfResets',
-    },
-    {
-      id: 'carFleet',
-      header: i18next.t('events.car-fleet'),
-      cell: (item) => {
-        if (allCarFleets) {
-          const currentFleet = allCarFleets.find((fleet) => fleet.fleetId === item.fleetId);
-          if (currentFleet) {
-            return currentFleet.fleetName;
-          }
-        }
-        return '-';
-      },
-      sortingField: 'fleet',
     },
     {
       id: 'country',

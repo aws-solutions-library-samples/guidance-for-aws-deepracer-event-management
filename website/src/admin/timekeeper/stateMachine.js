@@ -59,6 +59,7 @@ export const stateMachine = createMachine({
       entry: ['pauseTimer', 'stopPublishOverlayInfo', 'endRace'],
       on: {
         END: 'RaceReseted',
+        RESUME: 'RaceStarted.paused',
       },
     },
   },

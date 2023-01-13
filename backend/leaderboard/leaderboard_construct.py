@@ -96,24 +96,30 @@ class Leaderboard(Construct):
         lap_object_type = appsync.ObjectType(
             "Lap",
             definition={
-                "raceId": appsync.GraphqlType.id(),
                 "id": appsync.GraphqlType.id(),
+                "raceId": appsync.GraphqlType.id(),
+                "modelId": appsync.GraphqlType.id(),
+                "carId": appsync.GraphqlType.id(),
                 "time": appsync.GraphqlType.float(),
                 "resets": appsync.GraphqlType.int(),
                 "crashes": appsync.GraphqlType.int(),
                 "isValid": appsync.GraphqlType.boolean(),
+                "autTimerConnected": appsync.GraphqlType.boolean(),
             },
         )
 
         lap_input_object_type = appsync.InputType(
             "LapInput",
             definition={
-                "raceId": appsync.GraphqlType.id(),
                 "id": appsync.GraphqlType.id(),
+                "raceId": appsync.GraphqlType.id(),
+                "modelId": appsync.GraphqlType.id(),
+                "carId": appsync.GraphqlType.id(),
                 "time": appsync.GraphqlType.float(),
                 "resets": appsync.GraphqlType.int(),
                 "crashes": appsync.GraphqlType.int(),
                 "isValid": appsync.GraphqlType.boolean(),
+                "autTimerConnected": appsync.GraphqlType.boolean(),
             },
         )
 

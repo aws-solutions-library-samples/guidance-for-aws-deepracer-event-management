@@ -1,6 +1,7 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import * as queries from '../graphql/queries';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 // import * as mutations from '../graphql/mutations';
 // import * as subscriptions from '../graphql/subscriptions'
 
@@ -87,7 +88,7 @@ const AdminModels = () => {
     };
   }, []);
 
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useLocalStorage('DREM-models-table-preferences', {
     ...DefaultPreferences,
     visibleContent: ['userName', 'modelName', 'modelDate'],
   });

@@ -21,6 +21,7 @@ import {
   PageSizePreference,
   WrapLines,
 } from '../components/TableConfig';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 import dayjs from 'dayjs';
 
@@ -68,7 +69,7 @@ const AdminQuarantine = () => {
     };
   }, []);
 
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useLocalStorage('DREM-quarantine-table-preferences', {
     ...DefaultPreferences,
     visibleContent: ['userName', 'modelName', 'modelDate'],
   });

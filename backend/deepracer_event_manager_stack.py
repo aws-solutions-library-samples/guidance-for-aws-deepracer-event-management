@@ -202,6 +202,17 @@ class CdkDeepRacerEventManagerStack(Stack):
             stream=dynamodb.StreamViewType.NEW_IMAGE,
             removal_policy=RemovalPolicy.DESTROY,
         )
+        models_table.add_global_secondary_index(
+            index_name="racerNameIndex",
+            partition_key=dynamodb.Attribute(
+                name="racerName", type=dynamodb.AttributeType.STRING
+            ),
+            sort_key=dynamodb.Attribute(
+                name="modelId", type=dynamodb.AttributeType.STRING
+            ),
+            non_key_attributes=["modelKey", "modelFilename"],
+            projection_type=dynamodb.ProjectionType.INCLUDE,
+        )
 
         # Functions
         print_label_function = lambda_python.PythonFunction(

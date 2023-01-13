@@ -12,23 +12,13 @@ import { useTranslation } from 'react-i18next';
 import useMutation from '../../hooks/useMutation';
 import { LapTable } from './lap-table';
 
-const EndSessionModal = (props) => {
+const EndSessionModal = ({ race, onSubmitRace, visible, onAction, onDismiss, onAbandonRace }) => {
   const { t } = useTranslation();
   const [message, SetMessage] = useState('');
   const [buttonsIsDisabled, SetButtonsIsDisabled] = useState(false);
   const [sendMutation, loading, errorMessage, data] = useMutation();
 
   const messageDisplayTime = 2500;
-  const {
-    onSubmitRace,
-    laps,
-    selectedEvent,
-    username,
-    visible,
-    onAction,
-    onDismiss,
-    onAbandonRace,
-  } = props;
 
   // Update submit message in modal depending on addRace mutation result
   useEffect(() => {
@@ -59,11 +49,7 @@ const EndSessionModal = (props) => {
   const submitRaceHandler = async () => {
     console.info('Submiting Race...');
     SetButtonsIsDisabled(true);
-    sendMutation('addRace', {
-      eventId: selectedEvent.eventId,
-      username: username,
-      laps: laps,
-    });
+    sendMutation('addRace', { ...race });
   };
 
   const discardRaceHandler = () => {
@@ -105,7 +91,7 @@ const EndSessionModal = (props) => {
         </span>
       )}
       {!loading && message}
-      {!loading && message.length === 0 && <LapTable laps={laps} onAction={onAction} />}
+      {!loading && message.length === 0 && <LapTable laps={race.laps} onAction={onAction} />}
     </Modal>
   );
 };

@@ -81,6 +81,7 @@ class EventsManager(Construct):
                 "raceTimeInMin": appsync.GraphqlType.int(),
                 "raceNumberOfResets": appsync.GraphqlType.int(),
                 "raceLapsToFinish": appsync.GraphqlType.int(),
+                "raceTrackType": appsync.GraphqlType.string(),
             },
         )
 
@@ -106,6 +107,7 @@ class EventsManager(Construct):
                     "raceTimeInMin": appsync.GraphqlType.int(is_required=True),
                     "raceNumberOfResets": appsync.GraphqlType.int(is_required=True),
                     "raceLapsToFinish": appsync.GraphqlType.int(is_required=True),
+                    "raceTrackType": appsync.GraphqlType.string(is_required=True),
                 },
                 return_type=events_object_Type.attribute(),
                 data_source=events_data_source,
@@ -164,6 +166,7 @@ class EventsManager(Construct):
                     "eventDate": appsync.GraphqlType.aws_date(),
                     "fleetId": appsync.GraphqlType.id(),
                     "countryCode": appsync.GraphqlType.string(),
+                    "raceTrackType": appsync.GraphqlType.string(),
                     "raceRankingMethod": appsync.GraphqlType.string(),
                     "raceTimeInMin": appsync.GraphqlType.int(),
                     "raceNumberOfResets": appsync.GraphqlType.int(),

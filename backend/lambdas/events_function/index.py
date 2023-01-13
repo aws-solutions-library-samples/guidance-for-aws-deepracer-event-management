@@ -74,6 +74,7 @@ def udpateEvent(
     raceNumberOfResets: int,
     raceLapsToFinish: int,
     raceRankingMethod: int,
+    raceTrackType: str,
     eventDate: str = None,
     countryCode: str = None,
     fleetId: str = None,
@@ -85,17 +86,19 @@ def udpateEvent(
             "SET eventName= :newName, eventDate= :eventDate, countryCode= "
             " :countryCode, raceTimeInMin= :raceTimeInMin, raceNumberOfResets="
             " :raceNumberOfResets, raceLapsToFinish= :raceLapsToFinish,"
-            " raceRankingMethod= :raceRankingMethod, fleetId= :fleetId"
+            " raceRankingMethod= :raceRankingMethod, fleetId= :fleetId, raceTrackType="
+            " :raceTrackType"
         ),
         ExpressionAttributeValues={
             ":newName": eventName,
             ":eventDate": eventDate,
             ":countryCode": countryCode,
+            ":fleetId": fleetId,
             ":raceTimeInMin": raceTimeInMin,
             ":raceNumberOfResets": raceNumberOfResets,
             ":raceLapsToFinish": raceLapsToFinish,
             ":raceRankingMethod": raceRankingMethod,
-            ":fleetId": fleetId,
+            ":raceTrackType": raceTrackType,
         },
         ReturnValues="ALL_NEW",
     )

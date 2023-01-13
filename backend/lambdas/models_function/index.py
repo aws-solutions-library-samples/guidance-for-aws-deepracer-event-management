@@ -6,6 +6,7 @@ import boto3
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import AppSyncResolver
 from aws_lambda_powertools.logging import correlation_paths
+from boto3.dynamodb.conditions import Key
 
 tracer = Tracer()
 logger = Logger()
@@ -36,6 +37,19 @@ def getAllModels():
     return items
 
 
+@app.resolver(type_name="Query", field_name="getModelsForUser")
+def getModelsForUser(racerName: str):
+    response = ddbTable.query(
+        IndexName="racerNameIndex",
+        Select="ALL_PROJECTED_ATTRIBUTES",
+        KeyConditionExpression=Key("racerName").eq(racerName),
+    )
+    logger.info(response)
+    items = response["Items"]
+    logger.info(items)
+    return items
+
+
 @app.resolver(type_name="Mutation", field_name="addModel")
 def addModel(
     modelKey: str,
@@ -52,6 +66,7 @@ def addModel(
         "racerName": racerName,
         "racerIdentityId": racerIdentityId,
         "uploadedDateTime": datetime.utcnow().isoformat() + "Z",
+        "modelFilename": modelKey.rsplit("/", 1)[1],
     }
     response = ddbTable.put_item(Item=item)
     logger.info(f"ddb put response: {response}")

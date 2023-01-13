@@ -6,7 +6,7 @@ export const eventContext = createContext();
 
 const defaultEvent = (t) => {
   return {
-    eventId: 'not-set',
+    eventId: null,
     eventName: t('event-provider.please-select-an-event'),
   };
 };
