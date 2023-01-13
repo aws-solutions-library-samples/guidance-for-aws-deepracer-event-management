@@ -28,7 +28,7 @@ upload_to_s3:
     - release
     - esbjj
     - cdk-pipeline-askwith
-    - cdk-pipeline-dasmthc
+    - dasmthc
   stage: upload
   image:
     name: amazon/aws-cli
