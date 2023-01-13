@@ -20,6 +20,7 @@ from backend.cwrum_construct import CwRumAppMonitor
 from backend.events_manager import EventsManager
 from backend.fleets_manager import FleetsManager
 from backend.graphql_api.api import API as graphqlApi
+from backend.label_printer import LabelPrinter
 from backend.leaderboard.leaderboard_construct import Leaderboard
 from backend.models_manager import ModelsManager
 
@@ -130,29 +131,29 @@ class CdkDeepRacerEventManagerStack(Stack):
             )
         )
 
-        # Labels S3 bucket
-        labels_bucket = s3.Bucket(
-            self,
-            "labels_bucket",
-            encryption=s3.BucketEncryption.S3_MANAGED,
-            server_access_logs_bucket=logs_bucket,
-            server_access_logs_prefix="access-logs/labels_bucket/",
-            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
-            enforce_ssl=True,
-            auto_delete_objects=True,
-            removal_policy=RemovalPolicy.DESTROY,
-        )
+        # # Labels S3 bucket
+        # labels_bucket = s3.Bucket(
+        #     self,
+        #     "labels_bucket",
+        #     encryption=s3.BucketEncryption.S3_MANAGED,
+        #     server_access_logs_bucket=logs_bucket,
+        #     server_access_logs_prefix="access-logs/labels_bucket/",
+        #     block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+        #     enforce_ssl=True,
+        #     auto_delete_objects=True,
+        #     removal_policy=RemovalPolicy.DESTROY,
+        # )
 
-        labels_bucket.policy.document.add_statements(
-            iam.PolicyStatement(
-                sid="AllowSSLRequestsOnly",
-                effect=iam.Effect.DENY,
-                principals=[iam.AnyPrincipal()],
-                actions=["s3:*"],
-                resources=[labels_bucket.bucket_arn, labels_bucket.bucket_arn + "/*"],
-                conditions={"NumericLessThan": {"s3:TlsVersion": "1.2"}},
-            )
-        )
+        # labels_bucket.policy.document.add_statements(
+        #     iam.PolicyStatement(
+        #         sid="AllowSSLRequestsOnly",
+        #         effect=iam.Effect.DENY,
+        #         principals=[iam.AnyPrincipal()],
+        #         actions=["s3:*"],
+        #         resources=[labels_bucket.bucket_arn, labels_bucket.bucket_arn + "/*"],
+        #         conditions={"NumericLessThan": {"s3:TlsVersion": "1.2"}},
+        #     )
+        # )
         # Lambda
         # Common Config
         lambda_architecture = awslambda.Architecture.ARM_64
@@ -171,14 +172,14 @@ class CdkDeepRacerEventManagerStack(Stack):
             bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
         )
 
-        print_functions_layer = lambda_python.PythonLayerVersion(
-            self,
-            "print_functions",
-            entry="backend/lambdas/print_functions_layer/",
-            compatible_architectures=[lambda_architecture],
-            compatible_runtimes=[lambda_runtime],
-            bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
-        )
+        # print_functions_layer = lambda_python.PythonLayerVersion(
+        #     self,
+        #     "print_functions",
+        #     entry="backend/lambdas/print_functions_layer/",
+        #     compatible_architectures=[lambda_architecture],
+        #     compatible_runtimes=[lambda_runtime],
+        #     bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
+        # )
 
         # Powertools layer
         powertools_layer = lambda_python.PythonLayerVersion.from_layer_version_arn(
@@ -215,29 +216,29 @@ class CdkDeepRacerEventManagerStack(Stack):
         )
 
         # Functions
-        print_label_function = lambda_python.PythonFunction(
-            self,
-            "print_label_function",
-            entry="backend/lambdas/print_label_function/",
-            index="index.py",
-            handler="lambda_handler",
-            timeout=Duration.minutes(1),
-            runtime=lambda_runtime,
-            tracing=awslambda.Tracing.ACTIVE,
-            memory_size=256,
-            architecture=lambda_architecture,
-            bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
-            layers=[helper_functions_layer, print_functions_layer, powertools_layer],
-            environment={
-                "LABELS_S3_BUCKET": labels_bucket.bucket_name,
-                "URL_EXPIRY": "3600",
-                "POWERTOOLS_SERVICE_NAME": "print_label",
-                "LOG_LEVEL": powertools_log_level,
-            },
-        )
+        # print_label_function = lambda_python.PythonFunction(
+        #     self,
+        #     "print_label_function",
+        #     entry="backend/lambdas/print_label_function/",
+        #     index="index.py",
+        #     handler="lambda_handler",
+        #     timeout=Duration.minutes(1),
+        #     runtime=lambda_runtime,
+        #     tracing=awslambda.Tracing.ACTIVE,
+        #     memory_size=256,
+        #     architecture=lambda_architecture,
+        #     bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
+        #     layers=[helper_functions_layer, print_functions_layer, powertools_layer],
+        #     environment={
+        #         "LABELS_S3_BUCKET": labels_bucket.bucket_name,
+        #         "URL_EXPIRY": "3600",
+        #         "POWERTOOLS_SERVICE_NAME": "print_label",
+        #         "LOG_LEVEL": powertools_log_level,
+        #     },
+        # )
 
-        # Bucket permissions
-        labels_bucket.grant_read_write(print_label_function, "*")
+        # # Bucket permissions
+        # labels_bucket.grant_read_write(print_label_function, "*")
 
         delete_infected_files_function = lambda_python.PythonFunction(
             self,
@@ -1311,13 +1312,28 @@ class CdkDeepRacerEventManagerStack(Stack):
             request_validator=body_validator,
         )
 
-        api_cars_label = api_cars_upload.add_resource("label")
-        api_cars_label.add_method(
-            http_method="GET",
-            integration=apig.LambdaIntegration(handler=print_label_function),
-            authorization_type=apig.AuthorizationType.IAM,
-            request_models={"application/json": instanceid_commandid_model},
-            request_validator=body_validator,
+        # api_cars_label = api_cars_upload.add_resource("label")
+        # api_cars_label.add_method(
+        #     http_method="GET",
+        #     integration=apig.LambdaIntegration(handler=print_label_function),
+        #     authorization_type=apig.AuthorizationType.IAM,
+        #     request_models={"application/json": instanceid_commandid_model},
+        #     request_validator=body_validator,
+        # )
+
+        LabelPrinter(
+            self,
+            "LabelPrinter",
+            api_cars_upload=api_cars_upload,
+            api_instanceid_commandid_model=instanceid_commandid_model,
+            api_body_validator=body_validator,
+            logs_bucket=logs_bucket,
+            helper_functions_layer=helper_functions_layer,
+            powertools_layer=powertools_layer,
+            powertools_log_level=powertools_log_level,
+            lambda_architecture=lambda_architecture,
+            lambda_runtime=lambda_runtime,
+            lambda_bundling_image=lambda_bundling_image,
         )
 
         # Grant API Invoke permissions to admin users
