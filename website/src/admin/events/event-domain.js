@@ -7,6 +7,7 @@ export const event = {
   },
   fleetConfig: { fleetId: undefined },
   raceConfig: {
+    trackType: undefined,
     rankingMethod: undefined,
     raceTimeInMin: undefined,
     allowedNrOfResets: undefined,
@@ -21,6 +22,7 @@ export const ConvertFeEventToBeEvent = (event) => {
     raceTimeInMin: event.raceConfig.raceTimeInMin,
     raceRankingMethod: event.raceConfig.rankingMethod,
     raceLapsToFinish: event.raceConfig.lapsToFinish,
+    raceTrackType: event.raceConfig.trackType,
     ...event.fleetConfig,
     ...event.generalConfig,
   };
@@ -53,6 +55,7 @@ export const ConvertBeEventToFeEvent = (event) => {
       raceTimeInMin: raceTimeInMin,
       allowedNrOfResets: raceNumberOfResets,
       lapsToFinish: raceLapsToFinish,
+      trackType: event.raceTrackType,
     },
   };
 };

@@ -67,7 +67,7 @@ const LapTable = (props) => {
         },
       ]}
       items={lapsJsx}
-      loadingText={t('timekeeper.laptable.loading-reources')}
+      loadingText={t('timekeeper.lap-table.loading-resources')}
       sortingDisabled
       header={<Header> {props.header} </Header>}
     />

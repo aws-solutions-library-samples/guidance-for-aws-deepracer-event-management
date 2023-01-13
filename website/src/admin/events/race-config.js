@@ -81,6 +81,31 @@ export const GetLapsOptionFromId = (id) => {
   }
 };
 
+// TRACK OPTIONS METHODS
+export const TrackTypeConfig = () => {
+  return [
+    { label: i18next.t('events.tracks.reinvent-2018'), value: 'reinvent-2018' },
+    { label: i18next.t('events.tracks.reinvent-2019'), value: 'reinvent-2019' },
+    { label: i18next.t('events.tracks.reinvent-2022'), value: 'summit-speedway-2022' },
+  ];
+};
+
+export const GetTrackOptionFromId = (id) => {
+  if (!id) return;
+  const trackOptions = TrackTypeConfig();
+  return trackOptions.find((option) => option.value === id);
+};
+
+export const GetTrackTypeNameFromId = (id) => {
+  if (!id) return;
+  const trackOptions = TrackTypeConfig();
+  const item = trackOptions.find((item) => item.value.toString() === id.toString());
+  if (item && item.label) {
+    return item.label;
+  }
+  return undefined;
+};
+
 // RACE TYPE OPTIONS METHODS
 export const RaceTypeConfig = () => {
   return [

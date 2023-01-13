@@ -1,5 +1,6 @@
 import { Container, FormField, Header, Input, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const GeneralInfoPanel = ({
   onFormIsValid,
@@ -10,6 +11,7 @@ export const GeneralInfoPanel = ({
 }) => {
   // const [name, setName] = useState('');
   const [errorMessage, setErrorMessage] = useState();
+  const { t } = useTranslation();
 
   // Input validation for the fleet name
   useEffect(() => {
@@ -34,7 +36,7 @@ export const GeneralInfoPanel = ({
       onFormIsValid();
       //  }
     } else {
-      setErrorMessage(`Fleet name cannot be empty`);
+      setErrorMessage(t('fleets.fleet-name-empty-message'));
       onFormIsInvalid();
     }
   }, [fleetName, onFormIsInvalid, onFormIsValid]);
@@ -42,9 +44,13 @@ export const GeneralInfoPanel = ({
   return (
     <Container header={<Header variant="h2">General settings</Header>}>
       <SpaceBetween size="l">
-        <FormField label="Name" description="The name of the Fleet." errorText={errorMessage}>
+        <FormField
+          label={t('fleets.fleet-name')}
+          description={t('fleets.fleet-name-description')}
+          errorText={errorMessage}
+        >
           <Input
-            placeholder="My awsome fleet"
+            placeholder={t('fleets.fleet-name-placeholder')}
             ariaRequired={true}
             value={fleetName}
             onChange={(event) => onChange({ fleetName: event.detail.value })}
