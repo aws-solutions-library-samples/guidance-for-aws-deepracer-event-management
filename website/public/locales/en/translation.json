@@ -150,6 +150,8 @@
   "fleets.fleet-id": "Fleet ID",
   "fleets.fleet-name": "Fleet name",
   "fleets.fleet-name-description": "The name of the Fleet.",
+  "fleets.no-fleet": "No Fleets",
+  "fleets.no-fleet-message": "Please create a fleet.",
   "fleets.fleet-name-placeholder": "My awsome fleet",
   "fleets.fleet-name-empty-message": "Fleet name cannot be empty",
   "fleets.header": "Fleets admin",
@@ -257,8 +259,8 @@
   "table.select-page-size": "Select page size",
   "table.select-visible-colunms": "Select visible colunms",
   "table.we-cant-find-a-match": "We can't find a match",
-  "table.wrap-lines-description": "Check to see all the text and wrap the lines",
   "table.wrap-lines": "Wrap lines",
+  "table.wrap-lines-description": "Check to see all the text and wrap the lines",
 
   "timekeeper.automated-timer-connected": "Automated timer connected",
   "timekeeper.automated-timer-not-connected": "Automated timer not connected",
