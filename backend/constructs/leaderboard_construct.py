@@ -7,6 +7,8 @@ from aws_cdk import aws_lambda as awslambda
 from aws_cdk import aws_lambda_python_alpha as lambda_python
 from constructs import Construct
 
+from backend.constructs.common import BaseStack
+
 
 class Leaderboard(Construct):
     def __init__(
@@ -14,8 +16,7 @@ class Leaderboard(Construct):
         scope: Construct,
         id: str,
         api: appsync.IGraphqlApi,
-        # roles_to_grant_invoke_access: list[iam.IRole],
-        user_pool: cognito.IUserPool,
+        base_stack: BaseStack,
         **kwargs,
     ):
         super().__init__(scope, id, **kwargs)
@@ -31,12 +32,6 @@ class Leaderboard(Construct):
             encryption=dynamodb.TableEncryption.AWS_MANAGED,
         )
 
-        lambda_architecture = awslambda.Architecture.ARM_64
-        lambda_runtime = awslambda.Runtime.PYTHON_3_9
-        lambda_bundling_image = DockerImage.from_registry(
-            "public.ecr.aws/sam/build-python3.9:latest-arm64"
-        )
-
         laps_lambda = lambda_python.PythonFunction(
             self,
             "leaderboard_laps_lambda",
@@ -45,11 +40,13 @@ class Leaderboard(Construct):
             index="index.py",
             handler="lambda_handler",
             timeout=Duration.minutes(1),
-            runtime=lambda_runtime,
+            runtime=base_stack._lambda_runtime,
             tracing=awslambda.Tracing.ACTIVE,
             memory_size=128,
-            architecture=lambda_architecture,
-            bundling=lambda_python.BundlingOptions(image=lambda_bundling_image),
+            architecture=base_stack._lambda_architecture,
+            bundling=lambda_python.BundlingOptions(
+                image=base_stack._lambda_bundling_image
+            ),
             # layers=[helper_functions_layer, powertools_layer]
             layers=[
                 lambda_python.PythonLayerVersion.from_layer_version_arn(
@@ -62,7 +59,7 @@ class Leaderboard(Construct):
             environment={
                 "DDB_TABLE": laps_table.table_name,
                 "APPSYNC_URL": api.graphql_url,
-                "user_pool_id": user_pool.user_pool_id,
+                "user_pool_id": base_stack.idp.user_pool.user_pool_id,
             },
         )
         laps_table.grant_read_write_data(laps_lambda)
@@ -74,12 +71,28 @@ class Leaderboard(Construct):
                 actions=[
                     "cognito-idp:ListUsers",
                 ],
-                resources=[user_pool.user_pool_arn],
+                resources=[base_stack.idp.user_pool.user_pool_arn],
             )
         )
 
         laps_data_source = api.add_lambda_data_source("lapsDataSource", laps_lambda)
         none_data_source = api.add_none_data_source("noneLeaderboard")
+
+        base_stack.idp.admin_user_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["appsync:GraphQL"],
+                resources=[f"{api.arn}/*"],
+            )
+        )
+
+        base_stack.idp.unauthenticated_user_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["appsync:GraphQL"],
+                resources=[f"{api.arn}/types/Subscription/fields/onNewOverlayInfo"],
+            )
+        )
 
         # Leader board
         # Define API Schema

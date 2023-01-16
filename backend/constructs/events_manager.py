@@ -61,7 +61,7 @@ class EventsManager(Construct):
 
         events_table.grant_read_write_data(events_handler)
 
-        # Define the data source for the API
+        # # Define the data source for the API
         events_data_source = api.add_lambda_data_source(
             "EventsDataSource", events_handler
         )

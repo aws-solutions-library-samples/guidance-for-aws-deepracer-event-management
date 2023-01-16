@@ -2,10 +2,13 @@ from aws_cdk import CfnOutput, Duration, RemovalPolicy, Stack
 from aws_cdk import aws_cloudfront as cloudfront
 from aws_cdk import aws_cognito as cognito
 from aws_cdk import aws_iam as iam
+from aws_cdk.aws_cognito import (
+    CfnUserPoolUser,
+    CfnUserPoolUserToGroupAttachment,
+    IUserPool,
+)
 from cdk_nag import NagSuppressions
 from constructs import Construct
-
-from backend.users_n_groups.user_pool_user import UserPoolUser
 
 
 class Idp(Construct):
@@ -254,7 +257,7 @@ class Idp(Construct):
         # Add a default Admin user to the system
         default_admin_user_name = "admin"
 
-        UserPoolUser(
+        AddCognitoUser(
             self,
             "DefaultAdminUser",
             username=default_admin_user_name,
@@ -279,3 +282,43 @@ class Idp(Construct):
         CfnOutput(self, "DefaultAdminUserUsername", value=default_admin_user_name)
 
         CfnOutput(self, "DefaultAdminEmail", value=default_admin_email)
+
+
+class AddCognitoUser(Construct):
+    """
+    Creates a user in the provided Cognito User pool
+    """
+
+    def __init__(
+        self,
+        scope: Construct,
+        id: str,
+        username: str,
+        email: str,
+        user_pool: IUserPool,
+        group_name: str,
+    ) -> None:
+        super().__init__(scope, id)
+
+        admin_user = CfnUserPoolUser(
+            self,
+            "admin_user",
+            username=username,
+            user_pool_id=user_pool.user_pool_id,
+            desired_delivery_mediums=["EMAIL"],
+            user_attributes=[
+                CfnUserPoolUser.AttributeTypeProperty(name="email", value=email)
+            ],
+        )
+
+        # If a Group Name is provided, also add the user to this Cognito UserPool Group
+        if group_name:
+            user_to_group_attachment = CfnUserPoolUserToGroupAttachment(
+                self,
+                "user_to_group_attachment",
+                user_pool_id=user_pool.user_pool_id,
+                group_name=group_name,
+                username=admin_user.username,
+            )
+            user_to_group_attachment.node.add_dependency(admin_user)
+            user_to_group_attachment.node.add_dependency(user_pool)
