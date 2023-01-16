@@ -8,7 +8,7 @@ import sys
 # being updated to use `cdk`.  You may delete this import if you don't need it.
 from aws_cdk import App, Environment
 
-from backend.constructs.common import BaseStack
+from backend.BaseStack import BaseStack
 from backend.deepracer_event_manager_pipeline_stack import (
     CdkServerlessCharityPipelineStack,
 )
@@ -54,9 +54,11 @@ if app.node.try_get_context("manual_deploy") == "True":
 
 if manual_deploy:
     print("Manual deploy")
+    # base_stack = BaseStack(app, "drem-base-" + branchname, email=email, env=env)
     infrastructure = CdkDeepRacerEventManagerStack(
         app,
         "drem-backend-" + branchname + "-infrastructure",
+        # base_stack=base_stack,
         email=email,
         env=env,
     )

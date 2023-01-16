@@ -6,7 +6,7 @@ from aws_cdk import aws_lambda_python_alpha as lambda_python
 from aws_cdk import aws_s3 as s3
 from constructs import Construct
 
-from backend.constructs.common import BaseStack
+from backend.BaseStack import BaseStack
 
 
 class LabelPrinter(Construct):

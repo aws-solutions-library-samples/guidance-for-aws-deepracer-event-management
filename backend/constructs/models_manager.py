@@ -13,7 +13,7 @@ from aws_cdk import aws_sqs as sqs
 from cdk_serverless_clamscan import ServerlessClamscan
 from constructs import Construct
 
-from backend.constructs.common import BaseStack
+from backend.BaseStack import BaseStack
 
 
 class ModelsManager(Construct):

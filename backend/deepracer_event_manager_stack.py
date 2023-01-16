@@ -12,8 +12,8 @@ from aws_cdk import aws_s3_deployment as s3_deployment
 from cdk_serverless_clamscan import ServerlessClamscan
 from constructs import Construct
 
+from backend.BaseStack import BaseStack
 from backend.constructs.cars_manager import CarsManager
-from backend.constructs.common import BaseStack
 from backend.constructs.cwrum_construct import CwRumAppMonitor
 from backend.constructs.events_manager import EventsManager
 from backend.constructs.fleets_manager import FleetsManager
@@ -23,7 +23,6 @@ from backend.constructs.leaderboard_construct import Leaderboard
 from backend.constructs.models_manager import ModelsManager
 
 # from backend.systems_manager import SystemsManager
-from backend.constructs.terms_n_conditions.tnc_construct import TermsAndConditions
 from backend.constructs.user_manager import UserManager
 from backend.constructs.website import Website
 
@@ -33,6 +32,7 @@ class CdkDeepRacerEventManagerStack(Stack):
         self,
         scope: Construct,
         construct_id: str,
+        # base_stack: BaseStack,
         email: str,
         **kwargs,
     ) -> None:

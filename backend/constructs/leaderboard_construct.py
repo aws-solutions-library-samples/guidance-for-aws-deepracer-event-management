@@ -7,7 +7,7 @@ from aws_cdk import aws_lambda as awslambda
 from aws_cdk import aws_lambda_python_alpha as lambda_python
 from constructs import Construct
 
-from backend.constructs.common import BaseStack
+from backend.BaseStack import BaseStack
 
 
 class Leaderboard(Construct):
