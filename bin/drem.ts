@@ -5,7 +5,6 @@ import * as fs from 'fs';
 import 'source-map-support/register';
 import { BaseStack } from '../lib/base-stack';
 import { DeepracerEventManagerStack } from '../lib/drem-app-stack';
-import { DremPipelineStack } from '../lib/drem-pipeline-stack';
 
 
 const env = { account: process.env["CDK_DEFAULT_ACCOUNT"], region:"eu-west-1" }
@@ -58,11 +57,11 @@ if (app.node.tryGetContext("manual_deploy") == "True") {
 else {
   console.info("Pipeline deploy started...")
 
-  new DremPipelineStack(
-    app, "drem-pipeline-" + branchName, {
-      branchName: branchName,
-      email: email,
-      env: env
-     }
-  )
+  // new DremPipelineStack(
+  //   app, "drem-pipeline-" + branchName, {
+  //     branchName: branchName,
+  //     email: email,
+  //     env: env
+  //    }
+  // )
 }

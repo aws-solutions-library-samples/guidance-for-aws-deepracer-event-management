@@ -245,7 +245,7 @@ export class ModelsManager extends Construct {
             ],
         })
 
-        // // permissions for s3 bucket read
+        // permissions for s3 bucket read
         infectedBucket.grantRead(quarantined_models_function, "private/*")
 
         // upload_model_to_car_function
@@ -426,6 +426,8 @@ export class ModelsManager extends Construct {
             ]
         })
         ownModelsPolicy.attachToRole(props.authenticatedUserRole)
+        ownModelsPolicy.attachToRole(props.adminGroupRole)
+        ownModelsPolicy.attachToRole(props.operatorGroupRole)
 
         // Permissions for DynamoDB read / write
         models_table.grantReadWriteData(models_md5_handler)
