@@ -1,0 +1,263 @@
+import * as cdk from 'aws-cdk-lib';
+import { CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as cognito from 'aws-cdk-lib/aws-cognito';
+import { CfnUserPoolUserToGroupAttachment } from 'aws-cdk-lib/aws-cognito';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import { Construct } from 'constructs';
+
+export interface IdpProps {
+    distribution: cloudfront.IDistribution;
+    defaultAdminEmail: string;
+}
+
+export class Idp extends Construct {
+
+    public readonly userPool: cognito.IUserPool;
+    public readonly identityPool: cognito.CfnIdentityPool;
+    public readonly adminGroupRole: iam.IRole
+    public readonly operatorGroupRole: iam.IRole;
+    public readonly unauthenticated_user_role: iam.IRole;
+
+    constructor(scope: Construct, id: string, props: IdpProps) {
+        super(scope, id);
+
+        const stack = cdk.Stack.of(this)
+
+        const userPool = new cognito.UserPool(this, 'UserPool', {
+            userPoolName: stack.stackName,
+            standardAttributes: {
+                email: { required: true, mutable: true }
+            },
+            mfa: cognito.Mfa.OPTIONAL,
+            selfSignUpEnabled: true,
+            autoVerify: { email: true },
+            removalPolicy: RemovalPolicy.DESTROY,
+            passwordPolicy: {
+                minLength: 8,
+                requireLowercase: true,
+                requireDigits: true,
+                requireSymbols: true,
+                requireUppercase: true,
+                tempPasswordValidity: Duration.days(2)
+            },
+            userInvitation: {
+                emailSubject: "Invite to join DREM",
+                emailBody: ("Hello {username}, you have been invited to join DREM. \n" +
+                    "Your temporary password is \n\n{####}\n\n")
+                    + "https://" + props.distribution.distributionDomainName,
+                smsMessage: ("Hello {username}, your temporary password for DREM is {####}"),
+            },
+            userVerification: {
+                emailSubject: "Verify your email for DREM",
+                emailBody: "Thanks for signing up to DREM \n\nYour verification code is \n{####}",
+                emailStyle: cognito.VerificationEmailStyle.CODE,
+                smsMessage: "Thanks for signing up to DREM. Your verification code is {####}",
+            }
+        })
+
+        this.userPool = userPool
+
+        //         NagSuppressions.add_resource_suppressions(
+        //             self._userPool,
+        //             suppressions=[
+        //                 {
+        //                     "id": "AwsSolutions-COG2",
+        //                     "reason": (
+        //                         "users only sign up and us DREM for a short period of time, all"
+        //                         " users are deleted after 10 days inactivity"
+        //                     ),
+        //                 },
+        //                 {
+        //                     "id": "AwsSolutions-COG3",
+        //                     "reason": (
+        //                         "users only sign up and us DREM for a short period of time, all"
+        //                         " users are deleted after 10 days inactivity"
+        //                     ),
+        //                 },
+        //             ],
+        //         )
+
+
+
+        //  Cognito Client
+        const userPoolClientWeb = new cognito.UserPoolClient(this, 'UserPoolClientWeb', {
+            userPool: userPool,
+            preventUserExistenceErrors: true
+        })
+
+        userPool.addClient('DremClient', {
+            oAuth: {
+                callbackUrls: [
+                    "https://" + props.distribution.distributionDomainName,
+                    "http://localhost:3000",
+                ],
+                logoutUrls: [
+                    "https://" + props.distribution.distributionDomainName,
+                    "http://localhost:3000",
+                ]
+            }
+        })
+
+        //  Cognito Identity Pool
+        const cognitoIdentityProviderProperty: cognito.CfnIdentityPool.CognitoIdentityProviderProperty = {
+            clientId: userPoolClientWeb.userPoolClientId,
+            providerName: userPool.userPoolProviderName
+        }
+
+        const identityPool = new cognito.CfnIdentityPool(this, 'IdentityPool', {
+            allowUnauthenticatedIdentities: false,
+            cognitoIdentityProviders: [cognitoIdentityProviderProperty]
+        })
+
+        // Cognito Identity Pool Authenitcated Role
+        const authUserRole = new iam.Role(this, 'CognitoDefaultAuthenticatedRole', {
+            assumedBy: new iam.FederatedPrincipal(
+                'cognito-identity.amazonaws.com',
+                {
+                    'StringEquals': { "cognito-identity.amazonaws.com:aud": identityPool.ref },
+                    'ForAnyValue:StringLike': { "cognito-identity.amazonaws.com:amr": "authenticated" }
+                },
+                "sts:AssumeRoleWithWebIdentity"
+            )
+        })
+
+
+        //  Cognito Identity Pool Unauthenitcated Role
+        //  needed for accessing stream overlays
+        const unauthUserRole = new iam.Role(this, 'CognitoDefaultUnauthenticatedRole', {
+            assumedBy: new iam.FederatedPrincipal(
+                'cognito-identity.amazonaws.com',
+                {
+                    'StringEquals': { "cognito-identity.amazonaws.com:aud": identityPool.ref },
+                    'ForAnyValue:StringLike': { "cognito-identity.amazonaws.com:amr": "authenticated" }
+                },
+                "sts:AssumeRoleWithWebIdentity"
+            )
+        })
+
+        new cognito.CfnIdentityPoolRoleAttachment(this, "IdentityPoolRoleAttachment", {
+            identityPoolId: identityPool.ref,
+            roles: {
+              'authenticated': authUserRole.roleArn
+            },
+            roleMappings: {
+              "role_mapping": {
+                type: "Token",
+                identityProvider: userPool.userPoolProviderName + ":" + userPoolClientWeb.userPoolClientId,
+                ambiguousRoleResolution: 'AuthenticatedRole'
+              }
+            }
+          })
+
+        //  Admin Users Group Role
+        const adminGroupRole = new iam.Role(this, 'AdminUserGroupRole', {
+            assumedBy: new iam.FederatedPrincipal(
+                "cognito-identity.amazonaws.com",
+                {
+                    'StringEquals': { "cognito-identity.amazonaws.com:aud": identityPool.ref },
+                    'ForAnyValue:StringLike': { "cognito-identity.amazonaws.com:amr": "authenticated" }
+                },
+                "sts:AssumeRoleWithWebIdentity"
+            )
+        })
+        this.adminGroupRole = adminGroupRole
+
+        // Operator Users Group Role
+        const operatorGroupRole = new iam.Role(this, 'OperatorUserRole', {
+            assumedBy: new iam.FederatedPrincipal(
+                "cognito-identity.amazonaws.com",
+                {
+                    'StringEquals': { "cognito-identity.amazonaws.com:aud": identityPool.ref },
+                    'ForAnyValue:StringLike': { "cognito-identity.amazonaws.com:amr": "authenticated" }
+                },
+                "sts:AssumeRoleWithWebIdentity"
+            )
+        })
+        this.operatorGroupRole = operatorGroupRole
+
+        //  Cognito User Group (Operator)
+        const operatorGroup = new cognito.CfnUserPoolGroup(this, 'OperatorGroup', {
+            userPoolId: userPool.userPoolId,
+            description: "Operator user group",
+            groupName: 'operator',
+            precedence: 1,
+            roleArn: operatorGroupRole.roleArn
+        });
+
+        //  Cognito User Group (Admin)
+        const adminGroup = new cognito.CfnUserPoolGroup(this, 'AdminGroup', {
+            userPoolId: userPool.userPoolId,
+            description: "Admin user group",
+            groupName: 'admin',
+            precedence: 1,
+            roleArn: adminGroupRole.roleArn
+        });
+
+
+        //  Add a default Admin user to the system
+        const defaultAdminUserName = "admin"
+
+        new CognitoUser(this, "DefaultAdminUser", {
+            username: defaultAdminUserName,
+            email: props.defaultAdminEmail,
+            userPool: userPool,
+            groupName: adminGroup.ref
+        });
+
+        // Outputs
+        new CfnOutput(this, "userPoolWebClientId", {
+            value: userPoolClientWeb.userPoolClientId
+        })
+
+        new CfnOutput(this, 'identityPoolId', {
+            value: identityPool.ref
+        })
+
+        new CfnOutput(this, 'userPoolId', {
+            value: userPool.userPoolId
+        })
+
+        new CfnOutput(this, "DefaultAdminUserUsername", {value: defaultAdminUserName})
+
+        new CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
+
+    }
+}
+
+
+export interface CognitoUserProps {
+        username: string,
+        email: string,
+        userPool: cognito.IUserPool,
+        groupName?: string,
+}
+
+export class CognitoUser extends Construct {
+    // Creates a user in the provided Cognito User pool
+
+    constructor(scope: Construct, id: string, props: CognitoUserProps) {
+        super(scope, id);
+
+        const user = new cognito.CfnUserPoolUser(this, 'adminUser', {
+            userPoolId: props.userPool.userPoolId,
+            username: props.username,
+            desiredDeliveryMediums: ["EMAIL"],
+            userAttributes: [{name: "email", value: props.email}]
+        })
+
+        // If a Group Name is provided, also add the user to this Cognito UserPool Group
+        if (props.groupName) {
+            const userToGroupAttachment = new CfnUserPoolUserToGroupAttachment(this, 'AdminUserToAdminGroup', {
+                userPoolId: user.userPoolId,
+                groupName: props.groupName,
+                username: user.username!
+
+            })
+
+            userToGroupAttachment.node.addDependency(user)
+            userToGroupAttachment.node.addDependency(props.userPool)
+
+        }
+  }
+}
