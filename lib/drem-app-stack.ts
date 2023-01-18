@@ -10,6 +10,7 @@ import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { CodeFirstSchema } from 'awscdk-appsync-utils';
 import { Construct } from 'constructs';
 import { CarManager } from './constructs/cars-manager';
+import { CwRumAppMonitor } from './constructs/cw-rum';
 import { EventsManager } from './constructs/events-manager';
 import { GroupManager } from './constructs/group-manager';
 import { LabelPrinter } from './constructs/label-printer';
@@ -172,10 +173,9 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       }
     })
 
-    // RUM
-    // const cwRumAppMonitor = new CwRumAppMonitor( this, "CwRumAppMonitor", {
-    //   domainName: props.cloudfrontDistribution.distributionDomainName
-    // })
-    //End RUM
+    const cwRumAppMonitor = new CwRumAppMonitor( this, "CwRumAppMonitor", {
+      domainName: props.cloudfrontDistribution.distributionDomainName
+    })
+
   }
 }
