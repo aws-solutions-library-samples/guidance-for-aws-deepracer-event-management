@@ -1,7 +1,7 @@
 import json
 
 with open("cdk.outputs") as json_file:
-    data = json.load(json_file)["CdkDeepRacerEventManagerStack"]
+    data = json.load(json_file)["DremInfrastructure"]
 
     for key in data.keys():
         if key.startswith("apiGatewayEndpoint"):

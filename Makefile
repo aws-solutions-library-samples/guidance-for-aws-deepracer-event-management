@@ -46,7 +46,7 @@ local.install:		## Install Python and Javascript dependencies + Generate Config 
 
 local.config:		## Setup local config based on branch
 	echo "{}" > website/src/config.json
-	branch=`cat branch.txt` && aws cloudformation describe-stacks --stack-name drem-backend-$$branch-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
+	branch=`cat branch.txt` && aws cloudformation describe-stacks --stack-name DremInfrastructure-$$branch --query 'Stacks[0].Outputs' > cfn.outputs
 	python generate_amplify_config_cfn.py
 	python update_index_html_with_script_tag_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $$appsyncId --format SDL ./website/src/graphql/schema.graphql

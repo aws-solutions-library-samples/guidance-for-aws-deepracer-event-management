@@ -2,7 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import { DockerImage } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { IDistribution } from 'aws-cdk-lib/aws-cloudfront';
-import { IUserPool } from 'aws-cdk-lib/aws-cognito';
+import { CfnIdentityPool, IUserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
@@ -12,6 +13,7 @@ import { Construct } from 'constructs';
 import { CarManager } from './constructs/cars-manager';
 import { CwRumAppMonitor } from './constructs/cw-rum';
 import { EventsManager } from './constructs/events-manager';
+import { FleetsManager } from './constructs/fleets-manager';
 import { GroupManager } from './constructs/group-manager';
 import { LabelPrinter } from './constructs/label-printer';
 import { Leaderboard } from './constructs/leaderboard-construct';
@@ -23,9 +25,11 @@ import { Website } from './constructs/website';
 
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
-  adminGroupRole: IRole,
-  operatorGroupRole: IRole,
-  userPool: IUserPool,
+  adminGroupRole: IRole
+  operatorGroupRole: IRole
+  userPool: IUserPool
+  identiyPool: CfnIdentityPool
+  userPoolClientWeb: UserPoolClient
   cloudfrontDistribution: IDistribution
   logsBucket: IBucket
   lambdaConfig: { // TODO Break out to it´s own class/struct etc
@@ -46,7 +50,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
     const stack = cdk.Stack.of(this)
 
-      // Appsync API
+    // Appsync API
     const schema = new CodeFirstSchema()
     const appsyncApi = new appsync.GraphqlApi(this, 'graphQlApi', {
       name: `api-${stack.stackName}`,
@@ -118,6 +122,17 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       lambdaConfig: props.lambdaConfig
     })
 
+    new FleetsManager(this, 'FleetsManager', {
+      adminGroupRole: props.adminGroupRole,
+      appsyncApi: {
+        api: appsyncApi,
+        schema: schema,
+        noneDataSource: noneDataSoure
+      },
+      lambdaConfig: props.lambdaConfig,
+      userPoolId: props.userPool.userPoolId
+    })
+
     new Leaderboard(this, 'Leaderboard', {
       adminGroupRole: props.adminGroupRole,
       appsyncApi: {
@@ -173,9 +188,88 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       }
     })
 
-    const cwRumAppMonitor = new CwRumAppMonitor( this, "CwRumAppMonitor", {
+    const cwRumAppMonitor = new CwRumAppMonitor(this, "CwRumAppMonitor", {
       domainName: props.cloudfrontDistribution.distributionDomainName
     })
 
+    // TODO should be boken up and moved to the correspinding module
+    const adminPolicy = new iam.Policy(this, 'adminPolicy', {
+      statements: [
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: ["execute-api:Invoke"],
+          resources: [
+            restApi.api.arnForExecuteApi("GET","/models"),
+            restApi.api.arnForExecuteApi("GET", "/cars/label"),
+            restApi.api.arnForExecuteApi("POST", "/cars/upload"),
+            restApi.api.arnForExecuteApi("POST", "/cars/upload/status"),
+            restApi.api.arnForExecuteApi("GET", "/users"),
+            restApi.api.arnForExecuteApi("GET", "/admin/quarantinedmodels"),
+            restApi.api.arnForExecuteApi("GET", "/admin/groups"),
+            restApi.api.arnForExecuteApi("POST", "/admin/groups"),
+            restApi.api.arnForExecuteApi("DELETE", "/admin/groups"),
+            restApi.api.arnForExecuteApi("GET", "/admin/groups/*"),
+            restApi.api.arnForExecuteApi("POST", "/admin/groups/*"),
+            restApi.api.arnForExecuteApi("DELETE", "/admin/groups/*"),
+          ],
+        })
+      ]
+    })
+    adminPolicy.attachToRole(props.adminGroupRole)
+
+    // Outputs
+    new cdk.CfnOutput(this, "CFURL", {
+      value:"https://" + props.cloudfrontDistribution.distributionDomainName
+    })
+
+    new cdk.CfnOutput(this, "distributionId", {
+      value: props.cloudfrontDistribution.distributionId
+    })
+
+    // new cdk.CfnOutput(this, "sourceBucketName", {
+    //   value: props.
+    // })
+
+    new cdk.CfnOutput(this, "modelsBucketName", {
+      value: modelsManager.modelsBucket.bucketName
+    })
+
+    new cdk.CfnOutput(this, "infectedBucketName", {
+      value: modelsManager.infectedBucket.bucketName
+    })
+
+    // new cdk.CfnOutput(this, "stackRegion", { value: stack.region })
+
+    new cdk.CfnOutput(this, "region", {value: stack.region})
+
+    new cdk.CfnOutput(this, "apiGatewayEndpoint", {
+      value: restApi.api.url
+    })
+
+    new cdk.CfnOutput(this, "rumScript", {
+      value: cwRumAppMonitor.script
+    })
+
+    new cdk.CfnOutput(this, "appsyncId", {value: appsyncApi.apiId})
+
+    new cdk.CfnOutput(this, "appsyncEndpoint", {
+      value: appsyncApi.graphqlUrl
+    })
+
+    new cdk.CfnOutput(this, "userPoolWebClientId", {
+      value: props.userPoolClientWeb.userPoolClientId
+  })
+
+  new cdk.CfnOutput(this, 'identityPoolId', {
+      value: props.identiyPool.ref
+  })
+
+  new cdk.CfnOutput(this, 'userPoolId', {
+      value: props.userPool.userPoolId
+  })
+
+  //new cdk.CfnOutput(this, "DefaultAdminUserUsername", {value: defaultAdminUserName})
+
+  //new cdk.CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
   }
 }

@@ -15,7 +15,7 @@ export interface CwRumAppMonitorProps {
 }
 
 export class CwRumAppMonitor extends Construct {
-
+    public readonly script: string
     constructor(scope: Construct, id: string, props: CwRumAppMonitorProps) {
         super(scope, id);
 
@@ -102,8 +102,9 @@ export class CwRumAppMonitor extends Construct {
         const sessionSampleRate = props.sessionSampleRate ?? 1
         const telemetries = props.telemetries ?? ["performance", "errors", "http"]
 
-        const rum_script = `<script>(function(n,i,v,r,s,c,x,z){{x=window.AwsRumClient={{q:[],n:n,i:i,v:v,r:r,c:c}};window[n]=function(c,p){{x.q.push({{c:c,p:p}});}};z=document.createElement('script');z.async=true;z.src=s;document.head.insertBefore(z,document.getElementsByTagName('script')[0]);}})('cwr','${appMonitorId}','1.0.0','${stack.region}','https://client.rum.us-east-1.amazonaws.com/1.0.2/cwr.js',{{sessionSampleRate:\"${sessionSampleRate}\",guestRoleArn:\"${rum_id_pool_unauth_user_role.roleArn}\",identityPoolId:\"${rum_identity_pool.ref}\",endpoint:\"https://dataplane.rum.eu-west-1.amazonaws.com\",telemetries:${telemetries},allowCookies:${allowCookies},enableXRay:${enableXray}}});</script>`
+        const rumScript = `<script>(function(n,i,v,r,s,c,x,z){{x=window.AwsRumClient={{q:[],n:n,i:i,v:v,r:r,c:c}};window[n]=function(c,p){{x.q.push({{c:c,p:p}});}};z=document.createElement('script');z.async=true;z.src=s;document.head.insertBefore(z,document.getElementsByTagName('script')[0]);}})('cwr','${appMonitorId}','1.0.0','${stack.region}','https://client.rum.us-east-1.amazonaws.com/1.0.2/cwr.js',{{sessionSampleRate:\"${sessionSampleRate}\",guestRoleArn:\"${rum_id_pool_unauth_user_role.roleArn}\",identityPoolId:\"${rum_identity_pool.ref}\",endpoint:\"https://dataplane.rum.eu-west-1.amazonaws.com\",telemetries:${telemetries},allowCookies:${allowCookies},enableXRay:${enableXray}}});</script>`
 
+        this.script = rumScript
         // this.name = cfn_app_monitor.ref // TODO is this export needed?
         // this.name = cfn_app_monitor.ref // TODO is this export needed?
         // this.id = rum_appMonitorId // TODO is this export needed?

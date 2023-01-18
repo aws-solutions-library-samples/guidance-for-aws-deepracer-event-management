@@ -12,21 +12,19 @@ with open("cfn.outputs") as json_file:
             distributionId = key["OutputValue"]
         if key["OutputKey"] == "stackRegion":
             stackRegion = key["OutputValue"]
-        if key["OutputKey"].startswith("idpuserPoolWebClientId"):
+        if key["OutputKey"].startswith("userPoolWebClientId"):
             userPoolWebClientId = key["OutputValue"]
         if key["OutputKey"] == "sourceBucketName":
             sourceBucketName = key["OutputValue"]
-        if key["OutputKey"] == "apiUrl":
-            apiUrl = key["OutputValue"]
         if key["OutputKey"] == "modelsBucketName":
             modelsBucketName = key["OutputValue"]
         if key["OutputKey"] == "region":
             region = key["OutputValue"]
         if key["OutputKey"] == "CFURL":
             CFURL = key["OutputValue"]
-        if key["OutputKey"].startswith("idpuserPoolId"):
+        if key["OutputKey"].startswith("userPoolId"):
             userPoolId = key["OutputValue"]
-        if key["OutputKey"].startswith("idpidentityPoolId"):
+        if key["OutputKey"].startswith("identityPoolId"):
             identityPoolId = key["OutputValue"]
         if key["OutputKey"] == "appsyncId":
             appsyncId = key["OutputValue"]

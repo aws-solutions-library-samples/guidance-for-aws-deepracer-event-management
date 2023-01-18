@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import { CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import { CfnUserPoolUserToGroupAttachment } from 'aws-cdk-lib/aws-cognito';
@@ -15,6 +15,7 @@ export class Idp extends Construct {
 
     public readonly userPool: cognito.IUserPool;
     public readonly identityPool: cognito.CfnIdentityPool;
+    public readonly userPoolClientWeb: cognito.UserPoolClient
     public readonly adminGroupRole: iam.IRole
     public readonly operatorGroupRole: iam.IRole;
     public readonly unauthenticated_user_role: iam.IRole;
@@ -98,6 +99,7 @@ export class Idp extends Construct {
                 ]
             }
         })
+        this.userPoolClientWeb = userPoolClientWeb
 
         //  Cognito Identity Pool
         const cognitoIdentityProviderProperty: cognito.CfnIdentityPool.CognitoIdentityProviderProperty = {
@@ -109,6 +111,8 @@ export class Idp extends Construct {
             allowUnauthenticatedIdentities: false,
             cognitoIdentityProviders: [cognitoIdentityProviderProperty]
         })
+
+        this.identityPool = identityPool
 
         // Cognito Identity Pool Authenitcated Role
         const authUserRole = new iam.Role(this, 'CognitoDefaultAuthenticatedRole', {
@@ -194,7 +198,6 @@ export class Idp extends Construct {
             roleArn: adminGroupRole.roleArn
         });
 
-
         //  Add a default Admin user to the system
         const defaultAdminUserName = "admin"
 
@@ -204,23 +207,6 @@ export class Idp extends Construct {
             userPool: userPool,
             groupName: adminGroup.ref
         });
-
-        // Outputs
-        new CfnOutput(this, "userPoolWebClientId", {
-            value: userPoolClientWeb.userPoolClientId
-        })
-
-        new CfnOutput(this, 'identityPoolId', {
-            value: identityPool.ref
-        })
-
-        new CfnOutput(this, 'userPoolId', {
-            value: userPool.userPoolId
-        })
-
-        new CfnOutput(this, "DefaultAdminUserUsername", {value: defaultAdminUserName})
-
-        new CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
 
     }
 }

@@ -27,8 +27,8 @@ export interface FleetsManagerProps {
         bundlingImage: DockerImage
         layersConfig: {
             powerToolsLogLevel: string
-            helperFunctionsLayer: lambdaPython.PythonLayerVersion
-            // powerToolsLayer: lambdaPython.PythonLayerVersion // TODO uncomment when fixed in base stack
+            helperFunctionsLayer: lambda.ILayerVersion
+            powerToolsLayer: lambda.ILayerVersion
         }
     }
 
@@ -64,7 +64,10 @@ export class FleetsManager extends Construct {
             bundling: {
                 image: props.lambdaConfig.bundlingImage
             },
-            //            layers: [base_stack._powertools_layer],   // TODO uncomment when fixed in base stack
+            layers: [
+
+                props.lambdaConfig.layersConfig.powerToolsLayer
+            ],
             environment: {
                 "DDB_TABLE": fleets_table.tableName,
                 "user_pool_id": props.userPoolId,

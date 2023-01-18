@@ -17,7 +17,6 @@ export interface BaseStackProps extends cdk.StackProps {
 const powertoolsLogLevel = "INFO"
 
 export class BaseStack extends cdk.Stack {
-
   public readonly idp: Idp;
   public readonly cloudfrontDistribution: cloudfront.Distribution;
   public readonly logsBucket: s3.Bucket;
