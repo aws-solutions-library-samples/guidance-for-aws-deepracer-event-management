@@ -8,6 +8,7 @@
     "eslint:recommended",
     "plugin:jsx-a11y/recommended",
     "plugin:import/recommended",
+    "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended"
   ],
   "settings": {
@@ -20,7 +21,7 @@
     "sourceType": "module",
     "ecmaVersion": 2021
   },
-  "plugins": ["prettier"],
+  "plugins": ["prettier", "@typescript-eslint"],
   "rules": {
     "import/default": "off",
     "import/no-named-as-default-member": "off",

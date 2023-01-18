@@ -27,6 +27,7 @@ import { Website } from './constructs/website';
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
   adminGroupRole: IRole
   operatorGroupRole: IRole
+  authenticatedUserRole: IRole
   userPool: IUserPool
   identiyPool: CfnIdentityPool
   userPoolClientWeb: UserPoolClient
@@ -76,6 +77,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     const modelsManager = new ModelsManager(this, 'ModelsManager', {
       adminGroupRole: props.adminGroupRole,
       operatorGroupRole: props.operatorGroupRole,
+      authenticatedUserRole: props.authenticatedUserRole,
       appsyncApi: {
         api: appsyncApi,
         schema: schema,

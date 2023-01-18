@@ -22,6 +22,7 @@ import { Construct } from 'constructs';
 export interface ModelsManagerProps {
     adminGroupRole: IRole,
     operatorGroupRole: IRole,
+    authenticatedUserRole: IRole
     logsBucket: IBucket,
     appsyncApi: {
         schema: CodeFirstSchema,
@@ -91,10 +92,10 @@ export class ModelsManager extends Construct {
         // Deploy Default Models
         new s3Deployment.BucketDeployment(this, "ModelsDeploy", {
             sources: [
-                s3Deployment.Source.asset( "./lib/default_models")
+                s3Deployment.Source.asset("./lib/default_models")
             ],
             destinationBucket: modelsBucket,
-            destinationKeyPrefix: ( `private/${stack.region}:00000000-0000-0000-0000-000000000000/default/models/` ),
+            destinationKeyPrefix: (`private/${stack.region}:00000000-0000-0000-0000-000000000000/default/models/`),
             retainOnDelete: false,
         })
 
@@ -183,11 +184,11 @@ export class ModelsManager extends Construct {
         // Add clam av scan to S3 uploads bucket
         new ServerlessClamscan(this, "ClamScan", {
             buckets: [modelsBucket],
-            onResult: new lambdaDestinations.LambdaDestination( delete_infected_files_function ),
+            onResult: new lambdaDestinations.LambdaDestination(delete_infected_files_function),
             onError: new lambdaDestinations.LambdaDestination(delete_infected_files_function),
             defsBucketAccessLogsConfig: {
                 logsBucket: props.logsBucket,
-                logsPrefix:  "access-logs/serverless-clam-scan/",
+                logsPrefix: "access-logs/serverless-clam-scan/",
             },
 
         })
@@ -212,10 +213,10 @@ export class ModelsManager extends Construct {
             bundling: {
                 image: props.lambdaConfig.bundlingImage
             },
-                layers: [
-                    props.lambdaConfig.layersConfig.helperFunctionsLayer,
-                    props.lambdaConfig.layersConfig.powerToolsLayer
-                ],
+            layers: [
+                props.lambdaConfig.layersConfig.helperFunctionsLayer,
+                props.lambdaConfig.layersConfig.powerToolsLayer
+            ],
         })
 
         // Permissions for s3 bucket read
@@ -391,6 +392,40 @@ export class ModelsManager extends Construct {
                 ],
             })
         )
+
+        // loged in user can only read/write their own bucket
+        const ownModelsPolicy = new iam.Policy(this, 'userAccessToOwnModels', {
+            statements: [
+                new iam.PolicyStatement({
+                    effect: iam.Effect.ALLOW,
+                    actions: [
+                        "s3:GetObject",
+                        "s3:PutObject",
+                        "s3:DeleteObject",
+                        "s3:PutObjectTagging",
+                    ],
+                    resources: [
+                        modelsBucket.bucketArn + "/private/${cognito-identity.amazonaws.com:sub}",
+                        modelsBucket.bucketArn + "/private/${cognito-identity.amazonaws.com:sub}/*",
+                    ],
+                }),
+                new iam.PolicyStatement({
+                    effect: iam.Effect.ALLOW,
+                    actions:[
+                        "s3:ListBucket",
+                    ],
+                    resources:[modelsBucket.bucketArn],
+                    conditions:{
+                        "StringLike": {
+                            "s3:prefix": [
+                                "private/${cognito-identity.amazonaws.com:sub}/*"
+                            ],
+                        },
+                    },
+                })
+            ]
+        })
+        ownModelsPolicy.attachToRole(props.authenticatedUserRole)
 
         // Permissions for DynamoDB read / write
         models_table.grantReadWriteData(models_md5_handler)

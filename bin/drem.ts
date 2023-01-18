@@ -47,6 +47,7 @@ if (app.node.tryGetContext("manual_deploy") == "True") {
     lambdaConfig: baseStack.lambdaConfig,
     adminGroupRole: baseStack.idp.adminGroupRole,
     operatorGroupRole: baseStack.idp.operatorGroupRole,
+    authenticatedUserRole: baseStack.idp.authenticatedUserRole,
     userPool: baseStack.idp.userPool,
     identiyPool: baseStack.idp.identityPool,
     userPoolClientWeb: baseStack.idp.userPoolClientWeb

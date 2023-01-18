@@ -16,6 +16,7 @@ export class Idp extends Construct {
     public readonly userPool: cognito.IUserPool;
     public readonly identityPool: cognito.CfnIdentityPool;
     public readonly userPoolClientWeb: cognito.UserPoolClient
+    public readonly authenticatedUserRole: iam.IRole
     public readonly adminGroupRole: iam.IRole
     public readonly operatorGroupRole: iam.IRole;
     public readonly unauthenticated_user_role: iam.IRole;
@@ -102,14 +103,13 @@ export class Idp extends Construct {
         this.userPoolClientWeb = userPoolClientWeb
 
         //  Cognito Identity Pool
-        const cognitoIdentityProviderProperty: cognito.CfnIdentityPool.CognitoIdentityProviderProperty = {
-            clientId: userPoolClientWeb.userPoolClientId,
-            providerName: userPool.userPoolProviderName
-        }
-
         const identityPool = new cognito.CfnIdentityPool(this, 'IdentityPool', {
             allowUnauthenticatedIdentities: false,
-            cognitoIdentityProviders: [cognitoIdentityProviderProperty]
+            cognitoIdentityProviders: [
+                {
+                    clientId: userPoolClientWeb.userPoolClientId,
+                    providerName: userPool.userPoolProviderName
+                }]
         })
 
         this.identityPool = identityPool
@@ -125,32 +125,21 @@ export class Idp extends Construct {
                 "sts:AssumeRoleWithWebIdentity"
             )
         })
+        this.authenticatedUserRole = authUserRole
 
-
-        //  Cognito Identity Pool Unauthenitcated Role
-        //  needed for accessing stream overlays
-        const unauthUserRole = new iam.Role(this, 'CognitoDefaultUnauthenticatedRole', {
-            assumedBy: new iam.FederatedPrincipal(
-                'cognito-identity.amazonaws.com',
-                {
-                    'StringEquals': { "cognito-identity.amazonaws.com:aud": identityPool.ref },
-                    'ForAnyValue:StringLike': { "cognito-identity.amazonaws.com:amr": "authenticated" }
-                },
-                "sts:AssumeRoleWithWebIdentity"
-            )
-        })
+        console.info(userPool.userPoolProviderName) // TODO remove after test
 
         new cognito.CfnIdentityPoolRoleAttachment(this, "IdentityPoolRoleAttachment", {
             identityPoolId: identityPool.ref,
             roles: {
-              'authenticated': authUserRole.roleArn
+              authenticated: authUserRole.roleArn
             },
             roleMappings: {
-              "role_mapping": {
-                type: "Token",
-                identityProvider: userPool.userPoolProviderName + ":" + userPoolClientWeb.userPoolClientId,
-                ambiguousRoleResolution: 'AuthenticatedRole'
-              }
+                mapping: {
+                    type: "Token",
+                    identityProvider: `cognito-idp.${stack.region}.amazonaws.com/${userPool.userPoolId}:${userPoolClientWeb.userPoolClientId}`,
+                    ambiguousRoleResolution: 'AuthenticatedRole'
+                }
             }
           })
 
