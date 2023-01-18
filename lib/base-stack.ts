@@ -70,6 +70,8 @@ export class BaseStack extends cdk.Stack {
       logsBucket: logsBucket,
     })
 
+    this.dremWebsitebucket = dremWebsite.sourceBucket
+
     //  cloudfront Distribution
     const cloudfrontDistribution = new cloudfront.Distribution(this, 'distribution', {
       defaultBehavior: {

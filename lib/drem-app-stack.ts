@@ -43,9 +43,14 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
       powerToolsLayer: lambda.ILayerVersion
     }
   }
+  dremWebsiteBucket: IBucket
 }
 
 export class DeepracerEventManagerStack extends cdk.Stack {
+
+  public readonly sourceBucketName: cdk.CfnOutput
+  public readonly distributionId: cdk.CfnOutput
+
   constructor(scope: Construct, id: string, props: DeepracerEventManagerStackProps) {
     super(scope, id, props);
 
@@ -224,13 +229,13 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       value:"https://" + props.cloudfrontDistribution.distributionDomainName
     })
 
-    new cdk.CfnOutput(this, "distributionId", {
+    this.distributionId = new cdk.CfnOutput(this, "distributionId", {
       value: props.cloudfrontDistribution.distributionId
     })
 
-    // new cdk.CfnOutput(this, "sourceBucketName", {
-    //   value: props.
-    // })
+    this.sourceBucketName = new cdk.CfnOutput(this, "sourceBucketName", {
+       value: props.dremWebsiteBucket.bucketName
+    })
 
     new cdk.CfnOutput(this, "modelsBucketName", {
       value: modelsManager.modelsBucket.bucketName

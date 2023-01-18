@@ -1,10 +1,9 @@
-import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import * as cdk from 'aws-cdk-lib';
 import { DockerImage, Environment, Stage } from 'aws-cdk-lib';
 import { IDistribution } from 'aws-cdk-lib/aws-cloudfront';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codePipelineActions from 'aws-cdk-lib/aws-codepipeline-actions';
-import { IUserPool } from 'aws-cdk-lib/aws-cognito';
+import { CfnIdentityPool, IUserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -25,38 +24,14 @@ export interface BaseStackPipelineStageProps extends cdk.StackProps {
     branchName: string,
     email: string,
     env: Environment
-    adminGroupRole: IRole,
-    operatorGroupRole: IRole,
-    userPool: IUserPool,
-    cloudfrontDistribution: IDistribution
-    logsBucket: IBucket
-    lambdaConfig: { // TODO Break out to it´s own class/struct etc
-    runtime: lambda.Runtime,
-    architecture: lambda.Architecture,
-    bundlingImage: DockerImage
-    layersConfig: {
-        powerToolsLogLevel: string
-        helperFunctionsLayer: PythonLayerVersion
-    }
-}
 }
 
 class BaseStackPipelineStage extends Stage {
     constructor(scope: Construct, id: string, props: BaseStackPipelineStageProps) {
         super(scope, id, props);
 
-
         const stack = new BaseStack(this, "DremBase", {email: props.email}
         )
-
-        // this.sourceBucketName = stack.sourceBucketName
-        // this.distributionId = stack.distributionId
-        // this.stackRegion = stack.stackRegion
-        // this.userPoolId = stack.userPoolId
-        // this.userPoolWebClientId = stack.userPoolWebClientId
-        // this.identityPoolId = stack.identityPoolId
-        // this.apiUrl = stack.apiUrl
-
     }
 }
 
@@ -64,57 +39,56 @@ export interface InfrastructurePipelineStageProps extends cdk.StackProps {
     branchName: string,
     email: string,
     env: Environment
-    adminGroupRole: IRole,
-    operatorGroupRole: IRole,
-    userPool: IUserPool,
+    adminGroupRole: IRole
+    operatorGroupRole: IRole
+    authenticatedUserRole: IRole
+    userPool: IUserPool
+    identiyPool: CfnIdentityPool
+    userPoolClientWeb: UserPoolClient
     cloudfrontDistribution: IDistribution
     logsBucket: IBucket
     lambdaConfig: { // TODO Break out to it´s own class/struct etc
-    runtime: lambda.Runtime,
-    architecture: lambda.Architecture,
-    bundlingImage: DockerImage
-    layersConfig: {
-        powerToolsLogLevel: string
-        helperFunctionsLayer: PythonLayerVersion
+        runtime: lambda.Runtime,
+        architecture: lambda.Architecture,
+        bundlingImage: DockerImage
+        layersConfig: {
+            powerToolsLogLevel: string
+            helperFunctionsLayer: lambda.ILayerVersion
+            powerToolsLayer: lambda.ILayerVersion
+        }
     }
-}
+    dremWebsiteBucket: IBucket
 }
 
 class InfrastructurePipelineStage extends Stage {
+    public readonly sourceBucketName: cdk.CfnOutput
+    public readonly distributionId: cdk.CfnOutput
+
     constructor(scope: Construct, id: string, props: InfrastructurePipelineStageProps) {
         super(scope, id, props);
 
-        const stack = new DeepracerEventManagerStack(this, "infrastructure", {...props}
+        const stack = new DeepracerEventManagerStack(this, "infrastructure", {
+            cloudfrontDistribution: props.cloudfrontDistribution,
+            logsBucket: props.logsBucket,
+            lambdaConfig: props.lambdaConfig,
+            adminGroupRole: props.adminGroupRole,
+            operatorGroupRole: props.operatorGroupRole,
+            authenticatedUserRole: props.authenticatedUserRole,
+            userPool: props.userPool,
+            identiyPool: props.identiyPool,
+            userPoolClientWeb: props.userPoolClientWeb,
+            dremWebsiteBucket: props.dremWebsiteBucket
+        }
         )
 
-        // this.sourceBucketName = stack.sourceBucketName
-        // this.distributionId = stack.distributionId
-        // this.stackRegion = stack.stackRegion
-        // this.userPoolId = stack.userPoolId
-        // this.userPoolWebClientId = stack.userPoolWebClientId
-        // this.identityPoolId = stack.identityPoolId
-        // this.apiUrl = stack.apiUrl
-
+        this.sourceBucketName = stack.sourceBucketName
+        this.distributionId = stack.distributionId
     }
 }
 export interface DremPipelineStackProps extends cdk.StackProps {
     branchName: string,
     email: string,
     env: Environment
-    adminGroupRole: IRole,
-    operatorGroupRole: IRole,
-    userPool: IUserPool,
-    cloudfrontDistribution: IDistribution
-    logsBucket: IBucket
-    lambdaConfig: { // TODO Break out to it´s own class/struct etc
-    runtime: lambda.Runtime,
-    architecture: lambda.Architecture,
-    bundlingImage: DockerImage
-    layersConfig: {
-        powerToolsLogLevel: string
-        helperFunctionsLayer: PythonLayerVersion
-    }
-}
 }
 
 export class DremPipelineStack extends cdk.Stack {
@@ -180,8 +154,11 @@ export class DremPipelineStack extends cdk.Stack {
         // Dev Stage
         const env = { "account": stack.account, "region": stack.region }
 
-        const base = new BaseStack(this, 'drem-base' + props.branchName, { ...props })
-        // TODO add deployment of Base stack
+        const base = new BaseStackPipelineStage(this, 'drem-base-' + props.branchName, {
+            branchName: props.branchName,
+            email: props.email,
+            env: env
+        })
 
         const infrastructure = new InfrastructurePipelineStage(this, "drem-backend-" + props.branchName, { ...props })
 
@@ -226,8 +203,8 @@ export class DremPipelineStack extends cdk.Stack {
                     ),
                 ],
                 envFromCfnOutputs: {
-                    "sourceBucketName": base.dremWebsitebucket,
-                    "distributionId": base.cloudfrontDistribution.distributionId,
+                    "sourceBucketName": infrastructure.sourceBucketName,
+                    "distributionId": infrastructure.distributionId,
                 },
                 rolePolicyStatements: [
                     new iam.PolicyStatement({

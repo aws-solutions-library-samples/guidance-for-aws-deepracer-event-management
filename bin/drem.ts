@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import 'source-map-support/register';
 import { BaseStack } from '../lib/base-stack';
 import { DeepracerEventManagerStack } from '../lib/drem-app-stack';
+import { DremPipelineStack } from '../lib/drem-pipeline-stack';
 
 
 const env = { account: process.env["CDK_DEFAULT_ACCOUNT"], region:"eu-west-1" }
@@ -50,12 +51,18 @@ if (app.node.tryGetContext("manual_deploy") == "True") {
     authenticatedUserRole: baseStack.idp.authenticatedUserRole,
     userPool: baseStack.idp.userPool,
     identiyPool: baseStack.idp.identityPool,
-    userPoolClientWeb: baseStack.idp.userPoolClientWeb
+    userPoolClientWeb: baseStack.idp.userPoolClientWeb,
+    dremWebsiteBucket: baseStack.dremWebsitebucket
   });
 }
 else {
   console.info("Pipeline deploy started...")
-  // CdkServerlessCharityPipelineStack(
-  //     app, "drem-pipeline-" + branchname, branchname=branchname, email=email, env=env
-  // )
+
+  new DremPipelineStack(
+    app, "drem-pipeline-" + branchName, {
+      branchName: branchName,
+      email: email,
+      env: env
+     }
+  )
 }

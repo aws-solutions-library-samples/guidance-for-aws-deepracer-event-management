@@ -14,7 +14,7 @@ export interface WebsiteProps {
 
 export class Website extends Construct {
     public readonly origin: cloudfront.IOrigin;
-    public readonly sourceBucket: s3.IBucket;
+    public readonly sourceBucket: s3.Bucket;
 
     constructor(scope: Construct, id: string, props: WebsiteProps) {
         super(scope, id);
