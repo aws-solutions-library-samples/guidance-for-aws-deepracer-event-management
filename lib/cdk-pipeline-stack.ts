@@ -10,7 +10,6 @@ import { Construct } from 'constructs';
 import { BaseStack } from './base-stack';
 import { DeepracerEventManagerStack } from './drem-app-stack';
 
-
 // Constants
 const NODE_VERSION = "16.17.0"  // other possible options: stable, latest, lts
 const CDK_VERSION = "2.60.0"  // other possible options: latest
@@ -126,7 +125,7 @@ export class CdkPipelineStack extends cdk.Stack {
                 },
                 commands: [
                     "echo $sourceBucketName",
-                    "aws cloudformation describe-stacks --stack-name" +
+                    "aws cloudformation describe-stacks --stack-name " +
                     `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
                     "pwd",
                     "ls -lah",
