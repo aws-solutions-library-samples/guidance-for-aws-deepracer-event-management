@@ -60,7 +60,7 @@ if (app.node.tryGetContext("manual_deploy") == "True") {
 else {
   console.info("Pipeline deploy started...")
   new CdkPipelineStack(
-    app, "drem-pipeline-" + branchName, {
+    app, `drem-pipeline-${branchName}`, {
       branchName: branchName,
       email: email,
       env: env

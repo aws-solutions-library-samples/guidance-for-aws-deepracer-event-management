@@ -1,5 +1,4 @@
 
-import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import * as iam from 'aws-cdk-lib/aws-iam';
 
 
@@ -85,7 +84,7 @@ export class SystemsManager extends Construct {
         //     waitForSuccessTimeoutSeconds: 30,
         // })
 
-        new cloudwatch.Dashboard(this, "Dashboard", { dashboardName: "Car-Status", widgets: [] })
+        //new cloudwatch.Dashboard(this, "Dashboard", { dashboardName: "Car-Status", widgets: [] })
 
         // Create config in SSM Parameter store for CloudWatch
         // https://docs.aws.amazon.com/cdk/api/v1/python/aws_cdk.aws_ssm/README.html
