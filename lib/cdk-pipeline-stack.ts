@@ -111,7 +111,7 @@ export class CdkPipelineStack extends cdk.Stack {
         // Dev Stage
         const env = { "account": stack.account, "region": stack.region }
 
-        const infrastructure = new InfrastructurePipelineStage(this, "drem-backend-" + props.branchName, {...props })
+        const infrastructure = new InfrastructurePipelineStage(this, `drem-backend-${props.branchName}`, {...props })
 
         const infrastructure_stage = pipeline.addStage(infrastructure)
 
