@@ -4,6 +4,7 @@ import * as fs from 'fs';
 
 import 'source-map-support/register';
 import { BaseStack } from '../lib/base-stack';
+import { CdkPipelineStack } from '../lib/cdk-pipeline-stack';
 import { DeepracerEventManagerStack } from '../lib/drem-app-stack';
 
 
@@ -38,7 +39,8 @@ if (app.node.tryGetContext("manual_deploy") == "True") {
   console.info('Manual Deploy started....')
 
   const baseStack = new BaseStack(app, `DremBase-${branchName}`, {
-    email: email
+    email: email,
+    env: env
   })
 
   new DeepracerEventManagerStack(app, `DremInfrastructure-${branchName}`, {
@@ -51,17 +53,17 @@ if (app.node.tryGetContext("manual_deploy") == "True") {
     userPool: baseStack.idp.userPool,
     identiyPool: baseStack.idp.identityPool,
     userPoolClientWeb: baseStack.idp.userPoolClientWeb,
-    dremWebsiteBucket: baseStack.dremWebsitebucket
+    dremWebsiteBucket: baseStack.dremWebsitebucket,
+    env: env
   });
 }
 else {
   console.info("Pipeline deploy started...")
-
-  // new DremPipelineStack(
-  //   app, "drem-pipeline-" + branchName, {
-  //     branchName: branchName,
-  //     email: email,
-  //     env: env
-  //    }
-  // )
+  new CdkPipelineStack(
+    app, "drem-pipeline-" + branchName, {
+      branchName: branchName,
+      email: email,
+      env: env
+     }
+  )
 }

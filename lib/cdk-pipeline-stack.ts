@@ -1,14 +1,9 @@
 import * as cdk from 'aws-cdk-lib';
-import { DockerImage, Environment, Stage } from 'aws-cdk-lib';
-import { IDistribution } from 'aws-cdk-lib/aws-cloudfront';
+import { Environment, Stage } from 'aws-cdk-lib';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codePipelineActions from 'aws-cdk-lib/aws-codepipeline-actions';
-import { CfnIdentityPool, IUserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import { IRole } from 'aws-cdk-lib/aws-iam';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import { IBucket } from 'aws-cdk-lib/aws-s3';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as pipelines from 'aws-cdk-lib/pipelines';
 import { Construct } from 'constructs';
@@ -20,44 +15,10 @@ import { DeepracerEventManagerStack } from './drem-app-stack';
 const NODE_VERSION = "16.17.0"  // other possible options: stable, latest, lts
 const CDK_VERSION = "2.54.0"  // other possible options: latest
 
-export interface BaseStackPipelineStageProps extends cdk.StackProps {
-    branchName: string,
-    email: string,
-    env: Environment
-}
-
-class BaseStackPipelineStage extends Stage {
-    constructor(scope: Construct, id: string, props: BaseStackPipelineStageProps) {
-        super(scope, id, props);
-
-        const stack = new BaseStack(this, "DremBase", {email: props.email}
-        )
-    }
-}
-
 export interface InfrastructurePipelineStageProps extends cdk.StackProps {
     branchName: string,
     email: string,
     env: Environment
-    adminGroupRole: IRole
-    operatorGroupRole: IRole
-    authenticatedUserRole: IRole
-    userPool: IUserPool
-    identiyPool: CfnIdentityPool
-    userPoolClientWeb: UserPoolClient
-    cloudfrontDistribution: IDistribution
-    logsBucket: IBucket
-    lambdaConfig: { // TODO Break out to it´s own class/struct etc
-        runtime: lambda.Runtime,
-        architecture: lambda.Architecture,
-        bundlingImage: DockerImage
-        layersConfig: {
-            powerToolsLogLevel: string
-            helperFunctionsLayer: lambda.ILayerVersion
-            powerToolsLayer: lambda.ILayerVersion
-        }
-    }
-    dremWebsiteBucket: IBucket
 }
 
 class InfrastructurePipelineStage extends Stage {
@@ -67,32 +28,32 @@ class InfrastructurePipelineStage extends Stage {
     constructor(scope: Construct, id: string, props: InfrastructurePipelineStageProps) {
         super(scope, id, props);
 
+        const baseStack = new BaseStack(this, "DremBase", { email: props.email })
         const stack = new DeepracerEventManagerStack(this, "infrastructure", {
-            cloudfrontDistribution: props.cloudfrontDistribution,
-            logsBucket: props.logsBucket,
-            lambdaConfig: props.lambdaConfig,
-            adminGroupRole: props.adminGroupRole,
-            operatorGroupRole: props.operatorGroupRole,
-            authenticatedUserRole: props.authenticatedUserRole,
-            userPool: props.userPool,
-            identiyPool: props.identiyPool,
-            userPoolClientWeb: props.userPoolClientWeb,
-            dremWebsiteBucket: props.dremWebsiteBucket
-        }
-        )
+            cloudfrontDistribution: baseStack.cloudfrontDistribution,
+            logsBucket: baseStack.logsBucket,
+            lambdaConfig: baseStack.lambdaConfig,
+            adminGroupRole: baseStack.idp.adminGroupRole,
+            operatorGroupRole: baseStack.idp.operatorGroupRole,
+            authenticatedUserRole: baseStack.idp.authenticatedUserRole,
+            userPool: baseStack.idp.userPool,
+            identiyPool: baseStack.idp.identityPool,
+            userPoolClientWeb: baseStack.idp.userPoolClientWeb,
+            dremWebsiteBucket: baseStack.dremWebsitebucket
+         } )
 
         this.sourceBucketName = stack.sourceBucketName
         this.distributionId = stack.distributionId
     }
 }
-export interface DremPipelineStackProps extends cdk.StackProps {
+export interface CdkPipelineStackProps extends cdk.StackProps {
     branchName: string,
     email: string,
     env: Environment
 }
 
-export class DremPipelineStack extends cdk.Stack {
-    constructor(scope: Construct, id: string, props: DremPipelineStackProps) {
+export class CdkPipelineStack extends cdk.Stack {
+    constructor(scope: Construct, id: string, props: CdkPipelineStackProps) {
         super(scope, id, props);
 
         // setup for pseudo parameters
@@ -115,28 +76,29 @@ export class DremPipelineStack extends cdk.Stack {
                 }
                 ),
                 commands: [
-                    "python -m venv venv",
-                    ". venv/bin/activate",
-                    "pip install --upgrade pip",
-                    "pip install -r requirements-dev.txt",
+                    // "python -m venv venv",
+                    // ". venv/bin/activate",
+                    // "pip install --upgrade pip",
+                    // "pip install -r requirements-dev.txt",
                     // Node update
                     `${NODE_VERSION}`,
                     "node --version",
                     // Python unit tests
-                    "python -m pytest",
+                    // "python -m pytest",
+                    "npm install",
                     `npx cdk@${CDK_VERSION} synth`,
                 ],
-                partialBuildSpec: codebuild.BuildSpec.fromObject(
-                    {
-                        "reports": {
-                            "pytest_reports": {
-                                "files": ["unittest-report.xml"],
-                                "base-directory": "reports",
-                                "file-format": "JUNITXML",
-                            }
-                        }
-                    }
-                ),
+                // partialBuildSpec: codebuild.BuildSpec.fromObject(
+                //     {
+                //         "reports": {
+                //             "pytest_reports": {
+                //                 "files": ["unittest-report.xml"],
+                //                 "base-directory": "reports",
+                //                 "file-format": "JUNITXML",
+                //             }
+                //         }
+                //     }
+                // ),
                 rolePolicyStatements: [
                     new iam.PolicyStatement({
                         actions: ["sts:AssumeRole"],
@@ -154,13 +116,11 @@ export class DremPipelineStack extends cdk.Stack {
         // Dev Stage
         const env = { "account": stack.account, "region": stack.region }
 
-        const base = new BaseStackPipelineStage(this, 'drem-base-' + props.branchName, {
+        const infrastructure = new InfrastructurePipelineStage(this, "drem-backend-" + props.branchName, {
             branchName: props.branchName,
             email: props.email,
-            env: env
+            env: props.env
         })
-
-        const infrastructure = new InfrastructurePipelineStage(this, "drem-backend-" + props.branchName, { ...props })
 
         const infrastructure_stage = pipeline.addStage(infrastructure)
 
@@ -179,8 +139,8 @@ export class DremPipelineStack extends cdk.Stack {
                     `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
                     "pwd",
                     "ls -lah",
-                    "python generate_amplify_config_cfn.py",
-                    "python update_index_html_with_script_tag_cfn.py",
+                    "python scripts/generate_amplify_config_cfn.py",
+                    "python scripts/update_index_html_with_script_tag_cfn.py",
                     // "npm install -g @aws-amplify/cli",
                     (
                         "appsyncId=`cat appsyncId.txt` && aws appsync" +
