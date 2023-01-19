@@ -22,6 +22,8 @@ node_modules
 
 branch.txt
 email.txt
+s3_bucket.txt
+drem.zip
 reports
 htmlcov
 website/src/graphql/schema.graphql
