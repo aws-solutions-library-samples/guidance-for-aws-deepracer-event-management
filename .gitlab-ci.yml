@@ -9,6 +9,7 @@ zip_repo:
     - esbjj
     - cdk-pipeline-askwith
     - dasmthc
+    - marbuss-doc-updating
   stage: zip
   image:
     name: ubuntu
