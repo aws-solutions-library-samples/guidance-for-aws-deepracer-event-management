@@ -38,12 +38,12 @@ const app = new App();
 if (app.node.tryGetContext("manual_deploy") == "True") {
   console.info('Manual Deploy started....')
 
-  const baseStack = new BaseStack(app, `drem-base-${branchName}`, {
+  const baseStack = new BaseStack(app, `drem-backend-${branchName}-base`, {
     email: email,
     env: env
   })
 
-  new DeepracerEventManagerStack(app, `drem-infrastructure-${branchName}`, {
+  new DeepracerEventManagerStack(app, `drem-backend-${branchName}-infrastructure`, {
     cloudfrontDistribution: baseStack.cloudfrontDistribution,
     logsBucket: baseStack.logsBucket,
     lambdaConfig: baseStack.lambdaConfig,
