@@ -13,7 +13,7 @@ import { DeepracerEventManagerStack } from './drem-app-stack';
 
 // Constants
 const NODE_VERSION = "16.17.0"  // other possible options: stable, latest, lts
-const CDK_VERSION = "2.54.0"  // other possible options: latest
+const CDK_VERSION = "2.60.0"  // other possible options: latest
 
 export interface InfrastructurePipelineStageProps extends cdk.StackProps {
     branchName: string,
@@ -28,7 +28,7 @@ class InfrastructurePipelineStage extends Stage {
     constructor(scope: Construct, id: string, props: InfrastructurePipelineStageProps) {
         super(scope, id, props);
 
-        const baseStack = new BaseStack(this, "DremBase", { email: props.email })
+        const baseStack = new BaseStack(this, "base", { email: props.email })
         const stack = new DeepracerEventManagerStack(this, "infrastructure", {
             cloudfrontDistribution: baseStack.cloudfrontDistribution,
             logsBucket: baseStack.logsBucket,
@@ -69,24 +69,19 @@ export class CdkPipelineStack extends cdk.Stack {
             dockerEnabledForSynth: true,
             synth: new pipelines.CodeBuildStep("SynthAndDeployBackend", {
                 buildEnvironment: {
-                    buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0,  // noqa: E501
+                    buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0,
                 },
                 input: pipelines.CodePipelineSource.s3(s3_repo_bucket, props.branchName + "/drem.zip", {
                     trigger: codePipelineActions.S3Trigger.POLL,
                 }
                 ),
                 commands: [
-                    // "python -m venv venv",
-                    // ". venv/bin/activate",
-                    // "pip install --upgrade pip",
-                    // "pip install -r requirements-dev.txt",
                     // Node update
-                    `${NODE_VERSION}`,
+                    `n ${NODE_VERSION}`,
                     "node --version",
-                    // Python unit tests
-                    // "python -m pytest",
+
                     "npm install",
-                    `npx cdk@${CDK_VERSION} synth`,
+                    `npx cdk@${CDK_VERSION} synth --all`,
                 ],
                 // partialBuildSpec: codebuild.BuildSpec.fromObject(
                 //     {
@@ -116,11 +111,7 @@ export class CdkPipelineStack extends cdk.Stack {
         // Dev Stage
         const env = { "account": stack.account, "region": stack.region }
 
-        const infrastructure = new InfrastructurePipelineStage(this, "drem-backend-" + props.branchName, {
-            branchName: props.branchName,
-            email: props.email,
-            env: props.env
-        })
+        const infrastructure = new InfrastructurePipelineStage(this, "drem-backend-" + props.branchName, {...props })
 
         const infrastructure_stage = pipeline.addStage(infrastructure)
 
