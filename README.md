@@ -47,8 +47,6 @@ For uploading the repository as zipfile you can use also make.
 $ make pipeline.trigger
 ```
 
-6. Once the pipeline is place push a change via a git and the pipeline will then build and deploy into your account
-
 ## Local Frontend
 
 1. Run `make local.config` to build the local config from the CloudFormation stack and create the GraphQL schema
@@ -59,9 +57,10 @@ $ make pipeline.trigger
 
 ### Setup pre commit hooks
 
--   create and activate a virtualenv
--   install dependenies `$ pip install -r requirements-dev.txt `
+-   install dependenies `$ npm install `
 -   install pre-commit hooks`$ pre-commit install`
+-   set `AWS_DEFAULT_REGION`
+-   set `CDK_DEFAULT_ACCOUNT`
 
 The pre-commit hooks will only run towards changed files. You can manually run a pre-commit hook test without commiting the files by running `bash .git/hooks/pre-commit`
 

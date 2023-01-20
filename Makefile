@@ -13,6 +13,7 @@ pipeline.clean: 	## Destroys the CDK pipeline
 	npx cdk destroy
 
 pipeline.trigger: 	## creates the zipfile and uploads it to S3 to trigger the pipeline
+	-rm drem.zip
 	zip -r drem.zip . -x ./.venv/\* ./.git/\* ./website/build/\* ./website/node_modules/\* ./node_modules/\* ./cdk.out/\*
 	aws s3 cp drem.zip s3://$$(cat s3_bucket.txt)/$$(cat branch.txt)/
 
