@@ -1,57 +1,63 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function useWebsocket(url) {
+export default function useWebsocket(url, onMessage) {
   const [message, setMessage] = useState();
-  const [connected, setConnected] = useState(false);
-  const wsClient = useRef();
+  const [waitingToReconnect, setWaitingToReconnect] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const wsClientRef = useRef();
 
   useEffect(() => {
-    console.info('wsClient:' + wsClient);
-    const connect = () => {
-      try {
-        console.info('Websocket trying to connect to server....');
-        const client = new WebSocket(url);
-        wsClient.current = client;
-        client.onopen = () => {
-          console.warn('WebSocket Connected');
-          setConnected(true);
-        };
+    console.info('wsClientRef:' + wsClientRef);
+    if (waitingToReconnect) {
+      return;
+    }
 
-        client.onmessage = (message) => {
-          setMessage(message);
-        };
+    if (!wsClientRef.current) {
+      console.info('Websocket trying to connect to server....');
+      const client = new WebSocket(url);
+      wsClientRef.current = client;
 
-        client.onclose = () => {
-          console.warn('WebSocket Connection closed');
-          setConnected(false);
-          wsClient.current = null;
-          //     setTimeout(() => {}, 5000); // TODO check why reconnection is not working properly
-        };
+      client.onopen = () => {
+        console.info('WebSocket Connected');
+        setIsConnected(true);
+      };
 
-        client.onerror = () => {
-          console.warn('WebSocket Connection Error');
-          setConnected(false);
-          wsClient.current = null;
-          // setTimeout(connect(), 5000); // TODO check why reconnection is not working properly
-        };
+      client.onmessage = (message) => {
+        setMessage(message);
+      };
 
-        console.info('Websocket connected to server');
-      } catch (e) {
-        console.error('Websocket connection error', e);
-        // setTimeout(connect(), 5000); // TODO check why reconnection is not working properly
-      }
-    };
-    if (!wsClient.current) {
-      console.info('test');
-      connect();
+      client.onclose = () => {
+        if (wsClientRef.current) {
+          // Connection failed
+          console.log('ws closed by server');
+        } else {
+          // Cleanup initiated from app side, can return here, to not attempt a reconnect
+          console.log('ws closed by app component unmount');
+          return;
+        }
+
+        if (waitingToReconnect) {
+          return;
+        }
+
+        setIsConnected(false);
+
+        // Setting this will trigger a re-run of the effect,
+        // cleaning up the current websocket, but not setting
+        // up a new one right away
+        setWaitingToReconnect(true);
+
+        // This will trigger another re-run, and because it is false,
+        // the socket will be set up again
+        setTimeout(() => setWaitingToReconnect(null), 5000);
+      };
+
+      client.onerror = (e) => console.error(e);
     }
     return () => {
-      if (wsClient.current) {
-        wsClient.current.close();
-        wsClient.current = undefined;
-      }
+      wsClientRef.current = null;
     };
-  }, [url]);
+  }, [waitingToReconnect]);
 
-  return { message, connected };
+  return [isConnected, message];
 }

@@ -14,7 +14,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useMachine } from '@xstate/react';
 import { useTranslation } from 'react-i18next';
 import useCounter from '../../hooks/useCounter';
-// import useMutation from '../../hooks/useMutation';
+import useWebsocket from '../../hooks/useWebsocket';
 import { eventContext } from '../../store/EventProvider';
 import SideNavContext from '../../store/SideNavContext';
 import { GetRaceResetsNameFromId, GetRaceTypeNameFromId } from '../events/race-config';
@@ -39,8 +39,8 @@ export const Timekeeper = () => {
   const [currentLap, SetCurrentLap] = useState(defaultLap);
   const [fastestLap, SetFastestLap] = useState([]);
 
-  const autTimerIsConnected = false; // TODO remove when activating websocket (automated timer)
-  // const { message, autTimerIsConnected } = useWebsocket('ws://localhost:8080');
+  // const autTimerIsConnected = false; // TODO remove when activating websocket (automated timer)
+  const { message, autTimerIsConnected } = useWebsocket('ws://localhost:8080');
   const { setNavigationOpen } = useContext(SideNavContext);
 
   const raceType = GetRaceTypeNameFromId(selectedEvent.raceRankingMethod);
@@ -154,6 +154,10 @@ export const Timekeeper = () => {
   useEffect(() => {
     setNavigationOpen(false);
   }, [setNavigationOpen]);
+
+  useEffect(() => {
+    console.info(message);
+  }, [message]);
 
   // Find the fastest lap
   useEffect(() => {
