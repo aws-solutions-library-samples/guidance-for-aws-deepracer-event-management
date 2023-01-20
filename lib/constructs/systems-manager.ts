@@ -1,12 +1,8 @@
-
 import * as iam from 'aws-cdk-lib/aws-iam';
-
 
 import { Construct } from 'constructs';
 
-export interface SystemsManagerProps {
-
-}
+export interface SystemsManagerProps {}
 
 export class SystemsManager extends Construct {
     // public readonly origin: cloudfront.IOrigin;
@@ -15,25 +11,20 @@ export class SystemsManager extends Construct {
     constructor(scope: Construct, id: string, props?: SystemsManagerProps) {
         super(scope, id);
 
-
         // CloudWatch Agent on the cars
-        const cloudwatch_monitor_role = new iam.Role(this, "CloudWatchAgentServerRole", {
-            assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
-        })
+        const cloudwatch_monitor_role = new iam.Role(this, 'CloudWatchAgentServerRole', {
+            assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+        });
 
         // arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         // arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
 
         cloudwatch_monitor_role.addManagedPolicy(
-            iam.ManagedPolicy.fromAwsManagedPolicyName(
-                "AmazonSSMManagedInstanceCore"
-            )
-        )
+            iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore')
+        );
         cloudwatch_monitor_role.addManagedPolicy(
-            iam.ManagedPolicy.fromAwsManagedPolicyName(
-                "CloudWatchAgentServerPolicy"
-            )
-        )
+            iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchAgentServerPolicy')
+        );
 
         // Create config in SSM Parameter store for CloudWatch
         // https://docs.aws.amazon.com/cdk/api/v1/python/aws_cdk.aws_ssm/README.html

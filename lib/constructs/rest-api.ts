@@ -3,30 +3,26 @@ import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 
-
 export interface RestApiProps {
-    cloudFrontDistributionName: string
-
+    cloudFrontDistributionName: string;
 }
 
 export class RestApi extends Construct {
     public readonly api: apigw.RestApi;
     public readonly apiAdminResource: apigw.Resource;
     public readonly bodyValidator: apigw.RequestValidator;
-    public readonly instanceidCommandidModel: apigw.Model
+    public readonly instanceidCommandidModel: apigw.Model;
 
     constructor(scope: Construct, id: string, props: RestApiProps) {
         super(scope, id);
 
-        const stack = Stack.of(this)
+        const stack = Stack.of(this);
 
-        const apig_log_group = new logs.LogGroup(
-            this, "apig_log_group", { retention: logs.RetentionDays.ONE_MONTH }
-        )
+        const apig_log_group = new logs.LogGroup(this, 'apig_log_group', {
+            retention: logs.RetentionDays.ONE_MONTH,
+        });
 
-        const restApi = new apigw.RestApi(
-            this,
-            "api", {
+        const restApi = new apigw.RestApi(this, 'api', {
             restApiName: stack.stackName,
             deployOptions: {
                 throttlingRateLimit: 10,
@@ -48,65 +44,61 @@ export class RestApi extends Construct {
             },
             defaultCorsPreflightOptions: {
                 allowOrigins: [
-                    "http://localhost:3000",
-                    "https://" + props.cloudFrontDistributionName,
+                    'http://localhost:3000',
+                    'https://' + props.cloudFrontDistributionName,
                 ],
                 allowCredentials: true,
-            }
-        })
+            },
+        });
 
-        this.api = restApi
+        this.api = restApi;
 
         // API Validation models
-        restApi.addModel(
-            "hostanameModel", {
-            contentType: "application/json",
+        restApi.addModel('hostanameModel', {
+            contentType: 'application/json',
             schema: {
                 schema: apigw.JsonSchemaVersion.DRAFT4,
                 type: apigw.JsonSchemaType.OBJECT,
                 properties: {
-                    "hostname": { type: apigw.JsonSchemaType.STRING },
+                    hostname: { type: apigw.JsonSchemaType.STRING },
                 },
-            }
-        })
+            },
+        });
 
-        restApi.addModel(
-            "UsernameModel", {
-            contentType: "application/json",
+        restApi.addModel('UsernameModel', {
+            contentType: 'application/json',
             schema: {
                 schema: apigw.JsonSchemaVersion.DRAFT4,
                 type: apigw.JsonSchemaType.OBJECT,
                 properties: {
-                    "username": { type: apigw.JsonSchemaType.STRING}
+                    username: { type: apigw.JsonSchemaType.STRING },
                 },
-            }
-        })
+            },
+        });
 
         // Base API structure
         // /admin
-        this.apiAdminResource = restApi.root.addResource("admin")
+        this.apiAdminResource = restApi.root.addResource('admin');
 
-        const bodyValidator = new apigw.RequestValidator(
-            this, "BodyValidator", {
+        const bodyValidator = new apigw.RequestValidator(this, 'BodyValidator', {
             restApi: restApi,
             validateRequestBody: true,
-        })
+        });
 
-        this.bodyValidator = bodyValidator
+        this.bodyValidator = bodyValidator;
 
-        const instanceidCommandidModel = restApi.addModel(
-            "IanstanceIdCommandIdModel", {
-            contentType: "application/json",
+        const instanceidCommandidModel = restApi.addModel('IanstanceIdCommandIdModel', {
+            contentType: 'application/json',
             schema: {
                 schema: apigw.JsonSchemaVersion.DRAFT4,
                 type: apigw.JsonSchemaType.OBJECT,
                 properties: {
-                    "InstanceId": { type: apigw.JsonSchemaType.STRING },
-                    "CommandId": { type: apigw.JsonSchemaType.STRING },
+                    InstanceId: { type: apigw.JsonSchemaType.STRING },
+                    CommandId: { type: apigw.JsonSchemaType.STRING },
                 },
             },
-        })
-        this.instanceidCommandidModel = instanceidCommandidModel
+        });
+        this.instanceidCommandidModel = instanceidCommandidModel;
 
         // TODO are these methods needed????
         // // API Validation models
@@ -158,6 +150,5 @@ export class RestApi extends Construct {
         //         },
         //     ),
         // )
-
     }
 }

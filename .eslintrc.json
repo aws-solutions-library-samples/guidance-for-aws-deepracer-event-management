@@ -6,6 +6,8 @@
   },
   "extends": [
     "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
     "plugin:jsx-a11y/recommended",
     "plugin:import/recommended",
     "plugin:@typescript-eslint/recommended",
@@ -17,9 +19,10 @@
     }
   },
   "overrides": [],
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "sourceType": "module",
-    "ecmaVersion": 2021
+    "ecmaVersion": "latest"
   },
   "plugins": ["prettier", "@typescript-eslint"],
   "rules": {
@@ -32,6 +35,11 @@
     "import/no-named-as-default": "off",
     "import/prefer-default-export": "off",
     "import/no-unresolved": ["error"],
+
+    "react/prop-types": "off",
+    "react/display-name": "off",
+    "react-hooks/rules-of-hooks": "off",
+    "react-hooks/exhaustive-deps": "error",
 
     "curly": ["error", "multi-line"],
     "eol-last": "error",
