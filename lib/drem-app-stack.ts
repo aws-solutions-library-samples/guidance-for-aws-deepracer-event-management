@@ -152,10 +152,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
         new GroupManager(this, 'GroupManagers', {
             adminGroupRole: props.adminGroupRole,
-            appsyncApi: {
-                api: appsyncApi,
-                schema: schema,
-            },
             lambdaConfig: props.lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
             userPoolId: props.userPool.userPoolId,

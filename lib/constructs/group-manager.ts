@@ -1,11 +1,9 @@
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import { DockerImage, Duration } from 'aws-cdk-lib';
 import * as apig from 'aws-cdk-lib/aws-apigateway';
-import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import { CodeFirstSchema } from 'awscdk-appsync-utils';
 
 import { Construct } from 'constructs';
 
@@ -13,10 +11,6 @@ export interface GroupManagerProps {
     adminGroupRole: IRole;
     userPoolId: string;
     userPoolArn: string;
-    appsyncApi: {
-        schema: CodeFirstSchema;
-        api: appsync.IGraphqlApi;
-    };
     restApi: {
         api: apig.RestApi;
         apiAdminResource: apig.Resource;
