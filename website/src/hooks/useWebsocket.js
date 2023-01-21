@@ -7,7 +7,7 @@ export default function useWebsocket(url, onMessage) {
   const wsClientRef = useRef();
 
   useEffect(() => {
-    console.info('wsClientRef:' + wsClientRef);
+    console.info('wsClientRef:' + JSON.stringify(wsClientRef.current));
     if (waitingToReconnect) {
       return;
     }
@@ -19,11 +19,13 @@ export default function useWebsocket(url, onMessage) {
 
       client.onopen = () => {
         console.info('WebSocket Connected');
+        console.log('wsClient = ' + JSON.stringify(wsClientRef));
         setIsConnected(true);
       };
 
-      client.onmessage = (message) => {
-        setMessage(message);
+      client.onmessage = (event) => {
+        console.info(JSON.parse(event.data));
+        onMessage(event.data);
       };
 
       client.onclose = () => {

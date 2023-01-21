@@ -40,7 +40,7 @@ export const Timekeeper = () => {
   const [fastestLap, SetFastestLap] = useState([]);
 
   // const autTimerIsConnected = false; // TODO remove when activating websocket (automated timer)
-  const { message, autTimerIsConnected } = useWebsocket('ws://localhost:8080');
+
   const { setNavigationOpen } = useContext(SideNavContext);
 
   const raceType = GetRaceTypeNameFromId(selectedEvent.raceRankingMethod);
@@ -150,14 +150,15 @@ export const Timekeeper = () => {
     });
   };
 
+  const onMessageFromAutTimer = (message) => {
+    console.info('Automated timer sent message: ' + message);
+    send('CAPTURE_AUT_LAP');
+  };
+  const [autTimerIsConnected] = useWebsocket('ws://127.0.0.1:8080', onMessageFromAutTimer); //('ws://localhost:8080');
   // closes sidenav when time keeper page is open
   useEffect(() => {
     setNavigationOpen(false);
   }, [setNavigationOpen]);
-
-  useEffect(() => {
-    console.info(message);
-  }, [message]);
 
   // Find the fastest lap
   useEffect(() => {
