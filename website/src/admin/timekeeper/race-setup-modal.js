@@ -224,7 +224,7 @@ export const RaceSetupModal = ({ onOk, onDismiss, onChange, events, config, visi
             filteringType="auto"
             virtualScroll
             // invalid={carValidation.isInvalid}
-            empty={'timekeeper.racer-selector.select-car-empty'}
+            empty={t('timekeeper.racer-selector.select-car-empty')}
             disabled={carValidation.isDisabled}
             loadingText={t('timekeeper.racer-selector.loading-racers')}
             // statusType={isLoadingCars ? t('timekeeper.racer-selector.loading') : ''} // TODO change to it´s own loading when API is in place
