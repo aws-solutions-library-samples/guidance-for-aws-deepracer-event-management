@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
 export default function useWebsocket(url, onMessage) {
-  const [message, setMessage] = useState();
   const [waitingToReconnect, setWaitingToReconnect] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const wsClientRef = useRef();
@@ -19,12 +18,10 @@ export default function useWebsocket(url, onMessage) {
 
       client.onopen = () => {
         console.info('WebSocket Connected');
-        console.log('wsClient = ' + JSON.stringify(wsClientRef));
         setIsConnected(true);
       };
 
       client.onmessage = (event) => {
-        console.info(JSON.parse(event.data));
         onMessage(event.data);
       };
 
@@ -57,9 +54,10 @@ export default function useWebsocket(url, onMessage) {
       client.onerror = (e) => console.error(e);
     }
     return () => {
+      console.info(JSON.stringify(wsClientRef.current.readyState));
       wsClientRef.current = null;
     };
   }, [waitingToReconnect]);
 
-  return [isConnected, message];
+  return [isConnected];
 }

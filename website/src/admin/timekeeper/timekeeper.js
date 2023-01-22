@@ -152,9 +152,9 @@ export const Timekeeper = () => {
 
   const onMessageFromAutTimer = (message) => {
     console.info('Automated timer sent message: ' + message);
-    send('CAPTURE_AUT_LAP');
+    send('CAPTURE_AUT_LAP', { isValid: true });
   };
-  const [autTimerIsConnected] = useWebsocket('ws://127.0.0.1:8080', onMessageFromAutTimer); //('ws://localhost:8080');
+  const [autTimerIsConnected] = useWebsocket('ws://localhost:8080', onMessageFromAutTimer); //('ws://localhost:8080');
   // closes sidenav when time keeper page is open
   useEffect(() => {
     setNavigationOpen(false);
@@ -274,12 +274,12 @@ export const Timekeeper = () => {
         <Container>
           <ColumnLayout columns={2} variant="text-grid">
             <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-              <Header variant="H3">Race format: </Header>
-              <Header variant="H3">{raceType} </Header>
+              <Header variant="h3">Race format: </Header>
+              <Header variant="h3">{raceType} </Header>
             </Grid>
             <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-              <Header variant="H3">Automated timer: </Header>
-              <Header variant="H3">{autTimerIsConnected ? 'Connected' : 'Not connected'} </Header>
+              <Header variant="h3">Automated timer: </Header>
+              <Header variant="h3">{autTimerIsConnected ? 'Connected' : 'Not connected'} </Header>
             </Grid>
           </ColumnLayout>
         </Container>
@@ -340,7 +340,7 @@ export const Timekeeper = () => {
               <hr></hr>
               <SpaceBetween>
                 <Header variant="h3">{t('timekeeper.resets')}:</Header>
-                <Header variant="H3">
+                <Header variant="h3">
                   {carResetCounter}/{allowedNrResets}
                 </Header>
               </SpaceBetween>

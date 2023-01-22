@@ -103,10 +103,8 @@ export const RaceSetupModal = ({ onOk, onDismiss, onChange, events, config, visi
         query: queries.getModelsForUser,
         variables: { racerName: racerName },
       });
-      console.log(response);
       if (response && response.data && response.data.getModelsForUser) {
         const fetchedModels = response.data.getModelsForUser;
-        console.log(fetchedModels);
         setModelOptions(
           fetchedModels.map((model) => {
             const modelName = model.modelKey.split('/').pop();
