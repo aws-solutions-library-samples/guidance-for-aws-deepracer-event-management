@@ -1,13 +1,13 @@
 import { Header } from '@cloudscape-design/components';
-import React, { forwardRef, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import useInterval from '../../hooks/useInterval';
 
 const interval = 10;
 
 const LapTimer = forwardRef((props, ref) => {
-  const [isRunning, setIsRunning] = useState(false);
-  const [prevTime, setPrevTime] = useState(null);
-  const [timeInMilliseconds, setTimeInMilliseconds] = useState(0);
+  const isRunning = useRef(false);
+  const prevTime = useRef(null);
+  const timeInMilliseconds = useRef(0);
   const [time, setTime] = useState({
     minutes: 0,
     seconds: 0,
@@ -16,30 +16,27 @@ const LapTimer = forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => ({
     start() {
-      // console.log('Start Timer');
-      setIsRunning(true);
-      setPrevTime(null);
-      setTime(toTime(0));
+      isRunning.current = true;
+      prevTime.current = null;
     },
     pause() {
-      // console.log('Pause Resume Timer');
-      setIsRunning(false);
+      isRunning.current = false;
     },
     reset(startingTime = 0) {
-      // console.log('Reset Timer');
-      setPrevTime(null);
-      setTimeInMilliseconds(startingTime);
-      setTime(toTime(startingTime));
+      console.log('Reset Lap Timer: ' + startingTime);
+      prevTime.current = null;
+      timeInMilliseconds.current = startingTime;
+      setTime((prevState) => toTime(startingTime));
     },
     getCurrentTimeInMs() {
-      return timeInMilliseconds;
+      return timeInMilliseconds.current;
     },
     getIsRunning() {
-      return isRunning;
+      return isRunning.current;
     },
   }));
 
-  const toTime = (time) => {
+  const toTime = useCallback((time) => {
     let milliseconds = parseInt(time % 1000, 10);
     let seconds = Math.floor((time / 1000) % 60);
     let minutes = Math.floor(time / (1000 * 60));
@@ -57,19 +54,19 @@ const LapTimer = forwardRef((props, ref) => {
       seconds,
       minutes,
     };
-  };
+  }, []);
 
   useInterval(
     () => {
-      const prev = prevTime ? prevTime : Date.now();
+      const prev = prevTime.current ? prevTime.current : Date.now();
       const diffTime = Date.now() - prev;
-      const newMilliTime = timeInMilliseconds + diffTime;
-      setTimeInMilliseconds(newMilliTime);
+      const newMilliTime = timeInMilliseconds.current + diffTime;
+      timeInMilliseconds.current = newMilliTime;
       const newTime = toTime(newMilliTime);
-      setPrevTime(Date.now());
-      setTime(newTime);
+      prevTime.current = Date.now();
+      setTime((prevState) => newTime);
     },
-    isRunning ? interval : null
+    isRunning.current ? interval : null
   );
 
   return (
