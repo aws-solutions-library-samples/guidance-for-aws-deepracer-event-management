@@ -152,7 +152,9 @@ export const Timekeeper = () => {
     console.info('Automated timer sent message: ' + message);
     send('CAPTURE_AUT_LAP', { isValid: true });
   };
-  const [autTimerIsConnected] = useWebsocket('ws://localhost:8080', onMessageFromAutTimer); //('ws://localhost:8080');
+  const wsUrl = window.location.href.split('/', 3)[2] ?? 'localhost:8080';
+  const [autTimerIsConnected] = useWebsocket(`ws://${wsUrl}`, onMessageFromAutTimer);
+
   // closes sidenav when time keeper page is open
   useEffect(() => {
     setNavigationOpen(false);
