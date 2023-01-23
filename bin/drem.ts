@@ -12,7 +12,7 @@ const env = { account: process.env['CDK_DEFAULT_ACCOUNT'], region: 'eu-west-1' }
 const branchFileName = 'branch.txt';
 let branchName;
 if (fs.existsSync(branchFileName)) {
-    branchName = fs.readFileSync(branchFileName).toString();
+    branchName = fs.readFileSync(branchFileName).toString().trim();
     console.info('Branch Name: ' + branchName);
 } else {
     console.error(
@@ -24,7 +24,7 @@ if (fs.existsSync(branchFileName)) {
 const emailfileName = 'email.txt';
 let email;
 if (fs.existsSync(emailfileName)) {
-    email = fs.readFileSync(emailfileName).toString();
+    email = fs.readFileSync(emailfileName).toString().trim();
     console.info('Email Name: ' + email);
 } else {
     console.error(
