@@ -6,13 +6,12 @@ export default function useWebsocket(url, onMessage) {
   const wsClientRef = useRef();
 
   useEffect(() => {
-    console.info('wsClientRef:' + JSON.stringify(wsClientRef.current));
     if (waitingToReconnect) {
       return;
     }
 
     if (!wsClientRef.current) {
-      console.info('Websocket trying to connect to server....');
+      console.info(`Websocket trying to connect to server on url ${url}`);
       const client = new WebSocket(url);
       wsClientRef.current = client;
 
@@ -54,7 +53,6 @@ export default function useWebsocket(url, onMessage) {
       client.onerror = (e) => console.error(e);
     }
     return () => {
-      console.info(JSON.stringify(wsClientRef.current.readyState));
       wsClientRef.current = null;
     };
   }, [waitingToReconnect]);

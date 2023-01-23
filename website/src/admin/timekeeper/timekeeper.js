@@ -39,8 +39,6 @@ export const Timekeeper = () => {
   const [currentLap, SetCurrentLap] = useState(defaultLap);
   const [fastestLap, SetFastestLap] = useState([]);
 
-  // const autTimerIsConnected = false; // TODO remove when activating websocket (automated timer)
-
   const { setNavigationOpen } = useContext(SideNavContext);
 
   const raceType = GetRaceTypeNameFromId(selectedEvent.raceRankingMethod);
@@ -60,7 +58,7 @@ export const Timekeeper = () => {
   const [, send] = useMachine(stateMachine, {
     actions: {
       resetRace: () => {
-        console.log('Reseting race state');
+        //console.log('Reseting race state');
         setRace((prevState) => {
           return { ...prevState, username: null, currentModelId: null, currentCarId: null };
         });
@@ -73,27 +71,27 @@ export const Timekeeper = () => {
         SetRacerSelectorModalIsVisible(true);
       },
       readyToStart: (context, event) => {
-        console.log('readyToStart race for user ' + event.username);
+        //console.log('readyToStart race for user ' + event.username);
 
         resetTimers();
         SetEndSessionModalIsVisible(false);
         SetRacerSelectorModalIsVisible(false);
       },
       endRace: () => {
-        console.log('Ending race state');
+        // console.log('Ending race state');
         SetEndSessionModalIsVisible(true);
         SetRacerSelectorModalIsVisible(false);
       },
       startTimer: () => {
-        console.log('Start Timer state');
+        // console.log('Start Timer state');
         startTimers();
       },
       pauseTimer: () => {
-        console.log('Pause Timer state');
+        // console.log('Pause Timer state');
         pauseTimers();
       },
       captureLap: (context, event) => {
-        console.log('Capturing new lap');
+        // console.log('Capturing new lap');
         const isLapValid = event.isValid && carResetCounter <= selectedEvent.raceNumberOfResets;
 
         const lapId = race.laps.length;

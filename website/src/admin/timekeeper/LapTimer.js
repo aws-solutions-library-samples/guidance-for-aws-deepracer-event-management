@@ -23,7 +23,6 @@ const LapTimer = forwardRef((props, ref) => {
       isRunning.current = false;
     },
     reset(startingTime = 0) {
-      console.log('Reset Lap Timer: ' + startingTime);
       prevTime.current = null;
       timeInMilliseconds.current = startingTime;
       setTime((prevState) => toTime(startingTime));
