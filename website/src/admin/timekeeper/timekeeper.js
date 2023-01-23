@@ -152,6 +152,8 @@ export const Timekeeper = () => {
     console.info('Automated timer sent message: ' + message);
     send('CAPTURE_AUT_LAP', { isValid: true });
   };
+
+  //TODO fix so that useWebsocket is invoked only on local networks
   const wsUrl = window.location.href.split('/', 3)[2] ?? 'localhost:8080';
   const [autTimerIsConnected] = useWebsocket(`ws://${wsUrl}`, onMessageFromAutTimer);
 
