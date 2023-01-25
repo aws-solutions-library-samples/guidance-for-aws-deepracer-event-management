@@ -48,7 +48,7 @@ export class BaseStack extends cdk.Stack {
                 { abortIncompleteMultipartUploadAfter: Duration.days(1) },
             ],
         });
-
+        this.logsBucket = logsBucket;
         logsBucket.policy!.document.addStatements(
             new cdk.aws_iam.PolicyStatement({
                 sid: 'AllowSSLRequestsOnly',
