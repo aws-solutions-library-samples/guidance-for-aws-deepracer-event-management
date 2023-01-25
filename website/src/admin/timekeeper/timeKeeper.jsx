@@ -7,7 +7,7 @@ import {
   Container,
   Grid,
   Header,
-  SpaceBetween,
+  SpaceBetween
 } from '@cloudscape-design/components';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 
@@ -18,12 +18,12 @@ import useWebsocket from '../../hooks/useWebsocket';
 import { eventContext } from '../../store/EventProvider';
 import SideNavContext from '../../store/SideNavContext';
 import { GetRaceResetsNameFromId, GetRaceTypeNameFromId } from '../events/race-config';
-import { EndSessionModal } from './end-session-modal';
-import { LapTable } from './lap-table';
-import LapTimer from './LapTimer';
-import { defaultLap, defaultRace } from './race-domain';
-import { RaceSetupModal } from './race-setup-modal';
-import RaceTimer from './RaceTimer';
+import { EndSessionModal } from './endSessionModal';
+import { LapTable } from './lapTable';
+import LapTimer from './lapTimer';
+import { defaultLap, defaultRace } from './raceDomain';
+import { RaceSetupModal } from './raceSetupModal';
+import RaceTimer from './raceTimer';
 import { stateMachine } from './stateMachine';
 import styles from './timekeeper.module.css';
 
@@ -355,7 +355,6 @@ export const Timekeeper = () => {
               </Button>
             </Grid>
           </Container>
-          <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }]}>
             <SpaceBetween size="m" direction="horizontal">
               <LapTable
                 header={t('timekeeper.fastest-lap')}
@@ -368,7 +367,6 @@ export const Timekeeper = () => {
                 onAction={actionHandler}
               />
             </SpaceBetween>
-          </Grid>
         </Grid>
       </SpaceBetween>
     </Box>

@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import useMutation from '../../hooks/useMutation';
-import { LapTable } from './lap-table';
+import { LapTable } from './lapTable';
 
 const EndSessionModal = ({ race, onSubmitRace, visible, onAction, onDismiss, onAbandonRace }) => {
   const { t } = useTranslation();

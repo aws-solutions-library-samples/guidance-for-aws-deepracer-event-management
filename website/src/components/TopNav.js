@@ -19,7 +19,7 @@ import { AdminHome } from '../admin/home.js';
 import { Leaderboard } from '../admin/leaderboard/leaderboard.js';
 import { AdminModels } from '../admin/models.js';
 import { AdminQuarantine } from '../admin/quarantine.js';
-import { Timekeeper } from '../admin/timekeeper/timekeeper';
+import { Timekeeper } from '../admin/timeKeeper/timeKeeper';
 import { Home } from '../home.js';
 import useLink from '../hooks/useLink.js';
 import { Models } from '../models.js';

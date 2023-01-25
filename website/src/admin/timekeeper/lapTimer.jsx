@@ -4,6 +4,7 @@ import useInterval from '../../hooks/useInterval';
 
 const interval = 10;
 
+
 const LapTimer = forwardRef((props, ref) => {
   const isRunning = useRef(false);
   const prevTime = useRef(null);

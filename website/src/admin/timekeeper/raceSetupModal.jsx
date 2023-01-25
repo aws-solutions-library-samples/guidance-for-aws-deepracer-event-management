@@ -97,6 +97,7 @@ export const RaceSetupModal = ({ onOk, onDismiss, onChange, events, config, visi
   useEffect(() => {
     if (!config.username) return;
 
+    
     const getModelForUser = async (racerName) => {
       console.log(racerName);
       const response = await API.graphql({
