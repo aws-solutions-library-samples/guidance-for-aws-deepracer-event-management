@@ -38,7 +38,7 @@ export class BaseStack extends cdk.Stack {
 
         const logsBucket = new s3.Bucket(this, 'logsBucket', {
             encryption: s3.BucketEncryption.S3_MANAGED,
-            serverAccessLogsPrefix: 'access-logs/logsBucket/',
+            serverAccessLogsPrefix: 'access-logs/logsBucket/', // TODO is this causing a delete issue??
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
             enforceSSL: true,
             autoDeleteObjects: true,
