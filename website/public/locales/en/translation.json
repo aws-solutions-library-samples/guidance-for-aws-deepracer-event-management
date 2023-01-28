@@ -287,6 +287,7 @@
   "timekeeper.racer-selector.get-ready": "Get ready to race!",
   "timekeeper.racer-selector.loading-events": "Loading events",
   "timekeeper.racer-selector.loading-racers": "Loading racers",
+  "timekeeper.racer-selector.loading-cars": "Loading cars",
   "timekeeper.racer-selector.loading": "loading",
   "timekeeper.racer-selector.select-event": "Select event",
   "timekeeper.racer-selector.select-racer": "Select racer",

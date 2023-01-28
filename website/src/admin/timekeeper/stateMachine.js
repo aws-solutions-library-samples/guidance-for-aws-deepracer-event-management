@@ -19,6 +19,7 @@ export const stateMachine = createMachine({
       on: {
         TOGGLE: 'RaceStarted',
         END: 'RaceReseted',
+        CAPTURE_AUT_LAP: 'RaceStarted',
       },
     },
     RaceStarted: {
@@ -33,6 +34,7 @@ export const stateMachine = createMachine({
             },
             END: 'raceIsOver',
             CAPTURE_LAP: 'captureLap',
+            CAPTURE_AUT_LAP: 'captureLap',
           },
         },
         paused: {

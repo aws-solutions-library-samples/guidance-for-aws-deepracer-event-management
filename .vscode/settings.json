@@ -6,6 +6,13 @@
       "source.fixAll.eslint": true
     }
   },
+  "[typescript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    }
+  },
   "eslint.validate": ["javascript"],
   "editor.formatOnSave": true,
   "python.formatting.provider": "black",
