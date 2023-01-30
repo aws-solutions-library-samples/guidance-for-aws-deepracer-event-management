@@ -5,12 +5,12 @@ import {
   Header,
   Input,
   Select,
-  SpaceBetween,
+  SpaceBetween
 } from '@cloudscape-design/components';
 import { getNames, registerLocale } from 'i18n-iso-countries';
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { eventContext } from '../../store/EventProvider';
+import { eventContext } from '../../store/eventProvider';
 
 export const EventInfoPanel = ({
   onFormIsValid,

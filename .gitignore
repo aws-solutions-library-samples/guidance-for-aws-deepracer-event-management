@@ -34,8 +34,9 @@ website/src/graphql/subscriptions.js
 appsyncId.txt
 
 
-lib/*.js
-bin/*.js
+lib/**/*.js
+bin/**/*.js
+test/**/*.js
 !jest.config.js
 *.d.ts
 node_modules

@@ -5,14 +5,14 @@ import {
   Grid,
   Modal,
   Select,
-  SpaceBetween,
+  SpaceBetween
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as queries from '../../graphql/queries';
-import { carsContext } from '../../store/CarProvider';
-import { fleetContext } from '../../store/FleetProvider';
+import { carsContext } from '../../store/carProvider';
+import { fleetContext } from '../../store/fleetProvider';
 
 import useQuery from '../../hooks/useQuery';
 
@@ -97,7 +97,7 @@ export const RaceSetupModal = ({ onOk, onDismiss, onChange, events, config, visi
   useEffect(() => {
     if (!config.username) return;
 
-    
+
     const getModelForUser = async (racerName) => {
       console.log(racerName);
       const response = await API.graphql({

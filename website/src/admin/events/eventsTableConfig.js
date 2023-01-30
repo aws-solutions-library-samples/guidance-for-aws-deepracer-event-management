@@ -3,7 +3,7 @@ import {
   GetRaceResetsNameFromId,
   GetRaceTypeNameFromId,
   GetTrackTypeNameFromId,
-} from './race-config';
+} from './raceConfig';
 
 export const VisibleContentOptions = () => {
   return [

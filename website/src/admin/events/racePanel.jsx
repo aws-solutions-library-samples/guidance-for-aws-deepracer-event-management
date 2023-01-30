@@ -19,7 +19,7 @@ import {
   RaceTypeConfig,
   ResetConfig,
   TrackTypeConfig,
-} from './race-config';
+} from './raceConfig';
 
 const RaceCustomizationsFooter = (props) => {
   const [custIsExpanded, setCustIsExpanded] = useState(false);
@@ -80,6 +80,7 @@ const DefaultRacingFooter = ({
 };
 
 const FinishXLapsFooter = ({ lapsToFinish, onChange, lapsToFinishOptions }) => {
+  const { t } = useTranslation();
   return (
     <SpaceBetween size="l">
       <FormField

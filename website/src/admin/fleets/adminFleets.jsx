@@ -4,7 +4,7 @@ import { API } from 'aws-amplify';
 import React, { useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ContentHeader } from '../../components/ContentHeader';
+import { ContentHeader } from '../../components/contentHeader';
 import * as mutations from '../../graphql/mutations';
 
 import {
@@ -13,11 +13,11 @@ import {
   MatchesCountText,
   TableHeader,
   TablePagination,
-  TablePreferences,
-} from '../../components/TableConfig';
-import { useLocalStorage } from '../../hooks/useLocalStorage.js';
-import { fleetContext } from '../../store/FleetProvider';
-import { ColumnDefinitions, VisibleContentOptions } from './fleets-table-config';
+  TablePreferences
+} from '../../components/tableConfig';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { fleetContext } from '../../store/fleetProvider';
+import { ColumnDefinitions, VisibleContentOptions } from './fleetsTableConfig';
 
 const AdminFleets = () => {
   const { t } = useTranslation();

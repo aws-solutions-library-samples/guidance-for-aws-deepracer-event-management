@@ -1,16 +1,18 @@
 import { Button, Form, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-import { ContentHeader } from '../../components/ContentHeader';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ContentHeader } from '../../components/contentHeader';
 import useMutation from '../../hooks/useMutation';
 import { merge } from '../../support-functions/merge';
-import { CarsPanel } from './cars-panel';
-import { fleet } from './fleet-domain';
-import { GeneralInfoPanel } from './general-info-panel';
+import { CarsPanel } from './carsPanel';
+import { fleet } from './fleetDomain';
+import { GeneralInfoPanel } from './generalInfoPanel';
 
-export const CreateFleet = () => {
+export const EditFleet = () => {
   const { t } = useTranslation();
+  const location = useLocation();
+  const selectedFleet = location.state;
   const navigate = useNavigate();
 
   const [send, loading, errorMessage, data] = useMutation();
@@ -35,13 +37,19 @@ export const CreateFleet = () => {
     }
   };
 
-  const onCreateHandler = async () => {
-    send('addFleet', fleetConfig);
+  useEffect(() => {
+    if (selectedFleet) {
+      setFleetConfig(selectedFleet);
+    }
+  }, [selectedFleet]);
+
+  const onUpdateHandler = async () => {
     send('carUpdates', {
       resourceIds: fleetConfig.carIds,
       fleetId: fleetConfig.fleetId,
       fleetName: fleetConfig.fleetName,
     });
+    send('updateFleet', fleetConfig);
   };
 
   const formIsValidHandler = () => {
@@ -55,13 +63,13 @@ export const CreateFleet = () => {
   return (
     <>
       <ContentHeader
-        header={t('fleets.create-fleet')}
+        header={t('fleets.edit-fleet')}
         description={t('fleets.description')}
         breadcrumbs={[
           { text: t('home.breadcrumb'), href: '/' },
           { text: t('admin.breadcrumb'), href: '/admin/home' },
           { text: t('fleets.breadcrumb'), href: '/admin/fleets' },
-          { text: t('fleets.create-fleet') },
+          { text: t('fleets.edit-fleet') },
         ]}
       />
       <form onSubmit={(event) => event.preventDefault()}>
@@ -73,10 +81,10 @@ export const CreateFleet = () => {
               </Button>
               <Button
                 variant="primary"
-                onClick={onCreateHandler}
+                onClick={onUpdateHandler}
                 disabled={loading || createButtonIsDisabled}
               >
-                Create Fleet
+                Save Changes
               </Button>
             </SpaceBetween>
           }

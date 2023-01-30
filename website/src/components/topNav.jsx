@@ -5,27 +5,27 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { useTranslation } from 'react-i18next';
-import { AdminActivation } from '../admin/carActivation.js';
-import { AdminCars } from '../admin/cars.js';
-import { CreateEvent } from '../admin/events/create-event.js';
-import { EditEvent } from '../admin/events/edit-event.js';
-import { AdminEvents } from '../admin/events/events.js';
-import { CreateFleet } from '../admin/fleets/create-fleet.js';
-import { EditFleet } from '../admin/fleets/edit-fleet.js';
-import { AdminFleets } from '../admin/fleets/fleets.js';
-import { AdminGroups } from '../admin/groups.js';
-import { AdminGroupsDetail } from '../admin/groups/detail.js';
-import { AdminHome } from '../admin/home.js';
-import { Leaderboard } from '../admin/leaderboard/leaderboard.js';
-import { AdminModels } from '../admin/models.js';
-import { AdminQuarantine } from '../admin/quarantine.js';
+import { AdminActivation } from '../admin/carActivation';
+import { AdminCars } from '../admin/cars';
+import { AdminEvents } from '../admin/events/adminEvents';
+import { CreateEvent } from '../admin/events/createEvent';
+import { EditEvent } from '../admin/events/editEvent';
+import { AdminFleets } from '../admin/fleets/adminFleets';
+import { CreateFleet } from '../admin/fleets/createFleet';
+import { EditFleet } from '../admin/fleets/editFleet';
+import { AdminGroups } from '../admin/groups';
+import { AdminGroupsDetail } from '../admin/groups/detail';
+import { AdminHome } from '../admin/home';
+import { Leaderboard } from '../admin/leaderboard/leaderboard';
+import { AdminModels } from '../admin/models';
+import { AdminQuarantine } from '../admin/quarantine';
 import { Timekeeper } from '../admin/timekeeper/timeKeeper';
-import { Home } from '../home.js';
-import useLink from '../hooks/useLink.js';
-import { Models } from '../models.js';
-import { eventContext } from '../store/EventProvider';
-import SideNavContext from '../store/SideNavContext.js';
-import { Upload } from '../upload.js';
+import { Home } from '../home';
+import useLink from '../hooks/useLink';
+import { Models } from '../models';
+import { eventContext } from '../store/eventProvider';
+import SideNavContext from '../store/sideNavContext';
+import { Upload } from '../upload';
 
 function cwr(operation, payload) {
   // Instrument Routing to Record Page Views

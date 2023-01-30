@@ -1,3 +1,10 @@
+import { API } from 'aws-amplify';
+import React, { useEffect, useState } from 'react';
+import * as queries from '../graphql/queries';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+// import * as mutations from '../graphql/mutations';
+// import * as subscriptions from '../graphql/subscriptions'
+
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
@@ -5,25 +12,23 @@ import {
   Grid,
   Header,
   Pagination,
+  SpaceBetween,
   Table,
-  TextFilter,
+  TextFilter
 } from '@cloudscape-design/components';
-import { API } from 'aws-amplify';
-import React, { useEffect, useState } from 'react';
 
+import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from '../components/ContentHeader';
+import { ContentHeader } from '../components/contentHeader';
 import {
   AdminModelsColumnsConfig,
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
   PageSizePreference,
-  WrapLines,
-} from '../components/TableConfig';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-
-import dayjs from 'dayjs';
+  WrapLines
+} from '../components/tableConfig';
+import CarModelUploadModal from './carModelUploadModal';
 
 // day.js
 var advancedFormat = require('dayjs/plugin/advancedFormat');
@@ -34,42 +39,56 @@ dayjs.extend(advancedFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const AdminQuarantine = () => {
+const AdminModels = () => {
   const { t } = useTranslation();
 
   const [allItems, setItems] = useState([]);
+  const [cars, setCars] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedModelsBtn, setSelectedModelsBtn] = useState(true);
 
   useEffect(() => {
-    async function getQuarantinedModels() {
+    async function getData() {
       console.log('Collecting models...');
-
       const apiName = 'deepracerEventManager';
-      const apiPath = 'admin/quarantinedmodels';
+      const apiPath = 'models';
 
       const response = await API.get(apiName, apiPath);
       var models = response.map(function (model, i) {
+        // TODO: Fix inconsistency in model.Key / model.key in /admin/model.js and /models.js
         const modelKeyPieces = model.Key.split('/');
         return {
-          id: i,
+          key: model.Key,
           userName: modelKeyPieces[modelKeyPieces.length - 3],
           modelName: modelKeyPieces[modelKeyPieces.length - 1],
           modelDate: dayjs(model.LastModified).format('YYYY-MM-DD HH:mm:ss (z)'),
         };
       });
       setItems(models);
+      console.log(allItems);
+
+      console.log('Collecting cars...');
+      // Get CarsOnline
+      async function carsOnline() {
+        const response = await API.graphql({
+          query: queries.carsOnline,
+          variables: { online: true },
+        });
+        setCars(response.data.carsOnline);
+      }
+      carsOnline();
 
       setIsLoading(false);
     }
-
-    getQuarantinedModels();
+    console.log(cars);
+    getData();
 
     return () => {
       // Unmounting
     };
   }, []);
 
-  const [preferences, setPreferences] = useLocalStorage('DREM-quarantine-table-preferences', {
+  const [preferences, setPreferences] = useLocalStorage('DREM-models-table-preferences', {
     ...DefaultPreferences,
     visibleContent: ['userName', 'modelName', 'modelDate'],
   });
@@ -87,7 +106,7 @@ const AdminQuarantine = () => {
             title={t('models.no-matches')}
             subtitle={t('models.we-cant-find-a-match')}
             action={
-              <Button onClick={() => actions.setFiltering('')}>{t('models.clear-filter')}</Button>
+              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
             }
           />
         ),
@@ -96,12 +115,17 @@ const AdminQuarantine = () => {
       sorting: { defaultState: { sortingColumn: adminModelsColsConfig[3], isDescending: true } },
       selection: {},
     });
-  const { selectedItems } = collectionProps;
+  const [selectedItems, setSelectedItems] = useState([]);
 
   const visibleContentOptions = [
     {
       label: t('models.model-information'),
       options: [
+        {
+          id: 'userName',
+          label: t('models.user-name'),
+          editable: false,
+        },
         {
           id: 'modelName',
           label: t('models.model-name'),
@@ -118,12 +142,12 @@ const AdminQuarantine = () => {
   return (
     <>
       <ContentHeader
-        header={t('quarantine.header')}
-        description={t('quarantine.list-of-all-models')}
+        header={t('models.all-header')}
+        description={t('models.list-of-all-uploaded-models')}
         breadcrumbs={[
           { text: t('home.breadcrumb'), href: '/' },
           { text: t('admin.breadcrumb'), href: '/admin/home' },
-          { text: t('quarantine.breadcrumb') },
+          { text: t('models.breadcrumb') },
         ]}
       />
 
@@ -138,8 +162,25 @@ const AdminQuarantine = () => {
                   ? `(${selectedItems.length}/${allItems.length})`
                   : `(${allItems.length})`
               }
+              actions={
+                <SpaceBetween direction="horizontal" size="xs">
+                  <Button
+                    onClick={() => {
+                      setSelectedItems([]);
+                      setSelectedModelsBtn(true);
+                    }}
+                  >
+                    {t('button.clear-selected')}
+                  </Button>
+                  <CarModelUploadModal
+                    disabled={selectedModelsBtn}
+                    selectedModels={selectedItems}
+                    cars={cars}
+                  ></CarModelUploadModal>
+                </SpaceBetween>
+              }
             >
-              {t('quarantine.header')}
+              {t('models.all-header')}
             </Header>
           }
           columnDefinitions={adminModelsColsConfig}
@@ -164,6 +205,15 @@ const AdminQuarantine = () => {
           loading={isLoading}
           loadingText={t('models.loading-models')}
           visibleColumns={preferences.visibleContent}
+          selectedItems={selectedItems}
+          selectionType="multi"
+          stickyHeader="true"
+          trackBy={'key'}
+          onSelectionChange={({ detail: { selectedItems } }) => {
+            setSelectedItems(selectedItems);
+            selectedItems.length ? setSelectedModelsBtn(false) : setSelectedModelsBtn(true);
+          }}
+          resizableColumns
           preferences={
             <CollectionPreferences
               title={t('table.preferences')}
@@ -186,4 +236,4 @@ const AdminQuarantine = () => {
   );
 };
 
-export { AdminQuarantine };
+export { AdminModels };

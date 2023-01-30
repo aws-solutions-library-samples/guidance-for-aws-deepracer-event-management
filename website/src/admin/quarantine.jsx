@@ -4,22 +4,23 @@ import {
   CollectionPreferences,
   Grid,
   Header,
-  Link,
   Pagination,
   Table,
-  TextFilter,
+  TextFilter
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
+
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from '../components/ContentHeader';
+import { ContentHeader } from '../components/contentHeader';
 import {
+  AdminModelsColumnsConfig,
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
   PageSizePreference,
-  WrapLines,
-} from '../components/TableConfig';
+  WrapLines
+} from '../components/tableConfig';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 import dayjs from 'dayjs';
@@ -33,109 +34,53 @@ dayjs.extend(advancedFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export function AdminGroups() {
+const AdminQuarantine = () => {
   const { t } = useTranslation();
 
   const [allItems, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedItems] = useState([]);
-
-  const apiName = 'deepracerEventManager';
 
   useEffect(() => {
-    const getData = async () => {
-      const apiPath = 'admin/groups';
+    async function getQuarantinedModels() {
+      console.log('Collecting models...');
 
-      const groups = await API.get(apiName, apiPath);
-      setItems(groups.Groups);
+      const apiName = 'deepracerEventManager';
+      const apiPath = 'admin/quarantinedmodels';
+
+      const response = await API.get(apiName, apiPath);
+      var models = response.map(function (model, i) {
+        const modelKeyPieces = model.Key.split('/');
+        return {
+          id: i,
+          userName: modelKeyPieces[modelKeyPieces.length - 3],
+          modelName: modelKeyPieces[modelKeyPieces.length - 1],
+          modelDate: dayjs(model.LastModified).format('YYYY-MM-DD HH:mm:ss (z)'),
+        };
+      });
+      setItems(models);
+
       setIsLoading(false);
-    };
+    }
 
-    getData();
+    getQuarantinedModels();
 
     return () => {
       // Unmounting
     };
   }, []);
 
-  const [preferences, setPreferences] = useLocalStorage('DREM-groups-table-preferences', {
+  const [preferences, setPreferences] = useLocalStorage('DREM-quarantine-table-preferences', {
     ...DefaultPreferences,
-    visibleContent: ['groupName', 'description'],
+    visibleContent: ['userName', 'modelName', 'modelDate'],
   });
 
-  const columnsConfig = [
-    {
-      id: 'groupName',
-      header: t('groups.header-name'),
-      cell: (item) => (
-        <div>
-          <Link href={window.location.href + '/' + item.GroupName}>{item.GroupName}</Link>
-        </div>
-      ),
-      sortingField: 'groupName',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'description',
-      header: t('groups.header-description'),
-      cell: (item) => item.Description || '-',
-      sortingField: 'description',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'creationDate',
-      header: t('groups.header-creation-date'),
-      cell: (item) => dayjs(item.creationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
-      sortingField: 'creationDate',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'lastModifiedDate',
-      header: t('groups.header-last-modified-date'),
-      cell: (item) => dayjs(item.LastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
-      sortingField: 'lastModifiedDate',
-      width: 200,
-      minWidth: 150,
-    },
-  ];
-
-  const visibleContentOptions = [
-    {
-      label: t('groups.information'),
-      options: [
-        {
-          id: 'groupName',
-          label: t('groups.header-name'),
-          editable: false,
-        },
-        {
-          id: 'description',
-          label: t('groups.header-description'),
-          editable: false,
-        },
-        {
-          id: 'creationDate',
-          label: t('groups.header-creation-date'),
-        },
-        {
-          id: 'lastModifiedDate',
-          label: t('groups.header-last-modified-date'),
-        },
-      ],
-    },
-  ];
+  const adminModelsColsConfig = AdminModelsColumnsConfig();
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(allItems, {
       filtering: {
         empty: (
-          <EmptyState
-            title={t('groups.no-groups')}
-            subtitle={t('groups.no-groups-have-been-defined')}
-          />
+          <EmptyState title={t('models.no-models')} subtitle={t('models.no-models-to-display')} />
         ),
         noMatch: (
           <EmptyState
@@ -148,19 +93,37 @@ export function AdminGroups() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[0] } },
+      sorting: { defaultState: { sortingColumn: adminModelsColsConfig[3], isDescending: true } },
       selection: {},
     });
+  const { selectedItems } = collectionProps;
+
+  const visibleContentOptions = [
+    {
+      label: t('models.model-information'),
+      options: [
+        {
+          id: 'modelName',
+          label: t('models.model-name'),
+          editable: false,
+        },
+        {
+          id: 'modelDate',
+          label: t('models.upload-date'),
+        },
+      ],
+    },
+  ];
 
   return (
     <>
       <ContentHeader
-        header={t('groups.header')}
-        description={t('groups.description')}
+        header={t('quarantine.header')}
+        description={t('quarantine.list-of-all-models')}
         breadcrumbs={[
           { text: t('home.breadcrumb'), href: '/' },
           { text: t('admin.breadcrumb'), href: '/admin/home' },
-          { text: t('groups.breadcrumb') },
+          { text: t('quarantine.breadcrumb') },
         ]}
       />
 
@@ -176,10 +139,10 @@ export function AdminGroups() {
                   : `(${allItems.length})`
               }
             >
-              {t('groups.header')}
+              {t('quarantine.header')}
             </Header>
           }
-          columnDefinitions={columnsConfig}
+          columnDefinitions={adminModelsColsConfig}
           items={items}
           pagination={
             <Pagination
@@ -195,16 +158,12 @@ export function AdminGroups() {
             <TextFilter
               {...filterProps}
               countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel={t('groups.filter-groups')}
+              filteringAriaLabel={t('models.filter-models')}
             />
           }
           loading={isLoading}
-          loadingText={t('groups.loading-groups')}
+          loadingText={t('models.loading-models')}
           visibleColumns={preferences.visibleContent}
-          selectedItems={selectedItems}
-          stickyHeader="true"
-          trackBy="GroupName"
-          resizableColumns
           preferences={
             <CollectionPreferences
               title={t('table.preferences')}
@@ -212,7 +171,7 @@ export function AdminGroups() {
               cancelLabel={t('button.cancel')}
               onConfirm={({ detail }) => setPreferences(detail)}
               preferences={preferences}
-              pageSizePreference={PageSizePreference(t('groups.page-size-label'))}
+              pageSizePreference={PageSizePreference(t('models.page-size-label'))}
               visibleContentPreference={{
                 title: t('table.select-visible-colunms'),
                 options: visibleContentOptions,
@@ -225,4 +184,6 @@ export function AdminGroups() {
       </Grid>
     </>
   );
-}
+};
+
+export { AdminQuarantine };

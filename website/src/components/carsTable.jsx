@@ -12,11 +12,11 @@ import {
   EmptyState,
   MatchesCountText,
   TablePagination,
-  TablePreferences,
-} from '../components/TableConfig';
+  TablePreferences
+} from './tableConfig';
 
 import { useTranslation } from 'react-i18next';
-import { carsContext } from '../store/CarProvider';
+import { carsContext } from '../store/carProvider';
 
 // day.js
 var advancedFormat = require('dayjs/plugin/advancedFormat');
