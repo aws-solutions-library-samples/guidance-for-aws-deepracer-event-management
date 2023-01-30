@@ -1,19 +1,18 @@
 import { Button, Form, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { ContentHeader } from '../../components/ContentHeader';
+import { useNavigate } from 'react-router-dom';
+import { ContentHeader } from '../../components/contentHeader';
 import useMutation from '../../hooks/useMutation';
-import { merge } from '../../support-functions/merge';
-import { ConvertBeEventToFeEvent, ConvertFeEventToBeEvent, event } from './event-domain';
-import { CarFleetPanel } from './fleet-panel';
-import { EventInfoPanel } from './general-info-panel';
-import { RacePanel } from './race-panel';
 
-export const EditEvent = () => {
+import { merge } from '../../support-functions/merge';
+import { CarFleetPanel } from './carFleetPanel';
+import { ConvertFeEventToBeEvent, event } from './eventDomain';
+import { EventInfoPanel } from './generalInfoPanel';
+import { RacePanel } from './racePanel';
+
+export const CreateEvent = () => {
   const { t } = useTranslation();
-  const location = useLocation();
-  const selectedEvent = location.state;
   const navigate = useNavigate();
 
   const [send, loading, errorMessage, data] = useMutation();
@@ -32,14 +31,8 @@ export const EditEvent = () => {
     });
   };
 
-  useEffect(() => {
-    if (selectedEvent) {
-      setEventConfig(ConvertBeEventToFeEvent(selectedEvent));
-    }
-  }, [selectedEvent]);
-
-  const onSaveEventHandler = async () => {
-    send('updateEvent', ConvertFeEventToBeEvent(eventConfig));
+  const onCreateEventHandler = async () => {
+    send('addEvent', ConvertFeEventToBeEvent(eventConfig));
   };
 
   const formIsValidHandler = () => {
@@ -53,13 +46,13 @@ export const EditEvent = () => {
   return (
     <>
       <ContentHeader
-        header={t('events.edit-event')}
+        header={t('events.create-event')}
         description={t('events.description')}
         breadcrumbs={[
           { text: t('home.breadcrumb'), href: '/' },
           { text: t('admin.breadcrumb'), href: '/admin/home' },
           { text: t('events.breadcrumb'), href: '/admin/events' },
-          { text: t('events.edit-event') },
+          { text: t('events.create-event') },
         ]}
       />
       <form onSubmit={(event) => event.preventDefault()}>
@@ -71,10 +64,10 @@ export const EditEvent = () => {
               </Button>
               <Button
                 variant="primary"
-                onClick={onSaveEventHandler}
+                onClick={onCreateEventHandler}
                 disabled={loading || createButtonIsDisabled}
               >
-                Save Changes
+                Create Event
               </Button>
             </SpaceBetween>
           }

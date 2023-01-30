@@ -1,7 +1,7 @@
 import { Container, FormField, Header, Select, SpaceBetween } from '@cloudscape-design/components';
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { fleetContext } from '../../store/FleetProvider';
+import { fleetContext } from '../../store/fleetProvider';
 
 export const CarFleetPanel = ({ fleetId, onChange }) => {
   const { t } = useTranslation();

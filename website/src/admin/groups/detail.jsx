@@ -9,22 +9,22 @@ import {
   StatusIndicator,
   Table,
   TextFilter,
-  Toggle,
+  Toggle
 } from '@cloudscape-design/components';
 import { API, Auth } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { useLocalStorage } from '../../hooks/useLocalStorage.js';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
 
-import { ContentHeader } from '../../components/ContentHeader';
+import { ContentHeader } from '../../components/contentHeader';
 import {
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
   PageSizePreference,
-  WrapLines,
-} from '../../components/TableConfig';
+  WrapLines
+} from '../../components/tableConfig';
 
 import dayjs from 'dayjs';
 

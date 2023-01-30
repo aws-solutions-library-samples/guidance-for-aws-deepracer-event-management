@@ -1,10 +1,10 @@
 import { API } from 'aws-amplify';
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from '../components/ContentHeader';
-// import { ListOfFleets } from '../components/ListOfFleets';
+import { ContentHeader } from '../components/contentHeader';
+// import { ListOfFleets } from '../components/listOfFleets';
 import * as mutations from '../graphql/mutations';
-import { fleetContext } from '../store/FleetProvider';
+import { fleetContext } from '../store/fleetProvider';
 
 import {
   Box,

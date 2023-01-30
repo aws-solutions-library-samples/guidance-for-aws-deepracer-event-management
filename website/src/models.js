@@ -13,8 +13,8 @@ import { Auth, Storage } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from './components/ContentHeader';
-import DeleteModelModal from './components/DeleteModelModal';
+import { ContentHeader } from './components/contentHeader';
+import DeleteModelModal from './components/deleteModelModal';
 import {
   DefaultPreferences,
   EmptyState,
@@ -22,7 +22,7 @@ import {
   PageSizePreference,
   UserModelsColumnsConfig,
   WrapLines,
-} from './components/TableConfig';
+} from './components/tableConfig';
 
 import dayjs from 'dayjs';
 

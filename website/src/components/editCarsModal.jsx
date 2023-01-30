@@ -1,7 +1,7 @@
 import { API } from 'aws-amplify';
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { fleetContext } from '../store/FleetProvider';
+import { fleetContext } from '../store/fleetProvider';
 
 import * as mutations from '../graphql/mutations';
 import * as queries from '../graphql/queries';
@@ -13,7 +13,7 @@ import {
   Container,
   FormField,
   Modal,
-  SpaceBetween,
+  SpaceBetween
 } from '@cloudscape-design/components';
 
 export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
