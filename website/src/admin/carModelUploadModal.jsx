@@ -27,7 +27,7 @@ import {
   MatchesCountText,
   PageSizePreference,
   WrapLines,
-} from '../components/TableConfig';
+} from '../components/tableConfig';
 
 import dayjs from 'dayjs';
 

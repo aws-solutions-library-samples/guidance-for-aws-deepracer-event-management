@@ -12,11 +12,11 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import './App.css';
 
 import '@aws-amplify/ui-react/styles.css';
-import TopNav from './components/TopNav.js';
+import TopNav from './components/topNav';
 import awsconfig from './config.json';
-import CarsProvider from './store/CarProvider';
-import EventProvider from './store/EventProvider';
-import { FleetProvider } from './store/FleetProvider';
+import CarsProvider from './store/carProvider';
+import EventProvider from './store/eventProvider';
+import { FleetProvider } from './store/fleetProvider';
 
 Amplify.configure(awsconfig);
 

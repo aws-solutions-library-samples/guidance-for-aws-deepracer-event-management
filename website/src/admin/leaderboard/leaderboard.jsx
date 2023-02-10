@@ -7,8 +7,8 @@ import Logo from '../../assets/logo-bw.png';
 import { getLeaderBoardEntries } from '../../graphql/queries';
 import { onNewFastestLapForUser } from '../../graphql/subscriptions';
 import useQuery from '../../hooks/useQuery';
-import { eventContext } from '../../store/EventProvider';
-import SideNavContext from '../../store/SideNavContext';
+import { eventContext } from '../../store/eventProvider';
+import SideNavContext from '../../store/sideNavContext';
 import styles from './leaderboard.module.css';
 
 const Leaderboard = () => {

@@ -7,10 +7,10 @@ import { useNavigate } from 'react-router-dom';
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Box, Button, Modal, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from '../../components/ContentHeader';
-import { eventContext } from '../../store/EventProvider';
-import { fleetContext } from '../../store/FleetProvider';
-import { ColumnDefinitions, VisibleContentOptions } from './events-table-config';
+import { ContentHeader } from '../../components/contentHeader';
+import { eventContext } from '../../store/eventProvider';
+import { fleetContext } from '../../store/fleetProvider';
+import { ColumnDefinitions, VisibleContentOptions } from './eventsTableConfig';
 
 import {
   DefaultPreferences,
@@ -18,9 +18,9 @@ import {
   MatchesCountText,
   TableHeader,
   TablePagination,
-  TablePreferences,
-} from '../../components/TableConfig';
-import { useLocalStorage } from '../../hooks/useLocalStorage.js';
+  TablePreferences
+} from '../../components/tableConfig';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 const AdminEvents = () => {
   const { t } = useTranslation();

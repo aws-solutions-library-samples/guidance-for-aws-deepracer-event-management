@@ -116,14 +116,14 @@ export class Leaderboard extends Construct {
 
         // Leader board
         // Define API Schema
-        const user_object_type = new ObjectType('User', {
+        const userObjectType = new ObjectType('User', {
             definition: {
-                username: GraphqlType.string(),
-                email: GraphqlType.string(),
+                username: GraphqlType.string({ isRequired: true }),
+                id: GraphqlType.id({ isRequired: true }),
             },
         });
 
-        props.appsyncApi.schema.addType(user_object_type);
+        props.appsyncApi.schema.addType(userObjectType);
 
         const lap_object_type = new ObjectType('Lap', {
             definition: {
@@ -170,7 +170,7 @@ export class Leaderboard extends Construct {
         props.appsyncApi.schema.addQuery(
             'getAllRacers',
             new ResolvableField({
-                returnType: user_object_type.attribute({ isList: true }),
+                returnType: userObjectType.attribute({ isList: true }),
                 dataSource: laps_data_source,
             })
         );
@@ -179,7 +179,7 @@ export class Leaderboard extends Construct {
             new ResolvableField({
                 args: {
                     eventId: GraphqlType.id({ isRequired: true }),
-                    username: GraphqlType.string({ isRequired: true }),
+                    userId: GraphqlType.string({ isRequired: true }),
                     laps: lap_input_object_type.attribute({ isRequiredList: true }),
                 },
                 returnType: race_object_type.attribute(),

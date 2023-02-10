@@ -19,8 +19,8 @@ import React, { useEffect, useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from '../components/ContentHeader';
-import EditCarsModal from '../components/EditCarsModal';
+import { ContentHeader } from '../components/contentHeader';
+import EditCarsModal from '../components/editCarsModal';
 import {
   CarColumnsConfig,
   CarVisibleContentOptions,
@@ -29,7 +29,7 @@ import {
   MatchesCountText,
   PageSizePreference,
   WrapLines,
-} from '../components/TableConfig';
+} from '../components/tableConfig';
 import * as queries from '../graphql/queries';
 
 // day.js

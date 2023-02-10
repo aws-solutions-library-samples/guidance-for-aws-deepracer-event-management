@@ -1,7 +1,7 @@
 import { Cards, Grid, Header, Link } from '@cloudscape-design/components';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { HomeCards } from './components/HomeCards';
+import { HomeCards } from './components/homeCards';
 
 const Home = () => {
   const { t } = useTranslation();

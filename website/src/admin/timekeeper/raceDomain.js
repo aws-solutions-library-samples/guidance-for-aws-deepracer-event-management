@@ -1,6 +1,6 @@
 export const defaultRace = {
   eventId: null,
-  username: null,
+  userId: null,
   laps: [],
   currentModelId: null,
   currentCarId: null,

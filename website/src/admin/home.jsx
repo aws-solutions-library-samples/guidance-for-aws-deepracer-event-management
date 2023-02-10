@@ -1,5 +1,5 @@
 import { Cards, Grid, Header, Link } from '@cloudscape-design/components';
-import { AdminHomeCards } from '../components/HomeCards';
+import { AdminHomeCards } from '../components/homeCards';
 
 import React from 'react';
 
