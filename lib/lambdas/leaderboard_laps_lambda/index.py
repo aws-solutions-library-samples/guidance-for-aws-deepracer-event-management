@@ -39,8 +39,13 @@ def getLeaderBoardEntries(eventId: str):
     response = ddbTable.query(KeyConditionExpression=Key("pk").eq(f"RECORD#{eventId}"))
     logger.info(response)
     leaderboard_entries = []
+    racers = __get_racers()
+
     for record in response["Items"]:
-        leaderboard_entries.append({"username": record["sk"], "time": record["time"]})
+        userId = record["sk"]
+        username = __get_user_name_from_id(racers, userId)
+        if username is not None:
+            leaderboard_entries.append({"username": username, "time": record["time"]})
     return sorted(leaderboard_entries, key=lambda x: x["time"])
 
 
@@ -48,11 +53,11 @@ def getLeaderBoardEntries(eventId: str):
 # Admin methods
 ####################
 @app.resolver(type_name="Query", field_name="getRacesForUser")
-def getRacesForUser(eventId, username):
+def getRacesForUser(eventId, userId):
     logger.info("getRacesForUser start")
     response = ddbTable.query(
         KeyConditionExpression=Key("pk").eq(f"RACE#{eventId}")
-        & Key("sk").begins_with(username)
+        & Key("sk").begins_with(userId)
     )
     logger.info(f"ddb query response: {response}")
     listOfRacesForUser = dbEntriesToRaceList(response["Items"])
@@ -60,10 +65,10 @@ def getRacesForUser(eventId, username):
 
 
 @app.resolver(type_name="Mutation", field_name="deleteRaceForUser")
-def deleteRaceForUser(eventId, username, raceId):
+def deleteRaceForUser(eventId, userId, raceId):
     response = ddbTable.query(
         KeyConditionExpression=Key("pk").eq(f"RACE#{eventId}")
-        & Key("sk").begins_with(f"{username}#{raceId}#")
+        & Key("sk").begins_with(f"{userId}#{raceId}#")
     )
     items_to_delete = response["Items"]
 
@@ -82,9 +87,9 @@ def deleteRaceForUser(eventId, username, raceId):
 
 
 @app.resolver(type_name="Mutation", field_name="deleteLapForUser")
-def deleteLapForUser(eventId, username, raceId, lapId):
+def deleteLapForUser(eventId, userId, raceId, lapId):
     ddbTable.delete_item(
-        Key={"pk": f"RACE#{eventId}", "sk": f"{username}#{raceId}#{lapId}"}
+        Key={"pk": f"RACE#{eventId}", "sk": f"{userId}#{raceId}#{lapId}"}
     )
 
     # TODO Check if RECORD for user shall be updated
@@ -98,7 +103,7 @@ def deleteLapForUser(eventId, username, raceId, lapId):
 # Time keeper methods
 ####################
 @app.resolver(type_name="Mutation", field_name="addRace")
-def addRace(eventId, username, laps):
+def addRace(eventId, userId, laps):
     raceId = str(uuid.uuid4())
     print(laps)
     logger.info(laps)
@@ -114,7 +119,7 @@ def addRace(eventId, username, laps):
 
             response = batch.put_item(
                 Item={
-                    **{"pk": f"RACE#{eventId}", "sk": f"{username}#{raceId}#{lapId}"},
+                    **{"pk": f"RACE#{eventId}", "sk": f"{userId}#{raceId}#{lapId}"},
                     **lap,
                 }
             )
@@ -130,7 +135,7 @@ def addRace(eventId, username, laps):
                 fastestLapTimeInCurrentRace = lap["time"]
 
     # Create or update user lap record
-    response = ddbTable.get_item(Key={"pk": f"RECORD#{eventId}", "sk": username})
+    response = ddbTable.get_item(Key={"pk": f"RECORD#{eventId}", "sk": userId})
 
     logger.info(f"lap record ddb response: {response}")
 
@@ -141,7 +146,7 @@ def addRace(eventId, username, laps):
                 f"update user record: fastest time: {userFastestLapTime}, this race:"
                 f" {fastestLapTimeInCurrentRace}"
             )
-            updateUserRecord(eventId, username, fastestLapTimeInCurrentRace)
+            updateUserRecord(eventId, userId, fastestLapTimeInCurrentRace)
         else:
             logger.info(
                 f"Will not update record for user: fastest time={userFastestLapTime},"
@@ -152,54 +157,28 @@ def addRace(eventId, username, laps):
             "create user record: fastest time: None, this race:"
             f" {fastestLapTimeInCurrentRace}"
         )
-        updateUserRecord(eventId, username, fastestLapTimeInCurrentRace)
+        updateUserRecord(eventId, userId, fastestLapTimeInCurrentRace)
     return {"id": raceId}
 
 
 @app.resolver(type_name="Query", field_name="getAllRacers")
 def getAllRacers():
-    paginator = client_cognito.get_paginator("list_users")
-    response_iterator = paginator.paginate(
-        UserPoolId=user_pool_id,
-        PaginationConfig={
-            "PageSize": 30,
-        },
-    )
-
-    # TODO the parts below can be optimized
-    users = []
-    for r in response_iterator:
-        users.append(r["Users"])
-
-    # Squash the list of lists
-    all_users = [item for sublist in users for item in sublist]
-    logger.info(all_users)
-
-    list_user_objects = []
-    for user in all_users:
-        user_object = {"username": user["Username"]}
-        for attribute in user["Attributes"]:
-            if attribute["Name"] == "email":
-                user_object["email"] = attribute["Value"]
-        list_user_objects.append(user_object)
-
-    logger.info(list_user_objects)
-    return list_user_objects
+    return __get_racers()
 
 
 ##################
 # Helper functions
 ##################
-def updateUserRecord(eventId, username, newFastestLapTime):
+def updateUserRecord(eventId, userId, newFastestLapTime):
     response = ddbTable.update_item(
-        Key={"pk": f"RECORD#{eventId}", "sk": username},
+        Key={"pk": f"RECORD#{eventId}", "sk": userId},
         UpdateExpression="set #time=:t",
         ExpressionAttributeNames={"#time": "time"},
         ExpressionAttributeValues={":t": decimal.Decimal(newFastestLapTime)},
         ReturnValues="UPDATED_NEW",
     )
     logger.info(f"update record response: {response}")
-    newFastestLapForUser(eventId, username, newFastestLapTime)
+    newFastestLapForUser(eventId, userId, newFastestLapTime)
 
 
 def newFastestLapForUser(eventId, username, time):
@@ -250,6 +229,45 @@ def newFastestLapForUser(eventId, username, time):
     return None
 
 
+def __get_racers():
+    paginator = client_cognito.get_paginator("list_users")
+    response_iterator = paginator.paginate(
+        UserPoolId=user_pool_id,
+        PaginationConfig={
+            "PageSize": 30,
+        },
+    )
+
+    # TODO the parts below can be optimized
+    users = []
+    for r in response_iterator:
+        users.append(r["Users"])
+
+    # Squash the list of lists
+    all_users = [item for sublist in users for item in sublist]
+    logger.info(all_users)
+
+    list_user_objects = []
+    for user in all_users:
+        user_object = {"username": user["Username"]}
+        for attribute in user["Attributes"]:
+            if attribute["Name"] == "sub":
+                user_object["id"] = attribute["Value"]
+        list_user_objects.append(user_object)
+
+    logger.info(list_user_objects)
+    return list_user_objects
+
+
+def __get_user_name_from_id(users, userId):
+    for user in users:
+        logger.info(user)
+        if user["id"] == userId:
+            logger.info("match returning username=" + user["username"])
+            return user["username"]
+    return None
+
+
 def __parse_region_from_url(url):
     """Parses the region from the appsync url so we call the correct region regardless
     of the session or the argument"""
@@ -263,7 +281,7 @@ def __parse_region_from_url(url):
 def dbEntriesToRaceList(dbEntries):
     lapsPerRace = {}
     for dbEntry in dbEntries:
-        username = dbEntry["sk"].split("#")[0]
+        userId = dbEntry["sk"].split("#")[0]
         raceId = dbEntry["sk"].split("#")[1]
         lapId = dbEntry["sk"].split("#")[2]
         dbEntry["lapId"] = lapId
@@ -273,7 +291,7 @@ def dbEntriesToRaceList(dbEntries):
         else:
             lapsPerRace[raceId] = {
                 "id": raceId,
-                "username": username,
+                "userId": userId,
                 "laps": [dbEntry],
             }
     logger.info(f"lapsPerRace: {lapsPerRace}")
