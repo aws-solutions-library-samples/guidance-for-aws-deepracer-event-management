@@ -72,5 +72,37 @@ export class UserManager extends Construct {
         api_users.addMethod('GET', new apig.LambdaIntegration(get_users_function), {
             authorizationType: apig.AuthorizationType.IAM,
         });
+
+        // List users Function
+        const users_function = new lambdaPython.PythonFunction(this, 'users_function', {
+            entry: 'lib/lambdas/users_function/',
+            description: 'Work with Cognito users',
+            index: 'index.py',
+            handler: 'lambda_handler',
+            timeout: Duration.minutes(1),
+            runtime: props.lambdaConfig.runtime,
+            tracing: lambda.Tracing.ACTIVE,
+            memorySize: 128,
+            architecture: props.lambdaConfig.architecture,
+            environment: {
+                user_pool_id: props.userPoolId,
+                POWERTOOLS_SERVICE_NAME: 'cognito_users',
+                LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+            },
+            bundling: {
+                image: props.lambdaConfig.bundlingImage,
+            },
+            layers: [
+                props.lambdaConfig.layersConfig.helperFunctionsLayer,
+                props.lambdaConfig.layersConfig.powerToolsLayer,
+            ],
+        });
+        users_function.addToRolePolicy(
+            new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ['cognito-idp:ListUsers'],
+                resources: [props.userPoolArn],
+            })
+        );
     }
 }
