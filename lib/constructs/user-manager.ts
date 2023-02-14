@@ -152,7 +152,7 @@ export class UserManager extends Construct {
         props.appsyncApi.schema.addType(users_object_type);
 
         // Event methods
-        props.appsyncApi.schema.addMutation(
+        props.appsyncApi.schema.addQuery(
             'listUsers',
             new ResolvableField({
                 // args: {
