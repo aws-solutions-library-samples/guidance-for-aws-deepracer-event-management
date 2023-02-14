@@ -148,6 +148,7 @@ export class UserManager extends Construct {
                 Enabled: GraphqlType.boolean(),
                 UserStatus: GraphqlType.string(),
                 MFAOptions: user_object_mfa_options.attribute({ isList: true, isRequired: false }),
+                sub: GraphqlType.id(),
             },
         });
 

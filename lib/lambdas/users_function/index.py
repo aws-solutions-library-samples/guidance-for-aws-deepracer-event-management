@@ -57,6 +57,13 @@ def listUsers():
         all_users = [item for sublist in users for item in sublist]
         # logger.info(all_users)
 
+        # pull "sub" out to top level of user object
+        for user in all_users:
+            for attributes in user["Attributes"]:
+                if attributes["Name"] == "sub":
+                    # logger.info(attributes["Value"])
+                    user["sub"] = attributes["Value"]
+
         temp = json.dumps(all_users, default=json_serial)  # sort out datetime
         temp2 = json.loads(temp)
         # logger.info(temp2)
