@@ -102,7 +102,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             contentPath: './lib/constructs/terms_n_conditions/webpage/',
             pathPattern: '/terms_n_conditions.html',
             logsBucket: props.logsBucket,
-            //cdnDistribution: props.cloudfrontDistribution // TODO not working to addBehaviour to dist that is another stack, implement as custom resource????
+            // cdnDistribution: props.cloudfrontDistribution // TODO not working to addBehaviour to dist that is another stack, implement as custom resource????
         });
 
         const carManager = new CarManager(this, 'CarManager', {
@@ -167,6 +167,10 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             lambdaConfig: props.lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
             userPoolId: props.userPool.userPoolId,
+            appsyncApi: {
+                api: appsyncApi,
+                schema: schema,
+            },
             restApi: {
                 api: restApi.api,
                 apiAdminResource: restApi.apiAdminResource,
@@ -267,8 +271,8 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             value: props.userPool.userPoolId,
         });
 
-        //new cdk.CfnOutput(this, "DefaultAdminUserUsername", {value: defaultAdminUserName})
+        // new cdk.CfnOutput(this, "DefaultAdminUserUsername", {value: defaultAdminUserName})
 
-        //new cdk.CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
+        // new cdk.CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
     }
 }

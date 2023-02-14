@@ -1,9 +1,11 @@
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import { DockerImage, Duration } from 'aws-cdk-lib';
 import * as apig from 'aws-cdk-lib/aws-apigateway';
+import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { CodeFirstSchema, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
 
 import { Construct } from 'constructs';
 
@@ -15,6 +17,10 @@ export interface UserManagerProps {
         api: apig.RestApi;
         apiAdminResource: apig.Resource;
         bodyValidator: apig.RequestValidator;
+    };
+    appsyncApi: {
+        schema: CodeFirstSchema;
+        api: appsync.IGraphqlApi;
     };
     lambdaConfig: {
         runtime: lambda.Runtime;
@@ -74,7 +80,7 @@ export class UserManager extends Construct {
         });
 
         // List users Function
-        const users_function = new lambdaPython.PythonFunction(this, 'users_function', {
+        const users_handler = new lambdaPython.PythonFunction(this, 'users_handler', {
             entry: 'lib/lambdas/users_function/',
             description: 'Work with Cognito users',
             index: 'index.py',
@@ -97,11 +103,65 @@ export class UserManager extends Construct {
                 props.lambdaConfig.layersConfig.powerToolsLayer,
             ],
         });
-        users_function.addToRolePolicy(
+
+        users_handler.addToRolePolicy(
             new iam.PolicyStatement({
                 effect: iam.Effect.ALLOW,
                 actions: ['cognito-idp:ListUsers'],
                 resources: [props.userPoolArn],
+            })
+        );
+
+        // Define the data source for the API
+        const users_data_source = props.appsyncApi.api.addLambdaDataSource(
+            'users_data_source',
+            users_handler
+        );
+
+        // Define API Schema
+        const users_object_attributes_type = new ObjectType('users_object_attributes_type', {
+            definition: {
+                Name: GraphqlType.string({ isRequired: true }),
+                Value: GraphqlType.string({ isRequired: true }),
+            },
+        });
+
+        props.appsyncApi.schema.addType(users_object_attributes_type);
+
+        const users_object_mfa_options_type = new ObjectType('users_object_mfa_options_type', {
+            definition: {
+                Name: GraphqlType.string({ isRequired: true }),
+                Value: GraphqlType.string({ isRequired: true }),
+            },
+        });
+
+        props.appsyncApi.schema.addType(users_object_mfa_options_type);
+
+        const users_object_type = new ObjectType('users_object_type', {
+            definition: {
+                Username: GraphqlType.string(),
+                Attributes: users_object_attributes_type.attribute(),
+                UserCreateDate: GraphqlType.awsDateTime(),
+                UserLastModifiedDate: GraphqlType.awsDateTime(),
+                Enabled: GraphqlType.boolean(),
+                UserStatus: GraphqlType.string(),
+                MFAOptions: users_object_mfa_options_type.attribute(),
+            },
+        });
+
+        props.appsyncApi.schema.addType(users_object_type);
+
+        // Event methods
+        props.appsyncApi.schema.addMutation(
+            'listUsers',
+            new ResolvableField({
+                // args: {
+                //     hostname: GraphqlType.string({ isRequired: true }),
+                //     fleetId: GraphqlType.id({ isRequired: true }),
+                //     fleetName: GraphqlType.string({ isRequired: true }),
+                // },
+                returnType: users_object_type.attribute(),
+                dataSource: users_data_source,
             })
         );
     }
