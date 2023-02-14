@@ -79,6 +79,8 @@ export class UserManager extends Construct {
             authorizationType: apig.AuthorizationType.IAM,
         });
 
+        // AppSync //
+
         // List users Function
         const users_handler = new lambdaPython.PythonFunction(this, 'users_handler', {
             entry: 'lib/lambdas/users_function/',
@@ -119,43 +121,43 @@ export class UserManager extends Construct {
         );
 
         // Define API Schema
-        const users_object_attributes_type = new ObjectType('users_object_attributes_type', {
+        const user_object_attributes = new ObjectType('UserObjectAttributes', {
             definition: {
                 Name: GraphqlType.string({ isRequired: true }),
                 Value: GraphqlType.string({ isRequired: true }),
             },
         });
 
-        props.appsyncApi.schema.addType(users_object_attributes_type);
+        props.appsyncApi.schema.addType(user_object_attributes);
 
-        const users_object_mfa_options_type = new ObjectType('users_object_mfa_options_type', {
+        const user_object_mfa_options = new ObjectType('UsersObjectMfaOptions', {
             definition: {
                 Name: GraphqlType.string({ isRequired: true }),
                 Value: GraphqlType.string({ isRequired: true }),
             },
         });
 
-        props.appsyncApi.schema.addType(users_object_mfa_options_type);
+        props.appsyncApi.schema.addType(user_object_mfa_options);
 
-        const users_object_type = new ObjectType('users_object_type', {
+        const user_object = new ObjectType('userObject', {
             definition: {
                 Username: GraphqlType.string(),
-                Attributes: users_object_attributes_type.attribute(),
+                Attributes: user_object_attributes.attribute({ isList: true }),
                 UserCreateDate: GraphqlType.awsDateTime(),
                 UserLastModifiedDate: GraphqlType.awsDateTime(),
                 Enabled: GraphqlType.boolean(),
                 UserStatus: GraphqlType.string(),
-                MFAOptions: users_object_mfa_options_type.attribute(),
+                MFAOptions: user_object_mfa_options.attribute({ isList: true, isRequired: false }),
             },
         });
 
-        props.appsyncApi.schema.addType(users_object_type);
+        props.appsyncApi.schema.addType(user_object);
 
         // Event methods
         props.appsyncApi.schema.addQuery(
             'listUsers',
             new ResolvableField({
-                returnType: users_object_type.attribute({ isList: true }),
+                returnType: user_object.attribute({ isList: true }),
                 dataSource: users_data_source,
             })
         );

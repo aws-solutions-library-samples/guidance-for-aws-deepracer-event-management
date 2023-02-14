@@ -57,7 +57,10 @@ def listUsers():
         all_users = [item for sublist in users for item in sublist]
         # logger.info(all_users)
 
-        return json.dumps(all_users, default=json_serial)
+        temp = json.dumps(all_users, default=json_serial)  # sort out datetime
+        temp2 = json.loads(temp)
+        # logger.info(temp2)
+        return temp2
         # return "submitted request"
 
     except Exception as error:
