@@ -155,12 +155,7 @@ export class UserManager extends Construct {
         props.appsyncApi.schema.addQuery(
             'listUsers',
             new ResolvableField({
-                // args: {
-                //     hostname: GraphqlType.string({ isRequired: true }),
-                //     fleetId: GraphqlType.id({ isRequired: true }),
-                //     fleetName: GraphqlType.string({ isRequired: true }),
-                // },
-                returnType: users_object_type.attribute(),
+                returnType: users_object_type.attribute({ isList: true }),
                 dataSource: users_data_source,
             })
         );
