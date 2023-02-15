@@ -5,7 +5,13 @@ import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import { CodeFirstSchema, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
+import {
+    CodeFirstSchema,
+    Directive,
+    GraphqlType,
+    ObjectType,
+    ResolvableField,
+} from 'awscdk-appsync-utils';
 
 import { Construct } from 'constructs';
 
@@ -21,6 +27,7 @@ export interface UserManagerProps {
     appsyncApi: {
         schema: CodeFirstSchema;
         api: appsync.IGraphqlApi;
+        noneDataSource: appsync.NoneDataSource;
     };
     lambdaConfig: {
         runtime: lambda.Runtime;
@@ -174,5 +181,39 @@ export class UserManager extends Construct {
                 dataSource: users_data_source,
             })
         );
+
+        props.appsyncApi.schema.addSubscription(
+            'onCreateUser',
+            new ResolvableField({
+                returnType: user_object.attribute(),
+                dataSource: props.appsyncApi.noneDataSource,
+                requestMappingTemplate: appsync.MappingTemplate.fromString(
+                    `{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments.entry)
+                    }`
+                ),
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    '$util.toJson($context.result)'
+                ),
+                directives: [Directive.subscribe('createUser')],
+            })
+        );
+
+        // Grant access so API methods can be invoked
+        const admin_api_policy = new iam.Policy(this, 'adminApiPolicy', {
+            statements: [
+                new iam.PolicyStatement({
+                    effect: iam.Effect.ALLOW,
+                    actions: ['appsync:GraphQL'],
+                    resources: [
+                        `${props.appsyncApi.api.arn}/types/Query/fields/listUsers`,
+                        `${props.appsyncApi.api.arn}/types/Mutation/fields/createUser`,
+                        `${props.appsyncApi.api.arn}/types/Subscription/fields/createdUser`,
+                    ],
+                }),
+            ],
+        });
+        admin_api_policy.attachToRole(props.adminGroupRole);
     }
 }

@@ -170,6 +170,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             appsyncApi: {
                 api: appsyncApi,
                 schema: schema,
+                noneDataSource: noneDataSoure,
             },
             restApi: {
                 api: restApi.api,
