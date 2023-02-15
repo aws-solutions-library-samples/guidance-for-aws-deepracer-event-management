@@ -9,6 +9,7 @@ import {
     CodeFirstSchema,
     Directive,
     GraphqlType,
+    InputType,
     ObjectType,
     ResolvableField,
 } from 'awscdk-appsync-utils';
@@ -137,6 +138,15 @@ export class UserManager extends Construct {
 
         props.appsyncApi.schema.addType(user_object_attributes);
 
+        const user_object_attributes_input = new InputType('UserObjectAttributesInput', {
+            definition: {
+                Name: GraphqlType.string({ isRequired: true }),
+                Value: GraphqlType.string({ isRequired: true }),
+            },
+        });
+
+        props.appsyncApi.schema.addType(user_object_attributes_input);
+
         const user_object_mfa_options = new ObjectType('UsersObjectMfaOptions', {
             definition: {
                 Name: GraphqlType.string({ isRequired: true }),
@@ -145,6 +155,15 @@ export class UserManager extends Construct {
         });
 
         props.appsyncApi.schema.addType(user_object_mfa_options);
+
+        const user_object_mfa_options_input = new InputType('UsersObjectMfaOptionsInput', {
+            definition: {
+                Name: GraphqlType.string({ isRequired: true }),
+                Value: GraphqlType.string({ isRequired: true }),
+            },
+        });
+
+        props.appsyncApi.schema.addType(user_object_mfa_options_input);
 
         const user_object = new ObjectType('userObject', {
             definition: {
@@ -187,12 +206,12 @@ export class UserManager extends Construct {
             new ResolvableField({
                 args: {
                     Username: GraphqlType.string(),
-                    Attributes: user_object_attributes.attribute({ isList: true }),
+                    Attributes: user_object_attributes_input.attribute({ isList: true }),
                     UserCreateDate: GraphqlType.awsDateTime(),
                     UserLastModifiedDate: GraphqlType.awsDateTime(),
                     Enabled: GraphqlType.boolean(),
                     UserStatus: GraphqlType.string(),
-                    MFAOptions: user_object_mfa_options.attribute({
+                    MFAOptions: user_object_mfa_options_input.attribute({
                         isList: true,
                         isRequired: false,
                     }),
