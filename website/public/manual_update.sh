@@ -2,14 +2,14 @@
 
 usage()
 {
-    echo "Usage: sudo $0 -h HOSTNAME -p PASSWORD [ -c SSMCODE -i SSMID -r AWS_REGION ] [ -s SSID -w WIFI_PASSWORD]"
-    echo "If no details are provided for SSM the agent is installed but not activated"
+    echo -e -n "\nUsage, run as root: ./$0 -h HOSTNAME -p PASSWORD [ -c SSMCODE -i SSMID -r AWS_REGION ] [ -s SSID -w WIFI_PASSWORD]"
+    echo -e -n "\nIf no details are provided for SSM the agent is installed but not activated"
     exit 0
 }
 
 # Check we have the privileges we need
 if [ `whoami` != root ]; then
-    echo "Please run this script as root or using sudo"
+    echo -e -n "\nPlease run this script as root using 'su'\n"
     exit 0
 fi
 
@@ -42,26 +42,18 @@ while getopts $optstring arg; do
 done
 
 if [ $OPTIND -eq 1 ]; then
-    echo "No options selected."
+    echo -e -n "\nNo options selected.\n"
     usage
 fi
 
-# Stop DeepRacer Stack
-systemctl stop deepracer-core
-
 # Disable IPV6 on all interfaces
+echo -e -n "\nDisable IPV6\n"
 cp /etc/sysctl.conf ${backupDir}/sysctl.conf.bak
 printf "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
 
-# Grant deepracer user sudoers rights
-echo deepracer ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/deepracer
-chmod 0440 /etc/sudoers.d/deepracer
-
 # Sort out the Wifi (if we have SSID + Password)
 if [ ${ssid} != NULL ] && [ ${wifiPass} != NULL ]; then
-    echo "Please 'forget' the currently connected WiFi - a new service based connection will be created as part of the updates performed by this script."
-    read -s -n 1 -p "Press any key to once done."
-    echo
+    echo -e -n "\nAdding WiFi as a service: ${ssid}\n"
 
     mkdir /etc/deepracer-wifi
     cat > /etc/deepracer-wifi/start-wifi.sh << EOF
@@ -110,63 +102,68 @@ EOF
     systemctl enable deepracer-wifi
     systemctl start deepracer-wifi
 
-    echo 'DeepRacer Wifi service installed'
-    echo 'Checking for connection.'
+    echo -e -n "\nDeepRacer Wifi service installed"
+    echo -e -n "Checking for connection."
 
     while [ "$(hostname -I)" = "" ]; do
         echo -e "\e[1A\e[KNo network: $(date)"
         sleep 1
     done
 
-    echo "..connected";
+    echo -e -n "\n  ..connected\n\n";
 fi
 
 # Update the DeepRacer console password
-echo "Updating password to: $varPass"
+echo -e -n "\n\nUpdating password to: $varPass \n"
 tempPass=$(echo -n $varPass | sha224sum)
 IFS=' ' read -ra encryptedPass <<< $tempPass
 cp /opt/aws/deepracer/password.txt ${backupDir}/password.txt.bak
-printf "${encryptedPass[0]}" > /opt/aws/deepracer/password.txt
+sudo printf "${encryptedPass[0]}" > /opt/aws/deepracer/password.txt
 
 # Check version
 . /etc/lsb-release
 if [ $DISTRIB_RELEASE = "16.04" ]; then
-    echo 'Ubuntu 16.04 detected'
-    echo "Please update your car to 20.04 -> https://docs.aws.amazon.com/deepracer/latest/developerguide/deepracer-ubuntu-update-preparation.html"
+    echo -e -n "\nUbuntu 16.04 detected\n"
+    echo -e -n "\nPlease update your car to 20.04 -> https://docs.aws.amazon.com/deepracer/latest/developerguide/deepracer-ubuntu-update-preparation.html\n"
     exit 1
 
 elif [ $DISTRIB_RELEASE = "20.04" ]; then
-    echo 'Ubuntu 20.04 detected'
+    echo -e -n "\nUbuntu 20.04 detected\n"
 
     bundlePath=/opt/aws/deepracer/lib/device_console/static
     webserverPath=/opt/aws/deepracer/lib/webserver_pkg/lib/python3.8/site-packages/webserver_pkg
     systemPath=/opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg
 
 else
-    echo 'Not sure what version of OS, terminating.'
+    echo -e -n "\nNot sure what version of OS, terminating.\n"
     exit 1
 fi
 
-echo 'Updating...'
+echo -e -n "\nUpdating car...\n"
 
 # Update ROS cert
-curl https://repo.ros2.org/repos.key | sudo apt-key add -
+curl https://repo.ros2.org/repos.key | apt-key add -
 
 # Update Ubuntu - removed for now as it takes so long
-# sudo apt-get update
-# sudo apt-get upgrade -y -o Dpkg::Options::="--force-overwrite"
+# echo -e -n "\nUpdating Ubuntu packages\n"
+# apt-get update
+# apt-get upgrade -y -o Dpkg::Options::="--force-overwrite"
 
 # Update DeepRacer
-sudo apt-get install -y aws-deepracer-* -o Dpkg::Options::="--force-overwrite"
+echo -e -n "\nUpdate DeepRacer packages\n"
+apt-get update
+apt-get install -y aws-deepracer-* -o Dpkg::Options::="--force-overwrite"
 
 # Remove redundant packages
-sudo apt -y autoremove
+echo -e -n "\nRemove redundant packages\n"
+apt -y autoremove
 
 # If changing hostname need to change the flag in network_config.py
 # /opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py
 # SET_HOSTNAME_TO_CHASSIS_SERIAL_NUMBER = False
 if [ $DISTRIB_RELEASE = "20.04" ]; then
     if [ $varHost != NULL ]; then
+    	echo -e -n "\nSet hostname: ${varHost}\n"
         oldHost=$HOSTNAME
         hostnamectl set-hostname ${varHost}
         cp /etc/hosts ${backupDir}/hosts.bak
@@ -180,6 +177,7 @@ if [ $DISTRIB_RELEASE = "20.04" ]; then
     fi
 
     # Disable software_update
+    echo -e -n "\nDisable software update\n"
     cp ${systemPath}/software_update_module/software_update_config.py ${backupDir}/software_update_config.py.bak
     rm ${systemPath}/software_update_module/software_update_config.py
     cat ${backupDir}/software_update_config.py.bak | sed -e "s/ENABLE_PERIODIC_SOFTWARE_UPDATE = True/ENABLE_PERIODIC_SOFTWARE_UPDATE = False/" > ${systemPath}/software_update_module/software_update_config.py
@@ -187,6 +185,7 @@ if [ $DISTRIB_RELEASE = "20.04" ]; then
 fi
 
 # Install ssm-agent -> https://snapcraft.io/install/amazon-ssm-agent/ubuntu
+echo -e -n "\nInstall SSM\n"
 mkdir /tmp/ssm
 curl https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_amd64/amazon-ssm-agent.deb -o /tmp/ssm/amazon-ssm-agent.deb
 dpkg -i /tmp/ssm/amazon-ssm-agent.deb
@@ -194,6 +193,7 @@ rm -rf /tmp/ssm
 
 # Enable, Configure and Start SSM if we have the right info
 if [ ${ssmCode} != NULL ]; then
+    echo -e -n "\nActovate SSM\n"
     systemctl enable amazon-ssm-agent
     service amazon-ssm-agent stop
     amazon-ssm-agent -register -code "${ssmCode}" -id "${ssmId}" -region "${ssmRegion}"
@@ -201,30 +201,37 @@ if [ ${ssmCode} != NULL ]; then
 fi
 
 # Disable video stream by default
+echo -e -n "\nDisable video stream\n"
 cp $bundlePath/bundle.js ${backupDir}/bundle.js.bak
 rm $bundlePath/bundle.js
 cat ${backupDir}/bundle.js.bak | sed -e "s/isVideoPlaying\: true/isVideoPlaying\: false/" > $bundlePath/bundle.js
 
 # Disable system suspend
+echo -e -n "\nDisable system suspend\n"
 systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
 
 # Increase time before the console locks (helpful when troubleshooting) - 30 minutes
+echo -e -n "\nIncrease console time out\n"
 gsettings set org.gnome.desktop.session idle-delay 1800
 
 # Disable network power saving
+echo -e -n "\nDisable network power saving"
 echo -e '#!/bin/sh\n/usr/sbin/iw dev mlan0 set power_save off\n' > /etc/network/if-up.d/disable_power_saving
 chmod 755 /etc/network/if-up.d/disable_power_saving
 
 # Enable SSH
+echo -e -n "\nEnable SSH\n"
 service ssh start
 ufw allow ssh
 
 # Allow multiple logins on the console
+echo -e -n "\nEnable multiple logins to the console\n"
 cp /etc/nginx/sites-enabled/default ${backupDir}/default.bak
 rm /etc/nginx/sites-enabled/default
 cat ${backupDir}/default.bak | sed -e "s/auth_request \/auth;/#auth_request \/auth;/" > /etc/nginx/sites-enabled/default
 
 # Change the cookie duration
+echo -e -n "\nUpdate the cookie duration\n"
 cp $webserverPath/login.py ${backupDir}/login.py.bak
 rm $webserverPath/login.py
 cat ${backupDir}/login.py.bak | sed -e "s/datetime.timedelta(hours=1)/datetime.timedelta(hours=12)/" > $webserverPath/login.py
@@ -232,6 +239,7 @@ cat ${backupDir}/login.py.bak | sed -e "s/datetime.timedelta(hours=1)/datetime.t
 # Disable Gnome and other services
 # - to enable gnome - systemctl set-default graphical
 # - to start gnome -  systemctl start gdm3
+echo -e -n "\nDisable unused services\n"
 systemctl set-default multi-user
 systemctl stop bluetooth
 systemctl stop cups-browsed
@@ -276,8 +284,8 @@ systemctl stop cups-browsed
 #  [ + ]  whoopsie
 
 # Restart services
-echo 'Restarting services'
+echo -e -n "\nRestarting services\n"
 systemctl restart deepracer-core
 service nginx restart
 
-echo "Done!"
+echo -e -n "\nDone!"
