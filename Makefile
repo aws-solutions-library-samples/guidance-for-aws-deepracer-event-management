@@ -6,49 +6,26 @@
 help:			## Show this help.
 	@sed -ne '/@sed/!s/## //p' $(MAKEFILE_LIST)
 
-pipeline.deploy: 	## Deploy the CDK pipeline, currently hardcoded to arn:aws:s3:::drem-pipeline-zip-113122841518-eu-west-1
-	cdk deploy
+pipeline.deploy: 	## Deploy the CDK pipeline, eu-west-1
+	npx cdk deploy
 
 pipeline.clean: 	## Destroys the CDK pipeline
-	cdk destroy
+	npx cdk destroy
 
-manual.deploy: frontend.deploy		## Deploy the application directly from command line (note this will not be compatible with a pipeline deploy)
-
-frontend.deploy: frontend.config
-	branch=`cat branch.txt` && cdk deploy drem-frontend-$$branch --require-approval never --context manual_deploy=True
-
-frontend.only.deploy:
-	branch=`cat branch.txt` && cdk deploy drem-frontend-$$branch --require-approval never --context manual_deploy=True
-
-frontend.config: infra.deploy
-	branch=`cat branch.txt` && aws cloudformation describe-stacks --stack-name drem-backend-$$branch-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
-	python generate_amplify_config_cfn.py
-	python update_index_html_with_script_tag_cfn.py
-
-infra.deploy:
-	echo "{}" > website/src/config.json
-	branch=`cat branch.txt` && cdk deploy drem-backend-$$branch-infrastructure --require-approval never --context manual_deploy=True
-
-infra.synth:
-	echo "{}" > website/src/config.json
-	branch=`cat branch.txt` && cdk synth drem-backend-$$branch-infrastructure --require-approval never --context manual_deploy=True
-
-manual.clean:		## Tear down the stack, only do this if you're really sure
-	cdk destroy  --context manual_deploy=True
-
-local.setup: local.install local.config
+pipeline.trigger: 	## creates the zipfile and uploads it to S3 to trigger the pipeline
+	-rm drem.zip
+	zip -r drem.zip . -x ./.venv/\* ./.git/\* ./website/build/\* ./website/node_modules/\* ./node_modules/\* ./cdk.out/\*
+	aws s3 cp drem.zip s3://$$(cat s3_bucket.txt)/$$(cat branch.txt)/
 
 local.install:		## Install Python and Javascript dependencies + Generate Config from deployed backend
-	pip install --upgrade pip
-	pip install -r requirements-dev.txt
-	npm install -g aws-cdk
+	npm install
 	npm install --prefix website
 
 local.config:		## Setup local config based on branch
 	echo "{}" > website/src/config.json
 	branch=`cat branch.txt` && aws cloudformation describe-stacks --stack-name drem-backend-$$branch-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
-	python generate_amplify_config_cfn.py
-	python update_index_html_with_script_tag_cfn.py
+	python scripts/generate_amplify_config_cfn.py
+	python scripts/update_index_html_with_script_tag_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $$appsyncId --format SDL ./website/src/graphql/schema.graphql
 	cd website/src/graphql/ && amplify codegen
 

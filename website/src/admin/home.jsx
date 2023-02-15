@@ -1,11 +1,9 @@
 import { Cards, Grid, Header, Link } from '@cloudscape-design/components';
+import { AdminHomeCards } from '../components/homeCards';
+
 import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { HomeCards } from './components/homeCards';
 
-const Home = () => {
-  const { t } = useTranslation();
-
+const AdminHome = () => {
   return (
     <>
       <img
@@ -31,14 +29,14 @@ const Home = () => {
             sections: [
               {
                 id: 'description',
-                header: t('home.description', 'Description'),
+                header: 'Description',
                 content: (item) => item.description,
               },
             ],
           }}
           cardsPerRow={[{ cards: 1 }, { minWidth: 500, cards: 2 }]}
-          items={HomeCards()}
-          header={<Header>{t('home.header', 'DeepRacer Event Manager')}</Header>}
+          items={AdminHomeCards()}
+          header={<Header>DeepRacer Event Manager Admin</Header>}
         />
         <div></div>
       </Grid>
@@ -46,4 +44,4 @@ const Home = () => {
   );
 };
 
-export { Home };
+export { AdminHome };

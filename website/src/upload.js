@@ -3,8 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Button, FormField, Grid, SpaceBetween } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from './components/ContentHeader';
-import { ModelUploadStatus } from './components/ModelUploadStatus';
+import { ContentHeader } from './components/contentHeader';
+import { ModelUploadStatus } from './components/modelUploadStatus';
 
 const Upload = () => {
   const { t } = useTranslation();

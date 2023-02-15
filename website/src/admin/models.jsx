@@ -1,3 +1,10 @@
+import { API } from 'aws-amplify';
+import React, { useEffect, useState } from 'react';
+import * as queries from '../graphql/queries';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+// import * as mutations from '../graphql/mutations';
+// import * as subscriptions from '../graphql/subscriptions'
+
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
@@ -7,24 +14,21 @@ import {
   Pagination,
   SpaceBetween,
   Table,
-  TextFilter,
+  TextFilter
 } from '@cloudscape-design/components';
-import { Auth, Storage } from 'aws-amplify';
-import React, { useEffect, useState } from 'react';
 
+import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from './components/contentHeader';
-import DeleteModelModal from './components/deleteModelModal';
+import { ContentHeader } from '../components/contentHeader';
 import {
+  AdminModelsColumnsConfig,
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
   PageSizePreference,
-  UserModelsColumnsConfig,
-  WrapLines,
-} from './components/tableConfig';
-
-import dayjs from 'dayjs';
+  WrapLines
+} from '../components/tableConfig';
+import CarModelUploadModal from './carModelUploadModal';
 
 // day.js
 var advancedFormat = require('dayjs/plugin/advancedFormat');
@@ -35,40 +39,48 @@ dayjs.extend(advancedFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const Models = () => {
+const AdminModels = () => {
   const { t } = useTranslation();
 
   const [allItems, setItems] = useState([]);
-  const [selectedItems, setSelectedItems] = useState([]);
+  const [cars, setCars] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedModelsBtn, setSelectedModelsBtn] = useState(true);
 
   useEffect(() => {
-    const getData = async () => {
-      Auth.currentAuthenticatedUser()
-        .then((user) => {
-          const username = user.username;
-          const s3Path = username + '/models';
-          Storage.list(s3Path, { level: 'private' }).then((models) => {
-            if (models !== undefined) {
-              var userModels = models.map(function (model) {
-                const modelKeyPieces = model.key.split('/');
-                return {
-                  key: model.key,
-                  modelName: modelKeyPieces[modelKeyPieces.length - 1],
-                  modelDate: dayjs(model.lastModified).format('YYYY-MM-DD HH:mm:ss (z)'),
-                };
-              });
-              setItems(userModels);
-              setIsLoading(false);
-            }
-          });
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    };
+    async function getData() {
+      console.log('Collecting models...');
+      const apiName = 'deepracerEventManager';
+      const apiPath = 'models';
 
+      const response = await API.get(apiName, apiPath);
+      var models = response.map(function (model, i) {
+        // TODO: Fix inconsistency in model.Key / model.key in /admin/model.js and /models.js
+        const modelKeyPieces = model.Key.split('/');
+        return {
+          key: model.Key,
+          userName: modelKeyPieces[modelKeyPieces.length - 3],
+          modelName: modelKeyPieces[modelKeyPieces.length - 1],
+          modelDate: dayjs(model.LastModified).format('YYYY-MM-DD HH:mm:ss (z)'),
+        };
+      });
+      setItems(models);
+      console.log(allItems);
+
+      console.log('Collecting cars...');
+      // Get CarsOnline
+      async function carsOnline() {
+        const response = await API.graphql({
+          query: queries.carsOnline,
+          variables: { online: true },
+        });
+        setCars(response.data.carsOnline);
+      }
+      carsOnline();
+
+      setIsLoading(false);
+    }
+    console.log(cars);
     getData();
 
     return () => {
@@ -76,18 +88,12 @@ const Models = () => {
     };
   }, []);
 
-  const removeItem = (key) => {
-    setSelectedModelsBtn(true);
-    setItems((items) => items.filter((items) => items.key !== key));
-    setSelectedItems((items) => items.filter((items) => items.key !== key));
-  };
-
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useLocalStorage('DREM-models-table-preferences', {
     ...DefaultPreferences,
-    visibleContent: ['modelName', 'modelDate'],
+    visibleContent: ['userName', 'modelName', 'modelDate'],
   });
 
-  const userModelsColsConfig = UserModelsColumnsConfig();
+  const adminModelsColsConfig = AdminModelsColumnsConfig();
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(allItems, {
@@ -106,14 +112,20 @@ const Models = () => {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: userModelsColsConfig[2], isDescending: true } },
+      sorting: { defaultState: { sortingColumn: adminModelsColsConfig[3], isDescending: true } },
       selection: {},
     });
+  const [selectedItems, setSelectedItems] = useState([]);
 
   const visibleContentOptions = [
     {
       label: t('models.model-information'),
       options: [
+        {
+          id: 'userName',
+          label: t('models.user-name'),
+          editable: false,
+        },
         {
           id: 'modelName',
           label: t('models.model-name'),
@@ -130,9 +142,13 @@ const Models = () => {
   return (
     <>
       <ContentHeader
-        header={t('models.header')}
-        description={t('models.list-of-your-uploaded-models')}
-        breadcrumbs={[{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]}
+        header={t('models.all-header')}
+        description={t('models.list-of-all-uploaded-models')}
+        breadcrumbs={[
+          { text: t('home.breadcrumb'), href: '/' },
+          { text: t('admin.breadcrumb'), href: '/admin/home' },
+          { text: t('models.breadcrumb') },
+        ]}
       />
 
       <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
@@ -148,19 +164,26 @@ const Models = () => {
               }
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
-                  <DeleteModelModal
+                  <Button
+                    onClick={() => {
+                      setSelectedItems([]);
+                      setSelectedModelsBtn(true);
+                    }}
+                  >
+                    {t('button.clear-selected')}
+                  </Button>
+                  <CarModelUploadModal
                     disabled={selectedModelsBtn}
-                    selectedItems={selectedItems}
-                    removeItem={removeItem}
-                    variant="primary"
-                  />
+                    selectedModels={selectedItems}
+                    cars={cars}
+                  ></CarModelUploadModal>
                 </SpaceBetween>
               }
             >
-              {t('models.header')}
+              {t('models.all-header')}
             </Header>
           }
-          columnDefinitions={userModelsColsConfig}
+          columnDefinitions={adminModelsColsConfig}
           items={items}
           pagination={
             <Pagination
@@ -185,12 +208,12 @@ const Models = () => {
           selectedItems={selectedItems}
           selectionType="multi"
           stickyHeader="true"
-          trackBy="modelName"
-          resizableColumns
+          trackBy={'key'}
           onSelectionChange={({ detail: { selectedItems } }) => {
             setSelectedItems(selectedItems);
             selectedItems.length ? setSelectedModelsBtn(false) : setSelectedModelsBtn(true);
           }}
+          resizableColumns
           preferences={
             <CollectionPreferences
               title={t('table.preferences')}
@@ -213,4 +236,4 @@ const Models = () => {
   );
 };
 
-export { Models };
+export { AdminModels };

@@ -5,24 +5,23 @@ import {
   Grid,
   Header,
   Pagination,
-  SpaceBetween,
   Table,
-  TextFilter,
+  TextFilter
 } from '@cloudscape-design/components';
-import { Auth, Storage } from 'aws-amplify';
+import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from './components/contentHeader';
-import DeleteModelModal from './components/deleteModelModal';
+import { ContentHeader } from '../components/contentHeader';
 import {
+  AdminModelsColumnsConfig,
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
   PageSizePreference,
-  UserModelsColumnsConfig,
-  WrapLines,
-} from './components/tableConfig';
+  WrapLines
+} from '../components/tableConfig';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 import dayjs from 'dayjs';
 
@@ -35,59 +34,47 @@ dayjs.extend(advancedFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const Models = () => {
+const AdminQuarantine = () => {
   const { t } = useTranslation();
 
   const [allItems, setItems] = useState([]);
-  const [selectedItems, setSelectedItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedModelsBtn, setSelectedModelsBtn] = useState(true);
 
   useEffect(() => {
-    const getData = async () => {
-      Auth.currentAuthenticatedUser()
-        .then((user) => {
-          const username = user.username;
-          const s3Path = username + '/models';
-          Storage.list(s3Path, { level: 'private' }).then((models) => {
-            if (models !== undefined) {
-              var userModels = models.map(function (model) {
-                const modelKeyPieces = model.key.split('/');
-                return {
-                  key: model.key,
-                  modelName: modelKeyPieces[modelKeyPieces.length - 1],
-                  modelDate: dayjs(model.lastModified).format('YYYY-MM-DD HH:mm:ss (z)'),
-                };
-              });
-              setItems(userModels);
-              setIsLoading(false);
-            }
-          });
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    };
+    async function getQuarantinedModels() {
+      console.log('Collecting models...');
 
-    getData();
+      const apiName = 'deepracerEventManager';
+      const apiPath = 'admin/quarantinedmodels';
+
+      const response = await API.get(apiName, apiPath);
+      var models = response.map(function (model, i) {
+        const modelKeyPieces = model.Key.split('/');
+        return {
+          id: i,
+          userName: modelKeyPieces[modelKeyPieces.length - 3],
+          modelName: modelKeyPieces[modelKeyPieces.length - 1],
+          modelDate: dayjs(model.LastModified).format('YYYY-MM-DD HH:mm:ss (z)'),
+        };
+      });
+      setItems(models);
+
+      setIsLoading(false);
+    }
+
+    getQuarantinedModels();
 
     return () => {
       // Unmounting
     };
   }, []);
 
-  const removeItem = (key) => {
-    setSelectedModelsBtn(true);
-    setItems((items) => items.filter((items) => items.key !== key));
-    setSelectedItems((items) => items.filter((items) => items.key !== key));
-  };
-
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useLocalStorage('DREM-quarantine-table-preferences', {
     ...DefaultPreferences,
-    visibleContent: ['modelName', 'modelDate'],
+    visibleContent: ['userName', 'modelName', 'modelDate'],
   });
 
-  const userModelsColsConfig = UserModelsColumnsConfig();
+  const adminModelsColsConfig = AdminModelsColumnsConfig();
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(allItems, {
@@ -100,15 +87,16 @@ const Models = () => {
             title={t('models.no-matches')}
             subtitle={t('models.we-cant-find-a-match')}
             action={
-              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
+              <Button onClick={() => actions.setFiltering('')}>{t('models.clear-filter')}</Button>
             }
           />
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: userModelsColsConfig[2], isDescending: true } },
+      sorting: { defaultState: { sortingColumn: adminModelsColsConfig[3], isDescending: true } },
       selection: {},
     });
+  const { selectedItems } = collectionProps;
 
   const visibleContentOptions = [
     {
@@ -130,9 +118,13 @@ const Models = () => {
   return (
     <>
       <ContentHeader
-        header={t('models.header')}
-        description={t('models.list-of-your-uploaded-models')}
-        breadcrumbs={[{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]}
+        header={t('quarantine.header')}
+        description={t('quarantine.list-of-all-models')}
+        breadcrumbs={[
+          { text: t('home.breadcrumb'), href: '/' },
+          { text: t('admin.breadcrumb'), href: '/admin/home' },
+          { text: t('quarantine.breadcrumb') },
+        ]}
       />
 
       <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
@@ -146,21 +138,11 @@ const Models = () => {
                   ? `(${selectedItems.length}/${allItems.length})`
                   : `(${allItems.length})`
               }
-              actions={
-                <SpaceBetween direction="horizontal" size="xs">
-                  <DeleteModelModal
-                    disabled={selectedModelsBtn}
-                    selectedItems={selectedItems}
-                    removeItem={removeItem}
-                    variant="primary"
-                  />
-                </SpaceBetween>
-              }
             >
-              {t('models.header')}
+              {t('quarantine.header')}
             </Header>
           }
-          columnDefinitions={userModelsColsConfig}
+          columnDefinitions={adminModelsColsConfig}
           items={items}
           pagination={
             <Pagination
@@ -182,15 +164,6 @@ const Models = () => {
           loading={isLoading}
           loadingText={t('models.loading-models')}
           visibleColumns={preferences.visibleContent}
-          selectedItems={selectedItems}
-          selectionType="multi"
-          stickyHeader="true"
-          trackBy="modelName"
-          resizableColumns
-          onSelectionChange={({ detail: { selectedItems } }) => {
-            setSelectedItems(selectedItems);
-            selectedItems.length ? setSelectedModelsBtn(false) : setSelectedModelsBtn(true);
-          }}
           preferences={
             <CollectionPreferences
               title={t('table.preferences')}
@@ -213,4 +186,4 @@ const Models = () => {
   );
 };
 
-export { Models };
+export { AdminQuarantine };
