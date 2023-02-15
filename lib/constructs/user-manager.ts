@@ -109,7 +109,7 @@ export class UserManager extends Construct {
         users_handler.addToRolePolicy(
             new iam.PolicyStatement({
                 effect: iam.Effect.ALLOW,
-                actions: ['cognito-idp:ListUsers'],
+                actions: ['cognito-idp:ListUsers', 'cognito-idp:AdminCreateUser'],
                 resources: [props.userPoolArn],
             })
         );
@@ -148,7 +148,7 @@ export class UserManager extends Construct {
                 Enabled: GraphqlType.boolean(),
                 UserStatus: GraphqlType.string(),
                 MFAOptions: user_object_mfa_options.attribute({ isList: true, isRequired: false }),
-                sub: GraphqlType.id(),
+                sub: GraphqlType.id({ isRequired: false }),
             },
         });
 
@@ -159,6 +159,18 @@ export class UserManager extends Construct {
             'listUsers',
             new ResolvableField({
                 returnType: user_object.attribute({ isList: true }),
+                dataSource: users_data_source,
+            })
+        );
+
+        props.appsyncApi.schema.addMutation(
+            'createUser',
+            new ResolvableField({
+                args: {
+                    username: GraphqlType.string({ isRequired: true }),
+                    email: GraphqlType.string({ isRequired: true }),
+                },
+                returnType: user_object.attribute(),
                 dataSource: users_data_source,
             })
         );

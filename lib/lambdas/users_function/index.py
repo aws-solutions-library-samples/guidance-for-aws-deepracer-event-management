@@ -73,3 +73,28 @@ def listUsers():
     except Exception as error:
         logger.exception(error)
         return error
+
+
+@app.resolver(type_name="Mutation", field_name="createUser")
+def create_user(username: str, email: str):
+    try:
+        user = client_cognito.admin_create_user(
+            UserPoolId=user_pool_id,
+            Username=username,
+            UserAttributes=[
+                {"Name": "email", "Value": email},
+            ],
+            DesiredDeliveryMediums=[
+                "EMAIL",
+            ],
+        )
+
+        temp = json.dumps(user, default=json_serial)  # sort out datetime
+        temp2 = json.loads(temp)
+        logger.info(temp2)
+        return temp2
+        # return "submitted request"
+
+    except Exception as error:
+        logger.exception(error)
+        return error
