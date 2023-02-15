@@ -26,7 +26,6 @@ import {
 const AdminActivation = (props) => {
     const { t } = useTranslation();
 
-    const [dremUrl, setDremUrl] = useState('');
     const [result, setResult] = useState('');
     const [activationCode, setActivationCode] = useState('');
     const [activationId, setActivationId] = useState('');
@@ -48,6 +47,13 @@ const AdminActivation = (props) => {
 
     const [isLoading, setIsLoading] = useState(true);
     const [fleets] = useContext(fleetContext);
+
+    const [dremUrl, setDremUrl] = useState(
+        window.location.protocol +
+            '//' +
+            window.location.hostname +
+            (window.location.port ? ':' + window.location.port : '')
+    );
 
     // convert fleets data to dropdown format
     useEffect(() => {
@@ -99,12 +105,6 @@ const AdminActivation = (props) => {
             },
         });
         const response = apiResponse['data']['carActivation'];
-        setDremUrl(
-            window.location.protocol +
-                '//' +
-                window.location.hostname +
-                (window.location.port ? ':' + window.location.port : '')
-        );
         setResult(response);
         setActivationCode(response['activationCode']);
         setActivationId(response['activationId']);
