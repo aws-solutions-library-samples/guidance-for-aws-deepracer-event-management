@@ -182,8 +182,38 @@ export class UserManager extends Construct {
             })
         );
 
+        props.appsyncApi.schema.addMutation(
+            'newUser',
+            new ResolvableField({
+                args: {
+                    Username: GraphqlType.string(),
+                    Attributes: user_object_attributes.attribute({ isList: true }),
+                    UserCreateDate: GraphqlType.awsDateTime(),
+                    UserLastModifiedDate: GraphqlType.awsDateTime(),
+                    Enabled: GraphqlType.boolean(),
+                    UserStatus: GraphqlType.string(),
+                    MFAOptions: user_object_mfa_options.attribute({
+                        isList: true,
+                        isRequired: false,
+                    }),
+                    sub: GraphqlType.id({ isRequired: false }),
+                },
+                returnType: user_object.attribute(),
+                dataSource: props.appsyncApi.noneDataSource,
+                requestMappingTemplate: appsync.MappingTemplate.fromString(
+                    `{
+                        "version": "2017-02-28",
+                    "payload": $util.toJson($context.arguments)
+                    }`
+                ),
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    '$util.toJson($context.result)'
+                ),
+            })
+        );
+
         props.appsyncApi.schema.addSubscription(
-            'onCreateUser',
+            'onNewUser',
             new ResolvableField({
                 returnType: user_object.attribute(),
                 dataSource: props.appsyncApi.noneDataSource,
@@ -196,7 +226,7 @@ export class UserManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('createUser')],
+                directives: [Directive.subscribe('newUser')],
             })
         );
 
@@ -209,7 +239,8 @@ export class UserManager extends Construct {
                     resources: [
                         `${props.appsyncApi.api.arn}/types/Query/fields/listUsers`,
                         `${props.appsyncApi.api.arn}/types/Mutation/fields/createUser`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/createdUser`,
+                        `${props.appsyncApi.api.arn}/types/Subscription/fields/newUser`,
+                        `${props.appsyncApi.api.arn}/types/Subscription/fields/onNewUser`,
                     ],
                 }),
             ],
