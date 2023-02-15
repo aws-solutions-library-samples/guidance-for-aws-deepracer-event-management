@@ -66,6 +66,15 @@ const AdminActivation = (props) => {
         };
     }, [fleets]);
 
+    useEffect(() => {
+        if (password !== '' && hostname !== '') {
+            setWifiActivation(' -s ' + ssid + ' -w ' + wifiPass);
+        }
+        return () => {
+            // Unmounting
+        };
+    }, [ssid, wifiPass]);
+
     // watch properties for changes and enable generate button if required
     useEffect(() => {
         if (
@@ -109,9 +118,6 @@ const AdminActivation = (props) => {
                 response['region'] +
                 '"'
         );
-        if (ssid.length > 0) {
-            setWifiActivation(' -s ' + ssid + ' -w ' + wifiPass);
-        }
         setUpdateCommand(
             'curl -O ' +
                 dremUrl +
