@@ -109,7 +109,6 @@ const AdminActivation = (props) => {
                 response['region'] +
                 '"'
         );
-        console.log('ssid.length:' + ssid.length);
         if (ssid.length > 0) {
             setWifiActivation(' -s ' + ssid + ' -w ' + wifiPass);
         }
