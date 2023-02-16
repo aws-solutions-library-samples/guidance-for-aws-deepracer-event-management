@@ -2,6 +2,8 @@ import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import { DockerImage, Duration } from 'aws-cdk-lib';
 import * as apig from 'aws-cdk-lib/aws-apigateway';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
+import { Rule } from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -258,12 +260,46 @@ export class UserManager extends Construct {
                     resources: [
                         `${props.appsyncApi.api.arn}/types/Query/fields/listUsers`,
                         `${props.appsyncApi.api.arn}/types/Mutation/fields/createUser`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/newUser`,
+                        `${props.appsyncApi.api.arn}/types/Mutation/fields/newUser`,
                         `${props.appsyncApi.api.arn}/types/Subscription/fields/onNewUser`,
                     ],
                 }),
             ],
         });
         admin_api_policy.attachToRole(props.adminGroupRole);
+
+        // Eventbus Functions //
+
+        // respond to new user event
+        const new_user_event_handler = new lambdaPython.PythonFunction(
+            this,
+            'new_user_event_handler',
+            {
+                entry: 'lib/lambdas/users_function/',
+                description: 'Work with Cognito users',
+                index: 'new_user_event.py',
+                handler: 'lambda_handler',
+                timeout: Duration.minutes(1),
+                runtime: props.lambdaConfig.runtime,
+                tracing: lambda.Tracing.ACTIVE,
+                memorySize: 128,
+                architecture: props.lambdaConfig.architecture,
+                bundling: {
+                    image: props.lambdaConfig.bundlingImage,
+                },
+                layers: [
+                    props.lambdaConfig.layersConfig.helperFunctionsLayer,
+                    props.lambdaConfig.layersConfig.powerToolsLayer,
+                ],
+            }
+        );
+
+        // EventBridge Rule
+        const rule = new Rule(this, 'new_user_event_handler_rule');
+        rule.addEventPattern({
+            source: ['idp'],
+            detailType: ['userCreated'],
+        });
+        rule.addTarget(new targets.LambdaFunction(new_user_event_handler));
     }
 }

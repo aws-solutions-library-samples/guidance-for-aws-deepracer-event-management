@@ -49,6 +49,9 @@ export class Idp extends Construct {
             tracing: lambda.Tracing.ACTIVE,
             memorySize: 128,
             architecture: props.lambdaConfig.architecture,
+            environment: {
+                eventbus_name: props.eventbus.eventBusName,
+            },
             bundling: {
                 image: props.lambdaConfig.bundlingImage,
             },
