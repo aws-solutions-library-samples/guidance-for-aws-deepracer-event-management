@@ -1,14 +1,28 @@
+import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import * as cdk from 'aws-cdk-lib';
-import { Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import { CfnUserPoolUserToGroupAttachment } from 'aws-cdk-lib/aws-cognito';
+import { EventBus } from 'aws-cdk-lib/aws-events';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 
 export interface IdpProps {
     distribution: cloudfront.IDistribution;
     defaultAdminEmail: string;
+    lambdaConfig: {
+        runtime: lambda.Runtime;
+        architecture: lambda.Architecture;
+        bundlingImage: DockerImage;
+        layersConfig: {
+            powerToolsLogLevel: string;
+            helperFunctionsLayer: lambda.ILayerVersion;
+            powerToolsLayer: lambda.ILayerVersion;
+        };
+    };
+    eventbus: EventBus;
 }
 
 export class Idp extends Construct {
@@ -24,6 +38,27 @@ export class Idp extends Construct {
         super(scope, id);
 
         const stack = cdk.Stack.of(this);
+
+        const pre_sign_up_lambda = new lambdaPython.PythonFunction(this, 'pre_sign_up_lambda', {
+            entry: 'lib/lambdas/cognito_triggers/',
+            description: 'Cognito pre sign up Lambda',
+            index: 'index.py',
+            handler: 'pre_sign_up_handler',
+            timeout: Duration.minutes(1),
+            runtime: props.lambdaConfig.runtime,
+            tracing: lambda.Tracing.ACTIVE,
+            memorySize: 128,
+            architecture: props.lambdaConfig.architecture,
+            bundling: {
+                image: props.lambdaConfig.bundlingImage,
+            },
+            layers: [
+                props.lambdaConfig.layersConfig.helperFunctionsLayer,
+                props.lambdaConfig.layersConfig.powerToolsLayer,
+            ],
+        });
+
+        props.eventbus.grantPutEventsTo(pre_sign_up_lambda);
 
         const userPool = new cognito.UserPool(this, 'UserPool', {
             userPoolName: stack.stackName,
@@ -57,6 +92,7 @@ export class Idp extends Construct {
                 emailStyle: cognito.VerificationEmailStyle.CODE,
                 smsMessage: 'Thanks for signing up to DREM. Your verification code is {####}',
             },
+            lambdaTriggers: { preSignUp: pre_sign_up_lambda },
         });
 
         this.userPool = userPool;

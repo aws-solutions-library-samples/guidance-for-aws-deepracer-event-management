@@ -6,7 +6,7 @@ import * as awsLambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { Cdn } from './constructs/cdn';
-import { Eventbus } from './constructs/eventbus';
+import { Eventbridge } from './constructs/eventbridge';
 import { Idp } from './constructs/idp';
 import { Website } from './constructs/website';
 
@@ -17,7 +17,7 @@ export interface BaseStackProps extends cdk.StackProps {
 const powertoolsLogLevel = 'INFO';
 
 export class BaseStack extends cdk.Stack {
-    public readonly eventbus: Eventbus;
+    public readonly eventbridge: Eventbridge;
     public readonly idp: Idp;
     public readonly cloudfrontDistribution: Distribution;
     public readonly logsBucket: s3.Bucket;
@@ -112,12 +112,14 @@ export class BaseStack extends cdk.Stack {
         };
 
         // Event Bus
-        this.eventbus = new Eventbus(this, 'eventbus');
+        this.eventbridge = new Eventbridge(this, 'eventbus');
 
         // Cognito Resources
         this.idp = new Idp(this, 'idp', {
             distribution: cdn.distribution,
             defaultAdminEmail: props.email,
+            lambdaConfig: this.lambdaConfig,
+            eventbus: this.eventbridge.eventbus,
         });
     }
 }

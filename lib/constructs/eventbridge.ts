@@ -7,7 +7,7 @@ import { Construct } from 'constructs';
 //     defaultOrigin: IOrigin;
 // }
 
-export class Eventbus extends Construct {
+export class Eventbridge extends Construct {
     public readonly eventbus: events.EventBus;
 
     constructor(scope: Construct, id: string) {
