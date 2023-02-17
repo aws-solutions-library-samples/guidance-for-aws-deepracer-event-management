@@ -76,29 +76,35 @@ def listUsers():
 @app.resolver(type_name="Mutation", field_name="createUser")
 def create_user(username: str, email: str):
     # check to see if user already exists
+    userexists = False
     try:
         response = client_cognito.list_users(
             UserPoolId=user_pool_id,
-            AttributesToGet=[
-                "username",
-            ],
             Limit=1,
             Filter='username = "{}"'.format(username),
         )
         logger.info(response)
+
+        if len(response["Users"]) > 0:
+            userexists = True
     except Exception as error:
         logger.exception(error)
 
-    user = client_cognito.admin_create_user(
-        UserPoolId=user_pool_id,
-        Username=username,
-        UserAttributes=[
-            {"Name": "email", "Value": email},
-        ],
-        DesiredDeliveryMediums=[
-            "EMAIL",
-        ],
-    )
+    if userexists is False:
+        user = client_cognito.admin_create_user(
+            UserPoolId=user_pool_id,
+            Username=username,
+            UserAttributes=[
+                {"Name": "email", "Value": email},
+            ],
+            DesiredDeliveryMediums=[
+                "EMAIL",
+            ],
+        )
 
-    logger.info(user["User"])
-    return clean_json(user["User"])
+        logger.info(user["User"])
+        return clean_json(user["User"])
+    else:
+        return {
+            "error": {"message": "User Already Exists", "type": "UserAlreadyExists"}
+        }

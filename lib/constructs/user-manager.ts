@@ -201,6 +201,13 @@ export class UserManager extends Construct {
                 },
                 returnType: user_object.attribute(),
                 dataSource: users_data_source,
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    `if (!$util.isNull($ctx.result.error))
+                        $util.error($ctx.result.error.message, $ctx.result.error.type)
+                    #end
+                    
+                    $utils.toJson($ctx.result)`
+                ),
             })
         );
 
