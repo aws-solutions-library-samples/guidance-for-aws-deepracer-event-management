@@ -14,6 +14,7 @@
   "common.error": "Error",
   "common.success": "Success",
 
+  "car-activation.breadcrumb": "Car activation",
   "car-activation.copied-to-clipboard": "copied to clipboard",
   "car-activation.description": "Create systems manager activation to register and update cars.",
   "car-activation.fleet": "Fleet",
@@ -115,7 +116,8 @@
   "events.race.resets-per-lap-description": "Defines how many times the car may go of track during a lap before the lap is disqualified.",
   "events.race.unlimited": "Unlimited",
   "events.race.laps-to-finish": "Number of laps to finish",
-  "events.race.laps-to-finish-description": "Defines how many laps the car shall finish before the race is over.",  "events.race.ranking.best-lap-time": "Best lap time",
+  "events.race.laps-to-finish-description": "Defines how many laps the car shall finish before the race is over.",
+  "events.race.ranking.best-lap-time": "Best lap time",
   "events.race.ranking.average-lap-time": "Average lap time",
   "events.race.ranking.finish-x-laps": "Finish x laps",
 
