@@ -86,11 +86,13 @@ export function AdminActivation(props) {
     setActivationId(response['activationId']);
     setRegion(response['region']);
     setSsmCommand('sudo amazon-ssm-agent -register -code "' + response['activationCode'] + '" -id "' + response['activationId'] + '" -region "' + response['region'] + '"');
-    setUpdateCommand('curl -O ' + window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '') + '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -p ' + password + ' -h ' + hostname + ' -c ' + response['activationCode'] + ' -i ' + response['activationId'] + ' -r ' + response['region'] + ' -s ' + ssid + ' -w ' + wifiPass);
+    let wifiCreds = '';
+    if (ssid.length > 0) {
+      wifiCreds = ' -s ' + ssid + ' -w ' + wifiPass;
+    }
+    setUpdateCommand('curl -O ' + window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '') + '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -p ' + password + ' -h ' + hostname + ' -c ' + response['activationCode'] + ' -i ' + response['activationId'] + ' -r ' + response['region'] + wifiCreds);
     setLoading("");
   }
-
-
 
   return (
     <>

@@ -9,6 +9,7 @@ zip_repo:
     - esbjj
     - cdk-pipeline-askwith
     - cdk-pipeline-dasmthc
+    - hotfix-manual-update
   stage: zip
   image:
     name: ubuntu
@@ -29,6 +30,7 @@ upload_to_s3:
     - esbjj
     - cdk-pipeline-askwith
     - cdk-pipeline-dasmthc
+    - hotfix-manual-update
   stage: upload
   image:
     name: amazon/aws-cli
