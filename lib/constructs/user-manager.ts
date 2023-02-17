@@ -302,14 +302,14 @@ export class UserManager extends Construct {
             }
         );
 
-        // Grant access so API methods can be invoked
-        new_user_event_handler.addToRolePolicy(
-            new iam.PolicyStatement({
-                effect: iam.Effect.ALLOW,
-                actions: ['appsync:GraphQL'],
-                resources: [new_user_event_handler.functionArn],
-            })
-        );
+        // // Grant access so API methods can be invoked
+        // new_user_event_handler.addToRolePolicy(
+        //     new iam.PolicyStatement({
+        //         effect: iam.Effect.ALLOW,
+        //         actions: ['appsync:GraphQL'],
+        //         resources: [new_user_event_handler.functionArn],
+        //     })
+        // );
 
         // EventBridge Rule
         const rule = new Rule(this, 'new_user_event_handler_rule', {
