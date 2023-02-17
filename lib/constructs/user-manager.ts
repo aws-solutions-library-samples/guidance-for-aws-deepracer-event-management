@@ -2,7 +2,7 @@ import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import { DockerImage, Duration } from 'aws-cdk-lib';
 import * as apig from 'aws-cdk-lib/aws-apigateway';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
-import { Rule } from 'aws-cdk-lib/aws-events';
+import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
@@ -42,6 +42,7 @@ export interface UserManagerProps {
             powerToolsLayer: lambda.ILayerVersion;
         };
     };
+    eventbus: EventBus;
 }
 
 export class UserManager extends Construct {
@@ -295,7 +296,9 @@ export class UserManager extends Construct {
         );
 
         // EventBridge Rule
-        const rule = new Rule(this, 'new_user_event_handler_rule');
+        const rule = new Rule(this, 'new_user_event_handler_rule', {
+            eventBus: props.eventbus,
+        });
         rule.addEventPattern({
             source: ['idp'],
             detailType: ['userCreated'],

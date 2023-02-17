@@ -3,6 +3,7 @@ import { DockerImage } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { IDistribution } from 'aws-cdk-lib/aws-cloudfront';
 import { CfnIdentityPool, IUserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
+import { EventBus } from 'aws-cdk-lib/aws-events';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -44,6 +45,7 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
         };
     };
     dremWebsiteBucket: IBucket;
+    eventbus: EventBus;
 }
 
 export class DeepracerEventManagerStack extends cdk.Stack {
@@ -177,6 +179,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 apiAdminResource: restApi.apiAdminResource,
                 bodyValidator: restApi.bodyValidator,
             },
+            eventbus: props.eventbus,
         });
 
         new LabelPrinter(this, 'LabelPrinter', {

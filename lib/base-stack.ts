@@ -112,7 +112,7 @@ export class BaseStack extends cdk.Stack {
         };
 
         // Event Bus
-        this.eventbridge = new Eventbridge(this, 'eventbus');
+        this.eventbridge = new Eventbridge(this, 'eventbridge');
 
         // Cognito Resources
         this.idp = new Idp(this, 'idp', {
