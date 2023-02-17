@@ -202,11 +202,11 @@ export class UserManager extends Construct {
                 returnType: user_object.attribute(),
                 dataSource: users_data_source,
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
-                    `if (!$util.isNull($ctx.result.error))
-                        $util.error($ctx.result.error.message, $ctx.result.error.type)
+                    `#if (!$util.isNull($context.result.error))
+                        $util.error($context.result.error.message, $ctx.result.error.type)
                     #end
-                    
-                    $utils.toJson($ctx.result)`
+                                        
+                    $utils.toJson($context.result)`
                 ),
             })
         );
@@ -300,6 +300,15 @@ export class UserManager extends Construct {
                     props.lambdaConfig.layersConfig.powerToolsLayer,
                 ],
             }
+        );
+
+        // Grant access so API methods can be invoked
+        new_user_event_handler.addToRolePolicy(
+            new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ['appsync:GraphQL'],
+                resources: [new_user_event_handler.functionArn],
+            })
         );
 
         // EventBridge Rule
