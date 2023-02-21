@@ -29,7 +29,7 @@ export interface UserManagerProps {
     };
     appsyncApi: {
         schema: CodeFirstSchema;
-        api: appsync.IGraphqlApi;
+        api: appsync.GraphqlApi;
         noneDataSource: appsync.NoneDataSource;
     };
     lambdaConfig: {
@@ -301,6 +301,8 @@ export class UserManager extends Construct {
                 ],
             }
         );
+
+        props.appsyncApi.api.grantMutation(new_user_event_handler, 'newUser');
 
         // // Grant access so API methods can be invoked
         // new_user_event_handler.addToRolePolicy(
