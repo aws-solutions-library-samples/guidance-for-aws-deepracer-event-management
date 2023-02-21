@@ -290,32 +290,32 @@ export class UserManager extends Construct {
         // Eventbus Functions //
 
         // respond to new user event
-        const new_user_event_handler = new lambdaPython.PythonFunction(
-            this,
-            'new_user_event_handler',
-            {
-                entry: 'lib/lambdas/users_function/',
-                description: 'Work with Cognito users',
-                index: 'new_user_event.py',
-                handler: 'lambda_handler',
-                timeout: Duration.minutes(1),
-                runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
-                memorySize: 128,
-                architecture: props.lambdaConfig.architecture,
-                environment: {
-                    graphqlUrl: props.appsyncApi.api.graphqlUrl,
-                },
-                bundling: {
-                    image: props.lambdaConfig.bundlingImage,
-                },
-                layers: [
-                    props.lambdaConfig.layersConfig.helperFunctionsLayer,
-                    props.lambdaConfig.layersConfig.powerToolsLayer,
-                    requestsAws4authLayer,
-                ],
-            }
-        );
+        // const new_user_event_handler = new lambdaPython.PythonFunction(
+        //     this,
+        //     'new_user_event_handler',
+        //     {
+        //         entry: 'lib/lambdas/users_function/',
+        //         description: 'Work with Cognito users',
+        //         index: 'new_user_event.py',
+        //         handler: 'lambda_handler',
+        //         timeout: Duration.minutes(1),
+        //         runtime: props.lambdaConfig.runtime,
+        //         tracing: lambda.Tracing.ACTIVE,
+        //         memorySize: 128,
+        //         architecture: props.lambdaConfig.architecture,
+        //         environment: {
+        //             graphqlUrl: props.appsyncApi.api.graphqlUrl,
+        //         },
+        //         bundling: {
+        //             image: props.lambdaConfig.bundlingImage,
+        //         },
+        //         layers: [
+        //             props.lambdaConfig.layersConfig.helperFunctionsLayer,
+        //             props.lambdaConfig.layersConfig.powerToolsLayer,
+        //             requestsAws4authLayer,
+        //         ],
+        //     }
+        // );
 
         props.appsyncApi.api.grantMutation(new_user_event_handler, 'newUser');
 
