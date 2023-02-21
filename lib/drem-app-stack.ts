@@ -42,6 +42,7 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
             powerToolsLogLevel: string;
             helperFunctionsLayer: lambda.ILayerVersion;
             powerToolsLayer: lambda.ILayerVersion;
+            requestsAws4authLayer: lambda.ILayerVersion;
         };
     };
     dremWebsiteBucket: IBucket;
