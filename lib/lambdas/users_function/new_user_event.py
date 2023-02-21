@@ -67,7 +67,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         }}"""
         # Now we can simply post the request...
         response = http.request(
-            url=APPSYNC_API_ENDPOINT_URL, method="POST", json={"mutation": mutation}
+            url=api_endpoint, method="POST", json={"mutation": mutation}
         )
         logger.info(response)
         return "{}"

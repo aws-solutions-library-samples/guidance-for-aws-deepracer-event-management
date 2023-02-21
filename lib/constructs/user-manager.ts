@@ -40,6 +40,7 @@ export interface UserManagerProps {
             powerToolsLogLevel: string;
             helperFunctionsLayer: lambda.ILayerVersion;
             powerToolsLayer: lambda.ILayerVersion;
+            requestsAws4authLayer: lambda.ILayerVersion;
         };
     };
     eventbus: EventBus;
@@ -298,6 +299,7 @@ export class UserManager extends Construct {
                 layers: [
                     props.lambdaConfig.layersConfig.helperFunctionsLayer,
                     props.lambdaConfig.layersConfig.powerToolsLayer,
+                    props.lambdaConfig.layersConfig.requestsAws4authLayer,
                 ],
             }
         );
