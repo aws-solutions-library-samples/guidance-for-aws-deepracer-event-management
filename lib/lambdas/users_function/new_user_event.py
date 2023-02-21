@@ -4,7 +4,7 @@
 import os
 
 import http_response
-import urllib3
+import requests
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from requests_aws4auth import AWS4Auth
@@ -20,15 +20,15 @@ session_token = os.environ.get("AWS_SESSION_TOKEN")
 region = os.environ.get("AWS_REGION")
 
 # Your AppSync Endpoint
-# api_endpoint = os.environ.get("AppsyncConnectionString")
-api_endpoint = (
-    "https://jmuapsk5fveahflm2jdcumgy6u.appsync-api.eu-west-1.amazonaws.com/graphql"
-)
+api_endpoint = os.environ.get("graphqlUrl")
+# api_endpoint = (
+#     "https://jmuapsk5fveahflm2jdcumgy6u.appsync-api.eu-west-1.amazonaws.com/graphql"
+# )
 
 resource = "appsync"
 
-http = urllib3.PoolManager()
-http.auth = AWS4Auth(
+session = requests.Session()
+session.auth = AWS4Auth(
     access_id, secret_key, region, resource, session_token=session_token
 )
 
@@ -66,11 +66,9 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
             }
         }}"""
         # Now we can simply post the request...
-        response = http.request(
-            url=api_endpoint, method="POST", json={"mutation": mutation}
-        )
-        logger.info(response)
-        return "{}"
+        response = session.request(url=api_endpoint, method="POST", json=mutation)
+        logger.info(response.text)
+        return response
 
     except Exception as error:
         logger.exception(error)

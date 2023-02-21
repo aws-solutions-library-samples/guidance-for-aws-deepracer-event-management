@@ -40,7 +40,6 @@ export interface UserManagerProps {
             powerToolsLogLevel: string;
             helperFunctionsLayer: lambda.ILayerVersion;
             powerToolsLayer: lambda.ILayerVersion;
-            requestsAws4authLayer: lambda.ILayerVersion;
         };
     };
     eventbus: EventBus;
@@ -277,6 +276,17 @@ export class UserManager extends Construct {
         });
         admin_api_policy.attachToRole(props.adminGroupRole);
 
+        const requestsAws4authLayer = new lambdaPython.PythonLayerVersion(
+            this,
+            'requestsAws4authLayer',
+            {
+                entry: 'lib/lambdas/helper_functions_layer/requests_aws4auth/',
+                compatibleArchitectures: [props.lambdaConfig.architecture],
+                compatibleRuntimes: [props.lambdaConfig.runtime],
+                bundling: { image: props.lambdaConfig.bundlingImage },
+            }
+        );
+
         // Eventbus Functions //
 
         // respond to new user event
@@ -293,27 +303,21 @@ export class UserManager extends Construct {
                 tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 architecture: props.lambdaConfig.architecture,
+                environment: {
+                    graphqlUrl: props.appsyncApi.api.graphqlUrl,
+                },
                 bundling: {
                     image: props.lambdaConfig.bundlingImage,
                 },
                 layers: [
                     props.lambdaConfig.layersConfig.helperFunctionsLayer,
                     props.lambdaConfig.layersConfig.powerToolsLayer,
-                    props.lambdaConfig.layersConfig.requestsAws4authLayer,
+                    requestsAws4authLayer,
                 ],
             }
         );
 
         props.appsyncApi.api.grantMutation(new_user_event_handler, 'newUser');
-
-        // // Grant access so API methods can be invoked
-        // new_user_event_handler.addToRolePolicy(
-        //     new iam.PolicyStatement({
-        //         effect: iam.Effect.ALLOW,
-        //         actions: ['appsync:GraphQL'],
-        //         resources: [new_user_event_handler.functionArn],
-        //     })
-        // );
 
         // EventBridge Rule
         const rule = new Rule(this, 'new_user_event_handler_rule', {

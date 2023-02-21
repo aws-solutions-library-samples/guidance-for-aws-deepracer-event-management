@@ -29,7 +29,6 @@ export class BaseStack extends cdk.Stack {
             helperFunctionsLayer: awsLambda.ILayerVersion;
             powerToolsLayer: awsLambda.ILayerVersion;
             powerToolsLogLevel: string;
-            requestsAws4authLayer: awsLambda.ILayerVersion;
         };
     };
     public readonly dremWebsitebucket: s3.Bucket;
@@ -94,17 +93,6 @@ export class BaseStack extends cdk.Stack {
             bundling: { image: lambda_bundling_image },
         });
 
-        const requestsAws4authLayer = new lambdaPython.PythonLayerVersion(
-            this,
-            'requestsAws4authLayer',
-            {
-                entry: 'lib/lambdas/helper_functions_layer/requests_aws4auth/',
-                compatibleArchitectures: [lambda_architecture],
-                compatibleRuntimes: [lambda_runtime],
-                bundling: { image: lambda_bundling_image },
-            }
-        );
-
         // Powertools layer
         const powertoolsLayer = lambdaPython.PythonLayerVersion.fromLayerVersionArn(
             this,
@@ -120,7 +108,6 @@ export class BaseStack extends cdk.Stack {
                 helperFunctionsLayer: helperFunctionsLayer,
                 powerToolsLayer: powertoolsLayer,
                 powerToolsLogLevel: powertoolsLogLevel,
-                requestsAws4authLayer: requestsAws4authLayer,
             },
         };
 
