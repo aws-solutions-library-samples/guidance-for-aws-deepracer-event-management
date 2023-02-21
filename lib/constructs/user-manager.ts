@@ -2,7 +2,7 @@ import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import { DockerImage, Duration } from 'aws-cdk-lib';
 import * as apig from 'aws-cdk-lib/aws-apigateway';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
-import { EventBus } from 'aws-cdk-lib/aws-events';
+// import { EventBus } from 'aws-cdk-lib/aws-events';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -41,7 +41,7 @@ export interface UserManagerProps {
             powerToolsLayer: lambda.ILayerVersion;
         };
     };
-    eventbus: EventBus;
+    // eventbus: EventBus;
 }
 
 export class UserManager extends Construct {
