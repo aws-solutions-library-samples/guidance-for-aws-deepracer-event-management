@@ -179,7 +179,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 apiAdminResource: restApi.apiAdminResource,
                 bodyValidator: restApi.bodyValidator,
             },
-            // eventbus: props.eventbus,
+            eventbus: props.eventbus,
         });
 
         new LabelPrinter(this, 'LabelPrinter', {
