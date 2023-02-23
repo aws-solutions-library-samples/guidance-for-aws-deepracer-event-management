@@ -25,36 +25,34 @@ auth = AWS4Auth(access_id, secret_key, region, "appsync", session_token=session_
 
 @logger.inject_lambda_context
 def lambda_handler(event: dict, context: LambdaContext) -> str:
+    username = event["detail"]["data"]["userName"]
+    email = event["detail"]["data"]["request"]["userAttributes"]["email"]
+    # logger.info(username)
 
     try:
-        logger.info(event)
+        # logger.info(event)
 
         # Use JSON format string for the query. It does not need reformatting.
-        query = """
+        query = (
+            '''
             mutation MyMutation {
-                newUser(Username: "cognitotest00",
+                newUser(Username: "'''
+            + username
+            + '''",
                 Attributes: [
                     {
-                        Name: "sub",
-                        Value: "ffe5e8be-9a45-4eb2-acb8-af0353158ad6"
-                    },
-                    {
                         Name: "email",
-                        Value: "askwith+cognitotest00@amazon.co.uk"
+                        Value: "'''
+            + email
+            + """"
                     }
                 ],
-                Enabled: true,
-                UserStatus: "FORCE_CHANGE_PASSWORD"
               ) {
                 Username
-                UserCreateDate
-                UserLastModifiedDate
-                Enabled
-                UserStatus
-                sub
               }
             }
         """
+        )
         payload = {"query": query}
 
         try:
