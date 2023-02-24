@@ -1,3 +1,4 @@
+import datetime
 import os
 
 import http_response
@@ -27,7 +28,8 @@ auth = AWS4Auth(access_id, secret_key, region, "appsync", session_token=session_
 def lambda_handler(event: dict, context: LambdaContext) -> str:
     username = event["detail"]["data"]["userName"]
     email = event["detail"]["data"]["request"]["userAttributes"]["email"]
-    # logger.info(username)
+    # Add a 'fake' timestamp of now to save having to make another call to Cognito.
+    user_create_date = datetime.datetime.now().isoformat(timespec="milliseconds") + "Z"
 
     try:
         # logger.info(event)
@@ -39,6 +41,9 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                 userCreated(Username: "'''
             + username
             + '''",
+                UserCreateDate: "'''
+            + user_create_date
+            + '''",
                 Attributes: [
                     {
                         Name: "email",
@@ -48,7 +53,8 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                     }
                 ],
               ) {
-                Username
+                Username,
+                UserCreateDate
               }
             }
         """

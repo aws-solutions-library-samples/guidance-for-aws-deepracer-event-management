@@ -290,13 +290,13 @@ export class UserManager extends Construct {
         // Eventbus Functions //
 
         // respond to new user event
-        const new_user_event_handler = new lambdaPython.PythonFunction(
+        const user_created_event_handler = new lambdaPython.PythonFunction(
             this,
-            'new_user_event_handler',
+            'user_created_event_handler',
             {
                 entry: 'lib/lambdas/users_function/',
                 description: 'Work with Cognito users',
-                index: 'new_user_event.py',
+                index: 'user_created_event.py',
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(1),
                 runtime: props.lambdaConfig.runtime,
@@ -317,16 +317,16 @@ export class UserManager extends Construct {
             }
         );
 
-        props.appsyncApi.api.grantMutation(new_user_event_handler, 'userCreated');
+        props.appsyncApi.api.grantMutation(user_created_event_handler, 'userCreated');
 
         // EventBridge Rule
-        const rule = new Rule(this, 'new_user_event_handler_rule', {
+        const rule = new Rule(this, 'user_created_event_handler_rule', {
             eventBus: props.eventbus,
         });
         rule.addEventPattern({
             source: ['idp'],
             detailType: ['userCreated'],
         });
-        rule.addTarget(new targets.LambdaFunction(new_user_event_handler));
+        rule.addTarget(new targets.LambdaFunction(user_created_event_handler));
     }
 }

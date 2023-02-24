@@ -72,27 +72,27 @@ export function CreateUser() {
 
   const columnsConfig = [
     {
-      id: 'username',
+      id: 'Username',
       header: t('users.header-username'),
       cell: (item) => item.Username || '-',
-      sortingField: 'username',
+      sortingField: 'Username',
       width: 200,
       minWidth: 150,
     },
     {
-      id: 'creationDate',
+      id: 'UserCreateDate',
       header: t('users.header-creation-date'),
       cell: (item) => dayjs(item.UserCreateDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
-      sortingField: 'creationDate',
-      width: 200,
+      sortingField: 'UserCreateDate',
+      width: 300,
       minWidth: 150,
     },
     {
-      id: 'lastModifiedDate',
+      id: 'UserLastModifiedDate',
       header: t('users.header-last-modified-date'),
       cell: (item) => dayjs(item.UserLastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
-      sortingField: 'lastModifiedDate',
-      width: 200,
+      sortingField: 'UserLastModifiedDate',
+      width: 300,
       minWidth: 150,
     },
   ];
@@ -102,16 +102,16 @@ export function CreateUser() {
       label: t('groups.information'),
       options: [
         {
-          id: 'username',
+          id: 'Username',
           label: t('users.header-username'),
           editable: false,
         },
         {
-          id: 'creationDate',
+          id: 'UserCreateDate',
           label: t('users.header-creation-date'),
         },
         {
-          id: 'lastModifiedDate',
+          id: 'UserLastModifiedDate',
           label: t('users.header-last-modified-date'),
         },
       ],
@@ -138,9 +138,15 @@ export function CreateUser() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[1], isDescending:true } },
+      sorting: { defaultState: { sortingColumn: columnsConfig[1], isDescending: true } },
       selection: {},
     });
+  
+  // useEffect(() => {
+  //   console.log('wibble')
+  //   actions.setSorting({ sortingColumn: columnsConfig[1], isDescending: true })
+  // },[users])
+  // console.log(items)
 
   return (
     <>
