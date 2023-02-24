@@ -1,6 +1,7 @@
 import { API, graphqlOperation } from 'aws-amplify';
 import { useEffect, useState } from 'react';
 import * as queries from '../graphql/queries';
+import { onUserCreated } from '../graphql/subscriptions';
 // import * as mutations from '../graphql/mutations';
 
 export const useUsersApi = () => {
