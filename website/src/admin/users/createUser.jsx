@@ -1,13 +1,11 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
-  Button,
-  CollectionPreferences,
-  Grid,
-  Header, Pagination,
-  Table,
+  Button, CollectionPreferences, Container, Form, FormField, Header, Input, Pagination, SpaceBetween, Table,
   TextFilter
 } from '@cloudscape-design/components';
-import React, { useState } from 'react';
+import { API } from 'aws-amplify';
+import dayjs from 'dayjs';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ContentHeader } from '../../components/contentHeader';
 import {
@@ -17,10 +15,9 @@ import {
   PageSizePreference,
   WrapLines
 } from '../../components/tableConfig';
+import * as mutations from '../../graphql/mutations';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useEventsApi } from '../../hooks/useUsersApi';
-
-import dayjs from 'dayjs';
+import { useUsersApi } from '../../hooks/useUsersApi';
 
 // day.js
 var advancedFormat = require('dayjs/plugin/advancedFormat');
@@ -35,11 +32,43 @@ export function CreateUser() {
   const { t } = useTranslation();
 
   const [selectedItems] = useState([]);
-  const [users, isLoading ] = useEventsApi();
+  const [users, isLoading ] = useUsersApi();
   const [preferences, setPreferences] = useLocalStorage('DREM-user-table-preferences', {
     ...DefaultPreferences,
-    visibleContent: ['username', 'description'],
+    visibleContent: ['username', 'creationDate'],
   });
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [result, setResult] = useState('');
+  const [buttonDisabled, setButtonDisabled] = useState(false);
+
+  async function createUserNow() {
+    const apiResponse = await API.graphql({
+      query: mutations.createUser,
+      variables: {
+        email: email,
+        username: username,
+      },
+    });
+    const response = apiResponse['data']['createUser'];
+    console.log(response);
+    setResult(response);
+    setUsername('');
+    setEmail('');
+  }
+
+  // watch properties for changes and enable generate button if required
+  useEffect(() => {
+    if (username !== '' && email !== '') {
+      setButtonDisabled(false);
+    }
+    else {
+      setButtonDisabled(true);
+    }
+    return () => {
+      // Unmounting
+    };
+  }, [username, email]);
 
   const columnsConfig = [
     {
@@ -109,7 +138,7 @@ export function CreateUser() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[0] } },
+      sorting: { defaultState: { sortingColumn: columnsConfig[1], isDescending:true } },
       selection: {},
     });
 
@@ -124,9 +153,47 @@ export function CreateUser() {
           { text: t('users.breadcrumb') },
         ]}
       />
+      <SpaceBetween direction="vertical" size="l">
+        <Form
+          actions={
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                variant="primary"
+                onClick={() => {
+                  createUserNow();
+                }}
+                disabled={buttonDisabled}
+              >
+                {t('users.create-user')}
+              </Button>
+            </SpaceBetween>
+          }
+        >
+          <Container textAlign="center">
+            <SpaceBetween direction="vertical" size="l">
+              <FormField label={t('users.racer-name')} errorText=''>
+                <Input
+                  value={username}
+                  placeholder={t('users.racer-name-placeholder')}
+                  onChange={(input) => {
+                    setUsername(input.detail.value);
+                  }}
+                />
+              </FormField>
+              <FormField label={t('users.email')} errorText=''>
+                <Input
+                  value={email}
+                  placeholder={t('users.email-placeholder')}
+                  onChange={(input) => {
+                    setEmail(input.detail.value);
+                  }}
+                />
+              </FormField>
+            </SpaceBetween>
+          </Container>
 
-      <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
-        <div></div>
+        </Form>
+
         <Table
           {...collectionProps}
           header={
@@ -182,8 +249,8 @@ export function CreateUser() {
             />
           }
         />
-        <div></div>
-      </Grid>
+      </SpaceBetween>
     </>
+    
   );
 }

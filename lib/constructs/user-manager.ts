@@ -212,7 +212,7 @@ export class UserManager extends Construct {
         );
 
         props.appsyncApi.schema.addMutation(
-            'newUser',
+            'userCreated',
             new ResolvableField({
                 args: {
                     Username: GraphqlType.string(),
@@ -242,7 +242,7 @@ export class UserManager extends Construct {
         );
 
         props.appsyncApi.schema.addSubscription(
-            'onNewUser',
+            'onUserCreated',
             new ResolvableField({
                 returnType: user_object.attribute(),
                 dataSource: props.appsyncApi.noneDataSource,
@@ -255,7 +255,7 @@ export class UserManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('newUser')],
+                directives: [Directive.subscribe('userCreated')],
             })
         );
 
@@ -268,8 +268,8 @@ export class UserManager extends Construct {
                     resources: [
                         `${props.appsyncApi.api.arn}/types/Query/fields/listUsers`,
                         `${props.appsyncApi.api.arn}/types/Mutation/fields/createUser`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/newUser`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/onNewUser`,
+                        `${props.appsyncApi.api.arn}/types/Mutation/fields/userCreated`,
+                        `${props.appsyncApi.api.arn}/types/Subscription/fields/onUserCreated`,
                     ],
                 }),
             ],
@@ -317,7 +317,7 @@ export class UserManager extends Construct {
             }
         );
 
-        props.appsyncApi.api.grantMutation(new_user_event_handler, 'newUser');
+        props.appsyncApi.api.grantMutation(new_user_event_handler, 'userCreated');
 
         // EventBridge Rule
         const rule = new Rule(this, 'new_user_event_handler_rule', {

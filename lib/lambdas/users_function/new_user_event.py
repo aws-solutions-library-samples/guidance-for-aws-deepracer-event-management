@@ -36,7 +36,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         query = (
             '''
             mutation MyMutation {
-                newUser(Username: "'''
+                userCreated(Username: "'''
             + username
             + '''",
                 Attributes: [
