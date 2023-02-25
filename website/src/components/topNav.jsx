@@ -20,6 +20,7 @@ import { Leaderboard } from '../admin/leaderboard/leaderboard';
 import { AdminModels } from '../admin/models';
 import { AdminQuarantine } from '../admin/quarantine';
 import { Timekeeper } from '../admin/timekeeper/timeKeeper';
+import { CreateUser } from '../admin/users/createUser';
 import { Home } from '../home';
 import useLink from '../hooks/useLink';
 import { Models } from '../models';
@@ -58,6 +59,7 @@ function MenuRoutes() {
       <Route path="/admin/fleets" element={<AdminFleets />} />
       <Route path="/admin/fleets/create" element={<CreateFleet />} />
       <Route path="/admin/fleets/edit" element={<EditFleet />} />
+      <Route path="/admin/createUser" element={<CreateUser />} />
       <Route path="/admin/groups" element={<AdminGroups />} />
       <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />
       <Route path="/admin/car_activation" element={<AdminActivation />} />
@@ -152,6 +154,7 @@ export function TopNav(props) {
           ],
         },
         { type: 'link', text: t('topnav.groups'), href: '/admin/groups' },
+        { type: 'link', text: t('topnav.create-user'), href: '/admin/createuser' },
       ],
     });
   }

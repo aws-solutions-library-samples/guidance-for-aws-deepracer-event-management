@@ -3,6 +3,7 @@ import { DockerImage } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { IDistribution } from 'aws-cdk-lib/aws-cloudfront';
 import { CfnIdentityPool, IUserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
+import { EventBus } from 'aws-cdk-lib/aws-events';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -44,6 +45,7 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
         };
     };
     dremWebsiteBucket: IBucket;
+    eventbus: EventBus;
 }
 
 export class DeepracerEventManagerStack extends cdk.Stack {
@@ -102,7 +104,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             contentPath: './lib/constructs/terms_n_conditions/webpage/',
             pathPattern: '/terms_n_conditions.html',
             logsBucket: props.logsBucket,
-            //cdnDistribution: props.cloudfrontDistribution // TODO not working to addBehaviour to dist that is another stack, implement as custom resource????
+            // cdnDistribution: props.cloudfrontDistribution // TODO not working to addBehaviour to dist that is another stack, implement as custom resource????
         });
 
         const carManager = new CarManager(this, 'CarManager', {
@@ -167,11 +169,17 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             lambdaConfig: props.lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
             userPoolId: props.userPool.userPoolId,
+            appsyncApi: {
+                api: appsyncApi,
+                schema: schema,
+                noneDataSource: noneDataSoure,
+            },
             restApi: {
                 api: restApi.api,
                 apiAdminResource: restApi.apiAdminResource,
                 bodyValidator: restApi.bodyValidator,
             },
+            eventbus: props.eventbus,
         });
 
         new LabelPrinter(this, 'LabelPrinter', {
@@ -267,8 +275,8 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             value: props.userPool.userPoolId,
         });
 
-        //new cdk.CfnOutput(this, "DefaultAdminUserUsername", {value: defaultAdminUserName})
+        // new cdk.CfnOutput(this, "DefaultAdminUserUsername", {value: defaultAdminUserName})
 
-        //new cdk.CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
+        // new cdk.CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
     }
 }
