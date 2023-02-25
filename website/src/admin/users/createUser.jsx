@@ -62,7 +62,7 @@ export function CreateUser() {
   // watch properties for changes and enable generate button if required
   useEffect(() => {
     var regexFail = false;
-    if (username.match(/^[a-zA-Z0-9-_]+$/)) {
+    if (username.match(/^[a-zA-Z0-9-_]+$/) || username.match(/^$/)) {
       setUsernameErrorText('')
     }
     else{
@@ -70,11 +70,11 @@ export function CreateUser() {
       regexFail = true
     }
 
-    if (email.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
+    if (email.match(/^[\w\.+-_]+@([\w-]+\.)+[\w-]{2,4}$/) || username.match(/^$/)) {
       setEmailErrorText('')
     }
     else{
-      setEmailErrorText('Does not match ^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$')
+      setEmailErrorText('Does not match ^[\\w\\.+-_]+@([\\w-]+\\.)+[\\w-]{2,4}$')
       regexFail = true
     }
     
