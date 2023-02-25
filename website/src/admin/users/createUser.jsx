@@ -38,7 +38,9 @@ export function CreateUser() {
     visibleContent: ['username', 'creationDate'],
   });
   const [username, setUsername] = useState('');
+  const [usernameErrorText, setUsernameErrorText] = useState('');
   const [email, setEmail] = useState('');
+  const [emailErrorText, setEmailErrorText] = useState('');
   const [result, setResult] = useState('');
   const [buttonDisabled, setButtonDisabled] = useState(false);
 
@@ -59,7 +61,24 @@ export function CreateUser() {
 
   // watch properties for changes and enable generate button if required
   useEffect(() => {
-    if (username !== '' && email !== '') {
+    var regexFail = false;
+    if (username.match(/^[a-zA-Z0-9-_]+$/)) {
+      setUsernameErrorText('')
+    }
+    else{
+      setUsernameErrorText('Does not match ^[a-zA-Z0-9-_]+$')
+      regexFail = true
+    }
+
+    if (email.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
+      setEmailErrorText('')
+    }
+    else{
+      setEmailErrorText('Does not match ^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$')
+      regexFail = true
+    }
+    
+    if (username !== '' && email !== '' && regexFail !== true) {
       setButtonDisabled(false);
     }
     else {
@@ -177,7 +196,7 @@ export function CreateUser() {
         >
           <Container textAlign="center">
             <SpaceBetween direction="vertical" size="l">
-              <FormField label={t('users.racer-name')} errorText=''>
+              <FormField label={t('users.racer-name')} errorText={usernameErrorText}>
                 <Input
                   value={username}
                   placeholder={t('users.racer-name-placeholder')}
@@ -186,7 +205,7 @@ export function CreateUser() {
                   }}
                 />
               </FormField>
-              <FormField label={t('users.email')} errorText=''>
+              <FormField label={t('users.email')} errorText={emailErrorText}>
                 <Input
                   value={email}
                   placeholder={t('users.email-placeholder')}
