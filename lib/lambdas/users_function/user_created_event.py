@@ -1,6 +1,7 @@
 import datetime
 import os
 
+import boto3
 import http_response
 import requests
 from aws_lambda_powertools import Logger
@@ -23,17 +24,27 @@ region = os.environ.get("AWS_REGION")
 session = requests.Session()
 auth = AWS4Auth(access_id, secret_key, region, "appsync", session_token=session_token)
 
+client_cognito = boto3.client("cognito-idp")
+user_pool_id = os.environ["user_pool_id"]
+
 
 @logger.inject_lambda_context
 def lambda_handler(event: dict, context: LambdaContext) -> str:
+    logger.info(event)
+
     username = event["detail"]["data"]["userName"]
     email = event["detail"]["data"]["request"]["userAttributes"]["email"]
     # Add a 'fake' timestamp of now to save having to make another call to Cognito.
     user_create_date = datetime.datetime.now().isoformat(timespec="milliseconds") + "Z"
 
-    try:
-        # logger.info(event)
+    response = client_cognito.list_users(
+        UserPoolId=user_pool_id,
+        Limit=1,
+        Filter='username = "{}"'.format(username),
+    )
+    logger.info(response)
 
+    try:
         # Use JSON format string for the query. It does not need reformatting.
         query = (
             '''
