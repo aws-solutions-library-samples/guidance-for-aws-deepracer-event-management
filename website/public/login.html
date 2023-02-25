@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
+  <title>AWS DeepRacer - Login</title>
+
+  <script src="./static/jquery-3.5.1.min.js"></script>
+  <script src="./static/ui/1.12.1/jquery-ui.min.js"></script>
+  <link href="./static/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+  <link href="./static/style.css" rel="stylesheet">
+  <style>
+    .bottomPadding{
+        padding: 0px 0px 15px 0px;
+    }
+  </style>
+</head>
+<body>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<div class="container">
+  <div id="alert_box">
+  </div>
+  <div class="row" style="margin-top:100px">
+    <div class="col-xs-1">
+    </div>
+    <div class="col-xs-10" align="center">
+      <img class="image_pad" src="./static/AWS_logo_RGB.svg" width="100" alt="AWS Logo">
+      <h3 class="form-signin-heading bottomPadding" style="margin-top:30px">Unlock your AWS DeepRacer vehicle</h3>
+      <p>
+        The default AWS DeepRacer password can be found printed on the bottom of your vehicle.
+      </p>
+    </div>
+    <div class="col-xs-1">
+    </div>
+  </div>
+  <div class="row" style="padding-top:10px">
+    <div class="col-xs-2 col-sm-3">
+    </div>
+    <div class="col-xs-8 col-sm-6">
+      <label>Password</label><br/>
+      <input type="password" id="password" name="password" class="form-control" value="{{ request.form.password }}" required autofocus>
+      <p style="color:#df3312;margin-bottom:0px;">
+          {% with messages = get_flashed_messages() %}
+            {% if messages %}
+              {% for message in messages %}
+                {{ message }}
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        </p>
+        <div class="bottomPadding" style="padding-top:10px;">
+          <input type="checkbox" id="showPassword" name="showPassword">
+          <label for="showPassword" style="font-weight: normal;padding-left: 3px;"> Show password</label>
+       </div>
+      <div class="bottomPadding">
+       <button class="btn btn-lg btn-primary btn-block" id="login_submit">Access vehicle</button>
+      </div>
+      <p><a href="https://docs.aws.amazon.com/console/deepracer/recover-vehicle-password" target="_blank">Forgot password <span class="external-icon-img"><img src="./static/images/external_icon.svg" alt="External link icon"/></span></a></p>
+    </div>
+    <div class="col-xs-2 col-sm-3">
+    </div>
+  </div>
+  <div id="USBDisconnectTroubleShootMsg"></div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var csrf_token = "{{ csrf_token() }}";
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+                }
+            }
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('epwd')) {
+          UrlPassword = urlParams.get('epwd');
+          if (UrlPassword.length > 0) {
+            $("#password").val(UrlPassword);
+            submit_login();
+          }
+        }
+
+        $("#login_submit").click(function() {
+            submit_login();
+        });
+
+        $("#password").keydown(function(event) {
+            if (event.which == 13) {
+                submit_login();
+            }
+        });
+
+        $('#showPassword').change(function() {
+          $(this).is(':checked') ? $('#password').attr('type', 'text') : $('#password').attr('type', 'password');
+        });
+    });
+
+    function submit_login() {
+        $.ajax({
+            url: '/login',
+            type: 'POST',
+            data: {'password': $("#password").val()},
+            success: function(data){
+                if(data == "failure"){
+                    window.location = "/login";
+                } else{
+                    window.location = "/home";
+                }
+            },
+            error: function(error){
+                window.location = "/login";
+            }
+        });
+    }
+
+    var removeAllChildren = function(id){
+        var parentDom = document.getElementById(id);
+        while (parentDom.firstChild) {
+            parentDom.removeChild(parentDom.firstChild);
+        }
+    }
+
+    function set_alert (alert_type, alert_msg) {
+        removeAllChildren("alert_box");
+        $("#alert_box").append("<div id='login_alert'></div>");
+        $("#login_alert").addClass("alert " + alert_type + " alert-dismissible fade in");
+        $("#login_alert").text(alert_msg);
+    }
+
+    $("#alert_box").on('click', function() {
+        $(this).empty();
+    });
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,1036 @@
+<html>
+<head>
+  <title>
+    DeepRacer
+  </title>
+  <style>
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      /* background-color: #00ff00; */
+    }
+
+    #lower-third-racer-and-lap-info {
+      width: 1100px;
+      position: fixed;
+      top: 745px;
+      left: -1200px;
+    }
+
+    #leaderboard-frame {
+      width: 1920px;
+      height: 1080px;
+      position: fixed;
+      top: 0px;
+      left: 0px;
+    }
+
+    #leaderboard-frame #leaderboard {
+      opacity: 0;
+    }
+
+    #did-you-know-frame {
+      width: 1920px;
+      height: 1080px;
+      position: fixed;
+      top: 0px;
+      left: 0px;
+    }
+
+    #did-you-know-frame #did-you-know {
+      opacity: 0;
+    }
+
+    #track-overlay-frame {
+      width: 350px;
+      position: fixed;
+      top: 30px;
+      left: 1540px;
+      opacity: 0;
+    }
+  </style>
+
+</head>
+<body>
+  <!-- <button onclick="LowerThirdRacerAndLapInfoOut()">OUT</button> <button onclick="LowerThirdRacerAndLapInfoIn()">IN</button> -->
+  <div id="racerAndInfo" style="width: 1920px; height: 1080px; overflow: hidden;">
+    <object type="image/svg+xml" data="assets/svg/RacerAndLapInfo.svg" id="lower-third-racer-and-lap-info"></object>
+    <!-- <div id="lower-third-racer-and-lap-info"> -->
+      <!-- <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+        viewBox="0 0 1219.86 284.74" style="enable-background:new 0 0 1219.86 284.74;" xml:space="preserve">
+        <style type="text/css">
+          .st0{fill:url(#SVGID_1_);}
+          .st1{fill:none;stroke:#000000;stroke-miterlimit:10;}
+          .st2{fill:#FFFFFF;}
+          .st3{font-family:'Arial-BoldMT';}
+          .st4{font-size:39.642px;}
+          .st5{fill:url(#SVGID_00000047763839517841335510000000404556429859992961_);}
+          .st6{font-size:36px;}
+          .st7{font-family:'Arial-BoldItalicMT';}
+        </style>
+        <g>
+
+          <image style="overflow:visible;opacity:0.6;" width="1083" height="173" xlink:href="22DDB58B8212A466.png"  transform="matrix(1 0 0 1 121.8831 89.0747)">
+          </image>
+          <g>
+            <linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="661.2983" y1="248.0033" x2="661.2983" y2="94.7565">
+              <stop  offset="0" style="stop-color:#632D8B"/>
+              <stop  offset="0" style="stop-color:#58257C"/>
+              <stop  offset="0" style="stop-color:#4A196A"/>
+              <stop  offset="0" style="stop-color:#3E0D5A"/>
+              <stop  offset="0" style="stop-color:#35014D"/>
+              <stop  offset="0" style="stop-color:#2E0045"/>
+              <stop  offset="0" style="stop-color:#29003F"/>
+              <stop  offset="0" style="stop-color:#28003D"/>
+              <stop  offset="0.0674" style="stop-color:#370551"/>
+              <stop  offset="0.1412" style="stop-color:#441562"/>
+              <stop  offset="0.218" style="stop-color:#4F1E70"/>
+              <stop  offset="0.2976" style="stop-color:#56257A"/>
+              <stop  offset="0.3812" style="stop-color:#5B2981"/>
+              <stop  offset="0.4711" style="stop-color:#5E2B85"/>
+              <stop  offset="0.5791" style="stop-color:#5F2C87"/>
+              <stop  offset="0.7008" style="stop-color:#5E2B85"/>
+              <stop  offset="0.8183" style="stop-color:#5A2880"/>
+              <stop  offset="0.9338" style="stop-color:#552478"/>
+              <stop  offset="1" style="stop-color:#502072"/>
+            </linearGradient>
+            <polygon class="st0" points="1080.66,94.76 130.01,94.76 130.01,248 1192.58,248 1192.58,151.67 		"/>
+            <polygon class="st1" points="1080.66,94.76 130.01,94.76 130.01,248 1192.58,248 1192.58,151.67 		"/>
+          </g>
+        </g>
+        <text transform="matrix(1 0 0 1 298.1816 171.3797)" class="st2 st3 st4">RACER: </text>
+        <g>
+
+          <image style="overflow:visible;opacity:0.6;" width="394" height="67" xlink:href="22DDB58B8212A46A.png"  transform="matrix(1 0 0 1 184.8831 61.0747)">
+          </image>
+          <g>
+
+            <linearGradient id="SVGID_00000012436271284216342800000011403214818862285697_" gradientUnits="userSpaceOnUse" x1="381.9602" y1="63.0942" x2="381.9602" y2="115.8894">
+              <stop  offset="0" style="stop-color:#632D8B"/>
+              <stop  offset="0" style="stop-color:#66338C"/>
+              <stop  offset="0" style="stop-color:#7A5799"/>
+              <stop  offset="0" style="stop-color:#8C73A5"/>
+              <stop  offset="0" style="stop-color:#9D8CB0"/>
+              <stop  offset="0" style="stop-color:#ACA2BA"/>
+              <stop  offset="0" style="stop-color:#B8B2C2"/>
+              <stop  offset="0" style="stop-color:#C0BEC7"/>
+              <stop  offset="0" style="stop-color:#C6C6CA"/>
+              <stop  offset="0" style="stop-color:#C9CACC"/>
+              <stop  offset="0.0102" style="stop-color:#CBCDCE"/>
+              <stop  offset="0.1863" style="stop-color:#EEEFEF"/>
+              <stop  offset="0.2764" style="stop-color:#FFFFFF"/>
+              <stop  offset="0.41" style="stop-color:#F9FAFA"/>
+              <stop  offset="0.539" style="stop-color:#EFEFF0"/>
+              <stop  offset="0.6662" style="stop-color:#DEE0E1"/>
+              <stop  offset="0.7923" style="stop-color:#C8CACB"/>
+              <stop  offset="0.9164" style="stop-color:#ABADB0"/>
+              <stop  offset="1" style="stop-color:#95979A"/>
+            </linearGradient>
+            <polygon style="fill:url(#SVGID_00000012436271284216342800000011403214818862285697_);" points="571.78,63.09 192.14,63.09
+            192.14,115.89 539.94,115.89 571.78,96.01 		"/>
+            <polygon class="st1" points="571.78,63.09 192.14,63.09 192.14,115.89 539.94,115.89 571.78,96.01 		"/>
+          </g>
+        </g>
+        <g>
+          <g>
+            <path d="M267.74,93.93l-1.29,4.06h-3.53l5.64-17.56h4.51l5.88,17.56h-3.77l-1.36-4.06H267.74z M273.03,90.82
+            c-1.18-3.71-1.93-6.07-2.33-7.65h-0.02c-0.41,1.73-1.24,4.49-2.18,7.65H273.03z"/>
+            <path d="M283.86,97.98l-4.23-17.56h3.83c1.56,8.07,2.26,11.65,2.46,13.58h0.02c0.63-3.22,2.23-9.34,3.2-13.58h3.23
+            c0.85,3.37,2.53,10.18,3.07,13.39h0.02c0.55-3.87,2.18-10.67,2.76-13.39h3.49l-4.5,17.56h-3.72c-0.87-3.89-2.33-9.56-2.92-12.57
+            h-0.02c-0.6,3.12-2.1,9.04-2.99,12.57H283.86z"/>
+            <path d="M306.53,92.84c0.38,1.76,1.57,2.54,3.5,2.54c1.92,0,2.74-0.8,2.74-2.09c0-1.43-0.8-2.05-3.64-2.75
+            c-4.52-1.12-5.63-2.86-5.63-5.23c0-3.06,2.16-5.14,6.09-5.14c4.41,0,6.16,2.51,6.4,5.07h-3.62c-0.17-1.08-0.74-2.25-2.88-2.25
+            c-1.46,0-2.34,0.64-2.34,1.88c0,1.22,0.7,1.72,3.39,2.37c4.83,1.2,5.89,3.1,5.89,5.58c0,3.21-2.29,5.41-6.68,5.41
+            c-4.21,0-6.43-2.19-6.83-5.4H306.53z"/>
+            <path d="M339.13,91.4c0-3,0.05-6.35,0.12-8.34h-0.11c-0.78,3.58-2.44,9.43-4.03,14.92h-3.06c-1.21-4.8-2.93-11.47-3.66-14.97
+            h-0.11c0.14,2.06,0.21,5.67,0.21,8.68v6.29h-3.27V80.42h5.34c1.29,4.59,2.75,10.34,3.24,12.96h0.03
+            c0.41-2.31,2.23-8.46,3.61-12.96h5.15v17.56h-3.46V91.4z"/>
+            <path d="M355.28,91.94h-6.34v3.56h6.99l-0.34,2.48h-9.43V83.97h9.4v2.48h-6.62v3h6.34V91.94z"/>
+            <path d="M365.09,97.98l-2.84-4.94h-0.02l-2.9,4.94h-3.09l4.41-7.06l-4.28-6.96h3.33l2.68,4.65h0.02l2.77-4.65h3.04l-4.27,6.68
+            l4.47,7.33H365.09z"/>
+            <path d="M372.64,83.97v14.01h-2.87V83.97H372.64z"/>
+            <path d="M387.05,93.66c-0.53,2.61-2.4,4.52-5.72,4.52c-4.2,0-6.19-3.14-6.19-7.13c0-3.84,2.05-7.28,6.33-7.28
+            c3.53,0,5.24,2.19,5.56,4.53h-2.87c-0.28-1.08-0.99-2.16-2.79-2.16c-2.36,0-3.28,2.25-3.28,4.8c0,2.37,0.79,4.86,3.35,4.86
+            c1.87,0,2.46-1.32,2.71-2.14H387.05z"/>
+            <path d="M401.68,90.93c0,3.9-2.21,7.26-6.52,7.26c-4.16,0-6.34-3.2-6.34-7.21c0-4.08,2.4-7.21,6.52-7.21
+            C399.22,83.77,401.68,86.64,401.68,90.93z M391.78,90.92c0,2.74,1.14,4.8,3.49,4.8c2.55,0,3.45-2.26,3.45-4.75
+            c0-2.65-1.03-4.73-3.5-4.73C392.83,86.23,391.78,88.19,391.78,90.92z"/>
+            <path d="M424.5,92.57c-0.67,3.27-3,5.66-7.16,5.66c-5.26,0-7.75-3.94-7.75-8.94c0-4.81,2.57-9.13,7.92-9.13
+            c4.42,0,6.56,2.74,6.97,5.68h-3.59c-0.35-1.35-1.24-2.7-3.49-2.7c-2.96,0-4.1,2.82-4.1,6.01c0,2.97,0.99,6.1,4.2,6.1
+            c2.34,0,3.08-1.66,3.39-2.68H424.5z"/>
+            <path d="M430.02,83.97v14.01h-2.87V83.97H430.02z"/>
+            <path d="M435.82,86.45h-4.03v-2.48h10.91v2.48h-4.01v11.53h-2.87V86.45z"/>
+            <path d="M447.39,97.98v-4.95c0-0.16-0.02-0.3-0.11-0.45l-4.57-8.61h3.24c1.02,2.11,2.35,4.93,3.02,6.45
+            c0.58-1.47,2.03-4.42,3.03-6.45h3l-4.63,8.57c-0.06,0.1-0.11,0.16-0.11,0.45v5H447.39z"/>
+            <path d="M465.03,92.84c0.38,1.76,1.57,2.54,3.5,2.54c1.92,0,2.74-0.8,2.74-2.09c0-1.43-0.8-2.05-3.64-2.75
+            c-4.52-1.12-5.63-2.86-5.63-5.23c0-3.06,2.16-5.14,6.09-5.14c4.41,0,6.16,2.51,6.4,5.07h-3.62c-0.17-1.08-0.74-2.25-2.88-2.25
+            c-1.46,0-2.34,0.64-2.34,1.88c0,1.22,0.7,1.72,3.39,2.37c4.83,1.2,5.89,3.1,5.89,5.58c0,3.21-2.29,5.41-6.68,5.41
+            c-4.21,0-6.43-2.19-6.83-5.4H465.03z"/>
+            <path d="M480.18,83.97v8.35c0,2.69,1.31,3.49,2.74,3.49c1.64,0,2.67-0.94,2.67-3.49v-8.35h2.87v8.2c0,4.79-2.65,6.01-5.58,6.01
+            c-2.99,0-5.57-1.27-5.57-5.95v-8.26H480.18z"/>
+            <path d="M502.54,92.73c0-2.39,0.04-5.07,0.09-6.66h-0.09c-0.62,2.86-1.95,7.53-3.22,11.91h-2.44c-0.97-3.83-2.34-9.15-2.92-11.95
+            h-0.09c0.11,1.64,0.17,4.53,0.17,6.93v5.02h-2.61V83.97h4.27c1.03,3.66,2.19,8.25,2.59,10.34h0.02c0.32-1.84,1.78-6.75,2.89-10.34
+            h4.11v14.01h-2.76V92.73z"/>
+            <path d="M519.57,92.73c0-2.39,0.04-5.07,0.09-6.66h-0.09c-0.62,2.86-1.95,7.53-3.22,11.91h-2.44c-0.97-3.83-2.34-9.15-2.92-11.95
+            h-0.09c0.11,1.64,0.17,4.53,0.17,6.93v5.02h-2.61V83.97h4.27c1.03,3.66,2.19,8.25,2.59,10.34h0.02c0.32-1.84,1.78-6.75,2.89-10.34
+            h4.11v14.01h-2.76V92.73z"/>
+            <path d="M528.35,83.97v14.01h-2.87V83.97H528.35z"/>
+            <path d="M534.15,86.45h-4.03v-2.48h10.91v2.48h-4.01v11.53h-2.87V86.45z"/>
+          </g>
+        </g>
+        <g id="F53113.tif">
+
+          <image style="overflow:visible;" id="Layer_0_00000122688813104023957330000016979195333416109187_" xlink:href="22DDB58B8212A46D.png">
+          </image>
+        </g>
+        <g>
+          <g>
+            <path class="st2" d="M304.45,204.62v10.35h-0.63v-21.12h6.96c3.72,0,6.39,1.71,6.39,5.4c0,2.49-1.2,4.5-4.41,5.04
+            c2.28,0.39,4.08,1.47,4.08,5.88v0.39c0,2.79,0.06,3.84,0.27,4.41h-0.66c-0.24-0.96-0.21-2.28-0.21-4.41v-0.27
+            c0-3.72-0.96-5.67-5.67-5.67H304.45z M304.45,204.05h5.88c3.36,0,6.21-1.05,6.21-4.77c0-3.06-2.07-4.89-5.76-4.89h-6.33V204.05z"
+            />
+            <path class="st2" d="M333.82,204.05h-11.49v10.38h12.51l-0.12,0.54h-12.99v-21.12h12.69v0.54h-12.09v9.12h11.49V204.05z"/>
+            <path class="st2" d="M357.91,204.65c0-4.29-0.06-8.28,0.06-10.29h-0.06c-1.02,2.52-6.3,14.31-9.15,20.61h-0.75
+            c-3.06-6.93-7.86-17.88-8.94-20.61h-0.03c0.06,1.29,0.03,7.53,0.03,11.13v9.48h-0.6v-21.12h0.96c3.42,7.89,8.07,18.39,8.97,20.43
+            h0.03c0.75-1.74,5.88-13.08,9.12-20.43h0.96v21.12h-0.6V204.65z"/>
+            <path class="st2" d="M365.89,206.75l-3.15,8.22h-0.63l8.1-21.12h0.63l8.43,21.12h-0.66l-3.27-8.22H365.89z M375.1,206.21
+            c-2.67-6.69-4.17-10.68-4.59-11.73h-0.03c-0.21,0.78-2.28,6.24-4.38,11.73H375.1z"/>
+            <path class="st2" d="M383.47,193.85v21.12h-0.6v-21.12H383.47z"/>
+            <path class="st2" d="M389.11,214.97v-21.12h0.96c3.66,5.37,12.78,18.78,13.89,20.49l0.06,0.09c-0.09-0.57-0.09-6.57-0.09-9.99
+            v-10.59h0.6v21.12h-0.87c-3.51-5.19-12.6-18.6-13.98-20.61l-0.06-0.09c0.15,2.82,0.09,6,0.09,9.87v10.83H389.11z"/>
+            <path class="st2" d="M410.77,193.85v21.12h-0.6v-21.12H410.77z"/>
+            <path class="st2" d="M416.41,214.97v-21.12h0.96c3.66,5.37,12.78,18.78,13.89,20.49l0.06,0.09c-0.09-0.57-0.09-6.57-0.09-9.99
+            v-10.59h0.6v21.12h-0.87c-3.51-5.19-12.6-18.6-13.98-20.61l-0.06-0.09c0.15,2.82,0.09,6,0.09,9.87v10.83H416.41z"/>
+            <path class="st2" d="M453.34,214.97h-0.54c-0.03-0.6-0.03-1.41-0.06-4.95c-1.2,3.6-3.69,5.25-7.59,5.25c-6.24,0-9-4.92-9-10.65
+            c0-5.88,3-11.07,9.27-11.07c4.65,0,7.17,2.43,7.89,5.7h-0.6c-0.84-3.18-3.24-5.16-7.32-5.16c-5.76,0-8.61,4.77-8.61,10.44
+            c0,5.34,2.46,10.2,8.43,10.2c5.1,0,7.53-3.39,7.53-8.22v-1.56h-7.56v-0.54h8.16V214.97z"/>
+          </g>
+        </g>
+        <text id="TOTAL_x5F_TIME_x5F_REMAINING" transform="matrix(1 0 0 1 472.7593 215.6987)" class="st2 st3 st6">03:00:00</text>
+        <g>
+          <g>
+            <path class="st2" d="M657.7,194.65h12.66v0.54H658.3v9.63h11.31v0.54H658.3v10.41h-0.6V194.65z"/>
+            <path class="st2" d="M675.85,207.55l-3.15,8.22h-0.63l8.1-21.12h0.63l8.43,21.12h-0.66l-3.27-8.22H675.85z M685.06,207.01
+            c-2.67-6.69-4.17-10.68-4.59-11.73h-0.03c-0.21,0.78-2.28,6.24-4.38,11.73H685.06z"/>
+            <path class="st2" d="M691.72,210.27c0.63,3.42,3.09,5.25,6.69,5.25c3.78,0,6.18-1.89,6.18-5.01c0-2.97-1.29-4.38-6.18-5.7
+            c-4.26-1.14-6.27-2.37-6.27-5.49c0-3.09,2.37-4.98,6.18-4.98c4.62,0,6.18,2.76,6.51,5.1h-0.6c-0.54-2.79-2.43-4.56-5.94-4.56
+            c-3.27,0-5.52,1.47-5.52,4.38c0,2.73,1.62,3.9,5.7,4.95c5.61,1.44,6.75,3.3,6.75,6.24c0,3.45-2.58,5.61-6.84,5.61
+            c-4.35,0-6.69-2.31-7.29-5.79H691.72z"/>
+            <path class="st2" d="M713.98,195.19h-7.47v-0.54h15.57v0.54h-7.5v20.58h-0.6V195.19z"/>
+            <path class="st2" d="M736.93,204.85h-11.49v10.38h12.51l-0.12,0.54h-12.99v-21.12h12.69v0.54h-12.09v9.12h11.49V204.85z"/>
+            <path class="st2" d="M740.47,210.27c0.63,3.42,3.09,5.25,6.69,5.25c3.78,0,6.18-1.89,6.18-5.01c0-2.97-1.29-4.38-6.18-5.7
+            c-4.26-1.14-6.27-2.37-6.27-5.49c0-3.09,2.37-4.98,6.18-4.98c4.62,0,6.18,2.76,6.51,5.1h-0.6c-0.54-2.79-2.43-4.56-5.94-4.56
+            c-3.27,0-5.52,1.47-5.52,4.38c0,2.73,1.62,3.9,5.7,4.95c5.61,1.44,6.75,3.3,6.75,6.24c0,3.45-2.58,5.61-6.84,5.61
+            c-4.35,0-6.69-2.31-7.29-5.79H740.47z"/>
+            <path class="st2" d="M762.73,195.19h-7.47v-0.54h15.57v0.54h-7.5v20.58h-0.6V195.19z"/>
+          </g>
+        </g>
+        <text id="FASTEST_x5F_LAP_x5F_TIME" transform="matrix(1 0 0 1 782.6369 216.4957)" class="st2 st3 st6">00:00</text>
+        <g>
+          <g>
+            <path class="st2" d="M911.57,193.12h7.05c3.66,0,6.33,2.04,6.33,5.67c0,3.69-2.46,5.67-6.66,5.67h-6.12v9.78h-0.6V193.12z
+            M912.17,203.92h6.21c3.18,0,5.94-1.26,5.94-5.1c0-2.85-1.95-5.16-5.73-5.16h-6.42V203.92z"/>
+            <path class="st2" d="M929.75,203.89v10.35h-0.63v-21.12h6.96c3.72,0,6.39,1.71,6.39,5.4c0,2.49-1.2,4.5-4.41,5.04
+            c2.28,0.39,4.08,1.47,4.08,5.88v0.39c0,2.79,0.06,3.84,0.27,4.41h-0.66c-0.24-0.96-0.21-2.28-0.21-4.41v-0.27
+            c0-3.72-0.96-5.67-5.67-5.67H929.75z M929.75,203.32h5.88c3.36,0,6.21-1.05,6.21-4.77c0-3.06-2.07-4.89-5.76-4.89h-6.33V203.32z"
+            />
+            <path class="st2" d="M959.11,203.32h-11.49v10.38h12.51l-0.12,0.54h-12.99v-21.12h12.69v0.54h-12.09v9.12h11.49V203.32z"/>
+            <path class="st2" d="M969.64,214.24l-8.13-21.12h0.63l4.56,11.73c1.32,3.42,2.76,7.2,3.3,8.73h0.06c0.45-1.38,2.16-5.52,3.42-8.64
+            l4.71-11.82h0.66l-8.46,21.12H969.64z"/>
+            <path class="st2" d="M982.85,193.12v21.12h-0.6v-21.12H982.85z"/>
+            <path class="st2" d="M1005.82,203.5c0,6-3.09,11.04-9.42,11.04c-5.82,0-9.24-4.8-9.24-10.86c0-5.82,3.3-10.86,9.42-10.86
+            C1002.31,192.82,1005.82,197.59,1005.82,203.5z M987.79,203.62c0,5.4,2.85,10.38,8.61,10.38c5.85,0,8.79-4.65,8.79-10.47
+            c0-5.52-3.18-10.17-8.64-10.17C991.03,193.36,987.79,197.92,987.79,203.62z"/>
+            <path class="st2" d="M1010.44,193.12v13.2c0,5.73,3.39,7.68,7.02,7.68c4.53,0,6.9-2.64,6.9-7.68v-13.2h0.6v13.08
+            c0,6.33-3.21,8.34-7.56,8.34c-3.75,0-7.56-1.89-7.56-7.95v-13.47H1010.44z"/>
+            <path class="st2" d="M1029.19,208.75c0.63,3.42,3.09,5.25,6.69,5.25c3.78,0,6.18-1.89,6.18-5.01c0-2.97-1.29-4.38-6.18-5.7
+            c-4.26-1.14-6.27-2.37-6.27-5.49c0-3.09,2.37-4.98,6.18-4.98c4.62,0,6.18,2.76,6.51,5.1h-0.6c-0.54-2.79-2.43-4.56-5.94-4.56
+            c-3.27,0-5.52,1.47-5.52,4.38c0,2.73,1.62,3.9,5.7,4.95c5.61,1.44,6.75,3.3,6.75,6.24c0,3.45-2.58,5.61-6.84,5.61
+            c-4.35,0-6.69-2.31-7.29-5.79H1029.19z"/>
+          </g>
+        </g>
+        <text id="PREVIOUS_x5F_LAP_x5F_TIME" transform="matrix(1 0 0 1 1059.5001 214.9676)" class="st2 st3 st6">00:00</text>
+        <text id="RACER_x5F_NAME" transform="matrix(1 0 0 1 466.692 171.8873)" class="st2 st7 st4">ROGER RABIT </text>
+      </svg> -->
+
+      <!-- </div> -->
+
+    </div>
+
+    <div id="track-overlay-frame">
+      <!-- <img src="assets/svg/LeaderboardWithBackdrop.svg" id="leaderboard" /> -->
+      <object type="image/svg+xml" data="assets/svg/re-invent-2018-track-overlay-white.svg" id="track-overlay"></object>
+    </div>
+
+
+    <div id="leaderboard-frame">
+      <!-- <img src="assets/svg/LeaderboardWithBackdrop.svg" id="leaderboard" /> -->
+      <object type="image/svg+xml" data="assets/svg/LeaderboardWithBackdrop.svg" id="leaderboard"></object>
+    </div>
+
+    <div id="did-you-know-frame">
+      <img src="assets/svg/DidYouKnowWithBackdrop.svg" id="did-you-know" />
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aws-sdk/2.1221.0/aws-sdk.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+      // const annimation = () => {
+        //     LowerThirdRacerAndLapInfoIn();
+        //     setTimeout(LowerThirdRacerAndLapInfoOut, 4000);
+        //     setTimeout(LeaderboardFadeIn, 6000);
+        //     setTimeout(LeaderboardFadeOut, 14000);
+        // }
+        // annimation();
+        // setInterval(annimation, 16000);
+        // LowerThirdRacerAndLapInfoIn();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        var eventId = urlParams.get('eventId');
+
+        if (!eventId) {
+          eventId = 'test-event';
+        }
+
+        console.log(`EventID: ${eventId}`);
+
+        var leaderBoardStateIN = false;
+        var lowerThirdStateIN = false;
+        var didYouKnowStateIN = false;
+        var leaderboardData = [];
+        var eventName = "";
+
+        var mqttClient = null;
+
+        connect();
+
+        var keepAliveInterval = null;
+
+        function connect() {
+          // const exampleSocket = new WebSocket("wss://qzs2lacarf.execute-api.us-west-2.amazonaws.com/dev");
+          const exampleSocket = new WebSocket("wss://cgz9rtyg5m.execute-api.us-east-1.amazonaws.com/dev");
+
+          // const msg = {
+            //     "action": "sendmessage",
+            //     "message": "hello world!"
+            // }
+
+            exampleSocket.onopen = (event) => {
+              console.log(`connected @ ${getTimeStamp()}`);
+              // exampleSocket.send(JSON.stringify(msg));
+
+              keepAliveInterval = setInterval(() => {
+                exampleSocket.send(JSON.stringify({"action": "keep-alive"}));
+              }, 60000);
+            };
+
+            exampleSocket.onclose = (event) => {
+              console.log(`When: ${getTimeStamp()}`);
+              console.log(`onClose was called: ${JSON.stringify(event)}`);
+              console.log(`Code is: ${event.code}`);
+              console.log(`Reason is: ${event.reason}`);
+              console.log(`wasClean is: ${event.wasClean}`);
+
+              setTimeout(function() {
+                clearInterval(keepAliveInterval);
+                connect();
+              }, 1000);
+            };
+
+            exampleSocket.onmessage = (event) => {
+              const eventData = JSON.parse(event.data);
+              console.log(eventData);
+
+              switch (eventData.overlay) {
+                case "lower-third-racer-and-lap-info":
+                if (eventData.direction === "in" && !lowerThirdStateIN) {
+                  lowerThirdStateIN = true;
+                  console.log(`Lower Third State IN: ${lowerThirdStateIN}`)
+                  LowerThirdRacerAndLapInfoIn();
+                }
+                else if (eventData.direction === "out" && lowerThirdStateIN) {
+                  lowerThirdStateIN = false;
+                  LowerThirdRacerAndLapInfoOut();
+                }
+                break;
+                case "leaderboard":
+                if (eventData.direction === "in" && !leaderBoardStateIN) {
+                  leaderBoardStateIN = true;
+                  LeaderboardFadeIn();
+                  console.log("FADE LEADERBOARD IN");
+                }
+                else if (eventData.direction === "out" && leaderBoardStateIN) {
+                  leaderBoardStateIN = false;
+                  LeaderboardFadeOut();
+                }
+                break;
+                case "did-you-know":
+                if (eventData.direction === "in" && !didYouKnowStateIN) {
+                  didYouKnowStateIN = true;
+                  DidYouKnowFadeIn();
+                }
+                else if (eventData.direction === "out" && didYouKnowStateIN) {
+                  didYouKnowStateIN = false;
+                  DidYouKnowFadeOut();
+                }
+                break;
+                default:
+                break;
+              }
+
+            }
+          }
+
+          function getTimeStamp() {
+            var currentDate = new Date(),
+            day = currentDate.getDate(),
+            month = currentDate.getMonth() + 1,
+            year = currentDate.getFullYear();
+
+            if (month < 10) {
+              month = `0${month}`
+            }
+
+            if (day < 10) {
+              day = `0${day}`;
+            }
+
+            const fullDate = `${year}-${month}-${day}`;
+
+            var hours = currentDate.getHours(),
+            minutes = currentDate.getMinutes();
+
+            if (hours < 10) {
+              hours = `0${hours}`;
+            }
+
+            if (minutes < 10) {
+              minutes = `0${minutes}`;
+            }
+
+            const fullTime = `${hours}:${minutes}`;
+
+            return `${fullDate} ${fullTime}`;
+          }
+
+        </script>
+
+        <script>
+          function SetEventName(eventName) {
+            console.log(`SETTING EVENT NAME TO: ${eventName}`);
+            // Event Name on Leaderboard.
+            const leaderboardObj = d3.select(document.getElementById("leaderboard").contentDocument);
+            leaderboardObj.select("#LeaderboardUpperLeftTitleText").text(eventName);
+
+            // Event Name on Lower Third.
+            const racerAndLapInfoObj = d3.select(document.getElementById("lower-third-racer-and-lap-info").contentDocument);
+            racerAndLapInfoObj.select("#EVENT_x5F_NAME").text(eventName);
+          }
+
+          function SetFirstPlaceRacerNameAndTime(racerName, racerTime) {
+            // FirstPlaceRacerNameText
+            const racerAndLapInfoObj = d3.select(document.getElementById("leaderboard").contentDocument);
+            racerAndLapInfoObj.select("#FirstPlaceRacerNameText").text(racerName);
+            racerAndLapInfoObj.select("#FirstPlaceLapTimeText").text(racerTime);
+          }
+
+          function SetSecondPlaceRacerNameAndTime(racerName, racerTime) {
+            // FirstPlaceRacerNameText
+            const racerAndLapInfoObj = d3.select(document.getElementById("leaderboard").contentDocument);
+            racerAndLapInfoObj.select("#SecondPlaceRacerNameText").text(racerName);
+            racerAndLapInfoObj.select("#SecondPlaceLapTimeText").text(racerTime);
+          }
+
+          function SetThirdPlaceRacerNameAndTime(racerName, racerTime) {
+            // FirstPlaceRacerNameText
+            const racerAndLapInfoObj = d3.select(document.getElementById("leaderboard").contentDocument);
+            racerAndLapInfoObj.select("#ThirdPlaceRacerNameText").text(racerName);
+            racerAndLapInfoObj.select("#ThirdPlaceLapTimeText").text(racerTime);
+          }
+
+          function SetFourthPlaceRacerNameAndTime(racerName, racerTime) {
+            // FirstPlaceRacerNameText
+            const racerAndLapInfoObj = d3.select(document.getElementById("leaderboard").contentDocument);
+            racerAndLapInfoObj.select("#FourthPlaceRacerNameText").text(racerName);
+            racerAndLapInfoObj.select("#FourthPlaceLapTimeText").text(racerTime);
+          }
+
+
+          function SetRacerInfoName(racerName) {
+            const racerAndLapInfoObj = d3.select(document.getElementById("lower-third-racer-and-lap-info").contentDocument);
+            racerAndLapInfoObj.select("#RACER_x5F_NAME").text(racerName);
+          }
+          function SetRacerInfoFastestLap(bestTime) {
+            const racerAndLapInfoObj = d3.select(document.getElementById("lower-third-racer-and-lap-info").contentDocument);
+            racerAndLapInfoObj.select("#FASTEST_x5F_LAP_x5F_TIME").text(bestTime);
+          }
+          function SetRacerInfoLastLap(lastTime) {
+            const racerAndLapInfoObj = d3.select(document.getElementById("lower-third-racer-and-lap-info").contentDocument);
+            racerAndLapInfoObj.select("#PREVIOUS_x5F_LAP_x5F_TIME").text(lastTime);
+          }
+          function SetRacerInfoTotalTime(totalTimeRemaining) {
+            const racerAndLapInfoObj = d3.select(document.getElementById("lower-third-racer-and-lap-info").contentDocument);
+            racerAndLapInfoObj.select("#TOTAL_x5F_TIME_x5F_REMAINING").text(totalTimeRemaining);
+          }
+
+          function SetDRCarPosition(x, y) {
+            const trackOverlay = d3.select(document.getElementById("track-overlay").contentDocument);
+            trackOverlay.select("#DR_x5F_CAR").attr("cx", x).attr("cy", y);
+          }
+
+          function getLeaderboardData(entries) {
+            let leaderboardEntries = entries.split('\n');
+            let leaderboardTempData = [];
+            leaderboardEntries.forEach(entry => {
+              let racerStats = entry.split('|');
+              leaderboardTempData.push({
+                'RacerName': racerStats[2],
+                'RacerTime': GetFormattedLapTime(racerStats[1], true),
+                'RacerColor': racerStats[0],
+                'RacerTimeMS': parseInt(racerStats[1])
+              });
+            });
+
+            leaderboardTempData.sort(function(a,b) {return (a.RacerTimeMS > b.RacerTimeMS) ? 1 : ((b.RacerTimeMS > a.RacerTimeMS) ? -1 : 0);} );
+
+            // TODO: I think I was going to check for existing racers fastest time and pull that for the lower third? not sure here.
+            // for (var i = 0; i < leaderboardData.length; i++) {
+
+              // }
+
+              return leaderboardTempData
+            }
+
+            function GetFormattedTotalTime(timeInMS) {
+
+              if (timeInMS < 0) {
+                return '00:00.0';
+              }
+
+              var min = Math.floor(timeInMS / 1000 / 60);
+              var sec = Math.floor((timeInMS / 1000) - (min * 60));
+              var ms = (timeInMS - ((min * 60 * 1000) + (sec * 1000)));
+              return `${PadZero(min)}:${PadZero(sec)}.${String(ms).slice(0,1)}`
+            }
+
+            function GetFormattedLapTime(timeInMS, showMinutes = false) {
+              if (timeInMS == 999999999)
+              return '00.000';
+
+              if (showMinutes) {
+                var min = Math.floor(timeInMS / 1000 / 60);
+                var sec = Math.floor((timeInMS / 1000)) - (min * 60); // - (min * 60));
+                var ms = String(timeInMS - ((min * 60 * 1000) + (sec * 1000)));
+                //    return `${PadZero(min)}:${PadZero(sec)}:${ms}`
+                return `${PadZero(min)}:${PadZero(sec)}.${PadZeroMS(ms).slice(0,3)}`
+              }
+              else {
+                //    var min = Math.floor(timeInMS / 1000 / 60);
+                var sec = Math.floor((timeInMS / 1000)); // - (min * 60));
+                var ms = String(timeInMS - (sec * 1000)); //((min * 60 * 1000) + (sec * 1000)));
+                //    return `${PadZero(min)}:${PadZero(sec)}:${ms}`
+                return `${PadZero(sec)}.${PadZeroMS(ms).slice(0,3)}`
+              }
+            }
+
+            function PadZero(number) {
+              if (number < 10) {
+                return `0${number}`;
+              }
+              else {
+                return number;
+              }
+            }
+
+            function PadZeroMS(number) {
+              if (number < 10) {
+                return `00${number}`;
+              }
+              else if (number < 100) {
+                return `0${number}`;
+              }
+              else {
+                return number;
+              }
+            }
+
+            function SigV4Utils() {}
+
+            SigV4Utils.getSignatureKey = function (key, date, region, service) {
+              var kDate = AWS.util.crypto.hmac('AWS4' + key, date, 'buffer');
+              var kRegion = AWS.util.crypto.hmac(kDate, region, 'buffer');
+              var kService = AWS.util.crypto.hmac(kRegion, service, 'buffer');
+              var kCredentials = AWS.util.crypto.hmac(kService, 'aws4_request', 'buffer');
+              return kCredentials;
+            };
+
+            SigV4Utils.getSignedUrl = function(host, region, credentials, protocol, uri, service) {
+              var datetime = AWS.util.date.iso8601(new Date()).replace(/[:\-]|\.\d{3}/g, '');
+              var date = datetime.substr(0, 8);
+
+              var method = 'GET';
+              // var protocol = 'wss';
+              // var uri = '/mqtt';
+              // var service = 'iotdevicegateway';
+              var algorithm = 'AWS4-HMAC-SHA256';
+
+              var credentialScope = date + '/' + region + '/' + service + '/' + 'aws4_request';
+              var canonicalQuerystring = 'X-Amz-Algorithm=' + algorithm;
+              canonicalQuerystring += '&X-Amz-Credential=' + encodeURIComponent(credentials.AccessKeyId + '/' + credentialScope);
+              canonicalQuerystring += '&X-Amz-Date=' + datetime;
+              canonicalQuerystring += '&X-Amz-SignedHeaders=host';
+
+              var canonicalHeaders = 'host:' + host + '\n';
+              var payloadHash = AWS.util.crypto.sha256('', 'hex')
+              var canonicalRequest = method + '\n' + uri + '\n' + canonicalQuerystring + '\n' + canonicalHeaders + '\nhost\n' + payloadHash;
+
+              var stringToSign = algorithm + '\n' + datetime + '\n' + credentialScope + '\n' + AWS.util.crypto.sha256(canonicalRequest, 'hex');
+              var signingKey = SigV4Utils.getSignatureKey(credentials.SecretKey, date, region, service);
+              var signature = AWS.util.crypto.hmac(signingKey, stringToSign, 'hex');
+
+              canonicalQuerystring += '&X-Amz-Signature=' + signature;
+              if (credentials.SessionToken) {
+                canonicalQuerystring += '&X-Amz-Security-Token=' + encodeURIComponent(credentials.SessionToken);
+              }
+
+              var requestUrl = protocol + '://' + host + uri + '?' + canonicalQuerystring;
+              return requestUrl;
+            };
+
+            async function GetAWSCredentials(identityId) {
+              const res = await axios.post('https://cognito-identity.us-east-1.amazonaws.com/', {"IdentityId":identityId}, {
+                headers: {
+                  // 'application/json' is the modern content-type for JSON, but some
+                  // older servers may use 'text/json'.
+                  // See: http://bit.ly/text-json
+                  'Content-Type': 'application/x-amz-json-1.1',
+                  'X-Amz-Content-Sha256': '0ae89b957a4869d04331718db9f421f55f427fba4cc4a4c120fb807934df3ca7',
+                  'X-Amz-Target': 'AWSCognitoIdentityService.GetCredentialsForIdentity',
+                  'X-Amz-User-Agent': 'aws-sdk-js/2.344.0 callback'
+                }
+              });
+
+              console.log('creds');
+              console.log(JSON.stringify(res.data));
+
+              return res.data;
+            }
+
+            async function GetAWSIdentityId() {
+              const res = await axios.post('https://cognito-identity.us-east-1.amazonaws.com/', {"IdentityPoolId":"us-east-1:4b9c462f-266f-42b1-bea4-0d1363b117fc"}, {
+                headers: {
+                  // 'application/json' is the modern content-type for JSON, but some
+                  // older servers may use 'text/json'.
+                  // See: http://bit.ly/text-json
+                  'Content-Type': 'application/x-amz-json-1.1',
+                  'X-Amz-Content-Sha256': '0ae89b957a4869d04331718db9f421f55f427fba4cc4a4c120fb807934df3ca7',
+                  'X-Amz-Target': 'AWSCognitoIdentityService.GetId',
+                  'X-Amz-User-Agent': 'aws-sdk-js/2.344.0 callback'
+                }
+              });
+
+              console.log(JSON.stringify(res.data));
+
+              return res.data;
+            }
+
+            async function GetEventConfig(event_id, data_type, access_key, secret_key, session_token) { // data_type is one of "event_id" or "config" (event_id will get you leaderboard, config will get you event config)
+            const res = await axios.post('https://5bfdanpho0.execute-api.us-west-2.amazonaws.com/Prod/event-config', {"data_type": data_type, "access_key": access_key, "secret_key": secret_key, "session_token": session_token, "event_id": event_id}, {
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+
+            return res.data;
+          }
+
+          async function init() {
+            // Configure Cognito identity pool
+            AWS.config.region = 'us-east-1';
+            // var poolId = await GetAWSIdentityId();
+            // console.log(poolId);
+            var credentials = await GetAWSCredentials('us-east-1:4b9c462f-266f-42b1-bea4-0d1363b117fc'); //poolId.IdentityId);
+
+            var creds = credentials.Credentials;
+
+            console.log(JSON.stringify(creds));
+
+            var mqttUrl = SigV4Utils.getSignedUrl('aorm72ukoqghn-ats.iot.us-east-1.amazonaws.com', 'us-east-1', creds, 'wss', '/mqtt', 'iotdevicegateway');
+            initClient(mqttUrl);
+
+            var configData = await GetEventConfig(eventId, "config", creds.AccessKeyId, creds.SecretKey, creds.SessionToken);
+            console.log("CONFIG DATA");
+            console.log(configData);
+
+            SetEventName(configData.localName ? configData.localName : configData.name);
+
+            // {
+              //     'RacerName': racerStats[2],
+              //     'RacerTime': GetFormattedLapTime(racerStats[1], true),
+              //     'RacerColor': racerStats[0],
+              //     'RacerTimeMS': parseInt(racerStats[1])
+              // }
+
+
+              var leaderboardDataResponse = await GetEventConfig(eventId, "event_id", creds.AccessKeyId, creds.SecretKey, creds.SessionToken);
+              console.log(leaderboardDataResponse);
+
+              leaderboardData = [];
+
+              leaderboardDataResponse.forEach( (racer) => {
+                leaderboardData.push(
+                {
+                  'RacerName': racer.name,
+                  'RacerTime': GetFormattedLapTime(racer.time, true),
+                  'RacerColor': racer.id,
+                  'RacerTimeMS': parseInt(racer.time)
+                }
+                )
+              });
+
+              SetFirstPlaceRacerNameAndTime('', '');
+              SetSecondPlaceRacerNameAndTime('', '');
+              SetThirdPlaceRacerNameAndTime('', '');
+              SetFourthPlaceRacerNameAndTime('', '');
+
+              if (leaderboardData.length > 0) {
+                SetFirstPlaceRacerNameAndTime(leaderboardData[0].RacerName, leaderboardData[0].RacerTime);
+              }
+
+              if (leaderboardData.length > 1) {
+                SetSecondPlaceRacerNameAndTime(leaderboardData[1].RacerName, leaderboardData[1].RacerTime);
+              }
+
+              if (leaderboardData.length > 2) {
+                SetThirdPlaceRacerNameAndTime(leaderboardData[2].RacerName, leaderboardData[2].RacerTime);
+              }
+
+              if (leaderboardData.length > 3) {
+                SetFourthPlaceRacerNameAndTime(leaderboardData[3].RacerName, leaderboardData[3].RacerTime);
+              }
+
+              // var apiUrl = SigV4Utils.getSignedUrl('qxslcwqkg3.execute-api.us-east-1.amazonaws.com', 'us-east-1', creds, 'https', '/prod', 'execute-api');
+              // initApi(apiUrl);
+            }
+
+            // function initApi(apiUrl) {
+              //     $.get( apiUrl, function( data ) {
+                //         console.log(data);
+                //     });
+                // }
+
+                function initEventConfig(requestUrl) {
+
+                }
+
+                function onConnectSuccess() {
+                  console.log('connected');
+
+
+
+                  // subscribe to the drawing
+                  mqttClient.subscribe(`$aws/things/${eventId}/shadow/update/documents`);
+                  mqttClient.subscribe(`$aws/things/${eventId}/shadow/get/accepted`);
+                  mqttClient.subscribe(`$aws/things/${eventId}/shadow/get/rejected`);
+                  mqttClient.subscribe(`announcement/${eventId}`);
+                  mqttClient.subscribe(`timekeeper/${eventId}`);
+                  // mqttClient.subscribe(`$aws/things/${eventId}/shadow/get`);
+
+                  // publish a lifecycle event
+                  // var message = new Paho.MQTT.Message(JSON.stringify(""));
+                  // message.destinationName = `$aws/things/${eventId}/shadow/get`;
+                  // console.log(message);
+                  // mqttClient.send(message);
+
+                  // message = new Paho.MQTT.Message("");
+                  // message.destinationName = `$aws/things/${eventId}/shadow/get`;
+                  // console.log(message);
+                  // mqttClient.send(message);
+
+                  // message = new Paho.MQTT.Message('');
+                  // message.destinationName = `$aws/things/${eventId}/shadow/update/documents`;
+                  // mqttClient.send(message);
+
+                  // message = new Paho.MQTT.Message('');
+                  // message.destinationName = `announcement/${eventId}`;
+                  // mqttClient.send(message);
+
+                  // message = new Paho.MQTT.Message('!');
+                  // message.destinationName = `timekeeper/${eventId}`;
+                  // mqttClient.send(message);
+
+                }
+
+                var connectOptions = {
+                  onSuccess: onConnectSuccess,
+                  useSSL: true,
+                  timeout: 3,
+                  // mqttVersion: 4,
+                  keepAliveInterval: 5,
+                  onFailure: function () {
+                    console.error('connect failed');
+                  }
+                }
+
+                function onConnectionLost(responseObject) {
+                  console.log("Connection Lost: "+responseObject.errorMessage);
+                  delete connectOptions.mqttVersionExplicit;
+                  console.log(connectOptions);
+
+                  setTimeout(function() {mqttClient.connect(connectOptions);}, 5000);
+                }
+
+                function onMessageReceived(message) {
+                  try {
+
+                    console.log("msg arrived: " +  message.payloadString);
+                    var data = JSON.parse(message.payloadString);
+
+                    if (data.competitor) {
+                      console.log('competitor found!');
+
+                      if (leaderBoardStateIN) {
+                        console.log('fade out leaderboard');
+                        LeaderboardFadeOut();
+                        leaderBoardStateIN = false;
+                      }
+
+                      if (!lowerThirdStateIN) {
+                        console.log('transition IN lower third.');
+                        setTimeout(() => { LowerThirdRacerAndLapInfoIn(); lowerThirdStateIN = true; }, 2000);
+                      }
+
+                      var oldPauseState = isPaused;
+                      isPaused = data.paused;
+                      console.log(`Old Paused: ${oldPauseState}, New Paused: ${isPaused}`);
+
+                      if (oldPauseState && !data.paused && !data.finished && data.running) {
+                        console.log("RESUMING TIMER!");
+                        timerState = true;
+                        startTimer();
+                      }
+                      // console.log(`DATA.PAUSED: ${data.paused} !!!!!!!!!!!!!!!!!!!!!!!!!`);
+
+                      if (data.finished) {
+                        console.log('FINISHED, RESET TIMER!');
+                        resetTimer();
+                      }
+
+                      if (!timerState && data.running) {
+                        console.log('Timer Not Running, set state to true and start timer.');
+                        timerState = true;
+                        startTimer();
+                      }
+
+                      var racer = data.competitor.name;
+                      SetRacerInfoName(racer);
+                      console.log("Racer: " + racer)
+
+                      var timeLeft = data.time;
+                      console.log('Total Time Remaining: ' + GetFormattedTotalTime(timeLeft));
+                      SetRacerInfoTotalTime(GetFormattedTotalTime(timeLeft));
+                      currentTotalTimerMS = timeLeft;
+
+                      if (data.state) {
+                        console.log(`Found State:`);
+                        console.log(data.state);
+                        if (data.state.laps) {
+                          var fastestLap = data.state.laps
+                          .filter(item => item.allowed)
+                          .sort((a,b) => {
+                            if (a.totalTime < b.totalTime) {
+                              return -1;
+                            }
+                            if (a.totalTime > b.totalTime) {
+                              return 1;
+                            }
+                          })[0];
+
+                          if (fastestLap) {
+                            console.log('Fastest Lap: ' + GetFormattedLapTime(fastestLap.totalTime));
+                            SetRacerInfoFastestLap(GetFormattedLapTime(fastestLap.totalTime))
+                          }
+
+                          console.log(data.state.laps);
+
+                          var laps = data.state.laps.filter( obj => {
+
+                            return obj.totalTime !== 999999999
+
+                          });
+
+                          var lastLap = laps
+                          .filter(item => item.allowed)
+                          .sort((a,b) => {
+                            if (a.lapNumber > b.lapNumber) {
+                              return -1;
+                            }
+                            if (a.lapNumber < b.lapNumber) {
+                              return 1;
+                            }
+                          })[0];
+
+                          if (lastLap) {
+                            console.log('Last Lap: ' + GetFormattedLapTime(lastLap.totalTime));
+                            SetRacerInfoLastLap(GetFormattedLapTime(lastLap.totalTime));
+                          }
+                        }
+                      }
+                    }
+                    else if ('competitor' in data && data.competitor === null) {
+                      console.log('Competitor NOT FOUND!');
+
+                      if (lowerThirdStateIN) {
+                        console.log('Lower Third OUT!');
+                        LowerThirdRacerAndLapInfoOut();
+                        lowerThirdStateIN = false;
+
+                        console.log('Setting TimeOut to remove racer info from lower third.');
+                        setTimeout(() => {
+                          SetRacerInfoName("");
+                          SetRacerInfoFastestLap("00.000");
+                          SetRacerInfoLastLap("00.000");
+                          SetRacerInfoTotalTime(180000);
+                          console.log(`CURRENT TIMER STATE: ${timerState}`);
+                          if (timerState) {
+                            timerState = false;
+                            resetTimer();
+                          }
+                        }, 2000);
+                      }
+
+                      if (!leaderBoardStateIN) {
+                        console.log('Setting TimeOut to fade Leaderboard in!');
+                        setTimeout(() => { LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
+                      }
+                    }
+                    else if ('previous' in data && 'current' in data) {
+                      // event name info
+                      console.log('Event Config');
+                      console.log(data.current.state.reported.config);
+                      eventName = data.current.state.reported.config.localName === "" ? data.current.state.reported.config.name : data.current.state.reported.config.localName;
+                      console.log(`EVENT NAME SET TO: ${eventName}`)
+                      SetEventName(eventName.toUpperCase());
+
+                      // leaderboard data.
+                      console.log(data.current.state.reported.entries);
+                      leaderboardData = getLeaderboardData(data.current.state.reported.entries);
+
+                      SetFirstPlaceRacerNameAndTime('', '');
+                      SetSecondPlaceRacerNameAndTime('', '');
+                      SetThirdPlaceRacerNameAndTime('', '');
+                      SetFourthPlaceRacerNameAndTime('', '');
+
+                      SetFirstPlaceRacerNameAndTime(leaderboardData[0].RacerName, leaderboardData[0].RacerTime);
+                      SetSecondPlaceRacerNameAndTime(leaderboardData[1].RacerName, leaderboardData[1].RacerTime);
+                      SetThirdPlaceRacerNameAndTime(leaderboardData[2].RacerName, leaderboardData[2].RacerTime);
+                      SetFourthPlaceRacerNameAndTime(leaderboardData[3].RacerName, leaderboardData[3].RacerTime);
+                    }
+                    else if ('state' in data && 'metadata' in data) { // this is initial state message.
+                      leaderboardData = getLeaderboardData(data.state.reported.entries);
+                      let eventMsgConfig = data.state.reported.config;
+                      console.log(eventMsgConfig);
+                      eventName = eventMsgConfig.localName === "" ? eventMsgConfig.name : eventMsgConfig.localName;
+                      console.log(`EVENT NAME SET TO: ${eventName}`)
+                      SetEventName(eventName.toUpperCase());
+                    }
+                  } catch (e) {
+                    console.log("error! " + e);
+                  }
+                }
+
+                // Connect the client, subscribe to the drawing topic, and publish a "hey I connected" message
+                function initClient(requestUrl) {
+                  SetEventName(eventName.toUpperCase());
+
+                  var clientId = String(Math.random()).replace('.', '');
+                  console.log(`Client ID: ${clientId}`);
+                  mqttClient = new Paho.MQTT.Client(requestUrl, clientId);
+
+                  mqttClient.onConnectionLost = onConnectionLost
+
+                  mqttClient.onMessageArrived = onMessageReceived
+
+                  mqttClient.connect(connectOptions);
+                }
+
+                init();
+
+                SetDRCarPosition(200, 157.92);
+              </script>
+              <script src="transitions.js"></script>
+              <script>
+                var currentTotalTimer = "03:00.0";
+                var currentTotalTimerMS = 180000
+                var timerState = false;
+                var isPaused = false;
+
+                function startTimer() {
+                  // console.log(`Timer State: ${timerState}, isPaused: ${isPaused}`);
+                  if (!timerState || isPaused) {
+                    // console.log("Not Timer State OR isPaused");
+                    return;
+                  }
+                  // var presentTime = currentTotalTimer;
+                  // var timeArray = presentTime.split(/[:]+/);
+                  // var m = timeArray[0];
+                  // var s = checkSecond((parseInt(timeArray[1]) - 1));
+                  // if(s==59){m=parseInt(m)-1}
+                  // if(m<0){
+                    //     return
+                    // }
+
+                    // currentTotalTimer = checkMin(parseInt(m)) + ":" + s;
+                    // console.log(checkMin(parseInt(m)) + ":" + s);
+
+                    // if (timerState)
+                    //     setTimeout(startTimer, 100);
+
+                    currentTotalTimerMS = currentTotalTimerMS - 100;
+
+                    currentTotalTimer = GetFormattedTotalTime(currentTotalTimerMS);
+
+                    const racerAndLapInfoObj = d3.select(document.getElementById("lower-third-racer-and-lap-info").contentDocument);
+                    racerAndLapInfoObj.select("#TOTAL_x5F_TIME_x5F_REMAINING").text(currentTotalTimer);
+
+                    if (currentTotalTimer <= 0) {
+                      timerState = false;
+                      currentTotalTimerMS = 0;
+                    }
+
+                    if (timerState) {
+                      setTimeout(startTimer, 100);
+                    }
+
+                  }
+
+                  function checkMin(min) {
+                    if (min < 10 && min >= 0) {min = "0" + min}; // add zero in front of numbers < 10
+                    if (min < 0) {min = "00"};
+                    return min;
+                  }
+
+                  function checkSecond(sec) {
+                    if (sec < 10 && sec >= 0) {sec = "0" + sec}; // add zero in front of numbers < 10
+                    if (sec < 0) {sec = "59"};
+                    return sec;
+                  }
+
+                  function resetTimer() {
+                    timerState = false;
+                    currentTotalTimer = "03:00.0";
+                    currentTotalTimerMS = 180000;
+                  }
+
+                  SetFirstPlaceRacerNameAndTime('', '');
+                  SetSecondPlaceRacerNameAndTime('', '');
+                  SetThirdPlaceRacerNameAndTime('', '');
+                  SetFourthPlaceRacerNameAndTime('', '');
+                </script>
+              </body>
+              </html>

@@ -19,7 +19,6 @@ URL_EXPIRY = os.environ["URL_EXPIRY"]
 
 @logger.inject_lambda_context
 def lambda_handler(event: dict, context: LambdaContext) -> str:
-
     logger.debug(json.dumps(event))
 
     # TODO Check to see if we have details of this car already
@@ -77,7 +76,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         fill=(0, 0, 0),
     )
     qrimg = qrcode.make(
-        f"https://{device_event_ipaddress}?ddid={device_default_hostname}&dpwd={device_default_pwd}&epwd={device_event_password}&dremid={device_event_hostname}",  # noqa: E501
+        f"https://{device_event_hostname}?epwd={device_event_password}",
         box_size=6,
         border=0,
     )
