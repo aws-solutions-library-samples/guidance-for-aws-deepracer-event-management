@@ -42,10 +42,58 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         Limit=1,
         Filter='username = "{}"'.format(username),
     )
-    logger.info(response)
+    if len(response["Users"]) == 1:
+        user = response["Users"][0]
+        logger.info(user)
 
-    try:
-        # Use JSON format string for the query. It does not need reformatting.
+        # pull "sub" out to top level of user object
+        for attributes in user["Attributes"]:
+            if attributes["Name"] == "sub":
+                # logger.info(attributes["Value"])
+                user["sub"] = attributes["Value"]
+            elif attributes["Name"] == "email":
+                # logger.info(attributes["Value"])
+                user["email"] = attributes["Value"]
+
+        query = (
+            '''
+            mutation MyMutation {
+                userCreated(Username: "'''
+            + user["Username"]
+            + '''",
+                UserCreateDate: "'''
+            + user_create_date
+            + '''",
+                sub: "'''
+            + user["sub"]
+            + '''",
+                Attributes: [
+                    {
+                        Name: "email",
+                        Value: "'''
+            + user["email"]
+            + '''"
+                    },
+                    {
+                        Name: "sub",
+                        Value: "'''
+            + user["sub"]
+            + """"
+                    }
+                ],
+              ) {
+                Username,
+                UserCreateDate,
+                sub,
+                Attributes {
+                  Name
+                  Value
+                }
+              }
+            }
+        """
+        )
+    else:
         query = (
             '''
             mutation MyMutation {
@@ -70,6 +118,9 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
             }
         """
         )
+
+    try:
+        # Use JSON format string for the query. It does not need reformatting.
         payload = {"query": query}
 
         try:
