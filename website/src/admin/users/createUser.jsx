@@ -35,7 +35,7 @@ export function CreateUser() {
   const [users, isLoading ] = useUsersApi();
   const [preferences, setPreferences] = useLocalStorage('DREM-user-table-preferences', {
     ...DefaultPreferences,
-    visibleContent: ['username', 'creationDate'],
+    visibleContent: ['Username', 'UserCreateDate'],
   });
   const [username, setUsername] = useState('');
   const [usernameErrorText, setUsernameErrorText] = useState('');
