@@ -305,6 +305,7 @@ export class UserManager extends Construct {
                 architecture: props.lambdaConfig.architecture,
                 environment: {
                     graphqlUrl: props.appsyncApi.api.graphqlUrl,
+                    user_pool_id: props.userPoolId,
                 },
                 bundling: {
                     image: props.lambdaConfig.bundlingImage,
@@ -318,6 +319,14 @@ export class UserManager extends Construct {
         );
 
         props.appsyncApi.api.grantMutation(user_created_event_handler, 'userCreated');
+
+        user_created_event_handler.addToRolePolicy(
+            new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ['cognito-idp:ListUsers'],
+                resources: [props.userPoolArn],
+            })
+        );
 
         // EventBridge Rule
         const rule = new Rule(this, 'user_created_event_handler_rule', {
