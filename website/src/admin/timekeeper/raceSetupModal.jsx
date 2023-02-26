@@ -84,7 +84,7 @@ export const RaceSetupModal = ({
         if (allRacersFromBackend) {
             SetUserOptions(
                 allRacersFromBackend.map((user) => {
-                    return { label: user.username, value: user.id };
+                    return { label: user.Username, value: user.sub };
                 })
             );
         }
@@ -127,15 +127,15 @@ export const RaceSetupModal = ({
     // TODO can be improved to be more efficent
     useEffect(() => {
         if (!config.eventId || !fleets) return;
-        const selectedEvent = events.find((event) => event.eventId === config.eventId);
-        const selectedFleet = fleets.find((fleet) => fleet.fleetId === selectedEvent.fleetId);
-        const carsInFleet = cars.filter((car) => car.fleetId === selectedFleet.fleetId);
-        setCarOptions(() =>
-            carsInFleet.map((car) => {
-                console.log(car);
-                return { label: `${car.ComputerName} - ${car.IpAddress}`, value: car.InstanceId };
-            })
-        );
+        //const selectedEvent = events.find((event) => event.eventId === config.eventId);
+        //const selectedFleet = fleets.find((fleet) => fleet.fleetId === selectedEvent.fleetId);
+        //const carsInFleet = cars.filter((car) => car.fleetId === selectedFleet.fleetId);
+        // setCarOptions(() =>
+        //     carsInFleet.map((car) => {
+        //         console.log(car);
+        //         return { label: `${car.ComputerName} - ${car.IpAddress}`, value: car.InstanceId };
+        //     })
+        // );
     }, [config.eventId, fleets, cars, events]);
 
     const GetModelOptionFromId = (id) => {
@@ -192,8 +192,8 @@ export const RaceSetupModal = ({
                 gridDefinition={[
                     { colspan: 12 },
                     { colspan: 12 },
-                    { colspan: 12 },
-                    { colspan: 12 },
+                    // { colspan: 12 },
+                    // { colspan: 12 },
                 ]}
             >
                 <FormField label={t('timekeeper.racer-selector.select-event')}>
@@ -218,7 +218,12 @@ export const RaceSetupModal = ({
                 <FormField label={t('timekeeper.racer-selector.select-racer')}>
                     <Select
                         selectedOption={GetRacerOptionFromId(config.userId)}
-                        onChange={({ detail }) => onChange({ userId: detail.selectedOption.value })}
+                        onChange={({ detail }) =>
+                            onChange({
+                                userId: detail.selectedOption.value,
+                                username: detail.selectedOption.label,
+                            })
+                        }
                         options={userOptions}
                         selectedAriaLabel={t('timekeeper.racer-selector.selected')}
                         filteringType="auto"
@@ -229,7 +234,7 @@ export const RaceSetupModal = ({
                         statusType={isLoadingRacers ? t('timekeeper.racer-selector.loading') : ''}
                     />
                 </FormField>
-                <FormField label={t('timekeeper.racer-selector.select-car')}>
+                {/* <FormField label={t('timekeeper.racer-selector.select-car')}>
                     <Select
                         selectedOption={GetCarOptionFromId(config.currentCarId)}
                         onChange={({ detail }) =>
@@ -262,7 +267,7 @@ export const RaceSetupModal = ({
                         statusType={isLoadingRacers ? t('timekeeper.racer-selector.loading') : ''} // TODO change to it´s own loading when API is in place
                         empty={t('timekeeper.racer-selector.select-model-empty')}
                     />
-                </FormField>
+                </FormField> */}
             </Grid>
         </Modal>
     );

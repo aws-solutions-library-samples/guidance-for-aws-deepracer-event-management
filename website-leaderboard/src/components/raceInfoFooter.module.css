@@ -1,0 +1,23 @@
+.footerRoot {
+  padding-bottom: 2vmin;
+  padding-top: 1vmin;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  /* height: 15vmin; */
+  background: linear-gradient(90deg, hsl(275, 65%, 40%) 50%, hsl(265, 85%, 15%) 100%);
+  color: white;
+  text-align: center;
+  z-index: 2000;
+}
+
+.footerHeader {
+  font-size: 3vmin;
+  font-weight: bold;
+}
+
+.footerText {
+  font-size: 4vmin;
+  font-weight: normal;
+}

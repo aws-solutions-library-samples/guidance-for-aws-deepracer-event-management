@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import { DockerImage } from 'aws-cdk-lib';
+import { DockerImage, Duration, Expiration } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { IDistribution } from 'aws-cdk-lib/aws-cloudfront';
 import { CfnIdentityPool, IUserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
@@ -17,14 +17,16 @@ import { EventsManager } from './constructs/events-manager';
 import { FleetsManager } from './constructs/fleets-manager';
 import { GroupManager } from './constructs/group-manager';
 import { LabelPrinter } from './constructs/label-printer';
-import { Leaderboard } from './constructs/leaderboard-construct';
+import { Leaderboard } from './constructs/leaderboard';
 import { ModelsManager } from './constructs/models-manager';
+import { RaceManager } from './constructs/race-manager';
 import { RestApi } from './constructs/rest-api';
+import { StreamingOverlay } from './constructs/streaming-overlay';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
-import { Website } from './constructs/website';
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
+    branchName: string;
     adminGroupRole: IRole;
     operatorGroupRole: IRole;
     authenticatedUserRole: IRole;
@@ -49,8 +51,12 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
 }
 
 export class DeepracerEventManagerStack extends cdk.Stack {
-    public readonly sourceBucketName: cdk.CfnOutput;
     public readonly distributionId: cdk.CfnOutput;
+    public readonly sourceBucketName: cdk.CfnOutput;
+    public readonly leaderboardDistributionId: cdk.CfnOutput;
+    public readonly leaderboardSourceBucketName: cdk.CfnOutput;
+    public readonly streamingOverlayDistributionId: cdk.CfnOutput;
+    public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
 
     constructor(scope: Construct, id: string, props: DeepracerEventManagerStackProps) {
         super(scope, id, props);
@@ -66,6 +72,15 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 defaultAuthorization: {
                     authorizationType: appsync.AuthorizationType.IAM,
                 },
+                additionalAuthorizationModes: [
+                    {
+                        authorizationType: appsync.AuthorizationType.API_KEY,
+                        apiKeyConfig: {
+                            name: 'unauthApiKey',
+                            expires: Expiration.after(Duration.days(365)),
+                        },
+                    },
+                ],
             },
             xrayEnabled: true,
             logConfig: {
@@ -99,15 +114,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             },
         });
 
-        // Terms And Conditions
-        const tncWebsite = new Website(this, 'TermsNConditions', {
-            contentPath: './lib/constructs/terms_n_conditions/webpage/',
-            pathPattern: '/terms_n_conditions.html',
-            logsBucket: props.logsBucket,
-            // cdnDistribution: props.cloudfrontDistribution // TODO not working to addBehaviour to dist that is another stack, implement as custom resource????
-        });
-
-        const carManager = new CarManager(this, 'CarManager', {
+        new CarManager(this, 'CarManager', {
             adminGroupRole: props.adminGroupRole,
             appsyncApi: {
                 api: appsyncApi,
@@ -116,15 +123,44 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             lambdaConfig: props.lambdaConfig,
         });
 
-        new EventsManager(this, 'EventsManager', {
+        new RaceManager(this, 'RaceManager', {
             adminGroupRole: props.adminGroupRole,
             appsyncApi: {
                 api: appsyncApi,
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            userPoolId: props.userPool.userPoolId,
             lambdaConfig: props.lambdaConfig,
+            userPoolArn: props.userPool.userPoolArn,
+            userPoolId: props.userPool.userPoolId,
+            eventbus: props.eventbus,
+        });
+
+        const leaderboard = new Leaderboard(this, 'Leaderboard', {
+            branchName: props.branchName,
+            adminGroupRole: props.adminGroupRole,
+            logsBucket: props.logsBucket,
+            appsyncApi: {
+                api: appsyncApi,
+                schema: schema,
+                noneDataSource: noneDataSoure,
+            },
+            lambdaConfig: props.lambdaConfig,
+            userPoolArn: props.userPool.userPoolArn,
+            eventbus: props.eventbus,
+        });
+
+        new EventsManager(this, 'EventsManager', {
+            branchName: props.branchName,
+            adminGroupRole: props.adminGroupRole,
+            appsyncApi: {
+                api: appsyncApi,
+                schema: schema,
+                noneDataSource: noneDataSoure,
+            },
+            lambdaConfig: props.lambdaConfig,
+            leaderboardApi: leaderboard.api,
+            eventbus: props.eventbus,
         });
 
         new FleetsManager(this, 'FleetsManager', {
@@ -138,16 +174,9 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             userPoolId: props.userPool.userPoolId,
         });
 
-        new Leaderboard(this, 'Leaderboard', {
-            adminGroupRole: props.adminGroupRole,
-            appsyncApi: {
-                api: appsyncApi,
-                schema: schema,
-                noneDataSource: noneDataSoure,
-            },
-            lambdaConfig: props.lambdaConfig,
-            userPoolArn: props.userPool.userPoolArn,
-            userPoolId: props.userPool.userPoolId,
+        const streamingOverlay = new StreamingOverlay(this, 'streamingOverlay', {
+            branchName: props.branchName,
+            logsBucket: props.logsBucket,
         });
 
         new SystemsManager(this, 'SystemManager');
@@ -225,7 +254,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         adminPolicy.attachToRole(props.adminGroupRole);
 
         // Outputs
-        new cdk.CfnOutput(this, 'CFURL', {
+        new cdk.CfnOutput(this, 'DremWebsite', {
             value: 'https://' + props.cloudfrontDistribution.distributionDomainName,
         });
 
@@ -237,6 +266,30 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             value: props.dremWebsiteBucket.bucketName,
         });
 
+        new cdk.CfnOutput(this, 'LeaderboardWebsite', {
+            value: 'https://' + leaderboard.distribution.distributionDomainName,
+        });
+        this.leaderboardDistributionId = new cdk.CfnOutput(this, 'leaderboardDistributionId', {
+            value: leaderboard.distribution.distributionId,
+        });
+        this.leaderboardSourceBucketName = new cdk.CfnOutput(this, 'leaderboardSourceBucketName', {
+            value: leaderboard.websiteBucket.bucketName,
+        });
+
+        this.streamingOverlayDistributionId = new cdk.CfnOutput(
+            this,
+            'streamingOverlayDistributionId',
+            {
+                value: streamingOverlay.distribution.distributionId,
+            }
+        );
+        this.streamingOverlaySourceBucketName = new cdk.CfnOutput(
+            this,
+            'streamingOverlaySourceBucketName',
+            {
+                value: streamingOverlay.websiteBucket.bucketName,
+            }
+        );
         new cdk.CfnOutput(this, 'modelsBucketName', {
             value: modelsManager.modelsBucket.bucketName,
         });
@@ -263,6 +316,10 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             value: appsyncApi.graphqlUrl,
         });
 
+        new cdk.CfnOutput(this, 'appsyncApiKey', {
+            value: appsyncApi.apiKey || '',
+        });
+
         new cdk.CfnOutput(this, 'userPoolWebClientId', {
             value: props.userPoolClientWeb.userPoolClientId,
         });
@@ -276,7 +333,9 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         // new cdk.CfnOutput(this, "DefaultAdminUserUsername", {value: defaultAdminUserName})
+        // new cdk.CfnOutput(this, "DefaultAdminUserUsername", {value: defaultAdminUserName})
 
+        // new cdk.CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
         // new cdk.CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
     }
 }

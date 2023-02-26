@@ -11,7 +11,7 @@ import { BaseStack } from './base-stack';
 import { DeepracerEventManagerStack } from './drem-app-stack';
 
 // Constants
-const NODE_VERSION = '16.17.0'; // other possible options: stable, latest, lts
+const NODE_VERSION = '16'; // other possible options: stable, latest, lts
 const CDK_VERSION = '2.60.0'; // other possible options: latest
 
 export interface InfrastructurePipelineStageProps extends cdk.StackProps {
@@ -21,14 +21,19 @@ export interface InfrastructurePipelineStageProps extends cdk.StackProps {
 }
 
 class InfrastructurePipelineStage extends Stage {
-    public readonly sourceBucketName: cdk.CfnOutput;
     public readonly distributionId: cdk.CfnOutput;
+    public readonly sourceBucketName: cdk.CfnOutput;
+    public readonly leaderboardDistributionId: cdk.CfnOutput;
+    public readonly leaderboardSourceBucketName: cdk.CfnOutput;
+    public readonly streamingOverlayDistributionId: cdk.CfnOutput;
+    public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
 
     constructor(scope: Construct, id: string, props: InfrastructurePipelineStageProps) {
         super(scope, id, props);
 
         const baseStack = new BaseStack(this, 'base', { email: props.email });
         const stack = new DeepracerEventManagerStack(this, 'infrastructure', {
+            branchName: props.branchName,
             cloudfrontDistribution: baseStack.cloudfrontDistribution,
             logsBucket: baseStack.logsBucket,
             lambdaConfig: baseStack.lambdaConfig,
@@ -42,8 +47,12 @@ class InfrastructurePipelineStage extends Stage {
             eventbus: baseStack.eventbridge.eventbus,
         });
 
-        this.sourceBucketName = stack.sourceBucketName;
         this.distributionId = stack.distributionId;
+        this.sourceBucketName = stack.sourceBucketName;
+        this.leaderboardSourceBucketName = stack.leaderboardSourceBucketName;
+        this.leaderboardDistributionId = stack.leaderboardDistributionId;
+        this.streamingOverlaySourceBucketName = stack.streamingOverlaySourceBucketName;
+        this.streamingOverlayDistributionId = stack.streamingOverlayDistributionId;
     }
 }
 export interface CdkPipelineStackProps extends cdk.StackProps {
@@ -137,31 +146,62 @@ export class CdkPipelineStack extends cdk.Stack {
                     computeType: codebuild.ComputeType.LARGE,
                 },
                 commands: [
-                    'echo $sourceBucketName',
+                    // configure and deploy DREM website
+                    "echo 'Starting to deploy the DREM website'",
+                    'echo website bucket= $sourceBucketName',
                     'aws cloudformation describe-stacks --stack-name ' +
                         `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
-                    'pwd',
-                    'ls -lah',
                     'python scripts/generate_amplify_config_cfn.py',
                     'python scripts/update_index_html_with_script_tag_cfn.py',
-                    // "npm install -g @aws-amplify/cli",
                     'appsyncId=`cat appsyncId.txt` && aws appsync' +
                         ' get-introspection-schema --api-id $appsyncId --format SDL' +
                         ' ./website/src/graphql/schema.graphql',
                     'cd ./website/src/graphql',
                     'amplify codegen', // this is on purpose
                     'amplify codegen', // I'm not repeating mythis ;)
-                    'ls -lah',
                     'cd ../..',
                     'docker run --rm -v $(pwd):/foo -w /foo' +
                         " public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install" +
                         " --cache /tmp/empty-cache && npm run build'",
                     'aws s3 sync ./build/ s3://$sourceBucketName/ --delete',
+                    'echo distributionId=$distributionId',
                     "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'",
+                    'cd ..',
+
+                    // configure and deploy Leaderboard website
+                    "echo 'Starting to deploy the Leaderboard website'",
+                    'echo website bucket= $leaderboardSourceBucketName',
+                    // 'aws cloudformation describe-stacks --stack-name ' +
+                    // `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, //TODO add when paralazing the website deployments
+                    'python scripts/generate_leaderboard_amplify_config_cfn.py',
+                    'appsyncId=`cat appsyncId.txt` && aws appsync' +
+                        ' get-introspection-schema --api-id $appsyncId --format SDL' +
+                        ' ./website-leaderboard/src/graphql/schema.graphql',
+                    'cd ./website-leaderboard/src/graphql',
+                    'amplify codegen', // this is on purpose
+                    'amplify codegen', // I'm not repeating mythis ;)
+                    'cd ../..',
+                    'docker run --rm -v $(pwd):/foo -w /foo' +
+                        " public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install" +
+                        " --cache /tmp/empty-cache && npm run build'",
+                    'aws s3 sync ./build/ s3://$leaderboardSourceBucketName/ --delete',
+                    "aws cloudfront create-invalidation --distribution-id $leaderboardDistributionId --paths '/*'",
+                    'cd ..',
+
+                    // configure and deploy Streaming overlay website
+                    "echo 'Starting to deploy the Streaming overlay website'",
+                    'echo website bucket= $streamingOverlaySourceBucketName',
+                    'aws s3 sync ./website-stream-overlays/ s3://$streamingOverlaySourceBucketName/ --delete',
+                    "aws cloudfront create-invalidation --distribution-id $streamingOverlayDistributionId --paths '/*'",
                 ],
                 envFromCfnOutputs: {
                     sourceBucketName: infrastructure.sourceBucketName,
                     distributionId: infrastructure.distributionId,
+                    leaderboardSourceBucketName: infrastructure.leaderboardSourceBucketName,
+                    leaderboardDistributionId: infrastructure.leaderboardDistributionId,
+                    streamingOverlaySourceBucketName:
+                        infrastructure.streamingOverlaySourceBucketName,
+                    streamingOverlayDistributionId: infrastructure.streamingOverlayDistributionId,
                 },
                 rolePolicyStatements: [
                     new iam.PolicyStatement({
