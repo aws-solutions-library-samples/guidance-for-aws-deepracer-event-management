@@ -1,7 +1,6 @@
 import { API, graphqlOperation } from 'aws-amplify';
 import { useEffect, useState } from 'react';
 import * as queries from '../graphql/queries';
-// import * as mutations from '../graphql/mutations';
 import { onAddedEvent, onDeletedEvents, onUpdatedEvent } from '../graphql/subscriptions';
 
 export const useEventsApi = () => {
@@ -12,17 +11,17 @@ export const useEventsApi = () => {
   // initial data load
   useEffect(() => {
     // Get Events
-    async function getAllEvents() {
+    async function getEvents() {
       setIsLoading(true);
-      const response = await API.graphql({
-        query: queries.getAllEvents,
+      const responseGetEvents = await API.graphql({
+        query: queries.getEvents,
       });
-      // console.log('getAllEvents');
-      // console.log(response.data.getAllEvents);
-      setEvents([...response.data.getAllEvents]);
+      const events = responseGetEvents.data.getEvents;
+      console.info(events);
+      setEvents([...events]);
       setIsLoading(false);
     }
-    getAllEvents();
+    getEvents();
 
     return () => {
       // Unmounting
@@ -31,7 +30,7 @@ export const useEventsApi = () => {
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
-    const subscription = API.graphql(graphqlOperation(onAddedEvent)).subscribe({
+    const onAddEventSubscription = API.graphql(graphqlOperation(onAddedEvent)).subscribe({
       next: (event) => {
         console.log(event);
         setEvents([...events, event.value.data.onAddedEvent]);
@@ -39,13 +38,13 @@ export const useEventsApi = () => {
     });
 
     return () => {
-      subscription.unsubscribe();
+      onAddEventSubscription.unsubscribe();
     };
   }, [events]);
 
   // subscribe to updated events and update local array
   useEffect(() => {
-    const subscription = API.graphql(graphqlOperation(onUpdatedEvent)).subscribe({
+    const onUpdatedEventSubscription = API.graphql(graphqlOperation(onUpdatedEvent)).subscribe({
       next: (event) => {
         console.log(event);
         const updatedEvent = event.value.data.onUpdatedEvent;
@@ -62,15 +61,17 @@ export const useEventsApi = () => {
     });
 
     return () => {
-      subscription.unsubscribe();
+      onUpdatedEventSubscription.unsubscribe();
     };
   }, [events]);
 
   // subscribe to delete data changes and delete them from local array
   useEffect(() => {
-    const subscription = API.graphql(graphqlOperation(onDeletedEvents)).subscribe({
+    const onDeletedEventsSubscription = API.graphql(graphqlOperation(onDeletedEvents)).subscribe({
       next: (event) => {
-        const eventIdsToDelete = event.value.data.onDeletedEvents.map((event) => event.eventId);
+        const eventIdsToDelete = event.value.data.onDeletedEvents.map(
+          (event) => JSON.parse(event).eventId
+        );
 
         setEvents((prevState) => {
           const indexes = [];
@@ -95,7 +96,7 @@ export const useEventsApi = () => {
     });
 
     return () => {
-      subscription.unsubscribe();
+      onDeletedEventsSubscription.unsubscribe();
     };
   }, [events]);
 

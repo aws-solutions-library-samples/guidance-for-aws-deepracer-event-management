@@ -14,7 +14,8 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useMachine } from '@xstate/react';
 import { useTranslation } from 'react-i18next';
 import useCounter from '../../hooks/useCounter';
-import useQuery from '../../hooks/useQuery';
+import useMutation from '../../hooks/useMutation';
+import { useUsersApi } from '../../hooks/useUsersApi';
 import useWebsocket from '../../hooks/useWebsocket';
 import { eventContext } from '../../store/eventProvider';
 import SideNavContext from '../../store/sideNavContext';
@@ -41,9 +42,10 @@ export const Timekeeper = () => {
     const [fastestLap, SetFastestLap] = useState([]);
 
     const { setNavigationOpen } = useContext(SideNavContext);
-
-    const raceType = GetRaceTypeNameFromId(selectedEvent.raceRankingMethod);
-    const allowedNrResets = GetRaceResetsNameFromId(selectedEvent.raceNumberOfResets);
+    const raceType = GetRaceTypeNameFromId(selectedEvent.tracks[0].raceConfig.rankingMethod);
+    const allowedNrResets = GetRaceResetsNameFromId(
+        selectedEvent.tracks[0].raceConfig.numberOfResetsPerLap
+    );
 
     const [
         carResetCounter,
@@ -55,15 +57,16 @@ export const Timekeeper = () => {
     const lapTimerRef = useRef();
     const raceTimerRef = useRef();
     const [overlayPublishTimerId, setoverlayPublishTimerId] = useState();
-    const [allRacersFromBackend, isLoadingRacers] = useQuery('getAllRacers');
+    const [allRacersFromBackend, isLoadingRacers] = useUsersApi();
+    const [SendMutation] = useMutation();
 
     const GetUsernameFromId = (userId) => {
         if (!userId) return '';
         const userObj = allRacersFromBackend.find((o) => {
-            return o.id === userId;
+            return o.sub === userId;
         });
         if (!userObj) return '';
-        return userObj.username;
+        return userObj.Username;
     };
 
     const [, send] = useMachine(stateMachine, {
@@ -90,8 +93,11 @@ export const Timekeeper = () => {
             },
             endRace: () => {
                 // console.log('Ending race state');
-                SetEndSessionModalIsVisible(true);
-                SetRacerSelectorModalIsVisible(false);
+                // So the timers are paused before displaying the modal, else the race timer keeps counting down...
+                setTimeout(() => {
+                    SetEndSessionModalIsVisible(true);
+                    SetRacerSelectorModalIsVisible(false);
+                }, 100);
             },
             startTimer: () => {
                 // console.log('Start Timer state');
@@ -103,8 +109,11 @@ export const Timekeeper = () => {
             },
             captureLap: (context, event) => {
                 // console.log('Capturing new lap');
+                event.isValid = 'isValid' in event ? event.isValid : false;
+
                 const isLapValid =
-                    event.isValid && carResetCounter <= selectedEvent.raceNumberOfResets;
+                    event.isValid &&
+                    carResetCounter <= selectedEvent.tracks[0].raceConfig.numberOfResetsPerLap;
 
                 const lapId = race.laps.length;
                 const currentLapStats = {
@@ -130,25 +139,45 @@ export const Timekeeper = () => {
             },
             startPublishOverlayInfo: () => {
                 if (!overlayPublishTimerId) {
-                    // setoverlayPublishTimerId(
-                    //   setInterval(() => {
-                    //     const overlayInfo = {
-                    //       eventId: selectedEvent.eventId,
-                    //       username: username,
-                    //       timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
-                    //       currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
-                    //     };
-                    //     console.log('Publishing overlay info: ' + JSON.stringify(overlayInfo));
-                    //     SendMutation('updateOverlayInfo', overlayInfo);
-                    //   }, 5000)
-                    // );
-                    console.log(
-                        'TODO: starting new overlay publish timer, id=' + overlayPublishTimerId
+                    console.info('starting to publishing timer');
+                    setoverlayPublishTimerId(
+                        setInterval(() => {
+                            const overlayInfo = {
+                                eventId: selectedEvent.eventId,
+                                username: race.username,
+                                timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
+                                currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
+                                isActive: true,
+                            };
+                            SendMutation('updateOverlayInfo', overlayInfo);
+                        }, 400)
                     );
                 }
             },
+            pausePublishOverlayInfo: () => {
+                console.log('Pause Publishing overlay info, id: ' + overlayPublishTimerId);
+                const overlayInfo = {
+                    eventId: selectedEvent.eventId,
+                    username: race.username,
+                    timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
+                    currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
+                    isActive: true,
+                };
+                SendMutation('updateOverlayInfo', overlayInfo);
+                clearInterval(overlayPublishTimerId);
+                setoverlayPublishTimerId();
+            },
             stopPublishOverlayInfo: () => {
                 console.log('Stop Publishing overlay info, id: ' + overlayPublishTimerId);
+                const overlayInfo = {
+                    eventId: selectedEvent.eventId,
+                    username: race.username,
+                    timeLeftInMs: 0,
+                    currentLapTimeInMs: 0,
+                    isActive: false,
+                };
+                SendMutation('updateOverlayInfo', overlayInfo);
+                clearInterval(overlayPublishTimerId);
                 setoverlayPublishTimerId();
             },
         },
@@ -175,6 +204,13 @@ export const Timekeeper = () => {
     useEffect(() => {
         setNavigationOpen(false);
     }, [setNavigationOpen]);
+
+    // //Clean up overlay pusblishin on reload
+    // useEffect(() => {
+    //     return () => {
+    //         overlayPublishTimerId(overlayPublishTimerId)
+    //     }
+    // }, []);
 
     // Find the fastest lap
     useEffect(() => {
@@ -252,8 +288,10 @@ export const Timekeeper = () => {
 
     const resetTimers = () => {
         pauseTimers();
-        if (selectedEvent.raceTimeInMin) {
-            raceTimerRef.current.reset(selectedEvent.raceTimeInMin * 60 * 1000);
+        if (selectedEvent.tracks && selectedEvent.tracks[0].raceConfig.raceTimeInMin) {
+            raceTimerRef.current.reset(
+                selectedEvent.tracks[0].raceConfig.raceTimeInMin * 60 * 1000
+            );
         } else {
             raceTimerRef.current.reset(0 * 60 * 1000);
         }
@@ -264,7 +302,7 @@ export const Timekeeper = () => {
     return (
         <Box margin={{ top: 'l' }} textAlign="center">
             <RaceSetupModal
-                onOk={(userId) => send('READY', { userId: userId })}
+                onOk={(userObj) => send('READY', { ...userObj })}
                 onDismiss={raceSetupModalDismissedHandler}
                 onChange={UpdateRace}
                 events={events}
@@ -346,7 +384,7 @@ export const Timekeeper = () => {
                             ]}
                             className={styles.root}
                         >
-                            <Button onClick={() => send('CAPTURE_LAP', { isValid: false })}>
+                            <Button onClick={() => send('DID_NOT_FINISH', { isValid: false })}>
                                 {t('timekeeper.dnf')}
                             </Button>
                             <Button onClick={incrementCarResetCounter}>
