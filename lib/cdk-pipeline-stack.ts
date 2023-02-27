@@ -158,7 +158,7 @@ export class CdkPipelineStack extends cdk.Stack {
                         ' ./website/src/graphql/schema.graphql',
                     'cd ./website/src/graphql',
                     'amplify codegen', // this is on purpose
-                    'amplify codegen', // I'm not repeating mythis ;)
+                    'amplify codegen', // I'm not repeating myself ;)
                     'cd ../..',
                     'docker run --rm -v $(pwd):/foo -w /foo' +
                         " public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install" +
@@ -179,7 +179,7 @@ export class CdkPipelineStack extends cdk.Stack {
                         ' ./website-leaderboard/src/graphql/schema.graphql',
                     'cd ./website-leaderboard/src/graphql',
                     'amplify codegen', // this is on purpose
-                    'amplify codegen', // I'm not repeating mythis ;)
+                    'amplify codegen', // I'm not repeating myself ;)
                     'cd ../..',
                     'docker run --rm -v $(pwd):/foo -w /foo' +
                         " public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install" +
@@ -187,7 +187,47 @@ export class CdkPipelineStack extends cdk.Stack {
                     'aws s3 sync ./build/ s3://$leaderboardSourceBucketName/ --delete',
                     "aws cloudfront create-invalidation --distribution-id $leaderboardDistributionId --paths '/*'",
                     'cd ..',
+                ],
+                envFromCfnOutputs: {
+                    sourceBucketName: infrastructure.sourceBucketName,
+                    distributionId: infrastructure.distributionId,
+                    leaderboardSourceBucketName: infrastructure.leaderboardSourceBucketName,
+                    leaderboardDistributionId: infrastructure.leaderboardDistributionId,
+                },
+                rolePolicyStatements: [
+                    new iam.PolicyStatement({
+                        effect: iam.Effect.ALLOW,
+                        actions: ['s3:PutObject', 's3:ListBucket', 's3:DeleteObject'],
+                        resources: ['*'],
+                    }),
+                    new iam.PolicyStatement({
+                        effect: iam.Effect.ALLOW,
+                        actions: ['cloudfront:CreateInvalidation'],
+                        resources: ['*'],
+                    }),
+                    new iam.PolicyStatement({
+                        effect: iam.Effect.ALLOW,
+                        actions: ['cloudformation:DescribeStacks'],
+                        resources: ['*'],
+                    }),
+                    new iam.PolicyStatement({
+                        effect: iam.Effect.ALLOW,
+                        actions: ['appsync:GetIntrospectionSchema'],
+                        resources: ['*'],
+                    }),
+                ],
+            })
+        );
 
+        // Streaming overlay website Deploy to S3
+        infrastructure_stage.addPost(
+            new pipelines.CodeBuildStep('StreamingOverlayDeployToS3', {
+                // installCommands: ['npm install -g @aws-amplify/cli'],
+                buildEnvironment: {
+                    privileged: true,
+                    computeType: codebuild.ComputeType.LARGE,
+                },
+                commands: [
                     // configure and deploy Streaming overlay website
                     "echo 'Starting to deploy the Streaming overlay website'",
                     'echo website bucket= $streamingOverlaySourceBucketName',
@@ -195,10 +235,6 @@ export class CdkPipelineStack extends cdk.Stack {
                     "aws cloudfront create-invalidation --distribution-id $streamingOverlayDistributionId --paths '/*'",
                 ],
                 envFromCfnOutputs: {
-                    sourceBucketName: infrastructure.sourceBucketName,
-                    distributionId: infrastructure.distributionId,
-                    leaderboardSourceBucketName: infrastructure.leaderboardSourceBucketName,
-                    leaderboardDistributionId: infrastructure.leaderboardDistributionId,
                     streamingOverlaySourceBucketName:
                         infrastructure.streamingOverlaySourceBucketName,
                     streamingOverlayDistributionId: infrastructure.streamingOverlayDistributionId,
