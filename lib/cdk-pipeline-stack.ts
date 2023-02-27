@@ -160,7 +160,7 @@ export class CdkPipelineStack extends cdk.Stack {
             }),
         ];
 
-        // Add Generate Amplify Config and Deploy to S3
+        // Main website Deploy to S3
         infrastructure_stage.addPost(
             new pipelines.CodeBuildStep('MainSiteDeployToS3', {
                 installCommands: ['npm install -g @aws-amplify/cli'],
@@ -199,7 +199,7 @@ export class CdkPipelineStack extends cdk.Stack {
             })
         );
 
-        // Add Generate Amplify Config and Deploy to S3
+        // Leaderboard website Deploy to S3
         infrastructure_stage.addPost(
             new pipelines.CodeBuildStep('LeaderboardDeployToS3', {
                 installCommands: ['npm install -g @aws-amplify/cli'],
@@ -213,6 +213,7 @@ export class CdkPipelineStack extends cdk.Stack {
                     'echo website bucket= $leaderboardSourceBucketName',
                     'aws cloudformation describe-stacks --stack-name ' +
                         `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
+                    'python scripts/generate_amplify_config_cfn.py',
                     'python scripts/generate_leaderboard_amplify_config_cfn.py',
                     'appsyncId=`cat appsyncId.txt` && aws appsync' +
                         ' get-introspection-schema --api-id $appsyncId --format SDL' +
