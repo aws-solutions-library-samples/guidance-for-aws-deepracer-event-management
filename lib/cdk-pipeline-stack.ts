@@ -137,9 +137,32 @@ export class CdkPipelineStack extends cdk.Stack {
 
         const infrastructure_stage = pipeline.addStage(infrastructure);
 
+        const rolePolicyStatementsForWebsiteDeployStages = [
+            new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ['s3:PutObject', 's3:ListBucket', 's3:DeleteObject'],
+                resources: ['*'],
+            }),
+            new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ['cloudfront:CreateInvalidation'],
+                resources: ['*'],
+            }),
+            new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ['cloudformation:DescribeStacks'],
+                resources: ['*'],
+            }),
+            new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ['appsync:GetIntrospectionSchema'],
+                resources: ['*'],
+            }),
+        ];
+
         // Add Generate Amplify Config and Deploy to S3
         infrastructure_stage.addPost(
-            new pipelines.CodeBuildStep('DeployAmplifyToS3', {
+            new pipelines.CodeBuildStep('MainSiteDeployToS3', {
                 installCommands: ['npm install -g @aws-amplify/cli'],
                 buildEnvironment: {
                     privileged: true,
@@ -167,12 +190,29 @@ export class CdkPipelineStack extends cdk.Stack {
                     'echo distributionId=$distributionId',
                     "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'",
                     'cd ..',
+                ],
+                envFromCfnOutputs: {
+                    sourceBucketName: infrastructure.sourceBucketName,
+                    distributionId: infrastructure.distributionId,
+                },
+                rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
+            })
+        );
 
+        // Add Generate Amplify Config and Deploy to S3
+        infrastructure_stage.addPost(
+            new pipelines.CodeBuildStep('LeaderboardDeployToS3', {
+                installCommands: ['npm install -g @aws-amplify/cli'],
+                buildEnvironment: {
+                    privileged: true,
+                    computeType: codebuild.ComputeType.LARGE,
+                },
+                commands: [
                     // configure and deploy Leaderboard website
                     "echo 'Starting to deploy the Leaderboard website'",
                     'echo website bucket= $leaderboardSourceBucketName',
-                    // 'aws cloudformation describe-stacks --stack-name ' +
-                    // `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, //TODO add when paralazing the website deployments
+                    'aws cloudformation describe-stacks --stack-name ' +
+                        `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
                     'python scripts/generate_leaderboard_amplify_config_cfn.py',
                     'appsyncId=`cat appsyncId.txt` && aws appsync' +
                         ' get-introspection-schema --api-id $appsyncId --format SDL' +
@@ -189,33 +229,10 @@ export class CdkPipelineStack extends cdk.Stack {
                     'cd ..',
                 ],
                 envFromCfnOutputs: {
-                    sourceBucketName: infrastructure.sourceBucketName,
-                    distributionId: infrastructure.distributionId,
                     leaderboardSourceBucketName: infrastructure.leaderboardSourceBucketName,
                     leaderboardDistributionId: infrastructure.leaderboardDistributionId,
                 },
-                rolePolicyStatements: [
-                    new iam.PolicyStatement({
-                        effect: iam.Effect.ALLOW,
-                        actions: ['s3:PutObject', 's3:ListBucket', 's3:DeleteObject'],
-                        resources: ['*'],
-                    }),
-                    new iam.PolicyStatement({
-                        effect: iam.Effect.ALLOW,
-                        actions: ['cloudfront:CreateInvalidation'],
-                        resources: ['*'],
-                    }),
-                    new iam.PolicyStatement({
-                        effect: iam.Effect.ALLOW,
-                        actions: ['cloudformation:DescribeStacks'],
-                        resources: ['*'],
-                    }),
-                    new iam.PolicyStatement({
-                        effect: iam.Effect.ALLOW,
-                        actions: ['appsync:GetIntrospectionSchema'],
-                        resources: ['*'],
-                    }),
-                ],
+                rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
             })
         );
 
@@ -239,28 +256,7 @@ export class CdkPipelineStack extends cdk.Stack {
                         infrastructure.streamingOverlaySourceBucketName,
                     streamingOverlayDistributionId: infrastructure.streamingOverlayDistributionId,
                 },
-                rolePolicyStatements: [
-                    new iam.PolicyStatement({
-                        effect: iam.Effect.ALLOW,
-                        actions: ['s3:PutObject', 's3:ListBucket', 's3:DeleteObject'],
-                        resources: ['*'],
-                    }),
-                    new iam.PolicyStatement({
-                        effect: iam.Effect.ALLOW,
-                        actions: ['cloudfront:CreateInvalidation'],
-                        resources: ['*'],
-                    }),
-                    new iam.PolicyStatement({
-                        effect: iam.Effect.ALLOW,
-                        actions: ['cloudformation:DescribeStacks'],
-                        resources: ['*'],
-                    }),
-                    new iam.PolicyStatement({
-                        effect: iam.Effect.ALLOW,
-                        actions: ['appsync:GetIntrospectionSchema'],
-                        resources: ['*'],
-                    }),
-                ],
+                rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
             })
         );
     }
