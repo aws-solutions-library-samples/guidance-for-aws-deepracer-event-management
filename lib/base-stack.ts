@@ -51,7 +51,7 @@ export class BaseStack extends cdk.Stack {
             ],
         });
         this.logsBucket = logsBucket;
-        logsBucket.policy!.document.addStatements(
+        logsBucket.policy?.document.addStatements(
             new cdk.aws_iam.PolicyStatement({
                 sid: 'AllowSSLRequestsOnly',
                 effect: cdk.aws_iam.Effect.DENY,
@@ -62,8 +62,7 @@ export class BaseStack extends cdk.Stack {
             })
         );
 
-        // Drem website infra need to be created here since a disribution
-        // need a default_behaviour to be created
+        // Cloudfront resources for serving multiple pages via the same distribution
         const dremWebsite = new Website(this, 'DremWebSite', {
             logsBucket: logsBucket,
         });
@@ -76,6 +75,14 @@ export class BaseStack extends cdk.Stack {
             logsBucket: logsBucket,
         });
         this.cloudfrontDistribution = cdn.distribution;
+
+        // Terms And Conditions webpage
+        new Website(this, 'TermsNConditions', {
+            contentPath: './website-terms-and-conditions/',
+            pathPattern: '/terms-and-conditions.html',
+            logsBucket: logsBucket,
+            cdnDistribution: cdn.distribution,
+        });
 
         // Lambda
         // Common Config

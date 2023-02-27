@@ -8,7 +8,7 @@ import { Construct } from 'constructs';
 
 export interface WebsiteProps {
     logsBucket: s3.IBucket;
-    //cdnDistribution?: cloudfront.Distribution
+    cdnDistribution?: cloudfront.Distribution;
     contentPath?: string;
     pathPattern?: string;
 }
@@ -59,15 +59,22 @@ export class Website extends Construct {
 
         this.origin = origin;
 
-        // TODO NOT WORLKING - CIRCULAR DEPENDENCY
-        // if (props.pathPattern) {
-        //   props.cdnDistribution!.addBehavior(props.pathPattern, origin)
-        // }
+        if (props.pathPattern && props.cdnDistribution) {
+            props.cdnDistribution?.addBehavior(props.pathPattern, origin, {
+                viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                responseHeadersPolicy:
+                    cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_AND_SECURITY_HEADERS,
+            });
+        }
 
         if (props.contentPath) {
             new s3_deployment.BucketDeployment(this, 'deploy', {
                 sources: [s3_deployment.Source.asset(props.contentPath)],
                 destinationBucket: sourceBucket,
+                destinationKeyPrefix: props.pathPattern?.slice(
+                    1,
+                    props.pathPattern?.lastIndexOf('/')
+                ),
                 retainOnDelete: false,
             });
         }

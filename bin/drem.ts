@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 import { App } from 'aws-cdk-lib';
 import * as fs from 'fs';
-
-import 'source-map-support/register';
 import { BaseStack } from '../lib/base-stack';
 import { CdkPipelineStack } from '../lib/cdk-pipeline-stack';
 import { DeepracerEventManagerStack } from '../lib/drem-app-stack';
@@ -35,7 +33,7 @@ if (fs.existsSync(emailfileName)) {
 
 const app = new App();
 
-if (app.node.tryGetContext('manual_deploy') == 'True') {
+if (app.node.tryGetContext('manual_deploy') === 'True') {
     console.info('Manual Deploy started....');
 
     const baseStack = new BaseStack(app, `drem-backend-${branchName}-base`, {
@@ -44,6 +42,7 @@ if (app.node.tryGetContext('manual_deploy') == 'True') {
     });
 
     new DeepracerEventManagerStack(app, `drem-backend-${branchName}-infrastructure`, {
+        branchName: branchName,
         cloudfrontDistribution: baseStack.cloudfrontDistribution,
         logsBucket: baseStack.logsBucket,
         lambdaConfig: baseStack.lambdaConfig,

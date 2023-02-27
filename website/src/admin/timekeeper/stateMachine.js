@@ -1,10 +1,10 @@
-import { assign, createMachine } from 'xstate';
+import { assign, createMachine, raise } from 'xstate';
 
 export const stateMachine = createMachine({
   id: 'timekeeper',
   predictableActionArguments: true,
   preserveActionOrder: true,
-  context: { raceTimeIsExpired: false },
+  context: { raceTimeIsExpired: false, dnf: false },
   initial: 'RaceReseted',
   states: {
     RaceReseted: {
@@ -15,7 +15,7 @@ export const stateMachine = createMachine({
       },
     },
     ReadyToStartRace: {
-      entry: ['readyToStart'],
+      entry: ['readyToStart', 'startPublishOverlayInfo'],
       on: {
         TOGGLE: 'RaceStarted',
         END: 'RaceReseted',
@@ -35,10 +35,13 @@ export const stateMachine = createMachine({
             END: 'raceIsOver',
             CAPTURE_LAP: 'captureLap',
             CAPTURE_AUT_LAP: 'captureLap',
+            DID_NOT_FINISH: {
+              actions: [assign({ dnf: true }), raise('CAPTURE_LAP')], // TODO raise with param, then param is not propogated to capturelap
+            },
           },
         },
         paused: {
-          entry: ['pauseTimer'],
+          entry: ['pauseTimer', 'pausePublishOverlayInfo'],
           on: {
             TOGGLE: 'running',
             END: 'raceIsOver',
@@ -46,8 +49,10 @@ export const stateMachine = createMachine({
         },
         captureLap: {
           entry: ['captureLap'],
+          exit: [assign({ dnf: false })],
           always: [
-            { target: 'running', cond: (context) => !context.raceTimeIsExpired },
+            { target: 'running', cond: (context) => !context.raceTimeIsExpired && !context.dnf },
+            { target: 'paused', cond: (context) => !context.raceTimeIsExpired && context.dnf },
             { target: 'raceIsOver', cond: (context) => context.raceTimeIsExpired },
           ],
         },
