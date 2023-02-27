@@ -16,7 +16,6 @@ export default function useMutation() {
       setData({ ...response.data[method] });
       setIsLoading(false);
       setErrorMessage('');
-      console.info(response.data[method]);
     } catch (error) {
       console.info(error);
       console.warn(error.errors[0].message);

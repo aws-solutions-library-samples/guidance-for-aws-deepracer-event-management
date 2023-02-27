@@ -84,9 +84,10 @@ export const GetLapsOptionFromId = (id) => {
 // TRACK OPTIONS METHODS
 export const TrackTypeConfig = () => {
   return [
-    { label: i18next.t('events.tracks.reinvent-2018'), value: 'reinvent-2018' },
-    { label: i18next.t('events.tracks.reinvent-2019'), value: 'reinvent-2019' },
-    { label: i18next.t('events.tracks.reinvent-2022'), value: 'summit-speedway-2022' },
+    { label: i18next.t('events.tracks.reinvent-2018'), value: 'REINVENT_2018' },
+    { label: i18next.t('events.tracks.reinvent-2019'), value: 'REINVENT_2019' },
+    { label: i18next.t('events.tracks.reinvent-2022'), value: 'SUMMIT_SPEEDWAY' },
+    { label: i18next.t('events.tracks.other'), value: 'OTHER' },
   ];
 };
 
@@ -109,8 +110,9 @@ export const GetTrackTypeNameFromId = (id) => {
 // RACE TYPE OPTIONS METHODS
 export const RaceTypeConfig = () => {
   return [
-    { label: i18next.t('events.race.ranking.best-lap-time'), value: 'best-lap-time' },
-    //   { label: i18next.t('events.race.ranking.finish-x-laps'), value: 'finish-x-laps' }, // TODO: not yet implemented in Time keeper
+    { label: i18next.t('events.race.ranking.best-lap-time'), value: 'BEST_LAP_TIME' },
+    //   { label: i18next.t('events.race.ranking.finish-x-laps'), value: 'FINISH_X_LAPS' }, // TODO: not yet implemented in Time keeper
+    //   { label: i18next.t('events.race.ranking.best-average-lap-time-x-lap'), value: 'BEST_AVERAGE_LAP_TIME_X_LAP' }, // TODO: not yet implemented in Time keeper
   ];
 };
 

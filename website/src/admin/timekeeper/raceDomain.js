@@ -1,9 +1,11 @@
 export const defaultRace = {
   eventId: null,
   userId: null,
+  username: null,
   laps: [],
   currentModelId: null,
   currentCarId: null,
+  trackId: 1,
 };
 
 export const defaultLap = {

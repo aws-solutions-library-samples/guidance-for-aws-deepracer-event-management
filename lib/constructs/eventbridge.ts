@@ -2,11 +2,6 @@ import { Duration, Stack } from 'aws-cdk-lib';
 import * as events from 'aws-cdk-lib/aws-events';
 import { Construct } from 'constructs';
 
-// export interface CdnProps {
-//     logsBucket: IBucket;
-//     defaultOrigin: IOrigin;
-// }
-
 export class Eventbridge extends Construct {
     public readonly eventbus: events.EventBus;
 
