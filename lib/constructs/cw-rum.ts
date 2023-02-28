@@ -104,7 +104,7 @@ export class CwRumAppMonitor extends Construct {
         const enableXray = props.enableXray ?? true;
         const allowCookies = props.allowCookies ?? true;
         const sessionSampleRate = props.sessionSampleRate ?? 1;
-        const telemetries = props.telemetries ?? ['performance', 'errors', 'http'];
+        const telemetries = props.telemetries ?? ['"performance"', '"errors"', '"http"'];
 
         const rumScript = `<script>
             (function(n,i,v,r,s,c,x,z){x=window.AwsRumClient={q:[],n:n,i:i,v:v,r:r,c:c};window[n]=function(c,p){x.q.push({c:c,p:p});};z=document.createElement('script');z.async=true;z.src=s;document.head.insertBefore(z,document.head.getElementsByTagName('script')[0]);})(
@@ -118,7 +118,7 @@ export class CwRumAppMonitor extends Construct {
                 guestRoleArn: "${rum_id_pool_unauth_user_role.roleArn}",
                 identityPoolId: "${rum_identity_pool.ref}",
                 endpoint: "https://dataplane.rum.eu-west-1.amazonaws.com",
-                telemetries: ${telemetries},
+                telemetries: [${telemetries}],
                 allowCookies: ${allowCookies},
                 enableXRay: ${enableXray}
                 }
