@@ -382,6 +382,12 @@ export class CarManager extends Construct {
                 props.lambdaConfig.layersConfig.helperFunctionsLayer,
                 props.lambdaConfig.layersConfig.powerToolsLayer,
             ],
+            environment: {
+                POWERTOOLS_SERVICE_NAME: 'car_function',
+                LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+                DDB_TABLE: carsTable.tableName,
+                DDB_PING_STATE_INDEX: carsTable_ping_state_index_name,
+            },
         });
 
         // EventBridge Rule
