@@ -390,6 +390,14 @@ export class CarManager extends Construct {
             },
         });
 
+        car_event_handler.addToRolePolicy(
+            new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ['ssm:AddTagsToResource'],
+                resources: ['*'],
+            })
+        );
+
         // EventBridge Rule
         const rule = new Rule(this, 'car_event_handler_rule', {
             eventBus: props.eventbus,
