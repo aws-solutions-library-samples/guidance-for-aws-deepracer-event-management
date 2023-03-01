@@ -18,7 +18,7 @@ EVENTS_DDB_TABLE_NAME = os.environ["DDB_TABLE"]
 dynamodb = boto3.resource("dynamodb")
 ddbTable = dynamodb.Table(EVENTS_DDB_TABLE_NAME)
 client_events = boto3.client("events")
-eventbus_name = os.environ["EVENTBUS"]
+eventbus_name = os.environ["eventbus_name"]
 
 session = boto3.session.Session()
 credentials = session.get_credentials()

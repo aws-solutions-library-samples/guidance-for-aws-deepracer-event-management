@@ -71,6 +71,7 @@ export class FleetsManager extends Construct {
                 user_pool_id: props.userPoolId,
                 POWERTOOLS_SERVICE_NAME: 'fleets_resolver',
                 LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+                eventbus_name: props.eventbus.eventBusName,
             },
         });
 
