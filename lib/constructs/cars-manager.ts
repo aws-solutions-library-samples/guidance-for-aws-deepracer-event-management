@@ -393,10 +393,12 @@ export class CarManager extends Construct {
         car_event_handler.addToRolePolicy(
             new iam.PolicyStatement({
                 effect: iam.Effect.ALLOW,
-                actions: ['ssm:AddTagsToResource'],
+                actions: ['ssm:AddTagsToResource', 'ssm:RemoveTagsFromResource'],
                 resources: ['*'],
             })
         );
+
+        carsTable.grantReadWriteData(car_event_handler);
 
         // EventBridge Rule
         const rule = new Rule(this, 'car_event_handler_rule', {
