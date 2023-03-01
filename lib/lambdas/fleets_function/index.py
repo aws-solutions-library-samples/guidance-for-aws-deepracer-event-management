@@ -42,7 +42,7 @@ def post_eventbridge_carsUpdate_event(
         response = client_events.put_events(
             Entries=[
                 {
-                    "Source": "idp",
+                    "Source": "fleets",
                     "DetailType": "carsUpdate",
                     "Detail": json.dumps(detail),
                     "EventBusName": eventbus_name,

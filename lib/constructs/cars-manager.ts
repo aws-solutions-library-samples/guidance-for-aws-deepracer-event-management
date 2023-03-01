@@ -389,8 +389,8 @@ export class CarManager extends Construct {
             eventBus: props.eventbus,
         });
         rule.addEventPattern({
-            source: ['idp'],
-            detailType: ['userCreated'],
+            source: ['fleets'],
+            detailType: ['carsUpdate'],
         });
         rule.addTarget(new awsEventsTargets.LambdaFunction(car_event_handler));
     }
