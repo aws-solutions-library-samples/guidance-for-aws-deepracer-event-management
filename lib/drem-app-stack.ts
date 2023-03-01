@@ -121,6 +121,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
             },
             lambdaConfig: props.lambdaConfig,
+            eventbus: props.eventbus,
         });
 
         new RaceManager(this, 'RaceManager', {
@@ -172,6 +173,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             },
             lambdaConfig: props.lambdaConfig,
             userPoolId: props.userPool.userPoolId,
+            eventbus: props.eventbus,
         });
 
         const streamingOverlay = new StreamingOverlay(this, 'streamingOverlay', {

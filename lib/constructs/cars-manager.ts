@@ -3,6 +3,7 @@ import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as awsEvents from 'aws-cdk-lib/aws-events';
+import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
 import * as awsEventsTargets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
@@ -29,6 +30,7 @@ export interface CarManagerProps {
             powerToolsLayer: lambda.ILayerVersion;
         };
     };
+    eventbus: EventBus;
 }
 
 export class CarManager extends Construct {
@@ -361,5 +363,35 @@ export class CarManager extends Construct {
             ],
         });
         admin_api_policy.attachToRole(props.adminGroupRole);
+
+        // respond to Event Bridge user events
+        const car_event_handler = new lambdaPython.PythonFunction(this, 'cars_event_handler', {
+            entry: 'lib/lambdas/cars_function/',
+            description: 'Work with Cognito users',
+            index: 'eventbus_events.py',
+            handler: 'lambda_handler',
+            timeout: Duration.minutes(1),
+            runtime: props.lambdaConfig.runtime,
+            tracing: lambda.Tracing.ACTIVE,
+            memorySize: 128,
+            architecture: props.lambdaConfig.architecture,
+            bundling: {
+                image: props.lambdaConfig.bundlingImage,
+            },
+            layers: [
+                props.lambdaConfig.layersConfig.helperFunctionsLayer,
+                props.lambdaConfig.layersConfig.powerToolsLayer,
+            ],
+        });
+
+        // EventBridge Rule
+        const rule = new Rule(this, 'car_event_handler_rule', {
+            eventBus: props.eventbus,
+        });
+        rule.addEventPattern({
+            source: ['idp'],
+            detailType: ['userCreated'],
+        });
+        rule.addTarget(new awsEventsTargets.LambdaFunction(car_event_handler));
     }
 }

@@ -1,13 +1,19 @@
 import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import { EventBus } from 'aws-cdk-lib/aws-events';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import { CodeFirstSchema } from 'awscdk-appsync-utils';
+import {
+    CodeFirstSchema,
+    Directive,
+    GraphqlType,
+    ObjectType,
+    ResolvableField,
+} from 'awscdk-appsync-utils';
 
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
-import { Directive, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
 
 import { Construct } from 'constructs';
 
@@ -29,6 +35,7 @@ export interface FleetsManagerProps {
             powerToolsLayer: lambda.ILayerVersion;
         };
     };
+    eventbus: EventBus;
 }
 
 export class FleetsManager extends Construct {
@@ -68,6 +75,7 @@ export class FleetsManager extends Construct {
         });
 
         fleets_table.grantReadWriteData(fleets_handler);
+        props.eventbus.grantPutEventsTo(fleets_handler);
 
         // Define the data source for the API
         const fleets_data_source = props.appsyncApi.api.addLambdaDataSource(

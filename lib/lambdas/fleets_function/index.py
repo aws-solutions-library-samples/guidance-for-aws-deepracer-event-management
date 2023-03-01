@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # encoding=utf-8
+import json
 import os
 import uuid
 from datetime import datetime
@@ -16,11 +17,44 @@ app = AppSyncResolver()
 EVENTS_DDB_TABLE_NAME = os.environ["DDB_TABLE"]
 dynamodb = boto3.resource("dynamodb")
 ddbTable = dynamodb.Table(EVENTS_DDB_TABLE_NAME)
+client_events = boto3.client("events")
+eventbus_name = os.environ["EVENTBUS"]
 
 session = boto3.session.Session()
 credentials = session.get_credentials()
 region = session.region_name or "eu-west-1"
 graphql_endpoint = os.environ.get("APPSYNC_URL", None)
+
+
+def post_eventbridge_carsUpdate_event(
+    fleetId: str, fleetName: str, carIds: list[str]
+) -> bool:
+    try:
+        detail = {
+            "metadata": {
+                "service": "fleets",
+                "domain": "DREM",
+            },
+            "data": {"fleetId": fleetId, "fleetName": fleetName, "carIds": carIds},
+        }
+        logger.info(detail)
+
+        response = client_events.put_events(
+            Entries=[
+                {
+                    "Source": "idp",
+                    "DetailType": "carsUpdate",
+                    "Detail": json.dumps(detail),
+                    "EventBusName": eventbus_name,
+                },
+            ]
+        )
+        logger.info(response)
+        return True
+
+    except Exception as error:
+        logger.exception(error)
+        return False
 
 
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
@@ -53,6 +87,8 @@ def addFleet(fleetName: str, carIds: list[str] = []):
     response = ddbTable.put_item(Item=item)
     logger.info(f"ddb put response: {response}")
     logger.info(f"addFleet: response={item}")
+
+    post_eventbridge_carsUpdate_event(fleetId, fleetName, carIds)
     return item
 
 
@@ -81,6 +117,8 @@ def udpateFleet(fleetId: str, fleetName: str, carIds: list[str] = []):
         },
         ReturnValues="ALL_NEW",
     )
+
+    post_eventbridge_carsUpdate_event(fleetId, fleetName, carIds)
 
     updatedFleet = response["Attributes"]
     return updatedFleet
