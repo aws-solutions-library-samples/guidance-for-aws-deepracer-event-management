@@ -315,6 +315,7 @@
   "timekeeper.end-session.warning": "Warning, race has been deleted",
   "timekeeper.fastest-lap": "Fastest Lap",
   "timekeeper.lap-table.valid": "Valid",
+  "timekeeper.lap-table.not-valid": "Not Valid",
   "timekeeper.lap-table.lap-number": "Lap",
   "timekeeper.lap-table.lap-time": "Time",
   "timekeeper.lap-table.loading-resources": "Loading resources",
