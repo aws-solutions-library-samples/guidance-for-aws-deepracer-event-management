@@ -154,26 +154,55 @@ def carSetTaillightColor(resourceIds: List[str], selectedColor: str):
             color = colors.get("Blue")
 
         for instance_id in resourceIds:
-            client_ssm.send_command(
-                InstanceIds=[instance_id],
-                DocumentName="AWS-RunShellScript",
-                Parameters={
-                    "commands": [
-                        "#!/bin/bash",
-                        'export HOME="/home/deepracer"',
-                        "source /opt/ros/foxy/setup.bash",
-                        "source /opt/intel/openvino_2021/bin/setupvars.sh",
-                        "source /opt/aws/deepracer/lib/local_setup.bash",
-                        (
-                            "ros2 service call /servo_pkg/set_led_state"
-                            ' deepracer_interfaces_pkg/srv/SetLedCtrlSrv "{red:'
-                            f" {color['red_pwm']}, blue: {color['blue_pwm']}, green:"
-                            f" {color['green_pwm']}}}\""
-                        ),
-                    ]
-                },
+            rosCommand = (
+                "ros2 service call /servo_pkg/set_led_state"
+                ' deepracer_interfaces_pkg/srv/SetLedCtrlSrv "{red:'
+                f" {color['red_pwm']}, blue: {color['blue_pwm']}, green:"
+                f" {color['green_pwm']}}}\""
             )
+            
+            callRosService(instance_id, rosCommand)
             return {"result": "success"}
+    except Exception as error:
+        logger.exception(error)
+        return error
+    
+
+def callRosService(instaneId: str, rosCommand: str):
+    finalCommand = [
+                "#!/bin/bash",
+                'export HOME="/home/deepracer"',
+                "source /opt/ros/foxy/setup.bash",
+                "source /opt/intel/openvino_2021/bin/setupvars.sh",
+                "source /opt/aws/deepracer/lib/local_setup.bash",
+                rosCommand,
+            ]
+    
+
+    client_ssm.send_command(
+        InstanceIds=[instaneId],
+        DocumentName="AWS-RunShellScript",
+        Parameters={
+            "commands": finalCommand
+        },
+    )
+
+@app.resolver(type_name="Mutation", field_name="carRestartService")    
+def carRestartService(resourceId: str):
+    try:
+        logger.info(resourceId)
+
+        client_ssm.send_command(
+            InstanceIds=[resourceId],
+            DocumentName="AWS-RunShellScript",
+            Parameters={
+                "commands": [
+                    "#!/bin/bash",
+                    'export HOME="/home/deepracer"',
+                    'systemctl restart deepracer-core',
+                ]
+            })
+        return {"result": "success"}
     except Exception as error:
         logger.exception(error)
         return error
