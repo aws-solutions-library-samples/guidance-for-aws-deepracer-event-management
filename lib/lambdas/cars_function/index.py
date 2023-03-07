@@ -162,7 +162,23 @@ def carSetTaillightColor(resourceIds: List[str], selectedColor: str):
             )
             
             callRosService(instance_id, rosCommand)
-            return {"result": "success"}
+        
+        return {"result": "success"}
+    except Exception as error:
+        logger.exception(error)
+        return error
+    
+
+@app.resolver(type_name="Mutation", field_name="carEmergencyStop")
+def carEmergencyStop(resourceIds: List[str]):
+    try:
+        logger.info(resourceIds)
+
+        for instance_id in resourceIds:
+            rosCommand = 'ros2 service call /ctrl_pkg/enable_state deepracer_interfaces_pkg/srv/EnableStateSrv "{is_active: false}"'
+            callRosService(instance_id, rosCommand)
+
+        return {"result": "success"}
     except Exception as error:
         logger.exception(error)
         return error
@@ -177,7 +193,6 @@ def callRosService(instaneId: str, rosCommand: str):
                 "source /opt/aws/deepracer/lib/local_setup.bash",
                 rosCommand,
             ]
-    
 
     client_ssm.send_command(
         InstanceIds=[instaneId],
@@ -187,21 +202,24 @@ def callRosService(instaneId: str, rosCommand: str):
         },
     )
 
-@app.resolver(type_name="Mutation", field_name="carRestartService")    
-def carRestartService(resourceId: str):
-    try:
-        logger.info(resourceId)
 
-        client_ssm.send_command(
-            InstanceIds=[resourceId],
-            DocumentName="AWS-RunShellScript",
-            Parameters={
-                "commands": [
-                    "#!/bin/bash",
-                    'export HOME="/home/deepracer"',
-                    'systemctl restart deepracer-core',
-                ]
-            })
+@app.resolver(type_name="Mutation", field_name="carRestartService")    
+def carRestartService(resourceIds: List[str]):
+    try:
+        logger.info(resourceIds)
+
+        for instance_id in resourceIds:
+            client_ssm.send_command(
+                InstanceIds=[instance_id],
+                DocumentName="AWS-RunShellScript",
+                Parameters={
+                    "commands": [
+                        "#!/bin/bash",
+                        'export HOME="/home/deepracer"',
+                        'systemctl restart deepracer-core',
+                    ]
+                })
+        
         return {"result": "success"}
     except Exception as error:
         logger.exception(error)
