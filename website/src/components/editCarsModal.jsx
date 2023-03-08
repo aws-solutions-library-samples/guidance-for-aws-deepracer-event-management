@@ -128,10 +128,39 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
 
     setVisible(false);
     setRefresh(true);
-    setDropDownSelectedColor({
+    /*setDropDownSelectedColor({
       id: t('fleets.edit-cars.select-color'),
       text: t('fleets.edit-cars.select-color'),
+    });*/
+  }
+
+  // Restart ROS Service
+  async function carRestartService() {
+    const InstanceIds = selectedItems.map((i) => i.InstanceId);
+
+    const response = await API.graphql({
+      query: mutations.carRestartService,
+      variables: {
+        resourceIds: InstanceIds
+      },
     });
+
+    setVisible(false);
+    setRefresh(true);
+  }
+
+  async function carEmergencyStop() {
+    const InstanceIds = selectedItems.map((i) => i.InstanceId);
+
+    const response = await API.graphql({
+      query: mutations.carEmergencyStop,
+      variables: {
+        resourceIds: InstanceIds
+      },
+    });
+
+    setVisible(false);
+    setRefresh(true);
   }
 
   return (
@@ -203,7 +232,30 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
           </Container>
 
           <Container>
-            <FormField label="Tail Light">
+            <FormField label={t('fleets.edit-cars.title')}>
+              <Button
+                disabled={!online || selectedItems.length > 1}
+                onClick={() => {
+                  carRestartService();
+                }}
+              >
+                {t('fleets.edit-cars.restart-ros')}
+              </Button>
+              <Button
+                disabled={!online || selectedItems.length > 1}
+                iconName="status-warning"
+                variant="normal"
+                onClick={() => {
+                  carEmergencyStop();
+                }}
+              >
+                {t('fleets.edit-cars.stop')}
+              </Button>
+            </FormField>
+          </Container>
+
+          <Container>
+            <FormField label={t('fleets.edit-cars.taillight-label')}>
               <SpaceBetween direction="horizontal" size="xs">
                 <ButtonDropdown
                   items={dropDownColors}

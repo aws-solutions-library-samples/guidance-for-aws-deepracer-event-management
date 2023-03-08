@@ -336,6 +336,28 @@ export class CarManager extends Construct {
             })
         );
 
+        props.appsyncApi.schema.addMutation(
+            'carEmergencyStop',
+            new ResolvableField({
+                args: {
+                    resourceIds: GraphqlType.string({ isList: true, isRequired: true }),
+                },
+                returnType: GraphqlType.awsJson(),
+                dataSource: cars_data_source,
+            })
+        );
+
+        props.appsyncApi.schema.addMutation(
+            'carRestartService',
+            new ResolvableField({
+                args: {
+                    resourceIds: GraphqlType.string({ isList: true, isRequired: true }),
+                },
+                returnType: GraphqlType.awsJson(),
+                dataSource: cars_data_source,
+            })
+        );
+
         props.appsyncApi.schema.addQuery(
             'availableTaillightColors',
             new ResolvableField({
