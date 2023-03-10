@@ -145,6 +145,29 @@ export class CarManager extends Construct {
             ],
         });
 
+        // Define role used by lib/lambdas/car_activation_function/index.py
+        // TODO could pass role name as env var to lambda function
+        const smmRunCommandRole = new iam.Role(
+            this,
+            'RoleAmazonEC2RunCommandRoleForManagedInstances',
+            {
+                assumedBy: new ServicePrincipal('ssm.amazonaws.com'),
+                description: 'EC2 role for SSM',
+                managedPolicies: [
+                    ManagedPolicy.fromManagedPolicyArn(
+                        this,
+                        'PolicyAmazonSSMManagedInstanceCore',
+                        'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
+                    ),
+                    ManagedPolicy.fromManagedPolicyArn(
+                        this,
+                        'AmazonSSMDirectoryServiceAccess',
+                        'arn:aws:iam::aws:policy/AmazonSSMDirectoryServiceAccess'
+                    ),
+                ],
+            }
+        );
+
         // car_activation method
         const car_activation_handler = new lambdaPython.PythonFunction(
             this,
@@ -167,6 +190,7 @@ export class CarManager extends Construct {
                 environment: {
                     POWERTOOLS_SERVICE_NAME: 'car_activation',
                     LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+                    HYBRID_ACTIVATION_IAM_ROLE_NAME: smmRunCommandRole.roleName,
                 },
             }
         );
@@ -177,31 +201,6 @@ export class CarManager extends Construct {
                 actions: ['iam:PassRole', 'ssm:AddTagsToResource', 'ssm:CreateActivation'],
                 resources: ['*'],
             })
-        );
-
-        // Define role used by lib/lambdas/car_activation_function/index.py
-        // TODO could pass role name as env var to lambda function
-        const smmRunCommandRole = new iam.Role(
-            this,
-            'RoleAmazonEC2RunCommandRoleForManagedInstances',
-            {
-                assumedBy: new ServicePrincipal('ssm.amazonaws.com'),
-                description: 'EC2 role for SSM',
-                managedPolicies: [
-                    ManagedPolicy.fromManagedPolicyArn(
-                        this,
-                        'PolicyAmazonSSMManagedInstanceCore',
-                        'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
-                    ),
-                    ManagedPolicy.fromManagedPolicyArn(
-                        this,
-                        'AmazonSSMDirectoryServiceAccess',
-                        'arn:aws:iam::aws:policy/AmazonSSMDirectoryServiceAccess'
-                    ),
-                ],
-                path: '/service-role/',
-                roleName: 'AmazonEC2RunCommandRoleForManagedInstances',
-            }
         );
 
         // Define the data source for the API
