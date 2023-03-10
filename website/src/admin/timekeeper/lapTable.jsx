@@ -23,15 +23,12 @@ const LapTable = (props) => {
                         <>
                             <Button onClick={() => onAction(lap.id)}>
                                 <StatusIndicator type={lap.isValid ? 'success' : 'error'}>
-                                    {lap.isValid ? 'Valid' : 'Invalid'}
+                                    {lap.isValid
+                                        ? t('timekeeper.lap-table.valid')
+                                        : t('timekeeper.lap-table.not-valid')}
                                 </StatusIndicator>
                             </Button>
-                            {/* <Icon name="delete-marker" />
-                            <Icon name="remove" /> */}
                         </>
-                        // <Button onClick={() => onAction(lap.id)}>
-                        //     {(lap.isValid && <span>DQ</span>) || <span>Allow</span>}
-                        // </Button>
                     ),
                 };
             });

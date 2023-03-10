@@ -13,11 +13,9 @@ logger = Logger()
 app = AppSyncResolver()
 
 session = boto3.session.Session()
-credentials = session.get_credentials()
+client = boto3.client("ssm")
 region = session.region_name or "eu-west-1"
-graphql_endpoint = os.environ.get("APPSYNC_URL", None)
-region = session.region_name or "eu-west-1"
-graphql_endpoint = os.environ.get("APPSYNC_URL", None)
+hybrid_activation_iam_role_name = os.environ.get("HYBRID_ACTIVATION_IAM_ROLE_NAME")
 
 
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
@@ -29,14 +27,13 @@ def lambda_handler(event, context):
 @app.resolver(type_name="Mutation", field_name="carActivation")
 def carActivation(hostname: str, fleetName: str, fleetId: str):
     try:
-        client = boto3.client("ssm")
         now = datetime.now()
         datestr = now.strftime("%Y-%m-%d-%H:%M")
 
         response = client.create_activation(
             Description="Hybrid activation for DREM",
             DefaultInstanceName=hostname + " - " + datestr,
-            IamRole="service-role/AmazonEC2RunCommandRoleForManagedInstances",
+            IamRole=hybrid_activation_iam_role_name,
             RegistrationLimit=1,
             Tags=[
                 {"Key": "Name", "Value": hostname + " - " + datestr},

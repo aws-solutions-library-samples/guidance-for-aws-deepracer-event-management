@@ -3,9 +3,10 @@ import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as awsEvents from 'aws-cdk-lib/aws-events';
+import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
 import * as awsEventsTargets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import { IRole } from 'aws-cdk-lib/aws-iam';
+import { IRole, ManagedPolicy, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as stepFunctions from 'aws-cdk-lib/aws-stepfunctions';
 import * as stepFunctionsTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
@@ -29,6 +30,7 @@ export interface CarManagerProps {
             powerToolsLayer: lambda.ILayerVersion;
         };
     };
+    eventbus: EventBus;
 }
 
 export class CarManager extends Construct {
@@ -143,6 +145,29 @@ export class CarManager extends Construct {
             ],
         });
 
+        // Define role used by lib/lambdas/car_activation_function/index.py
+        // TODO could pass role name as env var to lambda function
+        const smmRunCommandRole = new iam.Role(
+            this,
+            'RoleAmazonEC2RunCommandRoleForManagedInstances',
+            {
+                assumedBy: new ServicePrincipal('ssm.amazonaws.com'),
+                description: 'EC2 role for SSM',
+                managedPolicies: [
+                    ManagedPolicy.fromManagedPolicyArn(
+                        this,
+                        'PolicyAmazonSSMManagedInstanceCore',
+                        'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
+                    ),
+                    ManagedPolicy.fromManagedPolicyArn(
+                        this,
+                        'AmazonSSMDirectoryServiceAccess',
+                        'arn:aws:iam::aws:policy/AmazonSSMDirectoryServiceAccess'
+                    ),
+                ],
+            }
+        );
+
         // car_activation method
         const car_activation_handler = new lambdaPython.PythonFunction(
             this,
@@ -165,6 +190,7 @@ export class CarManager extends Construct {
                 environment: {
                     POWERTOOLS_SERVICE_NAME: 'car_activation',
                     LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+                    HYBRID_ACTIVATION_IAM_ROLE_NAME: smmRunCommandRole.roleName,
                 },
             }
         );
@@ -334,6 +360,28 @@ export class CarManager extends Construct {
             })
         );
 
+        props.appsyncApi.schema.addMutation(
+            'carEmergencyStop',
+            new ResolvableField({
+                args: {
+                    resourceIds: GraphqlType.string({ isList: true, isRequired: true }),
+                },
+                returnType: GraphqlType.awsJson(),
+                dataSource: cars_data_source,
+            })
+        );
+
+        props.appsyncApi.schema.addMutation(
+            'carRestartService',
+            new ResolvableField({
+                args: {
+                    resourceIds: GraphqlType.string({ isList: true, isRequired: true }),
+                },
+                returnType: GraphqlType.awsJson(),
+                dataSource: cars_data_source,
+            })
+        );
+
         props.appsyncApi.schema.addQuery(
             'availableTaillightColors',
             new ResolvableField({
@@ -361,5 +409,51 @@ export class CarManager extends Construct {
             ],
         });
         admin_api_policy.attachToRole(props.adminGroupRole);
+
+        // respond to Event Bridge user events
+        const car_event_handler = new lambdaPython.PythonFunction(this, 'cars_event_handler', {
+            entry: 'lib/lambdas/cars_function/',
+            description: 'Work with Cognito users',
+            index: 'eventbus_events.py',
+            handler: 'lambda_handler',
+            timeout: Duration.minutes(1),
+            runtime: props.lambdaConfig.runtime,
+            tracing: lambda.Tracing.ACTIVE,
+            memorySize: 128,
+            architecture: props.lambdaConfig.architecture,
+            bundling: {
+                image: props.lambdaConfig.bundlingImage,
+            },
+            layers: [
+                props.lambdaConfig.layersConfig.helperFunctionsLayer,
+                props.lambdaConfig.layersConfig.powerToolsLayer,
+            ],
+            environment: {
+                POWERTOOLS_SERVICE_NAME: 'car_function',
+                LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+                DDB_TABLE: carsTable.tableName,
+                DDB_PING_STATE_INDEX: carsTable_ping_state_index_name,
+            },
+        });
+
+        car_event_handler.addToRolePolicy(
+            new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ['ssm:AddTagsToResource', 'ssm:RemoveTagsFromResource'],
+                resources: ['*'],
+            })
+        );
+
+        carsTable.grantReadWriteData(car_event_handler);
+
+        // EventBridge Rule
+        const rule = new Rule(this, 'car_event_handler_rule', {
+            eventBus: props.eventbus,
+        });
+        rule.addEventPattern({
+            source: ['fleets'],
+            detailType: ['carsUpdate'],
+        });
+        rule.addTarget(new awsEventsTargets.LambdaFunction(car_event_handler));
     }
 }
