@@ -253,6 +253,9 @@
   "users.email": "Email",
   "users.email-placeholder": "Email",
   "users.create-user": "Create user",
+  "users.terms-and-conditions": "Terms and Conditions",
+  "users.terms-and-conditions-error": "Please agree to the terms and conditions",
+  "users.terms-and-conditions-title": "Agreement",
 
   "home.all-models-description": "List of the models uploaded by users",
   "home.all-models": "All models",
