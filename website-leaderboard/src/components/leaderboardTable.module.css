@@ -81,17 +81,18 @@ ul {
 }
 
 .liRacer {
-  width: 48vmin;
+  width: 90vmin;
   font-weight: 400;
 }
 
 .topThreeLiRacer {
-  width: 40vmin;
+  width: 80vmin;
 }
 
 .liTime {
   padding-top: 1vmin;
   padding-bottom: 1vmin;
+  margin-right: 2vmin;
   font-size: 1.5em;
   font-style: italic;
 }

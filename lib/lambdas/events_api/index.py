@@ -31,7 +31,8 @@ def lambda_handler(event, context):
     return app.resolve(event, context)
 
 
-def __get_website_links(events: list) -> list:
+@app.resolver(type_name="Query", field_name="getLinks")
+def getLinks(eventId, trackId=1):
     """Generate links to Leaderboard and streaming overlays
 
     Parameters:
@@ -43,16 +44,15 @@ def __get_website_links(events: list) -> list:
     response = ssmClient.get_parameters_by_path(
         Path=f"/drem/{BRANCH_NAME}/", Recursive=True
     )
+    logger.info(response)
 
-    for event in events:
-        links = []
-        for parameter in response["Parameters"]:
-            param_name = parameter["Name"].rsplit("/", 1)[1]
-            param_value = f"{parameter['Value']}/?event={event['eventId']}"
-            links.append({param_name: param_value})
-
-        event["links"] = links
-    return events
+    link_objects = []
+    for parameter in response["Parameters"]:
+        param_name = parameter["Name"].rsplit("/", 1)[1]
+        param_value = f"{parameter['Value']}/?event={eventId}"
+        link_objects.append({"name": param_name, "url": param_value})
+    logger.info(link_objects)
+    return link_objects
 
 
 @app.resolver(type_name="Mutation", field_name="deleteEvents")
