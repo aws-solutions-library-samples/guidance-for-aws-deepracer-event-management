@@ -1,4 +1,4 @@
-import { Input } from '@cloudscape-design/components';
+import { Input, Select } from '@cloudscape-design/components';
 import i18next from '../../i18n';
 
 export const VisibleContentOptions = () => {
@@ -151,7 +151,34 @@ export const EditableColumnDefinitions = () => {
       header: i18next.t('race-admin.is-valid'),
       cell: (item) => (item.isValid ? 'Valid' : 'Not Valid'),
       sortingField: 'isValid',
-      width: 176,
+      width: 220,
+      editConfig: {
+        ariaLabel: 'Is Valid',
+        editIconAriaLabel: 'editable',
+        errorIconAriaLabel: 'Error',
+        editingCell: (item, { currentValue, setValue }) => {
+          const value = currentValue ?? item.isValid;
+          return (
+            <Select
+              autoFocus={true}
+              expandToViewport={true}
+              selectedOption={
+                [
+                  { label: 'Valid', value: true },
+                  { label: 'Not Valid', value: false },
+                ].find((option) => option.value === value) ?? null
+              }
+              onChange={(event) => {
+                setValue(event.detail.selectedOption.value ?? item.isValid);
+              }}
+              options={[
+                { label: 'Valid', value: true },
+                { label: 'Not Valid', value: false },
+              ]}
+            />
+          );
+        },
+      },
     },
     {
       id: 'autTimeConnected',

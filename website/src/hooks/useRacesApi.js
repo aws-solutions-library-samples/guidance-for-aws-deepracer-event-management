@@ -51,7 +51,14 @@ export const useRacesApi = (eventId) => {
   // initial data load, need to wait for users to be loaded before getting the races
   // TODO fetching races and users can be done in parallell and then merged when both of them exist
   useEffect(() => {
-    if (eventId && !usersIsLoading) {
+    if (!eventId) {
+      // used to display a message that an event need to be selected
+      setIsLoading(false);
+    } else if (eventId && usersIsLoading) {
+      // used to display the loading resources after an event has been selected
+      setIsLoading(true);
+    } else if (!usersIsLoading) {
+      console.info(eventId);
       async function queryApi() {
         const response = await API.graphql(graphqlOperation(getRaces, { eventId: eventId }));
         console.info('getRaces');
@@ -71,29 +78,31 @@ export const useRacesApi = (eventId) => {
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
-    const subscription = API.graphql(
-      graphqlOperation(onDeletedRaces, { eventId: eventId })
-    ).subscribe({
-      next: (event) => {
-        console.log('onDeletedRaces');
-        const deletedRaces = event.value.data.onDeletedRaces;
-        console.log(deletedRaces);
-        deletedRaces.raceIds.map((raceId) => removeRace(raceId));
-      },
-      error: (error) => {
-        console.warn(error);
-      },
-    });
+    let subscription = undefined;
+    if (eventId) {
+      subscription = API.graphql(graphqlOperation(onDeletedRaces, { eventId: eventId })).subscribe({
+        next: (event) => {
+          console.log('onDeletedRaces');
+          const deletedRaces = event.value.data.onDeletedRaces;
+          console.log(deletedRaces);
+          deletedRaces.raceIds.map((raceId) => removeRace(raceId));
+        },
+        error: (error) => {
+          console.warn(error);
+        },
+      });
+    }
 
     return () => {
-      subscription.unsubscribe();
+      if (subscription) subscription.unsubscribe();
     };
   }, [eventId]);
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
-    const subscription = API.graphql(graphqlOperation(onAddedRace, { eventId: eventId })).subscribe(
-      {
+    let subscription = undefined;
+    if (eventId) {
+      subscription = API.graphql(graphqlOperation(onAddedRace, { eventId: eventId })).subscribe({
         next: (event) => {
           console.log('onAddedRace');
           const addedRace = event.value.data.onAddedRace;
@@ -102,13 +111,13 @@ export const useRacesApi = (eventId) => {
           console.log(raceWithUsername);
           setRaces((prevState) => [...prevState, raceWithUsername, raceWithTimeHr]);
         },
-      }
-    );
+      });
+    }
 
     return () => {
-      subscription.unsubscribe();
+      if (subscription) subscription.unsubscribe();
     };
-  }, [eventId, addUserName]);
+  }, [eventId, addUserName, addTimeHr]);
 
   const sendDelete = async (variables) => {
     try {

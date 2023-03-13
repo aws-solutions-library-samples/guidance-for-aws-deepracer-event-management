@@ -57,10 +57,16 @@ const RaceAdmin = () => {
   const columnDefinitions = ColumnDefinitions();
   const visibleContentOptions = VisibleContentOptions();
 
+  const selectEmptyStateMessage = () => {
+    if (selectedEvent.eventId) {
+      return <EmptyState title={t('race-admin.no-races')} />;
+    }
+    return <EmptyState title={'Please select an event in the top right corner'} />;
+  };
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(races, {
       filtering: {
-        empty: <EmptyState title={t('race-admin.no-races')} />,
+        empty: selectEmptyStateMessage(),
         noMatch: (
           <EmptyState
             title={t('table.no-matches')}
