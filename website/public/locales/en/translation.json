@@ -13,6 +13,7 @@
   "common.in-progress": "In progress",
   "common.error": "Error",
   "common.success": "Success",
+  "common.info": "Info",
 
   "car-activation.breadcrumb": "Car activation",
   "car-activation.copied-to-clipboard": "copied to clipboard",
