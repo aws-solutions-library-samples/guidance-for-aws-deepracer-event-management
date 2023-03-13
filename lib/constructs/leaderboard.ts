@@ -503,7 +503,11 @@ export class Leaderboard extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('updateOverlayInfo'), Directive.apiKey()],
+                directives: [
+                    Directive.subscribe('updateOverlayInfo'),
+                    Directive.apiKey(),
+                    Directive.iam(),
+                ],
             })
         );
     }

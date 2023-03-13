@@ -85,14 +85,14 @@ export const EditRace = () => {
       } else if (column.id === 'time') {
         currentItem['timeHr'] = value;
         currentItem[column.id] = convertStringToMs(value);
-        console.info(currentItem);
+      } else if (column.id === 'isValid') {
+        currentItem['isValid'] = value;
       } else {
-        console.warn('unsupported column to edit: ' + column.id);
+        console.warn('Unsupported column to edit: ' + column.id);
       }
       setRaceConfig((prevState) => {
         const newState = { ...prevState };
         newState.laps[indexToReplace] = currentItem;
-        console.info(newState);
         return newState;
       });
     },
