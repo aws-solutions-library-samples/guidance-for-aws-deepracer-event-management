@@ -34,6 +34,7 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
     identiyPool: CfnIdentityPool;
     userPoolClientWeb: UserPoolClient;
     cloudfrontDistribution: IDistribution;
+    tacCloudfrontDistribution: IDistribution;
     logsBucket: IBucket;
     lambdaConfig: {
         // TODO Break out to it´s own class/struct etc
@@ -257,6 +258,10 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         // Outputs
         new cdk.CfnOutput(this, 'DremWebsite', {
             value: 'https://' + props.cloudfrontDistribution.distributionDomainName,
+        });
+
+        new cdk.CfnOutput(this, 'tacWebsite', {
+            value: 'https://' + props.tacCloudfrontDistribution.distributionDomainName,
         });
 
         this.distributionId = new cdk.CfnOutput(this, 'distributionId', {
