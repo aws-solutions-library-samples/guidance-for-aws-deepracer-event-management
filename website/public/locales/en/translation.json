@@ -365,6 +365,7 @@
   "topnav.sign-out": "Sign out",
   "topnav.time-keeper": "Time keeper",
   "topnav.upload": "Upload",
+  "topnav.commentator": "Commentator",
 
   "upload.breadcrumb": "Upload models",
   "upload.chose-file": "Choose model file(s)",
@@ -372,5 +373,16 @@
   "upload.constraint-text": "model-name.tar.gz",
   "upload.header-description": "Upload models into DREM ready for racing on the track.",
   "upload.header": "Upload models",
-  "upload.label": "Upload model"
+  "upload.label": "Upload model",
+
+  "commentator.race.header": "Race",
+  "commentator.race.stats": "Statistics about the Race and actual Racer",
+  "commentator.breadcrumb": "Commentator",
+  "commentator.race.breadcrumb": "Race",
+  "commentator.race.actualRacerStats": "Stats for the actual Racer",
+  "commentator.race.racerName": "Racer Name",
+  "commentator.race.racerFastestLap": "Fastest Time so far",
+  "commentator.race.overallFastestLaps": "Fastest Laps:",
+  "commentator.race.loading": "Loading resources",
+  "commentator.race.overallSlowestLaps": "Slowest Laps:"
 }
