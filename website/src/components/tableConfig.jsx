@@ -248,15 +248,21 @@ const HeaderActions = ({ onEdit, onDelete, onAdd, nrSelectedItems }) => {
   const disableDeleteButton = nrSelectedItems === 0;
   return (
     <SpaceBetween direction="horizontal" size="xs">
-      <Button disabled={disableEditButton} onClick={onEdit}>
-        {i18next.t('button.edit')}
-      </Button>
-      <Button disabled={disableDeleteButton} onClick={onDelete}>
-        {i18next.t('button.delete')}
-      </Button>
-      <Button variant="primary" onClick={onAdd}>
-        {i18next.t('button.create')}
-      </Button>
+      {onEdit && (
+        <Button disabled={disableEditButton} onClick={onEdit}>
+          {i18next.t('button.edit')}
+        </Button>
+      )}
+      {onDelete && (
+        <Button disabled={disableDeleteButton} onClick={onDelete}>
+          {i18next.t('button.delete')}
+        </Button>
+      )}
+      {onAdd && (
+        <Button variant="primary" onClick={onAdd}>
+          {i18next.t('button.create')}
+        </Button>
+      )}
     </SpaceBetween>
   );
 };

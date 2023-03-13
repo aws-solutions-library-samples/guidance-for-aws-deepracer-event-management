@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 # encoding=utf-8
 import decimal
+import json
 import os
 
 import boto3
 import requests
 from aws_lambda_powertools import Logger, Tracer
-from boto3.dynamodb.conditions import Key
 from requests_aws_sign import AWSV4Sign
 
 tracer = Tracer()
@@ -19,6 +19,9 @@ ddbTable = dynamodb.Table(DDB_TABLE_NAME)
 LEADERBOARD_CONFIG_TYPE = "leaderboard_config"
 LEADERBOARD_ENTRY_TYPE = "leaderboard_entry"
 
+cognito_client = boto3.client("cognito-idp")
+USER_POOL_ID = os.environ["USER_POOL_ID"]
+
 
 @tracer.capture_lambda_handler
 def lambda_handler(evbEvent, context):
@@ -27,53 +30,54 @@ def lambda_handler(evbEvent, context):
     detail_type = evbEvent["detail-type"]
     detail = evbEvent["detail"]
     if "raceSummaryAdded" in detail_type:
-        leaderboard = __get_leaderboard_by_event_id(
-            detail["eventId"], detail["trackId"]
-        )
-        if leaderboard["config"]["rankingMethod"] == "BEST_LAP_TIME":
-            current_leaderboard_entry = __update_entry_if_faster_lap_time(
-                leaderboard, detail
-            )
-            __addLeaderboardEntry(current_leaderboard_entry)
+        username = __get_username_by_user_id(detail["userId"])
+        detail = {**detail, "username": username}
+        __store_leaderboard_entry(detail)
+        __add_to_leaderboard(detail)
+    elif "raceSummaryUpdated" in detail_type:
+        username = __get_username_by_user_id(detail["userId"])
+        leaderboard_entry = {"username": username, **detail}
+        __store_leaderboard_entry(leaderboard_entry)
+        __update_entry_on_leaderboard(leaderboard_entry)
+    elif "raceSummaryDeleted" in detail_type:
+        username = __get_username_by_user_id(detail["userId"])
+        leaderboard_entry = {"username": username, **detail}
+        __delete_leaderboard_entry(detail)
+        __delete_from_leaderboard(leaderboard_entry)
+
     else:
         raise Exception(f"detail_type={detail_type} is not supported")
     return
 
 
-def __update_entry_if_faster_lap_time(leaderboard: dict, new_entry: dict) -> dict:
-    leaderboard_entry = __find_user_in_leaderboard(
-        new_entry["userId"], leaderboard["entries"]
+def __get_username_by_user_id(userId):
+    logger.info(f"userId = {userId}")
+    response = cognito_client.list_users(
+        UserPoolId=USER_POOL_ID,
+        AttributesToGet=[],
+        Filter=f'sub = "{userId}"',
     )
-    item_to_store = new_entry
-    if leaderboard_entry:
-        new_fastest_lap_time = new_entry["fastestLapTime"]
-        current_fastest_lap_time = leaderboard_entry["fastestLapTime"]
-        if new_fastest_lap_time > current_fastest_lap_time:
-            # Only update race stats but keep fastest and avg lap times since they
-            keep_from_current_entry = {
-                "fastestLapTime": current_fastest_lap_time,
-                "avgLapTime": leaderboard_entry["avgLapTime"],
-            }
-            item_to_store = {**new_entry, **keep_from_current_entry}
-    __store_leaderboard_entry(item_to_store)
-    return item_to_store
-
-
-def __get_leaderboard_by_event_id(event_id: str, track_id: int) -> str:
-    response = ddbTable.query(KeyConditionExpression=Key("eventId").eq(event_id))
     logger.info(response)
-    return __convert_ddb_into_leaderboard(response["Items"])
+    username = response["Users"][0]["Username"]
+    logger.info(username)
+    return username
 
 
-def __convert_ddb_into_leaderboard(items):
-    leaderboard = {"config": {}, "entries": []}
-    for item in items:
-        if item["type"] == LEADERBOARD_CONFIG_TYPE:
-            leaderboard["config"] = item
-        else:
-            leaderboard["entries"].append(item)
-    logger.info(leaderboard)
-    return leaderboard
+# def __get_username_from_entry(item):
+#     event_id = item["eventId"]
+#     sort_key = f"{item['trackId']}#{item['userId']}"
+#     response = ddbTable.get_item(Key={"eventId": event_id, "sk": sort_key})
+#     if "Item" in response:
+#         return response["Item"]["username"]
+#     raise ValueError("No DDB entry to get username from")
+
+
+def __delete_leaderboard_entry(item):
+    event_id = item["eventId"]
+    sort_key = f"{item['trackId']}#{item['userId']}"
+    response = ddbTable.delete_item(Key={"eventId": event_id, "sk": sort_key})
+    logger.info(response)
+    return
 
 
 def __store_leaderboard_entry(item: dict):
@@ -85,13 +89,6 @@ def __store_leaderboard_entry(item: dict):
     response = ddbTable.put_item(Item=__replace_floats_with_decimal(item_to_store))
     logger.info(response)
     return
-
-
-def __find_user_in_leaderboard(user_id: str, entries: list) -> dict:
-    for entry in entries:
-        if entry["userId"] == user_id:
-            return entry
-    return None
 
 
 def __replace_floats_with_decimal(obj):
@@ -111,30 +108,7 @@ def __replace_floats_with_decimal(obj):
         return obj
 
 
-# def __generate_update_query(fields):
-#     exp = {
-#         "UpdateExpression": "set",
-#         "ExpressionAttributeNames": {},
-#         "ExpressionAttributeValues": {},
-#     }
-#     for key, value in fields.items():
-#         exp["UpdateExpression"] += f" #{key} = :{key},"
-#         exp["ExpressionAttributeNames"][f"#{key}"] = key
-#         exp["ExpressionAttributeValues"][f":{key}"] = value
-#     exp["UpdateExpression"] = exp["UpdateExpression"][0:-1]
-#     return exp
-
-
-def __addLeaderboardEntry(variables):
-    logger.info(variables)
-    """Triggers a mutation on the Appsync API to trigger a subscription"""
-    session = boto3.session.Session()
-    credentials = session.get_credentials()
-    region = session.region_name or "eu-west-1"
-
-    endpoint = os.environ.get("APPSYNC_URL", None)
-    headers = {"Content-Type": "application/json"}
-
+def __add_to_leaderboard(variables):
     query = """
        mutation AddLeaderboardEntry(
             $avgLapTime: Float!
@@ -146,6 +120,7 @@ def __addLeaderboardEntry(variables):
             $lapCompletionRatio: Float!
             $trackId: ID!
             $username: String!
+            $racedByProxy: Boolean!
         ) {
             addLeaderboardEntry(
                 avgLapTime: $avgLapTime
@@ -157,6 +132,7 @@ def __addLeaderboardEntry(variables):
                 lapCompletionRatio: $lapCompletionRatio
                 trackId: $trackId
                 username: $username
+                racedByProxy: $racedByProxy
             ) {
             avgLapTime
             avgLapsPerAttempt
@@ -167,9 +143,91 @@ def __addLeaderboardEntry(variables):
             numberOfValidLaps
             trackId
             username
+            racedByProxy
             }
         }
         """
+
+    __send_mutation(query, variables)
+    return None
+
+
+def __update_entry_on_leaderboard(variables):
+    query = """
+       mutation UpdateLeaderboardEntry(
+            $avgLapTime: Float!
+            $avgLapsPerAttempt: Float!
+            $numberOfValidLaps: Int!
+            $numberOfInvalidLaps: Int!
+            $eventId: ID!
+            $fastestLapTime: Float!
+            $lapCompletionRatio: Float!
+            $trackId: ID!
+            $username: String!
+            $racedByProxy: Boolean!
+        ) {
+            updateLeaderboardEntry(
+                avgLapTime: $avgLapTime
+                avgLapsPerAttempt: $avgLapsPerAttempt
+                numberOfValidLaps: $numberOfValidLaps
+                numberOfInvalidLaps: $numberOfInvalidLaps
+                eventId: $eventId
+                fastestLapTime: $fastestLapTime
+                lapCompletionRatio: $lapCompletionRatio
+                trackId: $trackId
+                username: $username
+                racedByProxy: $racedByProxy
+            ) {
+            avgLapTime
+            avgLapsPerAttempt
+            eventId
+            fastestLapTime
+            lapCompletionRatio
+            numberOfInvalidLaps
+            numberOfValidLaps
+            trackId
+            username
+            racedByProxy
+            }
+        }
+        """
+
+    __send_mutation(query, variables)
+    return None
+
+
+def __delete_from_leaderboard(variables):
+    query = """
+       mutation DeleteLeaderboardEntry(
+            $eventId: ID!
+            $trackId: ID!
+            $username: String!
+        ) {
+            deleteLeaderboardEntry(
+                eventId: $eventId
+                trackId: $trackId
+                username: $username
+            ) {
+            eventId
+            trackId
+            username
+            }
+        }
+        """
+
+    __send_mutation(query, variables)
+    return None
+
+
+def __send_mutation(query, variables):
+    logger.info(variables)
+    """Triggers a mutation on the Appsync API to trigger a subscription"""
+    session = boto3.session.Session()
+    credentials = session.get_credentials()
+    region = session.region_name or "eu-west-1"
+
+    endpoint = os.environ.get("APPSYNC_URL", None)
+    headers = {"Content-Type": "application/json"}
 
     payload = {
         "query": query,

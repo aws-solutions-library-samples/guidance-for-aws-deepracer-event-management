@@ -81,22 +81,25 @@ ul {
 }
 
 .liRacer {
-  /* margin-left: 4vmin; */
+  width: 90vmin;
   font-weight: 400;
 }
 
+.topThreeLiRacer {
+  width: 80vmin;
+}
+
 .liTime {
-  margin-left: auto;
+  padding-top: 1vmin;
+  padding-bottom: 1vmin;
   margin-right: 2vmin;
-  padding-top: 0.5vmin;
-  padding-bottom: 0.5vmin;
   font-size: 1.5em;
   font-style: italic;
 }
 
 .moduleRow {
   width: 100%;
-  border-radius: 2.5vmin;
+  border-radius: 2vmin;
   background: rgba(113, 36, 131, 0.3);
   background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
     linear-gradient(90deg, rgba(0, 255, 235, 0.2), rgba(117, 38, 134, 0.2));

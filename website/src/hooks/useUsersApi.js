@@ -5,7 +5,7 @@ import { onUserCreated } from '../graphql/subscriptions';
 // import * as mutations from '../graphql/mutations';
 
 export const useUsersApi = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState([]);
   //const [errorMessage, setErrorMessage] = useState('');
 

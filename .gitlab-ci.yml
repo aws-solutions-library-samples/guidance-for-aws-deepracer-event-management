@@ -9,7 +9,8 @@ zip_repo:
     - esbjj
     - cdk-pipeline-askwith
     - dasmthc
-    - marbuss-doc-updating
+    - marbuss
+    - danlndnr
   stage: zip
   image:
     name: ubuntu
@@ -30,6 +31,8 @@ upload_to_s3:
     - esbjj
     - cdk-pipeline-askwith
     - dasmthc
+    - marbuss
+    - danlndnr
   stage: upload
   image:
     name: amazon/aws-cli

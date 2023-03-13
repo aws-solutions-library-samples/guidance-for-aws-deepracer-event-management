@@ -321,6 +321,27 @@ export class EventsManager extends Construct {
                 directives: [Directive.subscribe('updateEvent')],
             })
         );
+
+        const linkObjectType = new ObjectType('Link', {
+            definition: {
+                name: GraphqlType.id({ isRequired: true }),
+                url: GraphqlType.string(),
+            },
+        });
+        props.appsyncApi.schema.addType(linkObjectType);
+
+        props.appsyncApi.schema.addQuery(
+            'getLinks',
+            new ResolvableField({
+                args: {
+                    eventId: GraphqlType.id({ isRequired: true }),
+                    trackId: GraphqlType.id({ isRequired: true }),
+                },
+                returnType: linkObjectType.attribute({ isList: true }),
+                dataSource: eventsDataSource,
+            })
+        );
+
         // Grant access so API methods can be invoked
         // for role in roles_to_grant_invoke_access:
         const adminApiPolicy = new iam.Policy(this, 'adminApiPolicy', {
@@ -330,6 +351,7 @@ export class EventsManager extends Construct {
                     actions: ['appsync:GraphQL'],
                     resources: [
                         `${props.appsyncApi.api.arn}/types/Query/fields/getEvents`,
+                        `${props.appsyncApi.api.arn}/types/Query/fields/getLinks`,
                         `${props.appsyncApi.api.arn}/types/Mutation/fields/addEvent`,
                         `${props.appsyncApi.api.arn}/types/Subscription/fields/onAddedEvent`,
                         `${props.appsyncApi.api.arn}/types/Mutation/fields/deleteEvents`,
