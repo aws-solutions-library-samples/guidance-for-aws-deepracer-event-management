@@ -10,6 +10,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import {
     CodeFirstSchema,
+    Directive,
     GraphqlType,
     InputType,
     ObjectType,
@@ -20,8 +21,6 @@ import { Construct } from 'constructs';
 
 export interface RaceManagerProps {
     adminGroupRole: IRole;
-    userPoolId: string;
-    userPoolArn: string;
     appsyncApi: {
         schema: CodeFirstSchema;
         api: appsync.GraphqlApi;
@@ -80,20 +79,11 @@ export class RaceManager extends Construct {
                 DDB_TABLE: raceTable.tableName,
                 APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
                 EVENT_BUS_NAME: props.eventbus.eventBusName,
-                user_pool_id: props.userPoolId,
             },
         });
         raceTable.grantReadWriteData(raceLambda);
         props.eventbus.grantPutEventsTo(raceLambda);
         props.appsyncApi.api.grantMutation(raceLambda, 'addLeaderboardEntry');
-
-        raceLambda.addToRolePolicy(
-            new iam.PolicyStatement({
-                effect: iam.Effect.ALLOW,
-                actions: ['cognito-idp:ListUsers'],
-                resources: [props.userPoolArn],
-            })
-        );
 
         const raceDataSource = props.appsyncApi.api.addLambdaDataSource(
             'RaceDataSource',
@@ -115,13 +105,13 @@ export class RaceManager extends Construct {
         // API Schema
         const lapObjectType = new ObjectType('Lap', {
             definition: {
-                id: GraphqlType.id(),
-                raceId: GraphqlType.id(),
-                modelId: GraphqlType.id(),
-                carId: GraphqlType.id(),
+                lapId: GraphqlType.id(),
+                // raceId: GraphqlType.id(),
+                // modelId: GraphqlType.id(),
+                // carId: GraphqlType.id(),
                 time: GraphqlType.float(),
                 resets: GraphqlType.int(),
-                crashes: GraphqlType.int(),
+                // crashes: GraphqlType.int(),
                 isValid: GraphqlType.boolean(),
                 autTimerConnected: GraphqlType.boolean(),
             },
@@ -129,13 +119,14 @@ export class RaceManager extends Construct {
 
         const lapInputObjectType = new InputType('LapInput', {
             definition: {
-                id: GraphqlType.id(),
-                raceId: GraphqlType.id(),
-                modelId: GraphqlType.id(),
-                carId: GraphqlType.id(),
+                lapId: GraphqlType.id(),
+                // raceId: GraphqlType.id(),
+                // trackId: GraphqlType.int(),
+                // modelId: GraphqlType.id(),
+                // carId: GraphqlType.id(),
                 time: GraphqlType.float(),
                 resets: GraphqlType.int(),
-                crashes: GraphqlType.int(),
+                // crashes: GraphqlType.int(),
                 isValid: GraphqlType.boolean(),
                 autTimerConnected: GraphqlType.boolean(),
             },
@@ -146,13 +137,36 @@ export class RaceManager extends Construct {
 
         const raceObjectType = new ObjectType('Race', {
             definition: {
-                id: GraphqlType.id(),
-                username: GraphqlType.string(),
+                eventId: GraphqlType.id({ isRequired: true }),
+                trackId: GraphqlType.id({ isRequired: true }),
+                userId: GraphqlType.id({ isRequired: true }),
+                racedByProxy: GraphqlType.boolean({ isRequired: true }),
+                raceId: GraphqlType.id({ isRequired: true }),
+                createdAt: GraphqlType.awsDateTime(),
                 laps: lapObjectType.attribute({ isList: true }),
             },
         });
 
         props.appsyncApi.schema.addType(raceObjectType);
+
+        const raceDeleteInputType = new InputType('RaceDeleteInput', {
+            definition: {
+                userId: GraphqlType.id({ isRequired: true }),
+                raceId: GraphqlType.id({ isRequired: true }),
+            },
+        });
+
+        props.appsyncApi.schema.addType(raceDeleteInputType);
+
+        const raceDeleteObjectType = new ObjectType('RaceDeleteObject', {
+            definition: {
+                eventId: GraphqlType.id({ isRequired: true }),
+                trackId: GraphqlType.id({ isRequired: true }),
+                raceIds: GraphqlType.id({ isList: true }),
+            },
+        });
+
+        props.appsyncApi.schema.addType(raceDeleteObjectType);
 
         props.appsyncApi.schema.addMutation(
             'addRace',
@@ -161,7 +175,7 @@ export class RaceManager extends Construct {
                     eventId: GraphqlType.id({ isRequired: true }),
                     trackId: GraphqlType.id({ isRequired: true }),
                     userId: GraphqlType.id({ isRequired: true }),
-                    username: GraphqlType.string({ isRequired: true }),
+                    racedByProxy: GraphqlType.boolean({ isRequired: true }),
                     laps: lapInputObjectType.attribute({ isRequiredList: true }),
                 },
                 returnType: raceObjectType.attribute(),
@@ -169,17 +183,89 @@ export class RaceManager extends Construct {
             })
         );
 
+        props.appsyncApi.schema.addSubscription(
+            'onAddedRace',
+            new ResolvableField({
+                args: {
+                    eventId: GraphqlType.id({ isRequired: true }),
+                    trackId: GraphqlType.id(),
+                },
+                returnType: raceObjectType.attribute(),
+                dataSource: props.appsyncApi.noneDataSource,
+                requestMappingTemplate: appsync.MappingTemplate.fromString(
+                    `{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments.entry)
+                    }`
+                ),
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    '$util.toJson($context.result)'
+                ),
+                directives: [Directive.subscribe('addRace')],
+            })
+        );
+
+        props.appsyncApi.schema.addMutation(
+            'updateRace',
+            new ResolvableField({
+                args: {
+                    eventId: GraphqlType.id({ isRequired: true }),
+                    raceId: GraphqlType.id({ isRequired: true }),
+                    trackId: GraphqlType.id({ isRequired: true }),
+                    userId: GraphqlType.id({ isRequired: true }),
+                    racedByProxy: GraphqlType.boolean({ isRequired: true }),
+                    laps: lapInputObjectType.attribute({ isRequiredList: true }),
+                },
+                returnType: raceObjectType.attribute(),
+                dataSource: raceDataSource,
+            })
+        );
+
+        props.appsyncApi.schema.addMutation(
+            'deleteRaces',
+            new ResolvableField({
+                args: {
+                    eventId: GraphqlType.id({ isRequired: true }),
+                    trackId: GraphqlType.id({ isRequired: true }),
+                    racesToDelete: raceDeleteInputType.attribute({ isRequiredList: true }),
+                },
+                returnType: raceDeleteObjectType.attribute(),
+                dataSource: raceDataSource,
+            })
+        );
+
+        props.appsyncApi.schema.addSubscription(
+            'onDeletedRaces',
+            new ResolvableField({
+                args: {
+                    eventId: GraphqlType.id({ isRequired: true }),
+                    trackId: GraphqlType.id(),
+                },
+                returnType: raceDeleteObjectType.attribute(),
+                dataSource: props.appsyncApi.noneDataSource,
+                requestMappingTemplate: appsync.MappingTemplate.fromString(
+                    `{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments.entry)
+                    }`
+                ),
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    '$util.toJson($context.result)'
+                ),
+                directives: [Directive.subscribe('deleteRaces')],
+            })
+        );
+
         // Event Admin methods
-        // props.appsyncApi.schema.addQuery(
-        //     'getRacesForUser',
-        //     new ResolvableField({
-        //         args: {
-        //             username: GraphqlType.string({ isRequired: true }),
-        //             eventId: GraphqlType.string({ isRequired: true }),
-        //         },
-        //         returnType: raceObjectType.attribute({ isList: true }),
-        //         dataSource: raceDataSource,
-        //     })
-        // );
+        props.appsyncApi.schema.addQuery(
+            'getRaces',
+            new ResolvableField({
+                args: {
+                    eventId: GraphqlType.string({ isRequired: true }),
+                },
+                returnType: raceObjectType.attribute({ isList: true }),
+                dataSource: raceDataSource,
+            })
+        );
     }
 }
