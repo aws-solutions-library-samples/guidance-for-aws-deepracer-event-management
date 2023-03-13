@@ -28,6 +28,12 @@ with open("cfn.outputs") as json_file:
             identityPoolId = key["OutputValue"]
         if key["OutputKey"] == "appsyncId":
             appsyncId = key["OutputValue"]
+        if key["OutputKey"] == "tacWebsite":
+            tacWebsite = key["OutputValue"]
+        if key["OutputKey"] == "LeaderboardWebsite":
+            leaderboardWebsite = key["OutputValue"]
+        if key["OutputKey"] == "streamingOverlayWebsite":
+            streamingOverlayWebsite = key["OutputValue"]
 
     output_data = {
         "Auth": {
@@ -52,6 +58,11 @@ with open("cfn.outputs") as json_file:
             "aws_appsync_graphqlEndpoint": appsyncEndpoint,
             "aws_appsync_region": region,
             "aws_appsync_authenticationType": "AWS_IAM",
+        },
+        "Urls": {
+            "termsAndConditionsUrl": tacWebsite,
+            "leaderboardWebsite": leaderboardWebsite,
+            "streamingOverlayWebsite": streamingOverlayWebsite,
         },
     }
 

@@ -1,7 +1,7 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
-  Button, CollectionPreferences, Container, Form, FormField, Header, Input, Pagination, SpaceBetween, Table,
-  TextFilter
+  Button, CollectionPreferences, Container, Form, FormField, Header, Input, Link, Pagination, SpaceBetween, Table,
+  TextFilter, Toggle
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import dayjs from 'dayjs';
@@ -18,6 +18,8 @@ import {
 import * as mutations from '../../graphql/mutations';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useUsersApi } from '../../hooks/useUsersApi';
+
+import awsconfig from '../../config.json';
 
 // day.js
 var advancedFormat = require('dayjs/plugin/advancedFormat');
@@ -41,6 +43,8 @@ export function CreateUser() {
   const [usernameErrorText, setUsernameErrorText] = useState('');
   const [email, setEmail] = useState('');
   const [emailErrorText, setEmailErrorText] = useState('');
+  const [termsAndConditionsErrorText, setTermsAndConditionsErrorText] = useState('');
+  const [checked, setChecked] = useState(false);
   const [result, setResult] = useState('');
   const [buttonDisabled, setButtonDisabled] = useState(false);
 
@@ -58,6 +62,16 @@ export function CreateUser() {
     setUsername('');
     setEmail('');
   }
+
+  // watch checked Toggle for changes
+  useEffect(() => {
+    if (checked){
+      setTermsAndConditionsErrorText('')
+    }
+    else {
+      setTermsAndConditionsErrorText(t('users.terms-and-conditions-error'))
+    }
+  }, [checked, t]);
 
   // watch properties for changes and enable generate button if required
   useEffect(() => {
@@ -78,7 +92,7 @@ export function CreateUser() {
       regexFail = true
     }
     
-    if (username !== '' && email !== '' && regexFail !== true) {
+    if (username !== '' && email !== '' && regexFail !== true && checked) {
       setButtonDisabled(false);
     }
     else {
@@ -87,7 +101,7 @@ export function CreateUser() {
     return () => {
       // Unmounting
     };
-  }, [username, email]);
+  }, [username, email, checked]);
 
   const columnsConfig = [
     {
@@ -160,12 +174,6 @@ export function CreateUser() {
       sorting: { defaultState: { sortingColumn: columnsConfig[1], isDescending: true } },
       selection: {},
     });
-  
-  // useEffect(() => {
-  //   console.log('wibble')
-  //   actions.setSorting({ sortingColumn: columnsConfig[1], isDescending: true })
-  // },[users])
-  // console.log(items)
 
   return (
     <>
@@ -213,6 +221,16 @@ export function CreateUser() {
                     setEmail(input.detail.value);
                   }}
                 />
+              </FormField>
+              <FormField label={t('users.terms-and-conditions-title')} errorText={termsAndConditionsErrorText}>
+                <Link href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'} target="_blank">
+                  {t('users.terms-and-conditions')}
+                </Link>
+                <Toggle
+                  onChange={({ detail }) => setChecked(detail.checked)}
+                  checked={checked}    
+                >
+                </Toggle>
               </FormField>
             </SpaceBetween>
           </Container>
