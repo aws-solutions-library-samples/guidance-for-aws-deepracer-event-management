@@ -28,6 +28,8 @@ with open("cfn.outputs") as json_file:
             identityPoolId = key["OutputValue"]
         if key["OutputKey"] == "appsyncId":
             appsyncId = key["OutputValue"]
+        if key["OutputKey"] == "tacWebsite":
+            tacWebsite = key["OutputValue"]
 
     output_data = {
         "Auth": {
@@ -53,6 +55,7 @@ with open("cfn.outputs") as json_file:
             "aws_appsync_region": region,
             "aws_appsync_authenticationType": "AWS_IAM",
         },
+        "Urls": {"termsAndConditionsUrl": tacWebsite},
     }
 
     print(json.dumps(output_data, indent=4))

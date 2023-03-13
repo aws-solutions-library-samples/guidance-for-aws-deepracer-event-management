@@ -19,6 +19,8 @@ import * as mutations from '../../graphql/mutations';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useUsersApi } from '../../hooks/useUsersApi';
 
+import awsconfig from '../../config.json';
+
 // day.js
 var advancedFormat = require('dayjs/plugin/advancedFormat');
 var utc = require('dayjs/plugin/utc');
@@ -221,7 +223,7 @@ export function CreateUser() {
                 />
               </FormField>
               <FormField label={t('users.terms-and-conditions-title')} errorText={termsAndConditionsErrorText}>
-                <Link href="/terms-and-conditions.html" target="_blank">
+                <Link href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'} target="_blank">
                   {t('users.terms-and-conditions')}
                 </Link>
                 <Toggle
