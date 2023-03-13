@@ -29,10 +29,11 @@ import {
   useSideNavOptions,
   useSideNavOptionsDispatch,
   useSplitPanelOptions,
-  useSplitPanelOptionsDispatch,
+  useSplitPanelOptionsDispatch
 } from '../store/appLayoutProvider';
 import { eventContext } from '../store/eventProvider';
 import { Upload } from '../upload';
+import { CommenatorRaceStats } from './commentator/race-stats';
 
 function cwr(operation, payload) {
   // Instrument Routing to Record Page Views
@@ -55,6 +56,7 @@ function MenuRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/models" element={<Models />} />
       <Route path="/upload" element={<Upload />} />
+            <Route path="/commentator" element={<CommenatorRaceStats />} />
       <Route path="/admin/home" element={<AdminHome />} />
       <Route path="/admin/models" element={<AdminModels />} />
       <Route path="/admin/quarantine" element={<AdminQuarantine />} />
@@ -134,6 +136,11 @@ export function TopNav(props) {
     { type: 'link', text: t('topnav.upload'), href: '/upload' },
     { type: 'link', text: t('topnav.models'), href: '/models' },
   ];
+
+    if (groups.includes('admin') || groups.includes('commentator')) {
+        navItems.push(
+            {type: 'link', text: t('topnav.commentator'), href: '/commentator' })
+    }
 
   if (groups.includes('admin')) {
     navItems.push({
