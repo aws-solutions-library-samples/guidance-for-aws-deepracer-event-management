@@ -39,6 +39,7 @@ const LeaderboardTable = ({ leaderboardEntries }) => {
           )}
         >
           {entry.username}
+          {entry.racedByProxy ? '*' : ''}
         </div>
         <div className={styles.liTime}>{convertMsToString(entry.fastestLapTime)}</div>
       </li>

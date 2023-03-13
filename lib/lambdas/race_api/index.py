@@ -4,6 +4,7 @@ import decimal
 import json
 import os
 import uuid
+from datetime import datetime
 from statistics import mean
 
 import boto3
@@ -11,6 +12,7 @@ from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import AppSyncResolver
 from aws_lambda_powertools.logging import correlation_paths
 from boto3.dynamodb.conditions import Attr, Key
+from botocore.exceptions import ClientError
 
 tracer = Tracer()
 logger = Logger()
@@ -21,13 +23,11 @@ dynamodb = boto3.resource("dynamodb")
 ddbTable = dynamodb.Table(LAPS_DDB_TABLE_NAME)
 
 RACE_LAP_TYPE = "lap"
+RACE_TYPE = "race"
 RACE_SUMMARY_TYPE = "race_summary"
 
 EVENT_BUS_NAME = os.environ["EVENT_BUS_NAME"]
 cloudwatch_events = boto3.client("events")
-
-client_cognito = boto3.client("cognito-idp")
-user_pool_id = os.environ["user_pool_id"]
 
 
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
@@ -37,156 +37,241 @@ def lambda_handler(event, context):
     return app.resolve(event, context)
 
 
-####################
-# Admin methods
-####################
-@app.resolver(type_name="Query", field_name="getRacesForUser")
-def getRacesForUser(eventId, userId):
-    logger.info("getRacesForUser start")
+@app.resolver(type_name="Query", field_name="getRaces")
+def getRaces(eventId, trackId=1, userId=None):
+    response = {}
+    sort_key = __generate_sort_key(trackId, userId)
     response = ddbTable.query(
-        KeyConditionExpression=Key("pk").eq(f"RACE#{eventId}")
-        & Key("sk").begins_with(userId)
+        KeyConditionExpression=Key("eventId").eq(eventId)
+        & Key("sk").begins_with(sort_key),
+        FilterExpression=Attr("type").eq(RACE_TYPE),
     )
-    logger.info(f"ddb query response: {response}")
-    listOfRacesForUser = dbEntriesToRaceList(response["Items"])
-    return listOfRacesForUser
+
+    race_object_list = response["Items"]
+    logger.info(race_object_list)
+    return race_object_list
 
 
-# TODO update to make use of race summary and publishing to eventbridge raceSummaryUpdated
-@app.resolver(type_name="Mutation", field_name="deleteRaceForUser")
-def deleteRaceForUser(eventId, userId, raceId):
-    response = ddbTable.query(
-        KeyConditionExpression=Key("pk").eq(f"RACE#{eventId}")
-        & Key("sk").begins_with(f"{userId}#{raceId}#")
-    )
-    items_to_delete = response["Items"]
-
+@app.resolver(type_name="Mutation", field_name="deleteRaces")
+def deleteRaces(eventId, racesToDelete, trackId=1):
+    event_id = eventId
+    track_id = trackId
+    user_ids_to_publish_events_for = []
+    deleted_race_ids = []
     with ddbTable.batch_writer() as batch:
-        laps = []
-        for item in items_to_delete:
-            response = batch.delete_item(
-                Key={"pk": f"RACE#{eventId}", "sk": item["sk"]}
+        for race in racesToDelete:
+            user_id = race["userId"]
+            race_id = race["raceId"]
+            sort_key = __generate_sort_key(track_id, user_id, race_id)
+            try:
+                response = batch.delete_item(Key={"eventId": event_id, "sk": sort_key})
+                logger.info(response)
+                # TODO add error handling if any of the items can´t be removed
+                deleted_race_ids.append(race_id)
+                if user_id not in user_ids_to_publish_events_for:
+                    user_ids_to_publish_events_for.append(user_id)
+            except ClientError as error:
+                logger.error(
+                    "Couldn't delete race %s. Here's why: %s: %s",
+                    race_id,
+                    error.response["Error"]["Code"],
+                    error.response["Error"]["Message"],
+                )
+
+    logger.info(user_ids_to_publish_events_for)
+
+    # TODO send one event per userId
+    for user_id in user_ids_to_publish_events_for:
+        race_info = {
+            "eventId": event_id,
+            "trackId": track_id,
+            "userId": user_id,
+            "racedByProxy": False,  # TODO remove hardcoded value
+        }
+
+        try:
+            race_summary = __calculate_race_summary(event_id, track_id, user_id)
+
+            race_summary_combined = __replace_decimal_with_float(
+                {**race_info, **race_summary}
             )
-            logger.info(response)
-            lapId = item["sk"].rsplit("#", 1)[1]
-            laps.append({"lapId": lapId})
 
-    # TODO check if RECORD for user shall be updated
-    return {"id": raceId, "laps": laps}
+            evbEvent = {
+                "Detail": json.dumps(race_summary_combined),
+                "DetailType": "raceSummaryUpdated",
+                "Source": "race-manager",
+                "EventBusName": EVENT_BUS_NAME,
+            }
+            __put_evb_events([evbEvent])
+
+        # raised if there are no more race entries for user
+        except ValueError as e:
+            logger.info(e)
+
+            evbEvent = {
+                "Detail": json.dumps(race_info),
+                "DetailType": "raceSummaryDeleted",
+                "Source": "race-manager",
+                "EventBusName": EVENT_BUS_NAME,
+            }
+            __put_evb_events([evbEvent])
+
+    return_object = {
+        "eventId": event_id,
+        "trackId": track_id,
+        "raceIds": deleted_race_ids,
+    }
+    logger.info(return_object)
+    return return_object
 
 
-@app.resolver(type_name="Mutation", field_name="deleteLapForUser")
-def deleteLapForUser(eventId, userId, raceId, lapId):
-    ddbTable.delete_item(
-        Key={"pk": f"RACE#{eventId}", "sk": f"{userId}#{raceId}#{lapId}"}
-    )
-
-    # TODO Check if RECORD for user shall be updated
-    # TODO get all remaining lap times for user and distil current record time
-    # TODO get record for user and compare if it shall be updated
-
-    return {"raceId": raceId, "lapId": lapId}
-
-
-####################
-# Time keeper methods
-####################
 @app.resolver(type_name="Mutation", field_name="addRace")
-def addRace(eventId, userId, username, laps, trackId=1):
+def addRace(eventId, userId, laps, racedByProxy, trackId=1):
     raceId = str(uuid.uuid4())
-    print(laps)
-    logger.info(laps)
-
-    __store_laps(eventId, userId, raceId, laps)
-    race_summary = __calculate_race_summary(eventId, userId)
-
-    event_info = {
+    created_at = datetime.utcnow().isoformat() + "Z"
+    race_info = {
         "eventId": eventId,
-        "username": username,
         "trackId": trackId,
         "userId": userId,
         "raceId": raceId,
+        "createdAt": created_at,
+        "racedByProxy": racedByProxy,
     }
+    logger.info(laps)
+    if laps:
+        __store_race({**race_info, "laps": __replace_floats_with_decimal(laps)})
 
-    race_summary_combined = __replace_decimal_with_float({**event_info, **race_summary})
+        race_summary = __calculate_race_summary(eventId, trackId, userId)
 
-    evbEvent = {
-        "Detail": json.dumps(race_summary_combined),
-        "DetailType": "raceSummaryAdded",
-        "Source": "race-manager",
-        "EventBusName": EVENT_BUS_NAME,
-    }
-    __put_evb_events([evbEvent])
+        race_summary_combined = __replace_decimal_with_float(
+            {**race_info, **race_summary}
+        )
 
-    return {"id": raceId}
+        evbEvent = {
+            "Detail": json.dumps(race_summary_combined),
+            "DetailType": "raceSummaryAdded",
+            "Source": "race-manager",
+            "EventBusName": EVENT_BUS_NAME,
+        }
+        __put_evb_events([evbEvent])
+
+    logger.info(race_info)
+    return {**race_info, "laps": laps}  # TODO make proper error handling
 
 
-def __store_laps(event_id: str, user_id: str, race_id: str, laps: list) -> None:
-    with ddbTable.batch_writer() as batch:
-        # write laps to ddb
-        for lap in laps:
-            logger.info(lap)
+@app.resolver(type_name="Mutation", field_name="updateRace")
+def updateRace(**args):
+    event_id = args["eventId"]
+    track_id = args["trackId"]
+    user_id = args["userId"]
+    race_id = args["raceId"]
+    raced_by_proxy = args["racedByProxy"]
 
-            lapId = lap["id"]
-            item = {
-                **{
-                    "eventId": event_id,
-                    "sk": f"{user_id}#{race_id}#{lapId}",
-                    "type": RACE_LAP_TYPE,
-                    "userId": user_id,
-                    "raceId": race_id,
-                },
-                **__replace_floats_with_decimal(lap),
+    if args["laps"]:  # if no laps left, delete entire race
+        update_expressions = __generate_update_query(["eventId", "sk"], args)
+        sort_key = __generate_sort_key(track_id, user_id, race_id)
+        ddb_item = __update_race(event_id, sort_key, update_expressions)
+
+        race_summary = __calculate_race_summary(event_id, track_id, user_id)
+        race_summary_combined = __replace_decimal_with_float(
+            {
+                "eventId": event_id,
+                "trackId": track_id,
+                "userId": user_id,
+                "racedByProxy": raced_by_proxy,
+                **race_summary,
             }
-            logger.info(item)
-            response = batch.put_item(Item=item)
-            logger.info(f"ddb put lap resp: {response}")
+        )
+
+        evbEvent = {
+            "Detail": json.dumps(race_summary_combined),
+            "DetailType": "raceSummaryUpdated",
+            "Source": "race-manager",
+            "EventBusName": EVENT_BUS_NAME,
+        }
+        __put_evb_events([evbEvent])
+
+    logger.info(ddb_item)
+    return ddb_item  # TODO make proper error handling
 
 
-def __store_race_summary(
-    event_id: str, user_id: str, race_id: str, race_summary: dict
-) -> None:
-    # Write summary to ddb
-    item = {
-        "eventId": event_id,
-        "sk": f"{user_id}#{race_id}",
-        "type": RACE_SUMMARY_TYPE,
-        "userId": user_id,
-        "raceId": race_id,
-        **__replace_floats_with_decimal(race_summary),
+##################
+# Helper functions
+##################
+
+# TODO move into lambda layer
+def __generate_update_query(key_fields, fields):
+    exp = {
+        "UpdateExpression": "set",
+        "ExpressionAttributeNames": {},
+        "ExpressionAttributeValues": {},
     }
-    response = ddbTable.put_item(Item=item)
-    logger.info(f"ddb put race summary resp: {response}")
+    ddb_attributes = __replace_floats_with_decimal(fields)
+    for key, value in ddb_attributes.items():
+        if key not in key_fields:
+            exp["UpdateExpression"] += f" #{key} = :{key},"
+            exp["ExpressionAttributeNames"][f"#{key}"] = key
+            exp["ExpressionAttributeValues"][f":{key}"] = value
+    exp["UpdateExpression"] = exp["UpdateExpression"][0:-1]
+    logger.info(exp)
+    return exp
 
 
-def __calculate_race_summary(event_id, user_id) -> dict:
+def __store_race(item: dict) -> None:
+    item_to_store = {
+        **item,
+        "sk": __generate_sort_key(item["trackId"], item["userId"], item["raceId"]),
+        "type": RACE_TYPE,
+    }
+    logger.info(item_to_store)
+    response = ddbTable.put_item(Item=item_to_store)
+    logger.info(response)
 
-    stored_laps = __get_laps_by_event_id_and_user_id(event_id, user_id)
-    valid_laps, invalid_laps = __get_laps_by_validity(stored_laps)
-    avg_laps_per_attempt = __calculate_avg_laps_per_attempt(stored_laps)
-    valid_lap_times = __get_valid_lap_times(stored_laps)
+
+def __update_race(event_id, sort_key, ddb_update_expressions: dict) -> None:
+    response = ddbTable.update_item(
+        Key={"eventId": event_id, "sk": sort_key},
+        UpdateExpression=ddb_update_expressions["UpdateExpression"],
+        ExpressionAttributeNames=ddb_update_expressions["ExpressionAttributeNames"],
+        ExpressionAttributeValues=ddb_update_expressions["ExpressionAttributeValues"],
+        ReturnValues="ALL_NEW",
+    )
+    return response["Attributes"]
+
+
+def __calculate_race_summary(event_id, track_id, user_id) -> dict:
+    stored_races = __get_races_by_event_id_and_user_id(event_id, track_id, user_id)
+    if not stored_races:
+        raise ValueError("No more races entries for user")
+
+    logger.info(stored_races)
+    valid_laps, invalid_laps = __get_laps_by_validity(stored_races)
+    total_number_of_laps = len(valid_laps) + len(invalid_laps)
+    avg_laps_per_attempt = total_number_of_laps / len(stored_races)
+    valid_lap_times = __get_valid_lap_times(valid_laps)
 
     summary = {
         "numberOfValidLaps": len(valid_laps),
         "numberOfInvalidLaps": len(invalid_laps),
         "fastestLapTime": min(valid_lap_times),
         "avgLapTime": mean(valid_lap_times),
-        "lapCompletionRatio": round(float(len(valid_laps) / len(stored_laps)), 1)
+        "lapCompletionRatio": round(float(len(valid_laps) / total_number_of_laps), 1)
         * 100,  # percentage
-        "avgLapsPerAttempt": avg_laps_per_attempt,
+        "avgLapsPerAttempt": round(avg_laps_per_attempt, 1),
     }
     logger.info(summary)
     return summary
 
 
-def __get_laps_by_validity(laps: list) -> tuple[list, list]:
+def __get_laps_by_validity(races: list) -> tuple[list, list]:
     valid_laps = []
     invalid_laps = []
-    for lap in laps:
-        if bool(lap["isValid"]):
-            valid_laps.append(lap)
-        else:
-            invalid_laps.append(lap)
+    for race in races:
+        for lap in race["laps"]:
+            if bool(lap["isValid"]):
+                valid_laps.append(lap)
+            else:
+                invalid_laps.append(lap)
     return valid_laps, invalid_laps
 
 
@@ -199,61 +284,15 @@ def __get_valid_lap_times(laps: list) -> list:
         return None
 
 
-# def __calculate_fastest_lap_time(laps: list) -> float:
-#     if len(laps) > 0:
-#         times = [x["time"] for x in laps]
-#         logger.info(times)
-#         return min(times)
-#     else:
-#         return None
-
-
-# def __calculate_avg_lap_time(laps: list) -> float:
-#     if len(laps) > 0:
-#         times = [x["time"] for x in laps]
-#         return mean(times)
-#     else:
-#         return None
-
-
-def __calculate_avg_laps_per_attempt(laps: int) -> float:
-    number_of_laps_per_race = __calculate_number_of_laps_per_race(laps)
-
-    total_number_of_races = len(number_of_laps_per_race)
-    total_number_of_laps = sum(number_of_laps_per_race.values())
-
-    avg_laps_per_attempt = round(float(total_number_of_laps / total_number_of_races), 2)
-    logger.info(
-        f"avg_laps_per_attempt: {avg_laps_per_attempt} = total_number_of_laps:"
-        f" {total_number_of_laps} / total_number_of_races: {total_number_of_races}"
-    )
-    return avg_laps_per_attempt
-
-
-def __calculate_number_of_laps_per_race(laps: list) -> dict:
-    logger.info(laps)
-    number_of_laps_per_race = {}
-    for lap in laps:
-        race_id = lap["raceId"]
-        logger.info(f"race_id={race_id}")
-        if race_id in number_of_laps_per_race:
-            logger.info(f"race_id: {race_id} found in number_of_laps_per_race")
-            logger.info(number_of_laps_per_race)
-            number_of_laps_per_race[race_id] = number_of_laps_per_race[race_id] + 1
-        else:
-            logger.info(f"race_id: {race_id} NOT found in number_of_laps_per_race")
-            logger.info(number_of_laps_per_race)
-            number_of_laps_per_race[race_id] = 1
-    logger.info(number_of_laps_per_race)
-    return number_of_laps_per_race
-
-
-def __get_laps_by_event_id_and_user_id(event_id: str, user_id: str) -> list:
+def __get_races_by_event_id_and_user_id(
+    event_id: str, track_id: str, user_id: str
+) -> list:
     logger.info(f"eventId={event_id}, userId={user_id}")
+    sort_key = __generate_sort_key(track_id, user_id)
     response = ddbTable.query(
         KeyConditionExpression=Key("eventId").eq(event_id)
-        & Key("sk").begins_with(user_id),
-        FilterExpression=Attr("type").eq(RACE_LAP_TYPE),
+        & Key("sk").begins_with(sort_key),
+        FilterExpression=Attr("type").eq(RACE_TYPE),
     )
     logger.info(response)
     return __replace_decimal_with_float(response["Items"])
@@ -263,62 +302,13 @@ def __put_evb_events(evbEvents: list) -> dict:
     return cloudwatch_events.put_events(Entries=evbEvents)
 
 
-@app.resolver(type_name="Query", field_name="getAllRacers")
-def getAllRacers():
-    return __get_racers()
-
-
-##################
-# Helper functions
-##################
-def __get_racers():
-    paginator = client_cognito.get_paginator("list_users")
-    response_iterator = paginator.paginate(
-        UserPoolId=user_pool_id,
-        PaginationConfig={
-            "PageSize": 60,
-        },
-    )
-
-    # TODO the parts below can be optimized
-    users = []
-    for r in response_iterator:
-        users.append(r["Users"])
-
-    # Squash the list of lists
-    all_users = [item for sublist in users for item in sublist]
-
-    list_user_objects = []
-    for user in all_users:
-        user_object = {"username": user["Username"]}
-        for attribute in user["Attributes"]:
-            if attribute["Name"] == "sub":
-                user_object["id"] = attribute["Value"]
-        list_user_objects.append(user_object)
-
-    logger.info(list_user_objects)
-    return list_user_objects
-
-
-def dbEntriesToRaceList(dbEntries):
-    lapsPerRace = {}
-    for dbEntry in dbEntries:
-        userId = dbEntry["sk"].split("#")[0]
-        raceId = dbEntry["sk"].split("#")[1]
-        lapId = dbEntry["sk"].split("#")[2]
-        dbEntry["lapId"] = lapId
-
-        if raceId in lapsPerRace:
-            lapsPerRace[raceId]["laps"].append(dbEntry)
-        else:
-            lapsPerRace[raceId] = {
-                "id": raceId,
-                "userId": userId,
-                "laps": [dbEntry],
-            }
-    logger.info(f"lapsPerRace: {lapsPerRace}")
-
-    return list(lapsPerRace.values())
+def __generate_sort_key(track_id: str, user_id: str, race_id: str = None) -> str:
+    sort_key = f"TRACK#{track_id}"
+    if user_id:
+        sort_key = sort_key + f"#USER#{user_id}"
+    if race_id:
+        sort_key = sort_key + f"#RACE#{race_id}"
+    return sort_key
 
 
 def __replace_floats_with_decimal(obj):

@@ -132,8 +132,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 noneDataSource: noneDataSoure,
             },
             lambdaConfig: props.lambdaConfig,
-            userPoolArn: props.userPool.userPoolArn,
-            userPoolId: props.userPool.userPoolId,
             eventbus: props.eventbus,
         });
 
@@ -147,6 +145,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 noneDataSource: noneDataSoure,
             },
             lambdaConfig: props.lambdaConfig,
+            userPoolId: props.userPool.userPoolId,
             userPoolArn: props.userPool.userPoolArn,
             eventbus: props.eventbus,
         });
