@@ -282,6 +282,9 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             value: leaderboard.websiteBucket.bucketName,
         });
 
+        new cdk.CfnOutput(this, 'streamingOverlayWebsite', {
+            value: 'https://' + streamingOverlay.distribution.distributionDomainName,
+        });
         this.streamingOverlayDistributionId = new cdk.CfnOutput(
             this,
             'streamingOverlayDistributionId',
