@@ -82,6 +82,7 @@ export class CdkPipelineStack extends cdk.Stack {
 
         const pipeline = new pipelines.CodePipeline(this, 'Pipeline', {
             dockerEnabledForSynth: true,
+            publishAssetsInParallel: false,
             synth: new pipelines.CodeBuildStep('SynthAndDeployBackend', {
                 buildEnvironment: {
                     buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0,
