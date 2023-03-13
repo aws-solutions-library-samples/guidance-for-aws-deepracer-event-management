@@ -26,6 +26,7 @@ import { Website } from './website';
 export interface LeaderboardProps {
     branchName: string;
     adminGroupRole: IRole;
+    userPoolId: string;
     userPoolArn: string;
     logsBucket: IBucket;
     appsyncApi: {
@@ -139,16 +140,27 @@ export class Leaderboard extends Construct {
             ],
             environment: {
                 DDB_TABLE: ddbTable.tableName,
+                USER_POOL_ID: props.userPoolId,
                 APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
             },
         });
         ddbTable.grantReadWriteData(evbLeLambda);
         props.appsyncApi.api.grantMutation(evbLeLambda, 'addLeaderboardEntry');
+        props.appsyncApi.api.grantMutation(evbLeLambda, 'updateLeaderboardEntry');
+        props.appsyncApi.api.grantMutation(evbLeLambda, 'deleteLeaderboardEntry');
+
+        evbLeLambda.addToRolePolicy(
+            new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ['cognito-idp:ListUsers'],
+                resources: [props.userPoolArn],
+            })
+        );
 
         new Rule(this, 'RaceSummaryEvbRule', {
             description: 'Listen for new race summaries',
             eventPattern: {
-                detailType: ['raceSummaryAdded'],
+                detailType: ['raceSummaryAdded', 'raceSummaryUpdated', 'raceSummaryDeleted'],
             },
             eventBus: props.eventbus,
         }).addTarget(new LambdaFunction(evbLeLambda));
@@ -177,16 +189,6 @@ export class Leaderboard extends Construct {
             },
         });
         ddbTable.grantReadWriteData(apiLambda);
-        props.appsyncApi.api.grantMutation(apiLambda, 'addLeaderboardEntry');
-        props.appsyncApi.api.grantQuery(apiLambda, 'getEvent');
-
-        apiLambda.addToRolePolicy(
-            new iam.PolicyStatement({
-                effect: iam.Effect.ALLOW,
-                actions: ['cognito-idp:ListUsers'],
-                resources: [props.userPoolArn],
-            })
-        );
 
         const leaderboardDataSource = props.appsyncApi.api.addLambdaDataSource(
             'LeaderboardDataSource',
@@ -217,6 +219,7 @@ export class Leaderboard extends Construct {
                 eventId: GraphqlType.id(),
                 trackId: GraphqlType.id(),
                 username: GraphqlType.string(),
+                racedByProxy: GraphqlType.boolean(),
                 numberOfValidLaps: GraphqlType.int(),
                 numberOfInvalidLaps: GraphqlType.int(),
                 fastestLapTime: GraphqlType.float(),
@@ -303,6 +306,7 @@ export class Leaderboard extends Construct {
                     eventId: GraphqlType.id({ isRequired: true }),
                     trackId: GraphqlType.id({ isRequired: true }),
                     username: GraphqlType.string({ isRequired: true }),
+                    racedByProxy: GraphqlType.boolean({ isRequired: true }),
                     numberOfValidLaps: GraphqlType.int(),
                     numberOfInvalidLaps: GraphqlType.int(),
                     fastestLapTime: GraphqlType.float(),
@@ -343,6 +347,101 @@ export class Leaderboard extends Construct {
                     '$util.toJson($context.result)'
                 ),
                 directives: [Directive.subscribe('addLeaderboardEntry'), Directive.apiKey()],
+            })
+        );
+
+        props.appsyncApi.schema.addMutation(
+            'updateLeaderboardEntry',
+            new ResolvableField({
+                args: {
+                    eventId: GraphqlType.id({ isRequired: true }),
+                    trackId: GraphqlType.id({ isRequired: true }),
+                    username: GraphqlType.string({ isRequired: true }),
+                    racedByProxy: GraphqlType.boolean({ isRequired: true }),
+                    numberOfValidLaps: GraphqlType.int(),
+                    numberOfInvalidLaps: GraphqlType.int(),
+                    fastestLapTime: GraphqlType.float(),
+                    avgLapTime: GraphqlType.float(),
+                    lapCompletionRatio: GraphqlType.float(),
+                    avgLapsPerAttempt: GraphqlType.float(),
+                },
+                returnType: leaderboardEntryObjectType.attribute(),
+                dataSource: noneDataSource,
+                requestMappingTemplate: appsync.MappingTemplate.fromString(
+                    `{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments)
+                    }`
+                ),
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    '$util.toJson($context.result)'
+                ),
+            })
+        );
+
+        props.appsyncApi.schema.addSubscription(
+            'onUpdateLeaderboardEntry',
+            new ResolvableField({
+                args: {
+                    eventId: GraphqlType.id({ isRequired: true }),
+                    trackId: GraphqlType.id(),
+                },
+                returnType: leaderboardEntryObjectType.attribute(),
+                dataSource: noneDataSource,
+                requestMappingTemplate: appsync.MappingTemplate.fromString(
+                    `{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments.entry)
+                    }`
+                ),
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    '$util.toJson($context.result)'
+                ),
+                directives: [Directive.subscribe('updateLeaderboardEntry'), Directive.apiKey()],
+            })
+        );
+
+        props.appsyncApi.schema.addMutation(
+            'deleteLeaderboardEntry',
+            new ResolvableField({
+                args: {
+                    eventId: GraphqlType.id({ isRequired: true }),
+                    trackId: GraphqlType.id({ isRequired: true }),
+                    username: GraphqlType.string({ isRequired: true }),
+                },
+                returnType: leaderboardEntryObjectType.attribute(),
+                dataSource: noneDataSource,
+                requestMappingTemplate: appsync.MappingTemplate.fromString(
+                    `{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments)
+                    }`
+                ),
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    '$util.toJson($context.result)'
+                ),
+            })
+        );
+
+        props.appsyncApi.schema.addSubscription(
+            'onDeleteLeaderboardEntry',
+            new ResolvableField({
+                args: {
+                    eventId: GraphqlType.id({ isRequired: true }),
+                    trackId: GraphqlType.id(),
+                },
+                returnType: leaderboardEntryObjectType.attribute(),
+                dataSource: noneDataSource,
+                requestMappingTemplate: appsync.MappingTemplate.fromString(
+                    `{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments.entry)
+                    }`
+                ),
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    '$util.toJson($context.result)'
+                ),
+                directives: [Directive.subscribe('deleteLeaderboardEntry'), Directive.apiKey()],
             })
         );
 
