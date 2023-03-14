@@ -74,7 +74,7 @@ def listUsers():
 
 
 @app.resolver(type_name="Mutation", field_name="createUser")
-def create_user(username: str, email: str):
+def create_user(username: str, email: str, countryCode: str):
     # check to see if user already exists
     userexists = False
     try:
@@ -96,6 +96,7 @@ def create_user(username: str, email: str):
             Username=username,
             UserAttributes=[
                 {"Name": "email", "Value": email},
+                {"Name": "countryCode", "Value": countryCode},
             ],
             DesiredDeliveryMediums=[
                 "EMAIL",
