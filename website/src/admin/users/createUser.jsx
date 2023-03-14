@@ -7,7 +7,7 @@ import { API } from 'aws-amplify';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from '../../components/contentHeader';
+import { PageLayout } from '../../components/pageLayout';
 import {
   DefaultPreferences,
   EmptyState,
@@ -177,7 +177,7 @@ export function CreateUser() {
 
   return (
     <>
-      <ContentHeader
+      <PageLayout
         header={t('users.header')}
         description={t('users.description')}
         breadcrumbs={[
@@ -185,114 +185,115 @@ export function CreateUser() {
           { text: t('admin.breadcrumb'), href: '/admin/home' },
           { text: t('users.breadcrumb') },
         ]}
-      />
-      <SpaceBetween direction="vertical" size="l">
-        <Form
-          actions={
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button
-                variant="primary"
-                onClick={() => {
-                  createUserNow();
-                }}
-                disabled={buttonDisabled}
-              >
-                {t('users.create-user')}
-              </Button>
-            </SpaceBetween>
-          }
-        >
-          <Container textAlign="center">
-            <SpaceBetween direction="vertical" size="l">
-              <FormField label={t('users.racer-name')} errorText={usernameErrorText}>
-                <Input
-                  value={username}
-                  placeholder={t('users.racer-name-placeholder')}
-                  onChange={(input) => {
-                    setUsername(input.detail.value);
+      >
+        <SpaceBetween direction="vertical" size="l">
+          <Form
+            actions={
+              <SpaceBetween direction="horizontal" size="xs">
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    createUserNow();
                   }}
-                />
-              </FormField>
-              <FormField label={t('users.email')} errorText={emailErrorText}>
-                <Input
-                  value={email}
-                  placeholder={t('users.email-placeholder')}
-                  onChange={(input) => {
-                    setEmail(input.detail.value);
-                  }}
-                />
-              </FormField>
-              <FormField label={t('users.terms-and-conditions-title')} errorText={termsAndConditionsErrorText}>
-                <Link href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'} target="_blank">
-                  {t('users.terms-and-conditions')}
-                </Link>
-                <Toggle
-                  onChange={({ detail }) => setChecked(detail.checked)}
-                  checked={checked}    
+                  disabled={buttonDisabled}
                 >
-                </Toggle>
-              </FormField>
-            </SpaceBetween>
-          </Container>
+                  {t('users.create-user')}
+                </Button>
+              </SpaceBetween>
+            }
+          >
+            <Container textAlign="center">
+              <SpaceBetween direction="vertical" size="l">
+                <FormField label={t('users.racer-name')} errorText={usernameErrorText}>
+                  <Input
+                    value={username}
+                    placeholder={t('users.racer-name-placeholder')}
+                    onChange={(input) => {
+                      setUsername(input.detail.value);
+                    }}
+                  />
+                </FormField>
+                <FormField label={t('users.email')} errorText={emailErrorText}>
+                  <Input
+                    value={email}
+                    placeholder={t('users.email-placeholder')}
+                    onChange={(input) => {
+                      setEmail(input.detail.value);
+                    }}
+                  />
+                </FormField>
+                <FormField label={t('users.terms-and-conditions-title')} errorText={termsAndConditionsErrorText}>
+                  <Link href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'} target="_blank">
+                    {t('users.terms-and-conditions')}
+                  </Link>
+                  <Toggle
+                    onChange={({ detail }) => setChecked(detail.checked)}
+                    checked={checked}    
+                  >
+                  </Toggle>
+                </FormField>
+              </SpaceBetween>
+            </Container>
 
-        </Form>
+          </Form>
 
-        <Table
-          {...collectionProps}
-          header={
-            <Header
-              counter={
-                selectedItems.length
-                  ? `(${selectedItems.length}/${users.length})`
-                  : `(${users.length})`
-              }
-            >
-              {t('users.header-list')}
-            </Header>
-          }
-          columnDefinitions={columnsConfig}
-          items={items}
-          pagination={
-            <Pagination
-              {...paginationProps}
-              ariaLabels={{
-                nextPageLabel: t('table.next-page'),
-                previousPageLabel: t('table.previous-page'),
-                pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
-              }}
-            />
-          }
-          filter={
-            <TextFilter
-              {...filterProps}
-              countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel={t('users.filter-groups')}
-            />
-          }
-          loading={isLoading}
-          loadingText={t('users.loading-groups')}
-          visibleColumns={preferences.visibleContent}
-          selectedItems={selectedItems}
-          stickyHeader="true"
-          trackBy="GroupName"
-          resizableColumns
-          preferences={
-            <CollectionPreferences
-              title={t('table.preferences')}
-              confirmLabel={t('button.confirm')}
-              cancelLabel={t('button.cancel')}
-              onConfirm={({ detail }) => setPreferences(detail)}
-              preferences={preferences}
-              pageSizePreference={PageSizePreference(t('users.page-size-label'))}
-              visibleContentPreference={{
-                title: t('table.select-visible-colunms'),
-                options: visibleContentOptions,
-              }}
-              wrapLinesPreference={WrapLines}
-            />
-          }
-        />
-      </SpaceBetween>
+          <Table
+            {...collectionProps}
+            header={
+              <Header
+                counter={
+                  selectedItems.length
+                    ? `(${selectedItems.length}/${users.length})`
+                    : `(${users.length})`
+                }
+              >
+                {t('users.header-list')}
+              </Header>
+            }
+            columnDefinitions={columnsConfig}
+            items={items}
+            pagination={
+              <Pagination
+                {...paginationProps}
+                ariaLabels={{
+                  nextPageLabel: t('table.next-page'),
+                  previousPageLabel: t('table.previous-page'),
+                  pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
+                }}
+              />
+            }
+            filter={
+              <TextFilter
+                {...filterProps}
+                countText={MatchesCountText(filteredItemsCount)}
+                filteringAriaLabel={t('users.filter-groups')}
+              />
+            }
+            loading={isLoading}
+            loadingText={t('users.loading-groups')}
+            visibleColumns={preferences.visibleContent}
+            selectedItems={selectedItems}
+            stickyHeader="true"
+            trackBy="GroupName"
+            resizableColumns
+            preferences={
+              <CollectionPreferences
+                title={t('table.preferences')}
+                confirmLabel={t('button.confirm')}
+                cancelLabel={t('button.cancel')}
+                onConfirm={({ detail }) => setPreferences(detail)}
+                preferences={preferences}
+                pageSizePreference={PageSizePreference(t('users.page-size-label'))}
+                visibleContentPreference={{
+                  title: t('table.select-visible-colunms'),
+                  options: visibleContentOptions,
+                }}
+                wrapLinesPreference={WrapLines}
+              />
+            }
+          />
+        </SpaceBetween>
+      </PageLayout>
     </>
     
   );
