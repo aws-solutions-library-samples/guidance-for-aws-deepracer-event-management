@@ -4,6 +4,7 @@ import {
   GetRaceTypeNameFromId,
   GetTrackTypeNameFromId,
 } from './raceConfig';
+import awsconfig from '../../config.json';
 
 export const VisibleContentOptions = () => {
   return [
@@ -51,6 +52,14 @@ export const VisibleContentOptions = () => {
           id: 'eventId',
           label: i18next.t('events.event-id'),
         },
+        {
+          id: 'eventLeaderboardLink',
+          label: i18next.t('events.leaderboard-link'),
+        },
+        // {
+        //   id: 'eventStreamingOverlayLink',
+        //   label: i18next.t('events.streaming-overlay-link'),
+        // }, TODO uncomment when streaming overlay is done
       ],
     },
   ];
@@ -124,6 +133,30 @@ export const ColumnDefinitions = (allCarFleets = undefined) => {
       id: 'eventId',
       header: i18next.t('events.event-id'),
       cell: (item) => item.eventId || '-',
+    },
+    {
+      id: 'eventLeaderboardLink',
+      header: i18next.t('events.leaderboard-link'),
+      cell: (item) =>
+        (
+          <a href={awsconfig.Urls.leaderboardWebsite + '/?' + 'event=' + item.eventId.toString()}>
+            {i18next.t('events.leaderboard-link')}
+          </a>
+        ) || '-',
+    },
+    {
+      id: 'eventStreamingOverlayLink',
+      header: i18next.t('events.streaming-overlay-link'),
+      cell: (item) =>
+        (
+          <a
+            href={
+              awsconfig.Urls.streamingOverlayWebsite + '/?' + 'event=' + item.eventId.toString()
+            }
+          >
+            {i18next.t('events.streaming-overlay-link')}
+          </a>
+        ) || '-',
     },
   ];
 };

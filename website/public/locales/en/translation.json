@@ -115,6 +115,8 @@
   "events.loading": "Loading resources",
   "events.no-events": "No Events",
   "events.create-an-event": "Please create an event.",
+  "events.leaderboard-link": "Leaderboard",
+  "events.streaming-overlay-link": "Streaming Overlay",
 
   "events.event-type": "Type of Event",
   "events.event-type-description": "",
