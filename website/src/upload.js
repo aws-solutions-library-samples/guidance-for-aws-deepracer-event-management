@@ -38,7 +38,7 @@ const Upload = () => {
         description={t('upload.header-description')}
         breadcrumbs={[
           { text: t('home.breadcrumb'), href: '/' },
-          { text: t('home.breadcrumb'), href: '/upload' },
+          { text: t('upload.breadcrumb'), href: '/upload' },
         ]}
       >
         <Container>
