@@ -39,7 +39,7 @@ export function CreateUser() {
   const [users, isLoading ] = useUsersApi();
   const [preferences, setPreferences] = useLocalStorage('DREM-user-table-preferences', {
     ...DefaultPreferences,
-    visibleContent: ['Username', 'UserCreateDate'],
+    visibleContent: ['Username', 'Country', 'UserCreateDate'],
   });
   const [username, setUsername] = useState('');
   const [usernameErrorText, setUsernameErrorText] = useState('');
@@ -117,11 +117,29 @@ export function CreateUser() {
       minWidth: 150,
     },
     {
+      id: 'Country',
+      header: t('users.country'),
+      cell: (item) => {
+        const countryCode = item.Attributes.filter(obj => {
+          return obj.Name === 'custom:countryCode'
+        })
+        if(countryCode.length > 0){
+          return <Flag size='small' countryCode={(countryCode[0].Value)}></Flag>
+        }
+        else {
+          return ''
+        }
+      },
+      sortingField: 'Country',
+      width: 120,
+      minWidth: 80,
+    },
+    {
       id: 'UserCreateDate',
       header: t('users.header-creation-date'),
       cell: (item) => dayjs(item.UserCreateDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'UserCreateDate',
-      width: 300,
+      width: 200,
       minWidth: 150,
     },
     {
@@ -129,7 +147,7 @@ export function CreateUser() {
       header: t('users.header-last-modified-date'),
       cell: (item) => dayjs(item.UserLastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'UserLastModifiedDate',
-      width: 300,
+      width: 200,
       minWidth: 150,
     },
   ];
@@ -142,6 +160,11 @@ export function CreateUser() {
           id: 'Username',
           label: t('users.header-username'),
           editable: false,
+        },
+        {
+          id: 'Country',
+          label: t('users.country'),
+          //editable: false,
         },
         {
           id: 'UserCreateDate',
@@ -175,7 +198,7 @@ export function CreateUser() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[1], isDescending: true } },
+      sorting: { defaultState: { sortingColumn: columnsConfig[2], isDescending: true } },
       selection: {},
     });
 

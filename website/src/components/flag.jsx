@@ -8,9 +8,17 @@ function countryToFlag(isoCode) {
 }
 
 export function Flag(props) { 
-    return (
-        <TextContent>
-            <h1>{countryToFlag(props.countryCode)}</h1>
-        </TextContent>
-    )
+    if (props.size === 'small') {
+        return (
+            <TextContent>
+                <h3>{countryToFlag(props.countryCode)}</h3>
+            </TextContent>
+        )
+    } else {
+        return (
+            <TextContent>
+                <h1>{countryToFlag(props.countryCode)}</h1>
+            </TextContent>
+        )
+    }
 }
