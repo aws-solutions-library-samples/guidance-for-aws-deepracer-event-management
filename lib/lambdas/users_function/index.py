@@ -96,7 +96,7 @@ def create_user(username: str, email: str, countryCode: str):
             Username=username,
             UserAttributes=[
                 {"Name": "email", "Value": email},
-                {"Name": "countryCode", "Value": countryCode},
+                {"Name": "custom:countryCode", "Value": countryCode},
             ],
             DesiredDeliveryMediums=[
                 "EMAIL",
