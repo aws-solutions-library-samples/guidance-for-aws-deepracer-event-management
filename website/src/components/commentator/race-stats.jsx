@@ -1,12 +1,15 @@
+import BreadcrumbGroup from "@cloudscape-design/components/breadcrumb-group";
 import ColumnLayout from "@cloudscape-design/components/column-layout";
+import ContentLayout from "@cloudscape-design/components/content-layout";
+
 import { API, graphqlOperation } from 'aws-amplify';
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+
 import { getLeaderboard } from "../../graphql/queries";
 import { onNewOverlayInfo } from '../../graphql/subscriptions';
 import { eventContext } from '../../store/eventProvider';
-import { ContentHeader } from '../contentHeader';
 
 import Container from "@cloudscape-design/components/container";
 import Header from "@cloudscape-design/components/header";
@@ -107,18 +110,23 @@ const CommenatorRaceStats = () => {
     ];
 
     return (
-        <>
-            <ContentHeader
-                header={t('commentator.race.header')}
-                description={t('commentator.race.stats')}
-                breadcrumbs={[
-                { text: t('home.breadcrumb'), href: '/' },
-                { text: t('commentator.breadcrumb') },
-                { text: t('commentator.race.breadcrumb'), href: '/' },
-                ]}
-            />
-
-            <ColumnLayout columns={2}>
+        <ContentLayout
+            header={
+                <SpaceBetween size="m">
+                    <BreadcrumbGroup
+                        items={[
+                            { text: 'Home', href: '/' },
+                            { text: t('topnav.commentator'), href: '#commentator' }
+                        ]}
+                        ariaLabel="Breadcrumbs"
+                    />
+                    <Header variant="h1" description={t('commentator.race.stats')}>
+                        {t('commentator.race.header')}
+                    </Header>
+                </SpaceBetween>
+            }
+        >
+            <SpaceBetween size="m">
                 <Container
                     header={
                         <Header
@@ -129,58 +137,58 @@ const CommenatorRaceStats = () => {
                         </Header>
                     }
                     >
-
-                    <SpaceBetween size="l">
+                    <ColumnLayout columns={2}>
                         <ValueWithLabel label={t('commentator.race.racerName')}>{actualRacer}</ValueWithLabel>
                         <ValueWithLabel label={t('commentator.race.racerFastestLap')}>{fastesRacerTime}</ValueWithLabel>
-                    </SpaceBetween>
+                    </ColumnLayout>
                 </Container>
-
-                <div></div>
-
-                <Container
-                    header={
-                        <Header
-                            variant="h2"
+                
+                <ColumnLayout columns={2}>
+                    <Container
+                        header={
+                            <Header
+                                variant="h2"
+                            >
+                            {t('commentator.race.overallFastestLaps')}
+                            </Header>
+                        }
                         >
-                        {t('commentator.race.overallFastestLaps')}
-                        </Header>
-                    }
-                    >
-                    <Table 
-                        columnDefinitions={columnDefinitions}
-                        visibleColumns={[
-                            "time",
-                            "racerName"
-                          ]}
-                        items={fastesLapsForTrack}
-                        loadingText={t('commentator.race.loading')}
-                        sortingDisabled>
-                    </Table>
-                </Container>
+                        <Table 
+                            columnDefinitions={columnDefinitions}
+                            visibleColumns={[
+                                "time",
+                                "racerName"
+                            ]}
+                            items={fastesLapsForTrack}
+                            loadingText={t('commentator.race.loading')}
+                            sortingDisabled>
+                        </Table>
+                    </Container>
 
-                <Container
-                    header={
-                        <Header
-                            variant="h2"
+                    <Container
+                        header={
+                            <Header
+                                variant="h2"
+                            >
+                            {t('commentator.race.overallSlowestLaps')}
+                            </Header>
+                        }
                         >
-                        {t('commentator.race.overallSlowestLaps')}
-                        </Header>
-                    }
-                    >
-                    <Table 
-                        columnDefinitions={columnDefinitions}
-                        visibleColumns={[
-                            "time",
-                            "racerName"
-                          ]}
-                        items={slowestLapsForTrack}
-                        loadingText={t('commentator.race.loading')}
-                        sortingDisabled>
-                    </Table>
-                </Container>
-            </ColumnLayout>
-        </>
+                        <Table 
+                            columnDefinitions={columnDefinitions}
+                            visibleColumns={[
+                                "time",
+                                "racerName"
+                            ]}
+                            items={slowestLapsForTrack}
+                            loadingText={t('commentator.race.loading')}
+                            sortingDisabled>
+                        </Table>
+                    </Container>
+                </ColumnLayout>
+                
+            </SpaceBetween>
+        </ContentLayout>
     );
 };
 
