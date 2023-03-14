@@ -7,6 +7,8 @@ import { API } from 'aws-amplify';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CountrySelector } from '../../components/countrySelector';
+import { Flag } from '../../components/flag';
 import { PageLayout } from '../../components/pageLayout';
 import {
   DefaultPreferences,
@@ -47,6 +49,7 @@ export function CreateUser() {
   const [checked, setChecked] = useState(false);
   const [result, setResult] = useState('');
   const [buttonDisabled, setButtonDisabled] = useState(false);
+  const [countryCode, setCountryCode] = useState('');
 
   async function createUserNow() {
     const apiResponse = await API.graphql({
@@ -54,6 +57,7 @@ export function CreateUser() {
       variables: {
         email: email,
         username: username,
+        countryCode: countryCode
       },
     });
     const response = apiResponse['data']['createUser'];
@@ -92,7 +96,7 @@ export function CreateUser() {
       regexFail = true
     }
     
-    if (username !== '' && email !== '' && regexFail !== true && checked) {
+    if (username !== '' && email !== '' && regexFail !== true && checked && countryCode !== '') {
       setButtonDisabled(false);
     }
     else {
@@ -101,7 +105,7 @@ export function CreateUser() {
     return () => {
       // Unmounting
     };
-  }, [username, email, checked]);
+  }, [username, email, checked, countryCode]);
 
   const columnsConfig = [
     {
@@ -222,6 +226,14 @@ export function CreateUser() {
                     }}
                   />
                 </FormField>
+
+                <CountrySelector
+                  countryCode={countryCode}
+                  setCountryCode={setCountryCode}
+                  label={t('users.country')}
+                />
+                <Flag countryCode={countryCode}></Flag>
+
                 <FormField label={t('users.terms-and-conditions-title')} errorText={termsAndConditionsErrorText}>
                   <Link href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'} target="_blank">
                     {t('users.terms-and-conditions')}
