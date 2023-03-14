@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import { DockerImage, Duration, Expiration } from 'aws-cdk-lib';
+import { DockerImage, Duration, Expiration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { IDistribution } from 'aws-cdk-lib/aws-cloudfront';
 import { CfnIdentityPool, IUserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
@@ -24,6 +24,7 @@ import { RestApi } from './constructs/rest-api';
 import { StreamingOverlay } from './constructs/streaming-overlay';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
     branchName: string;
@@ -115,7 +116,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             },
         });
 
-        new CarManager(this, 'CarManager', {
+        const carManager = new CarManager(this, 'CarManager', {
             adminGroupRole: props.adminGroupRole,
             appsyncApi: {
                 api: appsyncApi,
@@ -217,13 +218,11 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             adminGroupRole: props.adminGroupRole,
             lambdaConfig: props.lambdaConfig,
             logsbucket: props.logsBucket,
-            restApi: {
-                api: restApi.api,
-                apiAdminResource: restApi.apiAdminResource,
-                bodyValidator: restApi.bodyValidator,
-                instanceidCommandIdModel: restApi.instanceidCommandidModel,
-                apiCarsUploadResource: modelsManager.apiCarsUploadResource,
+            appsyncApi: {
+                api: appsyncApi,
+                schema: schema,
             },
+            carStatusDataHandlerLambda: carManager.carStatusDataHandlerLambda,
         });
 
         const cwRumAppMonitor = new CwRumAppMonitor(this, 'CwRumAppMonitor', {

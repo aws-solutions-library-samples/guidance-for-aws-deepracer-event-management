@@ -8,11 +8,13 @@ import * as awsEventsTargets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole, ManagedPolicy, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { FunctionUrl, FunctionUrlAuthType } from 'aws-cdk-lib/aws-lambda';
 import * as stepFunctions from 'aws-cdk-lib/aws-stepfunctions';
 import * as stepFunctionsTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { CodeFirstSchema, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
 
 import { Construct } from 'constructs';
+import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
 
 export interface CarManagerProps {
     adminGroupRole: IRole;
@@ -34,10 +36,12 @@ export interface CarManagerProps {
 }
 
 export class CarManager extends Construct {
+    public readonly carStatusDataHandlerLambda: lambdaPython.PythonFunction;
+
     constructor(scope: Construct, id: string, props: CarManagerProps) {
         super(scope, id);
 
-        const carsTable = new dynamodb.Table(this, 'CarsStatusTable', {
+        const carStatusTable = new dynamodb.Table(this, 'CarsStatusTable', {
             partitionKey: {
                 name: 'InstanceId',
                 type: dynamodb.AttributeType.STRING,
@@ -48,7 +52,7 @@ export class CarManager extends Construct {
         });
 
         const carsTable_ping_state_index_name = 'pingStatus';
-        carsTable.addGlobalSecondaryIndex({
+        carStatusTable.addGlobalSecondaryIndex({
             indexName: carsTable_ping_state_index_name,
             partitionKey: {
                 name: 'PingStatus',
@@ -80,12 +84,12 @@ export class CarManager extends Construct {
                 environment: {
                     POWERTOOLS_SERVICE_NAME: 'car_status_update',
                     LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
-                    DDB_TABLE: carsTable.tableName,
+                    DDB_TABLE: carStatusTable.tableName,
                 },
             }
         );
 
-        carsTable.grantReadWriteData(carStatusUpdateHandler);
+        carStatusTable.grantReadWriteData(carStatusUpdateHandler);
 
         carStatusUpdateHandler.addToRolePolicy(
             new iam.PolicyStatement({
@@ -146,7 +150,6 @@ export class CarManager extends Construct {
         });
 
         // Define role used by lib/lambdas/car_activation_function/index.py
-        // TODO could pass role name as env var to lambda function
         const smmRunCommandRole = new iam.Role(
             this,
             'RoleAmazonEC2RunCommandRoleForManagedInstances',
@@ -228,6 +231,7 @@ export class CarManager extends Construct {
                     hostname: GraphqlType.string({ isRequired: true }),
                     fleetId: GraphqlType.id({ isRequired: true }),
                     fleetName: GraphqlType.string({ isRequired: true }),
+                    carUiPassword: GraphqlType.string({ isRequired: true }),
                 },
                 returnType: carActivationObjectType.attribute(),
                 dataSource: car_activation_data_source,
@@ -253,7 +257,7 @@ export class CarManager extends Construct {
                 environment: {
                     POWERTOOLS_SERVICE_NAME: 'car_function',
                     LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
-                    DDB_TABLE: carsTable.tableName,
+                    DDB_TABLE: carStatusTable.tableName,
                     DDB_PING_STATE_INDEX: carsTable_ping_state_index_name,
                 },
             }
@@ -274,7 +278,7 @@ export class CarManager extends Construct {
             })
         );
 
-        carsTable.grantReadWriteData(cars_function_handler);
+        carStatusTable.grantReadWriteData(cars_function_handler);
 
         // Define the data source for the API
         const cars_data_source = props.appsyncApi.api.addLambdaDataSource(
@@ -431,7 +435,7 @@ export class CarManager extends Construct {
             environment: {
                 POWERTOOLS_SERVICE_NAME: 'car_function',
                 LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
-                DDB_TABLE: carsTable.tableName,
+                DDB_TABLE: carStatusTable.tableName,
                 DDB_PING_STATE_INDEX: carsTable_ping_state_index_name,
             },
         });
@@ -444,7 +448,7 @@ export class CarManager extends Construct {
             })
         );
 
-        carsTable.grantReadWriteData(car_event_handler);
+        carStatusTable.grantReadWriteData(car_event_handler);
 
         // EventBridge Rule
         const rule = new Rule(this, 'car_event_handler_rule', {
@@ -455,5 +459,35 @@ export class CarManager extends Construct {
             detailType: ['carsUpdate'],
         });
         rule.addTarget(new awsEventsTargets.LambdaFunction(car_event_handler));
+
+        // data fetching lambda for label printing
+        const labelPrinterDataFetchHandler = new lambdaPython.PythonFunction(
+            this,
+            'labelPrinterDataFetchHandler',
+            {
+                entry: 'lib/lambdas/get_data_for_label_printing',
+                description: 'Serves data needed for label printing',
+                index: 'index.py',
+                handler: 'lambda_handler',
+                timeout: Duration.minutes(1),
+                runtime: props.lambdaConfig.runtime,
+                tracing: lambda.Tracing.ACTIVE,
+                memorySize: 128,
+                architecture: props.lambdaConfig.architecture,
+                bundling: {
+                    image: props.lambdaConfig.bundlingImage,
+                },
+                layers: [props.lambdaConfig.layersConfig.powerToolsLayer],
+                environment: {
+                    POWERTOOLS_SERVICE_NAME: 'labelPrinterDataFetchHandler',
+                    LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+                    DDB_TABLE: carStatusTable.tableName,
+                },
+            }
+        );
+
+        this.carStatusDataHandlerLambda = labelPrinterDataFetchHandler;
+
+        carStatusTable.grantReadData(labelPrinterDataFetchHandler);
     }
 }

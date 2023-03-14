@@ -25,7 +25,7 @@ def lambda_handler(event, context):
 
 
 @app.resolver(type_name="Mutation", field_name="carActivation")
-def carActivation(hostname: str, fleetName: str, fleetId: str):
+def carActivation(hostname: str, fleetName: str, fleetId: str, carUiPassword: str):
     try:
         now = datetime.now()
         datestr = now.strftime("%Y-%m-%d-%H:%M")
@@ -40,6 +40,7 @@ def carActivation(hostname: str, fleetName: str, fleetId: str):
                 {"Key": "Type", "Value": "deepracer"},
                 {"Key": "fleetName", "Value": fleetName},
                 {"Key": "fleetId", "Value": fleetId},
+                {"Key": "carUiPassword", "Value": carUiPassword},
             ],
         )
 
