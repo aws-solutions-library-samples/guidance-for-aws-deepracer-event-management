@@ -2,7 +2,7 @@ import { Button, Form, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ContentHeader } from '../../components/contentHeader';
+import { PageLayout } from '../../components/pageLayout';
 import useMutation from '../../hooks/useMutation';
 
 import { merge } from '../../support-functions/merge';
@@ -45,7 +45,7 @@ export const CreateEvent = () => {
 
     return (
         <>
-            <ContentHeader
+            <PageLayout
                 header={t('events.create-event')}
                 description={t('events.description')}
                 breadcrumbs={[
@@ -54,46 +54,47 @@ export const CreateEvent = () => {
                     { text: t('events.breadcrumb'), href: '/admin/events' },
                     { text: t('events.create-event') },
                 ]}
-            />
-            <form onSubmit={(event) => event.preventDefault()}>
-                <Form
-                    actions={
-                        <SpaceBetween direction="horizontal" size="xs">
-                            <Button variant="link" onClick={() => navigate(-1)} disabled={loading}>
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="primary"
-                                onClick={onCreateEventHandler}
-                                disabled={loading || createButtonIsDisabled}
-                            >
-                                Create Event
-                            </Button>
+            >
+                <form onSubmit={(event) => event.preventDefault()}>
+                    <Form
+                        actions={
+                            <SpaceBetween direction="horizontal" size="xs">
+                                <Button variant="link" onClick={() => navigate(-1)} disabled={loading}>
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="primary"
+                                    onClick={onCreateEventHandler}
+                                    disabled={loading || createButtonIsDisabled}
+                                >
+                                    Create Event
+                                </Button>
+                            </SpaceBetween>
+                        }
+                        errorText={errorMessage}
+                        errorIconAriaLabel="Error"
+                    >
+                        <SpaceBetween size="l">
+                            <EventInfoPanel
+                                {...eventConfig}
+                                onChange={UpdateConfigHandler}
+                                onFormIsValid={formIsValidHandler}
+                                onFormIsInvalid={formIsInvalidHandler}
+                            />
+                            <RacePanel
+                                tracks={eventConfig.tracks}
+                                onChange={UpdateConfigHandler}
+                                onFormIsValid={formIsValidHandler}
+                                onFormIsInvalid={formIsInvalidHandler}
+                            />
+                            <CarFleetPanel
+                                fleetId={eventConfig.fleetId}
+                                onChange={UpdateConfigHandler}
+                            />
                         </SpaceBetween>
-                    }
-                    errorText={errorMessage}
-                    errorIconAriaLabel="Error"
-                >
-                    <SpaceBetween size="l">
-                        <EventInfoPanel
-                            {...eventConfig}
-                            onChange={UpdateConfigHandler}
-                            onFormIsValid={formIsValidHandler}
-                            onFormIsInvalid={formIsInvalidHandler}
-                        />
-                        <RacePanel
-                            tracks={eventConfig.tracks}
-                            onChange={UpdateConfigHandler}
-                            onFormIsValid={formIsValidHandler}
-                            onFormIsInvalid={formIsInvalidHandler}
-                        />
-                        <CarFleetPanel
-                            fleetId={eventConfig.fleetId}
-                            onChange={UpdateConfigHandler}
-                        />
-                    </SpaceBetween>
-                </Form>
-            </form>
+                    </Form>
+                </form>
+            </PageLayout>
         </>
     );
 };
