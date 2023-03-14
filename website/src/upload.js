@@ -1,10 +1,10 @@
 import { Auth } from 'aws-amplify';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Button, FormField, Grid, SpaceBetween } from '@cloudscape-design/components';
+import { Button, Container, FormField, SpaceBetween } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from './components/contentHeader';
 import { ModelUploadStatus } from './components/modelUploadStatus';
+import { PageLayout } from './components/pageLayout';
 
 const Upload = () => {
   const { t } = useTranslation();
@@ -33,59 +33,53 @@ const Upload = () => {
 
   return (
     <>
-      <ContentHeader
+      <PageLayout
         header={t('upload.header')}
         description={t('upload.header-description')}
         breadcrumbs={[
           { text: t('home.breadcrumb'), href: '/' },
           { text: t('home.breadcrumb'), href: '/upload' },
         ]}
-      />
-
-      <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
-        <div></div>
-        <FormField
-          constraintText={t('upload.constraint-text')}
-          description={t('upload.constraint-description')}
-          label={t('upload.label')}
-        >
-          <Button
-            iconName="upload"
-            onClick={() => {
-              setUploadFiles([]);
-              fileInputRef.current.click();
-            }}
+      >
+        <Container>
+          <FormField
+            constraintText={t('upload.constraint-text')}
+            description={t('upload.constraint-description')}
+            label={t('upload.label')}
           >
-            {t('upload.chose-file')}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept="application/gzip,application/tar"
-              multiple
-              hidden
-            />
-          </Button>
-        </FormField>
-        <div></div>
-      </Grid>
-
-      <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
-        <div></div>
-        <SpaceBetween direction="vertical" size="s">
-          {Object.keys(uploadFiles).map((i) => {
-            return (
-              <ModelUploadStatus
-                file={uploadFiles[i]}
-                username={username}
-                identityId={identityId}
-                key={uploadFiles[i]}
+            <Button
+              iconName="upload"
+              onClick={() => {
+                setUploadFiles([]);
+                fileInputRef.current.click();
+              }}
+            >
+              {t('upload.chose-file')}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept="application/gzip,application/tar"
+                multiple
+                hidden
               />
-            );
-          })}
-        </SpaceBetween>
-        <div></div>
-      </Grid>
+            </Button>
+          </FormField>
+
+          <SpaceBetween direction="vertical" size="s">
+            {Object.keys(uploadFiles).map((i) => {
+              return (
+                <ModelUploadStatus
+                  file={uploadFiles[i]}
+                  username={username}
+                  identityId={identityId}
+                  key={uploadFiles[i]}
+                />
+              );
+            })}
+          </SpaceBetween>
+        </Container>
+      </PageLayout>
     </>
   );
 };
