@@ -35,6 +35,12 @@
   "car-activation.wifi-placeholder": "wifimagic",
   "car-activation.wifi": "WiFi Password",
 
+  "label-printer.printable-label-header": "Printable Label",
+  "label-printer.printable-label-alt-text": "Printable Label",
+  "label-printer.printable-label-copy-button": "Copy label URL",
+  "label-printer.download-printable-label": "Download printable label",
+  "label-printer.download-printable-labels": "Download printable labels",
+
   "carmodelupload.clear-filter": "Clear filter",
   "carmodelupload.clear": "Clear car models first?",
   "carmodelupload.commandid": "CommandId",

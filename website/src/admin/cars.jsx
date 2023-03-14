@@ -3,15 +3,7 @@
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
-  Button,
-  ButtonDropdown,
-  CollectionPreferences,
-  Grid,
-  Header,
-  Pagination,
-  SpaceBetween,
-  Table,
-  TextFilter,
+  Button, ButtonDropdown, CollectionPreferences, Grid, Header, Pagination, SpaceBetween, Table, TextFilter,
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import dayjs from 'dayjs';
@@ -51,6 +43,7 @@ const AdminCars = () => {
   const [onlineBool, setOnlineBool] = useState(true);
   const [refresh, setRefresh] = useState(false);
 
+
   // Get Cars
   async function getCars() {
     var thisOnlineBool = true;
@@ -61,8 +54,7 @@ const AdminCars = () => {
       setOnlineBool(true);
     }
     const response = await API.graphql({
-      query: queries.carsOnline,
-      variables: { online: thisOnlineBool },
+      query: queries.carsOnline, variables: {online: thisOnlineBool},
     });
     setSelectedCarsBtnDisabled(true);
     setSelectedItems([]);
@@ -89,134 +81,133 @@ const AdminCars = () => {
   }, [refresh]);
 
   const [preferences, setPreferences] = useLocalStorage('DREM-cars-table-preferences', {
-    ...DefaultPreferences,
-    visibleContent: ['carName', 'fleetName', 'carIp'],
+    ...DefaultPreferences, visibleContent: ['carName', 'fleetName', 'carIp'],
   });
 
   const carColumnsConfig = CarColumnsConfig();
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(allItems, {
-      filtering: {
-        empty: <EmptyState title={t('cars.no-cars')} subtitle={t('cars.no-cars-message')} />,
-        noMatch: (
-          <EmptyState
-            title={t('models.no-matches')}
-            subtitle={t('models.we-cant-find-a-match')}
-            action={
-              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
-            }
-          />
-        ),
-      },
-      pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: carColumnsConfig[1] } },
-      selection: {},
-    });
+  const {items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps} = useCollection(allItems, {
+    filtering: {
+      empty: <EmptyState title={t('cars.no-cars')} subtitle={t('cars.no-cars-message')}/>, noMatch: (<EmptyState
+        title={t('models.no-matches')}
+        subtitle={t('models.we-cant-find-a-match')}
+        action={<Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>}
+      />),
+    },
+    pagination: {pageSize: preferences.pageSize},
+    sorting: {defaultState: {sortingColumn: carColumnsConfig[1]}},
+    selection: {},
+  });
 
-  return (
-    <>
-      <ContentHeader
-        header={t('cars.header')}
-        description={t('cars.description')}
-        breadcrumbs={[
-          { text: t('home.breadcrumb'), href: '/' },
-          { text: t('admin.breadcrumb'), href: '/admin/home' },
-          { text: t('cars.breadcrumb') },
-        ]}
-      />
+  function getLabelSync(instanceId) {
+    API.graphql({
+      query: queries.carPrintableLabel, variables: {
+        "instanceId": instanceId,
+      }
+    }).then((response) => {
+      const labelURL = response.data.carPrintableLabel.toString()
+      window.open(labelURL)
+    })
+  }
 
-      <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
-        <div></div>
-        <Table
-          {...collectionProps}
-          header={
-            <Header
-              counter={
-                selectedItems.length
-                  ? `(${selectedItems.length}/${allItems.length})`
-                  : `(${allItems.length})`
-              }
-              actions={
-                <SpaceBetween direction="horizontal" size="xs">
-                  <ButtonDropdown
-                    items={[
-                      { text: t('cars.online'), id: 'Online', disabled: false },
-                      { text: t('cars.offline'), id: 'Offline', disabled: false },
-                    ]}
-                    onItemClick={({ detail }) => {
-                      setOnline(detail.id);
-                      setIsLoading(true);
-                    }}
-                  >
-                    {online}
-                  </ButtonDropdown>
-                  <EditCarsModal
-                    disabled={selectedCarsBtnDisabled}
-                    setRefresh={setRefresh}
-                    selectedItems={selectedItems}
-                    online={onlineBool}
-                    variant="primary"
-                  />
-                </SpaceBetween>
-              }
+  function getLabels(event) {
+    event.preventDefault()
+
+    selectedItems.map((selectedCar) => {
+      const instanceId = selectedCar.InstanceId
+      getLabelSync(instanceId)
+    })
+  }
+
+  return (<>
+    <ContentHeader
+      header={t('cars.header')}
+      description={t('cars.description')}
+      breadcrumbs={[{text: t('home.breadcrumb'), href: '/'}, {
+        text: t('admin.breadcrumb'), href: '/admin/home'
+      }, {text: t('cars.breadcrumb')},]}
+    />
+
+
+    <Grid gridDefinition={[{colspan: 1}, {colspan: 10}, {colspan: 1}]}>
+      <div></div>
+      <Table
+        {...collectionProps}
+        header={<Header
+          counter={selectedItems.length ? `(${selectedItems.length}/${allItems.length})` : `(${allItems.length})`}
+          actions={<SpaceBetween direction="horizontal" size="xs">
+            <ButtonDropdown
+              items={[{text: t('cars.online'), id: 'Online', disabled: false}, {
+                text: t('cars.offline'), id: 'Offline', disabled: false
+              },]}
+              onItemClick={({detail}) => {
+                setOnline(detail.id);
+                setIsLoading(true);
+              }}
             >
-              {t('cars.header')}
-            </Header>
-          }
-          columnDefinitions={carColumnsConfig}
-          items={items}
-          pagination={
-            <Pagination
-              {...paginationProps}
-              ariaLabels={{
-                nextPageLabel: t('table.next-page'),
-                previousPageLabel: t('table.previous-page'),
-                pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
-              }}
+              {online}
+            </ButtonDropdown>
+            <EditCarsModal
+              disabled={selectedCarsBtnDisabled}
+              setRefresh={setRefresh}
+              selectedItems={selectedItems}
+              online={onlineBool}
+              variant="primary"
             />
-          }
-          filter={
-            <TextFilter
-              {...filterProps}
-              countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel={t('cars.filter-cars')}
-            />
-          }
-          loading={isLoading}
-          loadingText={t('cars.loading')}
-          visibleColumns={preferences.visibleContent}
-          selectionType="multi"
-          stickyHeader="true"
-          trackBy="InstanceId"
-          selectedItems={selectedItems}
-          onSelectionChange={({ detail: { selectedItems } }) => {
-            setSelectedItems(selectedItems);
-            selectedItems.length
-              ? setSelectedCarsBtnDisabled(false)
-              : setSelectedCarsBtnDisabled(true);
+            <Button
+              variant="primary"
+              onClick={getLabels}
+              disabled={selectedCarsBtnDisabled}
+            >
+              {selectedItems.length > 1 ? t("label-printer.download-printable-labels") : t("label-printer.download-printable-label")}
+            </Button>
+          </SpaceBetween>}
+        >
+          {t('cars.header')}
+        </Header>}
+        columnDefinitions={carColumnsConfig}
+        items={items}
+        pagination={<Pagination
+          {...paginationProps}
+          ariaLabels={{
+            nextPageLabel: t('table.next-page'),
+            previousPageLabel: t('table.previous-page'),
+            pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
           }}
-          resizableColumns
-          preferences={
-            <CollectionPreferences
-              title={t('table.preferences')}
-              confirmLabel={t('button.confirm')}
-              cancelLabel={t('button.cancel')}
-              onConfirm={({ detail }) => setPreferences(detail)}
-              preferences={preferences}
-              pageSizePreference={PageSizePreference(t('cars.page-size-label'))}
-              visibleContentPreference={{
-                title: t('table.select-visible-colunms'),
-                options: CarVisibleContentOptions(),
-              }}
-              wrapLinesPreference={WrapLines}
-            />
-          }
-        />
-        <div></div>
-      </Grid>
-    </>
-  );
+        />}
+        filter={<TextFilter
+          {...filterProps}
+          countText={MatchesCountText(filteredItemsCount)}
+          filteringAriaLabel={t('cars.filter-cars')}
+        />}
+        loading={isLoading}
+        loadingText={t('cars.loading')}
+        visibleColumns={preferences.visibleContent}
+        selectionType="multi"
+        stickyHeader="true"
+        trackBy="InstanceId"
+        selectedItems={selectedItems}
+        onSelectionChange={({detail: {selectedItems}}) => {
+          setSelectedItems(selectedItems);
+          selectedItems.length ? setSelectedCarsBtnDisabled(false) : setSelectedCarsBtnDisabled(true);
+        }}
+        resizableColumns
+        preferences={<CollectionPreferences
+          title={t('table.preferences')}
+          confirmLabel={t('button.confirm')}
+          cancelLabel={t('button.cancel')}
+          onConfirm={({detail}) => setPreferences(detail)}
+          preferences={preferences}
+          pageSizePreference={PageSizePreference(t('cars.page-size-label'))}
+          visibleContentPreference={{
+            title: t('table.select-visible-colunms'), options: CarVisibleContentOptions(),
+          }}
+          wrapLinesPreference={WrapLines}
+        />}
+      />
+      <div></div>
+    </Grid>
+  </>);
 };
 
 export { AdminCars };
