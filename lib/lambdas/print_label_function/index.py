@@ -87,6 +87,13 @@ def create_label_image(device_ipaddress, device_hostname, device_password):
     fnt_small_bold = ImageFont.truetype(f"{FONTCONFIG_PATH}/AmazonEmberBold.TTF", 24)
     fnt_large_bold = ImageFont.truetype(f"{FONTCONFIG_PATH}/AmazonEmberBold.TTF", 48)
     # Get the logo
+
+    # get the data
+    qr_hostname = (
+        device_hostname + ".local"
+    )  # .local as for DNS in local network, ask @marbuss
+    qr_password = "" if device_password == "Not defined" else device_password
+
     dr_logo_bw = Image.open("./images/logo-bw.png")
     dr_logo_bw.thumbnail((300, 300), Image.Resampling.LANCZOS)
     new_img = Image.new("RGB", (991, 306), color="white")
@@ -95,9 +102,7 @@ def create_label_image(device_ipaddress, device_hostname, device_password):
     drawer.text((270, 240), device_ipaddress, font=fnt_large_bold, fill=(0, 0, 0))
     drawer.text(
         (270, 150),
-        "Hostname: "
-        + device_hostname
-        + ".local",  # .local as for DNS in local network, ask @marbuss
+        "Hostname: " + device_hostname,
         font=fnt_small_bold,
         fill=(0, 0, 0),
     )
@@ -114,7 +119,7 @@ def create_label_image(device_ipaddress, device_hostname, device_password):
         fill=(0, 0, 0),
     )
     qr_img = qrcode.make(
-        f"https://{device_hostname}?epwd={device_password}",
+        f"https://{qr_hostname}?epwd={qr_password}",
         box_size=6,
         border=0,
     )
