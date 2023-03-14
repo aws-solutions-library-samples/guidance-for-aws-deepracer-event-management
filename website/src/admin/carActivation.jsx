@@ -102,6 +102,7 @@ const AdminActivation = (props) => {
                 fleetId: dropDownSelectedItem.fleetId,
                 fleetName: dropDownSelectedItem.fleetName,
                 hostname: hostname,
+                carUiPassword: password
             },
         });
         const response = apiResponse['data']['carActivation'];
