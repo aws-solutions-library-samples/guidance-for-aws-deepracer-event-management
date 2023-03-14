@@ -41,6 +41,7 @@ const LapTable = (props) => {
 
   return (
     <Table
+      variant={props.variant}
       columnDefinitions={[
         {
           id: 'id',

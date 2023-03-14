@@ -33,9 +33,7 @@ export const CarFleetPanel = ({ fleetId, onChange }) => {
         >
           <Select
             selectedOption={GetCarFleetOptionFromId(fleetId)}
-            onChange={({ detail }) =>
-              onChange({ fleetConfig: { fleetId: detail.selectedOption.lable } })
-            }
+            onChange={({ detail }) => onChange({ fleetId: detail.selectedOption.lable })}
             options={carFleetOptions}
             selectedAriaLabel="Selected"
             filteringType="auto"

@@ -1,4 +1,10 @@
-import { AppLayout, Badge, SideNavigation, TopNavigation } from '@cloudscape-design/components';
+import {
+  AppLayout,
+  Badge,
+  Flashbar,
+  SideNavigation,
+  TopNavigation,
+} from '@cloudscape-design/components';
 import { Auth } from 'aws-amplify';
 import React, { useContext, useEffect, useState } from 'react';
 
@@ -26,10 +32,11 @@ import { Home } from '../home';
 import useLink from '../hooks/useLink';
 import { Models } from '../models';
 import {
+  useNotifications,
   useSideNavOptions,
   useSideNavOptionsDispatch,
   useSplitPanelOptions,
-  useSplitPanelOptionsDispatch
+  useSplitPanelOptionsDispatch,
 } from '../store/appLayoutProvider';
 import { eventContext } from '../store/eventProvider';
 import { Upload } from '../upload';
@@ -56,7 +63,7 @@ function MenuRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/models" element={<Models />} />
       <Route path="/upload" element={<Upload />} />
-            <Route path="/commentator" element={<CommenatorRaceStats />} />
+      <Route path="/commentator" element={<CommenatorRaceStats />} />
       <Route path="/admin/home" element={<AdminHome />} />
       <Route path="/admin/models" element={<AdminModels />} />
       <Route path="/admin/quarantine" element={<AdminQuarantine />} />
@@ -85,6 +92,7 @@ export function TopNav(props) {
   const [groups, setGroups] = useState([]);
   const splitPanelOptions = useSplitPanelOptions();
   const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
+  const notifications = useNotifications();
   // const [splitPanelOptions, setSplitPanelOptions] = useState({
   //   isOpen: true,
   //   content: (
@@ -137,10 +145,9 @@ export function TopNav(props) {
     { type: 'link', text: t('topnav.models'), href: '/models' },
   ];
 
-    if (groups.includes('admin') || groups.includes('commentator')) {
-        navItems.push(
-            {type: 'link', text: t('topnav.commentator'), href: '/commentator' })
-    }
+  if (groups.includes('admin') || groups.includes('commentator')) {
+    navItems.push({ type: 'link', text: t('topnav.commentator'), href: '/commentator' });
+  }
 
   if (groups.includes('admin')) {
     navItems.push({
@@ -254,7 +261,23 @@ export function TopNav(props) {
         />
       </div>
       <AppLayout
-        // stickyNotifications
+        notifications={
+          <Flashbar
+            items={notifications}
+            i18nStrings={{
+              ariaLabel: 'Notifications',
+              notificationBarAriaLabel: 'View all notifications',
+              notificationBarText: 'Notifications',
+              errorIconAriaLabel: 'Error',
+              warningIconAriaLabel: 'Warning',
+              successIconAriaLabel: 'Success',
+              infoIconAriaLabel: 'Info',
+              inProgressIconAriaLabel: 'In progress',
+            }}
+            //stackItems
+          />
+        }
+        stickyNotifications
         toolsHide
         // headerSelector="#header"
         ariaLabels={{ navigationClose: 'close' }}

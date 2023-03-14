@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer } from 'react';
+import React, { createContext, useContext, useReducer, useState } from 'react';
 
 const NavigationOptionsHandler = (state, action) => {
   if (action.type === 'SIDE_NAV_IS_OPEN') {
@@ -27,6 +27,16 @@ export function useSplitPanelOptionsDispatch() {
   return useContext(splitPanelOptionsDispatchContext);
 }
 
+const notificationContext = createContext();
+export function useNotifications() {
+  return useContext(notificationContext);
+}
+
+const notificationDispatchContext = createContext();
+export function useNotificationsDispatch() {
+  return useContext(notificationDispatchContext);
+}
+
 const splitPanelDefaultSettings = {
   isOpen: false,
   content: <></>,
@@ -49,13 +59,19 @@ export const AppLayoutProvider = (props) => {
     splitPanelDefaultSettings
   );
 
+  const [notifications, dispatchNotifications] = useState([]);
+
   return (
     // this is the provider providing state
     <splitPanelOptionsContext.Provider value={splitPanelOptions}>
       <splitPanelOptionsDispatchContext.Provider value={dispatchSplitPanelOptions}>
         <sideNavOptionsContext.Provider value={sideNavOptions}>
           <sideNavOptionsDispatch.Provider value={dispatchNavigationOptions}>
-            {props.children}
+            <notificationContext.Provider value={notifications}>
+              <notificationDispatchContext.Provider value={dispatchNotifications}>
+                {props.children}
+              </notificationDispatchContext.Provider>
+            </notificationContext.Provider>
           </sideNavOptionsDispatch.Provider>
         </sideNavOptionsContext.Provider>
       </splitPanelOptionsDispatchContext.Provider>

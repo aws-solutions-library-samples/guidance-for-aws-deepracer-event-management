@@ -1,4 +1,4 @@
-import { Box, Button, Grid, Modal, SpaceBetween } from '@cloudscape-design/components';
+import { Box, Button, Modal, SpaceBetween } from '@cloudscape-design/components';
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -128,12 +128,7 @@ export const EditRace = () => {
           isEditable={true}
         />
 
-        <Grid
-          gridDefinition={[
-            { colspan: 12, push: 8 },
-            // { colspan: 4, offset: { xxs: 2, default: 4 } }
-          ]}
-        >
+        <Box float="right">
           <SpaceBetween direction="horizontal" size="xs">
             <Button variant="link" onClick={() => navigate(-1)} disabled={loading}>
               Cancel
@@ -146,7 +141,7 @@ export const EditRace = () => {
               Save Changes
             </Button>
           </SpaceBetween>
-        </Grid>
+        </Box>
       </SpaceBetween>
       {/* delete modal */}
       <Modal
