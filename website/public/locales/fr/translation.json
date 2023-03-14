@@ -1,0 +1,24 @@
+{
+  "button.cancel": "Annuler",
+  "button.clear-selected": "Effacer la sélection",
+  "button.confirm": "Confirmer",
+  "button.copy": "Copie",
+  "button.delete": "Supprimer",
+  "button.edit": "Modifier",
+  "button.create": "Créer",
+  "button.ok": "Créer",
+
+  "common.in-progress": "En cours",
+  "common.error": "Erreur",
+  "common.success": "Succès",
+  "common.info": "Info",
+
+  "upload.breadcrumb": "Télécharger des modèles",
+  "upload.chose-file": "Choisissez le(s) fichier(s) modèle(s)",
+  "upload.constraint-description": "Téléchargez le modèle physique pour la course sur piste",
+  "upload.constraint-text": "model-name.tar.gz",
+  "upload.header-description": "Téléchargez des modèles dans DREM prêts pour la course sur la piste.",
+  "upload.header": "Télécharger des modèles",
+  "upload.label": "Télécharger le modèle"
+
+}
