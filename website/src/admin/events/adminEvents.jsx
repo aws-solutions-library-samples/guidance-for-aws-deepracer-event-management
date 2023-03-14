@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Box, Button, Modal, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from '../../components/contentHeader';
+import { PageLayout } from '../../components/pageLayout';
 import { eventContext } from '../../store/eventProvider';
 import { fleetContext } from '../../store/fleetProvider';
 import { ColumnDefinitions, VisibleContentOptions } from './eventsTableConfig';
@@ -149,7 +149,8 @@ const AdminEvents = () => {
   // JSX
   return (
     <>
-      <ContentHeader
+      <PageLayout
+        // simplified={true}
         header={t('events.header')}
         description={t('events.description')}
         breadcrumbs={[
@@ -157,40 +158,50 @@ const AdminEvents = () => {
           { text: t('admin.breadcrumb'), href: '/admin/home' },
           { text: t('events.breadcrumb') },
         ]}
-      />
-
-      {eventsTable}
-
-      {/* delete modal */}
-      <Modal
-        onDismiss={() => setDeleteModalVisible(false)}
-        visible={deleteModalVisible}
-        closeAriaLabel="Close modal"
-        footer={
-          <Box float="right">
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="link" onClick={() => setDeleteModalVisible(false)}>
-                {t('button.cancel')}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  deleteEvents();
-                  setDeleteModalVisible(false);
-                }}
-              >
-                {t('button.delete')}
-              </Button>
-            </SpaceBetween>
-          </Box>
-        }
-        header={t('events.delete-event')}
       >
-        {t('events.delete-warning')}: <br></br>{' '}
-        {SelectedEventsInTable.map((selectedEvent) => {
-          return selectedEvent.eventName + ' ';
-        })}
-      </Modal>
+        {/* <ContentHeader
+          header={t('events.header')}
+          description={t('events.description')}
+          breadcrumbs={[
+            { text: t('home.breadcrumb'), href: '/' },
+            { text: t('admin.breadcrumb'), href: '/admin/home' },
+            { text: t('events.breadcrumb') },
+          ]}
+        /> */}
+
+        {eventsTable}
+
+        {/* delete modal */}
+        <Modal
+          onDismiss={() => setDeleteModalVisible(false)}
+          visible={deleteModalVisible}
+          closeAriaLabel="Close modal"
+          footer={
+            <Box float="right">
+              <SpaceBetween direction="horizontal" size="xs">
+                <Button variant="link" onClick={() => setDeleteModalVisible(false)}>
+                  {t('button.cancel')}
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    deleteEvents();
+                    setDeleteModalVisible(false);
+                  }}
+                >
+                  {t('button.delete')}
+                </Button>
+              </SpaceBetween>
+            </Box>
+          }
+          header={t('events.delete-event')}
+        >
+          {t('events.delete-warning')}: <br></br>{' '}
+          {SelectedEventsInTable.map((selectedEvent) => {
+            return selectedEvent.eventName + ' ';
+          })}
+        </Modal>
+      </PageLayout>
     </>
   );
 };
