@@ -1,24 +1,35 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
-  Button, CollectionPreferences, Container, Form, FormField, Header, Input, Link, Pagination, SpaceBetween, Table,
-  TextFilter, Toggle
+  Button,
+  CollectionPreferences,
+  Container,
+  Form,
+  FormField,
+  Header,
+  Input,
+  Link,
+  Pagination,
+  SpaceBetween,
+  Table,
+  TextFilter,
+  Toggle,
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from '../../components/contentHeader';
 import {
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
   PageSizePreference,
-  WrapLines
+  WrapLines,
 } from '../../components/tableConfig';
 import * as mutations from '../../graphql/mutations';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useUsersApi } from '../../hooks/useUsersApi';
 
+import { PageLayout } from '../../components/pageLayout';
 import awsconfig from '../../config.json';
 
 // day.js
@@ -34,7 +45,7 @@ export function CreateUser() {
   const { t } = useTranslation();
 
   const [selectedItems] = useState([]);
-  const [users, isLoading ] = useUsersApi();
+  const [users, isLoading] = useUsersApi();
   const [preferences, setPreferences] = useLocalStorage('DREM-user-table-preferences', {
     ...DefaultPreferences,
     visibleContent: ['Username', 'UserCreateDate'],
@@ -65,11 +76,10 @@ export function CreateUser() {
 
   // watch checked Toggle for changes
   useEffect(() => {
-    if (checked){
-      setTermsAndConditionsErrorText('')
-    }
-    else {
-      setTermsAndConditionsErrorText(t('users.terms-and-conditions-error'))
+    if (checked) {
+      setTermsAndConditionsErrorText('');
+    } else {
+      setTermsAndConditionsErrorText(t('users.terms-and-conditions-error'));
     }
   }, [checked, t]);
 
@@ -77,25 +87,22 @@ export function CreateUser() {
   useEffect(() => {
     var regexFail = false;
     if (username.match(/^[a-zA-Z0-9-_]+$/) || username.match(/^$/)) {
-      setUsernameErrorText('')
-    }
-    else{
-      setUsernameErrorText('Does not match ^[a-zA-Z0-9-_]+$')
-      regexFail = true
+      setUsernameErrorText('');
+    } else {
+      setUsernameErrorText('Does not match ^[a-zA-Z0-9-_]+$');
+      regexFail = true;
     }
 
     if (email.match(/^[\w\.+-_]+@([\w-]+\.)+[\w-]{2,4}$/) || username.match(/^$/)) {
-      setEmailErrorText('')
+      setEmailErrorText('');
+    } else {
+      setEmailErrorText('Does not match ^[\\w\\.+-_]+@([\\w-]+\\.)+[\\w-]{2,4}$');
+      regexFail = true;
     }
-    else{
-      setEmailErrorText('Does not match ^[\\w\\.+-_]+@([\\w-]+\\.)+[\\w-]{2,4}$')
-      regexFail = true
-    }
-    
+
     if (username !== '' && email !== '' && regexFail !== true && checked) {
       setButtonDisabled(false);
-    }
-    else {
+    } else {
       setButtonDisabled(true);
     }
     return () => {
@@ -176,16 +183,15 @@ export function CreateUser() {
     });
 
   return (
-    <>
-      <ContentHeader
-        header={t('users.header')}
-        description={t('users.description')}
-        breadcrumbs={[
-          { text: t('home.breadcrumb'), href: '/' },
-          { text: t('admin.breadcrumb'), href: '/admin/home' },
-          { text: t('users.breadcrumb') },
-        ]}
-      />
+    <PageLayout
+      header={t('users.header')}
+      description={t('users.description')}
+      breadcrumbs={[
+        { text: t('home.breadcrumb'), href: '/' },
+        { text: t('admin.breadcrumb'), href: '/admin/home' },
+        { text: t('users.breadcrumb') },
+      ]}
+    >
       <SpaceBetween direction="vertical" size="l">
         <Form
           actions={
@@ -222,19 +228,23 @@ export function CreateUser() {
                   }}
                 />
               </FormField>
-              <FormField label={t('users.terms-and-conditions-title')} errorText={termsAndConditionsErrorText}>
-                <Link href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'} target="_blank">
+              <FormField
+                label={t('users.terms-and-conditions-title')}
+                errorText={termsAndConditionsErrorText}
+              >
+                <Link
+                  href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'}
+                  target="_blank"
+                >
                   {t('users.terms-and-conditions')}
                 </Link>
                 <Toggle
                   onChange={({ detail }) => setChecked(detail.checked)}
-                  checked={checked}    
-                >
-                </Toggle>
+                  checked={checked}
+                ></Toggle>
               </FormField>
             </SpaceBetween>
           </Container>
-
         </Form>
 
         <Table
@@ -293,7 +303,6 @@ export function CreateUser() {
           }
         />
       </SpaceBetween>
-    </>
-    
+    </PageLayout>
   );
 }

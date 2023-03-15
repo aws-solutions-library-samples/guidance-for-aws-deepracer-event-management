@@ -2,14 +2,13 @@ import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
   CollectionPreferences,
-  Grid,
   Header,
   Icon,
   Pagination,
   StatusIndicator,
   Table,
   TextFilter,
-  Toggle
+  Toggle,
 } from '@cloudscape-design/components';
 import { API, Auth } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
@@ -17,16 +16,16 @@ import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 
-import { ContentHeader } from '../../components/contentHeader';
 import {
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
   PageSizePreference,
-  WrapLines
+  WrapLines,
 } from '../../components/tableConfig';
 
 import dayjs from 'dayjs';
+import { PageLayout } from '../../components/pageLayout';
 
 // day.js
 var advancedFormat = require('dayjs/plugin/advancedFormat');
@@ -221,75 +220,70 @@ export function AdminGroupsDetail() {
   };
 
   return (
-    <>
-      <ContentHeader
-        header={t('groups.detail.content-header', { groupName })}
-        description={t('groups.detail.content-description', { groupName })}
-        breadcrumbs={[
-          { text: t('home.breadcrumb'), href: '/' },
-          { text: t('admin.breadcrumb'), href: '/admin/home' },
-          { text: t('groups.breadcrumb'), href: '/admin/groups' },
-          { text: groupName },
-        ]}
+    <PageLayout
+      header={t('groups.detail.content-header', { groupName })}
+      description={t('groups.detail.content-description', { groupName })}
+      breadcrumbs={[
+        { text: t('home.breadcrumb'), href: '/' },
+        { text: t('admin.breadcrumb'), href: '/admin/home' },
+        { text: t('groups.breadcrumb'), href: '/admin/groups' },
+        { text: groupName },
+      ]}
+    >
+      <Table
+        {...collectionProps}
+        header={
+          <Header
+            counter={
+              selectedItems.length
+                ? `(${selectedItems.length}/${allItems.length})`
+                : `(${allItems.length})`
+            }
+          >
+            {t('groups.detail.header')}
+          </Header>
+        }
+        columnDefinitions={columnsConfig}
+        items={items}
+        pagination={
+          <Pagination
+            {...paginationProps}
+            ariaLabels={{
+              nextPageLabel: t('table.next-page'),
+              previousPageLabel: t('table.previous-page'),
+              pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
+            }}
+          />
+        }
+        filter={
+          <TextFilter
+            {...filterProps}
+            countText={MatchesCountText(filteredItemsCount)}
+            filteringAriaLabel={t('groups.detail.filter-users')}
+          />
+        }
+        loading={isLoading}
+        loadingText={t('groups.detail.loading-users')}
+        visibleColumns={preferences.visibleContent}
+        stickyHeader="true"
+        trackBy="Username"
+        resizableColumns
+        preferences={
+          <CollectionPreferences
+            title={t('table.preferences')}
+            confirmLabel={t('button.confirm')}
+            cancelLabel={t('button.cancel')}
+            onConfirm={({ detail }) => setPreferences(detail)}
+            preferences={preferences}
+            pageSizePreference={PageSizePreference(t('groups.detail.page-size-label'))}
+            visibleContentPreference={{
+              title: t('table.select-visible-colunms'),
+              options: visibleContentOptions,
+            }}
+            wrapLinesPreference={WrapLines}
+          />
+        }
       />
-
-      <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
-        <div></div>
-        <Table
-          {...collectionProps}
-          header={
-            <Header
-              counter={
-                selectedItems.length
-                  ? `(${selectedItems.length}/${allItems.length})`
-                  : `(${allItems.length})`
-              }
-            >
-              {t('groups.detail.header')}
-            </Header>
-          }
-          columnDefinitions={columnsConfig}
-          items={items}
-          pagination={
-            <Pagination
-              {...paginationProps}
-              ariaLabels={{
-                nextPageLabel: t('table.next-page'),
-                previousPageLabel: t('table.previous-page'),
-                pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
-              }}
-            />
-          }
-          filter={
-            <TextFilter
-              {...filterProps}
-              countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel={t('groups.detail.filter-users')}
-            />
-          }
-          loading={isLoading}
-          loadingText={t('groups.detail.loading-users')}
-          visibleColumns={preferences.visibleContent}
-          stickyHeader="true"
-          trackBy="Username"
-          resizableColumns
-          preferences={
-            <CollectionPreferences
-              title={t('table.preferences')}
-              confirmLabel={t('button.confirm')}
-              cancelLabel={t('button.cancel')}
-              onConfirm={({ detail }) => setPreferences(detail)}
-              preferences={preferences}
-              pageSizePreference={PageSizePreference(t('groups.detail.page-size-label'))}
-              visibleContentPreference={{
-                title: t('table.select-visible-colunms'),
-                options: visibleContentOptions,
-              }}
-              wrapLinesPreference={WrapLines}
-            />
-          }
-        />
-      </Grid>
-    </>
+    </PageLayout>
   );
 }
