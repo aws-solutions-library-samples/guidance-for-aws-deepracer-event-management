@@ -300,6 +300,7 @@
   "leaderboard.position": "POSITION",
   "leaderboard.racer": "RACER",
   "leaderboard.time": "TIME",
+  "leaderboard.flag": "FLAG",
 
   "models.all-header": "Models",
   "models.breadcrumb": "Models",

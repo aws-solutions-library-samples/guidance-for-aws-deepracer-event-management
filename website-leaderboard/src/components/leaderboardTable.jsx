@@ -50,6 +50,7 @@ const LeaderboardTable = ({ leaderboardEntries }) => {
   return (
     <div className={styles.tableRoot}>
       <div className={styles.moduleHeaders}>
+        <div className={styles.modulePosition}>{t('leaderboard.flag')}</div>
         <div className={styles.modulePosition}>{t('leaderboard.position')}</div>
         <div className={styles.moduleRacer}>{t('leaderboard.racer')}</div>
         <div className={styles.moduleResults}>{t('leaderboard.time')}</div>

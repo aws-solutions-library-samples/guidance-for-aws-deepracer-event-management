@@ -54,7 +54,7 @@ def __get_username_by_user_id(userId):
     logger.info(f"userId = {userId}")
     response = cognito_client.list_users(
         UserPoolId=USER_POOL_ID,
-        AttributesToGet=[],
+        AttributesToGet=["custom:countryCode"],
         Filter=f'sub = "{userId}"',
     )
     logger.info(response)
