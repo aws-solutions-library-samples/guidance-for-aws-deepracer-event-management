@@ -30,18 +30,18 @@ def lambda_handler(evbEvent, context):
     detail_type = evbEvent["detail-type"]
     detail = evbEvent["detail"]
     if "raceSummaryAdded" in detail_type:
-        username = __get_username_by_user_id(detail["userId"])
-        detail = {**detail, "username": username}
+        username, countryCode = __get_username_by_user_id(detail["userId"])
+        detail = {**detail, "username": username, "countryCode": countryCode}
         __store_leaderboard_entry(detail)
         __add_to_leaderboard(detail)
     elif "raceSummaryUpdated" in detail_type:
-        username = __get_username_by_user_id(detail["userId"])
-        leaderboard_entry = {"username": username, **detail}
+        username, countryCode = __get_username_by_user_id(detail["userId"])
+        leaderboard_entry = {"username": username, "countryCode": countryCode, **detail}
         __store_leaderboard_entry(leaderboard_entry)
         __update_entry_on_leaderboard(leaderboard_entry)
     elif "raceSummaryDeleted" in detail_type:
-        username = __get_username_by_user_id(detail["userId"])
-        leaderboard_entry = {"username": username, **detail}
+        username, countryCode = __get_username_by_user_id(detail["userId"])
+        leaderboard_entry = {"username": username, "countryCode": countryCode, **detail}
         __delete_leaderboard_entry(detail)
         __delete_from_leaderboard(leaderboard_entry)
 
@@ -54,13 +54,22 @@ def __get_username_by_user_id(userId):
     logger.info(f"userId = {userId}")
     response = cognito_client.list_users(
         UserPoolId=USER_POOL_ID,
-        AttributesToGet=["custom:countryCode"],
+        # AttributesToGet=["custom:countryCode"],
         Filter=f'sub = "{userId}"',
     )
     logger.info(response)
-    username = response["Users"][0]["Username"]
+    user = response["Users"][0]
+    username = user["Username"]
+    # pull "countryCode" out off attributes if it exists
+    countryCode = ""
+    for attributes in user["Attributes"]:
+        if attributes["Name"] == "custom:countryCode":
+            # logger.info(attributes["Value"])
+            countryCode = attributes["Value"]
+
     logger.info(username)
-    return username
+    logger.info(countryCode)
+    return username, countryCode
 
 
 # def __get_username_from_entry(item):

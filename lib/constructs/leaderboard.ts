@@ -234,6 +234,7 @@ export class Leaderboard extends Construct {
                 avgLapTime: GraphqlType.float(),
                 lapCompletionRatio: GraphqlType.float(),
                 avgLapsPerAttempt: GraphqlType.float(),
+                countryCode: GraphqlType.string(),
             },
             directives: [Directive.apiKey(), Directive.iam()],
         });
