@@ -11,6 +11,7 @@ zip_repo:
     - dasmthc
     - marbuss
     - danlndnr
+    - csj
   stage: zip
   image:
     name: ubuntu
@@ -33,6 +34,7 @@ upload_to_s3:
     - dasmthc
     - marbuss
     - danlndnr
+    - csj
   stage: upload
   image:
     name: amazon/aws-cli
