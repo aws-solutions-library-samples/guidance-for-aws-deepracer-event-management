@@ -27,6 +27,9 @@ const CommenatorRaceStats = () => {
   const [fastesLapsForTrack, SetFastestLapsForTrack] = useState([]);
   const [slowestLapsForTrack, SetSlowestLapsForTrack] = useState([]);
 
+  const [lapsCount, SetLapsCount] = useState(0);
+  const [invalidCount, SetInvalidCount] = useState(0);
+
   useEffect(() => {
     if (selectedEvent) {
       const loadLeaderboard = async () => {
@@ -53,30 +56,30 @@ const CommenatorRaceStats = () => {
   }, [selectedEvent]);
 
   useEffect(() => {
-    if (actualRacer && selectedEvent) {
-      console.info('Load data for ' + actualRacer);
+    const eventId = selectedEvent.eventId
+    const userId = actualRacer.userId
+    
+    if (eventId && userId) {
+        console.info('Load data for '+ actualRacer.username)
+        // not working properly at the moment because of the missing userId in the overlay Update
+        const loadUserLaps = async () => {
 
-      // not working properly at the moment because of the missing userId in the overlay Update
-      const loadUserLaps = async () => {
-        const eventId = selectedEvent.eventId;
-        const userId = actualRacer.userId;
+            const response = await API.graphql(
+                graphqlOperation(getRaces, { eventId: eventId, userId: userId })
+            );
+            const laps = response.data.getRaces.flatMap(race => race.laps)
+            const lapCount = laps.length
+            const lapsSorted = laps
+              .filter((lap) => lap.isValid === true)
+              .sort((a, b) => a.time > b.time);
 
-        const response = await API.graphql(
-          graphqlOperation(getRaces, { eventId: eventId, userId: userId })
-        );
-        console.info(response);
-        const laps = response.data.getRaces.flatMap((race) => race.laps);
-        console.info(laps);
+            SetFastesRacerTime(lapsSorted[0] || {})
+            SetSlowestRacerTime(lapsSorted.pop() || {})
+            SetLapsCount(lapCount)
+            SetInvalidCount(lapCount - lapsSorted.length)
+        }
 
-        const lapsSorted = laps
-          .filter((lap) => lap.isValid === true)
-          .sort((a, b) => a.time > b.time);
-        console.info(lapsSorted);
-
-        SetFastesRacerTime(lapsSorted[0]);
-        SetSlowestRacerTime(lapsSorted.pop());
-      };
-
+      loadUserLaps();
       loadUserLaps();
     }
   }, [actualRacer, selectedEvent]);
@@ -94,7 +97,9 @@ const CommenatorRaceStats = () => {
         API.graphql(graphqlOperation(onNewOverlayInfo, { eventId: eventId })).subscribe({
           next: (event) => {
             const eventData = event.value.data.onNewOverlayInfo;
-            if (eventData.username !== actualRacer) SetActualRacer(eventData);
+            if (eventData.userId !== actualRacer.userId) 
+              SetActualRacer(eventData);
+              
           },
           error: (error) => console.warn(error),
         })
@@ -110,8 +115,8 @@ const CommenatorRaceStats = () => {
 
   const ValueWithLabel = ({ label, children }) => (
     <div>
-      <Box variant="awsui-key-label">{label}</Box>
-      <div>{children}</div>
+      <Box variant="h3" >{label}</Box>
+      <Box variant="h2" >{children}</Box>
     </div>
   );
 
@@ -119,6 +124,7 @@ const CommenatorRaceStats = () => {
     {
       id: 'time',
       header: 'time',
+      cell: (item) => <RaceTimeAsString timeInMS={item.fastestLapTime}></RaceTimeAsString>,
       cell: (item) => <RaceTimeAsString timeInMS={item.fastestLapTime}></RaceTimeAsString>,
     },
     {
@@ -158,15 +164,21 @@ const CommenatorRaceStats = () => {
             }
           >
             <ColumnLayout columns={3}>
-              <ValueWithLabel label={t('commentator.race.racerName')}>
-                {actualRacer.username}
-              </ValueWithLabel>
-              <ValueWithLabel label={t('commentator.race.racerFastestLap')}>
-                <RaceTimeAsString timeInMS={fastesRacerTime.time}></RaceTimeAsString>
-              </ValueWithLabel>
-              <ValueWithLabel label={t('commentator.race.racerSlowestLap')}>
-                <RaceTimeAsString timeInMS={slowestRacerTime.time}></RaceTimeAsString>
-              </ValueWithLabel>
+                <ValueWithLabel label={t('commentator.race.racerName')}>{actualRacer.username}</ValueWithLabel>
+                <ValueWithLabel label={t('commentator.race.currentLapTime')}>
+                  <RaceTimeAsString timeInMS={actualRacer.currentLapTimeInMs } showMills={false}></RaceTimeAsString>
+                </ValueWithLabel>
+                <ValueWithLabel label={t('commentator.race.timeLeft')}>
+                  <RaceTimeAsString timeInMS={actualRacer.timeLeftInMs} showMills={false}></RaceTimeAsString>
+                </ValueWithLabel>
+                <ValueWithLabel label={t('commentator.race.racerFastestLap')}>
+                  <RaceTimeAsString timeInMS={fastesRacerTime.time}></RaceTimeAsString>
+                </ValueWithLabel>
+                <ValueWithLabel label={t('commentator.race.racerSlowestLap')}>
+                  <RaceTimeAsString timeInMS={slowestRacerTime.time}></RaceTimeAsString>
+                </ValueWithLabel>
+                <ValueWithLabel label={t('commentator.race.lapCount')}>{lapsCount}</ValueWithLabel>
+                <ValueWithLabel label={t('commentator.race.invalidLapCount')}>{invalidCount}</ValueWithLabel>
             </ColumnLayout>
           </Container>
 

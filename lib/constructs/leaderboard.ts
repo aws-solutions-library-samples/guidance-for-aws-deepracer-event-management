@@ -121,6 +121,13 @@ export class Leaderboard extends Construct {
             eventBus: props.eventbus,
         }).addTarget(new LambdaFunction(evbLcLambda));
 
+        const evbLeLambdaLayer = new lambdaPython.PythonLayerVersion(this, 'evbLeLambdaLayer', {
+            entry: 'lib/lambdas/leaderboard_entry_evb_layer/',
+            compatibleArchitectures: [props.lambdaConfig.architecture],
+            compatibleRuntimes: [props.lambdaConfig.runtime],
+            bundling: { image: props.lambdaConfig.bundlingImage },
+        });
+
         const evbLeLambda = new lambdaPython.PythonFunction(this, 'evbLeLambda', {
             entry: 'lib/lambdas/leaderboard_entry_evb/',
             description: 'Leaderboard handler',
@@ -137,6 +144,7 @@ export class Leaderboard extends Construct {
             layers: [
                 props.lambdaConfig.layersConfig.helperFunctionsLayer,
                 props.lambdaConfig.layersConfig.powerToolsLayer,
+                evbLeLambdaLayer,
             ],
             environment: {
                 DDB_TABLE: ddbTable.tableName,
@@ -226,6 +234,7 @@ export class Leaderboard extends Construct {
                 avgLapTime: GraphqlType.float(),
                 lapCompletionRatio: GraphqlType.float(),
                 avgLapsPerAttempt: GraphqlType.float(),
+                countryCode: GraphqlType.string(),
             },
             directives: [Directive.apiKey(), Directive.iam()],
         });
@@ -451,6 +460,7 @@ export class Leaderboard extends Construct {
                 eventId: GraphqlType.id({ isRequired: true }),
                 trackId: GraphqlType.id(),
                 username: GraphqlType.string({ isRequired: true }),
+                userId: GraphqlType.string({ isRequired: true }),
                 timeLeftInMs: GraphqlType.float({ isRequired: true }),
                 currentLapTimeInMs: GraphqlType.float({ isRequired: true }),
                 isActive: GraphqlType.boolean({ isRequired: true }),
@@ -467,6 +477,7 @@ export class Leaderboard extends Construct {
                     eventId: GraphqlType.id({ isRequired: true }),
                     trackId: GraphqlType.id(),
                     username: GraphqlType.string({ isRequired: true }),
+                    userId: GraphqlType.string({ isRequired: true }),
                     timeLeftInMs: GraphqlType.float({ isRequired: true }),
                     currentLapTimeInMs: GraphqlType.float({ isRequired: true }),
                     isActive: GraphqlType.boolean({ isRequired: true }),
