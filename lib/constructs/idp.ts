@@ -32,6 +32,7 @@ export class Idp extends Construct {
     public readonly authenticatedUserRole: iam.IRole;
     public readonly adminGroupRole: iam.IRole;
     public readonly operatorGroupRole: iam.IRole;
+    public readonly commentatorGroupRole: iam.IRole;
     public readonly unauthenticated_user_role: iam.IRole;
 
     constructor(scope: Construct, id: string, props: IdpProps) {
@@ -219,6 +220,21 @@ export class Idp extends Construct {
         });
         this.operatorGroupRole = operatorGroupRole;
 
+        // Commentator Users Group Role
+        const commentatorGroupRole = new iam.Role(this, 'CommentatorUserRole', {
+            assumedBy: new iam.FederatedPrincipal(
+                'cognito-identity.amazonaws.com',
+                {
+                    StringEquals: { 'cognito-identity.amazonaws.com:aud': identityPool.ref },
+                    'ForAnyValue:StringLike': {
+                        'cognito-identity.amazonaws.com:amr': 'authenticated',
+                    },
+                },
+                'sts:AssumeRoleWithWebIdentity'
+            ),
+        });
+        this.commentatorGroupRole = commentatorGroupRole;
+
         //  Cognito User Group (Operator)
         const operatorGroup = new cognito.CfnUserPoolGroup(this, 'OperatorGroup', {
             userPoolId: userPool.userPoolId,
@@ -233,6 +249,15 @@ export class Idp extends Construct {
             userPoolId: userPool.userPoolId,
             description: 'Admin user group',
             groupName: 'admin',
+            precedence: 1,
+            roleArn: adminGroupRole.roleArn,
+        });
+
+        //  Cognito User Group (Commentator)
+        const commentatorGroup = new cognito.CfnUserPoolGroup(this, 'CommentatorGroup', {
+            userPoolId: userPool.userPoolId,
+            description: 'Commentator user group',
+            groupName: 'commentator',
             precedence: 1,
             roleArn: adminGroupRole.roleArn,
         });

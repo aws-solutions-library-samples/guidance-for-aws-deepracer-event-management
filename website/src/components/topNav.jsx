@@ -3,8 +3,9 @@ import {
   Badge,
   Flashbar,
   SideNavigation,
-  TopNavigation,
+  TopNavigation
 } from '@cloudscape-design/components';
+
 import { Auth } from 'aws-amplify';
 import React, { useContext, useEffect, useState } from 'react';
 
@@ -36,7 +37,7 @@ import {
   useSideNavOptions,
   useSideNavOptionsDispatch,
   useSplitPanelOptions,
-  useSplitPanelOptionsDispatch,
+  useSplitPanelOptionsDispatch
 } from '../store/appLayoutProvider';
 import { eventContext } from '../store/eventProvider';
 import { Upload } from '../upload';
@@ -120,7 +121,19 @@ export function TopNav(props) {
   ];
 
   if (groups.includes('admin') || groups.includes('commentator')) {
-    navItems.push({ type: 'link', text: t('topnav.commentator'), href: '/commentator' });
+    navItems.push({
+      type: 'section',
+      text: t('topnav.commentator'),
+      href: '/commentator',
+      items: [
+        {
+          type: 'link',
+          text: t('topnav.commentator-race'),
+          info: <Badge color="blue">Beta</Badge>,
+          href: '/commentator',
+        },
+      ],
+    });
   }
 
   if (groups.includes('admin')) {

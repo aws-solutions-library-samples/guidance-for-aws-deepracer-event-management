@@ -116,7 +116,11 @@
   "events.no-events": "No Events",
   "events.create-an-event": "Please create an event.",
   "events.leaderboard-link": "Leaderboard",
+  "events.leaderboard-link-same-tab": "Open in this tab",
+  "events.leaderboard-link-new-tab": "Open in new tab",
   "events.streaming-overlay-link": "Streaming Overlay",
+  "events.streaming-overlay-link-same-tab": "Open in this tab",
+  "events.streaming-overlay-link-new-tab": "Open in new tab",
 
   "events.event-type": "Type of Event",
   "events.event-type-description": "",
@@ -406,6 +410,7 @@
   "topnav.time-keeper": "Time keeper",
   "topnav.upload": "Upload",
   "topnav.commentator": "Commentator",
+  "topnav.commentator-race": "Race",
 
   "upload.breadcrumb": "Upload models",
   "upload.chose-file": "Choose model file(s)",
@@ -422,7 +427,8 @@
   "commentator.race.actualRacerStats": "Stats for the actual Racer",
   "commentator.race.racerName": "Racer Name",
   "commentator.race.racerFastestLap": "Fastest Time so far",
-  "commentator.race.overallFastestLaps": "Fastest Laps:",
+  "commentator.race.racerSlowestLap": "Slowest Time so far",
+  "commentator.race.overallFastestLaps": "Fastest Racer:",
   "commentator.race.loading": "Loading resources",
-  "commentator.race.overallSlowestLaps": "Slowest Laps:"
+  "commentator.race.overallSlowestLaps": "Slowest Racer:"
 }
