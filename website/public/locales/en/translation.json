@@ -271,6 +271,9 @@
   "users.terms-and-conditions": "Terms and Conditions",
   "users.terms-and-conditions-error": "Please agree to the terms and conditions",
   "users.terms-and-conditions-title": "Agreement",
+  "users.country": "Country",
+  "users.country-code": "Country Code",
+  "users.flag": "Flag",
 
   "home.all-models-description": "List of the models uploaded by users",
   "home.all-models": "All models",
@@ -299,6 +302,7 @@
   "leaderboard.position": "POSITION",
   "leaderboard.racer": "RACER",
   "leaderboard.time": "TIME",
+  "leaderboard.flag": "FLAG",
 
   "models.all-header": "Models",
   "models.breadcrumb": "Models",
