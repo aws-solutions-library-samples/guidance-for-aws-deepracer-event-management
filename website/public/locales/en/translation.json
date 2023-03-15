@@ -457,5 +457,9 @@
   "commentator.race.racerSlowestLap": "Slowest Time so far",
   "commentator.race.overallFastestLaps": "Fastest Racer:",
   "commentator.race.loading": "Loading resources",
-  "commentator.race.overallSlowestLaps": "Slowest Racer:"
+  "commentator.race.overallSlowestLaps": "Slowest Racer:",
+  "commentator.race.currentLapTime": "Current Lap Time",
+  "commentator.race.timeLeft": "Time Left",
+  "commentator.race.lapCount": "Laps",
+  "commentator.race.invalidLapCount": "Not valid Laps"
 }
