@@ -91,7 +91,7 @@ export function CarColumnsConfig() {
     {
       id: 'carIp',
       header: i18next.t('cars.car-ip'),
-      cell: (item) => item.IPAddress || '-',
+      cell: (item) => item.IpAddress || '-',
       sortingField: 'carIp',
       width: 200,
       minWidth: 150,
