@@ -69,6 +69,11 @@ export class Idp extends Construct {
             standardAttributes: {
                 email: { required: true, mutable: true },
             },
+            customAttributes: {
+                countryCode: new cognito.StringAttribute({
+                    mutable: true,
+                }),
+            },
             mfa: cognito.Mfa.OPTIONAL,
             selfSignUpEnabled: true,
             autoVerify: { email: true },
