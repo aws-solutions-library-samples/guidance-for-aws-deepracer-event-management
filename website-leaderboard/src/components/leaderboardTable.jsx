@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import classnames from 'classnames';
 import { useTranslation } from 'react-i18next';
+// import { Flag } from './flag';
 import styles from './leaderboardTable.module.css';
 
 const LeaderboardTable = ({ leaderboardEntries }) => {
@@ -32,6 +33,7 @@ const LeaderboardTable = ({ leaderboardEntries }) => {
         )}
       >
         <div className={styles.liPosition}>#{index + 1}</div>
+        {/* <div className={styles.flag}><Flag countryCode={entry.countryCode}></Flag></div> */}
         <div
           className={classnames(
             [0, 1, 2].includes(index) && styles.topThreeLiRacer,
@@ -51,6 +53,7 @@ const LeaderboardTable = ({ leaderboardEntries }) => {
     <div className={styles.tableRoot}>
       <div className={styles.moduleHeaders}>
         <div className={styles.modulePosition}>{t('leaderboard.position')}</div>
+        {/* <div className={styles.moduleFlag}>{t('leaderboard.flag')}</div> */}
         <div className={styles.moduleRacer}>{t('leaderboard.racer')}</div>
         <div className={styles.moduleResults}>{t('leaderboard.time')}</div>
       </div>

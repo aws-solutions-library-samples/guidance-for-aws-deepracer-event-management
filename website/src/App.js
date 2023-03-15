@@ -6,12 +6,13 @@ import {
   useTheme,
   View,
 } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
 import Amplify from 'aws-amplify';
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import './App.css';
 
-import '@aws-amplify/ui-react/styles.css';
+import { CountrySelector } from './components/countrySelector';
 import TopNav from './components/topNav';
 import awsconfig from './config.json';
 import { AppLayoutProvider } from './store/appLayoutProvider';
@@ -36,6 +37,13 @@ const components = {
         <>
           {/* Re-use default `Authenticator.SignUp.FormFields` */}
           <Authenticator.SignUp.FormFields />
+
+          <CountrySelector amplify={true} />
+          {/* <SelectField name="custom:countryCode" placeholder="Select country...">
+            <option value="apple">Apple</option>
+            <option value="banana">Banana</option>
+            <option value="orange">Orange</option>
+          </SelectField> */}
 
           {/* Append & require Terms & Conditions field to sign up  */}
           <CheckboxField

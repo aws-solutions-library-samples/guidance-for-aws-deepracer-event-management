@@ -198,6 +198,7 @@ export class UserManager extends Construct {
                 args: {
                     username: GraphqlType.string({ isRequired: true }),
                     email: GraphqlType.string({ isRequired: true }),
+                    countryCode: GraphqlType.string({ isRequired: true }),
                 },
                 returnType: user_object.attribute(),
                 dataSource: users_data_source,

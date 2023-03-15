@@ -5,13 +5,16 @@ import {
     Header,
     Input,
     Select,
-    SpaceBetween,
+    SpaceBetween
 } from '@cloudscape-design/components';
 import { getNames, registerLocale } from 'i18n-iso-countries';
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Flag } from '../../components/flag';
 import { eventContext } from '../../store/eventProvider';
 import { EventTypeConfig, GetTypeOfEventOptionFromId } from './eventDomain';
+
+
 
 export const EventInfoPanel = ({
     onFormIsValid,
@@ -19,7 +22,7 @@ export const EventInfoPanel = ({
     onChange,
     typeOfEvent,
     eventName = undefined,
-    countryCode = undefined,
+    countryCode = '',
     eventDate = undefined,
 }) => {
     const [errorMessage, setErrorMessage] = useState();
@@ -130,6 +133,7 @@ export const EventInfoPanel = ({
                         selectedAriaLabel="Selected"
                         filteringType="auto"
                     />
+                    <Flag countryCode={countryCode}></Flag>
                 </FormField>
             </SpaceBetween>
         </Container>

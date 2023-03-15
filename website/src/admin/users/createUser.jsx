@@ -12,24 +12,26 @@ import {
   SpaceBetween,
   Table,
   TextFilter,
-  Toggle,
+  Toggle
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CountrySelector } from '../../components/countrySelector';
+import { Flag } from '../../components/flag';
+import { PageLayout } from '../../components/pageLayout';
 import {
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
   PageSizePreference,
-  WrapLines,
+  WrapLines
 } from '../../components/tableConfig';
 import * as mutations from '../../graphql/mutations';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useUsersApi } from '../../hooks/useUsersApi';
 
-import { PageLayout } from '../../components/pageLayout';
 import awsconfig from '../../config.json';
 
 // day.js
@@ -48,7 +50,7 @@ export function CreateUser() {
   const [users, isLoading] = useUsersApi();
   const [preferences, setPreferences] = useLocalStorage('DREM-user-table-preferences', {
     ...DefaultPreferences,
-    visibleContent: ['Username', 'UserCreateDate'],
+    visibleContent: ['Username', 'Flag', 'UserCreateDate'],
   });
   const [username, setUsername] = useState('');
   const [usernameErrorText, setUsernameErrorText] = useState('');
@@ -58,6 +60,7 @@ export function CreateUser() {
   const [checked, setChecked] = useState(false);
   const [result, setResult] = useState('');
   const [buttonDisabled, setButtonDisabled] = useState(false);
+  const [countryCode, setCountryCode] = useState('');
 
   async function createUserNow() {
     const apiResponse = await API.graphql({
@@ -65,6 +68,7 @@ export function CreateUser() {
       variables: {
         email: email,
         username: username,
+        countryCode: countryCode
       },
     });
     const response = apiResponse['data']['createUser'];
@@ -99,8 +103,8 @@ export function CreateUser() {
       setEmailErrorText('Does not match ^[\\w\\.+-_]+@([\\w-]+\\.)+[\\w-]{2,4}$');
       regexFail = true;
     }
-
-    if (username !== '' && email !== '' && regexFail !== true && checked) {
+    
+    if (username !== '' && email !== '' && regexFail !== true && checked && countryCode !== '') {
       setButtonDisabled(false);
     } else {
       setButtonDisabled(true);
@@ -108,7 +112,7 @@ export function CreateUser() {
     return () => {
       // Unmounting
     };
-  }, [username, email, checked]);
+  }, [username, email, checked, countryCode]);
 
   const columnsConfig = [
     {
@@ -120,11 +124,47 @@ export function CreateUser() {
       minWidth: 150,
     },
     {
+      id: 'Flag',
+      header: t('users.flag'),
+      cell: (item) => {
+        const countryCode = item.Attributes.filter(obj => {
+          return obj.Name === 'custom:countryCode'
+        })
+        if(countryCode.length > 0){
+          return <Flag size='small' countryCode={(countryCode[0].Value)}></Flag>
+        }
+        else {
+          return ''
+        }
+      },
+      sortingField: 'Flag',
+      width: 120,
+      minWidth: 80,
+    },
+    {
+      id: 'CountryCode',
+      header: t('users.country-code'),
+      cell: (item) => {
+        const countryCode = item.Attributes.filter(obj => {
+          return obj.Name === 'custom:countryCode'
+        })
+        if(countryCode.length > 0){
+          return (countryCode[0].Value)
+        }
+        else {
+          return ''
+        }
+      },
+      sortingField: 'CountryCode',
+      width: 120,
+      minWidth: 80,
+    },
+    {
       id: 'UserCreateDate',
       header: t('users.header-creation-date'),
       cell: (item) => dayjs(item.UserCreateDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'UserCreateDate',
-      width: 300,
+      width: 200,
       minWidth: 150,
     },
     {
@@ -132,7 +172,7 @@ export function CreateUser() {
       header: t('users.header-last-modified-date'),
       cell: (item) => dayjs(item.UserLastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
       sortingField: 'UserLastModifiedDate',
-      width: 300,
+      width: 200,
       minWidth: 150,
     },
   ];
@@ -145,6 +185,16 @@ export function CreateUser() {
           id: 'Username',
           label: t('users.header-username'),
           editable: false,
+        },
+        {
+          id: 'Flag',
+          label: t('users.flag'),
+          //editable: false,
+        },
+        {
+          id: 'CountryCode',
+          label: t('users.country-code'),
+          //editable: false,
         },
         {
           id: 'UserCreateDate',
@@ -178,131 +228,138 @@ export function CreateUser() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[1], isDescending: true } },
+      sorting: { defaultState: { sortingColumn: columnsConfig[3], isDescending: true } },
       selection: {},
     });
 
   return (
-    <PageLayout
-      header={t('users.header')}
-      description={t('users.description')}
-      breadcrumbs={[
-        { text: t('home.breadcrumb'), href: '/' },
-        { text: t('admin.breadcrumb'), href: '/admin/home' },
-        { text: t('users.breadcrumb') },
-      ]}
-    >
-      <SpaceBetween direction="vertical" size="l">
-        <Form
-          actions={
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button
-                variant="primary"
-                onClick={() => {
-                  createUserNow();
-                }}
-                disabled={buttonDisabled}
-              >
-                {t('users.create-user')}
-              </Button>
-            </SpaceBetween>
-          }
-        >
-          <Container textAlign="center">
-            <SpaceBetween direction="vertical" size="l">
-              <FormField label={t('users.racer-name')} errorText={usernameErrorText}>
-                <Input
-                  value={username}
-                  placeholder={t('users.racer-name-placeholder')}
-                  onChange={(input) => {
-                    setUsername(input.detail.value);
+    <>
+      <PageLayout
+        header={t('users.header')}
+        description={t('users.description')}
+        breadcrumbs={[
+          { text: t('home.breadcrumb'), href: '/' },
+          { text: t('admin.breadcrumb'), href: '/admin/home' },
+          { text: t('users.breadcrumb') },
+        ]}
+      >
+        <SpaceBetween direction="vertical" size="l">
+          <Form
+            actions={
+              <SpaceBetween direction="horizontal" size="xs">
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    createUserNow();
                   }}
-                />
-              </FormField>
-              <FormField label={t('users.email')} errorText={emailErrorText}>
-                <Input
-                  value={email}
-                  placeholder={t('users.email-placeholder')}
-                  onChange={(input) => {
-                    setEmail(input.detail.value);
-                  }}
-                />
-              </FormField>
-              <FormField
-                label={t('users.terms-and-conditions-title')}
-                errorText={termsAndConditionsErrorText}
-              >
-                <Link
-                  href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'}
-                  target="_blank"
+                  disabled={buttonDisabled}
                 >
-                  {t('users.terms-and-conditions')}
-                </Link>
-                <Toggle
-                  onChange={({ detail }) => setChecked(detail.checked)}
-                  checked={checked}
-                ></Toggle>
-              </FormField>
-            </SpaceBetween>
-          </Container>
-        </Form>
+                  {t('users.create-user')}
+                </Button>
+              </SpaceBetween>
+            }
+          >
+            <Container textAlign="center">
+              <SpaceBetween direction="vertical" size="l">
+                <FormField label={t('users.racer-name')} errorText={usernameErrorText}>
+                  <Input
+                    value={username}
+                    placeholder={t('users.racer-name-placeholder')}
+                    onChange={(input) => {
+                      setUsername(input.detail.value);
+                    }}
+                  />
+                </FormField>
+                <FormField label={t('users.email')} errorText={emailErrorText}>
+                  <Input
+                    value={email}
+                    placeholder={t('users.email-placeholder')}
+                    onChange={(input) => {
+                      setEmail(input.detail.value);
+                    }}
+                  />
+                </FormField>
 
-        <Table
-          {...collectionProps}
-          header={
-            <Header
-              counter={
-                selectedItems.length
-                  ? `(${selectedItems.length}/${users.length})`
-                  : `(${users.length})`
-              }
-            >
-              {t('users.header-list')}
-            </Header>
-          }
-          columnDefinitions={columnsConfig}
-          items={items}
-          pagination={
-            <Pagination
-              {...paginationProps}
-              ariaLabels={{
-                nextPageLabel: t('table.next-page'),
-                previousPageLabel: t('table.previous-page'),
-                pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
-              }}
-            />
-          }
-          filter={
-            <TextFilter
-              {...filterProps}
-              countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel={t('users.filter-groups')}
-            />
-          }
-          loading={isLoading}
-          loadingText={t('users.loading-groups')}
-          visibleColumns={preferences.visibleContent}
-          selectedItems={selectedItems}
-          stickyHeader="true"
-          trackBy="GroupName"
-          resizableColumns
-          preferences={
-            <CollectionPreferences
-              title={t('table.preferences')}
-              confirmLabel={t('button.confirm')}
-              cancelLabel={t('button.cancel')}
-              onConfirm={({ detail }) => setPreferences(detail)}
-              preferences={preferences}
-              pageSizePreference={PageSizePreference(t('users.page-size-label'))}
-              visibleContentPreference={{
-                title: t('table.select-visible-colunms'),
-                options: visibleContentOptions,
-              }}
-              wrapLinesPreference={WrapLines}
-            />
-          }
-        />
-      </SpaceBetween>
-    </PageLayout>
+                <CountrySelector
+                  countryCode={countryCode}
+                  setCountryCode={setCountryCode}
+                  label={t('users.country')}
+                />
+                <Flag countryCode={countryCode}></Flag>
+
+                <FormField label={t('users.terms-and-conditions-title')} errorText={termsAndConditionsErrorText}>
+                  <Link href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'} target="_blank">
+                    {t('users.terms-and-conditions')}
+                  </Link>
+                  <Toggle
+                    onChange={({ detail }) => setChecked(detail.checked)}
+                    checked={checked}    
+                  >
+                  </Toggle>
+                </FormField>
+              </SpaceBetween>
+            </Container>
+
+          </Form>
+
+          <Table
+            {...collectionProps}
+            header={
+              <Header
+                counter={
+                  selectedItems.length
+                    ? `(${selectedItems.length}/${users.length})`
+                    : `(${users.length})`
+                }
+              >
+                {t('users.header-list')}
+              </Header>
+            }
+            columnDefinitions={columnsConfig}
+            items={items}
+            pagination={
+              <Pagination
+                {...paginationProps}
+                ariaLabels={{
+                  nextPageLabel: t('table.next-page'),
+                  previousPageLabel: t('table.previous-page'),
+                  pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
+                }}
+              />
+            }
+            filter={
+              <TextFilter
+                {...filterProps}
+                countText={MatchesCountText(filteredItemsCount)}
+                filteringAriaLabel={t('users.filter-groups')}
+              />
+            }
+            loading={isLoading}
+            loadingText={t('users.loading-groups')}
+            visibleColumns={preferences.visibleContent}
+            selectedItems={selectedItems}
+            stickyHeader="true"
+            trackBy="GroupName"
+            resizableColumns
+            preferences={
+              <CollectionPreferences
+                title={t('table.preferences')}
+                confirmLabel={t('button.confirm')}
+                cancelLabel={t('button.cancel')}
+                onConfirm={({ detail }) => setPreferences(detail)}
+                preferences={preferences}
+                pageSizePreference={PageSizePreference(t('users.page-size-label'))}
+                visibleContentPreference={{
+                  title: t('table.select-visible-colunms'),
+                  options: visibleContentOptions,
+                }}
+                wrapLinesPreference={WrapLines}
+              />
+            }
+          />
+        </SpaceBetween>
+      </PageLayout>
+    </>
+    
   );
 }
