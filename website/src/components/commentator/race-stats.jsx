@@ -3,7 +3,7 @@ import { API, graphqlOperation } from 'aws-amplify';
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { getLeaderboard } from '../../graphql/queries';
+import { getLeaderboard, getRaces } from '../../graphql/queries';
 import { onNewOverlayInfo } from '../../graphql/subscriptions';
 import { eventContext } from '../../store/eventProvider';
 import { PageLayout } from '../pageLayout';
@@ -12,7 +12,8 @@ import Container from '@cloudscape-design/components/container';
 import Header from '@cloudscape-design/components/header';
 
 import { Box, SpaceBetween, Table } from '@cloudscape-design/components';
-import { convertMsToString } from '../../support-functions/convertMsToString';
+import { RaceTimeAsString } from '../raceTimeAsString';
+
 
 const CommenatorRaceStats = () => {
   const { t } = useTranslation();
@@ -21,7 +22,8 @@ const CommenatorRaceStats = () => {
   const { selectedEvent } = useContext(eventContext);
   const [actualRacer, SetActualRacer] = useState('No active Racer');
 
-  const [fastesRacerTime, SetFastesRacerTime] = useState();
+  const [fastesRacerTime, SetFastesRacerTime] = useState({});
+  const [slowestRacerTime, SetSlowestRacerTime] = useState({});
 
   const [fastesLapsForTrack, SetFastestLapsForTrack] = useState([]);
   const [slowestLapsForTrack, SetSlowestLapsForTrack] = useState([]);
@@ -52,6 +54,32 @@ const CommenatorRaceStats = () => {
   }, [selectedEvent]);
 
   useEffect(() => {
+    if (actualRacer && selectedEvent) {
+        console.info('Load data for '+ actualRacer)
+
+        // not working properly at the moment because of the missing userId in the overlay Update
+        const loadUserLaps = async () => {
+            const eventId = selectedEvent.eventId
+            const userId = actualRacer.userId
+
+            const response = await API.graphql(
+                graphqlOperation(getRaces, { eventId: eventId, userId: userId })
+            );
+            console.info(response)
+            const laps = response.data.getRaces.flatMap(race => race.laps)
+            console.info(laps)
+
+            const lapsSorted = laps.sort((a, b) => a.time > b.time);
+
+            SetFastesRacerTime(lapsSorted[0])
+            SetSlowestRacerTime(lapsSorted.pop())
+        }
+
+        loadUserLaps();
+    }
+  }, [actualRacer, selectedEvent])
+
+  useEffect(() => {
     if (selectedEvent) {
       if (subscription) {
         subscription.unsubscribe();
@@ -64,8 +92,9 @@ const CommenatorRaceStats = () => {
         API.graphql(graphqlOperation(onNewOverlayInfo, { eventId: eventId })).subscribe({
           next: (event) => {
             const eventData = event.value.data.onNewOverlayInfo;
-            console.log(eventData.username);
-            if (eventData.username !== actualRacer) SetActualRacer(eventData.username);
+            if (eventData.username !== actualRacer) 
+              SetActualRacer(eventData);
+              
           },
           error: (error) => console.warn(error),
         })
@@ -90,7 +119,7 @@ const CommenatorRaceStats = () => {
     {
       id: 'time',
       header: 'time',
-      cell: (item) => convertMsToString(item.fastestLapTime) || '-',
+      cell: (item) => <RaceTimeAsString timeInMS={item.fastestLapTime}></RaceTimeAsString> ,
     },
     {
       id: 'racerName',
@@ -120,7 +149,7 @@ const CommenatorRaceStats = () => {
           { text: t('commentator.race.breadcrumb'), href: '/' },
         ]}
       >
-        <ColumnLayout columns={2}>
+        <SpaceBetween size="l">
           <Container
             header={
               <Header variant="h2" description={t('commentator.race.actualRacerStats')}>
@@ -128,40 +157,39 @@ const CommenatorRaceStats = () => {
               </Header>
             }
           >
-            <SpaceBetween size="l">
-              <ValueWithLabel label={t('commentator.race.racerName')}>{actualRacer}</ValueWithLabel>
-              <ValueWithLabel label={t('commentator.race.racerFastestLap')}>
-                {fastesRacerTime}
-              </ValueWithLabel>
-            </SpaceBetween>
+            <ColumnLayout columns={3}>
+                <ValueWithLabel label={t('commentator.race.racerName')}>{actualRacer.username}</ValueWithLabel>
+                <ValueWithLabel label={t('commentator.race.racerFastestLap')}>
+                  <RaceTimeAsString timeInMS={fastesRacerTime.time}></RaceTimeAsString>
+                </ValueWithLabel>
+                <ValueWithLabel label={t('commentator.race.racerSlowestLap')}>
+                  <RaceTimeAsString timeInMS={slowestRacerTime.time}></RaceTimeAsString>
+                </ValueWithLabel>
+            </ColumnLayout>
           </Container>
 
-          <div></div>
+        <ColumnLayout columns={2}>
 
-          <Container
-            header={<Header variant="h2">{t('commentator.race.overallFastestLaps')}</Header>}
-          >
             <Table
+              header={<Header variant="h2">{t('commentator.race.overallFastestLaps')}</Header>}
               columnDefinitions={columnDefinitions}
               visibleColumns={['time', 'racerName']}
               items={fastesLapsForTrack}
               loadingText={t('commentator.race.loading')}
               sortingDisabled
             ></Table>
-          </Container>
 
-          <Container
-            header={<Header variant="h2">{t('commentator.race.overallSlowestLaps')}</Header>}
-          >
             <Table
+              header={<Header variant="h2">{t('commentator.race.overallSlowestLaps')}</Header>}
               columnDefinitions={columnDefinitions}
               visibleColumns={['time', 'racerName']}
               items={slowestLapsForTrack}
               loadingText={t('commentator.race.loading')}
               sortingDisabled
             ></Table>
-          </Container>
+          
         </ColumnLayout>
+        </SpaceBetween>
       </PageLayout>
     </>
   );

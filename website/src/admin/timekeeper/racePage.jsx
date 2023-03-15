@@ -6,7 +6,7 @@ import {
   Grid,
   Header,
   Modal,
-  SpaceBetween,
+  SpaceBetween
 } from '@cloudscape-design/components';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -121,6 +121,7 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
       startPublishOverlayInfo: () => {
         if (!overlayPublishTimerId) {
           console.info('starting to publishing timer');
+          console.info(race);
           setoverlayPublishTimerId(
             setInterval(() => {
               const overlayInfo = {

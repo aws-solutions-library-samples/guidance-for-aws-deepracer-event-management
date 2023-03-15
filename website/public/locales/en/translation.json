@@ -403,6 +403,7 @@
   "topnav.time-keeper": "Time keeper",
   "topnav.upload": "Upload",
   "topnav.commentator": "Commentator",
+  "topnav.commentator-race": "Race",
 
   "upload.breadcrumb": "Upload models",
   "upload.chose-file": "Choose model file(s)",
@@ -419,7 +420,8 @@
   "commentator.race.actualRacerStats": "Stats for the actual Racer",
   "commentator.race.racerName": "Racer Name",
   "commentator.race.racerFastestLap": "Fastest Time so far",
-  "commentator.race.overallFastestLaps": "Fastest Laps:",
+  "commentator.race.racerSlowestLap": "Slowest Time so far",
+  "commentator.race.overallFastestLaps": "Fastest Racer:",
   "commentator.race.loading": "Loading resources",
-  "commentator.race.overallSlowestLaps": "Slowest Laps:"
+  "commentator.race.overallSlowestLaps": "Slowest Racer:"
 }
