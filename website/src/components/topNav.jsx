@@ -28,6 +28,7 @@ import { AdminQuarantine } from '../admin/quarantine';
 import { EditRace } from '../admin/race-admin/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { Timekeeper } from '../admin/timekeeper/timeKeeper';
+import { ProfileHome } from '../admin/user-profile/profile';
 import { CreateUser } from '../admin/users/createUser';
 import { Home } from '../home';
 import useLink from '../hooks/useLink';
@@ -82,6 +83,7 @@ function MenuRoutes() {
       <Route path="/admin/timekeeper" element={<Timekeeper />} />
       <Route path="/admin/races" element={<RaceAdmin />} />
       <Route path="/admin/races/edit" element={<EditRace />} />
+      <Route path="/user/profile" element={<ProfileHome />} />
       <Route path="*" element={<Home />} />
     </Routes>
   );
@@ -204,6 +206,12 @@ export function TopNav(props) {
       iconName: 'user-profile',
       items: [
         {
+          id: 'user-profile',
+          text: t('topnav.user-profile'),
+          type: 'link',
+          href: '/user/profile'
+        },
+        {
           id: 'signout',
           text: t('topnav.sign-out'),
         },
@@ -264,7 +272,7 @@ export function TopNav(props) {
               infoIconAriaLabel: 'Info',
               inProgressIconAriaLabel: 'In progress',
             }}
-            //stackItems
+          //stackItems
           />
         }
         stickyNotifications
