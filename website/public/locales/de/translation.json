@@ -399,13 +399,14 @@
  "upload.label": "Modell hochladen",
 
  "commentator.race.header": "Rennen",
- "commentator.race.stats": "Statistiken über das Rennen und den aktuellen Rennfahrer",
+ "commentator.race.stats": "Statistiken über das Rennen und den aktuellen Rennfahrer_in",
  "commentator.breadcrumb": "Kommentator",
  "commentator.race.breadcrumb": "Rennen",
- "commentator.race.actualRacerStats": "Statistiken für den aktuellen Rennfahrer",
+ "commentator.race.actualRacerStats": "Statistiken für den aktuellen Rennfahrer_in",
  "commentator.race.racerName": "Name des Rennfahrers",
  "commentator.race.racerFastestLap": "Bisher schnellste Zeit",
- "commentator.race.overallFastestLaps": "Schnellste Runden:",
+ "commentator.race.racerSlowestLap": "Bisher langsamste Zeit",
+ "commentator.race.overallFastestLaps": "Schnellste Rennfahrer_in:",
  "commentator.race.loading": "Ressourcen werden geladen",
  "commentator.race.overallslowestLaps": "Langsamste Runden:"
 }
