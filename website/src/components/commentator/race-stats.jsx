@@ -54,25 +54,22 @@ const CommenatorRaceStats = () => {
   }, [selectedEvent]);
 
   useEffect(() => {
-    if (actualRacer && selectedEvent) {
-        console.info('Load data for '+ actualRacer)
-
+    const eventId = selectedEvent.eventId
+    const userId = actualRacer.userId
+    
+    if (eventId && userId) {
+        console.info('Load data for '+ actualRacer.username)
         // not working properly at the moment because of the missing userId in the overlay Update
         const loadUserLaps = async () => {
-            const eventId = selectedEvent.eventId
-            const userId = actualRacer.userId
 
             const response = await API.graphql(
                 graphqlOperation(getRaces, { eventId: eventId, userId: userId })
             );
-            console.info(response)
             const laps = response.data.getRaces.flatMap(race => race.laps)
-            console.info(laps)
-
             const lapsSorted = laps.sort((a, b) => a.time > b.time);
 
-            SetFastesRacerTime(lapsSorted[0])
-            SetSlowestRacerTime(lapsSorted.pop())
+            SetFastesRacerTime(lapsSorted[0] || {})
+            SetSlowestRacerTime(lapsSorted.pop() || {})
         }
 
         loadUserLaps();
@@ -92,7 +89,7 @@ const CommenatorRaceStats = () => {
         API.graphql(graphqlOperation(onNewOverlayInfo, { eventId: eventId })).subscribe({
           next: (event) => {
             const eventData = event.value.data.onNewOverlayInfo;
-            if (eventData.username !== actualRacer) 
+            if (eventData.userId !== actualRacer.userId) 
               SetActualRacer(eventData);
               
           },
@@ -110,8 +107,8 @@ const CommenatorRaceStats = () => {
 
   const ValueWithLabel = ({ label, children }) => (
     <div>
-      <Box variant="awsui-key-label">{label}</Box>
-      <div>{children}</div>
+      <Box variant="h3" >{label}</Box>
+      <Box variant="h2" >{children}</Box>
     </div>
   );
 
@@ -159,6 +156,12 @@ const CommenatorRaceStats = () => {
           >
             <ColumnLayout columns={3}>
                 <ValueWithLabel label={t('commentator.race.racerName')}>{actualRacer.username}</ValueWithLabel>
+                <ValueWithLabel label="Current Laptime">
+                  <RaceTimeAsString timeInMS={actualRacer.currentLapTimeInMs } showMills={false}></RaceTimeAsString>
+                </ValueWithLabel>
+                <ValueWithLabel label="Time Left">
+                  <RaceTimeAsString timeInMS={actualRacer.timeLeftInMs} showMills={false}></RaceTimeAsString>
+                </ValueWithLabel>
                 <ValueWithLabel label={t('commentator.race.racerFastestLap')}>
                   <RaceTimeAsString timeInMS={fastesRacerTime.time}></RaceTimeAsString>
                 </ValueWithLabel>
