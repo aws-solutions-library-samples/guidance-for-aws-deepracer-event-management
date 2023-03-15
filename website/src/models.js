@@ -2,7 +2,6 @@ import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
   CollectionPreferences,
-  Container,
   Header,
   Pagination,
   SpaceBetween,
@@ -128,86 +127,82 @@ const Models = () => {
   ];
 
   return (
-    <>
-      <PageLayout
-        header={t('models.header')}
-        description={t('models.list-of-your-uploaded-models')}
-        breadcrumbs={[{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]}
-      >
-        <Container>
-          <Table
-            {...collectionProps}
-            header={
-              <Header
-                counter={
-                  selectedItems.length
-                    ? `(${selectedItems.length}/${allItems.length})`
-                    : `(${allItems.length})`
-                }
-                actions={
-                  <SpaceBetween direction="horizontal" size="xs">
-                    <DeleteModelModal
-                      disabled={selectedModelsBtn}
-                      selectedItems={selectedItems}
-                      removeItem={removeItem}
-                      variant="primary"
-                    />
-                  </SpaceBetween>
-                }
-              >
-                {t('models.header')}
-              </Header>
+    <PageLayout
+      header={t('models.header')}
+      description={t('models.list-of-your-uploaded-models')}
+      breadcrumbs={[{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]}
+    >
+      <Table
+        {...collectionProps}
+        header={
+          <Header
+            counter={
+              selectedItems.length
+                ? `(${selectedItems.length}/${allItems.length})`
+                : `(${allItems.length})`
             }
-            columnDefinitions={userModelsColsConfig}
-            items={items}
-            pagination={
-              <Pagination
-                {...paginationProps}
-                ariaLabels={{
-                  nextPageLabel: t('table.next-page'),
-                  previousPageLabel: t('table.previous-page'),
-                  pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
-                }}
-              />
+            actions={
+              <SpaceBetween direction="horizontal" size="xs">
+                <DeleteModelModal
+                  disabled={selectedModelsBtn}
+                  selectedItems={selectedItems}
+                  removeItem={removeItem}
+                  variant="primary"
+                />
+              </SpaceBetween>
             }
-            filter={
-              <TextFilter
-                {...filterProps}
-                countText={MatchesCountText(filteredItemsCount)}
-                filteringAriaLabel={t('models.filter-models')}
-              />
-            }
-            loading={isLoading}
-            loadingText={t('models.loading-models')}
-            visibleColumns={preferences.visibleContent}
-            selectedItems={selectedItems}
-            selectionType="multi"
-            stickyHeader="true"
-            trackBy="modelName"
-            resizableColumns
-            onSelectionChange={({ detail: { selectedItems } }) => {
-              setSelectedItems(selectedItems);
-              selectedItems.length ? setSelectedModelsBtn(false) : setSelectedModelsBtn(true);
+          >
+            {t('models.header')}
+          </Header>
+        }
+        columnDefinitions={userModelsColsConfig}
+        items={items}
+        pagination={
+          <Pagination
+            {...paginationProps}
+            ariaLabels={{
+              nextPageLabel: t('table.next-page'),
+              previousPageLabel: t('table.previous-page'),
+              pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
             }}
-            preferences={
-              <CollectionPreferences
-                title={t('table.preferences')}
-                confirmLabel={t('button.confirm')}
-                cancelLabel={t('button.cancel')}
-                onConfirm={({ detail }) => setPreferences(detail)}
-                preferences={preferences}
-                pageSizePreference={PageSizePreference(t('models.page-size-label'))}
-                visibleContentPreference={{
-                  title: t('table.select-visible-colunms'),
-                  options: visibleContentOptions,
-                }}
-                wrapLinesPreference={WrapLines}
-              />
-            }
           />
-        </Container>
-      </PageLayout>
-    </>
+        }
+        filter={
+          <TextFilter
+            {...filterProps}
+            countText={MatchesCountText(filteredItemsCount)}
+            filteringAriaLabel={t('models.filter-models')}
+          />
+        }
+        loading={isLoading}
+        loadingText={t('models.loading-models')}
+        visibleColumns={preferences.visibleContent}
+        selectedItems={selectedItems}
+        selectionType="multi"
+        stickyHeader="true"
+        trackBy="modelName"
+        resizableColumns
+        onSelectionChange={({ detail: { selectedItems } }) => {
+          setSelectedItems(selectedItems);
+          selectedItems.length ? setSelectedModelsBtn(false) : setSelectedModelsBtn(true);
+        }}
+        preferences={
+          <CollectionPreferences
+            title={t('table.preferences')}
+            confirmLabel={t('button.confirm')}
+            cancelLabel={t('button.cancel')}
+            onConfirm={({ detail }) => setPreferences(detail)}
+            preferences={preferences}
+            pageSizePreference={PageSizePreference(t('models.page-size-label'))}
+            visibleContentPreference={{
+              title: t('table.select-visible-colunms'),
+              options: visibleContentOptions,
+            }}
+            wrapLinesPreference={WrapLines}
+          />
+        }
+      />
+    </PageLayout>
   );
 };
 
