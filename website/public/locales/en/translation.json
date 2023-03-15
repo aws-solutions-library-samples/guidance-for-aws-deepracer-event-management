@@ -457,5 +457,5 @@
   "commentator.race.currentLapTime": "Current Lap Time",
   "commentator.race.timeLeft": "Time Left",
   "commentator.race.lapCount": "Laps",
-  "commentator.race.invalidLapCount": "invalid Laps"
+  "commentator.race.invalidLapCount": "Not valid Laps"
 }
