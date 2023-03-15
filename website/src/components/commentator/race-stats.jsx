@@ -80,6 +80,7 @@ const CommenatorRaceStats = () => {
         }
 
       loadUserLaps();
+      loadUserLaps();
     }
   }, [actualRacer, selectedEvent]);
 
@@ -123,6 +124,7 @@ const CommenatorRaceStats = () => {
     {
       id: 'time',
       header: 'time',
+      cell: (item) => <RaceTimeAsString timeInMS={item.fastestLapTime}></RaceTimeAsString>,
       cell: (item) => <RaceTimeAsString timeInMS={item.fastestLapTime}></RaceTimeAsString>,
     },
     {
@@ -181,6 +183,7 @@ const CommenatorRaceStats = () => {
           </Container>
 
           <ColumnLayout columns={2}>
+          <ColumnLayout columns={2}>
             <Table
               header={<Header variant="h2">{t('commentator.race.overallFastestLaps')}</Header>}
               columnDefinitions={columnDefinitions}
@@ -198,6 +201,7 @@ const CommenatorRaceStats = () => {
               loadingText={t('commentator.race.loading')}
               sortingDisabled
             ></Table>
+          </ColumnLayout>
           </ColumnLayout>
         </SpaceBetween>
       </PageLayout>

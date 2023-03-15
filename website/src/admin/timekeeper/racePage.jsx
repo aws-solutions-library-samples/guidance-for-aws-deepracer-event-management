@@ -33,7 +33,7 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
   console.info(race);
   const [currentLap, SetCurrentLap] = useState(defaultLap);
   const [fastestLap, SetFastestLap] = useState([]);
-
+  const [startButtonText, setStartButtonText] = useState(t('timekeeper.start-race'));
   const raceType = GetRaceTypeNameFromId(raceConfig.rankingMethod);
   const allowedNrResets = GetRaceResetsNameFromId(raceConfig.numberOfResetsPerLap);
 
@@ -52,46 +52,25 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
   const [, send] = useMachine(stateMachine, {
     actions: {
       resetRace: () => {
-        //console.log('Reseting race state');
-        //        setRace((prevState) => {
-        //          return { ...prevState, userId: null, currentModelId: null, currentCarId: null };
-        //        });
         resetTimers();
-        //        setRace({ ...defaultRace, eventId: race.eventId ?? null });
         SetCurrentLap(defaultLap);
-
-        // Restart racer selection
-        //SetEndSessionModalIsVisible(false);
-        //SetRacerSelectorModalIsVisible(true);
       },
       readyToStart: (context, event) => {
-        //console.log('readyToStart race for user ' + event.userId);
-
         resetTimers();
-        //SetEndSessionModalIsVisible(false);
-        //SetRacerSelectorModalIsVisible(false);
       },
       endRace: () => {
         console.log('Ending race state');
-        // So the timers are paused before displaying the modal, else the race timer keeps counting down...
-        // setTimeout(() => {
-        //   // SetEndSessionModalIsVisible(true);
-        //   // SetRacerSelectorModalIsVisible(false);
-        // }, 100);
-        console.info('END RACE°!!!!!!!!');
         setWarningModalVisible(true);
-        //onNext(race);
       },
       startTimer: () => {
-        // console.log('Start Timer state');
+        setStartButtonText(t('timekeeper.pause-race'));
         startTimers();
       },
       pauseTimer: () => {
-        // console.log('Pause Timer state');
+        setStartButtonText(t('timekeeper.race-page.resume-race'));
         pauseTimers();
       },
       captureLap: (context, event) => {
-        // console.log('Capturing new lap');
         event.isValid = 'isValid' in event ? event.isValid : false;
 
         const isLapValid = event.isValid && carResetCounter <= raceConfig.numberOfResetsPerLap;
@@ -177,12 +156,13 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
   const wsUrl = window.location.href.split('/', 3)[2] ?? 'localhost:8080';
   const [autTimerIsConnected] = useWebsocket(`ws://${wsUrl}`, onMessageFromAutTimer);
 
-  // //Clean up overlay pusblishin on reload
-  // useEffect(() => {
-  //     return () => {
-  //         overlayPublishTimerId(overlayPublishTimerId)
-  //     }
-  // }, []);
+  //Clean up overlay pusblishin on reload
+  useEffect(() => {
+    return () => {
+      clearInterval(overlayPublishTimerId);
+      setoverlayPublishTimerId();
+    };
+  }, []);
 
   // Find the fastest lap
   useEffect(() => {
@@ -277,49 +257,47 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
               {t('button.cancel')}
             </Button>
             <Button variant="primary" onClick={() => onNext(race)}>
-              {t('button.ok')}
+              {t('timekeeper.end-race')}
             </Button>
           </SpaceBetween>
         </Box>
       }
-      header="Warning!"
+      header={t('timekeeper.race-page.warning-modal.header')}
     >
-      Are you sure you want to end the race?
+      {t('timekeeper.race-page.warning-modal.text')}
     </Modal>
   );
 
   // JSX
   return (
-    <PageLayout breadcrumbs={breadcrumbs} header="Time Keeper">
+    <PageLayout breadcrumbs={breadcrumbs}>
       <SpaceBetween size="l" direction="vertical">
         <Container>
-          <ColumnLayout columns={2} variant="text-grid">
+          <ColumnLayout columns={3} variant="text-grid">
             <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-              <Header variant="h3">Race format: </Header>
+              <Header variant="h3">{t('timekeeper.race-page.race-format-header')}: </Header>
               <Header variant="h3">{raceType} </Header>
             </Grid>
             <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-              <Header variant="h3">Automated timer: </Header>
-              <Header variant="h3">{autTimerIsConnected ? 'Connected' : 'Not connected'} </Header>
+              <Header variant="h3">{t('timekeeper.current-racer')}:</Header>
+              <Header variant="h3">{race.username}</Header>
+            </Grid>
+            <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+              <Header variant="h3">{t('timekeeper.race-page.automated-timer-header')}: </Header>
+              <Header variant="h3">
+                {autTimerIsConnected
+                  ? t('timekeeper.race-page.automated-timer-connected')
+                  : t('timekeeper.race-page.automated-timer-not-connected')}{' '}
+              </Header>
             </Grid>
           </ColumnLayout>
         </Container>
-        <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+        <ColumnLayout columns={2} variant="text-grid">
           <Container>
             <SpaceBetween size="xs" direction="vertical">
               <Grid
-                gridDefinition={[
-                  { colspan: 6 },
-                  { colspan: 6 },
-                  { colspan: 6 },
-                  { colspan: 6 },
-                  { colspan: 6 },
-                  { colspan: 6 },
-                ]}
+                gridDefinition={[{ colspan: 6 }, { colspan: 6 }, { colspan: 6 }, { colspan: 6 }]}
               >
-                <Header>{t('timekeeper.current-racer')}:</Header>
-                <Header variant="h2">{race.username}</Header>
-
                 <Header>{t('timekeeper.time-left')}: </Header>
                 <RaceTimer
                   onExpire={() => {
@@ -339,30 +317,27 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
                 { colspan: 12 },
                 { colspan: 12 },
                 { colspan: 3 },
-                { colspan: 2 },
-                { colspan: 7 },
+                { colspan: 3 },
+                { colspan: 6 },
                 { colspan: 12 },
                 { colspan: 6 },
                 { colspan: 6 },
               ]}
               className={styles.root}
             >
-              <Button onClick={() => send('DID_NOT_FINISH', { isValid: false })}>
-                <Box textAlign="center" color="text-status-error" variant="h3">
+              <Button onClick={() => send('DID_NOT_FINISH', { isValid: false })} variant="primary">
+                <Box textAlign="center" variant="h2">
                   {t('timekeeper.dnf')}
                 </Box>
               </Button>
-              <Button onClick={incrementCarResetCounter}>
-                <Box textAlign="center" variant="h3">
+              <Button onClick={incrementCarResetCounter} variant="primary">
+                <Box textAlign="center" variant="h2">
                   {t('timekeeper.car-reset')}
                 </Box>
               </Button>
 
-              <Button
-                onClick={() => send('CAPTURE_LAP', { isValid: true })}
-                disabled={!timersAreRunning}
-              >
-                <Box textAlign="center" variant="h3">
+              <Button onClick={() => send('CAPTURE_LAP', { isValid: true })} variant="primary">
+                <Box textAlign="center" variant="h2">
                   {t('timekeeper.capture-lap')}
                 </Box>
               </Button>
@@ -374,43 +349,48 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
                   {carResetCounter}/{allowedNrResets}
                 </Header>
               </SpaceBetween>
-              <Button onClick={decrementCarResetCounter}>
+              <Button onClick={decrementCarResetCounter} variant="primary">
                 <Box textAlign="center" variant="h3">
                   -1
                 </Box>
               </Button>
-              <Button onClick={undoFalseFinishHandler}>
+              <Button onClick={undoFalseFinishHandler} variant="primary">
                 <Box textAlign="center" variant="h3">
                   {t('timekeeper.undo-false-finish')}
                 </Box>
               </Button>
 
               <hr></hr>
-              <Button onClick={() => send('END')}>
-                <Box textAlign="center" variant="h3">
+              <Button onClick={() => send('END')} variant="primary">
+                <Box textAlign="center" variant="h2">
                   {t('timekeeper.end-race')}
                 </Box>
               </Button>
-              <Button onClick={() => send('TOGGLE')}>
-                <Box textAlign="center" variant="h3">
-                  {!timersAreRunning ? t('timekeeper.start-race') : t('timekeeper.pause-race')}
+              <Button onClick={() => send('TOGGLE')} variant="primary">
+                <Box textAlign="center" variant="h2">
+                  {startButtonText}
                 </Box>
               </Button>
             </Grid>
           </Container>
-          <SpaceBetween size="m" direction="horizontal">
-            <LapTable
-              header={t('timekeeper.fastest-lap')}
-              laps={fastestLap}
-              onAction={actionHandler}
-            />
-            <LapTable
-              header={t('timekeeper.recorded-laps')}
-              laps={race.laps}
-              onAction={actionHandler}
-            />
-          </SpaceBetween>
-        </Grid>
+          <Container>
+            <SpaceBetween size="m" direction="horizontal">
+              <LapTable
+                variant="embedded"
+                header={t('timekeeper.fastest-lap')}
+                laps={fastestLap}
+                onAction={actionHandler}
+              />
+
+              <LapTable
+                variant="embedded"
+                header={t('timekeeper.recorded-laps')}
+                laps={race.laps}
+                onAction={actionHandler}
+              />
+            </SpaceBetween>
+          </Container>
+        </ColumnLayout>
       </SpaceBetween>
       {warningModal}
     </PageLayout>

@@ -2,7 +2,7 @@ import { Box, Button, Modal, SpaceBetween } from '@cloudscape-design/components'
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ContentHeader } from '../../components/contentHeader';
+import { PageLayout } from '../../components/pageLayout';
 import { TableHeader } from '../../components/tableConfig';
 import useMutation from '../../hooks/useMutation';
 import { eventContext } from '../../store/eventProvider';
@@ -107,17 +107,16 @@ export const EditRace = () => {
   };
 
   return (
-    <>
-      <ContentHeader
-        header={t('race-admin.edit-race')}
-        description={t('race-admin.description')}
-        breadcrumbs={[
-          { text: t('home.breadcrumb'), href: '/' },
-          { text: t('admin.breadcrumb'), href: '/admin/home' },
-          { text: t('race-admin.breadcrumb'), href: '/admin/races' },
-          { text: t('race-admin.edit-race') },
-        ]}
-      />
+    <PageLayout
+      header={t('race-admin.edit-race')}
+      description={t('race-admin.description')}
+      breadcrumbs={[
+        { text: t('home.breadcrumb'), href: '/' },
+        { text: t('admin.breadcrumb'), href: '/admin/home' },
+        { text: t('race-admin.breadcrumb'), href: '/admin/races' },
+        { text: t('race-admin.edit-race') },
+      ]}
+    >
       <SpaceBetween size="l">
         <RaceInfoPanel race={raceConfig} onChange={updateRaceHandler} />
         <LapsTable
@@ -143,7 +142,7 @@ export const EditRace = () => {
           </SpaceBetween>
         </Box>
       </SpaceBetween>
-      {/* delete modal */}
+
       <Modal
         onDismiss={() => setDeleteModalVisible(false)}
         visible={deleteModalVisible}
@@ -173,6 +172,6 @@ export const EditRace = () => {
           return selectedLap.lapId + ' ';
         })}
       </Modal>
-    </>
+    </PageLayout>
   );
 };
