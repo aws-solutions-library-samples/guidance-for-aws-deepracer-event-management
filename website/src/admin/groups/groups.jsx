@@ -2,27 +2,26 @@ import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
   CollectionPreferences,
-  Grid,
   Header,
   Link,
   Pagination,
   Table,
-  TextFilter
+  TextFilter,
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ContentHeader } from '../../components/contentHeader';
 import {
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
   PageSizePreference,
-  WrapLines
+  WrapLines,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 import dayjs from 'dayjs';
+import { PageLayout } from '../../components/pageLayout';
 
 // day.js
 var advancedFormat = require('dayjs/plugin/advancedFormat');
@@ -153,76 +152,70 @@ export function AdminGroups() {
     });
 
   return (
-    <>
-      <ContentHeader
-        header={t('groups.header')}
-        description={t('groups.description')}
-        breadcrumbs={[
-          { text: t('home.breadcrumb'), href: '/' },
-          { text: t('admin.breadcrumb'), href: '/admin/home' },
-          { text: t('groups.breadcrumb') },
-        ]}
+    <PageLayout
+      header={t('groups.header')}
+      description={t('groups.description')}
+      breadcrumbs={[
+        { text: t('home.breadcrumb'), href: '/' },
+        { text: t('admin.breadcrumb'), href: '/admin/home' },
+        { text: t('groups.breadcrumb') },
+      ]}
+    >
+      <Table
+        {...collectionProps}
+        header={
+          <Header
+            counter={
+              selectedItems.length
+                ? `(${selectedItems.length}/${allItems.length})`
+                : `(${allItems.length})`
+            }
+          >
+            {t('groups.header')}
+          </Header>
+        }
+        columnDefinitions={columnsConfig}
+        items={items}
+        pagination={
+          <Pagination
+            {...paginationProps}
+            ariaLabels={{
+              nextPageLabel: t('table.next-page'),
+              previousPageLabel: t('table.previous-page'),
+              pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
+            }}
+          />
+        }
+        filter={
+          <TextFilter
+            {...filterProps}
+            countText={MatchesCountText(filteredItemsCount)}
+            filteringAriaLabel={t('groups.filter-groups')}
+          />
+        }
+        loading={isLoading}
+        loadingText={t('groups.loading-groups')}
+        visibleColumns={preferences.visibleContent}
+        selectedItems={selectedItems}
+        stickyHeader="true"
+        trackBy="GroupName"
+        resizableColumns
+        preferences={
+          <CollectionPreferences
+            title={t('table.preferences')}
+            confirmLabel={t('button.confirm')}
+            cancelLabel={t('button.cancel')}
+            onConfirm={({ detail }) => setPreferences(detail)}
+            preferences={preferences}
+            pageSizePreference={PageSizePreference(t('groups.page-size-label'))}
+            visibleContentPreference={{
+              title: t('table.select-visible-colunms'),
+              options: visibleContentOptions,
+            }}
+            wrapLinesPreference={WrapLines}
+          />
+        }
       />
-
-      <Grid gridDefinition={[{ colspan: 1 }, { colspan: 10 }, { colspan: 1 }]}>
-        <div></div>
-        <Table
-          {...collectionProps}
-          header={
-            <Header
-              counter={
-                selectedItems.length
-                  ? `(${selectedItems.length}/${allItems.length})`
-                  : `(${allItems.length})`
-              }
-            >
-              {t('groups.header')}
-            </Header>
-          }
-          columnDefinitions={columnsConfig}
-          items={items}
-          pagination={
-            <Pagination
-              {...paginationProps}
-              ariaLabels={{
-                nextPageLabel: t('table.next-page'),
-                previousPageLabel: t('table.previous-page'),
-                pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
-              }}
-            />
-          }
-          filter={
-            <TextFilter
-              {...filterProps}
-              countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel={t('groups.filter-groups')}
-            />
-          }
-          loading={isLoading}
-          loadingText={t('groups.loading-groups')}
-          visibleColumns={preferences.visibleContent}
-          selectedItems={selectedItems}
-          stickyHeader="true"
-          trackBy="GroupName"
-          resizableColumns
-          preferences={
-            <CollectionPreferences
-              title={t('table.preferences')}
-              confirmLabel={t('button.confirm')}
-              cancelLabel={t('button.cancel')}
-              onConfirm={({ detail }) => setPreferences(detail)}
-              preferences={preferences}
-              pageSizePreference={PageSizePreference(t('groups.page-size-label'))}
-              visibleContentPreference={{
-                title: t('table.select-visible-colunms'),
-                options: visibleContentOptions,
-              }}
-              wrapLinesPreference={WrapLines}
-            />
-          }
-        />
-        <div></div>
-      </Grid>
-    </>
+    </PageLayout>
   );
 }

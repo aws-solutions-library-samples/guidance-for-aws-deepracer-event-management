@@ -2,7 +2,7 @@ import { Button, Form, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ContentHeader } from '../../components/contentHeader';
+import { PageLayout } from '../../components/pageLayout';
 import useMutation from '../../hooks/useMutation';
 import { merge } from '../../support-functions/merge';
 import { CarsPanel } from './carsPanel';
@@ -61,17 +61,16 @@ export const EditFleet = () => {
   };
 
   return (
-    <>
-      <ContentHeader
-        header={t('fleets.edit-fleet')}
-        description={t('fleets.description')}
-        breadcrumbs={[
-          { text: t('home.breadcrumb'), href: '/' },
-          { text: t('admin.breadcrumb'), href: '/admin/home' },
-          { text: t('fleets.breadcrumb'), href: '/admin/fleets' },
-          { text: t('fleets.edit-fleet') },
-        ]}
-      />
+    <PageLayout
+      header={t('fleets.edit-fleet')}
+      description={t('fleets.description')}
+      breadcrumbs={[
+        { text: t('home.breadcrumb'), href: '/' },
+        { text: t('admin.breadcrumb'), href: '/admin/home' },
+        { text: t('fleets.breadcrumb'), href: '/admin/fleets' },
+        { text: t('fleets.edit-fleet') },
+      ]}
+    >
       <form onSubmit={(event) => event.preventDefault()}>
         <Form
           actions={
@@ -102,6 +101,6 @@ export const EditFleet = () => {
           </SpaceBetween>
         </Form>
       </form>
-    </>
+    </PageLayout>
   );
 };

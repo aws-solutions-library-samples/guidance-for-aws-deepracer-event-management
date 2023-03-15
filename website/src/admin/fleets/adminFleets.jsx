@@ -4,7 +4,7 @@ import { API } from 'aws-amplify';
 import React, { useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ContentHeader } from '../../components/contentHeader';
+import { PageLayout } from '../../components/pageLayout';
 import * as mutations from '../../graphql/mutations';
 
 import {
@@ -13,7 +13,7 @@ import {
   MatchesCountText,
   TableHeader,
   TablePagination,
-  TablePreferences
+  TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { fleetContext } from '../../store/fleetProvider';
@@ -121,16 +121,15 @@ const AdminFleets = () => {
   );
 
   return (
-    <>
-      <ContentHeader
-        header={t('fleets.header')}
-        description={t('fleets.description')}
-        breadcrumbs={[
-          { text: t('home.breadcrumb'), href: '/' },
-          { text: t('admin.breadcrumb'), href: '/admin/home' },
-          { text: t('fleets.breadcrumb') },
-        ]}
-      />
+    <PageLayout
+      header={t('fleets.header')}
+      description={t('fleets.description')}
+      breadcrumbs={[
+        { text: t('home.breadcrumb'), href: '/' },
+        { text: t('admin.breadcrumb'), href: '/admin/home' },
+        { text: t('fleets.breadcrumb') },
+      ]}
+    >
       <SpaceBetween direction="vertical" size="l">
         {fleetsTable}
       </SpaceBetween>
@@ -165,7 +164,7 @@ const AdminFleets = () => {
           return selectedFleet.fleetName + ' ';
         })}
       </Modal>
-    </>
+    </PageLayout>
   );
 };
 
