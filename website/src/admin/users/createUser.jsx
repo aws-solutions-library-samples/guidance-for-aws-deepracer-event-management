@@ -39,7 +39,7 @@ export function CreateUser() {
   const [users, isLoading ] = useUsersApi();
   const [preferences, setPreferences] = useLocalStorage('DREM-user-table-preferences', {
     ...DefaultPreferences,
-    visibleContent: ['Username', 'Country', 'UserCreateDate'],
+    visibleContent: ['Username', 'Flag', 'UserCreateDate'],
   });
   const [username, setUsername] = useState('');
   const [usernameErrorText, setUsernameErrorText] = useState('');
@@ -117,8 +117,8 @@ export function CreateUser() {
       minWidth: 150,
     },
     {
-      id: 'Country',
-      header: t('users.country'),
+      id: 'Flag',
+      header: t('users.flag'),
       cell: (item) => {
         const countryCode = item.Attributes.filter(obj => {
           return obj.Name === 'custom:countryCode'
@@ -130,7 +130,25 @@ export function CreateUser() {
           return ''
         }
       },
-      sortingField: 'Country',
+      sortingField: 'Flag',
+      width: 120,
+      minWidth: 80,
+    },
+    {
+      id: 'CountryCode',
+      header: t('users.country-code'),
+      cell: (item) => {
+        const countryCode = item.Attributes.filter(obj => {
+          return obj.Name === 'custom:countryCode'
+        })
+        if(countryCode.length > 0){
+          return (countryCode[0].Value)
+        }
+        else {
+          return ''
+        }
+      },
+      sortingField: 'CountryCode',
       width: 120,
       minWidth: 80,
     },
@@ -162,8 +180,13 @@ export function CreateUser() {
           editable: false,
         },
         {
-          id: 'Country',
-          label: t('users.country'),
+          id: 'Flag',
+          label: t('users.flag'),
+          //editable: false,
+        },
+        {
+          id: 'CountryCode',
+          label: t('users.country-code'),
           //editable: false,
         },
         {
@@ -198,7 +221,7 @@ export function CreateUser() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[2], isDescending: true } },
+      sorting: { defaultState: { sortingColumn: columnsConfig[3], isDescending: true } },
       selection: {},
     });
 
