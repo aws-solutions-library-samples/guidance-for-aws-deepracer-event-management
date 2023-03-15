@@ -403,6 +403,7 @@
   "topnav.time-keeper": "Time keeper",
   "topnav.upload": "Upload",
   "topnav.commentator": "Commentator",
+  "topnav.commentator-race": "Race",
 
   "upload.breadcrumb": "Upload models",
   "upload.chose-file": "Choose model file(s)",
