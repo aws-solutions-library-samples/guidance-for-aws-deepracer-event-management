@@ -3,7 +3,7 @@ import { Box, Button, Modal, SpaceBetween, Table, TextFilter } from '@cloudscape
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ContentHeader } from '../../components/contentHeader';
+import { PageLayout } from '../../components/pageLayout';
 import {
   DefaultPreferences,
   EmptyState,
@@ -152,16 +152,15 @@ const RaceAdmin = () => {
 
   // JSX
   return (
-    <>
-      <ContentHeader
-        header={t('race-admin.header')}
-        description={t('race-admin.description')}
-        breadcrumbs={[
-          { text: t('home.breadcrumb'), href: '/' },
-          { text: t('admin.breadcrumb'), href: '/admin/home' },
-          { text: t('race-admin.breadcrumb') },
-        ]}
-      />
+    <PageLayout
+      header={t('race-admin.header')}
+      description={t('race-admin.description')}
+      breadcrumbs={[
+        { text: t('home.breadcrumb'), href: '/' },
+        { text: t('admin.breadcrumb'), href: '/admin/home' },
+        { text: t('race-admin.breadcrumb') },
+      ]}
+    >
       {raceTable}
 
       <Modal
@@ -193,7 +192,7 @@ const RaceAdmin = () => {
           return selectedRace.raceId + ' ';
         })}
       </Modal>
-    </>
+    </PageLayout>
   );
 };
 
