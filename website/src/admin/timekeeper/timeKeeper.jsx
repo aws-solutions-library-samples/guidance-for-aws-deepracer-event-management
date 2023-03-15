@@ -1,7 +1,4 @@
-// TODO ensure automatic timer (websocket) is working properly
-
 import React, { useEffect, useState } from 'react';
-
 import { useTranslation } from 'react-i18next';
 import { useSideNavOptionsDispatch } from '../../store/appLayoutProvider';
 import { defaultRace } from './raceDomain';
@@ -63,23 +60,7 @@ export const Timekeeper = () => {
     });
   };
 
-  const raceInfoHandler = (attr) => {
-    console.info(attr);
-    setRace((prevState) => {
-      const test = { ...prevState, ...attr };
-      return test;
-    });
-  };
-
-  const raceConfigHandler = (attr) => {
-    console.info(attr);
-    setRaceConfig((prevState) => {
-      const test = { ...prevState, ...attr };
-      return test;
-    });
-  };
-
-  const raceSetupOnOkHandler = (event) => {
+  const raceSetupHandler = (event) => {
     console.info(event);
     setRace((prevState) => {
       const test = { ...prevState, ...event.race };
@@ -110,7 +91,7 @@ export const Timekeeper = () => {
     let pageToDisplay = undefined;
     switch (activeStep) {
       case 0:
-        pageToDisplay = <RaceSetupPage onNext={raceSetupOnOkHandler} />;
+        pageToDisplay = <RaceSetupPage onNext={raceSetupHandler} />;
         break;
       case 1:
         pageToDisplay = (
@@ -118,14 +99,16 @@ export const Timekeeper = () => {
         );
         break;
       case 2:
-        return (
+        pageToDisplay = (
           <RaceFinishPage
+            eventName={raceConfig.eventName}
             raceInfo={race}
             fastestLap={fastestLap}
             onAction={actionHandler}
             onNext={resetRacehandler}
           />
         );
+        break;
       default:
         break;
     }
@@ -133,7 +116,6 @@ export const Timekeeper = () => {
   };
 
   const pageToDisplay = stateMachine(activeStepIndex);
-  console.info(pageToDisplay);
   // JSX
   return <>{pageToDisplay}</>;
 };
