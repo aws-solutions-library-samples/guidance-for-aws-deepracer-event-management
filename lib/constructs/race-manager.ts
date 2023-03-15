@@ -262,6 +262,7 @@ export class RaceManager extends Construct {
             new ResolvableField({
                 args: {
                     eventId: GraphqlType.string({ isRequired: true }),
+                    userId: GraphqlType.string(),
                 },
                 returnType: raceObjectType.attribute({ isList: true }),
                 dataSource: raceDataSource,

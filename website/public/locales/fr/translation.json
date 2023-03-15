@@ -19,6 +19,7 @@
   "upload.constraint-text": "model-name.tar.gz",
   "upload.header-description": "Téléchargez des modèles dans DREM prêts pour la course sur la piste.",
   "upload.header": "Télécharger des modèles",
-  "upload.label": "Télécharger le modèle"
+  "upload.label": "Télécharger le modèle",
 
+  "commentator.race.racerSlowestLap": "to define"
 }
