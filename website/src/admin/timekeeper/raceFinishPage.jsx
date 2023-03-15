@@ -16,22 +16,19 @@ import { useNotificationsDispatch } from '../../store/appLayoutProvider';
 import { LapTable } from './lapTable';
 import { breadcrumbs } from './supportFunctions';
 
-export const RaceFinishPage = ({ raceInfo, fastestLap = [], onAction, onNext }) => {
+export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction, onNext }) => {
   const { t } = useTranslation();
   const [buttonsIsDisabled, SetButtonsIsDisabled] = useState(false);
   const [sendMutation, loading, errorMessage, data] = useMutation();
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const setNotifications = useNotificationsDispatch();
 
-  console.info(loading);
-  console.info(data);
-  console.info(errorMessage);
   const messageDisplayTime = 2500;
 
   const raceDiscardedNotification = [
     {
       type: 'warning',
-      content: 'Race Discarded!',
+      content: t('timekeeper.end-session.race-discarded'),
       id: 'discarding_race',
       dismissible: true,
       onDismiss: () => {
@@ -43,7 +40,7 @@ export const RaceFinishPage = ({ raceInfo, fastestLap = [], onAction, onNext }) 
     {
       type: 'success',
       loading: true,
-      content: 'Submitting race...',
+      content: t('timekeeper.end-session.submitting-race'),
       id: 'submitting_race',
       dismissible: true,
       onDismiss: () => {
@@ -54,7 +51,7 @@ export const RaceFinishPage = ({ raceInfo, fastestLap = [], onAction, onNext }) 
   const raceSubmittedSucessNotification = [
     {
       type: 'success',
-      content: 'Race Submitted',
+      content: t('timekeeper.end-session.info'),
       id: 'submitting_race',
       dismissible: true,
       onDismiss: (event) => {
@@ -66,7 +63,7 @@ export const RaceFinishPage = ({ raceInfo, fastestLap = [], onAction, onNext }) 
   const raceSubmittedFailedNotification = [
     {
       type: 'error',
-      content: 'Could not submit race, please try again',
+      content: t('timekeeper.end-session.error'),
       id: 'submitting_race',
       dismissible: true,
       onDismiss: (event) => {
@@ -94,7 +91,6 @@ export const RaceFinishPage = ({ raceInfo, fastestLap = [], onAction, onNext }) 
   }, [data, errorMessage, loading]);
 
   const submitRaceHandler = async () => {
-    console.info('Submiting Race...');
     console.info(raceInfo);
     SetButtonsIsDisabled(true);
     setNotifications(raceSubmitInProgressNotification);
@@ -113,30 +109,30 @@ export const RaceFinishPage = ({ raceInfo, fastestLap = [], onAction, onNext }) 
   };
 
   const raceInfoPanel = (
-    <Container header={<Header>Race Info</Header>}>
+    <Container header={<Header>{t('timekeeper.end-session.race-info')}</Header>}>
       <SpaceBetween direction="vertical" size="l">
         <Box>
-          <Header variant="h3">Event:</Header>
-          {raceInfo.eventId}
+          <Header variant="h3">{t('topnav.event')}</Header>
+          {eventName}
         </Box>
         <Box>
-          <Header variant="h3">Track:</Header>
+          <Header variant="h3">{t('events.track-type')}</Header>
           {raceInfo.trackId}
         </Box>
         <Box>
-          <Header variant="h3">Customer:</Header>
+          <Header variant="h3">{t('timekeeper.end-session.customer')}</Header>
           {raceInfo.username}
         </Box>
         <Box>
-          <Header variant="h3">Raced By Proxy:</Header>
-          {raceInfo.racedByProxy ? 'Yes' : 'No'}
+          <Header variant="h3">{t('timekeeper.end-session.raced-by-proxy')}</Header>
+          {raceInfo.racedByProxy ? t('common.yes') : t('common.no')}
         </Box>
       </SpaceBetween>
     </Container>
   );
 
   const lapsPanel = (
-    <Container header={<Header>Laps</Header>}>
+    <Container header={<Header>{t('timekeeper.end-session.laps-panel-header')}</Header>}>
       <SpaceBetween size="m" direction="vertical">
         <LapTable
           header={t('timekeeper.fastest-lap')}
@@ -188,21 +184,21 @@ export const RaceFinishPage = ({ raceInfo, fastestLap = [], onAction, onNext }) 
               {t('button.cancel')}
             </Button>
             <Button variant="primary" disabled={buttonsIsDisabled} onClick={discardRaceHandler}>
-              {t('button.ok')}
+              {t('timekeeper.end-session.discard-race')}
             </Button>
           </SpaceBetween>
         </Box>
       }
       header="Warning!"
     >
-      Clicking Ok will delete the race without saving it!
+      {t('timekeeper.end-session.warning-message')}
     </Modal>
   );
   return (
     <PageLayout
       breadcrumbs={breadcrumbs}
-      header="Review Race"
-      description="Verify that all laps and racer details are accurate before submitting the race."
+      header={t('timekeeper.end-session.page-header')}
+      description={t('timekeeper.end-session.page-description')}
     >
       <Grid gridDefinition={[{ colspan: 5 }, { colspan: 7 }, { colspan: 12 }]}>
         {raceInfoPanel}

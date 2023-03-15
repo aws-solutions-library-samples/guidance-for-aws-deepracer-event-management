@@ -45,6 +45,7 @@ export const stateMachine = createMachine({
           entry: ['pauseTimer', 'pausePublishOverlayInfo'],
           on: {
             TOGGLE: 'running',
+            CAPTURE_AUT_LAP: 'running',
             END: 'raceIsOver',
           },
         },
