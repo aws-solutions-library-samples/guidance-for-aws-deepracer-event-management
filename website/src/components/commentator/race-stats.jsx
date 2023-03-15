@@ -14,7 +14,6 @@ import Header from '@cloudscape-design/components/header';
 import { Box, SpaceBetween, Table } from '@cloudscape-design/components';
 import { RaceTimeAsString } from '../raceTimeAsString';
 
-
 const CommenatorRaceStats = () => {
   const { t } = useTranslation();
   const [subscription, SetSubscription] = useState();
@@ -66,15 +65,17 @@ const CommenatorRaceStats = () => {
                 graphqlOperation(getRaces, { eventId: eventId, userId: userId })
             );
             const laps = response.data.getRaces.flatMap(race => race.laps)
-            const lapsSorted = laps.sort((a, b) => a.time > b.time);
+            const lapsSorted = laps
+              .filter((lap) => lap.isValid === true)
+              .sort((a, b) => a.time > b.time);
 
             SetFastesRacerTime(lapsSorted[0] || {})
             SetSlowestRacerTime(lapsSorted.pop() || {})
         }
 
-        loadUserLaps();
+      loadUserLaps();
     }
-  }, [actualRacer, selectedEvent])
+  }, [actualRacer, selectedEvent]);
 
   useEffect(() => {
     if (selectedEvent) {
@@ -116,7 +117,7 @@ const CommenatorRaceStats = () => {
     {
       id: 'time',
       header: 'time',
-      cell: (item) => <RaceTimeAsString timeInMS={item.fastestLapTime}></RaceTimeAsString> ,
+      cell: (item) => <RaceTimeAsString timeInMS={item.fastestLapTime}></RaceTimeAsString>,
     },
     {
       id: 'racerName',
@@ -171,8 +172,7 @@ const CommenatorRaceStats = () => {
             </ColumnLayout>
           </Container>
 
-        <ColumnLayout columns={2}>
-
+          <ColumnLayout columns={2}>
             <Table
               header={<Header variant="h2">{t('commentator.race.overallFastestLaps')}</Header>}
               columnDefinitions={columnDefinitions}
@@ -190,8 +190,7 @@ const CommenatorRaceStats = () => {
               loadingText={t('commentator.race.loading')}
               sortingDisabled
             ></Table>
-          
-        </ColumnLayout>
+          </ColumnLayout>
         </SpaceBetween>
       </PageLayout>
     </>
