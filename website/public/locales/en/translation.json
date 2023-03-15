@@ -262,7 +262,7 @@
   "users.terms-and-conditions-error": "Please agree to the terms and conditions",
   "users.terms-and-conditions-title": "Agreement",
   "users.country": "Country",
-  "users.country-code": "Country",
+  "users.country-code": "Country Code",
   "users.flag": "Flag",
 
   "home.all-models-description": "List of the models uploaded by users",
