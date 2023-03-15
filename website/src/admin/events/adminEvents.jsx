@@ -18,7 +18,7 @@ import {
   MatchesCountText,
   TableHeader,
   TablePagination,
-  TablePreferences
+  TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 
@@ -150,7 +150,6 @@ const AdminEvents = () => {
   return (
     <>
       <PageLayout
-        // simplified={true}
         header={t('events.header')}
         description={t('events.description')}
         breadcrumbs={[
@@ -159,16 +158,6 @@ const AdminEvents = () => {
           { text: t('events.breadcrumb') },
         ]}
       >
-        {/* <ContentHeader
-          header={t('events.header')}
-          description={t('events.description')}
-          breadcrumbs={[
-            { text: t('home.breadcrumb'), href: '/' },
-            { text: t('admin.breadcrumb'), href: '/admin/home' },
-            { text: t('events.breadcrumb') },
-          ]}
-        /> */}
-
         {eventsTable}
 
         {/* delete modal */}
