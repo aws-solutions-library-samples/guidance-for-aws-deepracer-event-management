@@ -12,36 +12,36 @@ import { EventInfoPanel } from './generalInfoPanel';
 import { RacePanel } from './racePanel';
 
 export const CreateEvent = () => {
-    const { t } = useTranslation();
-    const navigate = useNavigate();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
 
-    const [send, loading, errorMessage, data] = useMutation();
-    const [createButtonIsDisabled, setCreateButtonIsDisabled] = useState(false);
-    const [eventConfig, setEventConfig] = useState(event);
+  const [send, loading, errorMessage, data] = useMutation();
+  const [createButtonIsDisabled, setCreateButtonIsDisabled] = useState(false);
+  const [eventConfig, setEventConfig] = useState(event);
 
-    useEffect(() => {
-        if (!loading && data && !errorMessage) {
-            navigate(-1);
-        }
-    }, [loading, data, errorMessage, navigate]);
+  useEffect(() => {
+    if (!loading && data && !errorMessage) {
+      navigate(-1);
+    }
+  }, [loading, data, errorMessage, navigate]);
 
-    const UpdateConfigHandler = (attr) => {
-        setEventConfig((prevState) => {
-            return merge({ ...prevState }, attr);
-        });
-    };
+  const UpdateConfigHandler = (attr) => {
+    setEventConfig((prevState) => {
+      return merge({ ...prevState }, attr);
+    });
+  };
 
-    const onCreateEventHandler = async () => {
-        send('addEvent', eventConfig);
-    };
+  const onCreateEventHandler = async () => {
+    send('addEvent', eventConfig);
+  };
 
-    const formIsValidHandler = () => {
-        setCreateButtonIsDisabled(false);
-    };
+  const formIsValidHandler = () => {
+    setCreateButtonIsDisabled(false);
+  };
 
-    const formIsInvalidHandler = () => {
-        setCreateButtonIsDisabled(true);
-    };
+  const formIsInvalidHandler = () => {
+    setCreateButtonIsDisabled(true);
+  };
 
     return (
         <>

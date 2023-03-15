@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 
@@ -27,9 +28,13 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
 
         response_item = ddb_response["Item"]
 
+        decoded_password = base64.b64decode(
+            response_item.get("base64carUiPassword", "").encode("utf-8")
+        ).decode("utf-8")
+
         label_info = {
             "device_hostname": response_item.get("ComputerName", "Not defined"),
-            "device_password": response_item.get("carUiPassword", "Not defined"),
+            "device_password": decoded_password,
             "device_ipaddress": response_item.get("IpAddress", "Not defined"),
         }
 

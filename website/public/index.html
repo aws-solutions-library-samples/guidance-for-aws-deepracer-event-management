@@ -1,7 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script>(function(n,i,v,r,s,c,x,z){{x=window.AwsRumClient={{q:[],n:n,i:i,v:v,r:r,c:c}};window[n]=function(c,p){{x.q.push({{c:c,p:p}});}};z=document.createElement('script');z.async=true;z.src=s;document.head.insertBefore(z,document.getElementsByTagName('script')[0]);}})('cwr','af6b4b3f-8f1b-4aa0-a6ac-4e4f4c22181b','1.0.0','eu-west-1','https://client.rum.us-east-1.amazonaws.com/1.0.2/cwr.js',{{sessionSampleRate:"1",guestRoleArn:"arn:aws:iam::984132265396:role/drem-backend-esbjj-local-CwRumAppMonitorCwRumCogn-1I2X4N139GIL9",identityPoolId:"eu-west-1:ef15ca64-eb57-4d3f-9441-c963f3fc5fd1",endpoint:"https://dataplane.rum.eu-west-1.amazonaws.com",telemetries:performance,errors,http,allowCookies:true,enableXRay:true}});</script>
+    <script>
+            (function(n,i,v,r,s,c,x,z){x=window.AwsRumClient={q:[],n:n,i:i,v:v,r:r,c:c};window[n]=function(c,p){x.q.push({c:c,p:p});};z=document.createElement('script');z.async=true;z.src=s;document.head.insertBefore(z,document.head.getElementsByTagName('script')[0]);})(
+                'cwr',
+                'af6b4b3f-8f1b-4aa0-a6ac-4e4f4c22181b',
+                '1.0.0',
+                'eu-west-1',
+                'https://client.rum.us-east-1.amazonaws.com/1.12.0/cwr.js',
+                {
+                sessionSampleRate: 1,
+                guestRoleArn: "arn:aws:iam::984132265396:role/drem-backend-esbjj-local-CwRumAppMonitorCwRumCogn-1I2X4N139GIL9",
+                identityPoolId: "eu-west-1:ef15ca64-eb57-4d3f-9441-c963f3fc5fd1",
+                endpoint: "https://dataplane.rum.eu-west-1.amazonaws.com",
+                telemetries: ["performance","errors","http"],
+                allowCookies: true,
+                enableXRay: true
+                }
+            );
+        </script>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

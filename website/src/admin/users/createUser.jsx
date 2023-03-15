@@ -1,7 +1,18 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
-  Button, CollectionPreferences, Container, Form, FormField, Header, Input, Link, Pagination, SpaceBetween, Table,
-  TextFilter, Toggle
+  Button,
+  CollectionPreferences,
+  Container,
+  Form,
+  FormField,
+  Header,
+  Input,
+  Link,
+  Pagination,
+  SpaceBetween,
+  Table,
+  TextFilter,
+  Toggle
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import dayjs from 'dayjs';
@@ -36,7 +47,7 @@ export function CreateUser() {
   const { t } = useTranslation();
 
   const [selectedItems] = useState([]);
-  const [users, isLoading ] = useUsersApi();
+  const [users, isLoading] = useUsersApi();
   const [preferences, setPreferences] = useLocalStorage('DREM-user-table-preferences', {
     ...DefaultPreferences,
     visibleContent: ['Username', 'Flag', 'UserCreateDate'],
@@ -69,11 +80,10 @@ export function CreateUser() {
 
   // watch checked Toggle for changes
   useEffect(() => {
-    if (checked){
-      setTermsAndConditionsErrorText('')
-    }
-    else {
-      setTermsAndConditionsErrorText(t('users.terms-and-conditions-error'))
+    if (checked) {
+      setTermsAndConditionsErrorText('');
+    } else {
+      setTermsAndConditionsErrorText(t('users.terms-and-conditions-error'));
     }
   }, [checked, t]);
 
@@ -81,25 +91,22 @@ export function CreateUser() {
   useEffect(() => {
     var regexFail = false;
     if (username.match(/^[a-zA-Z0-9-_]+$/) || username.match(/^$/)) {
-      setUsernameErrorText('')
-    }
-    else{
-      setUsernameErrorText('Does not match ^[a-zA-Z0-9-_]+$')
-      regexFail = true
+      setUsernameErrorText('');
+    } else {
+      setUsernameErrorText('Does not match ^[a-zA-Z0-9-_]+$');
+      regexFail = true;
     }
 
     if (email.match(/^[\w\.+-_]+@([\w-]+\.)+[\w-]{2,4}$/) || username.match(/^$/)) {
-      setEmailErrorText('')
-    }
-    else{
-      setEmailErrorText('Does not match ^[\\w\\.+-_]+@([\\w-]+\\.)+[\\w-]{2,4}$')
-      regexFail = true
+      setEmailErrorText('');
+    } else {
+      setEmailErrorText('Does not match ^[\\w\\.+-_]+@([\\w-]+\\.)+[\\w-]{2,4}$');
+      regexFail = true;
     }
     
     if (username !== '' && email !== '' && regexFail !== true && checked && countryCode !== '') {
       setButtonDisabled(false);
-    }
-    else {
+    } else {
       setButtonDisabled(true);
     }
     return () => {

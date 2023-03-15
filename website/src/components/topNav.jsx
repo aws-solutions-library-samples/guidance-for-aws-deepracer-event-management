@@ -1,4 +1,10 @@
-import { AppLayout, Badge, SideNavigation, TopNavigation } from '@cloudscape-design/components';
+import {
+  AppLayout,
+  Badge,
+  Flashbar,
+  SideNavigation,
+  TopNavigation,
+} from '@cloudscape-design/components';
 import { Auth } from 'aws-amplify';
 import React, { useContext, useEffect, useState } from 'react';
 
@@ -26,10 +32,11 @@ import { Home } from '../home';
 import useLink from '../hooks/useLink';
 import { Models } from '../models';
 import {
+  useNotifications,
   useSideNavOptions,
   useSideNavOptionsDispatch,
   useSplitPanelOptions,
-  useSplitPanelOptionsDispatch
+  useSplitPanelOptionsDispatch,
 } from '../store/appLayoutProvider';
 import { eventContext } from '../store/eventProvider';
 import { Upload } from '../upload';
@@ -56,7 +63,7 @@ function MenuRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/models" element={<Models />} />
       <Route path="/upload" element={<Upload />} />
-            <Route path="/commentator" element={<CommenatorRaceStats />} />
+      <Route path="/commentator" element={<CommenatorRaceStats />} />
       <Route path="/admin/home" element={<AdminHome />} />
       <Route path="/admin/models" element={<AdminModels />} />
       <Route path="/admin/quarantine" element={<AdminQuarantine />} />
@@ -85,32 +92,7 @@ export function TopNav(props) {
   const [groups, setGroups] = useState([]);
   const splitPanelOptions = useSplitPanelOptions();
   const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
-  // const [splitPanelOptions, setSplitPanelOptions] = useState({
-  //   isOpen: true,
-  //   content: (
-  //     <SplitPanel
-  //       header="Laps"
-  //       i18nStrings={{
-  //         preferencesTitle: 'Split panel preferences',
-  //         preferencesPositionLabel: 'Split panel position',
-  //         preferencesPositionDescription:
-  //           'Choose the default split panel position for the service.',
-  //         preferencesPositionSide: 'Side',
-  //         preferencesPositionBottom: 'Bottom',
-  //         preferencesConfirm: 'Confirm',
-  //         preferencesCancel: 'Cancel',
-  //         closeButtonAriaLabel: 'Close panel',
-  //         openButtonAriaLabel: 'Open panel',
-  //         resizeHandleAriaLabel: 'Resize split panel',
-  //       }}
-  //     >
-  //       Test
-  //     </SplitPanel>
-  //   ),
-  //   onToggle: (event) => {
-  //     console.info(event);
-  //   },
-  // });
+  const notifications = useNotifications();
 
   const { handleFollow } = useLink();
 
@@ -137,10 +119,9 @@ export function TopNav(props) {
     { type: 'link', text: t('topnav.models'), href: '/models' },
   ];
 
-    if (groups.includes('admin') || groups.includes('commentator')) {
-        navItems.push(
-            {type: 'link', text: t('topnav.commentator'), href: '/commentator' })
-    }
+  if (groups.includes('admin') || groups.includes('commentator')) {
+    navItems.push({ type: 'link', text: t('topnav.commentator'), href: '/commentator' });
+  }
 
   if (groups.includes('admin')) {
     navItems.push({
@@ -203,6 +184,36 @@ export function TopNav(props) {
     });
   }
 
+  const topNavItems = [
+    {
+      type: 'menu-dropdown',
+      text: props.user,
+      iconName: 'user-profile',
+      items: [
+        {
+          id: 'signout',
+          text: t('topnav.sign-out'),
+        },
+      ],
+      onItemClick: ({ detail }) => {
+        if (detail.id === 'signout') {
+          props.signout();
+        }
+      },
+    },
+  ];
+  if (groups.includes('admin')) {
+    topNavItems.unshift({
+      type: 'menu-dropdown',
+      text: selectedEvent.eventName,
+      items: events.map((event) => {
+        return { id: event.eventId, text: event.eventName };
+      }),
+      onItemClick: ({ detail }) => {
+        setSelectedEvent(events.find((item) => item.eventId === detail.id));
+      },
+    });
+  }
   return (
     <div>
       <div id="h" style={{ position: 'sticky', top: 0, zIndex: 1002 }}>
@@ -215,34 +226,7 @@ export function TopNav(props) {
               alt: 'DREM',
             },
           }}
-          utilities={[
-            {
-              type: 'menu-dropdown',
-              text: selectedEvent.eventName,
-              items: events.map((event) => {
-                return { id: event.eventId, text: event.eventName };
-              }),
-              onItemClick: ({ detail }) => {
-                setSelectedEvent(events.find((item) => item.eventId === detail.id));
-              },
-            },
-            {
-              type: 'menu-dropdown',
-              text: props.user,
-              iconName: 'user-profile',
-              items: [
-                {
-                  id: 'signout',
-                  text: t('topnav.sign-out'),
-                },
-              ],
-              onItemClick: ({ detail }) => {
-                if (detail.id === 'signout') {
-                  props.signout();
-                }
-              },
-            },
-          ]}
+          utilities={topNavItems}
           i18nStrings={{
             searchIconAriaLabel: t('topnav.search'),
             searchDismissIconAriaLabel: t('topnav.close-search'),
@@ -254,7 +238,23 @@ export function TopNav(props) {
         />
       </div>
       <AppLayout
-        // stickyNotifications
+        notifications={
+          <Flashbar
+            items={notifications}
+            i18nStrings={{
+              ariaLabel: 'Notifications',
+              notificationBarAriaLabel: 'View all notifications',
+              notificationBarText: 'Notifications',
+              errorIconAriaLabel: 'Error',
+              warningIconAriaLabel: 'Warning',
+              successIconAriaLabel: 'Success',
+              infoIconAriaLabel: 'Info',
+              inProgressIconAriaLabel: 'In progress',
+            }}
+            //stackItems
+          />
+        }
+        stickyNotifications
         toolsHide
         // headerSelector="#header"
         ariaLabels={{ navigationClose: 'close' }}
