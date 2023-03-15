@@ -93,32 +93,6 @@ export function TopNav(props) {
   const splitPanelOptions = useSplitPanelOptions();
   const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
   const notifications = useNotifications();
-  // const [splitPanelOptions, setSplitPanelOptions] = useState({
-  //   isOpen: true,
-  //   content: (
-  //     <SplitPanel
-  //       header="Laps"
-  //       i18nStrings={{
-  //         preferencesTitle: 'Split panel preferences',
-  //         preferencesPositionLabel: 'Split panel position',
-  //         preferencesPositionDescription:
-  //           'Choose the default split panel position for the service.',
-  //         preferencesPositionSide: 'Side',
-  //         preferencesPositionBottom: 'Bottom',
-  //         preferencesConfirm: 'Confirm',
-  //         preferencesCancel: 'Cancel',
-  //         closeButtonAriaLabel: 'Close panel',
-  //         openButtonAriaLabel: 'Open panel',
-  //         resizeHandleAriaLabel: 'Resize split panel',
-  //       }}
-  //     >
-  //       Test
-  //     </SplitPanel>
-  //   ),
-  //   onToggle: (event) => {
-  //     console.info(event);
-  //   },
-  // });
 
   const { handleFollow } = useLink();
 
@@ -210,6 +184,36 @@ export function TopNav(props) {
     });
   }
 
+  const topNavItems = [
+    {
+      type: 'menu-dropdown',
+      text: props.user,
+      iconName: 'user-profile',
+      items: [
+        {
+          id: 'signout',
+          text: t('topnav.sign-out'),
+        },
+      ],
+      onItemClick: ({ detail }) => {
+        if (detail.id === 'signout') {
+          props.signout();
+        }
+      },
+    },
+  ];
+  if (groups.includes('admin')) {
+    topNavItems.unshift({
+      type: 'menu-dropdown',
+      text: selectedEvent.eventName,
+      items: events.map((event) => {
+        return { id: event.eventId, text: event.eventName };
+      }),
+      onItemClick: ({ detail }) => {
+        setSelectedEvent(events.find((item) => item.eventId === detail.id));
+      },
+    });
+  }
   return (
     <div>
       <div id="h" style={{ position: 'sticky', top: 0, zIndex: 1002 }}>
@@ -222,34 +226,7 @@ export function TopNav(props) {
               alt: 'DREM',
             },
           }}
-          utilities={[
-            {
-              type: 'menu-dropdown',
-              text: selectedEvent.eventName,
-              items: events.map((event) => {
-                return { id: event.eventId, text: event.eventName };
-              }),
-              onItemClick: ({ detail }) => {
-                setSelectedEvent(events.find((item) => item.eventId === detail.id));
-              },
-            },
-            {
-              type: 'menu-dropdown',
-              text: props.user,
-              iconName: 'user-profile',
-              items: [
-                {
-                  id: 'signout',
-                  text: t('topnav.sign-out'),
-                },
-              ],
-              onItemClick: ({ detail }) => {
-                if (detail.id === 'signout') {
-                  props.signout();
-                }
-              },
-            },
-          ]}
+          utilities={topNavItems}
           i18nStrings={{
             searchIconAriaLabel: t('topnav.search'),
             searchDismissIconAriaLabel: t('topnav.close-search'),
