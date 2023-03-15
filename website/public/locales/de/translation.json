@@ -50,6 +50,12 @@
   "carmodelupload.no-matches": "Keine Treffer",
   "carmodelupload.online": "Zurzeit sind keine Autos online. ",
   "carmodelupload.please-wait": "Bitte warten Sie, bis die Model-Upload-Jobs übermittelt werden",
+  "carmodelupload.loading": "Loading resources",
+  "carmodelupload.modelname": "ModelName",
+  "carmodelupload.no-cars": "No cars",
+  "carmodelupload.no-matches": "No matches",
+  "carmodelupload.online": "No cars are currently online.",
+  "carmodelupload.please-wait": "Please wait whilst model upload jobs are submitted",
   "carmodelupload.status": "Status",
   "carmodelupload.upload": "Modelle ins Auto hochladen",
   "carmodelupload.we-cant-find-a-match": "Wir können keinen Treffer finden",
@@ -107,7 +113,13 @@
   "events.loading": "Ressourcen werden geladen",
   "events.no-events": "Keine Ereignisse",
   "events.create-an-event": "Bitte erstelle ein Event. ",
- 
+  "events.leaderboard-link": "Leaderboard",
+  "events.leaderboard-link-same-tab": "Open in this tab",
+  "events.leaderboard-link-new-tab": "Open in new tab",
+  "events.streaming-overlay-link": "Streaming Overlay",
+  "events.streaming-overlay-link-same-tab": "Open in this tab",
+  "events.streaming-overlay-link-new-tab": "Open in new tab",
+
   "events.event-type": "Art der Veranstaltung",
   "events.event-type-description": "",
   "events.type.private-workshop": "Privater Workshop",
@@ -252,6 +264,9 @@
  "users.email": "E-Mail",
  "users.email-placeholder": "E-Mail",
  "users.create-user": "Benutzer erstellen",
+ "users.terms-and-conditions": "Terms and Conditions",
+ "users.terms-and-conditions-error": "Please agree to the terms and conditions",
+ "users.terms-and-conditions-title": "Agreement",
 
  "home.all-models-description": "Liste der von Benutzern hochgeladenen Models",
  "home.all-models": "Alle Modelle",
@@ -365,6 +380,7 @@
  "timekeeper.start-race": "Rennen starten",
  "timekeeper.time-left": "Verbleibende Zeit",
  "timekeeper.undo-false-finish": "Falsches Ende rückgängig machen",
+ "timekeeper.undo-false-finish": "Undo false finish",
 
  "topnav.admin": "Administrator",
  "topnav.all-models": "Alle Modelle",
@@ -408,5 +424,10 @@
  "commentator.race.racerSlowestLap": "Bisher langsamste Zeit",
  "commentator.race.overallFastestLaps": "Schnellste Rennfahrer_in:",
  "commentator.race.loading": "Ressourcen werden geladen",
- "commentator.race.overallslowestLaps": "Langsamste Runden:"
+ "commentator.race.overallslowestLaps": "Langsamste Runden:",
+ "commentator.race.currentLapTime": "Current Lap Time",
+  "commentator.race.timeLeft": "Time Left",
+  "commentator.race.lapCount": "Laps",
+  "commentator.race.invalidLapCount": "invalid Laps"
+
 }
