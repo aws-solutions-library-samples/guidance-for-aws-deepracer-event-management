@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # encoding=utf-8
+import base64
 import os
 from datetime import datetime
 
@@ -30,6 +31,10 @@ def carActivation(hostname: str, fleetName: str, fleetId: str, carUiPassword: st
         now = datetime.now()
         datestr = now.strftime("%Y-%m-%d-%H:%M")
 
+        base64carUiPassword = base64.b64encode(carUiPassword.encode("utf-8")).decode(
+            "utf-8"
+        )  # encode to allow for special characters
+
         response = client.create_activation(
             Description="Hybrid activation for DREM",
             DefaultInstanceName=hostname + " - " + datestr,
@@ -40,7 +45,7 @@ def carActivation(hostname: str, fleetName: str, fleetId: str, carUiPassword: st
                 {"Key": "Type", "Value": "deepracer"},
                 {"Key": "fleetName", "Value": fleetName},
                 {"Key": "fleetId", "Value": fleetId},
-                {"Key": "carUiPassword", "Value": carUiPassword},
+                {"Key": "base64carUiPassword", "Value": base64carUiPassword},
             ],
         )
 

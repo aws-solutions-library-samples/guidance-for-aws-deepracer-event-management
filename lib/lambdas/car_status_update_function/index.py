@@ -30,7 +30,7 @@ def lambda_handler(event: dict, context: LambdaContext):
                 logger.debug(tags_response)
 
                 # list of tags that we copy from SSM to DynamoBD table
-                tag_keys_to_copy = ["fleetName", "fleetId", "carUiPassword"]
+                tag_keys_to_copy = ["fleetName", "fleetId", "base64carUiPassword"]
                 for tag in tags_response["TagList"]:
                     if tag["Key"] in tag_keys_to_copy:
                         instance[tag["Key"]] = tag["Value"]
