@@ -5,14 +5,15 @@ export const stateMachine = createMachine({
   predictableActionArguments: true,
   preserveActionOrder: true,
   context: { raceTimeIsExpired: false, dnf: false },
-  initial: 'RaceReseted',
+  initial: 'ReadyToStartRace',
   states: {
     RaceReseted: {
-      entry: ['resetRace'],
-      on: {
-        READY: 'ReadyToStartRace',
-        END: 'RaceReseted',
-      },
+      entry: ['resetRace', 'stopPublishOverlayInfo'],
+      // on: {
+      //   READY: 'ReadyToStartRace',
+      //   END: 'RaceReseted',
+      // },
+      always: [{ target: 'ReadyToStartRace' }],
     },
     ReadyToStartRace: {
       entry: ['readyToStart', 'startPublishOverlayInfo'],

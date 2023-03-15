@@ -55,7 +55,10 @@ const components = {
 
     return (
       <View textAlign="center" padding={tokens.space.large}>
-        <Link href="/terms_and_conditions.html" target="_blank">
+        <Link
+          href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'}
+          target="_blank"
+        >
           Terms and Conditions
         </Link>
       </View>

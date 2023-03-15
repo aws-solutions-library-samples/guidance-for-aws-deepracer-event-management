@@ -8,11 +8,13 @@
   "button.delete": "Delete",
   "button.edit": "Edit",
   "button.create": "Create",
+  "button.next": "Next",
   "button.ok": "Ok",
 
   "common.in-progress": "In progress",
   "common.error": "Error",
   "common.success": "Success",
+  "common.info": "Info",
 
   "car-activation.breadcrumb": "Car activation",
   "car-activation.copied-to-clipboard": "copied to clipboard",
@@ -33,6 +35,12 @@
   "car-activation.wifi-config": "Optional WiFi config for networks with hidden SSIDs",
   "car-activation.wifi-placeholder": "wifimagic",
   "car-activation.wifi": "WiFi Password",
+
+  "label-printer.printable-label-header": "Printable Label",
+  "label-printer.printable-label-alt-text": "Printable Label",
+  "label-printer.printable-label-copy-button": "Copy label URL",
+  "label-printer.download-printable-label": "Download printable label",
+  "label-printer.download-printable-labels": "Download printable labels",
 
   "carmodelupload.clear-filter": "Clear filter",
   "carmodelupload.clear": "Clear car models first?",
@@ -107,6 +115,8 @@
   "events.loading": "Loading resources",
   "events.no-events": "No Events",
   "events.create-an-event": "Please create an event.",
+  "events.leaderboard-link": "Leaderboard",
+  "events.streaming-overlay-link": "Streaming Overlay",
 
   "events.event-type": "Type of Event",
   "events.event-type-description": "",
@@ -252,6 +262,9 @@
   "users.email": "Email",
   "users.email-placeholder": "Email",
   "users.create-user": "Create user",
+  "users.terms-and-conditions": "Terms and Conditions",
+  "users.terms-and-conditions-error": "Please agree to the terms and conditions",
+  "users.terms-and-conditions-title": "Agreement",
 
   "home.all-models-description": "List of the models uploaded by users",
   "home.all-models": "All models",
@@ -355,6 +368,7 @@
   "timekeeper.racer-selector.loading": "loading",
   "timekeeper.racer-selector.select-event": "Select event",
   "timekeeper.racer-selector.select-racer": "Select racer",
+  "timekeeper.racer-selector.select-track": "Track",
   "timekeeper.racer-selector.select-car": "Select car from event car fleet",
   "timekeeper.racer-selector.select-car-empty": "Event has not been associated with a car fleet or there is no cars in the fleet",
   "timekeeper.racer-selector.select-model": "Select model",

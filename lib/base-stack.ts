@@ -20,6 +20,7 @@ export class BaseStack extends cdk.Stack {
     public readonly eventbridge: Eventbridge;
     public readonly idp: Idp;
     public readonly cloudfrontDistribution: Distribution;
+    public readonly tacCloudfrontDistribution: Distribution;
     public readonly logsBucket: s3.Bucket;
     public readonly lambdaConfig: {
         runtime: awsLambda.Runtime;
@@ -77,12 +78,19 @@ export class BaseStack extends cdk.Stack {
         this.cloudfrontDistribution = cdn.distribution;
 
         // Terms And Conditions webpage
-        new Website(this, 'TermsNConditions', {
+        const tacWebsite = new Website(this, 'TermsNConditions', {
             contentPath: './website-terms-and-conditions/',
             pathPattern: '/terms-and-conditions.html',
             logsBucket: logsBucket,
             cdnDistribution: cdn.distribution,
         });
+
+        // Terms And Conditions cloudfront Distribution
+        const tacCdn = new Cdn(this, 'tacCdn', {
+            defaultOrigin: tacWebsite.origin,
+            logsBucket: logsBucket,
+        });
+        this.tacCloudfrontDistribution = tacCdn.distribution;
 
         // Lambda
         // Common Config

@@ -57,12 +57,12 @@ $ make pipeline.trigger
 
 ### Setup pre commit hooks
 
--   install dependenies `$ npm install `
--   install pre-commit hooks`$ pre-commit install`
+-   install dependencies `$ npm install `
+-   install pre-commit hooks`$ pip install pre-commit && pre-commit install`
 -   set `AWS_DEFAULT_REGION`
 -   set `CDK_DEFAULT_ACCOUNT`
 
-The pre-commit hooks will only run towards changed files. You can manually run a pre-commit hook test without commiting the files by running `bash .git/hooks/pre-commit`
+The pre-commit hooks will only run towards changed files. You can manually run a pre-commit hook test without committing the files by running `bash .git/hooks/pre-commit`
 
 ## SES + Cognito
 
