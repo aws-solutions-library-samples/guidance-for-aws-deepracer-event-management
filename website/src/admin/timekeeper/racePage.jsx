@@ -106,6 +106,7 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
               const overlayInfo = {
                 eventId: race.eventId,
                 username: race.username,
+                userId: race.userId,
                 timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
                 currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
                 isActive: true,
@@ -120,6 +121,7 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
         const overlayInfo = {
           eventId: race.eventId,
           username: race.username,
+          userId: race.userId,
           timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
           currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
           isActive: true,
@@ -133,6 +135,7 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
         const overlayInfo = {
           eventId: race.eventId,
           username: race.username,
+          userId: race.userId,
           timeLeftInMs: 0,
           currentLapTimeInMs: 0,
           isActive: false,
