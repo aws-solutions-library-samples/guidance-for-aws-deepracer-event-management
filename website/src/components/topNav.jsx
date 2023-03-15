@@ -3,8 +3,9 @@ import {
   Badge,
   Flashbar,
   SideNavigation,
-  TopNavigation,
+  TopNavigation
 } from '@cloudscape-design/components';
+
 import { Auth } from 'aws-amplify';
 import React, { useContext, useEffect, useState } from 'react';
 
@@ -36,7 +37,7 @@ import {
   useSideNavOptions,
   useSideNavOptionsDispatch,
   useSplitPanelOptions,
-  useSplitPanelOptionsDispatch,
+  useSplitPanelOptionsDispatch
 } from '../store/appLayoutProvider';
 import { eventContext } from '../store/eventProvider';
 import { Upload } from '../upload';
