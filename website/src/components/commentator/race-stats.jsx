@@ -68,12 +68,11 @@ const CommenatorRaceStats = () => {
         const laps = response.data.getRaces.flatMap((race) => race.laps);
         console.info(laps);
 
-        const filteredLaps = laps
+        const lapsSorted = laps
           .filter((lap) => lap.isValid === true)
           .sort((a, b) => a.time > b.time);
-        console.info(filteredLaps);
+        console.info(lapsSorted);
 
-        const lapsSorted = filteredLaps.sort((a, b) => a.time > b.time);
         SetFastesRacerTime(lapsSorted[0]);
         SetSlowestRacerTime(lapsSorted.pop());
       };
