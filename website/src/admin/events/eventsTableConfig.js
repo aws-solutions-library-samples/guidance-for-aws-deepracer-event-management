@@ -5,6 +5,7 @@ import {
   GetTrackTypeNameFromId,
 } from './raceConfig';
 import awsconfig from '../../config.json';
+import { EventLinksButtons } from '../../components/eventLinksButtons';
 
 export const VisibleContentOptions = () => {
   return [
@@ -56,10 +57,10 @@ export const VisibleContentOptions = () => {
           id: 'eventLeaderboardLink',
           label: i18next.t('events.leaderboard-link'),
         },
-        // {
-        //   id: 'eventStreamingOverlayLink',
-        //   label: i18next.t('events.streaming-overlay-link'),
-        // }, TODO uncomment when streaming overlay is done
+        {
+          id: 'eventStreamingOverlayLink',
+          label: i18next.t('events.streaming-overlay-link'),
+        },
       ],
     },
   ];
@@ -139,9 +140,11 @@ export const ColumnDefinitions = (allCarFleets = undefined) => {
       header: i18next.t('events.leaderboard-link'),
       cell: (item) =>
         (
-          <a href={awsconfig.Urls.leaderboardWebsite + '/?' + 'event=' + item.eventId.toString()}>
-            {i18next.t('events.leaderboard-link')}
-          </a>
+          <EventLinksButtons
+            href={awsconfig.Urls.leaderboardWebsite + '/?' + 'event=' + item.eventId.toString()}
+            linkTextPrimary={i18next.t('events.leaderboard-link-same-tab')}
+            linkTextExternal={i18next.t('events.leaderboard-link-new-tab')}
+          />
         ) || '-',
     },
     {
@@ -149,13 +152,13 @@ export const ColumnDefinitions = (allCarFleets = undefined) => {
       header: i18next.t('events.streaming-overlay-link'),
       cell: (item) =>
         (
-          <a
+          <EventLinksButtons
             href={
               awsconfig.Urls.streamingOverlayWebsite + '/?' + 'event=' + item.eventId.toString()
             }
-          >
-            {i18next.t('events.streaming-overlay-link')}
-          </a>
+            linkTextPrimary={i18next.t('events.streaming-overlay-link-same-tab')}
+            linkTextExternal={i18next.t('events.streaming-overlay-link-new-tab')}
+          />
         ) || '-',
     },
   ];
