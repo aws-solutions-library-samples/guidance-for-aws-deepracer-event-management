@@ -38,7 +38,7 @@ const components = {
           {/* Re-use default `Authenticator.SignUp.FormFields` */}
           <Authenticator.SignUp.FormFields />
 
-          <CountrySelector amplify={true} />
+          <CountrySelector amplify={true} description={validationErrors.countryCode} />
 
           {/* Append & require Terms & Conditions field to sign up  */}
           <CheckboxField
@@ -82,7 +82,7 @@ export default function App() {
           }
           if (!formData['custom:countryCode']) {
             return {
-              'custom:countryCode': 'You must pick a country',
+              countryCode: 'You must pick a country',
             };
           }
         },
