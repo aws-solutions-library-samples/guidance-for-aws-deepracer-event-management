@@ -1,5 +1,46 @@
-.root Button {
+.root button {
   width: inherit;
   /* height: 4rem; */
   text-align: center;
+  border-radius: 15px;
+  -moz-border-radius: 15px;
+  font-weight: bold;
+  font-size: 20px;
+  padding: 40px;
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+
+#dnf {
+  background-color: #FF5166;
+}
+
+#carreset {
+  background-color: #F7B500;
+}
+
+#capturelap {
+  background-color: #2FCF8F;
+}
+
+#undoreset {
+  background-color: #F7B500;
+}
+
+#undofalsefinish {
+  background-color: #98BCD5;
+}
+
+#endrace {
+  background-color: #FF5166;
+}
+
+/* #endrace:hover {
+  background-color:red;
+} */
+
+#startrace {
+  background-color: #FF5166;
 }
