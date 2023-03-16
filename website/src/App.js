@@ -39,11 +39,6 @@ const components = {
           <Authenticator.SignUp.FormFields />
 
           <CountrySelector amplify={true} />
-          {/* <SelectField name="custom:countryCode" placeholder="Select country...">
-            <option value="apple">Apple</option>
-            <option value="banana">Banana</option>
-            <option value="orange">Orange</option>
-          </SelectField> */}
 
           {/* Append & require Terms & Conditions field to sign up  */}
           <CheckboxField
@@ -83,6 +78,11 @@ export default function App() {
           if (!formData.acknowledgement) {
             return {
               acknowledgement: 'You must agree to the Terms & Conditions',
+            };
+          }
+          if (!formData['custom:countryCode']) {
+            return {
+              'custom:countryCode': 'You must pick a country',
             };
           }
         },

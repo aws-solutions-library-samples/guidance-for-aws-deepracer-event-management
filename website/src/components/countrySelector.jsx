@@ -39,6 +39,7 @@ export function CountrySelector(props) {
             <SelectField 
                 name="custom:countryCode" 
                 placeholder="Select country..."
+                descriptiveText={props.description}
             >
                 {countryOptionsAmplify}
             </SelectField>
