@@ -6,7 +6,7 @@ import {
   Grid,
   Header,
   Modal,
-  SpaceBetween
+  SpaceBetween,
 } from '@cloudscape-design/components';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -14,7 +14,7 @@ import { useMachine } from '@xstate/react';
 import { useTranslation } from 'react-i18next';
 import { PageLayout } from '../../components/pageLayout';
 import useCounter from '../../hooks/useCounter';
-import useMutation from '../../hooks/useMutation';
+import { usePublishOverlay } from '../../hooks/usePublishOverlay';
 import useWebsocket from '../../hooks/useWebsocket';
 import { GetRaceResetsNameFromId, GetRaceTypeNameFromId } from '../events/raceConfig';
 import { LapTable } from './lapTable';
@@ -28,11 +28,10 @@ import styles from './timekeeper.module.css';
 export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
   const { t } = useTranslation();
   const [warningModalVisible, setWarningModalVisible] = useState(false);
-  const [timersAreRunning, SetTimersAreRunning] = useState(false);
   const [race, setRace] = useState({ ...defaultRace, ...raceInfo });
-  console.info(race);
   const [currentLap, SetCurrentLap] = useState(defaultLap);
   const [fastestLap, SetFastestLap] = useState([]);
+  const lapsForOverlay = useRef([]);
   const [startButtonText, setStartButtonText] = useState(t('timekeeper.start-race'));
   const raceType = GetRaceTypeNameFromId(raceConfig.rankingMethod);
   const allowedNrResets = GetRaceResetsNameFromId(raceConfig.numberOfResetsPerLap);
@@ -46,17 +45,13 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
 
   const lapTimerRef = useRef();
   const raceTimerRef = useRef();
-  const [overlayPublishTimerId, setoverlayPublishTimerId] = useState();
-  const [SendMutation] = useMutation();
+  const [PublishOverlay] = usePublishOverlay();
 
   const [, send] = useMachine(stateMachine, {
     actions: {
-      resetRace: () => {
-        resetTimers();
-        SetCurrentLap(defaultLap);
-      },
       readyToStart: (context, event) => {
         resetTimers();
+        SetCurrentLap(defaultLap);
       },
       endRace: () => {
         console.log('Ending race state');
@@ -92,57 +87,57 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
           return { ...prevState, laps: laps };
         });
 
+        lapsForOverlay.current.push(currentLapStats);
+
         // reset lap
         SetCurrentLap(defaultLap);
         resetCarResetCounter();
         lapTimerRef.current.reset();
       },
-      startPublishOverlayInfo: () => {
-        if (!overlayPublishTimerId) {
-          console.info('starting to publishing timer');
-          console.info(race);
-          setoverlayPublishTimerId(
-            setInterval(() => {
-              const overlayInfo = {
-                eventId: race.eventId,
-                username: race.username,
-                userId: race.userId,
-                timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
-                currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
-                isActive: true,
-              };
-              SendMutation('updateOverlayInfo', overlayInfo);
-            }, 400)
-          );
-        }
+      publishReadyToStartOverlay: () => {
+        PublishOverlay(() => {
+          return {
+            eventId: race.eventId,
+            eventName: raceConfig.eventName,
+            trackId: race.trackId,
+            username: race.username,
+            userId: race.userId,
+            laps: lapsForOverlay.current,
+            timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
+            currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
+            raceStatus: 'READY_TO_START',
+          };
+        }, 2000);
       },
-      pausePublishOverlayInfo: () => {
-        console.log('Pause Publishing overlay info, id: ' + overlayPublishTimerId);
-        const overlayInfo = {
-          eventId: race.eventId,
-          username: race.username,
-          userId: race.userId,
-          timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
-          currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
-          isActive: true,
-        };
-        SendMutation('updateOverlayInfo', overlayInfo);
-        clearInterval(overlayPublishTimerId);
-        setoverlayPublishTimerId();
+      publishRaceInProgreessOverlay: () => {
+        PublishOverlay(() => {
+          return {
+            eventId: race.eventId,
+            eventName: raceConfig.eventName,
+            trackId: race.trackId,
+            username: race.username,
+            userId: race.userId,
+            laps: lapsForOverlay.current,
+            timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
+            currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
+            raceStatus: 'RACE_IN_PROGRESS',
+          };
+        });
       },
-      stopPublishOverlayInfo: () => {
-        console.log('Stop Publishing overlay info, id: ' + overlayPublishTimerId);
-        const overlayInfo = {
-          eventId: race.eventId,
-          username: race.username,
-          userId: race.userId,
-          timeLeftInMs: 0,
-          currentLapTimeInMs: 0,
-          isActive: false,
-        };
-        SendMutation('updateOverlayInfo', overlayInfo);
-        clearInterval(overlayPublishTimerId);
-        setoverlayPublishTimerId();
+      publishRacePausedOverlay: () => {
+        PublishOverlay(() => {
+          return {
+            eventId: race.eventId,
+            eventName: raceConfig.eventName,
+            trackId: race.trackId,
+            username: race.username,
+            userId: race.userId,
+            laps: lapsForOverlay.current,
+            timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
+            currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
+            raceStatus: 'RACE_PAUSED',
+          };
+        }, 5000);
       },
     },
   });
@@ -155,14 +150,6 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
   //TODO fix so that useWebsocket is invoked only on local networks
   const wsUrl = window.location.href.split('/', 3)[2] ?? 'localhost:8080';
   const [autTimerIsConnected] = useWebsocket(`ws://${wsUrl}`, onMessageFromAutTimer);
-
-  //Clean up overlay pusblishin on reload
-  useEffect(() => {
-    return () => {
-      clearInterval(overlayPublishTimerId);
-      setoverlayPublishTimerId();
-    };
-  }, []);
 
   // Find the fastest lap
   useEffect(() => {
@@ -212,6 +199,7 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
         lapTimerRef.current.reset(lapTimerRef.current.getCurrentTimeInMs() + lastLap.time);
         resetCarResetCounter(lastLap.resets);
       }
+      lapsForOverlay.current = updatedLaps;
       return { ...prevState, laps: updatedLaps };
     });
   };
@@ -220,13 +208,11 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
   const startTimers = () => {
     lapTimerRef.current.start();
     raceTimerRef.current.start();
-    SetTimersAreRunning(true);
   };
 
   const pauseTimers = () => {
     lapTimerRef.current.pause();
     raceTimerRef.current.pause();
-    SetTimersAreRunning(false);
   };
 
   const resetTimers = () => {
@@ -256,7 +242,12 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
             >
               {t('button.cancel')}
             </Button>
-            <Button variant="primary" onClick={() => onNext(race)}>
+            <Button
+              variant="primary"
+              onClick={() => {
+                onNext(race);
+              }}
+            >
               {t('timekeeper.end-race')}
             </Button>
           </SpaceBetween>
@@ -325,22 +316,16 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
               ]}
               className={styles.root}
             >
-              <Button onClick={() => send('DID_NOT_FINISH', { isValid: false })} variant="primary">
-                <Box textAlign="center" variant="h2">
-                  {t('timekeeper.dnf')}
-                </Box>
-              </Button>
-              <Button onClick={incrementCarResetCounter} variant="primary">
-                <Box textAlign="center" variant="h2">
-                  {t('timekeeper.car-reset')}
-                </Box>
-              </Button>
+              <button id={styles.dnf} onClick={() => send('DID_NOT_FINISH', { isValid: false })}>
+                {t('timekeeper.dnf')}
+              </button>
+              <button id={styles.carreset} onClick={incrementCarResetCounter}>
+                {t('timekeeper.car-reset')}
+              </button>
 
-              <Button onClick={() => send('CAPTURE_LAP', { isValid: true })} variant="primary">
-                <Box textAlign="center" variant="h2">
-                  {t('timekeeper.capture-lap')}
-                </Box>
-              </Button>
+              <button id={styles.capturelap} onClick={() => send('CAPTURE_LAP', { isValid: true })}>
+                {t('timekeeper.capture-lap')}
+              </button>
 
               <hr></hr>
               <SpaceBetween>
@@ -349,28 +334,20 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
                   {carResetCounter}/{allowedNrResets}
                 </Header>
               </SpaceBetween>
-              <Button onClick={decrementCarResetCounter} variant="primary">
-                <Box textAlign="center" variant="h3">
-                  -1
-                </Box>
-              </Button>
-              <Button onClick={undoFalseFinishHandler} variant="primary">
-                <Box textAlign="center" variant="h3">
-                  {t('timekeeper.undo-false-finish')}
-                </Box>
-              </Button>
+              <button id={styles.undoreset} onClick={decrementCarResetCounter}>
+                -1
+              </button>
+              <button id={styles.undofalsefinish} onClick={undoFalseFinishHandler}>
+                {t('timekeeper.undo-false-finish')}
+              </button>
 
               <hr></hr>
-              <Button onClick={() => send('END')} variant="primary">
-                <Box textAlign="center" variant="h2">
-                  {t('timekeeper.end-race')}
-                </Box>
-              </Button>
-              <Button onClick={() => send('TOGGLE')} variant="primary">
-                <Box textAlign="center" variant="h2">
-                  {startButtonText}
-                </Box>
-              </Button>
+              <button id={styles.endrace} onClick={() => send('END')}>
+                {t('timekeeper.end-race')}
+              </button>
+              <button id={styles.startrace} onClick={() => send('TOGGLE')} variant="primary">
+                {startButtonText}
+              </button>
             </Grid>
           </Container>
           <Container>
