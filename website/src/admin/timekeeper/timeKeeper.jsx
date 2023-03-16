@@ -87,7 +87,6 @@ export const Timekeeper = () => {
   };
 
   const stateMachine = (activeStep) => {
-    console.info(activeStep);
     let pageToDisplay = undefined;
     switch (activeStep) {
       case 0:

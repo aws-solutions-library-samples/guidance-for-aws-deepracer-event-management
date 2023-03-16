@@ -12,12 +12,15 @@ import {
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageLayout } from '../../components/pageLayout';
+import useMutation from '../../hooks/useMutation';
+import { RacesStatusEnum } from '../../hooks/usePublishOverlay';
 import { eventContext } from '../../store/eventProvider';
 import { usersContext } from '../../store/usersProvider';
 import { breadcrumbs } from './supportFunctions';
 
 export const RaceSetupPage = ({ onNext }) => {
   const { t } = useTranslation();
+  const [SendMutation] = useMutation();
   const { events, selectedEvent, setSelectedEvent } = useContext(eventContext);
   const [users, isLoadingRacers] = useContext(usersContext);
 
@@ -39,6 +42,17 @@ export const RaceSetupPage = ({ onNext }) => {
   });
 
   const [userOptions, SetUserOptions] = useState([]);
+
+  useEffect(() => {
+    if (selectedEvent == null) return;
+
+    const message = {
+      eventId: selectedEvent.eventId,
+      trackId: 1,
+      raceStatus: RacesStatusEnum.NO_RACER_SELECTED,
+    };
+    SendMutation('updateOverlayInfo', message);
+  }, [selectedEvent, SendMutation]);
 
   // input validation
   useEffect(() => {
