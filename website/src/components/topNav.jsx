@@ -117,10 +117,26 @@ export function TopNav(props) {
     };
   }, []);
 
-  const navItems = [
-    { type: 'link', text: t('topnav.upload'), href: '/upload' },
-    { type: 'link', text: t('topnav.models'), href: '/models' },
-  ];
+  const navItems = [{
+    type: 'section',
+    text: t('topnav.models'),
+    href: '/models',
+    items: [
+      { type: 'link', text: t('topnav.upload'), href: '/upload' },
+      { type: 'link', text: t('topnav.models'), href: '/models' },
+    ]
+  }];
+
+  if (groups.includes('admin') || groups.includes('reception')) {
+    navItems.push({
+      type: 'section',
+      text: t('topnav.reception'),
+      href: '/reception',
+      items: [
+        { type: 'link', text: t('topnav.create-user'), href: '/admin/createuser' },
+      ],
+    });
+  }
 
   if (groups.includes('admin') || groups.includes('commentator')) {
     navItems.push({
@@ -193,8 +209,15 @@ export function TopNav(props) {
             },
           ],
         },
-        { type: 'link', text: t('topnav.groups'), href: '/admin/groups' },
-        { type: 'link', text: t('topnav.create-user'), href: '/admin/createuser' },
+        {
+          type: 'expandable-link-group',
+          text: t('topnav.users'),
+          items: [
+            { type: 'link', text: t('topnav.groups'), href: '/admin/groups' },
+          ],
+        },
+        
+        
       ],
     });
   }
