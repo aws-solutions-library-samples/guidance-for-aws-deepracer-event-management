@@ -6,7 +6,7 @@ import {
   Grid,
   Header,
   Modal,
-  SpaceBetween
+  SpaceBetween,
 } from '@cloudscape-design/components';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -325,22 +325,16 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
               ]}
               className={styles.root}
             >
-              <Button onClick={() => send('DID_NOT_FINISH', { isValid: false })} variant="primary">
-                <Box textAlign="center" variant="h2">
-                  {t('timekeeper.dnf')}
-                </Box>
-              </Button>
-              <Button onClick={incrementCarResetCounter} variant="primary">
-                <Box textAlign="center" variant="h2">
-                  {t('timekeeper.car-reset')}
-                </Box>
-              </Button>
+              <button id={styles.dnf} onClick={() => send('DID_NOT_FINISH', { isValid: false })}>
+                {t('timekeeper.dnf')}
+              </button>
+              <button id={styles.carreset} onClick={incrementCarResetCounter}>
+                {t('timekeeper.car-reset')}
+              </button>
 
-              <Button onClick={() => send('CAPTURE_LAP', { isValid: true })} variant="primary">
-                <Box textAlign="center" variant="h2">
-                  {t('timekeeper.capture-lap')}
-                </Box>
-              </Button>
+              <button id={styles.capturelap} onClick={() => send('CAPTURE_LAP', { isValid: true })}>
+                {t('timekeeper.capture-lap')}
+              </button>
 
               <hr></hr>
               <SpaceBetween>
@@ -349,28 +343,20 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
                   {carResetCounter}/{allowedNrResets}
                 </Header>
               </SpaceBetween>
-              <Button onClick={decrementCarResetCounter} variant="primary">
-                <Box textAlign="center" variant="h3">
-                  -1
-                </Box>
-              </Button>
-              <Button onClick={undoFalseFinishHandler} variant="primary">
-                <Box textAlign="center" variant="h3">
-                  {t('timekeeper.undo-false-finish')}
-                </Box>
-              </Button>
+              <button id={styles.undoreset} onClick={decrementCarResetCounter}>
+                -1
+              </button>
+              <button id={styles.undofalsefinish} onClick={undoFalseFinishHandler}>
+                {t('timekeeper.undo-false-finish')}
+              </button>
 
               <hr></hr>
-              <Button onClick={() => send('END')} variant="primary">
-                <Box textAlign="center" variant="h2">
-                  {t('timekeeper.end-race')}
-                </Box>
-              </Button>
-              <Button onClick={() => send('TOGGLE')} variant="primary">
-                <Box textAlign="center" variant="h2">
-                  {startButtonText}
-                </Box>
-              </Button>
+              <button id={styles.endrace} onClick={() => send('END')}>
+                {t('timekeeper.end-race')}
+              </button>
+              <button id={styles.startrace} onClick={() => send('TOGGLE')} variant="primary">
+                {startButtonText}
+              </button>
             </Grid>
           </Container>
           <Container>
