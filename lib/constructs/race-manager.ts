@@ -11,6 +11,7 @@ import { Bucket } from 'aws-cdk-lib/aws-s3';
 import {
     CodeFirstSchema,
     Directive,
+    EnumType,
     GraphqlType,
     InputType,
     ObjectType,
@@ -45,6 +46,8 @@ export class RaceManager extends Construct {
 
     constructor(scope: Construct, id: string, props: RaceManagerProps) {
         super(scope, id);
+
+        const noneDataSource = props.appsyncApi.noneDataSource;
 
         // STORAGE
         const raceTable = new dynamodb.Table(this, 'Table', {
@@ -266,6 +269,90 @@ export class RaceManager extends Construct {
                 },
                 returnType: raceObjectType.attribute({ isList: true }),
                 dataSource: raceDataSource,
+            })
+        );
+
+        // OVERLAY METHODS
+        const raceStatusEnum = new EnumType('RaceStatusEnum', {
+            definition: [
+                'NO_RACER_SELECTED',
+                'READY_TO_START',
+                'RACE_IN_PROGRESS',
+                'RACE_PAUSED',
+                'RACE_FINSIHED',
+            ],
+        });
+        props.appsyncApi.schema.addType(raceStatusEnum);
+
+        // broadcast Overlays
+        const overlayObjectType = new ObjectType('Overlay', {
+            definition: {
+                eventId: GraphqlType.id({ isRequired: true }),
+                eventName: GraphqlType.string(),
+                trackId: GraphqlType.id(),
+                username: GraphqlType.string(),
+                userId: GraphqlType.string(),
+                laps: lapObjectType.attribute({ isList: true }),
+                timeLeftInMs: GraphqlType.float(),
+                currentLapTimeInMs: GraphqlType.float(),
+                raceStatus: raceStatusEnum.attribute({ isRequired: true }),
+            },
+            directives: [Directive.apiKey(), Directive.iam()],
+        });
+
+        props.appsyncApi.schema.addType(overlayObjectType);
+
+        props.appsyncApi.schema.addMutation(
+            'updateOverlayInfo',
+            new ResolvableField({
+                args: {
+                    eventId: GraphqlType.id({ isRequired: true }),
+                    eventName: GraphqlType.string(),
+                    trackId: GraphqlType.id(),
+                    username: GraphqlType.string(),
+                    userId: GraphqlType.string(),
+                    laps: lapInputObjectType.attribute({ isList: true }),
+                    timeLeftInMs: GraphqlType.float(),
+                    currentLapTimeInMs: GraphqlType.float(),
+                    raceStatus: raceStatusEnum.attribute({ isRequired: true }),
+                },
+                returnType: overlayObjectType.attribute(),
+                dataSource: noneDataSource,
+                requestMappingTemplate: appsync.MappingTemplate.fromString(
+                    `{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments)
+                    }`
+                ),
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    '$util.toJson($context.result)'
+                ),
+            })
+        );
+
+        props.appsyncApi.schema.addSubscription(
+            'onNewOverlayInfo',
+            new ResolvableField({
+                args: {
+                    eventId: GraphqlType.id({ isRequired: true }),
+                    trackId: GraphqlType.id(),
+                },
+                returnType: overlayObjectType.attribute(),
+                dataSource: noneDataSource,
+                requestMappingTemplate: appsync.MappingTemplate.fromString(
+                    `{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments.entry)
+                    }`
+                ),
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    '$util.toJson($context.result)'
+                ),
+                directives: [
+                    Directive.subscribe('updateOverlayInfo'),
+                    Directive.apiKey(),
+                    Directive.iam(),
+                ],
             })
         );
     }

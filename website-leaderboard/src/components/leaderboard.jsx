@@ -35,6 +35,12 @@ const Leaderboard = ({ eventId, trackId }) => {
 
   const [followFooterText, SetFollowFooterText] = useState('');
 
+  /**
+   * Get the leaderboard entry based on the provided username
+   * @param  {string} username entry to remove
+   * @param  {Array[Object]} allEntries all leaderbaord entries
+   * @return {[Number,Object]} entry index & leaderboard entry
+   */
   const findEntryByUsername = (username, allEntries) => {
     const index = allEntries.findIndex((entry) => entry.username === username);
     if (index !== -1) {
@@ -44,6 +50,11 @@ const Leaderboard = ({ eventId, trackId }) => {
     return [undefined, undefined];
   };
 
+  /**
+   * Removes the entry from the leaderboard
+   * @param  {Object} entry entry to remove
+   * @return {}
+   */
   const removeLeaderboardEntry = (entry) => {
     SetleaderboardEntries((prevState) => {
       console.log(entry);
@@ -61,8 +72,14 @@ const Leaderboard = ({ eventId, trackId }) => {
     });
   };
 
+  /**
+   * Calculate overall rank (current leaderboard position)
+   * @param  {Object} newEntry
+   * @param  {Number} previousPostition
+   * @param {Array[Object]} allEntries    All lederboard entries
+   * @return {}
+   */
   const calcRaceSummary = useCallback((newEntry, previousPostition, allEntries) => {
-    //calculate overall rank (current leaderboard position)
     const [entryIndex] = findEntryByUsername(newEntry.username, allEntries);
     const overallRank = entryIndex + 1; // +1 due to that list index start from 0 and leaderboard on 1
     newEntry.overallRank = overallRank;
@@ -86,6 +103,11 @@ const Leaderboard = ({ eventId, trackId }) => {
     SetRaceSummaryData(newEntry);
   }, []);
 
+  /**
+   * Update leaderboard with a new entry
+   * @param  {Object} newEntry Leaderboard entry to be added
+   * @return {}
+   */
   const updateLeaderboardEntries = (newLeaderboardEntry) => {
     SetleaderboardEntries((prevState) => {
       console.log(newLeaderboardEntry);
