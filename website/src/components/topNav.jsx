@@ -3,7 +3,7 @@ import {
   Badge,
   Flashbar,
   SideNavigation,
-  TopNavigation
+  TopNavigation,
 } from '@cloudscape-design/components';
 
 import { Auth } from 'aws-amplify';
@@ -37,7 +37,7 @@ import {
   useSideNavOptions,
   useSideNavOptionsDispatch,
   useSplitPanelOptions,
-  useSplitPanelOptionsDispatch
+  useSplitPanelOptionsDispatch,
 } from '../store/appLayoutProvider';
 import { eventContext } from '../store/eventProvider';
 import { Upload } from '../upload';
@@ -75,7 +75,7 @@ function MenuRoutes() {
       <Route path="/admin/fleets" element={<AdminFleets />} />
       <Route path="/admin/fleets/create" element={<CreateFleet />} />
       <Route path="/admin/fleets/edit" element={<EditFleet />} />
-      <Route path="/admin/createUser" element={<CreateUser />} />
+      <Route path="/createUser" element={<CreateUser />} />
       <Route path="/admin/groups" element={<AdminGroups />} />
       <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />
       <Route path="/admin/car_activation" element={<AdminActivation />} />
@@ -119,6 +119,21 @@ export function TopNav(props) {
     { type: 'link', text: t('topnav.upload'), href: '/upload' },
     { type: 'link', text: t('topnav.models'), href: '/models' },
   ];
+
+  if (groups.includes('admin') || groups.includes('reception')) {
+    navItems.push({
+      type: 'section',
+      text: t('topnav.reception'),
+      href: '/createuser',
+      items: [
+        {
+          type: 'link',
+          text: t('topnav.create-user'),
+          href: '/createuser',
+        },
+      ],
+    });
+  }
 
   if (groups.includes('admin') || groups.includes('commentator')) {
     navItems.push({
@@ -192,7 +207,6 @@ export function TopNav(props) {
           ],
         },
         { type: 'link', text: t('topnav.groups'), href: '/admin/groups' },
-        { type: 'link', text: t('topnav.create-user'), href: '/admin/createuser' },
       ],
     });
   }
