@@ -16,6 +16,7 @@ import {
   SpaceBetween
 } from '@cloudscape-design/components';
 
+/* eslint import/no-anonymous-default-export: [2, {"allowArrowFunction": true}] */
 export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
@@ -233,24 +234,26 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
 
           <Container>
             <FormField label={t('fleets.edit-cars.title')}>
-              <Button
-                disabled={!online || selectedItems.length > 1}
-                onClick={() => {
-                  carRestartService();
-                }}
-              >
-                {t('fleets.edit-cars.restart-ros')}
-              </Button>
-              <Button
-                disabled={!online || selectedItems.length > 1}
-                iconName="status-warning"
-                variant="normal"
-                onClick={() => {
-                  carEmergencyStop();
-                }}
-              >
-                {t('fleets.edit-cars.stop')}
-              </Button>
+              <SpaceBetween direction="horizontal" size="xs">
+                <Button
+                  disabled={!online || selectedItems.length > 1}
+                  onClick={() => {
+                    carRestartService();
+                  }}
+                >
+                  {t('fleets.edit-cars.restart-ros')}
+                </Button>
+                <Button
+                  disabled={!online || selectedItems.length > 1}
+                  iconName="status-warning"
+                  variant="normal"
+                  onClick={() => {
+                    carEmergencyStop();
+                  }}
+                >
+                  {t('fleets.edit-cars.stop')}
+                </Button>
+              </SpaceBetween>
             </FormField>
           </Container>
 
