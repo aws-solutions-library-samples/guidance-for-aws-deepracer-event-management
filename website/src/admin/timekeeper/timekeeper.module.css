@@ -14,33 +14,115 @@
 }
 
 #dnf {
-  background-color: #FF5166;
+  background-color: #dc3545;
+}
+
+#dnf:hover {
+  background-color: #bb2d3b;
+}
+
+#dnf:active {
+  background-color: #bb2d3b;
+}
+
+#dnf:disabled {
+  background: #c9c9c9;
 }
 
 #carreset {
-  background-color: #F7B500;
+  background-color: #ffc107;
+}
+
+#carreset:hover {
+  background-color: #ffca2c;
+}
+
+#carreset:active {
+  background-color: #ffca2c;
+}
+
+#carreset:disabled {
+  background: #c9c9c9;
 }
 
 #capturelap {
-  background-color: #2FCF8F;
+  background: #0d6efd;
+}
+
+#capturelap:hover {
+  background: #0b5ed7;
+}
+
+#capturelap:active {
+  background: #0b5ed7;
+}
+
+#capturelap:disabled {
+  background: #c9c9c9;
 }
 
 #undoreset {
-  background-color: #F7B500;
+  background-color: #ffc107;
+}
+
+#undoreset:hover {
+  background-color: #ffca2c;
+}
+
+#undoreset:active {
+  background-color: #ffca2c;
+}
+
+#undoreset:disabled {
+  background: #c9c9c9;
 }
 
 #undofalsefinish {
-  background-color: #98BCD5;
+  background-color: #f8f9fa;
+}
+
+#undofalsefinish:hover {
+  background-color: #d3d4d5;
+}
+
+#undofalsefinish:active {
+  background-color: #d3d4d5;
+}
+
+#undofalsefinish:disabled {
+  background: #c9c9c9;
 }
 
 #endrace {
-  background-color: #FF5166;
+  background-color: #dc3545;
 }
 
-/* #endrace:hover {
-  background-color:red;
-} */
+#endrace:hover {
+  background-color: #bb2d3b;
+  transition: 0.5s;
+}
+
+#endrace:active {
+  background-color: #bb2d3b;
+  transition: 0.5s;
+}
+
+#endrace:disabled {
+  background: #c9c9c9;
+}
+
+#resumerace {
+  background: #198754;
+}
 
 #startrace {
-  background-color: #FF5166;
+  background-color: #198754;
+}
+
+#startrace:hover {
+  background-color: #157347;
+}
+
+#startrace:active {
+  background-color: #157347;
 }
