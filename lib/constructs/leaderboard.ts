@@ -9,7 +9,6 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Bucket, IBucket } from 'aws-cdk-lib/aws-s3';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
 import {
     CodeFirstSchema,
     Directive,
@@ -24,7 +23,6 @@ import { Cdn } from './cdn';
 import { Website } from './website';
 
 export interface LeaderboardProps {
-    branchName: string;
     adminGroupRole: IRole;
     userPoolId: string;
     userPoolArn: string;
@@ -81,12 +79,6 @@ export class Leaderboard extends Construct {
         });
         this.distribution = cdn.distribution;
         this.websiteBucket = websiteHosting.sourceBucket;
-
-        new ssm.StringParameter(this, 'leaderbordUrl', {
-            parameterName: `/drem/${props.branchName}/leaderboardUrl`,
-            description: 'Leaderboard URL',
-            stringValue: 'https://' + cdn.distribution.distributionDomainName,
-        });
 
         // BACKEND
         // Event bridge integration

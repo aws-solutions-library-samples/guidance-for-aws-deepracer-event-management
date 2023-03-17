@@ -21,7 +21,6 @@ import {
 import { Construct } from 'constructs';
 
 export interface EventsManagerProps {
-    branchName: string;
     adminGroupRole: IRole;
     appsyncApi: {
         schema: CodeFirstSchema;
@@ -107,20 +106,10 @@ export class EventsManager extends Construct {
                 DDB_TABLE: eventsTable.tableName,
                 POWERTOOLS_SERVICE_NAME: 'events_resolver',
                 LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
-                BRANCH_NAME: props.branchName,
             },
         });
 
         eventsTable.grantReadWriteData(eventsFunction);
-        eventsFunction.addToRolePolicy(
-            new iam.PolicyStatement({
-                effect: iam.Effect.ALLOW,
-                actions: ['ssm:GetParametersByPath'],
-                resources: [
-                    `arn:aws:ssm:${stack.region}:${stack.account}:parameter/drem/${props.branchName}/*`,
-                ],
-            })
-        );
 
         const eventsDataSourceDdb = props.appsyncApi.api.addDynamoDbDataSource(
             'EventsDataSourceDdb',
@@ -205,7 +194,6 @@ export class EventsManager extends Construct {
                 eventDate: GraphqlType.awsDate(),
                 fleetId: GraphqlType.id(),
                 countryCode: GraphqlType.string(),
-                // links: GraphqlType.awsJson({ isList: true }),
                 tracks: trackObjectType.attribute({ isList: true }),
             },
         });
@@ -322,26 +310,6 @@ export class EventsManager extends Construct {
             })
         );
 
-        const linkObjectType = new ObjectType('Link', {
-            definition: {
-                name: GraphqlType.id({ isRequired: true }),
-                url: GraphqlType.string(),
-            },
-        });
-        props.appsyncApi.schema.addType(linkObjectType);
-
-        props.appsyncApi.schema.addQuery(
-            'getLinks',
-            new ResolvableField({
-                args: {
-                    eventId: GraphqlType.id({ isRequired: true }),
-                    trackId: GraphqlType.id({ isRequired: true }),
-                },
-                returnType: linkObjectType.attribute({ isList: true }),
-                dataSource: eventsDataSource,
-            })
-        );
-
         // Grant access so API methods can be invoked
         // for role in roles_to_grant_invoke_access:
         const adminApiPolicy = new iam.Policy(this, 'adminApiPolicy', {
@@ -351,7 +319,6 @@ export class EventsManager extends Construct {
                     actions: ['appsync:GraphQL'],
                     resources: [
                         `${props.appsyncApi.api.arn}/types/Query/fields/getEvents`,
-                        `${props.appsyncApi.api.arn}/types/Query/fields/getLinks`,
                         `${props.appsyncApi.api.arn}/types/Mutation/fields/addEvent`,
                         `${props.appsyncApi.api.arn}/types/Subscription/fields/onAddedEvent`,
                         `${props.appsyncApi.api.arn}/types/Mutation/fields/deleteEvents`,
