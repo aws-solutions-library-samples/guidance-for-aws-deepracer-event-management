@@ -29,6 +29,8 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
     branchName: string;
     adminGroupRole: IRole;
     operatorGroupRole: IRole;
+    commentatorGroupRole: IRole;
+    registrationGroupRole: IRole;
     authenticatedUserRole: IRole;
     userPool: IUserPool;
     identiyPool: CfnIdentityPool;

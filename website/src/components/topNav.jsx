@@ -76,7 +76,7 @@ function MenuRoutes() {
       <Route path="/admin/fleets" element={<AdminFleets />} />
       <Route path="/admin/fleets/create" element={<CreateFleet />} />
       <Route path="/admin/fleets/edit" element={<EditFleet />} />
-      <Route path="/createuser" element={<CreateUser />} />
+      <Route path="/registration/createuser" element={<CreateUser />} />
       <Route path="/admin/groups" element={<AdminGroups />} />
       <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />
       <Route path="/admin/car_activation" element={<AdminActivation />} />
@@ -127,13 +127,13 @@ export function TopNav(props) {
     ]
   }];
 
-  if (groups.includes('admin') || groups.includes('reception')) {
+  if (groups.includes('admin') || groups.includes('registration')) {
     navItems.push({
       type: 'section',
-      text: t('topnav.reception'),
-      href: '/reception',
+      text: t('topnav.registration'),
+      href: '/registration',
       items: [
-        { type: 'link', text: t('topnav.create-user'), href: '/createuser' },
+        { type: 'link', text: t('topnav.create-user'), href: '/registration/createuser' },
       ],
     });
   }
@@ -154,11 +154,11 @@ export function TopNav(props) {
     });
   }
 
-  if (groups.includes('admin')) {
+  if (groups.includes('admin') || groups.includes('operator')) {
     navItems.push({
       type: 'section',
-      text: t('topnav.admin'),
-      href: '/admin',
+      text: t('topnav.operator'),
+      href: '/operator',
       items: [
         {
           type: 'expandable-link-group',
@@ -209,6 +209,17 @@ export function TopNav(props) {
             },
           ],
         },
+      ],
+    });
+  }
+
+  if (groups.includes('admin')) {
+    navItems.push({
+      type: 'section',
+      text: t('topnav.admin'),
+      href: '/admin',
+      items: [
+        
         {
           type: 'expandable-link-group',
           text: t('topnav.users'),

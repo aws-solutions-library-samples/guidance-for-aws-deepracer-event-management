@@ -444,8 +444,9 @@
   "topnav.commentator": "Commentator",
   "topnav.user-profile": "Settings",
   "topnav.commentator-race": "Race",
-  "topnav.reception": "Registration",
+  "topnav.registration": "Registration",
   "topnav.users": "Users",
+  "topnav.operator": "Operator",
 
   "upload.breadcrumb": "Upload models",
   "upload.chose-file": "Choose model file(s)",
