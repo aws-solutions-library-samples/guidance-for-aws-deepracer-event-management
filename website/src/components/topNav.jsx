@@ -3,7 +3,7 @@ import {
   Badge,
   Flashbar,
   SideNavigation,
-  TopNavigation,
+  TopNavigation
 } from '@cloudscape-design/components';
 
 import { Auth } from 'aws-amplify';
@@ -38,7 +38,7 @@ import {
   useSideNavOptions,
   useSideNavOptionsDispatch,
   useSplitPanelOptions,
-  useSplitPanelOptionsDispatch,
+  useSplitPanelOptionsDispatch
 } from '../store/appLayoutProvider';
 import { eventContext } from '../store/eventProvider';
 import { Upload } from '../upload';
@@ -117,22 +117,23 @@ export function TopNav(props) {
     };
   }, []);
 
-  const navItems = [
-    { type: 'link', text: t('topnav.upload'), href: '/upload' },
-    { type: 'link', text: t('topnav.models'), href: '/models' },
-  ];
+  const navItems = [{
+    type: 'section',
+    text: t('topnav.models'),
+    href: '/models',
+    items: [
+      { type: 'link', text: t('topnav.upload'), href: '/upload' },
+      { type: 'link', text: t('topnav.models'), href: '/models' },
+    ]
+  }];
 
   if (groups.includes('admin') || groups.includes('reception')) {
     navItems.push({
       type: 'section',
       text: t('topnav.reception'),
-      href: '/createuser',
+      href: '/reception',
       items: [
-        {
-          type: 'link',
-          text: t('topnav.create-user'),
-          href: '/createuser',
-        },
+        { type: 'link', text: t('topnav.create-user'), href: '/admin/createuser' },
       ],
     });
   }
@@ -208,7 +209,15 @@ export function TopNav(props) {
             },
           ],
         },
-        { type: 'link', text: t('topnav.groups'), href: '/admin/groups' },
+        {
+          type: 'expandable-link-group',
+          text: t('topnav.users'),
+          items: [
+            { type: 'link', text: t('topnav.groups'), href: '/admin/groups' },
+          ],
+        },
+        
+        
       ],
     });
   }

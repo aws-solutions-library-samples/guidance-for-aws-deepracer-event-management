@@ -1,11 +1,12 @@
+import { EventLinksButtons } from '../../components/eventLinksButtons';
+import awsconfig from '../../config.json';
 import i18next from '../../i18n';
+import { GetQrCodeOptionFromBoolean } from './leaderboardConfig';
 import {
   GetRaceResetsNameFromId,
   GetRaceTypeNameFromId,
   GetTrackTypeNameFromId,
 } from './raceConfig';
-import awsconfig from '../../config.json';
-import { EventLinksButtons } from '../../components/eventLinksButtons';
 
 export const VisibleContentOptions = () => {
   return [
@@ -60,6 +61,10 @@ export const VisibleContentOptions = () => {
         {
           id: 'eventStreamingOverlayLink',
           label: i18next.t('events.streaming-overlay-link'),
+        },
+        {
+          id: 'qrCodeIsVisible',
+          label: i18next.t('events.leaderboard.qr-code-header'),
         },
       ],
     },
@@ -160,6 +165,11 @@ export const ColumnDefinitions = (allCarFleets = undefined) => {
             linkTextExternal={i18next.t('events.streaming-overlay-link-new-tab')}
           />
         ) || '-',
+    },
+    {
+      id: 'qrCodeIsVisible',
+      header: i18next.t('events.leaderboard.qr-code-header'),
+      cell: (item) => GetQrCodeOptionFromBoolean(item.qrCodeVisible) || '-',
     },
   ];
 };
