@@ -36,6 +36,14 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
   const raceType = GetRaceTypeNameFromId(raceConfig.rankingMethod);
   const allowedNrResets = GetRaceResetsNameFromId(raceConfig.numberOfResetsPerLap);
 
+  const [btnDNF, setBtnDNF] = useState(true);
+  const [btnCarReset, setBtnCarReset] = useState(true);
+  const [btnCaptureLap, setBtnCaptureLap] = useState(true);
+  const [btnUndoReset, setBtnUndoReset] = useState(true);
+  const [btnUndoFalseFinish, setBtnUndoFalseFinish] = useState(true);
+  const [btnEndRace, setBtnEndRace] = useState(true);
+  const [btnStartRace, setBtnStartRace] = useState(false);
+
   const [
     carResetCounter,
     incrementCarResetCounter,
@@ -56,14 +64,23 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
       endRace: () => {
         console.log('Ending race state');
         setWarningModalVisible(true);
+        // Buttons
+        setBtnEndRace(true);
+        setBtnStartRace(true);
       },
       startTimer: () => {
         setStartButtonText(t('timekeeper.pause-race'));
         startTimers();
+        // Buttons
+        toggleBtnState(false);
+        setBtnEndRace(false);
       },
       pauseTimer: () => {
         setStartButtonText(t('timekeeper.race-page.resume-race'));
         pauseTimers();
+        // Buttons
+        toggleBtnState(true);
+        setBtnEndRace(false);
       },
       captureLap: (context, event) => {
         event.isValid = 'isValid' in event ? event.isValid : false;
@@ -225,6 +242,14 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
     lapTimerRef.current.reset();
   };
 
+  const toggleBtnState = (btnDisabledState) => {
+    setBtnDNF(btnDisabledState);
+    setBtnCarReset(btnDisabledState);
+    setBtnCaptureLap(btnDisabledState);
+    setBtnUndoReset(btnDisabledState);
+    setBtnUndoFalseFinish(btnDisabledState);
+  };
+
   const warningModal = (
     <Modal
       onDismiss={() => setWarningModalVisible(false)}
@@ -316,14 +341,26 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
               ]}
               className={styles.root}
             >
-              <button id={styles.dnf} onClick={() => send('DID_NOT_FINISH', { isValid: false })}>
+              <button
+                id={styles.dnf}
+                onClick={() => send('DID_NOT_FINISH', { isValid: false })}
+                disabled={btnDNF}
+              >
                 {t('timekeeper.dnf')}
               </button>
-              <button id={styles.carreset} onClick={incrementCarResetCounter}>
+              <button
+                id={styles.carreset}
+                onClick={incrementCarResetCounter}
+                disabled={btnCarReset}
+              >
                 {t('timekeeper.car-reset')}
               </button>
 
-              <button id={styles.capturelap} onClick={() => send('CAPTURE_LAP', { isValid: true })}>
+              <button
+                id={styles.capturelap}
+                onClick={() => send('CAPTURE_LAP', { isValid: true })}
+                disabled={btnCaptureLap}
+              >
                 {t('timekeeper.capture-lap')}
               </button>
 
@@ -334,18 +371,26 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
                   {carResetCounter}/{allowedNrResets}
                 </Header>
               </SpaceBetween>
-              <button id={styles.undoreset} onClick={decrementCarResetCounter}>
+              <button
+                id={styles.undoreset}
+                onClick={decrementCarResetCounter}
+                disabled={btnUndoReset}
+              >
                 -1
               </button>
-              <button id={styles.undofalsefinish} onClick={undoFalseFinishHandler}>
+              <button
+                id={styles.undofalsefinish}
+                onClick={undoFalseFinishHandler}
+                disabled={btnUndoFalseFinish}
+              >
                 {t('timekeeper.undo-false-finish')}
               </button>
 
               <hr></hr>
-              <button id={styles.endrace} onClick={() => send('END')}>
+              <button id={styles.endrace} onClick={() => send('END')} disabled={btnEndRace}>
                 {t('timekeeper.end-race')}
               </button>
-              <button id={styles.startrace} onClick={() => send('TOGGLE')} variant="primary">
+              <button id={styles.startrace} onClick={() => send('TOGGLE')} disabled={btnStartRace}>
                 {startButtonText}
               </button>
             </Grid>
