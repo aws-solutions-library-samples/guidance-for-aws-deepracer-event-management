@@ -138,6 +138,11 @@
   "events.leaderboard.footer-description": "Text displayed at the bottom of the leaderboard",
   "events.leaderboard.sponsor": "Sponsor",
   "events.leaderboard.sponsor-description": "Event sponsor",
+  "events.leaderboard.qr-code-header": "QR code",
+  "events.leaderboard.qr-code-description": "Display QR code on the leaderboard?",
+  "events.leaderboard.qr-code-visible": "Visible",
+  "events.leaderboard.qr-code-hidden": "Hidden",
+  "events.leaderboard.validation-error-message": "Not allowed to be empty",
 
   "events.race.ranking-method": "Ranking method",
   "events.race.ranking-method-description": "Define how the racers shall be ranked in the leaderboard",
