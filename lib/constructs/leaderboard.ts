@@ -247,6 +247,7 @@ export class Leaderboard extends Construct {
                 // trackId: GraphqlType.string(),
                 headerText: GraphqlType.string(),
                 // rankingMethod: raceRankingMethodEnum.attribute(),
+                qrCodeVisible: GraphqlType.boolean(),
                 footerText: GraphqlType.string(),
                 sponsor: GraphqlType.string(),
             },
@@ -270,6 +271,7 @@ export class Leaderboard extends Construct {
                 headerText: GraphqlType.string({ isRequired: true }),
                 // rankingMethod: raceRankingMethodEnum.attribute({ isRequired: true }),
                 footerText: GraphqlType.string({ isRequired: true }),
+                qrCodeVisible: GraphqlType.boolean(),
                 sponsor: GraphqlType.string(),
             },
         });

@@ -17,6 +17,7 @@ import { RaceSummaryFooter } from './raceSummaryFooter';
 const Leaderboard = ({ eventId, trackId }) => {
   const [leaderboardEntries, SetleaderboardEntries] = useState([]);
   const [headerText, SetHeaderText] = useState([]);
+  const [qrCodeVisible, SetQrCodeVisible] = useState(false);
   const [subscription, SetSubscription] = useState();
   const [onUpdateSubscription, SetOnUpdateSubscription] = useState();
   const [onDeleteSubscription, SetOnDeleteSubscription] = useState();
@@ -143,6 +144,7 @@ const Leaderboard = ({ eventId, trackId }) => {
         SetleaderboardEntries(leaderboard.entries);
         SetFollowFooterText(leaderboard.config.footerText);
         SetHeaderText(leaderboard.config.headerText);
+        SetQrCodeVisible(leaderboard.config.qrCodeVisible);
       };
       getLeaderboardData();
 
@@ -211,7 +213,7 @@ const Leaderboard = ({ eventId, trackId }) => {
       {leaderboardEntries.length > 0 && (
         <div className={styles.pageRoot}>
           <div className={styles.leaderboardRoot}>
-            <Header headerText={headerText} />
+            <Header headerText={headerText} qrCodeVisible={qrCodeVisible} />
             <LeaderboardTable leaderboardEntries={leaderboardEntries} />
           </div>
           <FollowFooter visible text={followFooterText} />
