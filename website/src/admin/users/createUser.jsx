@@ -12,7 +12,7 @@ import {
   SpaceBetween,
   Table,
   TextFilter,
-  Toggle
+  Toggle,
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import dayjs from 'dayjs';
@@ -26,7 +26,7 @@ import {
   EmptyState,
   MatchesCountText,
   PageSizePreference,
-  WrapLines
+  WrapLines,
 } from '../../components/tableConfig';
 import * as mutations from '../../graphql/mutations';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
@@ -68,7 +68,7 @@ export function CreateUser() {
       variables: {
         email: email,
         username: username,
-        countryCode: countryCode
+        countryCode: countryCode,
       },
     });
     const response = apiResponse['data']['createUser'];
@@ -103,7 +103,7 @@ export function CreateUser() {
       setEmailErrorText('Does not match ^[\\w\\.+-_]+@([\\w-]+\\.)+[\\w-]{2,4}$');
       regexFail = true;
     }
-    
+
     if (username !== '' && email !== '' && regexFail !== true && checked && countryCode !== '') {
       setButtonDisabled(false);
     } else {
@@ -127,14 +127,13 @@ export function CreateUser() {
       id: 'Flag',
       header: t('users.flag'),
       cell: (item) => {
-        const countryCode = item.Attributes.filter(obj => {
-          return obj.Name === 'custom:countryCode'
-        })
-        if(countryCode.length > 0){
-          return <Flag size='small' countryCode={(countryCode[0].Value)}></Flag>
-        }
-        else {
-          return ''
+        const countryCode = item.Attributes.filter((obj) => {
+          return obj.Name === 'custom:countryCode';
+        });
+        if (countryCode.length > 0) {
+          return <Flag size="small" countryCode={countryCode[0].Value}></Flag>;
+        } else {
+          return '';
         }
       },
       sortingField: 'Flag',
@@ -145,14 +144,13 @@ export function CreateUser() {
       id: 'CountryCode',
       header: t('users.country-code'),
       cell: (item) => {
-        const countryCode = item.Attributes.filter(obj => {
-          return obj.Name === 'custom:countryCode'
-        })
-        if(countryCode.length > 0){
-          return (countryCode[0].Value)
-        }
-        else {
-          return ''
+        const countryCode = item.Attributes.filter((obj) => {
+          return obj.Name === 'custom:countryCode';
+        });
+        if (countryCode.length > 0) {
+          return countryCode[0].Value;
+        } else {
+          return '';
         }
       },
       sortingField: 'CountryCode',
@@ -239,7 +237,7 @@ export function CreateUser() {
         description={t('users.description')}
         breadcrumbs={[
           { text: t('home.breadcrumb'), href: '/' },
-          { text: t('admin.breadcrumb'), href: '/admin/home' },
+          { text: t('topnav.reception'), href: '/createuser' },
           { text: t('users.breadcrumb') },
         ]}
       >
@@ -287,19 +285,23 @@ export function CreateUser() {
                 />
                 <Flag countryCode={countryCode}></Flag>
 
-                <FormField label={t('users.terms-and-conditions-title')} errorText={termsAndConditionsErrorText}>
-                  <Link href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'} target="_blank">
+                <FormField
+                  label={t('users.terms-and-conditions-title')}
+                  errorText={termsAndConditionsErrorText}
+                >
+                  <Link
+                    href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'}
+                    target="_blank"
+                  >
                     {t('users.terms-and-conditions')}
                   </Link>
                   <Toggle
                     onChange={({ detail }) => setChecked(detail.checked)}
-                    checked={checked}    
-                  >
-                  </Toggle>
+                    checked={checked}
+                  ></Toggle>
                 </FormField>
               </SpaceBetween>
             </Container>
-
           </Form>
 
           <Table
@@ -360,6 +362,5 @@ export function CreateUser() {
         </SpaceBetween>
       </PageLayout>
     </>
-    
   );
 }

@@ -3,7 +3,7 @@ import {
   Badge,
   Flashbar,
   SideNavigation,
-  TopNavigation
+  TopNavigation,
 } from '@cloudscape-design/components';
 
 import { Auth } from 'aws-amplify';
@@ -28,6 +28,7 @@ import { AdminQuarantine } from '../admin/quarantine';
 import { EditRace } from '../admin/race-admin/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { Timekeeper } from '../admin/timekeeper/timeKeeper';
+import { ProfileHome } from '../admin/user-profile/profile';
 import { CreateUser } from '../admin/users/createUser';
 import { Home } from '../home';
 import useLink from '../hooks/useLink';
@@ -37,7 +38,7 @@ import {
   useSideNavOptions,
   useSideNavOptionsDispatch,
   useSplitPanelOptions,
-  useSplitPanelOptionsDispatch
+  useSplitPanelOptionsDispatch,
 } from '../store/appLayoutProvider';
 import { eventContext } from '../store/eventProvider';
 import { Upload } from '../upload';
@@ -75,13 +76,14 @@ function MenuRoutes() {
       <Route path="/admin/fleets" element={<AdminFleets />} />
       <Route path="/admin/fleets/create" element={<CreateFleet />} />
       <Route path="/admin/fleets/edit" element={<EditFleet />} />
-      <Route path="/admin/createUser" element={<CreateUser />} />
+      <Route path="/createUser" element={<CreateUser />} />
       <Route path="/admin/groups" element={<AdminGroups />} />
       <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />
       <Route path="/admin/car_activation" element={<AdminActivation />} />
       <Route path="/admin/timekeeper" element={<Timekeeper />} />
       <Route path="/admin/races" element={<RaceAdmin />} />
       <Route path="/admin/races/edit" element={<EditRace />} />
+      <Route path="/user/profile" element={<ProfileHome />} />
       <Route path="*" element={<Home />} />
     </Routes>
   );
@@ -119,6 +121,21 @@ export function TopNav(props) {
     { type: 'link', text: t('topnav.upload'), href: '/upload' },
     { type: 'link', text: t('topnav.models'), href: '/models' },
   ];
+
+  if (groups.includes('admin') || groups.includes('reception')) {
+    navItems.push({
+      type: 'section',
+      text: t('topnav.reception'),
+      href: '/createuser',
+      items: [
+        {
+          type: 'link',
+          text: t('topnav.create-user'),
+          href: '/createuser',
+        },
+      ],
+    });
+  }
 
   if (groups.includes('admin') || groups.includes('commentator')) {
     navItems.push({
@@ -192,7 +209,6 @@ export function TopNav(props) {
           ],
         },
         { type: 'link', text: t('topnav.groups'), href: '/admin/groups' },
-        { type: 'link', text: t('topnav.create-user'), href: '/admin/createuser' },
       ],
     });
   }
@@ -203,6 +219,12 @@ export function TopNav(props) {
       text: props.user,
       iconName: 'user-profile',
       items: [
+        {
+          id: 'user-profile',
+          text: t('topnav.user-profile'),
+          type: 'link',
+          href: '/user/profile'
+        },
         {
           id: 'signout',
           text: t('topnav.sign-out'),
@@ -264,7 +286,7 @@ export function TopNav(props) {
               infoIconAriaLabel: 'Info',
               inProgressIconAriaLabel: 'In progress',
             }}
-            //stackItems
+          //stackItems
           />
         }
         stickyNotifications

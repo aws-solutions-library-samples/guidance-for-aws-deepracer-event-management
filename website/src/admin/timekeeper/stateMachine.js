@@ -7,19 +7,11 @@ export const stateMachine = createMachine({
   context: { raceTimeIsExpired: false, dnf: false },
   initial: 'ReadyToStartRace',
   states: {
-    RaceReseted: {
-      entry: ['resetRace', 'stopPublishOverlayInfo'],
-      // on: {
-      //   READY: 'ReadyToStartRace',
-      //   END: 'RaceReseted',
-      // },
-      always: [{ target: 'ReadyToStartRace' }],
-    },
     ReadyToStartRace: {
-      entry: ['readyToStart', 'startPublishOverlayInfo'],
+      entry: ['readyToStart', 'publishReadyToStartOverlay'],
       on: {
         TOGGLE: 'RaceStarted',
-        END: 'RaceReseted',
+        END: 'RaceIsOver',
         CAPTURE_AUT_LAP: 'RaceStarted',
       },
     },
@@ -27,7 +19,11 @@ export const stateMachine = createMachine({
       initial: 'running',
       states: {
         running: {
-          entry: ['startTimer', 'startPublishOverlayInfo', assign({ raceTimeIsExpired: false })],
+          entry: [
+            'startTimer',
+            'publishRaceInProgreessOverlay',
+            assign({ raceTimeIsExpired: false }),
+          ],
           on: {
             TOGGLE: 'paused',
             EXPIRE: {
@@ -42,7 +38,7 @@ export const stateMachine = createMachine({
           },
         },
         paused: {
-          entry: ['pauseTimer', 'pausePublishOverlayInfo'],
+          entry: ['pauseTimer', 'publishRacePausedOverlay'],
           on: {
             TOGGLE: 'running',
             CAPTURE_AUT_LAP: 'running',
@@ -65,9 +61,9 @@ export const stateMachine = createMachine({
       onDone: 'RaceIsOver',
     },
     RaceIsOver: {
-      entry: ['pauseTimer', 'stopPublishOverlayInfo', 'endRace'],
+      entry: ['pauseTimer', 'endRace', 'publishRacePausedOverlay'],
       on: {
-        END: 'RaceReseted',
+        END: 'ReadyToStartRace',
         RESUME: 'RaceStarted.paused',
       },
     },
