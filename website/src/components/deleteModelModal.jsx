@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 
 import { Box, Button, Flashbar, Modal, SpaceBetween } from '@cloudscape-design/components';
 
+/* eslint import/no-anonymous-default-export: [2, {"allowArrowFunction": true}] */
 export default ({ disabled, selectedItems, removeItem, variant }) => {
   const [visible, setVisible] = useState(false);
   const [msgs, setMsgs] = useState([]);
