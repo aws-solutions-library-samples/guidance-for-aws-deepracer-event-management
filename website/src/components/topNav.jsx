@@ -76,7 +76,7 @@ function MenuRoutes() {
       <Route path="/admin/fleets" element={<AdminFleets />} />
       <Route path="/admin/fleets/create" element={<CreateFleet />} />
       <Route path="/admin/fleets/edit" element={<EditFleet />} />
-      <Route path="/createUser" element={<CreateUser />} />
+      <Route path="/createuser" element={<CreateUser />} />
       <Route path="/admin/groups" element={<AdminGroups />} />
       <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />
       <Route path="/admin/car_activation" element={<AdminActivation />} />
@@ -133,7 +133,7 @@ export function TopNav(props) {
       text: t('topnav.reception'),
       href: '/reception',
       items: [
-        { type: 'link', text: t('topnav.create-user'), href: '/admin/createuser' },
+        { type: 'link', text: t('topnav.create-user'), href: '/createuser' },
       ],
     });
   }
