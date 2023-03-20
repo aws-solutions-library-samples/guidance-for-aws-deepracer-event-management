@@ -3,13 +3,13 @@ import { API, graphqlOperation } from 'aws-amplify';
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import Container from '@cloudscape-design/components/container';
+import Header from '@cloudscape-design/components/header';
+import { EventSelectorModal } from '../../components/eventSelectorModal';
 import { getLeaderboard, getRaces } from '../../graphql/queries';
 import { onNewOverlayInfo } from '../../graphql/subscriptions';
 import { eventContext } from '../../store/eventProvider';
 import { PageLayout } from '../pageLayout';
-
-import Container from '@cloudscape-design/components/container';
-import Header from '@cloudscape-design/components/header';
 
 import { Box, SpaceBetween, Table } from '@cloudscape-design/components';
 import { RaceTimeAsString } from '../raceTimeAsString';
@@ -29,6 +29,15 @@ const CommenatorRaceStats = () => {
 
   const [lapsCount, SetLapsCount] = useState(0);
   const [invalidCount, SetInvalidCount] = useState(0);
+
+  const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
+
+  // Show event selector modal if no event has been selected, timekeeper must have an event selected to work
+  useEffect(() => {
+    if (selectedEvent.eventId == null) {
+      setEventSelectModalVisible(true);
+    }
+  }, [selectedEvent]);
 
   useEffect(() => {
     if (selectedEvent) {
@@ -56,28 +65,27 @@ const CommenatorRaceStats = () => {
   }, [selectedEvent]);
 
   useEffect(() => {
-    const eventId = selectedEvent.eventId
-    const userId = actualRacer.userId
-    
+    const eventId = selectedEvent.eventId;
+    const userId = actualRacer.userId;
+
     if (eventId && userId) {
-        console.info('Load data for '+ actualRacer.username)
-        // not working properly at the moment because of the missing userId in the overlay Update
-        const loadUserLaps = async () => {
+      console.info('Load data for ' + actualRacer.username);
+      // not working properly at the moment because of the missing userId in the overlay Update
+      const loadUserLaps = async () => {
+        const response = await API.graphql(
+          graphqlOperation(getRaces, { eventId: eventId, userId: userId })
+        );
+        const laps = response.data.getRaces.flatMap((race) => race.laps);
+        const lapCount = laps.length;
+        const lapsSorted = laps
+          .filter((lap) => lap.isValid === true)
+          .sort((a, b) => a.time > b.time);
 
-            const response = await API.graphql(
-                graphqlOperation(getRaces, { eventId: eventId, userId: userId })
-            );
-            const laps = response.data.getRaces.flatMap(race => race.laps)
-            const lapCount = laps.length
-            const lapsSorted = laps
-              .filter((lap) => lap.isValid === true)
-              .sort((a, b) => a.time > b.time);
-
-            SetFastesRacerTime(lapsSorted[0] || {})
-            SetSlowestRacerTime(lapsSorted.pop() || {})
-            SetLapsCount(lapCount)
-            SetInvalidCount(lapCount - lapsSorted.length)
-        }
+        SetFastesRacerTime(lapsSorted[0] || {});
+        SetSlowestRacerTime(lapsSorted.pop() || {});
+        SetLapsCount(lapCount);
+        SetInvalidCount(lapCount - lapsSorted.length);
+      };
 
       loadUserLaps();
       loadUserLaps();
@@ -97,9 +105,7 @@ const CommenatorRaceStats = () => {
         API.graphql(graphqlOperation(onNewOverlayInfo, { eventId: eventId })).subscribe({
           next: (event) => {
             const eventData = event.value.data.onNewOverlayInfo;
-            if (eventData.userId !== actualRacer.userId) 
-              SetActualRacer(eventData);
-              
+            if (eventData.userId !== actualRacer.userId) SetActualRacer(eventData);
           },
           error: (error) => console.warn(error),
         })
@@ -115,8 +121,8 @@ const CommenatorRaceStats = () => {
 
   const ValueWithLabel = ({ label, children }) => (
     <div>
-      <Box variant="h3" >{label}</Box>
-      <Box variant="h2" >{children}</Box>
+      <Box variant="h3">{label}</Box>
+      <Box variant="h2">{children}</Box>
     </div>
   );
 
@@ -124,7 +130,6 @@ const CommenatorRaceStats = () => {
     {
       id: 'time',
       header: 'time',
-      cell: (item) => <RaceTimeAsString timeInMS={item.fastestLapTime}></RaceTimeAsString>,
       cell: (item) => <RaceTimeAsString timeInMS={item.fastestLapTime}></RaceTimeAsString>,
     },
     {
@@ -155,6 +160,11 @@ const CommenatorRaceStats = () => {
           { text: t('commentator.race.breadcrumb'), href: '/' },
         ]}
       >
+        <EventSelectorModal
+          visible={eventSelectModalVisible}
+          onDismiss={() => setEventSelectModalVisible(false)}
+          onOk={() => setEventSelectModalVisible(false)}
+        />
         <SpaceBetween size="l">
           <Container
             header={
@@ -164,21 +174,31 @@ const CommenatorRaceStats = () => {
             }
           >
             <ColumnLayout columns={3}>
-                <ValueWithLabel label={t('commentator.race.racerName')}>{actualRacer.username}</ValueWithLabel>
-                <ValueWithLabel label={t('commentator.race.currentLapTime')}>
-                  <RaceTimeAsString timeInMS={actualRacer.currentLapTimeInMs } showMills={false}></RaceTimeAsString>
-                </ValueWithLabel>
-                <ValueWithLabel label={t('commentator.race.timeLeft')}>
-                  <RaceTimeAsString timeInMS={actualRacer.timeLeftInMs} showMills={false}></RaceTimeAsString>
-                </ValueWithLabel>
-                <ValueWithLabel label={t('commentator.race.racerFastestLap')}>
-                  <RaceTimeAsString timeInMS={fastesRacerTime.time}></RaceTimeAsString>
-                </ValueWithLabel>
-                <ValueWithLabel label={t('commentator.race.racerSlowestLap')}>
-                  <RaceTimeAsString timeInMS={slowestRacerTime.time}></RaceTimeAsString>
-                </ValueWithLabel>
-                <ValueWithLabel label={t('commentator.race.lapCount')}>{lapsCount}</ValueWithLabel>
-                <ValueWithLabel label={t('commentator.race.invalidLapCount')}>{invalidCount}</ValueWithLabel>
+              <ValueWithLabel label={t('commentator.race.racerName')}>
+                {actualRacer.username}
+              </ValueWithLabel>
+              <ValueWithLabel label={t('commentator.race.currentLapTime')}>
+                <RaceTimeAsString
+                  timeInMS={actualRacer.currentLapTimeInMs}
+                  showMills={false}
+                ></RaceTimeAsString>
+              </ValueWithLabel>
+              <ValueWithLabel label={t('commentator.race.timeLeft')}>
+                <RaceTimeAsString
+                  timeInMS={actualRacer.timeLeftInMs}
+                  showMills={false}
+                ></RaceTimeAsString>
+              </ValueWithLabel>
+              <ValueWithLabel label={t('commentator.race.racerFastestLap')}>
+                <RaceTimeAsString timeInMS={fastesRacerTime.time}></RaceTimeAsString>
+              </ValueWithLabel>
+              <ValueWithLabel label={t('commentator.race.racerSlowestLap')}>
+                <RaceTimeAsString timeInMS={slowestRacerTime.time}></RaceTimeAsString>
+              </ValueWithLabel>
+              <ValueWithLabel label={t('commentator.race.lapCount')}>{lapsCount}</ValueWithLabel>
+              <ValueWithLabel label={t('commentator.race.invalidLapCount')}>
+                {invalidCount}
+              </ValueWithLabel>
             </ColumnLayout>
           </Container>
 
