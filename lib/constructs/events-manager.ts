@@ -189,6 +189,7 @@ export class EventsManager extends Construct {
             definition: {
                 eventId: GraphqlType.id(),
                 createdAt: GraphqlType.awsDateTime(),
+                createdBy: GraphqlType.id(),
                 eventName: GraphqlType.string(),
                 typeOfEvent: typeOfEventEnum.attribute({ isRequired: true }),
                 eventDate: GraphqlType.awsDate(),
@@ -216,6 +217,7 @@ export class EventsManager extends Construct {
             new ResolvableField({
                 args: {
                     eventName: GraphqlType.string({ isRequired: true }),
+                    createdBy: GraphqlType.id({ isRequired: true }),
                     typeOfEvent: typeOfEventEnum.attribute({ isRequired: true }),
                     tracks: trackInputType.attribute({ isRequiredList: true }),
                     eventDate: GraphqlType.awsDate(),

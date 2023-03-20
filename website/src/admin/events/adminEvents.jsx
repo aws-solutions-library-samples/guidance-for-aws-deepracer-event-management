@@ -8,10 +8,6 @@ import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Box, Button, Modal, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
 import { PageLayout } from '../../components/pageLayout';
-import { eventContext } from '../../store/eventProvider';
-import { fleetContext } from '../../store/fleetProvider';
-import { ColumnDefinitions, VisibleContentOptions } from './eventsTableConfig';
-
 import {
   DefaultPreferences,
   EmptyState,
@@ -21,6 +17,10 @@ import {
   TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { eventContext } from '../../store/eventProvider';
+import { fleetContext } from '../../store/fleetProvider';
+import { usersContext } from '../../store/usersProvider';
+import { ColumnDefinitions, VisibleContentOptions } from './eventsTableConfig';
 
 const AdminEvents = () => {
   const { t } = useTranslation();
@@ -32,6 +32,7 @@ const AdminEvents = () => {
     visibleContent: ['eventName', 'eventDate', 'createdAt'],
   });
 
+  const [users, usersIsLoading, getUserNameFromId] = useContext(usersContext);
   const { events } = useContext(eventContext);
   const [fleets] = useContext(fleetContext);
 
@@ -57,30 +58,11 @@ const AdminEvents = () => {
       },
     });
 
-    // setEvents((prevState) => {
-    //   const indexes = [];
-    //   eventIdsToDelete.map((eventId) => {
-    //     const index = events.findIndex((event) => event.eventId === eventId);
-    //     if (index > -1) {
-    //       indexes.push(index);
-    //     }
-    //   });
-
-    //   // To make sure events with highest index are deleted first
-    //   indexes.sort().reverse();
-
-    //   if (indexes) {
-    //     const updatedState = [...prevState];
-    //     indexes.map((index) => updatedState.splice(index, 1));
-    //     return updatedState;
-    //   }
-    //   return prevState;
-    // });
     setSelectedEventsInTable([]);
   }
 
   // Table config
-  const columnDefinitions = ColumnDefinitions(fleets);
+  const columnDefinitions = ColumnDefinitions(getUserNameFromId, fleets);
   const visibleContentOptions = VisibleContentOptions();
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
