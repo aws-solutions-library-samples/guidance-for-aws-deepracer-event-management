@@ -179,6 +179,7 @@ export class UserManager extends Construct {
                 MFAOptions: user_object_mfa_options.attribute({ isList: true, isRequired: false }),
                 sub: GraphqlType.id({ isRequired: false }),
             },
+            directives: [Directive.iam(), Directive.cognito('registration')],
         });
 
         props.appsyncApi.schema.addType(user_object);
@@ -189,6 +190,7 @@ export class UserManager extends Construct {
             new ResolvableField({
                 returnType: user_object.attribute({ isList: true }),
                 dataSource: users_data_source,
+                directives: [Directive.iam(), Directive.cognito('registration')],
             })
         );
 
@@ -209,7 +211,7 @@ export class UserManager extends Construct {
                                         
                     $utils.toJson($context.result)`
                 ),
-                directives: [Directive.cognito('commentator')],
+                directives: [Directive.iam(), Directive.cognito('registration')],
             })
         );
 

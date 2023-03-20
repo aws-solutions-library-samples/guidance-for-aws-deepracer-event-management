@@ -70,6 +70,7 @@ export function CreateUser() {
         username: username,
         countryCode: countryCode,
       },
+      authMode: 'AMAZON_COGNITO_USER_POOLS'
     });
     const response = apiResponse['data']['createUser'];
     console.log(response);
