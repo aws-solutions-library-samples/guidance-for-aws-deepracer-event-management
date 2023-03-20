@@ -14,7 +14,7 @@ import { PageLayout } from '../pageLayout';
 import { Box, SpaceBetween, Table } from '@cloudscape-design/components';
 import { RaceTimeAsString } from '../raceTimeAsString';
 
-const CommenatorRaceStats = () => {
+const CommentatorRaceStats = () => {
   const { t } = useTranslation();
   const [subscription, SetSubscription] = useState();
 
@@ -227,4 +227,4 @@ const CommenatorRaceStats = () => {
   );
 };
 
-export { CommenatorRaceStats };
+export { CommentatorRaceStats };
