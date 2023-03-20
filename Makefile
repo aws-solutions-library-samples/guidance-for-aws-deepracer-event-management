@@ -25,6 +25,7 @@ pipeline.trigger: 	## creates the zipfile and uploads it to S3 to trigger the pi
 local.install:		## Install Python and Javascript dependencies + Generate Config from deployed backend
 	npm install
 	npm install --prefix website
+	npm install --prefix website-leaderboard
 
 local.config:		## Setup local config based on branch
 	echo "{}" > ${dremSrcPath}/config.json
@@ -40,7 +41,13 @@ local.config:		## Setup local config based on branch
 	pushd $(leaderboardSrcPath)/graphql/ && amplify codegen; popd
 
 local.run:		## Run the frontend application locally for development
-	npm start --prefix website
+	PORT=3000 npm start --prefix website
+
+local.run-leaderboard:		## Run the frontend application locally for development
+	PORT=3001 npm start --prefix website-leaderboard
+
+# local.run-overlays:		## Run the frontend application locally for development
+# 	PORT=3002 npm start --prefix website-stream-overlays
 
 .PHONY: local.clean
 local.clean:		## Remove local packages and modules
