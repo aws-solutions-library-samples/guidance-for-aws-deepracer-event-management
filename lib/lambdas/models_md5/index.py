@@ -49,12 +49,20 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         tar.extractall(f"/tmp/{model_name}")
         tar.close()
 
+        # Get the MD5
         model_md5 = md5_file(f"/tmp/{model_name}/agent/model.pb")
         logger.debug(f"{model_name}/agent/model.pb MD5 => {model_md5}")
 
         model_metadata_md5 = md5_file(f"/tmp/{model_name}/model_metadata.json")
         logger.debug(f"{model_name}/model_metadata.json MD5 => {model_metadata_md5}")
 
+        # Get sensor, training algorithm and action space from model_metadata.jsom
+        with open(f"/tmp/{model_name}/model_metadata.json") as json_file:
+            model_metadata_contents = json_file.read()
+
+        logger.debug(f"model_metadata_content => {model_metadata_contents}")
+
+        model_metadata_json = json.loads(model_metadata_contents)
         response = table.update_item(
             Key={
                 "modelId": model_id,
@@ -62,7 +70,8 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
             UpdateExpression=(
                 "SET racerName = :racerName, racerIdentityId = :racerIdentityId,"
                 " md5Datetime = :md5Datetime, modelMD5 = :modelMD5, modelMetadataMD5 ="
-                " :modelMetadataMD5"
+                " :modelMetadataMD5, sensor = :sensor, trainingAlgorithm ="
+                " :trainingAlgorithm, actionSpaceType = :actionSpaceType"
             ),
             ExpressionAttributeValues={
                 ":racerName": racer_name,
@@ -70,6 +79,9 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                 ":md5Datetime": datetime.utcnow().isoformat() + "Z",
                 ":modelMD5": model_md5,
                 ":modelMetadataMD5": model_metadata_md5,
+                ":sensor": model_metadata_json["sensor"],
+                ":trainingAlgorithm": model_metadata_json["training_algorithm"],
+                ":actionSpaceType": model_metadata_json["action_space_type"],
             },
         )
         logger.debug(response)
