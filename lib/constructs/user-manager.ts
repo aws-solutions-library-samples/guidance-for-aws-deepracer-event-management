@@ -13,13 +13,14 @@ import {
     GraphqlType,
     InputType,
     ObjectType,
-    ResolvableField,
+    ResolvableField
 } from 'awscdk-appsync-utils';
 
 import { Construct } from 'constructs';
 
 export interface UserManagerProps {
     adminGroupRole: IRole;
+    authenticatedUserRole: IRole;
     userPoolId: string;
     userPoolArn: string;
     restApi: {
@@ -84,6 +85,40 @@ export class UserManager extends Construct {
             })
         );
 
+        // List users Function
+        const delete_user_function = new lambdaPython.PythonFunction(this, 'delete_user_function', {
+            entry: 'lib/lambdas/delete_user_function/',
+            description: 'Delete current user from cognito',
+            index: 'index.py',
+            handler: 'lambda_handler',
+            timeout: Duration.minutes(1),
+            runtime: props.lambdaConfig.runtime,
+            tracing: lambda.Tracing.ACTIVE,
+            memorySize: 128,
+            architecture: props.lambdaConfig.architecture,
+            environment: {
+                user_pool_id: props.userPoolId,
+                POWERTOOLS_SERVICE_NAME: 'delete_user',
+                LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+                eventbus_name: props.eventbus.eventBusName,
+            },
+            bundling: {
+                image: props.lambdaConfig.bundlingImage,
+            },
+            layers: [
+                props.lambdaConfig.layersConfig.helperFunctionsLayer,
+                props.lambdaConfig.layersConfig.powerToolsLayer,
+            ],
+        });
+        delete_user_function.addToRolePolicy(
+            new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ['cognito-idp:AdminDeleteUser','cognito-idp:AdminGetUser'],
+                resources: [props.userPoolArn],
+            })
+        );
+        props.eventbus.grantPutEventsTo(delete_user_function);
+
         // API RESOURCES
         const api_users = props.restApi.api.root.addResource('users');
         api_users.addMethod('GET', new apig.LambdaIntegration(get_users_function), {
@@ -129,6 +164,10 @@ export class UserManager extends Construct {
         const users_data_source = props.appsyncApi.api.addLambdaDataSource(
             'users_data_source',
             users_handler
+        );
+        const user_delete_data_source = props.appsyncApi.api.addLambdaDataSource(
+            'user_delete_data_source',
+            delete_user_function
         );
 
         // Define API Schema
@@ -183,6 +222,15 @@ export class UserManager extends Construct {
 
         props.appsyncApi.schema.addType(user_object);
 
+        const user_delete_object = new ObjectType('userDeleteObject', {
+            definition: {
+                Username: GraphqlType.string(),
+                Deleted: GraphqlType.boolean(),
+            },
+        });
+
+        props.appsyncApi.schema.addType(user_delete_object);
+
         // Event methods
         props.appsyncApi.schema.addQuery(
             'listUsers',
@@ -207,6 +255,23 @@ export class UserManager extends Construct {
                         $util.error($context.result.error.message, $ctx.result.error.type)
                     #end
                                         
+                    $utils.toJson($context.result)`
+                ),
+            })
+        );
+
+        props.appsyncApi.schema.addMutation(
+            'deleteUser',
+            new ResolvableField({
+                args: {
+                    username: GraphqlType.string({ isRequired: true })
+                },
+                returnType: user_delete_object.attribute(),
+                dataSource: user_delete_data_source,
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    `#if (!$util.isNull($context.result.error))
+                        $util.error($context.result.error.message, $ctx.result.error.type)
+                    #end
                     $utils.toJson($context.result)`
                 ),
             })
@@ -276,6 +341,20 @@ export class UserManager extends Construct {
             ],
         });
         admin_api_policy.attachToRole(props.adminGroupRole);
+
+        // Grant access so API methods can be invoked
+        const user_api_policy = new iam.Policy(this, 'userApiPolicy', {
+            statements: [
+                new iam.PolicyStatement({
+                    effect: iam.Effect.ALLOW,
+                    actions: ['appsync:GraphQL'],
+                    resources: [
+                        `${props.appsyncApi.api.arn}/types/Mutation/fields/deleteUser`,
+                    ],
+                }),
+            ],
+        });
+        user_api_policy.attachToRole(props.authenticatedUserRole);
 
         const requestsAws4authLayer = new lambdaPython.PythonLayerVersion(
             this,
