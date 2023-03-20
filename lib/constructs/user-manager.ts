@@ -209,6 +209,7 @@ export class UserManager extends Construct {
                                         
                     $utils.toJson($context.result)`
                 ),
+                directives: [Directive.cognito('commentator')],
             })
         );
 

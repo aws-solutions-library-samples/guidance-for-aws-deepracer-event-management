@@ -83,6 +83,13 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                             expires: Expiration.after(Duration.days(365)),
                         },
                     },
+                    {
+                        authorizationType: appsync.AuthorizationType.USER_POOL,
+                        userPoolConfig: {
+                            userPool: props.userPool,
+                            defaultAction: appsync.UserPoolDefaultAction.DENY,
+                        },
+                    },
                 ],
             },
             xrayEnabled: true,
