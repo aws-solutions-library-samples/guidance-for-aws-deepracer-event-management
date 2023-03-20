@@ -17,17 +17,19 @@ import {
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { fleetContext } from '../../store/fleetProvider';
+import { usersContext } from '../../store/usersProvider';
 import { ColumnDefinitions, VisibleContentOptions } from './fleetsTableConfig';
 
 const AdminFleets = () => {
   const { t } = useTranslation();
   const [selectedFleetsInTable, setSelectedFleetsInTable] = useState([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [users, usersIsLoading, getUserNameFromId] = useContext(usersContext);
 
   const [fleets, isLoading] = useContext(fleetContext);
 
   const navigate = useNavigate();
-  const columnDefinitions = ColumnDefinitions();
+  const columnDefinitions = ColumnDefinitions(getUserNameFromId);
   const visibleContentOptions = VisibleContentOptions();
 
   // Edit Fleet
