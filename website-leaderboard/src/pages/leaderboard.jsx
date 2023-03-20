@@ -1,23 +1,26 @@
 import { API, graphqlOperation } from 'aws-amplify';
 import React, { useCallback, useEffect, useState } from 'react';
 import Logo from '../assets/logo.png';
+import { FollowFooter } from '../components/followFooter';
+import { Header } from '../components/header';
+import { LeaderboardTable } from '../components/leaderboardTable';
+import { RaceInfoFooter } from '../components/raceInfoFooter';
+import { RaceSummaryFooter } from '../components/raceSummaryFooter';
 import { getLeaderboard } from '../graphql/queries';
 import {
   onDeleteLeaderboardEntry,
   onNewLeaderboardEntry,
   onUpdateLeaderboardEntry,
 } from '../graphql/subscriptions';
-import { FollowFooter } from './followFooter';
-import { Header } from './header';
 import styles from './leaderboard.module.css';
-import { LeaderboardTable } from './leaderboardTable';
-import { RaceInfoFooter } from './raceInfoFooter';
-import { RaceSummaryFooter } from './raceSummaryFooter';
 
 const Leaderboard = ({ eventId, trackId }) => {
   const [leaderboardEntries, SetleaderboardEntries] = useState([]);
-  const [headerText, SetHeaderText] = useState([]);
-  const [qrCodeVisible, SetQrCodeVisible] = useState(false);
+  const [leaderboardConfig, setLeaderboardConfig] = useState({
+    headerText: '',
+    followFooterText: '',
+    qrCodeVisible: false,
+  });
   const [subscription, SetSubscription] = useState();
   const [onUpdateSubscription, SetOnUpdateSubscription] = useState();
   const [onDeleteSubscription, SetOnDeleteSubscription] = useState();
@@ -33,8 +36,6 @@ const Leaderboard = ({ eventId, trackId }) => {
     lapCompletionRation: undefined,
     avgLapsPerAttempt: undefined,
   });
-
-  const [followFooterText, SetFollowFooterText] = useState('');
 
   /**
    * Get the leaderboard entry based on the provided username
@@ -58,15 +59,15 @@ const Leaderboard = ({ eventId, trackId }) => {
    */
   const removeLeaderboardEntry = (entry) => {
     SetleaderboardEntries((prevState) => {
-      console.log(entry);
-      console.log(prevState);
+      console.debug(entry);
+      console.debug(prevState);
       const [index] = findEntryByUsername(entry.username, prevState);
-      console.info(index);
+      console.debug(index);
       if (index >= 0) {
-        console.log([...prevState]);
+        console.debug([...prevState]);
         const updatedList = [...prevState];
         updatedList.splice(index, 1);
-        console.info(updatedList);
+        console.debug(updatedList);
         return updatedList;
       }
       return prevState;
@@ -84,16 +85,16 @@ const Leaderboard = ({ eventId, trackId }) => {
     const [entryIndex] = findEntryByUsername(newEntry.username, allEntries);
     const overallRank = entryIndex + 1; // +1 due to that list index start from 0 and leaderboard on 1
     newEntry.overallRank = overallRank;
-    console.info(overallRank);
+    console.debug(overallRank);
 
     // calculate consistency (previous leaderboard position)
-    console.info(previousPostition);
+    console.debug(previousPostition);
     if (previousPostition) {
       newEntry.consistency = previousPostition;
     } else {
       newEntry.consistency = newEntry.overallRank;
     }
-    console.info(newEntry.consistency);
+    console.debug(newEntry.consistency);
 
     //calculate gap to fastest
     if (overallRank === 0) {
@@ -111,14 +112,14 @@ const Leaderboard = ({ eventId, trackId }) => {
    */
   const updateLeaderboardEntries = (newLeaderboardEntry) => {
     SetleaderboardEntries((prevState) => {
-      console.log(newLeaderboardEntry);
+      console.debug(newLeaderboardEntry);
       const usernameToUpdate = newLeaderboardEntry.username;
       let newState = [...prevState];
 
       // Find user to update on leaderboard, if user exist
       const [oldEntryIndex, oldEntry] = findEntryByUsername(usernameToUpdate, prevState);
-      console.info(oldEntryIndex);
-      console.info(oldEntry);
+      console.debug(oldEntryIndex);
+      console.debug(oldEntry);
       if (oldEntryIndex >= 0) {
         newState[oldEntryIndex] = newLeaderboardEntry;
       } else {
@@ -140,11 +141,8 @@ const Leaderboard = ({ eventId, trackId }) => {
           graphqlOperation(getLeaderboard, { eventId: eventId, trackId: trackId })
         );
         const leaderboard = response.data.getLeaderboard;
-        console.log(leaderboard);
         SetleaderboardEntries(leaderboard.entries);
-        SetFollowFooterText(leaderboard.config.footerText);
-        SetHeaderText(leaderboard.config.headerText);
-        SetQrCodeVisible(leaderboard.config.qrCodeVisible);
+        setLeaderboardConfig(leaderboard.config);
       };
       getLeaderboardData();
 
@@ -154,7 +152,7 @@ const Leaderboard = ({ eventId, trackId }) => {
       SetSubscription(
         API.graphql(graphqlOperation(onNewLeaderboardEntry, { eventId: eventId })).subscribe({
           next: ({ provider, value }) => {
-            console.log('onNewLeaderboardEntry');
+            console.debug('onNewLeaderboardEntry');
             const newEntry = value.data.onNewLeaderboardEntry;
             updateLeaderboardEntries(newEntry);
             SetraceSummaryFooterIsVisible(true);
@@ -172,7 +170,7 @@ const Leaderboard = ({ eventId, trackId }) => {
       SetOnUpdateSubscription(
         API.graphql(graphqlOperation(onUpdateLeaderboardEntry, { eventId: eventId })).subscribe({
           next: ({ provider, value }) => {
-            console.log('onUpdateLeaderboardEntry');
+            console.debug('onUpdateLeaderboardEntry');
             const newEntry = value.data.onUpdateLeaderboardEntry;
             updateLeaderboardEntries(newEntry);
           },
@@ -186,9 +184,9 @@ const Leaderboard = ({ eventId, trackId }) => {
       SetOnDeleteSubscription(
         API.graphql(graphqlOperation(onDeleteLeaderboardEntry, { eventId: eventId })).subscribe({
           next: ({ provider, value }) => {
-            console.log('onDeleteLeaderboardEntry');
+            console.debug('onDeleteLeaderboardEntry');
             const entryToDelete = value.data.onDeleteLeaderboardEntry;
-            console.log(entryToDelete);
+            console.debug(entryToDelete);
             removeLeaderboardEntry(entryToDelete);
           },
           error: (error) => console.warn(error),
@@ -213,10 +211,13 @@ const Leaderboard = ({ eventId, trackId }) => {
       {leaderboardEntries.length > 0 && (
         <div className={styles.pageRoot}>
           <div className={styles.leaderboardRoot}>
-            <Header headerText={headerText} qrCodeVisible={qrCodeVisible} />
+            <Header
+              headerText={leaderboardConfig.headerText}
+              qrCodeVisible={leaderboardConfig.qrCodeVisible}
+            />
             <LeaderboardTable leaderboardEntries={leaderboardEntries} />
           </div>
-          <FollowFooter visible text={followFooterText} />
+          <FollowFooter visible text={leaderboardConfig.followFooterText} />
           <RaceInfoFooter eventId={eventId} />
           <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} />
         </div>

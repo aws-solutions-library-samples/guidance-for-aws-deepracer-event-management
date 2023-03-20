@@ -20,7 +20,7 @@ const LeaderboardTable = ({ leaderboardEntries }) => {
 
   // Update the leaderboard list
   useEffect(() => {
-    console.log('Update leaderboard list items');
+    console.debug('Update leaderboard list items');
     const items = leaderboardEntries.map((entry, index) => (
       <li
         key={entry.username}

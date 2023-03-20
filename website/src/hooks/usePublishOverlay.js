@@ -23,7 +23,7 @@ export const usePublishOverlay = () => {
   let intervalTimerId = useRef();
   let lastMessage = useRef();
 
-  const startPublish = (callback, interval = 400) => {
+  const startPublish = (callback, interval = 5000) => {
     if (intervalTimerId.current) stopPublish();
 
     const message = callback();

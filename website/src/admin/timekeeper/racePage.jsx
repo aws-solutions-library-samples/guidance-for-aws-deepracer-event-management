@@ -120,11 +120,11 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
             username: race.username,
             userId: race.userId,
             laps: lapsForOverlay.current,
-            timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
-            currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
+            timeLeftInMs: raceConfig.raceTimeInMin * 60 * 1000, // racetime in MS
+            currentLapTimeInMs: 0,
             raceStatus: 'READY_TO_START',
           };
-        }, 2000);
+        });
       },
       publishRaceInProgreessOverlay: () => {
         PublishOverlay(() => {
@@ -139,7 +139,7 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
             currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
             raceStatus: 'RACE_IN_PROGRESS',
           };
-        });
+        }, 2000);
       },
       publishRacePausedOverlay: () => {
         PublishOverlay(() => {
@@ -154,7 +154,7 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
             currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
             raceStatus: 'RACE_PAUSED',
           };
-        }, 5000);
+        });
       },
     },
   });
