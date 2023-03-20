@@ -123,6 +123,14 @@ export const GetRankingOptionFromId = (id) => {
   }
 };
 
+export const GetRankingNameFromId = (id) => {
+  if (id) {
+    const raceRankingOptions = RaceTypeConfig();
+    const option = raceRankingOptions.find((option) => option.value === id);
+    return option.label;
+  }
+};
+
 export const GetRaceTypeNameFromId = (id) => {
   if (id) {
     const raceTypeConfig = RaceTypeConfig();
