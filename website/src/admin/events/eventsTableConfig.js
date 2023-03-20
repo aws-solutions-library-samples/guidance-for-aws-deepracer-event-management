@@ -52,6 +52,10 @@ export const VisibleContentOptions = () => {
           label: i18next.t('events.created-at'),
         },
         {
+          id: 'createdBy',
+          label: i18next.t('events.created-by'),
+        },
+        {
           id: 'eventId',
           label: i18next.t('events.event-id'),
         },
@@ -72,7 +76,7 @@ export const VisibleContentOptions = () => {
   ];
 };
 
-export const ColumnDefinitions = (allCarFleets = undefined) => {
+export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) => {
   return [
     {
       id: 'eventName',
@@ -136,6 +140,12 @@ export const ColumnDefinitions = (allCarFleets = undefined) => {
       header: i18next.t('events.created-at'),
       cell: (item) => item.createdAt || '-',
       sortingField: 'createdAt',
+    },
+    {
+      id: 'createdBy', // TODO: how to get the username from the user id???
+      header: i18next.t('events.created-by'),
+      cell: (item) => getUserNameFromId(item.createdBy) || '-',
+      sortingField: 'createdBy',
     },
     {
       id: 'eventId',

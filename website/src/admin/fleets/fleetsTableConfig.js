@@ -18,12 +18,16 @@ export const VisibleContentOptions = () => {
           id: 'createdAt',
           label: i18next.t('fleets.created-at'),
         },
+        {
+          id: 'createdBy',
+          label: i18next.t('fleets.created-by'),
+        },
       ],
     },
   ];
 };
 
-export const ColumnDefinitions = () => {
+export const ColumnDefinitions = (getUserNameFromId) => {
   return [
     {
       id: 'fleetName',
@@ -41,6 +45,12 @@ export const ColumnDefinitions = () => {
       header: i18next.t('fleets.created-at'),
       cell: (item) => item.createdAt || '-',
       sortingField: 'createdAt',
+    },
+    {
+      id: 'createdBy',
+      header: i18next.t('fleets.created-by'),
+      cell: (item) => getUserNameFromId(item.createdBy) || '-',
+      sortingField: 'createdBy',
     },
   ];
 };
