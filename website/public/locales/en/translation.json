@@ -323,11 +323,6 @@
   "home.upload-description": "Upload models into DREM ready to send to cars for racing",
   "home.upload": "Upload",
 
-  "leaderboard.position": "POSITION",
-  "leaderboard.racer": "RACER",
-  "leaderboard.time": "TIME",
-  "leaderboard.flag": "FLAG",
-
   "models.all-header": "Models",
   "models.breadcrumb": "Models",
   "models.clear-filter": "Clear filter",
