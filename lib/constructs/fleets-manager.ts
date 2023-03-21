@@ -91,6 +91,7 @@ export class FleetsManager extends Construct {
                 fleetName: GraphqlType.string(),
                 fleetId: GraphqlType.id(),
                 createdAt: GraphqlType.awsDateTime(),
+                createdBy: GraphqlType.id(),
                 carIds: GraphqlType.id({ isList: true }),
             },
         });
@@ -111,6 +112,7 @@ export class FleetsManager extends Construct {
                 args: {
                     fleetName: GraphqlType.string({ isRequired: true }),
                     carIds: GraphqlType.string({ isList: true }),
+                    createdBy: GraphqlType.id({ isRequired: true }),
                 },
                 returnType: fleets_object_Type.attribute(),
                 dataSource: fleets_data_source,

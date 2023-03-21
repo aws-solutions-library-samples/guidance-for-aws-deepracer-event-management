@@ -296,10 +296,6 @@
   "home.upload-description": "Lade Modelle in DREM hoch, um sie an Rennwagen zu schicken",
   "home.upload": "Hochladen",
 
-  "leaderboard.position": "POSITION",
-  "leaderboard.racer": "RENNFAHRER",
-  "leaderboard.time": "ZEIT",
-
   "models.all-header": "Modelle",
   "models.breadcrumb": "Modelle",
   "models.clear-filter": "Filter löschen",

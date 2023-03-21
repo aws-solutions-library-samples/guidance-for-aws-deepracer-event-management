@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import { DockerImage, Duration, Expiration, RemovalPolicy } from 'aws-cdk-lib';
+import { DockerImage, Duration, Expiration } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { IDistribution } from 'aws-cdk-lib/aws-cloudfront';
 import { CfnIdentityPool, IUserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
@@ -24,7 +24,6 @@ import { RestApi } from './constructs/rest-api';
 import { StreamingOverlay } from './constructs/streaming-overlay';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
-import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
     branchName: string;
@@ -138,7 +137,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         const leaderboard = new Leaderboard(this, 'Leaderboard', {
-            branchName: props.branchName,
             adminGroupRole: props.adminGroupRole,
             logsBucket: props.logsBucket,
             appsyncApi: {
@@ -153,7 +151,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new EventsManager(this, 'EventsManager', {
-            branchName: props.branchName,
             adminGroupRole: props.adminGroupRole,
             appsyncApi: {
                 api: appsyncApi,
@@ -178,7 +175,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         const streamingOverlay = new StreamingOverlay(this, 'streamingOverlay', {
-            branchName: props.branchName,
             logsBucket: props.logsBucket,
         });
 
@@ -198,6 +194,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
         new UserManager(this, 'UserManager', {
             adminGroupRole: props.adminGroupRole,
+            authenticatedUserRole: props.authenticatedUserRole,
             lambdaConfig: props.lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
             userPoolId: props.userPool.userPoolId,

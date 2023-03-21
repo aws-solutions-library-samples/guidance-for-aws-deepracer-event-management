@@ -15,44 +15,12 @@ EVENTS_DDB_TABLE_NAME = os.environ["DDB_TABLE"]
 dynamodb = boto3.resource("dynamodb")
 ddbTable = dynamodb.Table(EVENTS_DDB_TABLE_NAME)
 
-session = boto3.session.Session()
-credentials = session.get_credentials()
-region = session.region_name or "eu-west-1"
-graphql_endpoint = os.environ.get("APPSYNC_URL", None)
-
-ssmClient = boto3.client("ssm")
-BRANCH_NAME = os.environ["BRANCH_NAME"]
-
 
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
 @tracer.capture_lambda_handler
 def lambda_handler(event, context):
     logger.info(event)
     return app.resolve(event, context)
-
-
-@app.resolver(type_name="Query", field_name="getLinks")
-def getLinks(eventId, trackId=1):
-    """Generate links to Leaderboard and streaming overlays
-
-    Parameters:
-
-        events : list
-            The event for which the links should be fetched and generated
-
-    """
-    response = ssmClient.get_parameters_by_path(
-        Path=f"/drem/{BRANCH_NAME}/", Recursive=True
-    )
-    logger.info(response)
-
-    link_objects = []
-    for parameter in response["Parameters"]:
-        param_name = parameter["Name"].rsplit("/", 1)[1]
-        param_value = f"{parameter['Value']}/?event={eventId}"
-        link_objects.append({"name": param_name, "url": param_value})
-    logger.info(link_objects)
-    return link_objects
 
 
 @app.resolver(type_name="Mutation", field_name="deleteEvents")

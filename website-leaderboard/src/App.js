@@ -2,8 +2,8 @@ import { Amplify } from 'aws-amplify';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import './App.css';
-import { Leaderboard } from './components/leaderboard';
 import awsconfig from './config.json';
+import { Leaderboard } from './pages/leaderboard';
 
 Amplify.configure(awsconfig);
 

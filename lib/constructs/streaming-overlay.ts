@@ -1,13 +1,11 @@
 import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
 import { Bucket, IBucket } from 'aws-cdk-lib/aws-s3';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
 
 import { Construct } from 'constructs';
 import { Cdn } from './cdn';
 import { Website } from './website';
 
 export interface StreamingOverlayProps {
-    branchName: string;
     logsBucket: IBucket;
 }
 
@@ -29,11 +27,5 @@ export class StreamingOverlay extends Construct {
         });
         this.distribution = cdn.distribution;
         this.websiteBucket = websiteHosting.sourceBucket;
-
-        new ssm.StringParameter(this, 'streamingOverlayUrl', {
-            parameterName: `/drem/${props.branchName}/streamingOverlayUrl`,
-            description: 'Streaaming OVerlay URL',
-            stringValue: 'https://' + cdn.distribution.distributionDomainName,
-        });
     }
 }

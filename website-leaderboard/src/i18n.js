@@ -10,9 +10,8 @@ i18n
   .use(initReactI18next)
   .init({
     debug: true,
-    lng: 'en',
+    // lng: 'de', // testing
     fallbackLng: 'en',
-    whitelist: ['en'],
 
     interpolation: {
       escapeValue: false,
