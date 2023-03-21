@@ -34,6 +34,14 @@ export const useRacesApi = (eventId) => {
     return race;
   }, []);
 
+  const fixLapIDs = useCallback((race) => {
+    race.laps = race.laps.map((lap) => {
+      lap['lapId'] = ('0'+(parseInt(lap['lapId'])+1)).slice(-2);
+      return lap;
+    });
+    return race;
+  }, []);
+
   const addUserName = useCallback(
     (race) => {
       const user = users.find((user) => user.sub === race.userId);
@@ -65,6 +73,7 @@ export const useRacesApi = (eventId) => {
         const races = response.data.getRaces;
         races.map((race) => addUserName(race));
         races.map((race) => addTimeHr(race));
+        races.map((race) => fixLapIDs(race));
         setRaces(races);
         setIsLoading(false);
       }
