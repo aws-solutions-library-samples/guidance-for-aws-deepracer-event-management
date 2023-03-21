@@ -4,7 +4,7 @@ import {
   Link,
   useAuthenticator,
   useTheme,
-  View,
+  View
 } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import Amplify from 'aws-amplify';
@@ -75,16 +75,23 @@ export default function App() {
       components={components}
       services={{
         async validateCustomSignUp(formData) {
+
+          const errors = {};
+          //regex user a-z0-9
+          const validUsername = new RegExp(
+            '^(?=.{2,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$'
+          );
+
+          if (!validUsername.test(formData.username)) {
+            errors['username'] = 'Please enter a valid username. You are allowed A-Z, a-z and 0-9 (2 - 20 characters)';
+          }
           if (!formData.acknowledgement) {
-            return {
-              acknowledgement: 'You must agree to the Terms & Conditions',
-            };
+            errors['acknowledgement'] = 'You must agree to the Terms & Conditions';
           }
           if (!formData['custom:countryCode']) {
-            return {
-              countryCode: 'You must pick a country',
-            };
+            errors['countryCode'] = 'You must pick a country';
           }
+          return errors;
         },
       }}
       hideSignUp={false}
