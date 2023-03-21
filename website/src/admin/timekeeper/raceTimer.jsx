@@ -31,8 +31,7 @@ const RaceTimer = forwardRef((props, ref) => {
             setIsRunning(true);
         },
         pause() {
-            // console.log('Pause race Timer');
-            setIsRunning((prevState) => !prevState);
+      setIsRunning(false);
         },
         reset(startingTime = 0) {
             // console.log('Reset race Timer =' + JSON.stringify(startingTime));
