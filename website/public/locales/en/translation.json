@@ -177,6 +177,10 @@
   "events.tracks.choose": "Choose track",
   "events.tracks.choose-description": "What track will be used when hosting the event",
 
+  "events.split-panel.multi-choice-text": "Select 1 event to see the event details",
+  "events.split-panel.empty": "Select an event to see its details",
+  "events.split-panel-header": "events selected",
+
   "race-admin.header": "Race Management",
   "race-admin.description": "",
   "race-admin.breadcrumb": "Race",
