@@ -3,7 +3,7 @@ import {
   Badge,
   Flashbar,
   SideNavigation,
-  TopNavigation,
+  TopNavigation
 } from '@cloudscape-design/components';
 
 import { Auth } from 'aws-amplify';
@@ -38,7 +38,7 @@ import {
   useSideNavOptions,
   useSideNavOptionsDispatch,
   useSplitPanelOptions,
-  useSplitPanelOptionsDispatch,
+  useSplitPanelOptionsDispatch
 } from '../store/appLayoutProvider';
 import { eventContext } from '../store/eventProvider';
 import { Upload } from '../upload';
@@ -142,7 +142,6 @@ export function TopNav(props) {
     navItems.push({
       type: 'section',
       text: t('topnav.commentator'),
-      href: '/commentator',
       items: [
         {
           type: 'link',
