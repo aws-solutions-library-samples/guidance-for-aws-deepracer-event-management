@@ -19,7 +19,7 @@ import {
   Popover,
   SpaceBetween,
   StatusIndicator,
-  TextContent,
+  TextContent
 } from '@cloudscape-design/components';
 import { PageLayout } from '../components/pageLayout';
 
@@ -168,7 +168,9 @@ const AdminActivation = (props) => {
                   items={dropDownFleets}
                   onItemClick={({ detail }) => {
                     const index = fleets.map((e) => e.fleetId).indexOf(detail.id);
-                    setDropDownSelectedItem(fleets[index]);
+                    if(detail.id !== "none") {
+                      setDropDownSelectedItem(fleets[index]);
+                    }
                   }}
                 >
                   {dropDownSelectedItem.fleetName}
