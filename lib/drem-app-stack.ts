@@ -73,7 +73,11 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             schema: schema,
             authorizationConfig: {
                 defaultAuthorization: {
-                    authorizationType: appsync.AuthorizationType.IAM,
+                    authorizationType: appsync.AuthorizationType.USER_POOL,
+                    userPoolConfig: {
+                        userPool: props.userPool,
+                        defaultAction: appsync.UserPoolDefaultAction.DENY,
+                    },
                 },
                 additionalAuthorizationModes: [
                     {
@@ -84,11 +88,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                         },
                     },
                     {
-                        authorizationType: appsync.AuthorizationType.USER_POOL,
-                        userPoolConfig: {
-                            userPool: props.userPool,
-                            defaultAction: appsync.UserPoolDefaultAction.DENY,
-                        },
+                        authorizationType: appsync.AuthorizationType.IAM,
                     },
                 ],
             },

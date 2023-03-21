@@ -179,7 +179,7 @@ export class UserManager extends Construct {
                 MFAOptions: user_object_mfa_options.attribute({ isList: true, isRequired: false }),
                 sub: GraphqlType.id({ isRequired: false }),
             },
-            directives: [Directive.iam(), Directive.cognito('registration')],
+            directives: [Directive.cognito('admin'), Directive.cognito('registration')],
         });
 
         props.appsyncApi.schema.addType(user_object);
@@ -190,7 +190,7 @@ export class UserManager extends Construct {
             new ResolvableField({
                 returnType: user_object.attribute({ isList: true }),
                 dataSource: users_data_source,
-                directives: [Directive.iam(), Directive.cognito('registration')],
+                directives: [Directive.cognito('admin'), Directive.cognito('registration')],
             })
         );
 
@@ -211,7 +211,7 @@ export class UserManager extends Construct {
                                         
                     $utils.toJson($context.result)`
                 ),
-                directives: [Directive.iam(), Directive.cognito('registration')],
+                directives: [Directive.cognito('admin'), Directive.cognito('registration')],
             })
         );
 
@@ -242,6 +242,7 @@ export class UserManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
+                directives: [Directive.cognito('admin'), Directive.cognito('registration')],
             })
         );
 
@@ -259,26 +260,30 @@ export class UserManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('userCreated')],
+                directives: [
+                    Directive.subscribe('userCreated'),
+                    Directive.cognito('admin'),
+                    Directive.cognito('registration'),
+                ],
             })
         );
 
-        // Grant access so API methods can be invoked
-        const admin_api_policy = new iam.Policy(this, 'adminApiPolicy', {
-            statements: [
-                new iam.PolicyStatement({
-                    effect: iam.Effect.ALLOW,
-                    actions: ['appsync:GraphQL'],
-                    resources: [
-                        `${props.appsyncApi.api.arn}/types/Query/fields/listUsers`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/createUser`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/userCreated`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/onUserCreated`,
-                    ],
-                }),
-            ],
-        });
-        admin_api_policy.attachToRole(props.adminGroupRole);
+        // // Grant access so API methods can be invoked
+        // const admin_api_policy = new iam.Policy(this, 'adminApiPolicy', {
+        //     statements: [
+        //         new iam.PolicyStatement({
+        //             effect: iam.Effect.ALLOW,
+        //             actions: ['appsync:GraphQL'],
+        //             resources: [
+        //                 `${props.appsyncApi.api.arn}/types/Query/fields/listUsers`,
+        //                 `${props.appsyncApi.api.arn}/types/Mutation/fields/createUser`,
+        //                 `${props.appsyncApi.api.arn}/types/Mutation/fields/userCreated`,
+        //                 `${props.appsyncApi.api.arn}/types/Subscription/fields/onUserCreated`,
+        //             ],
+        //         }),
+        //     ],
+        // });
+        // admin_api_policy.attachToRole(props.adminGroupRole);
 
         const requestsAws4authLayer = new lambdaPython.PythonLayerVersion(
             this,

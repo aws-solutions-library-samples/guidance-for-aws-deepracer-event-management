@@ -29,22 +29,22 @@ export const useUsersApi = () => {
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
-    // const subscription = API.graphql(graphqlOperation(onUserCreated)).subscribe({
-    //   next: (event) => {
-    //     console.log(event);
-    //     setUsers([...users, event.value.data.onUserCreated]);
-    //   },
-    // });
-
-    const subscription = API.graphql({
-      ...graphqlOperation(onUserCreated),
-      authMode: 'AMAZON_COGNITO_USER_POOLS',
-    }).subscribe({
+    const subscription = API.graphql(graphqlOperation(onUserCreated)).subscribe({
       next: (event) => {
         console.log(event);
         setUsers([...users, event.value.data.onUserCreated]);
       },
     });
+
+    // const subscription = API.graphql({
+    //   ...graphqlOperation(onUserCreated),
+    //   authMode: 'AMAZON_COGNITO_USER_POOLS',
+    // }).subscribe({
+    //   next: (event) => {
+    //     console.log(event);
+    //     setUsers([...users, event.value.data.onUserCreated]);
+    //   },
+    // });
 
     return () => {
       subscription.unsubscribe();
