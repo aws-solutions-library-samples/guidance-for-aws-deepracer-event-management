@@ -81,6 +81,7 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
         // Buttons
         toggleBtnState(true);
         setBtnEndRace(false);
+        setBtnStartRace(false);
       },
       captureLap: (context, event) => {
         event.isValid = 'isValid' in event ? event.isValid : false;
@@ -252,7 +253,6 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
 
   const warningModal = (
     <Modal
-      onDismiss={() => setWarningModalVisible(false)}
       visible={warningModalVisible}
       closeAriaLabel="End the race?"
       footer={
