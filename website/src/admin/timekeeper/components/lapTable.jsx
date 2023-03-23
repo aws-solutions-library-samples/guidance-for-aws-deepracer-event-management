@@ -1,7 +1,7 @@
 import { Button, Header, StatusIndicator, Table } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { convertMsToString } from './../../support-functions/time';
+import { convertMsToString } from '../../../support-functions/time';
 
 const LapTable = (props) => {
   const { t } = useTranslation();
