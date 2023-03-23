@@ -203,6 +203,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
         new UserManager(this, 'UserManager', {
             adminGroupRole: props.adminGroupRole,
+            authenticatedUserRole: props.authenticatedUserRole,
             lambdaConfig: props.lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
             userPoolId: props.userPool.userPoolId,

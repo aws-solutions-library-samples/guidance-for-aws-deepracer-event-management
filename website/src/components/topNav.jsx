@@ -3,7 +3,7 @@ import {
   Badge,
   Flashbar,
   SideNavigation,
-  TopNavigation
+  TopNavigation,
 } from '@cloudscape-design/components';
 
 import { Auth } from 'aws-amplify';
@@ -38,11 +38,11 @@ import {
   useSideNavOptions,
   useSideNavOptionsDispatch,
   useSplitPanelOptions,
-  useSplitPanelOptionsDispatch
+  useSplitPanelOptionsDispatch,
 } from '../store/appLayoutProvider';
 import { eventContext } from '../store/eventProvider';
 import { Upload } from '../upload';
-import { CommenatorRaceStats } from './commentator/race-stats';
+import { CommentatorRaceStats } from './commentator/race-stats';
 
 function cwr(operation, payload) {
   // Instrument Routing to Record Page Views
@@ -65,7 +65,7 @@ function MenuRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/models" element={<Models />} />
       <Route path="/upload" element={<Upload />} />
-      <Route path="/commentator" element={<CommenatorRaceStats />} />
+      <Route path="/commentator" element={<CommentatorRaceStats />} />
       <Route path="/admin/home" element={<AdminHome />} />
       <Route path="/admin/models" element={<AdminModels />} />
       <Route path="/admin/quarantine" element={<AdminQuarantine />} />
@@ -117,24 +117,24 @@ export function TopNav(props) {
     };
   }, []);
 
-  const navItems = [{
-    type: 'section',
-    text: t('topnav.models'),
-    href: '/models',
-    items: [
-      { type: 'link', text: t('topnav.upload'), href: '/upload' },
-      { type: 'link', text: t('topnav.models'), href: '/models' },
-    ]
-  }];
+  const navItems = [
+    {
+      type: 'section',
+      text: t('topnav.models'),
+      href: '/models',
+      items: [
+        { type: 'link', text: t('topnav.upload'), href: '/upload' },
+        { type: 'link', text: t('topnav.models'), href: '/models' },
+      ],
+    },
+  ];
 
   if (groups.includes('admin') || groups.includes('registration')) {
     navItems.push({
       type: 'section',
       text: t('topnav.registration'),
       href: '/registration',
-      items: [
-        { type: 'link', text: t('topnav.create-user'), href: '/registration/createuser' },
-      ],
+      items: [{ type: 'link', text: t('topnav.create-user'), href: '/registration/createuser' }],
     });
   }
 
@@ -142,7 +142,6 @@ export function TopNav(props) {
     navItems.push({
       type: 'section',
       text: t('topnav.commentator'),
-      href: '/commentator',
       items: [
         {
           type: 'link',
@@ -219,16 +218,11 @@ export function TopNav(props) {
       text: t('topnav.admin'),
       href: '/admin',
       items: [
-        
         {
           type: 'expandable-link-group',
           text: t('topnav.users'),
-          items: [
-            { type: 'link', text: t('topnav.groups'), href: '/admin/groups' },
-          ],
+          items: [{ type: 'link', text: t('topnav.groups'), href: '/admin/groups' }],
         },
-        
-        
       ],
     });
   }
@@ -243,7 +237,7 @@ export function TopNav(props) {
           id: 'user-profile',
           text: t('topnav.user-profile'),
           type: 'link',
-          href: '/user/profile'
+          href: '/user/profile',
         },
         {
           id: 'signout',
@@ -306,7 +300,7 @@ export function TopNav(props) {
               infoIconAriaLabel: 'Info',
               inProgressIconAriaLabel: 'In progress',
             }}
-          //stackItems
+            //stackItems
           />
         }
         stickyNotifications

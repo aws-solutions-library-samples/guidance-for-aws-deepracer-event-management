@@ -1,17 +1,13 @@
 import { API } from 'aws-amplify';
 import * as mutations from '../../graphql/mutations';
 
-import React, { useContext, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Box, Button, Modal, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
 import { PageLayout } from '../../components/pageLayout';
-import { eventContext } from '../../store/eventProvider';
-import { fleetContext } from '../../store/fleetProvider';
-import { ColumnDefinitions, VisibleContentOptions } from './eventsTableConfig';
-
 import {
   DefaultPreferences,
   EmptyState,
@@ -21,6 +17,14 @@ import {
   TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useSplitPanelOptionsDispatch } from '../../store/appLayoutProvider';
+import { eventContext } from '../../store/eventProvider';
+import { fleetContext } from '../../store/fleetProvider';
+import { usersContext } from '../../store/usersProvider';
+import { ColumnDefinitions, VisibleContentOptions } from './eventsTableConfig';
+import { EmptyPanel } from './split-panels/emptyPanel';
+import { EventDetailsPanel } from './split-panels/eventDetailsPanel';
+import { MultiChoicePanel } from './split-panels/multiChoicePanel';
 
 const AdminEvents = () => {
   const { t } = useTranslation();
@@ -32,9 +36,10 @@ const AdminEvents = () => {
     visibleContent: ['eventName', 'eventDate', 'createdAt'],
   });
 
+  const [users, usersIsLoading, getUserNameFromId] = useContext(usersContext);
   const { events } = useContext(eventContext);
   const [fleets] = useContext(fleetContext);
-
+  const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
   const navigate = useNavigate();
 
   const editEventHandler = () => {
@@ -57,30 +62,11 @@ const AdminEvents = () => {
       },
     });
 
-    // setEvents((prevState) => {
-    //   const indexes = [];
-    //   eventIdsToDelete.map((eventId) => {
-    //     const index = events.findIndex((event) => event.eventId === eventId);
-    //     if (index > -1) {
-    //       indexes.push(index);
-    //     }
-    //   });
-
-    //   // To make sure events with highest index are deleted first
-    //   indexes.sort().reverse();
-
-    //   if (indexes) {
-    //     const updatedState = [...prevState];
-    //     indexes.map((index) => updatedState.splice(index, 1));
-    //     return updatedState;
-    //   }
-    //   return prevState;
-    // });
     setSelectedEventsInTable([]);
   }
 
   // Table config
-  const columnDefinitions = ColumnDefinitions(fleets);
+  const columnDefinitions = ColumnDefinitions(getUserNameFromId, fleets);
   const visibleContentOptions = VisibleContentOptions();
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
@@ -101,6 +87,52 @@ const AdminEvents = () => {
       sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
       selection: {},
     });
+
+  const i18SplitPanel = {
+    preferencesTitle: t('common.panel.split-panel-preference-title'),
+    preferencesPositionLabel: t('common.panel.split-panel-position-label'),
+    preferencesPositionDescription: t('common.panel.split-panel-position-description'),
+    preferencesPositionSide: t('common.panel.position-side'),
+    preferencesPositionBottom: t('common.panel.position-bottom'),
+    preferencesConfirm: t('button.confirm'),
+    preferencesCancel: t('button.cancel'),
+    closeButtonAriaLabel: t('common.panel.close'),
+    openButtonAriaLabel: t('common.panel.open'),
+    resizeHandleAriaLabel: t('common.panel.split-panel-rezize-label'),
+  };
+
+  const i18SplitPanelHeader = t('events.split-panel-header');
+
+  const selectPanelContent = useCallback((selectedItems) => {
+    if (selectedItems.length === 0) {
+      return <EmptyPanel i18nStrings={i18SplitPanel} i18Header={i18SplitPanelHeader} />;
+    } else if (selectedItems.length === 1) {
+      return <EventDetailsPanel event={selectedItems[0]} i18nStrings={i18SplitPanel} />;
+    } else if (selectedItems.length > 1) {
+      return (
+        <MultiChoicePanel
+          events={selectedItems}
+          i18nStrings={i18SplitPanel}
+          i18Header={i18SplitPanelHeader}
+        />
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log('show split panel');
+    splitPanelOptionsDispatch({
+      type: 'UPDATE',
+      value: {
+        isOpen: true,
+        content: selectPanelContent(SelectedEventsInTable),
+      },
+    });
+
+    return () => {
+      splitPanelOptionsDispatch({ type: 'RESET' });
+    };
+  }, [SelectedEventsInTable, splitPanelOptionsDispatch, selectPanelContent]);
 
   const eventsTable = (
     <Table

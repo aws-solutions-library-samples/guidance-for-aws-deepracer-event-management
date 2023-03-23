@@ -11,18 +11,20 @@ import {
 } from '@cloudscape-design/components';
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PageLayout } from '../../components/pageLayout';
-import useMutation from '../../hooks/useMutation';
-import { RacesStatusEnum } from '../../hooks/usePublishOverlay';
-import { eventContext } from '../../store/eventProvider';
-import { usersContext } from '../../store/usersProvider';
-import { breadcrumbs } from './supportFunctions';
+import { EventSelectorModal } from '../../../components/eventSelectorModal';
+import { PageLayout } from '../../../components/pageLayout';
+import useMutation from '../../../hooks/useMutation';
+import { RacesStatusEnum } from '../../../hooks/usePublishOverlay';
+import { eventContext } from '../../../store/eventProvider';
+import { usersContext } from '../../../store/usersProvider';
+import { breadcrumbs } from '../support-functions/supportFunctions';
 
 export const RaceSetupPage = ({ onNext }) => {
   const { t } = useTranslation();
   const [SendMutation] = useMutation();
-  const { events, selectedEvent, setSelectedEvent } = useContext(eventContext);
+  const { events, selectedEvent } = useContext(eventContext);
   const [users, isLoadingRacers] = useContext(usersContext);
+  const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
 
   const [race, setRace] = useState({
     eventId: selectedEvent.eventId,
@@ -31,17 +33,19 @@ export const RaceSetupPage = ({ onNext }) => {
     racedByProxy: false,
   });
 
-  const [eventValidation, setEventValidation] = useState({
-    isInvalid: true,
-    isLoading: false,
-  });
-
   const [racerValidation, setRacerValidation] = useState({
     isInvalid: true,
-    isDisabled: true,
+    isDisabled: false,
   });
 
   const [userOptions, SetUserOptions] = useState([]);
+
+  // Show event selector modal if no event has been selected, timekeeper must have an event selected to work
+  useEffect(() => {
+    if (selectedEvent.eventId == null) {
+      setEventSelectModalVisible(true);
+    }
+  }, [selectedEvent]);
 
   useEffect(() => {
     if (selectedEvent == null) return;
@@ -57,9 +61,6 @@ export const RaceSetupPage = ({ onNext }) => {
   // input validation
   useEffect(() => {
     if (race.eventId) {
-      setEventValidation((prevState) => {
-        return { ...prevState, isInvalid: false };
-      });
       setRacerValidation((prevState) => {
         return { ...prevState, isDisabled: false };
       });
@@ -71,9 +72,6 @@ export const RaceSetupPage = ({ onNext }) => {
     }
 
     return () => {
-      setEventValidation((prevState) => {
-        return { ...prevState, isInvalid: true };
-      });
       setRacerValidation({ isInvalid: true, isDisabled: true });
     };
   }, [race.eventId, race.userId]);
@@ -97,67 +95,10 @@ export const RaceSetupPage = ({ onNext }) => {
   };
 
   const configUpdateHandler = (attr) => {
-    if (attr.eventId) {
-      const event = events.find((event) => event.eventId === attr.eventId);
-      setSelectedEvent(event);
-    }
-
-    //onRaceChange(attr);
     setRace((prevState) => {
       return { ...prevState, ...attr };
     });
   };
-
-  const GetEventOptionFromId = (id) => {
-    if (!id) return;
-
-    const selectedEvent = events.find((event) => event.eventId === id);
-    if (selectedEvent) {
-      return { label: selectedEvent.eventName, value: selectedEvent.eventId };
-    }
-    return undefined;
-  };
-
-  const eventSelector = (
-    <Container header={<Header>{t('timekeeper.racer-selector.event-section-header')}</Header>}>
-      <Grid gridDefinition={[{ colspan: 7 }, { colspan: 3 }]}>
-        <FormField label={t('timekeeper.racer-selector.select-event')}>
-          <Select
-            selectedOption={GetEventOptionFromId(race.eventId)}
-            onChange={(detail) => {
-              configUpdateHandler({ eventId: detail.detail.selectedOption.value });
-            }}
-            options={events.map((event) => {
-              return { label: event.eventName, value: event.eventId };
-            })}
-            selectedAriaLabel={t('timekeeper.racer-selector.selected')}
-            filteringType="auto"
-            virtualScroll
-            invalid={eventValidation.isInvalid}
-            loadingText={t('timekeeper.racer-selector.loading-events')}
-            statusType={eventValidation.isLoading ? t('timekeeper.racer-selector.loading') : ''}
-          />
-        </FormField>
-        <FormField label={t('timekeeper.racer-selector.select-track')}>
-          <Select
-            selectedOption={{ label: race.trackId, value: race.trackId }}
-            onChange={(detail) => {
-              configUpdateHandler({ trackId: detail.detail.selectedOption.value });
-            }}
-            options={selectedEvent.tracks.map((track) => {
-              return { label: track.trackId, value: track.trackId };
-            })}
-            selectedAriaLabel={t('timekeeper.racer-selector.selected')}
-            filteringType="auto"
-            virtualScroll
-            invalid={eventValidation.isInvalid}
-            loadingText={t('timekeeper.racer-selector.loading-events')}
-            statusType={eventValidation.isLoading ? t('timekeeper.racer-selector.loading') : ''}
-          />
-        </FormField>
-      </Grid>
-    </Container>
-  );
 
   const racerSelectorPanel = (
     <Container header={<Header>{t('timekeeper.racer-selector.racer-section-header')}</Header>}>
@@ -197,7 +138,7 @@ export const RaceSetupPage = ({ onNext }) => {
         <Button variant="link">{t('button.cancel')}</Button>
         <Button
           variant="primary"
-          disabled={eventValidation.isInvalid || racerValidation.isInvalid}
+          disabled={racerValidation.isInvalid}
           onClick={() => {
             const raceDetails = {
               race: race,
@@ -212,15 +153,19 @@ export const RaceSetupPage = ({ onNext }) => {
       </SpaceBetween>
     </Box>
   );
-
+  console.info(eventSelectModalVisible);
   return (
     <PageLayout
       breadcrumbs={breadcrumbs}
-      header={t('timekeeper.race-setup-page.page-header')}
+      header={t('timekeeper.race-setup-page.page-header') + `: ${selectedEvent.eventName}`}
       description={t('timekeeper.race-setup-page.page-description')}
     >
+      <EventSelectorModal
+        visible={eventSelectModalVisible}
+        onDismiss={() => setEventSelectModalVisible(false)}
+        onOk={() => setEventSelectModalVisible(false)}
+      />
       <SpaceBetween direction="vertical" size="l">
-        {eventSelector}
         {racerSelectorPanel}
         {actionButtons}
       </SpaceBetween>

@@ -1,4 +1,4 @@
-import { Auth } from 'aws-amplify';
+import { API, Auth } from 'aws-amplify';
 
 import ColumnLayout from '@cloudscape-design/components/column-layout';
 import React, { useEffect, useState } from 'react';
@@ -9,16 +9,14 @@ import { PageLayout } from '../../components/pageLayout';
 import Container from '@cloudscape-design/components/container';
 import Header from '@cloudscape-design/components/header';
 
+import * as mutations from '../../graphql/mutations';
+
 import {
-    Box,
-    Button,
-    ButtonDropdown,
-    Form,
-    FormField,
-    Modal,
-    SpaceBetween,
-    Input
-  } from '@cloudscape-design/components';
+  Box,
+  Button, Form,
+  FormField, Input, Modal,
+  SpaceBetween
+} from '@cloudscape-design/components';
 
     const ProfileHome = (props) => {
     const { t } = useTranslation();
@@ -52,8 +50,21 @@ import {
 
     async function deleteUser() {
       try {
-        const result = await Auth.deleteUser();
-        console.log(result);
+        Auth.currentAuthenticatedUser()
+          .then(async (user) => {
+            const username = user.username;        
+            const apiResponse = await API.graphql({
+              query: mutations.deleteUser,
+              variables: {
+                username: username,
+              },
+            });
+            console.log(apiResponse)
+            Auth.signOut()
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       } catch (error) {
         console.log('Error deleting user', error);
       }

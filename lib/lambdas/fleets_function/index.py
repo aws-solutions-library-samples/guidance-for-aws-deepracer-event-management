@@ -73,7 +73,7 @@ def getAllFleets():
 
 
 @app.resolver(type_name="Mutation", field_name="addFleet")
-def addFleet(fleetName: str, carIds: list[str] = []):
+def addFleet(fleetName: str, carIds: list[str] = [], **args):
     # TODO add regular expression for tag validation
     # TODO verify that the wanted tag is not already in use for another track
     fleetId = str(uuid.uuid4())
@@ -83,6 +83,7 @@ def addFleet(fleetName: str, carIds: list[str] = []):
         "fleetName": fleetName,
         "createdAt": createdAt,
         "carIds": carIds,
+        **args,
     }
     response = ddbTable.put_item(Item=item)
     logger.info(f"ddb put response: {response}")

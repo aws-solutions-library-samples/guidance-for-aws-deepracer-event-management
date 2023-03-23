@@ -1,4 +1,5 @@
 import { EventLinksButtons } from '../../components/eventLinksButtons';
+import { Flag } from '../../components/flag';
 import awsconfig from '../../config.json';
 import i18next from '../../i18n';
 import { GetQrCodeOptionFromBoolean } from './leaderboardConfig';
@@ -31,7 +32,7 @@ export const VisibleContentOptions = () => {
           label: i18next.t('events.race.ranking-method'),
         },
         {
-          id: 'raceTimeinMin',
+          id: 'raceTimeInMin',
           label: i18next.t('events.race.race-time'),
         },
         {
@@ -49,6 +50,10 @@ export const VisibleContentOptions = () => {
         {
           id: 'createdAt',
           label: i18next.t('events.created-at'),
+        },
+        {
+          id: 'createdBy',
+          label: i18next.t('events.created-by'),
         },
         {
           id: 'eventId',
@@ -71,7 +76,7 @@ export const VisibleContentOptions = () => {
   ];
 };
 
-export const ColumnDefinitions = (allCarFleets = undefined) => {
+export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) => {
   return [
     {
       id: 'eventName',
@@ -102,31 +107,32 @@ export const ColumnDefinitions = (allCarFleets = undefined) => {
     {
       id: 'trackType',
       header: i18next.t('events.track-type'),
-      cell: (item) => GetTrackTypeNameFromId(item.raceTrackType) || '-',
+      cell: (item) => GetTrackTypeNameFromId(item.tracks[0].raceConfig.trackType) || '-',
       sortingField: 'trackType',
     },
     {
       id: 'rankingMethod',
       header: i18next.t('events.race.ranking-method'),
-      cell: (item) => GetRaceTypeNameFromId(item.raceRankingMethod) || '-',
+      cell: (item) => GetRaceTypeNameFromId(item.tracks[0].raceConfig.rankingMethod) || '-',
       sortingField: 'rankingMethod',
     },
     {
       id: 'raceTimeInMin',
       header: i18next.t('events.race.race-time'),
-      cell: (item) => item.raceTimeInMin || '-',
+      cell: (item) => item.tracks[0].raceConfig.raceTimeInMin || '-',
       sortingField: 'raceTimeInMin',
     },
     {
       id: 'raceNumberOfResets',
       header: i18next.t('events.race.resets-per-lap'),
-      cell: (item) => GetRaceResetsNameFromId(item.raceNumberOfResets) || '-',
+      cell: (item) =>
+        GetRaceResetsNameFromId(item.tracks[0].raceConfig.numberOfResetsPerLap) || '-',
       sortingField: 'raceNumberOfResets',
     },
     {
       id: 'country',
       header: i18next.t('events.country'),
-      cell: (item) => item.countryCode || '-',
+      cell: (item) => <Flag countryCode={item.countryCode}></Flag> || '-',
       sortingField: 'country',
     },
     {
@@ -134,6 +140,12 @@ export const ColumnDefinitions = (allCarFleets = undefined) => {
       header: i18next.t('events.created-at'),
       cell: (item) => item.createdAt || '-',
       sortingField: 'createdAt',
+    },
+    {
+      id: 'createdBy', // TODO: how to get the username from the user id???
+      header: i18next.t('events.created-by'),
+      cell: (item) => getUserNameFromId(item.createdBy) || '-',
+      sortingField: 'createdBy',
     },
     {
       id: 'eventId',

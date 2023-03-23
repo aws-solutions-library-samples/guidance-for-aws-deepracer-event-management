@@ -1,20 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useSideNavOptionsDispatch } from '../../store/appLayoutProvider';
-import { defaultRace } from './raceDomain';
-import { RaceFinishPage } from './raceFinishPage';
-import { RacePage } from './racePage';
-import { RaceSetupPage } from './raceSetupPage';
+import { RaceFinishPage } from './pages/raceFinishPage';
+import { RacePage } from './pages/racePage';
+import { RaceSetupPage } from './pages/raceSetupPage';
+import { defaultRace } from './support-functions/raceDomain';
 
 export const Timekeeper = () => {
-  const { t } = useTranslation();
-  const [activeStepIndex, setActiveStepIndex] = useState(0);
-
-  const [raceConfig, setRaceConfig] = useState({});
-  const [race, setRace] = useState(defaultRace);
+  const [activeStepIndex, setActiveStepIndex] = useLocalStorage('DREM-timekeeper-state', 0);
+  const [raceConfig, setRaceConfig] = useLocalStorage('DREM-timekeeper-race-config', {});
+  const [race, setRace] = useLocalStorage('DREM-timekeeper-current-race', defaultRace);
   const [fastestLap, SetFastestLap] = useState([]);
 
   const sideNavOptionsDispatch = useSideNavOptionsDispatch();
+
+  // Reset the timekeeper when navigating away from the timekeeper
+  useEffect(() => {
+    return () => {
+      setRaceConfig({});
+      setActiveStepIndex(0);
+      setRace(defaultRace);
+    };
+  }, []);
 
   useEffect(() => {
     sideNavOptionsDispatch({ type: 'SIDE_NAV_IS_OPEN', value: false });
@@ -55,34 +62,35 @@ export const Timekeeper = () => {
     const updatedLap = { ...race.laps[id] };
     updatedLap.isValid = !updatedLap.isValid;
     lapsCopy[id] = updatedLap;
-    setRace((prevState) => {
-      return { ...prevState, laps: lapsCopy };
-    });
+    setRace({ ...race, laps: lapsCopy });
   };
 
   const raceSetupHandler = (event) => {
     console.info(event);
-    setRace((prevState) => {
-      const test = { ...prevState, ...event.race };
-      return test;
-    });
-    setRaceConfig((prevState) => {
-      const test = { ...prevState, ...event.config };
-      return test;
-    });
+    setRace({ ...race, ...event.race });
+    setRaceConfig({ ...raceConfig, ...event.config });
+
     setActiveStepIndex(1);
   };
 
-  const raceIsDoneHandler = (event) => {
-    console.info(event);
-    setRace((prevState) => {
-      const test = { ...prevState, ...event };
-      return test;
-    });
+  const raceIsDoneHandler = () => {
     setActiveStepIndex(2);
   };
+
+  const raceInfoHandler = (event) => {
+    console.info(event);
+    setRace({ ...race, ...event });
+  };
+
+  const raceConfigHandler = (event) => {
+    console.info(event);
+  };
+
   const resetRacehandler = () => {
     setRace(defaultRace);
+    setRaceConfig({});
+    SetFastestLap([]);
+
     setActiveStepIndex(0);
   };
 
@@ -94,7 +102,14 @@ export const Timekeeper = () => {
         break;
       case 1:
         pageToDisplay = (
-          <RacePage raceInfo={race} raceConfig={raceConfig} onNext={raceIsDoneHandler} />
+          <RacePage
+            raceInfo={race}
+            setRaceInfo={raceInfoHandler}
+            fastestLap={fastestLap}
+            raceConfig={raceConfig}
+            setRaceConfig={raceConfigHandler}
+            onNext={raceIsDoneHandler}
+          />
         );
         break;
       case 2:

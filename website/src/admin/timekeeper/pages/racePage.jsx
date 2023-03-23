@@ -8,29 +8,27 @@ import {
   Modal,
   SpaceBetween,
 } from '@cloudscape-design/components';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { useMachine } from '@xstate/react';
 import { useTranslation } from 'react-i18next';
-import { PageLayout } from '../../components/pageLayout';
-import useCounter from '../../hooks/useCounter';
-import { usePublishOverlay } from '../../hooks/usePublishOverlay';
-import useWebsocket from '../../hooks/useWebsocket';
-import { GetRaceResetsNameFromId, GetRaceTypeNameFromId } from '../events/raceConfig';
-import { LapTable } from './lapTable';
-import LapTimer from './lapTimer';
-import { defaultLap, defaultRace } from './raceDomain';
-import RaceTimer from './raceTimer';
-import { stateMachine } from './stateMachine';
-import { breadcrumbs } from './supportFunctions';
-import styles from './timekeeper.module.css';
+import { PageLayout } from '../../../components/pageLayout';
+import useCounter from '../../../hooks/useCounter';
+import { usePublishOverlay } from '../../../hooks/usePublishOverlay';
+import useWebsocket from '../../../hooks/useWebsocket';
+import { GetRaceResetsNameFromId, GetRaceTypeNameFromId } from '../../events/raceConfig';
+import { LapTable } from '../components/lapTable';
+import LapTimer from '../components/lapTimer';
+import RaceTimer from '../components/raceTimer';
+import { defaultLap } from '../support-functions/raceDomain';
+import { stateMachine } from '../support-functions/stateMachine';
+import { breadcrumbs } from '../support-functions/supportFunctions';
+import styles from './racePage.module.css';
 
-export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
+export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext }) => {
   const { t } = useTranslation();
   const [warningModalVisible, setWarningModalVisible] = useState(false);
-  const [race, setRace] = useState({ ...defaultRace, ...raceInfo });
   const [currentLap, SetCurrentLap] = useState(defaultLap);
-  const [fastestLap, SetFastestLap] = useState([]);
   const lapsForOverlay = useRef([]);
   const [startButtonText, setStartButtonText] = useState(t('timekeeper.start-race'));
   const raceType = GetRaceTypeNameFromId(raceConfig.rankingMethod);
@@ -81,28 +79,26 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
         // Buttons
         toggleBtnState(true);
         setBtnEndRace(false);
+        setBtnStartRace(false);
       },
       captureLap: (context, event) => {
         event.isValid = 'isValid' in event ? event.isValid : false;
 
         const isLapValid = event.isValid && carResetCounter <= raceConfig.numberOfResetsPerLap;
 
-        const lapId = race.laps.length;
+        const lapId = raceInfo.laps.length;
         const currentLapStats = {
           ...currentLap,
           resets: carResetCounter,
           lapId: lapId,
-          modelId: race.currentModelId,
-          carId: race.currentCarId,
+          modelId: raceInfo.currentModelId,
+          carId: raceInfo.currentCarId,
           time: lapTimerRef.current.getCurrentTimeInMs(),
           isValid: isLapValid,
           autTimerConnected: autTimerIsConnected,
         };
 
-        setRace((prevState) => {
-          const laps = [...prevState.laps, currentLapStats];
-          return { ...prevState, laps: laps };
-        });
+        setRaceInfo({ laps: [...raceInfo.laps, currentLapStats] });
 
         lapsForOverlay.current.push(currentLapStats);
 
@@ -114,47 +110,47 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
       publishReadyToStartOverlay: () => {
         PublishOverlay(() => {
           return {
-            eventId: race.eventId,
+            eventId: raceInfo.eventId,
             eventName: raceConfig.eventName,
-            trackId: race.trackId,
-            username: race.username,
-            userId: race.userId,
+            trackId: raceInfo.trackId,
+            username: raceInfo.username,
+            userId: raceInfo.userId,
             laps: lapsForOverlay.current,
-            timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
-            currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
+            timeLeftInMs: raceConfig.raceTimeInMin * 60 * 1000, // racetime in MS
+            currentLapTimeInMs: 0,
             raceStatus: 'READY_TO_START',
           };
-        }, 2000);
+        });
       },
       publishRaceInProgreessOverlay: () => {
         PublishOverlay(() => {
           return {
-            eventId: race.eventId,
+            eventId: raceInfo.eventId,
             eventName: raceConfig.eventName,
-            trackId: race.trackId,
-            username: race.username,
-            userId: race.userId,
+            trackId: raceInfo.trackId,
+            username: raceInfo.username,
+            userId: raceInfo.userId,
             laps: lapsForOverlay.current,
             timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
             currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
             raceStatus: 'RACE_IN_PROGRESS',
           };
-        });
+        }, 2000);
       },
       publishRacePausedOverlay: () => {
         PublishOverlay(() => {
           return {
-            eventId: race.eventId,
+            eventId: raceInfo.eventId,
             eventName: raceConfig.eventName,
-            trackId: race.trackId,
-            username: race.username,
-            userId: race.userId,
+            trackId: raceInfo.trackId,
+            username: raceInfo.username,
+            userId: raceInfo.userId,
             laps: lapsForOverlay.current,
             timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
             currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
             raceStatus: 'RACE_PAUSED',
           };
-        }, 5000);
+        });
       },
     },
   });
@@ -168,57 +164,26 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
   const wsUrl = window.location.href.split('/', 3)[2] ?? 'localhost:8080';
   const [autTimerIsConnected] = useWebsocket(`ws://${wsUrl}`, onMessageFromAutTimer);
 
-  // Find the fastest lap
-  useEffect(() => {
-    if (race.laps.length) {
-      // Get all valid laps
-      const validLaps = race.laps.filter((o) => {
-        return o.isValid === true;
-      });
-      if (validLaps.length) {
-        // Find fastest time
-        var res = Math.min.apply(
-          Math,
-          validLaps.map((o) => {
-            return o.time;
-          })
-        );
-        // Get object with the fastets time
-        const obj = validLaps.find((o) => {
-          return o.time === res;
-        });
-        SetFastestLap([obj]);
-      } else {
-        SetFastestLap([]);
-      }
-    } else {
-      SetFastestLap([]);
-    }
-  }, [race.laps]);
-
   // handlers functions
   const actionHandler = (id) => {
     console.log('alter lap status for lap id: ' + id);
-    const lapsCopy = [...race.laps];
-    const updatedLap = { ...race.laps[id] };
+    const lapsCopy = [...raceInfo.laps];
+    const updatedLap = { ...raceInfo.laps[id] };
     updatedLap.isValid = !updatedLap.isValid;
     lapsCopy[id] = updatedLap;
-    setRace((prevState) => {
-      return { ...prevState, laps: lapsCopy };
-    });
+
+    setRaceInfo({ laps: lapsCopy });
   };
 
   const undoFalseFinishHandler = () => {
-    setRace((prevState) => {
-      const updatedLaps = [...prevState.laps];
-      if (updatedLaps.length !== 0) {
-        const lastLap = updatedLaps.pop();
-        lapTimerRef.current.reset(lapTimerRef.current.getCurrentTimeInMs() + lastLap.time);
-        resetCarResetCounter(lastLap.resets);
-      }
-      lapsForOverlay.current = updatedLaps;
-      return { ...prevState, laps: updatedLaps };
-    });
+    const updatedLaps = [...raceInfo.laps];
+    if (updatedLaps.length !== 0) {
+      const lastLap = updatedLaps.pop();
+      lapTimerRef.current.reset(lapTimerRef.current.getCurrentTimeInMs() + lastLap.time);
+      resetCarResetCounter(lastLap.resets);
+    }
+    lapsForOverlay.current = updatedLaps;
+    setRaceInfo({ laps: updatedLaps });
   };
 
   // support functions
@@ -252,7 +217,6 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
 
   const warningModal = (
     <Modal
-      onDismiss={() => setWarningModalVisible(false)}
       visible={warningModalVisible}
       closeAriaLabel="End the race?"
       footer={
@@ -270,7 +234,8 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
             <Button
               variant="primary"
               onClick={() => {
-                onNext(race);
+                //onNext(race);
+                onNext();
               }}
             >
               {t('timekeeper.end-race')}
@@ -296,7 +261,7 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
             </Grid>
             <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
               <Header variant="h3">{t('timekeeper.current-racer')}:</Header>
-              <Header variant="h3">{race.username}</Header>
+              <Header variant="h3">{raceInfo.username}</Header>
             </Grid>
             <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
               <Header variant="h3">{t('timekeeper.race-page.automated-timer-header')}: </Header>
@@ -407,7 +372,7 @@ export const RacePage = ({ raceInfo, raceConfig, onNext }) => {
               <LapTable
                 variant="embedded"
                 header={t('timekeeper.recorded-laps')}
-                laps={race.laps}
+                laps={raceInfo.laps}
                 onAction={actionHandler}
               />
             </SpaceBetween>
