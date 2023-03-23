@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { App } from 'aws-cdk-lib';
+// import { App, Aspects } from 'aws-cdk-lib';
+// import { AwsSolutionsChecks } from 'cdk-nag';
 import * as fs from 'fs';
 import { BaseStack } from '../lib/base-stack';
 import { CdkPipelineStack } from '../lib/cdk-pipeline-stack';
@@ -32,6 +34,7 @@ if (fs.existsSync(emailfileName)) {
 }
 
 const app = new App();
+// Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 
 if (app.node.tryGetContext('manual_deploy') === 'True') {
     console.info('Manual Deploy started....');

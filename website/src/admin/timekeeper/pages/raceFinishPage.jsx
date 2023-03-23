@@ -10,11 +10,11 @@ import {
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { PageLayout } from '../../components/pageLayout';
-import useMutation from '../../hooks/useMutation';
-import { useNotificationsDispatch } from '../../store/appLayoutProvider';
-import { LapTable } from './lapTable';
-import { breadcrumbs } from './supportFunctions';
+import { PageLayout } from '../../../components/pageLayout';
+import useMutation from '../../../hooks/useMutation';
+import { useNotificationsDispatch } from '../../../store/appLayoutProvider';
+import { LapTable } from '../components/lapTable';
+import { breadcrumbs } from '../support-functions/supportFunctions';
 
 export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction, onNext }) => {
   const { t } = useTranslation();
