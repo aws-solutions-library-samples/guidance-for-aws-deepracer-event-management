@@ -1,9 +1,8 @@
 import { Header } from '@cloudscape-design/components';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import useInterval from '../../hooks/useInterval';
+import useInterval from '../../../hooks/useInterval';
 
 const interval = 10;
-
 
 const LapTimer = forwardRef((props, ref) => {
   const isRunning = useRef(false);
