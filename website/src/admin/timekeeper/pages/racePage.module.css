@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 .root button {
   width: inherit;
   /* height: 4rem; */
@@ -11,119 +15,145 @@
   text-align: center;
   text-decoration: none;
   display: inline-block;
-  color: #000000;
+  color: #ffffff;
 }
 
 #dnf {
-  background-color: #dc3545;
+  background-color: #161e2d;
+  color: ;
 }
 
-#dnf:hover {
-  background-color: #bb2d3b;
+#dnf:hover, #dnf:focus {
+  background-color: #161e2d;
 }
 
 #dnf:active {
-  background-color: #bb2d3b;
+  background-color: #161e2d;
+  transition: 0.5s;
+  position:relative;
+  top:2px;
 }
 
 #dnf:disabled {
-  background: #c9c9c9;
+  background-color: #f1f3f3;
+  color: #161e2d;
 }
 
 #carreset {
-  background-color: #ffc107;
+  background-color: #003181;
 }
 
-#carreset:hover {
-  background-color: #ffca2c;
+#carreset:hover, #carreset:focus {
+  background-color: #003181;
 }
 
 #carreset:active {
-  background-color: #ffca2c;
+  background-color: #003181;
+  transition: 0.5s;
+  position:relative;
+  top:2px;
 }
 
 #carreset:disabled {
-  background: #c9c9c9;
+  background-color: #f1f3f3;
+  color: #161e2d;
 }
 
 #capturelap {
-  background: #0d6efd;
+  background: #ff9900;
 }
 
-#capturelap:hover {
-  background: #0b5ed7;
+#capturelap:hover, #capturelap:focus {
+  background: #ff9900;
 }
 
 #capturelap:active {
-  background: #0b5ed7;
+  background: #ff9900;
+  transition: 0.5s;
+  position:relative;
+  top:2px;
 }
 
 #capturelap:disabled {
-  background: #c9c9c9;
+  background-color: #f1f3f3;
+  color: #161e2d;
 }
 
 #undoreset {
   background-color: #ffc107;
 }
 
-#undoreset:hover {
+#undoreset:hover, #undoreset:focus {
   background-color: #ffca2c;
 }
 
 #undoreset:active {
   background-color: #ffca2c;
+  transition: 0.5s;
+  position:relative;
+  top:2px;
 }
 
 #undoreset:disabled {
-  background: #c9c9c9;
+  background-color: #f1f3f3;
+  color: #161e2d;
 }
 
 #undofalsefinish {
-  background-color: #f8f9fa;
+  background-color: #d4dada;
 }
 
-#undofalsefinish:hover {
-  background-color: #d3d4d5;
+#undofalsefinish:hover, #undofalsefinish:focus {
+  background-color: #d4dada;
 }
 
 #undofalsefinish:active {
-  background-color: #d3d4d5;
+  background-color: #d4dada;
+  transition: 0.5s;
+  position:relative;
+  top:2px;
 }
 
 #undofalsefinish:disabled {
-  background: #c9c9c9;
+  background-color: #f1f3f3;
+  color: #161e2d;
 }
 
 #endrace {
-  background-color: #dc3545;
+  background-color: #161e2d;
 }
 
-#endrace:hover {
-  background-color: #bb2d3b;
-  transition: 0.5s;
+#endrace:hover, #endrace:focus {
+  background-color: #161e2d;
 }
 
 #endrace:active {
-  background-color: #bb2d3b;
+  background-color: #161e2d;
   transition: 0.5s;
+  position:relative;
+  top:2px;
 }
 
 #endrace:disabled {
-  background: #c9c9c9;
+  background-color: #f1f3f3;
+  color: #161e2d;
 }
 
 #resumerace {
-  background: #198754;
+  background: #ff9900;
 }
 
 #startrace {
-  background-color: #198754;
+  background-color: #ff9900;
 }
 
-#startrace:hover {
-  background-color: #157347;
+#startrace:hover, #startrace:focus {
+  background-color: #ff9900;
 }
 
 #startrace:active {
-  background-color: #157347;
+  background-color: #ff9900;
+  transition: 0.5s;
+  position:relative;
+  top:2px;
 }
