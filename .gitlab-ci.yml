@@ -10,6 +10,7 @@ zip_repo:
     - cdk-pipeline-askwith
     - dasmthc
     - marbuss
+    - mrglover-overlay
     - danlndnr
     - csj
   stage: zip
@@ -33,6 +34,7 @@ upload_to_s3:
     - cdk-pipeline-askwith
     - dasmthc
     - marbuss
+    - mrglover-overlay
     - danlndnr
     - csj
   stage: upload
