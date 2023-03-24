@@ -284,7 +284,7 @@ export class EventsManager extends Construct {
                 ),
                 directives: [
                     Directive.subscribe('deleteEvents'),
-                    Directive.cognito('admin', 'operator'),
+                    Directive.cognito('admin', 'commentator', 'operator'),
                 ],
             })
         );

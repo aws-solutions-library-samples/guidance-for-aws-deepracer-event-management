@@ -135,7 +135,7 @@ export class FleetsManager extends Construct {
                 ),
                 directives: [
                     Directive.subscribe('addFleet'),
-                    Directive.cognito('admin', 'operator'),
+                    Directive.cognito('admin', 'commentator', 'operator'),
                 ],
             })
         );
@@ -164,7 +164,7 @@ export class FleetsManager extends Construct {
                 ),
                 directives: [
                     Directive.subscribe('deleteFleets'),
-                    Directive.cognito('admin', 'operator'),
+                    Directive.cognito('admin', 'commentator', 'operator'),
                 ],
             })
         );
@@ -198,7 +198,7 @@ export class FleetsManager extends Construct {
                 ),
                 directives: [
                     Directive.subscribe('updateFleet'),
-                    Directive.cognito('admin', 'operator'),
+                    Directive.cognito('admin', 'commentator', 'operator'),
                 ],
             })
         );
