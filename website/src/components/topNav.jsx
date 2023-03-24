@@ -57,37 +57,58 @@ function usePageViews() {
     cwr('recordPageView', location.pathname);
   }, [location]);
 }
+const defaultRoutes = [
+  <Route path="/" element={<Home />} />,
+  <Route path="*" element={<Home />} />,
+  <Route path="/user/profile" element={<ProfileHome />} />,
+  <Route path="/models" element={<Models />} />,
+  <Route path="/upload" element={<Upload />} />,
+];
 
-function MenuRoutes() {
+const registrationRoutes = [<Route path="/registration/createuser" element={<CreateUser />} />];
+
+const commentatorRoutes = [<Route path="/commentator" element={<CommentatorRaceStats />} />];
+
+const operatorRoutes = [
+  <Route path="/admin/home" element={<AdminHome />} />,
+  <Route path="/admin/models" element={<AdminModels />} />,
+  <Route path="/admin/quarantine" element={<AdminQuarantine />} />,
+  <Route path="/admin/cars" element={<AdminCars />} />,
+  <Route path="/admin/events" element={<AdminEvents />} />,
+  <Route path="/admin/events/create" element={<CreateEvent />} />,
+  <Route path="/admin/events/edit" element={<EditEvent />} />,
+  <Route path="/admin/fleets" element={<AdminFleets />} />,
+  <Route path="/admin/fleets/create" element={<CreateFleet />} />,
+  <Route path="/admin/fleets/edit" element={<EditFleet />} />,
+  <Route path="/admin/car_activation" element={<AdminActivation />} />,
+  <Route path="/admin/timekeeper" element={<Timekeeper />} />,
+  <Route path="/admin/races" element={<RaceAdmin />} />,
+  <Route path="/admin/races/edit" element={<EditRace />} />,
+];
+
+const adminRoutes = [
+  <Route path="/admin/groups" element={<AdminGroups />} />,
+  <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />,
+];
+
+const MenuRoutes = ({ groups }) => {
   usePageViews();
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/models" element={<Models />} />
-      <Route path="/upload" element={<Upload />} />
-      <Route path="/commentator" element={<CommentatorRaceStats />} />
-      <Route path="/admin/home" element={<AdminHome />} />
-      <Route path="/admin/models" element={<AdminModels />} />
-      <Route path="/admin/quarantine" element={<AdminQuarantine />} />
-      <Route path="/admin/cars" element={<AdminCars />} />
-      <Route path="/admin/events" element={<AdminEvents />} />
-      <Route path="/admin/events/create" element={<CreateEvent />} />
-      <Route path="/admin/events/edit" element={<EditEvent />} />
-      <Route path="/admin/fleets" element={<AdminFleets />} />
-      <Route path="/admin/fleets/create" element={<CreateFleet />} />
-      <Route path="/admin/fleets/edit" element={<EditFleet />} />
-      <Route path="/registration/createuser" element={<CreateUser />} />
-      <Route path="/admin/groups" element={<AdminGroups />} />
-      <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />
-      <Route path="/admin/car_activation" element={<AdminActivation />} />
-      <Route path="/admin/timekeeper" element={<Timekeeper />} />
-      <Route path="/admin/races" element={<RaceAdmin />} />
-      <Route path="/admin/races/edit" element={<EditRace />} />
-      <Route path="/user/profile" element={<ProfileHome />} />
-      <Route path="*" element={<Home />} />
-    </Routes>
-  );
-}
+  let routes = defaultRoutes;
+  if (groups.includes('registration') || groups.includes('admin')) {
+    routes = routes.concat(registrationRoutes);
+  }
+  if (groups.includes('commentator') || groups.includes('admin')) {
+    routes = routes.concat(commentatorRoutes);
+  }
+  if (groups.includes('operator') || groups.includes('admin')) {
+    routes = routes.concat(operatorRoutes);
+  }
+  if (groups.includes('admin')) {
+    routes = routes.concat(adminRoutes);
+  }
+
+  return <Routes>{routes}</Routes>;
+};
 
 export function TopNav(props) {
   const { t } = useTranslation();
@@ -117,7 +138,7 @@ export function TopNav(props) {
     };
   }, []);
 
-  const navItems = [
+  const defaultSideNavItems = [
     {
       type: 'section',
       text: t('topnav.models'),
@@ -129,17 +150,17 @@ export function TopNav(props) {
     },
   ];
 
-  if (groups.includes('admin') || groups.includes('registration')) {
-    navItems.push({
+  const registrationSideNavItems = [
+    {
       type: 'section',
       text: t('topnav.registration'),
       href: '/registration',
       items: [{ type: 'link', text: t('topnav.create-user'), href: '/registration/createuser' }],
-    });
-  }
+    },
+  ];
 
-  if (groups.includes('admin') || groups.includes('commentator')) {
-    navItems.push({
+  const commentatorSideNavItems = [
+    {
       type: 'section',
       text: t('topnav.commentator'),
       items: [
@@ -150,11 +171,11 @@ export function TopNav(props) {
           href: '/commentator',
         },
       ],
-    });
-  }
+    },
+  ];
 
-  if (groups.includes('admin') || groups.includes('operator')) {
-    navItems.push({
+  const operatorSideNavItems = [
+    {
       type: 'section',
       text: t('topnav.operator'),
       href: '/operator',
@@ -209,11 +230,11 @@ export function TopNav(props) {
           href: '/admin/timekeeper',
         },
       ],
-    });
-  }
+    },
+  ];
 
-  if (groups.includes('admin')) {
-    navItems.push({
+  const adminSideNavItems = [
+    {
       type: 'section',
       text: t('topnav.admin'),
       href: '/admin',
@@ -224,8 +245,25 @@ export function TopNav(props) {
           items: [{ type: 'link', text: t('topnav.groups'), href: '/admin/groups' }],
         },
       ],
-    });
-  }
+    },
+  ];
+
+  const SideNavItems = () => {
+    let items = defaultSideNavItems;
+    if (groups.includes('registration') || groups.includes('admin')) {
+      items = items.concat(registrationSideNavItems);
+    }
+    if (groups.includes('commentator') || groups.includes('admin')) {
+      items = items.concat(commentatorSideNavItems);
+    }
+    if (groups.includes('operator') || groups.includes('admin')) {
+      items = items.concat(operatorSideNavItems);
+    }
+    if (groups.includes('admin')) {
+      items = items.concat(adminSideNavItems);
+    }
+    return items;
+  };
 
   const topNavItems = [
     {
@@ -251,6 +289,7 @@ export function TopNav(props) {
       },
     },
   ];
+
   if (
     groups.includes('admin') ||
     groups.includes('operator') ||
@@ -317,12 +356,12 @@ export function TopNav(props) {
           <SideNavigation
             activeHref={window.location.pathname}
             onFollow={handleFollow}
-            items={navItems}
+            items={SideNavItems()}
           />
         }
         // breadcrumbs={<BreadcrumbGroup items={breadcrumbs} expandAriaLabel="Show path" ariaLabel="Breadcrumbs" />}
         contentType="table"
-        content={<MenuRoutes />}
+        content={<MenuRoutes groups={groups} />}
         onNavigationChange={({ detail }) =>
           sideNavOptionsDispatch({ type: 'SIDE_NAV_IS_OPEN', value: detail.open })
         }
