@@ -4,8 +4,6 @@ import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { EventBus } from 'aws-cdk-lib/aws-events';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import {
@@ -21,7 +19,6 @@ import {
 import { Construct } from 'constructs';
 
 export interface RaceManagerProps {
-    adminGroupRole: IRole;
     appsyncApi: {
         schema: CodeFirstSchema;
         api: appsync.GraphqlApi;
@@ -93,18 +90,6 @@ export class RaceManager extends Construct {
             raceLambda
         );
 
-        // TODO make least privilage
-        const adminApiPolicy = new iam.Policy(this, 'adminApiPolicy', {
-            statements: [
-                new iam.PolicyStatement({
-                    effect: iam.Effect.ALLOW,
-                    actions: ['appsync:GraphQL'],
-                    resources: [`${props.appsyncApi.api.arn}/*`],
-                }),
-            ],
-        });
-        adminApiPolicy.attachToRole(props.adminGroupRole);
-
         // API Schema
         const lapObjectType = new ObjectType('Lap', {
             definition: {
@@ -118,6 +103,7 @@ export class RaceManager extends Construct {
                 isValid: GraphqlType.boolean(),
                 autTimerConnected: GraphqlType.boolean(),
             },
+            directives: [Directive.cognito('admin', 'operator', 'commentator')],
         });
 
         const lapInputObjectType = new InputType('LapInput', {
@@ -133,6 +119,7 @@ export class RaceManager extends Construct {
                 isValid: GraphqlType.boolean(),
                 autTimerConnected: GraphqlType.boolean(),
             },
+            directives: [Directive.cognito('admin', 'operator')],
         });
 
         props.appsyncApi.schema.addType(lapObjectType);
@@ -148,6 +135,7 @@ export class RaceManager extends Construct {
                 createdAt: GraphqlType.awsDateTime(),
                 laps: lapObjectType.attribute({ isList: true }),
             },
+            directives: [Directive.cognito('admin', 'operator')],
         });
 
         props.appsyncApi.schema.addType(raceObjectType);
@@ -157,6 +145,7 @@ export class RaceManager extends Construct {
                 userId: GraphqlType.id({ isRequired: true }),
                 raceId: GraphqlType.id({ isRequired: true }),
             },
+            directives: [Directive.cognito('admin', 'operator')],
         });
 
         props.appsyncApi.schema.addType(raceDeleteInputType);
@@ -167,6 +156,7 @@ export class RaceManager extends Construct {
                 trackId: GraphqlType.id({ isRequired: true }),
                 raceIds: GraphqlType.id({ isList: true }),
             },
+            directives: [Directive.cognito('admin', 'operator')],
         });
 
         props.appsyncApi.schema.addType(raceDeleteObjectType);
@@ -183,6 +173,7 @@ export class RaceManager extends Construct {
                 },
                 returnType: raceObjectType.attribute(),
                 dataSource: raceDataSource,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -204,7 +195,10 @@ export class RaceManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('addRace')],
+                directives: [
+                    Directive.subscribe('addRace'),
+                    Directive.cognito('admin', 'operator'),
+                ],
             })
         );
 
@@ -221,6 +215,7 @@ export class RaceManager extends Construct {
                 },
                 returnType: raceObjectType.attribute(),
                 dataSource: raceDataSource,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -234,6 +229,7 @@ export class RaceManager extends Construct {
                 },
                 returnType: raceDeleteObjectType.attribute(),
                 dataSource: raceDataSource,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -255,7 +251,10 @@ export class RaceManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('deleteRaces')],
+                directives: [
+                    Directive.subscribe('deleteRaces'),
+                    Directive.cognito('admin', 'operator'),
+                ],
             })
         );
 
@@ -269,6 +268,7 @@ export class RaceManager extends Construct {
                 },
                 returnType: raceObjectType.attribute({ isList: true }),
                 dataSource: raceDataSource,
+                directives: [Directive.cognito('admin', 'operator', 'commentator')],
             })
         );
 
@@ -297,7 +297,11 @@ export class RaceManager extends Construct {
                 currentLapTimeInMs: GraphqlType.float(),
                 raceStatus: raceStatusEnum.attribute({ isRequired: true }),
             },
-            directives: [Directive.apiKey(), Directive.iam()],
+            directives: [
+                Directive.apiKey(),
+                Directive.iam(),
+                Directive.cognito('admin', 'operator', 'commentator'),
+            ],
         });
 
         props.appsyncApi.schema.addType(overlayObjectType);
@@ -327,6 +331,7 @@ export class RaceManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -352,6 +357,7 @@ export class RaceManager extends Construct {
                     Directive.subscribe('updateOverlayInfo'),
                     Directive.apiKey(),
                     Directive.iam(),
+                    Directive.cognito('admin', 'operator', 'commentator'),
                 ],
             })
         );

@@ -200,13 +200,13 @@ export function TopNav(props) {
               info: <Badge color="blue">Beta</Badge>,
               href: '/admin/races',
             },
-            {
-              type: 'link',
-              text: t('topnav.time-keeper'),
-              info: <Badge color="blue">Beta</Badge>,
-              href: '/admin/timekeeper',
-            },
           ],
+        },
+        {
+          type: 'link',
+          text: t('topnav.time-keeper'),
+          info: <Badge color="blue">Beta</Badge>,
+          href: '/admin/timekeeper',
         },
       ],
     });
@@ -251,7 +251,12 @@ export function TopNav(props) {
       },
     },
   ];
-  if (groups.includes('admin')) {
+  if (
+    groups.includes('admin') ||
+    groups.includes('operator') ||
+    groups.includes('commentator') ||
+    groups.includes('registration')
+  ) {
     topNavItems.unshift({
       type: 'menu-dropdown',
       text: selectedEvent.eventName,

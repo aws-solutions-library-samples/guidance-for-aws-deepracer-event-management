@@ -57,7 +57,7 @@ with open("cfn.outputs") as json_file:
             ],
             "aws_appsync_graphqlEndpoint": appsyncEndpoint,
             "aws_appsync_region": region,
-            "aws_appsync_authenticationType": "AWS_IAM",
+            "aws_appsync_authenticationType": "AMAZON_COGNITO_USER_POOLS",
         },
         "Urls": {
             "termsAndConditionsUrl": tacWebsite,

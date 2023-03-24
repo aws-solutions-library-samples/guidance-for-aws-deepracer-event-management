@@ -76,7 +76,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                     authorizationType: appsync.AuthorizationType.USER_POOL,
                     userPoolConfig: {
                         userPool: props.userPool,
-                        defaultAction: appsync.UserPoolDefaultAction.DENY,
+                        // defaultAction: appsync.UserPoolDefaultAction.DENY, // NOT possible to use when having addiotnal auth modes
                     },
                 },
                 additionalAuthorizationModes: [
@@ -125,7 +125,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         const carManager = new CarManager(this, 'CarManager', {
-            adminGroupRole: props.adminGroupRole,
             appsyncApi: {
                 api: appsyncApi,
                 schema: schema,
@@ -135,7 +134,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new RaceManager(this, 'RaceManager', {
-            adminGroupRole: props.adminGroupRole,
             appsyncApi: {
                 api: appsyncApi,
                 schema: schema,
@@ -146,7 +144,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         const leaderboard = new Leaderboard(this, 'Leaderboard', {
-            adminGroupRole: props.adminGroupRole,
             logsBucket: props.logsBucket,
             appsyncApi: {
                 api: appsyncApi,
@@ -160,7 +157,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new EventsManager(this, 'EventsManager', {
-            adminGroupRole: props.adminGroupRole,
             appsyncApi: {
                 api: appsyncApi,
                 schema: schema,
@@ -172,7 +168,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new FleetsManager(this, 'FleetsManager', {
-            adminGroupRole: props.adminGroupRole,
             appsyncApi: {
                 api: appsyncApi,
                 schema: schema,
@@ -190,7 +185,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         new SystemsManager(this, 'SystemManager');
 
         new GroupManager(this, 'GroupManagers', {
-            adminGroupRole: props.adminGroupRole,
             lambdaConfig: props.lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
             userPoolId: props.userPool.userPoolId,
@@ -202,7 +196,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new UserManager(this, 'UserManager', {
-            adminGroupRole: props.adminGroupRole,
             authenticatedUserRole: props.authenticatedUserRole,
             lambdaConfig: props.lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
@@ -221,7 +214,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new LabelPrinter(this, 'LabelPrinter', {
-            adminGroupRole: props.adminGroupRole,
             lambdaConfig: props.lambdaConfig,
             logsbucket: props.logsBucket,
             appsyncApi: {

@@ -13,13 +13,12 @@ import {
     GraphqlType,
     InputType,
     ObjectType,
-    ResolvableField
+    ResolvableField,
 } from 'awscdk-appsync-utils';
 
 import { Construct } from 'constructs';
 
 export interface UserManagerProps {
-    adminGroupRole: IRole;
     authenticatedUserRole: IRole;
     userPoolId: string;
     userPoolArn: string;
@@ -113,7 +112,7 @@ export class UserManager extends Construct {
         delete_user_function.addToRolePolicy(
             new iam.PolicyStatement({
                 effect: iam.Effect.ALLOW,
-                actions: ['cognito-idp:AdminDeleteUser','cognito-idp:AdminGetUser'],
+                actions: ['cognito-idp:AdminDeleteUser', 'cognito-idp:AdminGetUser'],
                 resources: [props.userPoolArn],
             })
         );
@@ -218,7 +217,7 @@ export class UserManager extends Construct {
                 MFAOptions: user_object_mfa_options.attribute({ isList: true, isRequired: false }),
                 sub: GraphqlType.id({ isRequired: false }),
             },
-            directives: [Directive.cognito('admin'), Directive.cognito('registration')],
+            directives: [Directive.cognito('admin', 'registration', 'operator')],
         });
 
         props.appsyncApi.schema.addType(user_object);
@@ -228,6 +227,7 @@ export class UserManager extends Construct {
                 Username: GraphqlType.string(),
                 Deleted: GraphqlType.boolean(),
             },
+            directives: [Directive.cognito('admin')],
         });
 
         props.appsyncApi.schema.addType(user_delete_object);
@@ -238,7 +238,7 @@ export class UserManager extends Construct {
             new ResolvableField({
                 returnType: user_object.attribute({ isList: true }),
                 dataSource: users_data_source,
-                directives: [Directive.cognito('admin'), Directive.cognito('registration')],
+                directives: [Directive.cognito('admin', 'registration', 'operator')],
             })
         );
 
@@ -256,10 +256,10 @@ export class UserManager extends Construct {
                     `#if (!$util.isNull($context.result.error))
                         $util.error($context.result.error.message, $ctx.result.error.type)
                     #end
-                                        
+
                     $utils.toJson($context.result)`
                 ),
-                directives: [Directive.cognito('admin'), Directive.cognito('registration')],
+                directives: [Directive.cognito('admin', 'registration')],
             })
         );
 
@@ -267,7 +267,7 @@ export class UserManager extends Construct {
             'deleteUser',
             new ResolvableField({
                 args: {
-                    username: GraphqlType.string({ isRequired: true })
+                    username: GraphqlType.string({ isRequired: true }),
                 },
                 returnType: user_delete_object.attribute(),
                 dataSource: user_delete_data_source,
@@ -277,6 +277,7 @@ export class UserManager extends Construct {
                     #end
                     $utils.toJson($context.result)`
                 ),
+                directives: [Directive.cognito('admin')],
             })
         );
 
@@ -307,7 +308,7 @@ export class UserManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.cognito('admin'), Directive.cognito('registration')],
+                directives: [Directive.cognito('admin', 'registration')],
             })
         );
 
@@ -327,28 +328,10 @@ export class UserManager extends Construct {
                 ),
                 directives: [
                     Directive.subscribe('userCreated'),
-                    Directive.cognito('admin'),
-                    Directive.cognito('registration'),
+                    Directive.cognito('admin', 'registration', 'operator'),
                 ],
             })
         );
-
-        // // Grant access so API methods can be invoked
-        // const admin_api_policy = new iam.Policy(this, 'adminApiPolicy', {
-        //     statements: [
-        //         new iam.PolicyStatement({
-        //             effect: iam.Effect.ALLOW,
-        //             actions: ['appsync:GraphQL'],
-        //             resources: [
-        //                 `${props.appsyncApi.api.arn}/types/Query/fields/listUsers`,
-        //                 `${props.appsyncApi.api.arn}/types/Mutation/fields/createUser`,
-        //                 `${props.appsyncApi.api.arn}/types/Mutation/fields/userCreated`,
-        //                 `${props.appsyncApi.api.arn}/types/Subscription/fields/onUserCreated`,
-        //             ],
-        //         }),
-        //     ],
-        // });
-        // admin_api_policy.attachToRole(props.adminGroupRole);
 
         // Grant access so API methods can be invoked
         const user_api_policy = new iam.Policy(this, 'userApiPolicy', {
@@ -356,9 +339,7 @@ export class UserManager extends Construct {
                 new iam.PolicyStatement({
                     effect: iam.Effect.ALLOW,
                     actions: ['appsync:GraphQL'],
-                    resources: [
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/deleteUser`,
-                    ],
+                    resources: [`${props.appsyncApi.api.arn}/types/Mutation/fields/deleteUser`],
                 }),
             ],
         });
