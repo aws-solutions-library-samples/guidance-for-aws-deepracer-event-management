@@ -68,6 +68,10 @@ export const VisibleContentOptions = () => {
           label: i18next.t('events.streaming-overlay-link'),
         },
         {
+          id: 'eventStreamingOverlayLinkChomra',
+          label: i18next.t('events.streaming-overlay-link-chroma'),
+        },
+        {
           id: 'qrCodeIsVisible',
           label: i18next.t('events.leaderboard.qr-code-header'),
         },
@@ -175,6 +179,24 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
             }
             linkTextPrimary={i18next.t('events.streaming-overlay-link-same-tab')}
             linkTextExternal={i18next.t('events.streaming-overlay-link-new-tab')}
+          />
+        ) || '-',
+    },
+    {
+      id: 'eventStreamingOverlayLinkChomra',
+      header: i18next.t('events.streaming-overlay-link-chroma'),
+      cell: (item) =>
+        (
+          <EventLinksButtons
+            href={
+              awsconfig.Urls.streamingOverlayWebsite +
+              '/?' +
+              'event=' +
+              item.eventId.toString() +
+              '&chroma=1'
+            }
+            linkTextPrimary={i18next.t('events.streaming-overlay-link-chroma-same-tab')}
+            linkTextExternal={i18next.t('events.streaming-overlay-link-chroma-new-tab')}
           />
         ) || '-',
     },
