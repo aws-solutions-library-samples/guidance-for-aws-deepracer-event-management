@@ -254,7 +254,7 @@ export class EventsManager extends Construct {
                 ),
                 directives: [
                     Directive.subscribe('addEvent'),
-                    Directive.cognito('admin', 'operator'),
+                    Directive.cognito('admin', 'commentator', 'operator'),
                 ],
             })
         );
@@ -322,7 +322,7 @@ export class EventsManager extends Construct {
                 ),
                 directives: [
                     Directive.subscribe('updateEvent'),
-                    Directive.cognito('admin', 'operator'),
+                    Directive.cognito('admin', 'commentator', 'operator'),
                 ],
             })
         );

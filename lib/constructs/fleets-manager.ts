@@ -91,7 +91,7 @@ export class FleetsManager extends Construct {
                 createdBy: GraphqlType.id(),
                 carIds: GraphqlType.id({ isList: true }),
             },
-            directives: [Directive.cognito('admin', 'operator')],
+            directives: [Directive.cognito('admin', 'commentator', 'operator')],
         });
 
         props.appsyncApi.schema.addType(fleets_object_Type);
@@ -102,7 +102,7 @@ export class FleetsManager extends Construct {
             new ResolvableField({
                 returnType: fleets_object_Type.attribute({ isList: true }),
                 dataSource: fleets_data_source,
-                directives: [Directive.cognito('admin', 'operator')],
+                directives: [Directive.cognito('admin', 'commentator', 'operator')],
             })
         );
 

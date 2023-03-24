@@ -312,6 +312,7 @@ export class CarManager extends Construct {
                 fleetId: GraphqlType.id(),
                 fleetName: GraphqlType.string(),
             },
+            directives: [Directive.cognito('admin', 'commentator', 'operator')],
         });
 
         props.appsyncApi.schema.addType(car_online_object_type);
@@ -325,7 +326,7 @@ export class CarManager extends Construct {
                 },
                 returnType: car_online_object_type.attribute({ isList: true }),
                 dataSource: cars_data_source,
-                directives: [Directive.cognito('admin', 'operator')],
+                directives: [Directive.cognito('admin', 'commentator', 'operator')],
             })
         );
 
