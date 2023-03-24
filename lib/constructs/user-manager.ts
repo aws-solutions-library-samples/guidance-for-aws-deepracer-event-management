@@ -175,6 +175,7 @@ export class UserManager extends Construct {
                 Name: GraphqlType.string({ isRequired: true }),
                 Value: GraphqlType.string({ isRequired: true }),
             },
+            directives: [Directive.cognito('admin', 'registration', 'operator'), Directive.iam()],
         });
 
         props.appsyncApi.schema.addType(user_object_attributes);
@@ -184,6 +185,7 @@ export class UserManager extends Construct {
                 Name: GraphqlType.string({ isRequired: true }),
                 Value: GraphqlType.string({ isRequired: true }),
             },
+            directives: [Directive.iam()],
         });
 
         props.appsyncApi.schema.addType(user_object_attributes_input);
@@ -193,6 +195,7 @@ export class UserManager extends Construct {
                 Name: GraphqlType.string({ isRequired: true }),
                 Value: GraphqlType.string({ isRequired: true }),
             },
+            directives: [Directive.cognito('admin', 'registration', 'operator'), Directive.iam()],
         });
 
         props.appsyncApi.schema.addType(user_object_mfa_options);
@@ -202,6 +205,7 @@ export class UserManager extends Construct {
                 Name: GraphqlType.string({ isRequired: true }),
                 Value: GraphqlType.string({ isRequired: true }),
             },
+            directives: [Directive.iam()],
         });
 
         props.appsyncApi.schema.addType(user_object_mfa_options_input);
@@ -217,7 +221,7 @@ export class UserManager extends Construct {
                 MFAOptions: user_object_mfa_options.attribute({ isList: true, isRequired: false }),
                 sub: GraphqlType.id({ isRequired: false }),
             },
-            directives: [Directive.cognito('admin', 'registration', 'operator')],
+            directives: [Directive.cognito('admin', 'registration', 'operator'), Directive.iam()],
         });
 
         props.appsyncApi.schema.addType(user_object);
@@ -308,7 +312,7 @@ export class UserManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.cognito('admin', 'registration')],
+                directives: [Directive.iam()],
             })
         );
 
