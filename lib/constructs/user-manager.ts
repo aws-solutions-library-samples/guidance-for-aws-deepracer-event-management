@@ -231,7 +231,7 @@ export class UserManager extends Construct {
                 Username: GraphqlType.string(),
                 Deleted: GraphqlType.boolean(),
             },
-            directives: [Directive.cognito('admin')],
+            // all users shall be able to delete themself
         });
 
         props.appsyncApi.schema.addType(user_delete_object);
@@ -281,7 +281,7 @@ export class UserManager extends Construct {
                     #end
                     $utils.toJson($context.result)`
                 ),
-                directives: [Directive.cognito('admin')],
+                // directive: all users shall be able to delete themself
             })
         );
 
