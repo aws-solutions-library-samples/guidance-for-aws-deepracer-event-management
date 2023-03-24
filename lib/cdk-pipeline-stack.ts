@@ -244,7 +244,7 @@ export class CdkPipelineStack extends cdk.Stack {
         // Streaming overlay website Deploy to S3
         infrastructure_stage.addPost(
             new pipelines.CodeBuildStep('StreamingOverlayDeployToS3', {
-                // installCommands: ['npm install -g @aws-amplify/cli'],
+                installCommands: ['npm install -g @aws-amplify/cli'],
                 buildEnvironment: {
                     privileged: true,
                     computeType: codebuild.ComputeType.LARGE,
@@ -253,7 +253,21 @@ export class CdkPipelineStack extends cdk.Stack {
                     // configure and deploy Streaming overlay website
                     "echo 'Starting to deploy the Streaming overlay website'",
                     'echo website bucket= $streamingOverlaySourceBucketName',
-                    'aws s3 sync ./website-stream-overlays/ s3://$streamingOverlaySourceBucketName/ --delete',
+                    'aws cloudformation describe-stacks --stack-name ' +
+                    `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
+                    'python scripts/generate_amplify_config_cfn.py',
+                    'python scripts/generate_stream_overlays_amplify_config_cfn.py',
+                    'appsyncId=`cat appsyncId.txt` && aws appsync' +
+                        ' get-introspection-schema --api-id $appsyncId --format SDL' +
+                        ' ./website-stream-overlays/src/graphql/schema.graphql',
+                    'cd ./website-stream-overlays/src/graphql',
+                    'amplify codegen', // this is on purpose
+                    'amplify codegen', // I'm not repeating myself ;)
+                    'cd ../..',
+                    'docker run --rm -v $(pwd):/foo -w /foo' +
+                        " public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install" +
+                        " --cache /tmp/empty-cache && npm run build'",
+                    'aws s3 sync ./build/ s3://$streamingOverlaySourceBucketName/ --delete',
                     "aws cloudfront create-invalidation --distribution-id $streamingOverlayDistributionId --paths '/*'",
                 ],
                 envFromCfnOutputs: {
