@@ -138,7 +138,7 @@ export class EventsManager extends Construct {
                 trackType: trackTypeMethodEnum.attribute(),
                 rankingMethod: raceRankingMethodEnum.attribute(),
             },
-            directives: [Directive.cognito('admin', 'operator')],
+            directives: [Directive.cognito('admin', 'commentator', 'operator')],
         });
         props.appsyncApi.schema.addType(raceConfigObjectType);
 
@@ -159,7 +159,7 @@ export class EventsManager extends Construct {
                 raceConfig: raceConfigObjectType.attribute(),
                 leaderboardConfig: props.leaderboardApi.leaderboardConfigObjectType.attribute(),
             },
-            directives: [Directive.cognito('admin', 'operator')],
+            directives: [Directive.cognito('admin', 'commentator', 'operator')],
         });
         props.appsyncApi.schema.addType(trackObjectType);
 
