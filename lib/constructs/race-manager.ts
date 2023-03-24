@@ -135,7 +135,7 @@ export class RaceManager extends Construct {
                 createdAt: GraphqlType.awsDateTime(),
                 laps: lapObjectType.attribute({ isList: true }),
             },
-            directives: [Directive.cognito('admin', 'operator')],
+            directives: [Directive.cognito('admin', 'operator', 'commentator')],
         });
 
         props.appsyncApi.schema.addType(raceObjectType);
@@ -197,7 +197,7 @@ export class RaceManager extends Construct {
                 ),
                 directives: [
                     Directive.subscribe('addRace'),
-                    Directive.cognito('admin', 'operator'),
+                    Directive.cognito('admin', 'operator', 'commentator'),
                 ],
             })
         );
