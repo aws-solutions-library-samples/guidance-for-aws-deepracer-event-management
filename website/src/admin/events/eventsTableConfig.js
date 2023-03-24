@@ -68,7 +68,7 @@ export const VisibleContentOptions = () => {
           label: i18next.t('events.streaming-overlay-link'),
         },
         {
-          id: 'eventStreamingOverlayLinkChomra',
+          id: 'eventStreamingOverlayLinkChroma',
           label: i18next.t('events.streaming-overlay-link-chroma'),
         },
         {
@@ -183,7 +183,7 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
         ) || '-',
     },
     {
-      id: 'eventStreamingOverlayLinkChomra',
+      id: 'eventStreamingOverlayLinkChroma',
       header: i18next.t('events.streaming-overlay-link-chroma'),
       cell: (item) =>
         (
