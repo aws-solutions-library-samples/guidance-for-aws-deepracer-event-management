@@ -14,6 +14,15 @@ export const Timekeeper = () => {
 
   const sideNavOptionsDispatch = useSideNavOptionsDispatch();
 
+  // Reset the timekeeper when navigating away from the timekeeper
+  useEffect(() => {
+    return () => {
+      setRaceConfig({});
+      setActiveStepIndex(0);
+      setRace(defaultRace);
+    };
+  }, []);
+
   useEffect(() => {
     sideNavOptionsDispatch({ type: 'SIDE_NAV_IS_OPEN', value: false });
   }, [sideNavOptionsDispatch]);
