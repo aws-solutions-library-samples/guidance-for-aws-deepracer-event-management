@@ -175,7 +175,10 @@ export class UserManager extends Construct {
                 Name: GraphqlType.string({ isRequired: true }),
                 Value: GraphqlType.string({ isRequired: true }),
             },
-            directives: [Directive.cognito('admin', 'registration', 'operator'), Directive.iam()],
+            directives: [
+                Directive.cognito('admin', 'registration', 'commentator', 'operator'),
+                Directive.iam(),
+            ],
         });
 
         props.appsyncApi.schema.addType(user_object_attributes);
