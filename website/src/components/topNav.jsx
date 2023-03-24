@@ -61,8 +61,8 @@ const defaultRoutes = [
   <Route path="/" element={<Home />} />,
   <Route path="*" element={<Home />} />,
   <Route path="/user/profile" element={<ProfileHome />} />,
-  <Route path="/models" element={<Models />} />,
-  <Route path="/upload" element={<Upload />} />,
+  <Route path="/models/view" element={<Models />} />,
+  <Route path="/models/upload" element={<Upload />} />,
 ];
 
 const registrationRoutes = [<Route path="/registration/createuser" element={<CreateUser />} />];
@@ -144,8 +144,8 @@ export function TopNav(props) {
       text: t('topnav.models'),
       href: '/models',
       items: [
-        { type: 'link', text: t('topnav.upload'), href: '/upload' },
-        { type: 'link', text: t('topnav.models'), href: '/models' },
+        { type: 'link', text: t('topnav.upload'), href: '/models/upload' },
+        { type: 'link', text: t('topnav.models'), href: '/models/view' },
       ],
     },
   ];
