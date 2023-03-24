@@ -130,9 +130,12 @@
   "events.leaderboard-link": "Leaderboard",
   "events.leaderboard-link-same-tab": "Open in this tab",
   "events.leaderboard-link-new-tab": "Open in new tab",
-  "events.streaming-overlay-link": "Streaming Overlay",
+  "events.streaming-overlay-link": "Streaming overlay",
   "events.streaming-overlay-link-same-tab": "Open in this tab",
   "events.streaming-overlay-link-new-tab": "Open in new tab",
+  "events.streaming-overlay-link-chroma": "Streaming overlay +chroma",
+  "events.streaming-overlay-link-chroma-same-tab": "Open in this tab",
+  "events.streaming-overlay-link-chroma-new-tab": "Open in new tab",
 
   "events.event-type": "Type of Event",
   "events.event-type-description": "",
