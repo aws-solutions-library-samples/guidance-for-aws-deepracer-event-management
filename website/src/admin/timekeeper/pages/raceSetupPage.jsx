@@ -11,13 +11,13 @@ import {
 } from '@cloudscape-design/components';
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { EventSelectorModal } from '../../components/eventSelectorModal';
-import { PageLayout } from '../../components/pageLayout';
-import useMutation from '../../hooks/useMutation';
-import { RacesStatusEnum } from '../../hooks/usePublishOverlay';
-import { eventContext } from '../../store/eventProvider';
-import { usersContext } from '../../store/usersProvider';
-import { breadcrumbs } from './supportFunctions';
+import { EventSelectorModal } from '../../../components/eventSelectorModal';
+import { PageLayout } from '../../../components/pageLayout';
+import useMutation from '../../../hooks/useMutation';
+import { RacesStatusEnum } from '../../../hooks/usePublishOverlay';
+import { eventContext } from '../../../store/eventProvider';
+import { usersContext } from '../../../store/usersProvider';
+import { breadcrumbs } from '../support-functions/supportFunctions';
 
 export const RaceSetupPage = ({ onNext }) => {
   const { t } = useTranslation();
