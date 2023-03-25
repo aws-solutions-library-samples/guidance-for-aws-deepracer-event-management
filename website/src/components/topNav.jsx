@@ -30,6 +30,7 @@ import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { Timekeeper } from '../admin/timekeeper/timeKeeper';
 import { ProfileHome } from '../admin/user-profile/profile';
 import { CreateUser } from '../admin/users/createUser';
+import { CommentatorRaceStats } from '../commentator/race-stats';
 import { Home } from '../home';
 import useLink from '../hooks/useLink';
 import { Models } from '../models';
@@ -42,7 +43,6 @@ import {
 } from '../store/appLayoutProvider';
 import { eventContext } from '../store/eventProvider';
 import { Upload } from '../upload';
-import { CommentatorRaceStats } from './commentator/race-stats';
 
 function cwr(operation, payload) {
   // Instrument Routing to Record Page Views
