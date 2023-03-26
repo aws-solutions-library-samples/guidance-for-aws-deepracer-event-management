@@ -1,4 +1,6 @@
-function LowerThirdRacerAndLapInfoIn() {
+import * as d3 from 'd3';
+
+export function LowerThirdRacerAndLapInfoIn() {
   return d3
     .select('#lower-third-racer-and-lap-info')
     .transition()
@@ -7,7 +9,7 @@ function LowerThirdRacerAndLapInfoIn() {
     .style('left', '20px');
 }
 
-function LowerThirdRacerAndLapInfoOut() {
+export function LowerThirdRacerAndLapInfoOut() {
   return (
     d3
       .select('#lower-third-racer-and-lap-info')
@@ -20,7 +22,7 @@ function LowerThirdRacerAndLapInfoOut() {
   );
 }
 
-function LeaderboardFadeIn() {
+export function LeaderboardFadeIn() {
   return (
     d3
       .select('#leaderboard')
@@ -33,7 +35,7 @@ function LeaderboardFadeIn() {
   );
 }
 
-function LeaderboardFadeOut() {
+export function LeaderboardFadeOut() {
   return (
     d3
       .select('#leaderboard')
@@ -46,7 +48,7 @@ function LeaderboardFadeOut() {
   );
 }
 
-function DidYouKnowFadeIn() {
+export function DidYouKnowFadeIn() {
   return (
     d3
       .select('#did-you-know')
@@ -59,7 +61,7 @@ function DidYouKnowFadeIn() {
   );
 }
 
-function DidYouKnowFadeOut() {
+export function DidYouKnowFadeOut() {
   return (
     d3
       .select('#did-you-know')

@@ -1,0 +1,47 @@
+#lower-third-racer-and-lap-info {
+  width: 1100px;
+  position: fixed;
+  top: 745px;
+  left: -1200px;
+}
+
+#leaderboard-frame {
+  width: 1920px;
+  height: 1080px;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+}
+
+#leaderboard-frame #leaderboard {
+  opacity: 0;
+}
+
+#did-you-know-frame {
+  width: 1920px;
+  height: 1080px;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+}
+
+#did-you-know-frame #did-you-know {
+  opacity: 0;
+}
+
+#track-overlay-frame {
+  width: 350px;
+  position: fixed;
+  top: 30px;
+  left: 1540px;
+  opacity: 0;
+}
+
+#chromaBg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  height: 1080px;
+  background-color: #00ff00;
+}
