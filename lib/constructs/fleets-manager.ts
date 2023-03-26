@@ -102,7 +102,7 @@ export class FleetsManager extends Construct {
             new ResolvableField({
                 returnType: fleets_object_Type.attribute({ isList: true }),
                 dataSource: fleets_data_source,
-                directives: [Directive.cognito('admin', 'commentator', 'operator')],
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -135,7 +135,7 @@ export class FleetsManager extends Construct {
                 ),
                 directives: [
                     Directive.subscribe('addFleet'),
-                    Directive.cognito('admin', 'commentator', 'operator'),
+                    Directive.cognito('admin', 'operator'),
                 ],
             })
         );
@@ -164,7 +164,7 @@ export class FleetsManager extends Construct {
                 ),
                 directives: [
                     Directive.subscribe('deleteFleets'),
-                    Directive.cognito('admin', 'commentator', 'operator'),
+                    Directive.cognito('admin', 'operator'),
                 ],
             })
         );
@@ -198,7 +198,7 @@ export class FleetsManager extends Construct {
                 ),
                 directives: [
                     Directive.subscribe('updateFleet'),
-                    Directive.cognito('admin', 'commentator', 'operator'),
+                    Directive.cognito('admin', 'operator'),
                 ],
             })
         );
