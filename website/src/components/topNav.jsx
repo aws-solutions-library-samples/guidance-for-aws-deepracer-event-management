@@ -283,7 +283,7 @@ export function TopNav(props) {
     },
   ];
 
-  if (permissions.topNavItems.eventSelector) {
+  if (permissions.topNavItems.eventSelection) {
     topNavItems.unshift({
       type: 'menu-dropdown',
       text: selectedEvent.eventName,
