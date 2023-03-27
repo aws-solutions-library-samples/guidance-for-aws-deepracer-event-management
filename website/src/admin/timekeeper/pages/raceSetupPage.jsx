@@ -9,21 +9,21 @@ import {
   SpaceBetween,
   Toggle,
 } from '@cloudscape-design/components';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EventSelectorModal } from '../../../components/eventSelectorModal';
 import { PageLayout } from '../../../components/pageLayout';
 import useMutation from '../../../hooks/useMutation';
 import { RacesStatusEnum } from '../../../hooks/usePublishOverlay';
-import { eventContext } from '../../../store/eventProvider';
-import { usersContext } from '../../../store/usersProvider';
+import { useSelectedEventContext, useUsersContext } from '../../../store/storeProvider';
 import { breadcrumbs } from '../support-functions/supportFunctions';
 
 export const RaceSetupPage = ({ onNext }) => {
   const { t } = useTranslation();
   const [SendMutation] = useMutation();
-  const { events, selectedEvent } = useContext(eventContext);
-  const [users, isLoadingRacers] = useContext(usersContext);
+  const selectedEvent = useSelectedEventContext();
+  const [users, isLoadingRacers] = useUsersContext();
+
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
 
   const [race, setRace] = useState({
@@ -153,7 +153,7 @@ export const RaceSetupPage = ({ onNext }) => {
       </SpaceBetween>
     </Box>
   );
-  console.info(eventSelectModalVisible);
+
   return (
     <PageLayout
       breadcrumbs={breadcrumbs}

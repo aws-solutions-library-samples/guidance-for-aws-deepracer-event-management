@@ -1,11 +1,17 @@
 import { Box, Button, FormField, Modal, Select, SpaceBetween } from '@cloudscape-design/components';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { eventContext } from '../store/eventProvider';
+import {
+  useEventsContext,
+  useSelectedEventContext,
+  useSelectedEventDispatch,
+} from '../store/storeProvider';
 
 export const EventSelectorModal = ({ visible, onDismiss, onOk }) => {
   const { t } = useTranslation();
-  const { events, selectedEvent, setSelectedEvent } = useContext(eventContext);
+  const [events] = useEventsContext();
+  const selectedEvent = useSelectedEventContext();
+  const setSelectedEvent = useSelectedEventDispatch();
   const [config, SetConfig] = useState({ ...selectedEvent });
   const [eventSelectionIsNotValid, setEventSelectionIsNotValid] = useState(true);
 

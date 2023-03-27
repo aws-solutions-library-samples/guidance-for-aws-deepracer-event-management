@@ -1,6 +1,6 @@
 import ColumnLayout from '@cloudscape-design/components/column-layout';
 import { API, graphqlOperation } from 'aws-amplify';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Container from '@cloudscape-design/components/container';
@@ -8,17 +8,17 @@ import Header from '@cloudscape-design/components/header';
 import { EventSelectorModal } from '../../components/eventSelectorModal';
 import { getLeaderboard, getRaces } from '../../graphql/queries';
 import { onNewOverlayInfo } from '../../graphql/subscriptions';
-import { eventContext } from '../../store/eventProvider';
 import { PageLayout } from '../pageLayout';
 
 import { Box, SpaceBetween, Table } from '@cloudscape-design/components';
+import { useSelectedEventContext } from '../../store/storeProvider';
 import { RaceTimeAsString } from '../raceTimeAsString';
 
 const CommentatorRaceStats = () => {
   const { t } = useTranslation();
   const [subscription, SetSubscription] = useState();
 
-  const { selectedEvent } = useContext(eventContext);
+  const selectedEvent = useSelectedEventContext();
   const [actualRacer, SetActualRacer] = useState('No active Racer');
 
   const [fastesRacerTime, SetFastesRacerTime] = useState({});

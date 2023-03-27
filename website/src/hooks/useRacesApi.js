@@ -1,14 +1,14 @@
 import { API, graphqlOperation } from 'aws-amplify';
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { deleteRaces } from '../graphql/mutations';
 import { getRaces } from '../graphql/queries';
 import { onAddedRace, onDeletedRaces } from '../graphql/subscriptions';
+import { useUsersContext } from '../store/storeProvider';
 // import * as mutations from '../graphql/mutations';
-import { usersContext } from '../store/usersProvider';
 import { convertMsToString } from '../support-functions/time';
 
 export const useRacesApi = (eventId) => {
-  const [users, usersIsLoading] = useContext(usersContext);
+  const [users, usersIsLoading] = useUsersContext();
   const [isLoading, setIsLoading] = useState(true);
   const [races, setRaces] = useState([]);
   //const [errorMessage, setErrorMessage] = useState('');
@@ -36,7 +36,7 @@ export const useRacesApi = (eventId) => {
 
   const fixLapIDs = useCallback((race) => {
     race.laps = race.laps.map((lap) => {
-      lap['lapId'] = ('0'+(parseInt(lap['lapId'])+1)).slice(-2);
+      lap['lapId'] = ('0' + (parseInt(lap['lapId']) + 1)).slice(-2);
       return lap;
     });
     return race;

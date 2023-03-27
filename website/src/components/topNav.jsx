@@ -6,8 +6,7 @@ import {
   TopNavigation,
 } from '@cloudscape-design/components';
 
-import { Auth } from 'aws-amplify';
-import React, { useContext, useEffect, useState } from 'react';
+import React from 'react';
 
 import { Route, Routes, useLocation } from 'react-router-dom';
 
@@ -40,7 +39,12 @@ import {
   useSplitPanelOptions,
   useSplitPanelOptionsDispatch,
 } from '../store/appLayoutProvider';
-import { eventContext } from '../store/eventProvider';
+import { usePermissionsContext } from '../store/permissions/permissionsProvider';
+import {
+  useEventsContext,
+  useSelectedEventContext,
+  useSelectedEventDispatch,
+} from '../store/storeProvider';
 import { Upload } from '../upload';
 import { CommentatorRaceStats } from './commentator/race-stats';
 
@@ -91,19 +95,19 @@ const adminRoutes = [
   <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />,
 ];
 
-const MenuRoutes = ({ groups }) => {
+const MenuRoutes = ({ permissions }) => {
   usePageViews();
   let routes = defaultRoutes;
-  if (groups.includes('registration') || groups.includes('admin')) {
+  if (permissions.sideNavItems.registration) {
     routes = routes.concat(registrationRoutes);
   }
-  if (groups.includes('commentator') || groups.includes('admin')) {
+  if (permissions.sideNavItems.commentator) {
     routes = routes.concat(commentatorRoutes);
   }
-  if (groups.includes('operator') || groups.includes('admin')) {
+  if (permissions.sideNavItems.operator) {
     routes = routes.concat(operatorRoutes);
   }
-  if (groups.includes('admin')) {
+  if (permissions.sideNavItems.admin) {
     routes = routes.concat(adminRoutes);
   }
 
@@ -113,30 +117,19 @@ const MenuRoutes = ({ groups }) => {
 export function TopNav(props) {
   const { t } = useTranslation();
 
-  const [groups, setGroups] = useState([]);
   const splitPanelOptions = useSplitPanelOptions();
   const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
   const notifications = useNotifications();
 
   const { handleFollow } = useLink();
 
-  const { events, selectedEvent, setSelectedEvent } = useContext(eventContext);
+  const [events] = useEventsContext();
+  const selectedEvent = useSelectedEventContext();
+  const setSelectedEvent = useSelectedEventDispatch();
   const sideNavOptions = useSideNavOptions();
   const sideNavOptionsDispatch = useSideNavOptionsDispatch();
 
-  useEffect(() => {
-    // Config Groups
-    Auth.currentAuthenticatedUser().then((user) => {
-      const groups = user.signInUserSession.accessToken.payload['cognito:groups'];
-      if (groups !== undefined) {
-        setGroups(groups);
-      }
-    });
-
-    return () => {
-      // Unmounting
-    };
-  }, []);
+  const permissions = usePermissionsContext();
 
   const defaultSideNavItems = [
     {
@@ -250,16 +243,16 @@ export function TopNav(props) {
 
   const SideNavItems = () => {
     let items = defaultSideNavItems;
-    if (groups.includes('registration') || groups.includes('admin')) {
+    if (permissions.sideNavItems.registration) {
       items = items.concat(registrationSideNavItems);
     }
-    if (groups.includes('commentator') || groups.includes('admin')) {
+    if (permissions.sideNavItems.commentator) {
       items = items.concat(commentatorSideNavItems);
     }
-    if (groups.includes('operator') || groups.includes('admin')) {
+    if (permissions.sideNavItems.operator) {
       items = items.concat(operatorSideNavItems);
     }
-    if (groups.includes('admin')) {
+    if (permissions.sideNavItems.admin) {
       items = items.concat(adminSideNavItems);
     }
     return items;
@@ -290,12 +283,7 @@ export function TopNav(props) {
     },
   ];
 
-  if (
-    groups.includes('admin') ||
-    groups.includes('operator') ||
-    groups.includes('commentator') ||
-    groups.includes('registration')
-  ) {
+  if (permissions.topNavItems.eventSelector) {
     topNavItems.unshift({
       type: 'menu-dropdown',
       text: selectedEvent.eventName,
@@ -361,7 +349,7 @@ export function TopNav(props) {
         }
         // breadcrumbs={<BreadcrumbGroup items={breadcrumbs} expandAriaLabel="Show path" ariaLabel="Breadcrumbs" />}
         contentType="table"
-        content={<MenuRoutes groups={groups} />}
+        content={<MenuRoutes permissions={permissions} />}
         onNavigationChange={({ detail }) =>
           sideNavOptionsDispatch({ type: 'SIDE_NAV_IS_OPEN', value: detail.open })
         }

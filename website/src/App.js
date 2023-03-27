@@ -4,7 +4,7 @@ import {
   Link,
   useAuthenticator,
   useTheme,
-  View
+  View,
 } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import Amplify from 'aws-amplify';
@@ -16,10 +16,8 @@ import { CountrySelector } from './components/countrySelector';
 import TopNav from './components/topNav';
 import awsconfig from './config.json';
 import { AppLayoutProvider } from './store/appLayoutProvider';
-import CarsProvider from './store/carProvider';
-import EventProvider from './store/eventProvider';
-import { FleetProvider } from './store/fleetProvider';
-import { UsersProvider } from './store/usersProvider';
+import { PermissionProvider } from './store/permissions/permissionsProvider';
+import { StoreProvider } from './store/storeProvider';
 
 Amplify.configure(awsconfig);
 
@@ -75,7 +73,6 @@ export default function App() {
       components={components}
       services={{
         async validateCustomSignUp(formData) {
-
           const errors = {};
           //regex user a-z0-9
           const validUsername = new RegExp(
@@ -83,7 +80,8 @@ export default function App() {
           );
 
           if (!validUsername.test(formData.username)) {
-            errors['username'] = 'Please enter a valid username. You are allowed A-Z, a-z and 0-9 (2 - 20 characters)';
+            errors['username'] =
+              'Please enter a valid username. You are allowed A-Z, a-z and 0-9 (2 - 20 characters)';
           }
           if (!formData.acknowledgement) {
             errors['acknowledgement'] = 'You must agree to the Terms & Conditions';
@@ -99,19 +97,15 @@ export default function App() {
     >
       {({ signOut, user }) => (
         <main>
-          <AppLayoutProvider>
-            <CarsProvider>
-              <FleetProvider>
-                <EventProvider>
-                  <UsersProvider>
-                    <Router>
-                      <TopNav user={user.username} signout={signOut} />
-                    </Router>
-                  </UsersProvider>
-                </EventProvider>
-              </FleetProvider>
-            </CarsProvider>
-          </AppLayoutProvider>
+          <PermissionProvider>
+            <AppLayoutProvider>
+              <StoreProvider>
+                <Router>
+                  <TopNav user={user.username} signout={signOut} />
+                </Router>
+              </StoreProvider>
+            </AppLayoutProvider>
+          </PermissionProvider>
         </main>
       )}
     </Authenticator>
