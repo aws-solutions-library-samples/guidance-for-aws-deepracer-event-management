@@ -4,7 +4,7 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Button, Header, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
 import dayjs from 'dayjs';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   CarColumnsConfig,
   CarVisibleContentOptions,
@@ -12,11 +12,11 @@ import {
   EmptyState,
   MatchesCountText,
   TablePagination,
-  TablePreferences
+  TablePreferences,
 } from './tableConfig';
 
 import { useTranslation } from 'react-i18next';
-import { carsContext } from '../store/carProvider';
+import { useCarsContext } from '../store/storeProvider';
 
 // day.js
 var advancedFormat = require('dayjs/plugin/advancedFormat');
@@ -57,13 +57,11 @@ const Actions = ({ children, t, setOnline, setIsLoading, edit = false }) => {
 
 export const CarTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) => {
   const { t } = useTranslation();
-  // const [allItems, setItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedCarsBtnDisabled, setSelectedCarsBtnDisabled] = useState(true);
   const [online, setOnline] = useState('Online');
   const [onlineBool, setOnlineBool] = useState(true);
 
-  const [cars] = useContext(carsContext);
+  const [cars, isLoading] = useCarsContext();
 
   useEffect(() => {
     // getCars();
@@ -109,7 +107,7 @@ export const CarTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) =
               : `(${cars.length})`
           }
           actions={
-            <Actions t={t} setOnline={setOnline} setIsLoading={setIsLoading} />
+            <Actions t={t} setOnline={setOnline} />
             //   {online}
             // </Actions>
           }
@@ -127,7 +125,7 @@ export const CarTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) =
           filteringAriaLabel={t('cars.filter-cars')}
         />
       }
-      // loading={isLoading}
+      loading={isLoading}
       loadingText={t('cars.loading')}
       visibleColumns={preferences.visibleContent}
       selectionType="multi"

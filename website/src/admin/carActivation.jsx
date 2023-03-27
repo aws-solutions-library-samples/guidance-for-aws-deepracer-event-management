@@ -1,9 +1,8 @@
 import { API } from 'aws-amplify';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 // import { ListOfFleets } from '../components/listOfFleets';
 import * as mutations from '../graphql/mutations';
-import { fleetContext } from '../store/fleetProvider';
 
 import {
   Box,
@@ -19,9 +18,10 @@ import {
   Popover,
   SpaceBetween,
   StatusIndicator,
-  TextContent
+  TextContent,
 } from '@cloudscape-design/components';
 import { PageLayout } from '../components/pageLayout';
+import { useFleetsContext } from '../store/storeProvider';
 
 const AdminActivation = (props) => {
   const { t } = useTranslation();
@@ -46,7 +46,7 @@ const AdminActivation = (props) => {
   const [dropDownSelectedItem, setDropDownSelectedItem] = useState({ fleetName: 'Select Fleet' });
 
   const [isLoading, setIsLoading] = useState(true);
-  const [fleets] = useContext(fleetContext);
+  const [fleets] = useFleetsContext();
 
   const [dremUrl, setDremUrl] = useState(
     window.location.protocol +
@@ -168,7 +168,7 @@ const AdminActivation = (props) => {
                   items={dropDownFleets}
                   onItemClick={({ detail }) => {
                     const index = fleets.map((e) => e.fleetId).indexOf(detail.id);
-                    if(detail.id !== "none") {
+                    if (detail.id !== 'none') {
                       setDropDownSelectedItem(fleets[index]);
                     }
                   }}

@@ -14,7 +14,6 @@ import { CodeFirstSchema, GraphqlType, ObjectType, ResolvableField } from 'awscd
 import { FunctionUrl } from 'aws-cdk-lib/aws-lambda';
 
 export interface LabelPrinterProps {
-    adminGroupRole: IRole;
     logsbucket: IBucket;
     appsyncApi: {
         schema: CodeFirstSchema;

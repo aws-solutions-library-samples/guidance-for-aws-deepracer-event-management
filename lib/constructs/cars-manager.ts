@@ -6,18 +6,21 @@ import * as awsEvents from 'aws-cdk-lib/aws-events';
 import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
 import * as awsEventsTargets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import { IRole, ManagedPolicy, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { ManagedPolicy, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import { FunctionUrl, FunctionUrlAuthType } from 'aws-cdk-lib/aws-lambda';
 import * as stepFunctions from 'aws-cdk-lib/aws-stepfunctions';
 import * as stepFunctionsTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
-import { CodeFirstSchema, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
+import {
+    CodeFirstSchema,
+    Directive,
+    GraphqlType,
+    ObjectType,
+    ResolvableField,
+} from 'awscdk-appsync-utils';
 
 import { Construct } from 'constructs';
-import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
 
 export interface CarManagerProps {
-    adminGroupRole: IRole;
     appsyncApi: {
         schema: CodeFirstSchema;
         api: appsync.IGraphqlApi;
@@ -309,6 +312,7 @@ export class CarManager extends Construct {
                 fleetId: GraphqlType.id(),
                 fleetName: GraphqlType.string(),
             },
+            directives: [Directive.cognito('admin', 'operator')],
         });
 
         props.appsyncApi.schema.addType(car_online_object_type);
@@ -322,6 +326,7 @@ export class CarManager extends Construct {
                 },
                 returnType: car_online_object_type.attribute({ isList: true }),
                 dataSource: cars_data_source,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -338,6 +343,7 @@ export class CarManager extends Construct {
                 },
                 returnType: GraphqlType.awsJson(),
                 dataSource: cars_data_source,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -349,6 +355,7 @@ export class CarManager extends Construct {
                 },
                 returnType: GraphqlType.awsJson(),
                 dataSource: cars_data_source,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -361,6 +368,7 @@ export class CarManager extends Construct {
                 },
                 returnType: GraphqlType.awsJson(),
                 dataSource: cars_data_source,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -372,6 +380,7 @@ export class CarManager extends Construct {
                 },
                 returnType: GraphqlType.awsJson(),
                 dataSource: cars_data_source,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -383,6 +392,7 @@ export class CarManager extends Construct {
                 },
                 returnType: GraphqlType.awsJson(),
                 dataSource: cars_data_source,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -391,28 +401,11 @@ export class CarManager extends Construct {
             new ResolvableField({
                 returnType: GraphqlType.awsJson(),
                 dataSource: cars_data_source,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
         // All Methods...
-        // Grant access so API methods can be invoked
-        const admin_api_policy = new iam.Policy(this, 'adminApiPolicy', {
-            statements: [
-                new iam.PolicyStatement({
-                    effect: iam.Effect.ALLOW,
-                    actions: ['appsync:GraphQL'],
-                    resources: [
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/carActivation`,
-                        `${props.appsyncApi.api.arn}/types/Query/fields/carsOnline`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/carUpdates`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/carDeleteAllModels`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/carSetTaillightColor`,
-                        `${props.appsyncApi.api.arn}/types/Query/fields/availableTaillightColors`,
-                    ],
-                }),
-            ],
-        });
-        admin_api_policy.attachToRole(props.adminGroupRole);
 
         // respond to Event Bridge user events
         const car_event_handler = new lambdaPython.PythonFunction(this, 'cars_event_handler', {

@@ -1,6 +1,6 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Box, Button, Modal, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../../components/pageLayout';
@@ -15,7 +15,7 @@ import {
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useRacesApi } from '../../hooks/useRacesApi';
 import { useSplitPanelOptionsDispatch } from '../../store/appLayoutProvider';
-import { eventContext } from '../../store/eventProvider';
+import { useSelectedEventContext } from '../../store/storeProvider';
 import { EmptyPanel } from './emptyPanel';
 import { MultiChoicePanel } from './multiChoicePanel';
 import { RaceDetailsPanel } from './raceDetailsPanel';
@@ -23,7 +23,7 @@ import { ColumnDefinitions, VisibleContentOptions } from './raceTableConfig';
 
 const RaceAdmin = () => {
   const { t } = useTranslation();
-  const { events, selectedEvent } = useContext(eventContext);
+  const selectedEvent = useSelectedEventContext();
   const [races, loading, sendDelete] = useRacesApi(selectedEvent.eventId);
   const [SelectedRacesInTable, setSelectedRacesInTable] = useState([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);

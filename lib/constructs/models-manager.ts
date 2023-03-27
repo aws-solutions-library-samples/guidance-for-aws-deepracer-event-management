@@ -620,23 +620,5 @@ export class ModelsManager extends Construct {
                 requestValidator: props.restApi.bodyValidator,
             }
         );
-
-        // Grant access so API methods can be invoked
-        const admin_api_policy = new iam.Policy(this, 'adminApiPolicy', {
-            statements: [
-                new iam.PolicyStatement({
-                    effect: iam.Effect.ALLOW,
-                    actions: ['appsync:GraphQL'],
-                    resources: [
-                        `${props.appsyncApi.api.arn}/types/Query/fields/getAllModels`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/addModel`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/addedModel`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/updateModel`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/updatedModel`,
-                    ],
-                }),
-            ],
-        });
-        admin_api_policy.attachToRole(props.adminGroupRole);
     }
 }

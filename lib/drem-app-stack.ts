@@ -29,6 +29,8 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
     branchName: string;
     adminGroupRole: IRole;
     operatorGroupRole: IRole;
+    commentatorGroupRole: IRole;
+    registrationGroupRole: IRole;
     authenticatedUserRole: IRole;
     userPool: IUserPool;
     identiyPool: CfnIdentityPool;
@@ -71,7 +73,11 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             schema: schema,
             authorizationConfig: {
                 defaultAuthorization: {
-                    authorizationType: appsync.AuthorizationType.IAM,
+                    authorizationType: appsync.AuthorizationType.USER_POOL,
+                    userPoolConfig: {
+                        userPool: props.userPool,
+                        // defaultAction: appsync.UserPoolDefaultAction.DENY, // NOT possible to use when having addiotnal auth modes
+                    },
                 },
                 additionalAuthorizationModes: [
                     {
@@ -80,6 +86,9 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                             name: 'unauthApiKey',
                             expires: Expiration.after(Duration.days(365)),
                         },
+                    },
+                    {
+                        authorizationType: appsync.AuthorizationType.IAM,
                     },
                 ],
             },
@@ -116,7 +125,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         const carManager = new CarManager(this, 'CarManager', {
-            adminGroupRole: props.adminGroupRole,
             appsyncApi: {
                 api: appsyncApi,
                 schema: schema,
@@ -126,7 +134,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new RaceManager(this, 'RaceManager', {
-            adminGroupRole: props.adminGroupRole,
             appsyncApi: {
                 api: appsyncApi,
                 schema: schema,
@@ -137,7 +144,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         const leaderboard = new Leaderboard(this, 'Leaderboard', {
-            adminGroupRole: props.adminGroupRole,
             logsBucket: props.logsBucket,
             appsyncApi: {
                 api: appsyncApi,
@@ -151,7 +157,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new EventsManager(this, 'EventsManager', {
-            adminGroupRole: props.adminGroupRole,
             appsyncApi: {
                 api: appsyncApi,
                 schema: schema,
@@ -163,7 +168,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new FleetsManager(this, 'FleetsManager', {
-            adminGroupRole: props.adminGroupRole,
             appsyncApi: {
                 api: appsyncApi,
                 schema: schema,
@@ -181,7 +185,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         new SystemsManager(this, 'SystemManager');
 
         new GroupManager(this, 'GroupManagers', {
-            adminGroupRole: props.adminGroupRole,
             lambdaConfig: props.lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
             userPoolId: props.userPool.userPoolId,
@@ -193,7 +196,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new UserManager(this, 'UserManager', {
-            adminGroupRole: props.adminGroupRole,
             authenticatedUserRole: props.authenticatedUserRole,
             lambdaConfig: props.lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
@@ -212,7 +214,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new LabelPrinter(this, 'LabelPrinter', {
-            adminGroupRole: props.adminGroupRole,
             lambdaConfig: props.lambdaConfig,
             logsbucket: props.logsBucket,
             appsyncApi: {
@@ -250,6 +251,25 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             ],
         });
         adminPolicy.attachToRole(props.adminGroupRole);
+
+        // TODO should be boken up and moved to the correspinding module
+        const operatorPolicy = new iam.Policy(this, 'operatorPolicy', {
+            statements: [
+                new iam.PolicyStatement({
+                    effect: iam.Effect.ALLOW,
+                    actions: ['execute-api:Invoke'],
+                    resources: [
+                        restApi.api.arnForExecuteApi('GET', '/models'),
+                        restApi.api.arnForExecuteApi('GET', '/cars/label'),
+                        restApi.api.arnForExecuteApi('POST', '/cars/upload'),
+                        restApi.api.arnForExecuteApi('POST', '/cars/upload/status'),
+                        restApi.api.arnForExecuteApi('GET', '/users'),
+                        restApi.api.arnForExecuteApi('GET', '/admin/quarantinedmodels'),
+                    ],
+                }),
+            ],
+        });
+        operatorPolicy.attachToRole(props.operatorGroupRole);
 
         // Outputs
         new cdk.CfnOutput(this, 'DremWebsite', {
