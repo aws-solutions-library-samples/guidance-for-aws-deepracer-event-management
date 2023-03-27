@@ -2,47 +2,48 @@ import { API } from 'aws-amplify';
 import { useEffect, useState } from 'react';
 import * as queries from '../graphql/queries';
 
-export const useCarsApi = () => {
+export const useCarsApi = (userHasAccess = false) => {
   const [isLoading, setIsLoading] = useState(false);
   const [cars, setCars] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
 
   // initial data load
   useEffect(() => {
-    async function getCars(online) {
-      setIsLoading(true);
-      const response = await API.graphql({
-        query: queries.carsOnline,
-        variables: { online: online },
-      });
-      setCars((prevState) => {
-        const updatedCars = [...prevState];
-        const carsFetched = response.data.carsOnline;
-
-        // Deduplicate cars before updaing state
-        const duplicatedCarsToDelete = carsFetched.map((newCar) => {
-          const index = updatedCars.findIndex(
-            (existingCar) => existingCar.InstanceId === newCar.InstanceId
-          );
-          if (index > -1) {
-            return index;
-          }
+    if (userHasAccess) {
+      async function getCars(online) {
+        setIsLoading(true);
+        const response = await API.graphql({
+          query: queries.carsOnline,
+          variables: { online: online },
         });
-        duplicatedCarsToDelete.sort().reverse();
-        duplicatedCarsToDelete.map((index) => updatedCars.splice(index, 1));
-        return [...updatedCars, ...carsFetched];
-      });
+        setCars((prevState) => {
+          const updatedCars = [...prevState];
+          const carsFetched = response.data.carsOnline;
 
-      setIsLoading(false);
+          // Deduplicate cars before updaing state
+          const duplicatedCarsToDelete = carsFetched.map((newCar) => {
+            const index = updatedCars.findIndex(
+              (existingCar) => existingCar.InstanceId === newCar.InstanceId
+            );
+            if (index > -1) {
+              return index;
+            }
+          });
+          duplicatedCarsToDelete.sort().reverse();
+          duplicatedCarsToDelete.map((index) => updatedCars.splice(index, 1));
+          return [...updatedCars, ...carsFetched];
+        });
+
+        setIsLoading(false);
+      }
+      getCars(true);
+      getCars(false);
+      // TODO currently get duplicated items in dev mode
     }
-    getCars(true);
-    getCars(false);
-    // TODO currently get duplicated items in dev mode
-
     return () => {
       // Unmounting
     };
-  }, []);
+  }, [userHasAccess]);
 
   // // subscribe to data changes and append them to local array
   // useEffect(() => {

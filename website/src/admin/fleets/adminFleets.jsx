@@ -1,7 +1,7 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Box, Button, Modal, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../../components/pageLayout';
@@ -16,17 +16,16 @@ import {
   TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { fleetContext } from '../../store/fleetProvider';
-import { usersContext } from '../../store/usersProvider';
+import { useFleetsContext, useUsersContext } from '../../store/storeProvider';
 import { ColumnDefinitions, VisibleContentOptions } from './fleetsTableConfig';
 
 const AdminFleets = () => {
   const { t } = useTranslation();
   const [selectedFleetsInTable, setSelectedFleetsInTable] = useState([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [users, usersIsLoading, getUserNameFromId] = useContext(usersContext);
+  const [, , getUserNameFromId] = useUsersContext();
 
-  const [fleets, isLoading] = useContext(fleetContext);
+  const [fleets, isLoading] = useFleetsContext();
 
   const navigate = useNavigate();
   const columnDefinitions = ColumnDefinitions(getUserNameFromId);
