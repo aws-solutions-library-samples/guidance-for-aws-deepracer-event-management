@@ -12,7 +12,7 @@ import {
   SpaceBetween,
   Table,
   TextFilter,
-  Toggle
+  Toggle,
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import dayjs from 'dayjs';
@@ -26,11 +26,11 @@ import {
   EmptyState,
   MatchesCountText,
   PageSizePreference,
-  WrapLines
+  WrapLines,
 } from '../../components/tableConfig';
 import * as mutations from '../../graphql/mutations';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useUsersApi } from '../../hooks/useUsersApi';
+import { useUsersContext } from '../../store/storeProvider';
 
 import awsconfig from '../../config.json';
 
@@ -47,7 +47,8 @@ export function CreateUser() {
   const { t } = useTranslation();
 
   const [selectedItems] = useState([]);
-  const [users, isLoading] = useUsersApi();
+
+  const [users, isLoading] = useUsersContext();
   const [preferences, setPreferences] = useLocalStorage('DREM-user-table-preferences', {
     ...DefaultPreferences,
     visibleContent: ['Username', 'Flag', 'UserCreateDate'],
@@ -70,7 +71,7 @@ export function CreateUser() {
         username: username,
         countryCode: countryCode,
       },
-      authMode: 'AMAZON_COGNITO_USER_POOLS'
+      authMode: 'AMAZON_COGNITO_USER_POOLS',
     });
     const response = apiResponse['data']['createUser'];
     console.log(response);
