@@ -252,6 +252,25 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
         adminPolicy.attachToRole(props.adminGroupRole);
 
+        // TODO should be boken up and moved to the correspinding module
+        const operatorPolicy = new iam.Policy(this, 'operatorPolicy', {
+            statements: [
+                new iam.PolicyStatement({
+                    effect: iam.Effect.ALLOW,
+                    actions: ['execute-api:Invoke'],
+                    resources: [
+                        restApi.api.arnForExecuteApi('GET', '/models'),
+                        restApi.api.arnForExecuteApi('GET', '/cars/label'),
+                        restApi.api.arnForExecuteApi('POST', '/cars/upload'),
+                        restApi.api.arnForExecuteApi('POST', '/cars/upload/status'),
+                        restApi.api.arnForExecuteApi('GET', '/users'),
+                        restApi.api.arnForExecuteApi('GET', '/admin/quarantinedmodels'),
+                    ],
+                }),
+            ],
+        });
+        operatorPolicy.attachToRole(props.operatorGroupRole);
+
         // Outputs
         new cdk.CfnOutput(this, 'DremWebsite', {
             value: 'https://' + props.cloudfrontDistribution.distributionDomainName,
