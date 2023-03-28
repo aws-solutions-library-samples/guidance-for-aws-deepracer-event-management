@@ -6,7 +6,7 @@
 
 .ulRoot {
   overflow: scroll;
-  height: calc(100vh - 32vmin)
+  height: calc(100vh - 32vmin);
 }
 
 ul {
@@ -15,7 +15,6 @@ ul {
   padding-left: 0;
   list-style: none;
   color: black;
-
 }
 
 /* .moduleBase {
@@ -49,7 +48,7 @@ ul {
 } */
 .modulePosition {
   margin-left: 2vmin;
-  width: 16vmin
+  width: 16vmin;
 }
 
 .moduleHeaders {
@@ -89,6 +88,12 @@ ul {
   width: 80vmin;
 }
 
+.racerCountryFlag {
+  display: inline-block;
+  /*padding-left: 2vw;*/
+  padding-right: 2vw;
+}
+
 .liTime {
   padding-top: 1vmin;
   padding-bottom: 1vmin;
@@ -123,7 +128,9 @@ ul {
   transform: scale(1.1);
 } */
 
-.gold, .silver, .bronze {
+.gold,
+.silver,
+.bronze {
   margin-bottom: 1.5vmin;
   font-size: 1.5em;
 }
@@ -135,25 +142,30 @@ ul {
   font-size: 6rem;
 } */
 
-.gold .name, .silver .name, .bronze .name {
-  text-shadow: 0 .3rem .2rem rgba(0,0,0,0.3);
+.gold .name,
+.silver .name,
+.bronze .name {
+  text-shadow: 0 0.3rem 0.2rem rgba(0, 0, 0, 0.3);
 }
 
 .bronze {
   background: transparent;
-  background-image: linear-gradient(rgba(255,255,255,0.3),rgba(255,255,255,0)), linear-gradient(90deg,#FCAE4D,#672F04);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, #fcae4d, #672f04);
   color: black;
 }
 
 .silver {
   background: transparent;
-  background-image: linear-gradient(rgba(255,255,255,0.3),rgba(255,255,255,0)), linear-gradient(90deg,#c1c1c5,#44464c);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, #c1c1c5, #44464c);
   color: black;
 }
 
 .gold {
   background: transparent;
-  background-image: linear-gradient(rgba(255,255,255,0.3),rgba(255,255,255,0)), linear-gradient(90deg,#f0ba0a,#C47400);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, #f0ba0a, #c47400);
   color: black;
 }
 

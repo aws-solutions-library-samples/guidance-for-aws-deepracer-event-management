@@ -6,16 +6,9 @@ function countryToFlag(isoCode) {
         : isoCode;
 }
 
-export function Flag(props) { 
+export function Flag(props) {
     if(!props.countryCode) return undefined
-
-    if (props.size === 'small') {
-        return (
-            <h3>{countryToFlag(props.countryCode)}</h3>
-        )
-    } else {
-        return (
-            <h1>{countryToFlag(props.countryCode)}</h1>
-        )
+  return (
+    <div style={props.style}>{countryToFlag(props.countryCode)}</div>
+  )
     }
-}
