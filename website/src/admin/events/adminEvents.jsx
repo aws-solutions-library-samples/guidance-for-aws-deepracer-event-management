@@ -1,7 +1,7 @@
 import { API } from 'aws-amplify';
 import * as mutations from '../../graphql/mutations';
 
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
@@ -18,9 +18,7 @@ import {
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useSplitPanelOptionsDispatch } from '../../store/appLayoutProvider';
-import { eventContext } from '../../store/eventProvider';
-import { fleetContext } from '../../store/fleetProvider';
-import { usersContext } from '../../store/usersProvider';
+import { useEventsContext, useFleetsContext, useUsersContext } from '../../store/storeProvider';
 import { ColumnDefinitions, VisibleContentOptions } from './eventsTableConfig';
 import { EmptyPanel } from './split-panels/emptyPanel';
 import { EventDetailsPanel } from './split-panels/eventDetailsPanel';
@@ -36,9 +34,10 @@ const AdminEvents = () => {
     visibleContent: ['eventName', 'eventDate', 'createdAt'],
   });
 
-  const [users, usersIsLoading, getUserNameFromId] = useContext(usersContext);
-  const { events } = useContext(eventContext);
-  const [fleets] = useContext(fleetContext);
+  const [users, usersIsLoading, getUserNameFromId] = useUsersContext();
+  const [events, eventIsLoading] = useEventsContext();
+  const [fleets] = useFleetsContext();
+
   const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
   const navigate = useNavigate();
 
@@ -144,8 +143,8 @@ const AdminEvents = () => {
       selectionType="multi"
       columnDefinitions={columnDefinitions}
       items={items}
-      // loading={loading}
-      // loadingText={t('events.loading')}
+      loading={eventIsLoading}
+      loadingText={t('events.loading')}
       stickyHeader="true"
       trackBy="eventId"
       filter={

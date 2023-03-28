@@ -14,7 +14,7 @@ import {
 } from '../graphql/subscriptions';
 import styles from './leaderboard.module.css';
 
-const Leaderboard = ({ eventId, trackId }) => {
+const Leaderboard = ({ eventId, trackId, showQrCode }) => {
   const [leaderboardEntries, SetleaderboardEntries] = useState([]);
   const [leaderboardConfig, setLeaderboardConfig] = useState({
     headerText: '',
@@ -213,7 +213,8 @@ const Leaderboard = ({ eventId, trackId }) => {
           <div className={styles.leaderboardRoot}>
             <Header
               headerText={leaderboardConfig.headerText}
-              qrCodeVisible={leaderboardConfig.qrCodeVisible}
+              qrCodeVisible={showQrCode}
+
             />
             <LeaderboardTable leaderboardEntries={leaderboardEntries} />
           </div>

@@ -6,7 +6,6 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Bucket, IBucket } from 'aws-cdk-lib/aws-s3';
 import {
@@ -23,7 +22,6 @@ import { Cdn } from './cdn';
 import { Website } from './website';
 
 export interface LeaderboardProps {
-    adminGroupRole: IRole;
     userPoolId: string;
     userPoolArn: string;
     logsBucket: IBucket;
@@ -202,17 +200,6 @@ export class Leaderboard extends Construct {
         );
         ddbTable.grantReadWriteData(leaderboardDataSourceDdb);
 
-        const adminApiPolicy = new iam.Policy(this, 'adminApiPolicy', {
-            statements: [
-                new iam.PolicyStatement({
-                    effect: iam.Effect.ALLOW,
-                    actions: ['appsync:GraphQL'],
-                    resources: [`${props.appsyncApi.api.arn}/*`],
-                }),
-            ],
-        });
-        adminApiPolicy.attachToRole(props.adminGroupRole);
-
         // API Schema
         const leaderboardEntryObjectType = new ObjectType('LeaderBoardEntry', {
             definition: {
@@ -228,7 +215,11 @@ export class Leaderboard extends Construct {
                 avgLapsPerAttempt: GraphqlType.float(),
                 countryCode: GraphqlType.string(),
             },
-            directives: [Directive.apiKey(), Directive.iam()],
+            directives: [
+                Directive.apiKey(),
+                Directive.iam(),
+                Directive.cognito('admin', 'operator', 'commentator'),
+            ],
         });
 
         props.appsyncApi.schema.addType(leaderboardEntryObjectType);
@@ -243,7 +234,11 @@ export class Leaderboard extends Construct {
                 footerText: GraphqlType.string(),
                 sponsor: GraphqlType.string(),
             },
-            directives: [Directive.apiKey(), Directive.iam()],
+            directives: [
+                Directive.apiKey(),
+                Directive.iam(),
+                Directive.cognito('admin', 'operator', 'commentator'),
+            ],
         });
 
         props.appsyncApi.schema.addType(leaderboardConfigObjectType);
@@ -253,7 +248,11 @@ export class Leaderboard extends Construct {
                 config: leaderboardConfigObjectType.attribute({ isRequired: true }),
                 entries: leaderboardEntryObjectType.attribute({ isList: true }),
             },
-            directives: [Directive.apiKey(), Directive.iam()],
+            directives: [
+                Directive.apiKey(),
+                Directive.iam(),
+                Directive.cognito('admin', 'operator', 'commentator'),
+            ],
         });
 
         props.appsyncApi.schema.addType(leaderboardObjectType);
@@ -298,7 +297,11 @@ export class Leaderboard extends Construct {
                 },
                 returnType: leaderboardObjectType.attribute(),
                 dataSource: leaderboardDataSource,
-                directives: [Directive.apiKey(), Directive.iam()],
+                directives: [
+                    Directive.apiKey(),
+                    Directive.iam(),
+                    Directive.cognito('admin', 'operator', 'commentator'),
+                ],
             })
         );
 
@@ -316,6 +319,7 @@ export class Leaderboard extends Construct {
                     avgLapTime: GraphqlType.float(),
                     lapCompletionRatio: GraphqlType.float(),
                     avgLapsPerAttempt: GraphqlType.float(),
+                    countryCode: GraphqlType.string(),
                 },
                 returnType: leaderboardEntryObjectType.attribute(),
                 dataSource: noneDataSource,
@@ -328,6 +332,7 @@ export class Leaderboard extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
+                directives: [Directive.iam()],
             })
         );
 
@@ -349,7 +354,11 @@ export class Leaderboard extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('addLeaderboardEntry'), Directive.apiKey()],
+                directives: [
+                    Directive.subscribe('addLeaderboardEntry'),
+                    Directive.apiKey(),
+                    Directive.cognito('admin', 'operator'),
+                ],
             })
         );
 
@@ -367,6 +376,7 @@ export class Leaderboard extends Construct {
                     avgLapTime: GraphqlType.float(),
                     lapCompletionRatio: GraphqlType.float(),
                     avgLapsPerAttempt: GraphqlType.float(),
+                    countryCode: GraphqlType.string(),
                 },
                 returnType: leaderboardEntryObjectType.attribute(),
                 dataSource: noneDataSource,
@@ -379,6 +389,7 @@ export class Leaderboard extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
+                directives: [Directive.iam()],
             })
         );
 
@@ -423,6 +434,7 @@ export class Leaderboard extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
+                directives: [Directive.iam()],
             })
         );
 

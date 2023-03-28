@@ -25,7 +25,7 @@ export const LeaderBoardConfigPanel = ({
   const UpdateConfig = (attr) => {
     onChange({ leaderboardConfig: { ...attr } });
   };
-  console.info(GetQrCodeOptionFromBoolean(qrCodeVisible));
+  // console.info(GetQrCodeOptionFromBoolean(qrCodeVisible));
   useEffect(() => {
     if (headerText) {
       setErrorMessage('');

@@ -1,11 +1,11 @@
 import { Box, Button, Modal, SpaceBetween } from '@cloudscape-design/components';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { PageLayout } from '../../components/pageLayout';
 import { TableHeader } from '../../components/tableConfig';
 import useMutation from '../../hooks/useMutation';
-import { eventContext } from '../../store/eventProvider';
+import { useSelectedEventContext } from '../../store/storeProvider';
 import { convertStringToMs } from '../../support-functions/time';
 import { LapsTable } from './lapsTable';
 import { RaceInfoPanel } from './raceInfoPanel';
@@ -15,7 +15,7 @@ export const EditRace = () => {
   const location = useLocation();
   const selectedRace = location.state;
   const navigate = useNavigate();
-  const { events, selectedEvent } = useContext(eventContext);
+  const selectedEvent = useSelectedEventContext();
   const [send, loading, errorMessage, data] = useMutation();
   const [createButtonIsDisabled, setCreateButtonIsDisabled] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);

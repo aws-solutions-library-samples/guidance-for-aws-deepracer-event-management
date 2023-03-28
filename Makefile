@@ -19,7 +19,7 @@ pipeline.clean: 	## Destroys the CDK pipeline
 
 pipeline.trigger: 	## creates the zipfile and uploads it to S3 to trigger the pipeline
 	-rm drem.zip
-	zip -r drem.zip . -x ./.venv/\* ./.git/\* ./website/build/\* ./website/node_modules/\* ./node_modules/\* ./cdk.out/\* ./website-leaderboard/build/\* ./website-leaderboard/node_modules/\*
+	zip -r drem.zip . -x ./.venv/\* ./.git/\* ./website/build/\* ./website/node_modules/\* ./node_modules/\* ./cdk.out/\* ./website-leaderboard/build/\* ./website-leaderboard/node_modules/\* ./website-stream-overlays/build/\* ./website-stream-overlays/node_modules/\*
 	aws s3 cp drem.zip s3://$$(cat s3_bucket.txt)/$$(cat branch.txt)/
 
 local.install:		## Install Python and Javascript dependencies + Generate Config from deployed backend

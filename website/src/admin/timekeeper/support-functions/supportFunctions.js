@@ -1,8 +1,8 @@
 export const breadcrumbs = [
-  { text: 'Home', href: '#' },
-  { text: 'Admin', href: '#components' },
+  { text: 'Home', href: '/' },
+  { text: 'Admin', href: '/admin/home' },
   {
     text: 'Time Keeper',
-    href: '#components/breadcrumb-group',
+    href: '/admin/timekeeper',
   },
 ];

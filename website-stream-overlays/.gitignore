@@ -11,6 +11,12 @@
 # production
 /build
 
+#graphql schema
+/src/graphql/schema.graphql
+/src/graphql/mutations.js
+/src/graphql/queries.js
+/src/graphql/subscriptions.js
+
 # misc
 .DS_Store
 .env.local
@@ -21,3 +27,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# amplify config
+src/config.json
+.eslintcache

@@ -1,0 +1,20 @@
+.landingPageRoot {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin: 3%;
+}
+
+.landingPageCards {
+  display: flex;
+  max-width: 900px;
+}
+
+.logodiv {
+  display: flex;
+}
+
+.logo {
+  max-height: 13vh;
+  max-width: 13vh;
+}

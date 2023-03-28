@@ -2,8 +2,6 @@ import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { EventBus } from 'aws-cdk-lib/aws-events';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import {
     CodeFirstSchema,
@@ -18,7 +16,6 @@ import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import { Construct } from 'constructs';
 
 export interface FleetsManagerProps {
-    adminGroupRole: IRole;
     userPoolId: string;
     appsyncApi: {
         schema: CodeFirstSchema;
@@ -94,6 +91,7 @@ export class FleetsManager extends Construct {
                 createdBy: GraphqlType.id(),
                 carIds: GraphqlType.id({ isList: true }),
             },
+            directives: [Directive.cognito('admin', 'commentator', 'operator')],
         });
 
         props.appsyncApi.schema.addType(fleets_object_Type);
@@ -104,8 +102,10 @@ export class FleetsManager extends Construct {
             new ResolvableField({
                 returnType: fleets_object_Type.attribute({ isList: true }),
                 dataSource: fleets_data_source,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
+
         props.appsyncApi.schema.addMutation(
             'addFleet',
             new ResolvableField({
@@ -116,6 +116,7 @@ export class FleetsManager extends Construct {
                 },
                 returnType: fleets_object_Type.attribute(),
                 dataSource: fleets_data_source,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
         props.appsyncApi.schema.addSubscription(
@@ -132,7 +133,10 @@ export class FleetsManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('addFleet')],
+                directives: [
+                    Directive.subscribe('addFleet'),
+                    Directive.cognito('admin', 'operator'),
+                ],
             })
         );
 
@@ -158,7 +162,10 @@ export class FleetsManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('deleteFleets')],
+                directives: [
+                    Directive.subscribe('deleteFleets'),
+                    Directive.cognito('admin', 'operator'),
+                ],
             })
         );
 
@@ -172,6 +179,7 @@ export class FleetsManager extends Construct {
                 },
                 returnType: fleets_object_Type.attribute(),
                 dataSource: fleets_data_source,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
         props.appsyncApi.schema.addSubscription(
@@ -188,30 +196,11 @@ export class FleetsManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('updateFleet')],
+                directives: [
+                    Directive.subscribe('updateFleet'),
+                    Directive.cognito('admin', 'operator'),
+                ],
             })
         );
-
-        // Grant access so API methods can be invoked
-        const admin_api_policy = new iam.Policy(this, 'adminApiPolicy', {
-            statements: [
-                new iam.PolicyStatement({
-                    effect: iam.Effect.ALLOW,
-                    actions: ['appsync:GraphQL'],
-                    resources: [
-                        `${props.appsyncApi.api.arn}/types/Query/fields/getAllFleets`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/addFleet`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/addedFleet`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/deleteFleet`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/deletedFleet`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/updateFleet`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/addedFleet`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/deletedFleet`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/updatedFleet`,
-                    ],
-                }),
-            ],
-        });
-        admin_api_policy.attachToRole(props.adminGroupRole);
     }
 }

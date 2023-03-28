@@ -3,8 +3,6 @@ import { DockerImage, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { EventBus } from 'aws-cdk-lib/aws-events';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda';
 import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
@@ -21,7 +19,6 @@ import {
 import { Construct } from 'constructs';
 
 export interface EventsManagerProps {
-    adminGroupRole: IRole;
     appsyncApi: {
         schema: CodeFirstSchema;
         api: appsync.GraphqlApi;
@@ -40,6 +37,10 @@ export interface EventsManagerProps {
     leaderboardApi: {
         leaderboardConfigObjectType: ObjectType;
         leaderboardConfigInputype: InputType;
+    };
+    landingPageApi: {
+        landingPageConfigObjectType: ObjectType;
+        landingPageConfigInputType: InputType;
     };
     eventbus: EventBus;
 }
@@ -141,6 +142,7 @@ export class EventsManager extends Construct {
                 trackType: trackTypeMethodEnum.attribute(),
                 rankingMethod: raceRankingMethodEnum.attribute(),
             },
+            directives: [Directive.cognito('admin', 'commentator', 'operator')],
         });
         props.appsyncApi.schema.addType(raceConfigObjectType);
 
@@ -151,6 +153,7 @@ export class EventsManager extends Construct {
                 trackType: trackTypeMethodEnum.attribute(),
                 rankingMethod: raceRankingMethodEnum.attribute(),
             },
+            directives: [Directive.cognito('admin', 'operator')],
         });
         props.appsyncApi.schema.addType(raceConfigInputType);
 
@@ -159,7 +162,9 @@ export class EventsManager extends Construct {
                 trackId: GraphqlType.id(),
                 raceConfig: raceConfigObjectType.attribute(),
                 leaderboardConfig: props.leaderboardApi.leaderboardConfigObjectType.attribute(),
+                landingPageConfig: props.landingPageApi.landingPageConfigObjectType.attribute(),
             },
+            directives: [Directive.cognito('admin', 'commentator', 'operator')],
         });
         props.appsyncApi.schema.addType(trackObjectType);
 
@@ -170,7 +175,11 @@ export class EventsManager extends Construct {
                 leaderboardConfig: props.leaderboardApi.leaderboardConfigInputype.attribute({
                     isRequired: true,
                 }),
+                landingPageConfig: props.landingPageApi.landingPageConfigInputType.attribute({
+                    isRequired: true,
+                }),
             },
+            directives: [Directive.cognito('admin', 'operator')],
         });
         props.appsyncApi.schema.addType(trackInputType);
 
@@ -197,6 +206,7 @@ export class EventsManager extends Construct {
                 countryCode: GraphqlType.string(),
                 tracks: trackObjectType.attribute({ isList: true }),
             },
+            directives: [Directive.cognito('admin', 'operator', 'commentator', 'registration')],
         });
 
         props.appsyncApi.schema.addType(eventObjectType);
@@ -209,6 +219,7 @@ export class EventsManager extends Construct {
                 dataSource: eventsDataSourceDdb,
                 requestMappingTemplate: appsync.MappingTemplate.dynamoDbScanTable(),
                 responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultList(),
+                directives: [Directive.cognito('admin', 'operator', 'commentator', 'registration')],
             })
         );
 
@@ -231,6 +242,7 @@ export class EventsManager extends Construct {
                     appsync.Values.projecting()
                 ),
                 responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultItem(),
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -248,7 +260,10 @@ export class EventsManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('addEvent')],
+                directives: [
+                    Directive.subscribe('addEvent'),
+                    Directive.cognito('admin', 'commentator', 'operator'),
+                ],
             })
         );
 
@@ -258,6 +273,7 @@ export class EventsManager extends Construct {
                 args: { eventIds: GraphqlType.string({ isRequiredList: true }) },
                 returnType: GraphqlType.awsJson({ isList: true }),
                 dataSource: eventsDataSource,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
         props.appsyncApi.schema.addSubscription(
@@ -274,7 +290,10 @@ export class EventsManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('deleteEvents')],
+                directives: [
+                    Directive.subscribe('deleteEvents'),
+                    Directive.cognito('admin', 'commentator', 'operator'),
+                ],
             })
         );
 
@@ -292,6 +311,7 @@ export class EventsManager extends Construct {
                 },
                 returnType: eventObjectType.attribute(),
                 dataSource: eventsDataSource,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
         props.appsyncApi.schema.addSubscription(
@@ -308,29 +328,11 @@ export class EventsManager extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('updateEvent')],
+                directives: [
+                    Directive.subscribe('updateEvent'),
+                    Directive.cognito('admin', 'commentator', 'operator'),
+                ],
             })
         );
-
-        // Grant access so API methods can be invoked
-        // for role in roles_to_grant_invoke_access:
-        const adminApiPolicy = new iam.Policy(this, 'adminApiPolicy', {
-            statements: [
-                new iam.PolicyStatement({
-                    effect: iam.Effect.ALLOW,
-                    actions: ['appsync:GraphQL'],
-                    resources: [
-                        `${props.appsyncApi.api.arn}/types/Query/fields/getEvents`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/addEvent`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/onAddedEvent`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/deleteEvents`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/onDeletedEvent`,
-                        `${props.appsyncApi.api.arn}/types/Mutation/fields/updateEvent`,
-                        `${props.appsyncApi.api.arn}/types/Subscription/fields/onUpdatedEvent`,
-                    ],
-                }),
-            ],
-        });
-        adminApiPolicy.attachToRole(props.adminGroupRole);
     }
 }

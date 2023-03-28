@@ -3,11 +3,10 @@ import {
   Badge,
   Flashbar,
   SideNavigation,
-  TopNavigation
+  TopNavigation,
 } from '@cloudscape-design/components';
 
-import { Auth } from 'aws-amplify';
-import React, { useContext, useEffect, useState } from 'react';
+import React from 'react';
 
 import { Route, Routes, useLocation } from 'react-router-dom';
 
@@ -38,9 +37,14 @@ import {
   useSideNavOptions,
   useSideNavOptionsDispatch,
   useSplitPanelOptions,
-  useSplitPanelOptionsDispatch
+  useSplitPanelOptionsDispatch,
 } from '../store/appLayoutProvider';
-import { eventContext } from '../store/eventProvider';
+import { usePermissionsContext } from '../store/permissions/permissionsProvider';
+import {
+  useEventsContext,
+  useSelectedEventContext,
+  useSelectedEventDispatch,
+} from '../store/storeProvider';
 import { Upload } from '../upload';
 import { CommentatorRaceStats } from './commentator/race-stats';
 
@@ -57,89 +61,99 @@ function usePageViews() {
     cwr('recordPageView', location.pathname);
   }, [location]);
 }
+const defaultRoutes = [
+  <Route path="/" element={<Home />} />,
+  <Route path="*" element={<Home />} />,
+  <Route path="/user/profile" element={<ProfileHome />} />,
+  <Route path="/models/view" element={<Models />} />,
+  <Route path="/models/upload" element={<Upload />} />,
+];
 
-function MenuRoutes() {
+const registrationRoutes = [<Route path="/registration/createuser" element={<CreateUser />} />];
+
+const commentatorRoutes = [<Route path="/commentator" element={<CommentatorRaceStats />} />];
+
+const operatorRoutes = [
+  <Route path="/admin/home" element={<AdminHome />} />,
+  <Route path="/admin/models" element={<AdminModels />} />,
+  <Route path="/admin/quarantine" element={<AdminQuarantine />} />,
+  <Route path="/admin/cars" element={<AdminCars />} />,
+  <Route path="/admin/events" element={<AdminEvents />} />,
+  <Route path="/admin/events/create" element={<CreateEvent />} />,
+  <Route path="/admin/events/edit" element={<EditEvent />} />,
+  <Route path="/admin/fleets" element={<AdminFleets />} />,
+  <Route path="/admin/fleets/create" element={<CreateFleet />} />,
+  <Route path="/admin/fleets/edit" element={<EditFleet />} />,
+  <Route path="/admin/car_activation" element={<AdminActivation />} />,
+  <Route path="/admin/timekeeper" element={<Timekeeper />} />,
+  <Route path="/admin/races" element={<RaceAdmin />} />,
+  <Route path="/admin/races/edit" element={<EditRace />} />,
+];
+
+const adminRoutes = [
+  <Route path="/admin/groups" element={<AdminGroups />} />,
+  <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />,
+];
+
+const MenuRoutes = ({ permissions }) => {
   usePageViews();
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/models" element={<Models />} />
-      <Route path="/upload" element={<Upload />} />
-      <Route path="/commentator" element={<CommentatorRaceStats />} />
-      <Route path="/admin/home" element={<AdminHome />} />
-      <Route path="/admin/models" element={<AdminModels />} />
-      <Route path="/admin/quarantine" element={<AdminQuarantine />} />
-      <Route path="/admin/cars" element={<AdminCars />} />
-      <Route path="/admin/events" element={<AdminEvents />} />
-      <Route path="/admin/events/create" element={<CreateEvent />} />
-      <Route path="/admin/events/edit" element={<EditEvent />} />
-      <Route path="/admin/fleets" element={<AdminFleets />} />
-      <Route path="/admin/fleets/create" element={<CreateFleet />} />
-      <Route path="/admin/fleets/edit" element={<EditFleet />} />
-      <Route path="/createuser" element={<CreateUser />} />
-      <Route path="/admin/groups" element={<AdminGroups />} />
-      <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />
-      <Route path="/admin/car_activation" element={<AdminActivation />} />
-      <Route path="/admin/timekeeper" element={<Timekeeper />} />
-      <Route path="/admin/races" element={<RaceAdmin />} />
-      <Route path="/admin/races/edit" element={<EditRace />} />
-      <Route path="/user/profile" element={<ProfileHome />} />
-      <Route path="*" element={<Home />} />
-    </Routes>
-  );
-}
+  let routes = defaultRoutes;
+  if (permissions.sideNavItems.registration) {
+    routes = routes.concat(registrationRoutes);
+  }
+  if (permissions.sideNavItems.commentator) {
+    routes = routes.concat(commentatorRoutes);
+  }
+  if (permissions.sideNavItems.operator) {
+    routes = routes.concat(operatorRoutes);
+  }
+  if (permissions.sideNavItems.admin) {
+    routes = routes.concat(adminRoutes);
+  }
+
+  return <Routes>{routes}</Routes>;
+};
 
 export function TopNav(props) {
   const { t } = useTranslation();
 
-  const [groups, setGroups] = useState([]);
   const splitPanelOptions = useSplitPanelOptions();
   const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
   const notifications = useNotifications();
 
   const { handleFollow } = useLink();
 
-  const { events, selectedEvent, setSelectedEvent } = useContext(eventContext);
+  const [events] = useEventsContext();
+  const selectedEvent = useSelectedEventContext();
+  const setSelectedEvent = useSelectedEventDispatch();
   const sideNavOptions = useSideNavOptions();
   const sideNavOptionsDispatch = useSideNavOptionsDispatch();
 
-  useEffect(() => {
-    // Config Groups
-    Auth.currentAuthenticatedUser().then((user) => {
-      const groups = user.signInUserSession.accessToken.payload['cognito:groups'];
-      if (groups !== undefined) {
-        setGroups(groups);
-      }
-    });
+  const permissions = usePermissionsContext();
 
-    return () => {
-      // Unmounting
-    };
-  }, []);
-
-  const navItems = [
+  const defaultSideNavItems = [
     {
       type: 'section',
       text: t('topnav.models'),
       href: '/models',
       items: [
-        { type: 'link', text: t('topnav.upload'), href: '/upload' },
-        { type: 'link', text: t('topnav.models'), href: '/models' },
+        { type: 'link', text: t('topnav.upload'), href: '/models/upload' },
+        { type: 'link', text: t('topnav.models'), href: '/models/view' },
       ],
     },
   ];
 
-  if (groups.includes('admin') || groups.includes('reception')) {
-    navItems.push({
+  const registrationSideNavItems = [
+    {
       type: 'section',
-      text: t('topnav.reception'),
-      href: '/reception',
-      items: [{ type: 'link', text: t('topnav.create-user'), href: '/createuser' }],
-    });
-  }
+      text: t('topnav.registration'),
+      href: '/registration',
+      items: [{ type: 'link', text: t('topnav.create-user'), href: '/registration/createuser' }],
+    },
+  ];
 
-  if (groups.includes('admin') || groups.includes('commentator')) {
-    navItems.push({
+  const commentatorSideNavItems = [
+    {
       type: 'section',
       text: t('topnav.commentator'),
       items: [
@@ -150,14 +164,14 @@ export function TopNav(props) {
           href: '/commentator',
         },
       ],
-    });
-  }
+    },
+  ];
 
-  if (groups.includes('admin')) {
-    navItems.push({
+  const operatorSideNavItems = [
+    {
       type: 'section',
-      text: t('topnav.admin'),
-      href: '/admin',
+      text: t('topnav.operator'),
+      href: '/operator',
       items: [
         {
           type: 'expandable-link-group',
@@ -200,22 +214,49 @@ export function TopNav(props) {
               info: <Badge color="blue">Beta</Badge>,
               href: '/admin/races',
             },
-            {
-              type: 'link',
-              text: t('topnav.time-keeper'),
-              info: <Badge color="blue">Beta</Badge>,
-              href: '/admin/timekeeper',
-            },
           ],
         },
+        {
+          type: 'link',
+          text: t('topnav.time-keeper'),
+          info: <Badge color="blue">Beta</Badge>,
+          href: '/admin/timekeeper',
+        },
+      ],
+    },
+  ];
+
+  const adminSideNavItems = [
+    {
+      type: 'section',
+      text: t('topnav.admin'),
+      href: '/admin',
+      items: [
         {
           type: 'expandable-link-group',
           text: t('topnav.users'),
           items: [{ type: 'link', text: t('topnav.groups'), href: '/admin/groups' }],
         },
       ],
-    });
-  }
+    },
+  ];
+
+  const SideNavItems = () => {
+    let items = defaultSideNavItems;
+    if (permissions.sideNavItems.registration) {
+      items = items.concat(registrationSideNavItems);
+    }
+    if (permissions.sideNavItems.commentator) {
+      items = items.concat(commentatorSideNavItems);
+    }
+    if (permissions.sideNavItems.operator) {
+      items = items.concat(operatorSideNavItems);
+    }
+    if (permissions.sideNavItems.admin) {
+      items = items.concat(adminSideNavItems);
+    }
+    return items;
+  };
 
   const topNavItems = [
     {
@@ -241,7 +282,8 @@ export function TopNav(props) {
       },
     },
   ];
-  if (groups.includes('admin')) {
+
+  if (permissions.topNavItems.eventSelection) {
     topNavItems.unshift({
       type: 'menu-dropdown',
       text: selectedEvent.eventName,
@@ -302,12 +344,12 @@ export function TopNav(props) {
           <SideNavigation
             activeHref={window.location.pathname}
             onFollow={handleFollow}
-            items={navItems}
+            items={SideNavItems()}
           />
         }
         // breadcrumbs={<BreadcrumbGroup items={breadcrumbs} expandAriaLabel="Show path" ariaLabel="Breadcrumbs" />}
         contentType="table"
-        content={<MenuRoutes />}
+        content={<MenuRoutes permissions={permissions} />}
         onNavigationChange={({ detail }) =>
           sideNavOptionsDispatch({ type: 'SIDE_NAV_IS_OPEN', value: detail.open })
         }
