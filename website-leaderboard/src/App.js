@@ -1,36 +1,34 @@
 import { Amplify } from 'aws-amplify';
-import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import './App.css';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import awsconfig from './config.json';
-import { Leaderboard } from './pages/leaderboard';
+
+import '@cloudscape-design/global-styles/index.css';
+import { LandingPage } from './pages/landingPage';
+import { LeaderboardWrapper } from './components/leaderboardWrapper';
 
 Amplify.configure(awsconfig);
 
-//Example event ID
-//const eventId = '80f0f15c-a830-4cee-a751-4dfea59a69c6';
-
 function App() {
-  const { i18n } = useTranslation();
+  const router = createBrowserRouter([
+    {
+      path: '/',
+      element: <LeaderboardWrapper />,
+    },
+    {
+      path: '/:eventId',
+      element: <LeaderboardWrapper />,
+    },
+    {
+      path: '/leaderboard/:eventId',
+      element: <LeaderboardWrapper />,
+    },
+    {
+      path: '/landing-page/:eventId',
+      element: <LandingPage />,
+    },
+  ]);
 
-  const eventId = window.location.pathname.replaceAll('/', '');
-  const queryParams = new URLSearchParams(window.location.search);
-
-  let language = queryParams.get('lang');
-  if (language === null) language = 'en';
-
-  let trackId = queryParams.get('track');
-  if (trackId === null) trackId = 1;
-
-  console.info('eventId: ' + eventId);
-  console.info('language: ' + language);
-  console.info('trackId: ' + trackId);
-
-  useEffect(() => {
-    i18n.changeLanguage(language);
-  }, [language]);
-
-  return <Leaderboard eventId={eventId} trackId={trackId} language={language} />;
+  return <RouterProvider router={router} />;
 }
 
 export default App;

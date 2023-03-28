@@ -137,7 +137,6 @@ export class LabelPrinter extends Construct {
                     instanceId: GraphqlType.string(),
                 },
                 dataSource: printableLabelDataSource,
-                // returnType: printableLabelObjectType.attribute(),
                 returnType: GraphqlType.string(),
             })
         );

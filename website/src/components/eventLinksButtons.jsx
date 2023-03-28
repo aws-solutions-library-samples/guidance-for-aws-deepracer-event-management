@@ -4,13 +4,13 @@ import { SpaceBetween } from '@cloudscape-design/components';
 
 export const EventLinksButtons = (props) => {
   return (
-    <p>
+    <div>
       <Link
         href={props.href}
         variant="primary">
         {props.linkTextPrimary}
       </Link>
-      <SpaceBetween />
+      <SpaceBetween size="xs" />
       <Link
         external
         externalIconAriaLabel="Opens in a new tab"
@@ -18,7 +18,7 @@ export const EventLinksButtons = (props) => {
       >
         {props.linkTextExternal}
       </Link>
-    </p>
+    </div>
 
   );
 }
