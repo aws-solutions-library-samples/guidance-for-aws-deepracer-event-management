@@ -94,6 +94,7 @@ export class ModelsManager extends Construct {
             destinationBucket: modelsBucket,
             destinationKeyPrefix: `private/${stack.region}:00000000-0000-0000-0000-000000000000/default/models/`,
             retainOnDelete: false,
+            memoryLimit: 512,
         });
 
         const infectedBucket = new s3.Bucket(this, 'infected_bucket', {
