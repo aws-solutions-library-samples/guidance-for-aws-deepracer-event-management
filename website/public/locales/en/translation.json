@@ -136,6 +136,9 @@
   "events.streaming-overlay-link-chroma": "Streaming overlay +chroma",
   "events.streaming-overlay-link-chroma-same-tab": "Open in this tab",
   "events.streaming-overlay-link-chroma-new-tab": "Open in new tab",
+  "events.landing-page-link": "Landing Page",
+  "events.landing-page-link-same-tab": "Open in this tab",
+  "events.landing-page-link-new-tab": "Open in new tab",
 
   "events.event-type": "Type of Event",
   "events.event-type-description": "",

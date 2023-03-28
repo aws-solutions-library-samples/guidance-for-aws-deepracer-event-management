@@ -319,6 +319,7 @@ export class Leaderboard extends Construct {
                     avgLapTime: GraphqlType.float(),
                     lapCompletionRatio: GraphqlType.float(),
                     avgLapsPerAttempt: GraphqlType.float(),
+                    countryCode: GraphqlType.string(),
                 },
                 returnType: leaderboardEntryObjectType.attribute(),
                 dataSource: noneDataSource,
@@ -375,6 +376,7 @@ export class Leaderboard extends Construct {
                     avgLapTime: GraphqlType.float(),
                     lapCompletionRatio: GraphqlType.float(),
                     avgLapsPerAttempt: GraphqlType.float(),
+                    countryCode: GraphqlType.string(),
                 },
                 returnType: leaderboardEntryObjectType.attribute(),
                 dataSource: noneDataSource,
@@ -436,6 +438,7 @@ export class Leaderboard extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
+                directives: [Directive.iam()],
             })
         );
 

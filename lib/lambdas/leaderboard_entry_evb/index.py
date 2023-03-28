@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 # encoding=utf-8
 import decimal
-import json
 import os
 
 import boto3
@@ -130,6 +129,7 @@ def __add_to_leaderboard(variables):
             $trackId: ID!
             $username: String!
             $racedByProxy: Boolean!
+            $countryCode: String!
         ) {
             addLeaderboardEntry(
                 avgLapTime: $avgLapTime
@@ -142,6 +142,7 @@ def __add_to_leaderboard(variables):
                 trackId: $trackId
                 username: $username
                 racedByProxy: $racedByProxy
+                countryCode: $countryCode
             ) {
             avgLapTime
             avgLapsPerAttempt
@@ -153,6 +154,7 @@ def __add_to_leaderboard(variables):
             trackId
             username
             racedByProxy
+            countryCode
             }
         }
         """
@@ -174,6 +176,7 @@ def __update_entry_on_leaderboard(variables):
             $trackId: ID!
             $username: String!
             $racedByProxy: Boolean!
+            $countryCode: String
         ) {
             updateLeaderboardEntry(
                 avgLapTime: $avgLapTime
@@ -186,6 +189,7 @@ def __update_entry_on_leaderboard(variables):
                 trackId: $trackId
                 username: $username
                 racedByProxy: $racedByProxy
+                countryCode: $countryCode
             ) {
             avgLapTime
             avgLapsPerAttempt
@@ -197,6 +201,7 @@ def __update_entry_on_leaderboard(variables):
             trackId
             username
             racedByProxy
+            countryCode
             }
         }
         """

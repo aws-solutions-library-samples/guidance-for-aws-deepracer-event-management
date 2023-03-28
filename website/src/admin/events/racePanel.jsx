@@ -14,12 +14,14 @@ export const RacePanel = ({ tracks, onChange, onFormIsValid, onFormIsInvalid }) 
             trackType: undefined,
             rankingMethod: undefined,
         },
-
         leaderboardConfig: {
             footerText: undefined,
             headerText: undefined,
             sponsor: undefined,
         },
+        landingPageConfig: {
+          links: ""
+        }
     });
 
     useEffect(() => {
