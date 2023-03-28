@@ -13,8 +13,8 @@ Amplify.configure(awsconfig);
 function App() {
   const { i18n } = useTranslation();
 
+  const eventId = window.location.pathname.replaceAll('/', '');
   const queryParams = new URLSearchParams(window.location.search);
-  const eventId = queryParams.get('event');
 
   let language = queryParams.get('lang');
   if (language === null) language = 'en';

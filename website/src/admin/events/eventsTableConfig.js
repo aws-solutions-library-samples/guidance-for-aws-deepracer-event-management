@@ -162,7 +162,7 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
       cell: (item) =>
         (
           <EventLinksButtons
-            href={awsconfig.Urls.leaderboardWebsite + '/?' + 'event=' + item.eventId.toString()}
+            href={`${awsconfig.Urls.leaderboardWebsite}/${item.eventId.toString()}`}
             linkTextPrimary={i18next.t('events.leaderboard-link-same-tab')}
             linkTextExternal={i18next.t('events.leaderboard-link-new-tab')}
           />
@@ -174,9 +174,7 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
       cell: (item) =>
         (
           <EventLinksButtons
-            href={
-              awsconfig.Urls.streamingOverlayWebsite + '/?' + 'event=' + item.eventId.toString()
-            }
+            href={`${awsconfig.Urls.streamingOverlayWebsite}/${item.eventId.toString()}`}
             linkTextPrimary={i18next.t('events.streaming-overlay-link-same-tab')}
             linkTextExternal={i18next.t('events.streaming-overlay-link-new-tab')}
           />
