@@ -1,9 +1,9 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EventSelectorModal } from '../components/eventSelectorModal';
 import { PageLayout } from '../components/pageLayout';
-import { eventContext } from '../store/eventProvider';
+import { useSelectedEventContext } from '../store/storeProvider';
 import { ActualRacerStats } from './actual-racer-stats';
 
 import { SpaceBetween } from '@cloudscape-design/components';
@@ -12,7 +12,7 @@ import { LeaderboardStats } from './leaderboard-stats';
 const CommentatorRaceStats = () => {
   const { t } = useTranslation();
 
-  const { selectedEvent } = useContext(eventContext);
+  const selectedEvent = useSelectedEventContext();
 
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
 

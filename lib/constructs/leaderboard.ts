@@ -356,7 +356,7 @@ export class Leaderboard extends Construct {
                 directives: [
                     Directive.subscribe('addLeaderboardEntry'),
                     Directive.apiKey(),
-                    Directive.cognito('admin', 'operator'),
+                    Directive.cognito('admin', 'operator', 'commentator'),
                 ],
             })
         );

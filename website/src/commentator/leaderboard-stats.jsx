@@ -1,11 +1,11 @@
 import ColumnLayout from '@cloudscape-design/components/column-layout';
 import { API, graphqlOperation } from 'aws-amplify';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Header from '@cloudscape-design/components/header';
 import { getLeaderboard } from '../graphql/queries';
-import { eventContext } from '../store/eventProvider';
+import { useSelectedEventContext } from '../store/storeProvider';
 
 import { Table } from '@cloudscape-design/components';
 import { RaceTimeAsString } from '../components/raceTimeAsString';
@@ -16,7 +16,7 @@ const LeaderboardStats = ({itemsToShow = 5}) => {
 
     const { t } = useTranslation();
 
-    const { selectedEvent } = useContext(eventContext);
+    const selectedEvent = useSelectedEventContext();
     const [subscription, SetSubscription] = useState();
 
     const [fastesLapsForTrack, SetFastestLapsForTrack] = useState([]);

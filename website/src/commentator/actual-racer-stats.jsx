@@ -1,14 +1,15 @@
 import ColumnLayout from '@cloudscape-design/components/column-layout';
 import { API, graphqlOperation } from 'aws-amplify';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Container from '@cloudscape-design/components/container';
 import Header from '@cloudscape-design/components/header';
 import { getRaces } from '../graphql/queries';
 import { onNewOverlayInfo } from '../graphql/subscriptions';
-import { eventContext } from '../store/eventProvider';
+import { useSelectedEventContext } from '../store/storeProvider';
 
+import { SpaceBetween } from '@cloudscape-design/components';
 import { RaceTimeAsString } from '../components/raceTimeAsString';
 import RaceTimer from '../components/raceTimer';
 
@@ -17,16 +18,18 @@ import { Box } from '@cloudscape-design/components';
 const ActualRacerStats = () => {
     const { t } = useTranslation();
 
-    const { selectedEvent } = useContext(eventContext);
+    const selectedEvent = useSelectedEventContext()
     const [actualRacer, SetActualRacer] = useState({});
 
     const [fastesRacerTime, SetFastesRacerTime] = useState({});
     const [slowestRacerTime, SetSlowestRacerTime] = useState({});
-    const [lapsCount, SetLapsCount] = useState(0);
-    const [invalidCount, SetInvalidCount] = useState(0);
+    const [lapsCount, SetLapsCount] = useState('-');
+    const [invalidCount, SetInvalidCount] = useState('-');
+    const [actualLapTime, SetActualLapTime] = useState(0);
 
-    const [restsSum, SetRestsSum] = useState(0);
-    const [avaerageResetsPerLap, SetAvaerageResetsPerLap] = useState(0);
+    const [restsSum, SetRestsSum] = useState('-');
+    const [avaerageResetsPerLap, SetAvaerageResetsPerLap] = useState('-');
+    const [racesCount, SetRacesCount] = useState(0);
 
     const [subscription, SetSubscription] = useState();
     const [timerIsRunning, SetTimerIsRunning] = useState(false);
@@ -39,6 +42,16 @@ const ActualRacerStats = () => {
         SetTimerIsRunning(false);
       }
     };
+
+    const clearRacerStats = () => {
+      SetFastesRacerTime({});
+      SetSlowestRacerTime({});
+      SetLapsCount('-');
+      SetInvalidCount('-');
+      SetRestsSum('-');
+      SetAvaerageResetsPerLap('-');
+      SetRacesCount('-');
+    }
 
     useEffect(() => {
         if (selectedEvent) {
@@ -54,7 +67,13 @@ const ActualRacerStats = () => {
                   if (eventData.userId !== actualRacer.userId) {
                     SetActualRacer(eventData);
                   }
+
+                  if(eventData.raceStatus === 'NO_RACER_SELECTED') {
+                    clearRacerStats()
+                  }
+
                   SetTimeLeftInMs(eventData.timeLeftInMs);
+                  SetActualLapTime(eventData.currentLapTimeInMs);
                   ManageTimer(eventData.raceStatus);
                   
                 },
@@ -90,6 +109,8 @@ const ActualRacerStats = () => {
         const resets = validLaps.reduce((count, lap) => count + lap.resets, 0);
         const avaerageResetsPerLap = resets > 0 && validLaps.length > 0 ? resets / validLaps.length : 0;
 
+        SetRestsSum(resets);
+        SetAvaerageResetsPerLap(avaerageResetsPerLap.toFixed(1));
         console.log("Resets: " + resets);
         console.log("Average Resets: " + avaerageResetsPerLap);
       }
@@ -109,6 +130,7 @@ const ActualRacerStats = () => {
             const laps = response.data.getRaces.flatMap((race) => race.laps);
             
             console.info(laps);
+            SetRacesCount(response.data?.getRaces.length)
             caclulateLapsInformation(laps);
             calculateOfftrackInformation(laps);
           };
@@ -117,51 +139,83 @@ const ActualRacerStats = () => {
         }
     }, [actualRacer, selectedEvent]);
 
-    const ValueWithLabel = ({ label, children }) => (
+    const ValueWithLabel = ({ label, children, highlight = false }) => (
         <div>
           <Box variant="h3">{label}</Box>
-          <Box variant="h2">{children}</Box>
+          <Box color={highlight ? 'text-status-info' : 'text-label'} variant="h2">{children}</Box>
         </div>
     );
 
+    const AverageLapsPerRace = () => {
+      let value = '-';
+
+      if(lapsCount !== '-' && racesCount !== '-' && racesCount > 0) {
+        value = (lapsCount / racesCount).toFixed(1);
+      } else if (racesCount == 0) {
+        value = 0;
+      }
+
+      return (<ValueWithLabel label={t('commentator.race.averagelapCount')}>{value}</ValueWithLabel>)
+    }
+
     return (
+        <>
+        <SpaceBetween size="l">
         <Container
             header={
               <Header variant="h2" description={t('commentator.race.actualRacerStats')}>
-                Actual Racer: <Box color="text-status-info" display="inline" variant='h2'>{actualRacer.username}</Box>
+                Current Racer: <Box color="text-status-info" display="inline" variant='h2'>{actualRacer.username}</Box>
               </Header>
             }
           >
-            <ColumnLayout columns={2} borders="vertical">
-              <ColumnLayout columns={2}>
-                <ValueWithLabel label={t('commentator.race.racerFastestLap')}>
-                  <RaceTimeAsString timeInMS={fastesRacerTime.time}></RaceTimeAsString>
-                </ValueWithLabel>
-                <ValueWithLabel label={t('commentator.race.racerSlowestLap')}>
-                  <RaceTimeAsString timeInMS={slowestRacerTime.time}></RaceTimeAsString>
-                </ValueWithLabel>
-                <ValueWithLabel label={t('commentator.race.lapCount')}>{lapsCount}</ValueWithLabel>
-                <ValueWithLabel label={t('commentator.race.invalidLapCount')}>
-                  {invalidCount}
-                </ValueWithLabel>
-              </ColumnLayout>
+          <ColumnLayout columns={2}>
+              <ValueWithLabel label={t('commentator.race.currentLapTime')} highlight={true}>
+                <RaceTimeAsString
+                  timeInMS={actualLapTime}
+                  showMills={false}
+                ></RaceTimeAsString>
+              </ValueWithLabel>
+              <ValueWithLabel label={t('commentator.race.timeLeft')} highlight={true}>
+                <RaceTimer timerIsRunning={timerIsRunning} timeLeftInMs={timeLeftInMs} />
+              </ValueWithLabel>
+          </ColumnLayout>
+        </Container>
 
-
-              <ColumnLayout columns={2}>
-                <ValueWithLabel label={t('commentator.race.currentLapTime')}>
-                  <RaceTimeAsString
-                    timeInMS={actualRacer.currentLapTimeInMs}
-                    showMills={false}
-                  ></RaceTimeAsString>
-                </ValueWithLabel>
-                <ValueWithLabel label={t('commentator.race.timeLeft')}>
-                  <RaceTimer timerIsRunning={timerIsRunning} timeLeftInMs={timeLeftInMs} />
-                </ValueWithLabel>
-              </ColumnLayout>
+          <Container
+            header={
+              <Header variant="h2" description={t('commentator.race.historicalRacerStats')}>
+                {t('commentator.race.historicalRacerStats.header1')} <Box color="text-status-info" display="inline" variant='h2'>{racesCount}</Box> {t('commentator.race.historicalRacerStats.header2')}
+              </Header>
+            }
+          >
+          <ColumnLayout columns={2} borders="horizontal">
+            <ValueWithLabel label={t('commentator.race.racerFastestLap')}>
+              <RaceTimeAsString timeInMS={fastesRacerTime.time}></RaceTimeAsString>
+            </ValueWithLabel>
+            <ValueWithLabel label={t('commentator.race.racerSlowestLap')}>
+              <RaceTimeAsString timeInMS={slowestRacerTime.time}></RaceTimeAsString>
+            </ValueWithLabel>
+            <ColumnLayout columns={2}>
+              <ValueWithLabel label={t('commentator.race.lapCount')}>{lapsCount}</ValueWithLabel>
+              <AverageLapsPerRace></AverageLapsPerRace>
             </ColumnLayout>
-
             
-          </Container>
+            <ValueWithLabel label={t('commentator.race.invalidLapCount')}>
+              {invalidCount}
+            </ValueWithLabel>
+
+            <ColumnLayout columns={2}>
+              <ValueWithLabel label={t('commentator.race.restSum')}>
+                {restsSum}
+              </ValueWithLabel>
+              <ValueWithLabel label={t('commentator.race.averageResetsPerLap')}>
+                {avaerageResetsPerLap}
+              </ValueWithLabel>
+            </ColumnLayout>
+          </ColumnLayout>
+        </Container>
+        </SpaceBetween>
+      </>
     )
 }
 
