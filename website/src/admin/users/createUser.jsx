@@ -12,7 +12,7 @@ import {
   SpaceBetween,
   Table,
   TextFilter,
-  Toggle,
+  Toggle
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import dayjs from 'dayjs';
@@ -26,7 +26,7 @@ import {
   EmptyState,
   MatchesCountText,
   PageSizePreference,
-  WrapLines,
+  WrapLines
 } from '../../components/tableConfig';
 import * as mutations from '../../graphql/mutations';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
@@ -78,6 +78,7 @@ export function CreateUser() {
     setResult(response);
     setUsername('');
     setEmail('');
+    setChecked(false);
   }
 
   // watch checked Toggle for changes
