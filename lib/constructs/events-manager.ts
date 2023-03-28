@@ -38,6 +38,10 @@ export interface EventsManagerProps {
         leaderboardConfigObjectType: ObjectType;
         leaderboardConfigInputype: InputType;
     };
+    landingPageApi: {
+        landingPageConfigObjectType: ObjectType;
+        landingPageConfigInputType: InputType;
+    };
     eventbus: EventBus;
 }
 export class EventsManager extends Construct {
@@ -158,6 +162,7 @@ export class EventsManager extends Construct {
                 trackId: GraphqlType.id(),
                 raceConfig: raceConfigObjectType.attribute(),
                 leaderboardConfig: props.leaderboardApi.leaderboardConfigObjectType.attribute(),
+                landingPageConfig: props.landingPageApi.landingPageConfigObjectType.attribute(),
             },
             directives: [Directive.cognito('admin', 'commentator', 'operator')],
         });
@@ -168,6 +173,9 @@ export class EventsManager extends Construct {
                 trackId: GraphqlType.id({ isRequired: true }),
                 raceConfig: raceConfigInputType.attribute({ isRequired: true }),
                 leaderboardConfig: props.leaderboardApi.leaderboardConfigInputype.attribute({
+                    isRequired: true,
+                }),
+                landingPageConfig: props.landingPageApi.landingPageConfigInputType.attribute({
                     isRequired: true,
                 }),
             },

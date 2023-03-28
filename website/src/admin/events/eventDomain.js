@@ -20,6 +20,15 @@ export const event = {
         sponsor: undefined,
         qrCodeVisible: false,
       },
+      landingPageConfig: {
+        links: [
+          {
+            linkName: 'Upload your own model and race',
+            linkDescription: 'Upload your own autonomous racing model here and get started racing!',
+            linkHref: `${window.location.origin}/upload`,
+          },
+        ],
+      },
     },
   ],
 };
