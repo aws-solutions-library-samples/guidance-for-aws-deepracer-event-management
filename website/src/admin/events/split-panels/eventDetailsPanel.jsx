@@ -1,7 +1,7 @@
 import { Box, ColumnLayout, Grid, SpaceBetween, SplitPanel } from '@cloudscape-design/components';
-import React, { useContext } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { fleetContext } from '../../../store/fleetProvider';
+import { useFleetsContext } from '../../../store/storeProvider';
 import { GetTypeOfEventNameFromId } from '../eventDomain';
 import { GetQrCodeLabelFromBoolean } from '../leaderboardConfig';
 import {
@@ -13,7 +13,7 @@ import {
 const EventDetailsPanel = ({ event, i18nStrings }) => {
   const { t } = useTranslation();
 
-  const [fleets, isLoading, getFleetNameFromId] = useContext(fleetContext);
+  const [, , getFleetNameFromId] = useFleetsContext();
   const attributeField = (header, value) => {
     return (
       <SpaceBetween size="xxxs">

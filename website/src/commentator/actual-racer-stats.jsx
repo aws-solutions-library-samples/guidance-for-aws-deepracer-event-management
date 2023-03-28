@@ -134,8 +134,6 @@ const ActualRacerStats = () => {
           >
             <ColumnLayout columns={2} borders="vertical">
               <ColumnLayout columns={2}>
-                
-                
                 <ValueWithLabel label={t('commentator.race.racerFastestLap')}>
                   <RaceTimeAsString timeInMS={fastesRacerTime.time}></RaceTimeAsString>
                 </ValueWithLabel>

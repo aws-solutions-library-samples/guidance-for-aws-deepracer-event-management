@@ -33,6 +33,7 @@ export class Idp extends Construct {
     public readonly adminGroupRole: iam.IRole;
     public readonly operatorGroupRole: iam.IRole;
     public readonly commentatorGroupRole: iam.IRole;
+    public readonly registrationGroupRole: iam.IRole;
     public readonly unauthenticated_user_role: iam.IRole;
 
     constructor(scope: Construct, id: string, props: IdpProps) {
@@ -235,6 +236,21 @@ export class Idp extends Construct {
         });
         this.commentatorGroupRole = commentatorGroupRole;
 
+        // Registration Users Group Role
+        const registrationGroupRole = new iam.Role(this, 'RegistrationGroupRole', {
+            assumedBy: new iam.FederatedPrincipal(
+                'cognito-identity.amazonaws.com',
+                {
+                    StringEquals: { 'cognito-identity.amazonaws.com:aud': identityPool.ref },
+                    'ForAnyValue:StringLike': {
+                        'cognito-identity.amazonaws.com:amr': 'authenticated',
+                    },
+                },
+                'sts:AssumeRoleWithWebIdentity'
+            ),
+        });
+        this.registrationGroupRole = registrationGroupRole;
+
         //  Cognito User Group (Operator)
         const operatorGroup = new cognito.CfnUserPoolGroup(this, 'OperatorGroup', {
             userPoolId: userPool.userPoolId,
@@ -259,7 +275,16 @@ export class Idp extends Construct {
             description: 'Commentator user group',
             groupName: 'commentator',
             precedence: 1,
-            roleArn: adminGroupRole.roleArn,
+            roleArn: commentatorGroupRole.roleArn,
+        });
+
+        //  Cognito User Group (Commentator)
+        const registrationGroup = new cognito.CfnUserPoolGroup(this, 'RegistrationGroup', {
+            userPoolId: userPool.userPoolId,
+            description: 'Registration user group',
+            groupName: 'registration',
+            precedence: 1,
+            roleArn: registrationGroupRole.roleArn,
         });
 
         //  Add a default Admin user to the system
