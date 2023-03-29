@@ -20,7 +20,6 @@ export const useLocalStorage = (key, defaultValue) => {
   const [value, setValue] = useState(() => load(key) ?? defaultValue);
 
   function handleValueChange(newValue) {
-    console.info(newValue);
     setValue(newValue);
     save(key, newValue);
   }
