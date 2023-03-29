@@ -357,7 +357,7 @@ export class Leaderboard extends Construct {
                 directives: [
                     Directive.subscribe('addLeaderboardEntry'),
                     Directive.apiKey(),
-                    Directive.cognito('admin', 'operator'),
+                    Directive.cognito('admin', 'operator', 'commentator'),
                 ],
             })
         );
@@ -411,7 +411,11 @@ export class Leaderboard extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('updateLeaderboardEntry'), Directive.apiKey()],
+                directives: [
+                    Directive.subscribe('updateLeaderboardEntry'),
+                    Directive.apiKey(),
+                    Directive.iam(),
+                ],
             })
         );
 
@@ -456,7 +460,11 @@ export class Leaderboard extends Construct {
                 responseMappingTemplate: appsync.MappingTemplate.fromString(
                     '$util.toJson($context.result)'
                 ),
-                directives: [Directive.subscribe('deleteLeaderboardEntry'), Directive.apiKey()],
+                directives: [
+                    Directive.subscribe('deleteLeaderboardEntry'),
+                    Directive.apiKey(),
+                    Directive.iam(),
+                ],
             })
         );
     }
