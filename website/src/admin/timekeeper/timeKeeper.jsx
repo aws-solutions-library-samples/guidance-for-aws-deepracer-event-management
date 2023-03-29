@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useSideNavOptionsDispatch } from '../../store/appLayoutProvider';
+import { useSelectedEventContext } from '../../store/storeProvider';
 import { RaceFinishPage } from './pages/raceFinishPage';
 import { RacePage } from './pages/racePage';
 import { RaceSetupPage } from './pages/raceSetupPage';
@@ -11,8 +12,21 @@ export const Timekeeper = () => {
   const [raceConfig, setRaceConfig] = useLocalStorage('DREM-timekeeper-race-config', {});
   const [race, setRace] = useLocalStorage('DREM-timekeeper-current-race', defaultRace);
   const [fastestLap, SetFastestLap] = useState([]);
+  const selectedEvent = useSelectedEventContext();
 
   const sideNavOptionsDispatch = useSideNavOptionsDispatch();
+
+  // change event info and race config when a user select another event
+  useEffect(() => {
+    if (selectedEvent.eventId !== race.eventId) {
+      let raceDetails = selectedEvent.tracks[0].raceConfig;
+      raceDetails['eventName'] = selectedEvent.eventName;
+      setRaceConfig(raceDetails);
+
+      const modifiedRace = { ...race, eventId: selectedEvent.eventId };
+      setRace(modifiedRace);
+    }
+  }, [selectedEvent]);
 
   // Reset the timekeeper when navigating away from the timekeeper
   useEffect(() => {
@@ -82,10 +96,6 @@ export const Timekeeper = () => {
     setRace({ ...race, ...event });
   };
 
-  const raceConfigHandler = (event) => {
-    console.info(event);
-  };
-
   const resetRacehandler = () => {
     setRace(defaultRace);
     setRaceConfig({});
@@ -107,7 +117,6 @@ export const Timekeeper = () => {
             setRaceInfo={raceInfoHandler}
             fastestLap={fastestLap}
             raceConfig={raceConfig}
-            setRaceConfig={raceConfigHandler}
             onNext={raceIsDoneHandler}
           />
         );
