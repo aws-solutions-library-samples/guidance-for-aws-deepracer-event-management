@@ -219,10 +219,10 @@ const Leaderboard = ({ eventId, trackId, showQrCode }) => {
             <LeaderboardTable leaderboardEntries={leaderboardEntries} />
           </div>
           <FollowFooter visible text={leaderboardConfig.followFooterText} />
-          <RaceInfoFooter eventId={eventId} />
-          <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} />
         </div>
       )}
+      <RaceInfoFooter eventId={eventId} />
+      <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} />
     </>
   );
 };
