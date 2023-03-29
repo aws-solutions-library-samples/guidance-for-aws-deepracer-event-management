@@ -24,6 +24,7 @@ import { RestApi } from './constructs/rest-api';
 import { StreamingOverlay } from './constructs/streaming-overlay';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
+import { LandingPageManager } from './constructs/landing-page';
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
     branchName: string;
@@ -156,6 +157,17 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             eventbus: props.eventbus,
         });
 
+        const landingPage = new LandingPageManager(this, 'LandingPageManager', {
+            adminGroupRole: props.adminGroupRole,
+            appsyncApi: {
+                api: appsyncApi,
+                schema: schema,
+                noneDataSource: noneDataSoure,
+            },
+            lambdaConfig: props.lambdaConfig,
+            eventbus: props.eventbus,
+        });
+
         new EventsManager(this, 'EventsManager', {
             appsyncApi: {
                 api: appsyncApi,
@@ -164,6 +176,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             },
             lambdaConfig: props.lambdaConfig,
             leaderboardApi: leaderboard.api,
+            landingPageApi: landingPage.api,
             eventbus: props.eventbus,
         });
 

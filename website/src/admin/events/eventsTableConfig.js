@@ -72,6 +72,10 @@ export const VisibleContentOptions = () => {
           label: i18next.t('events.streaming-overlay-link-chroma'),
         },
         {
+          id: 'eventLandingPageLink',
+          label: i18next.t('events.landing-page-link'),
+        },
+        {
           id: 'qrCodeIsVisible',
           label: i18next.t('events.leaderboard.qr-code-header'),
         },
@@ -162,7 +166,9 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
       cell: (item) =>
         (
           <EventLinksButtons
-            href={`${awsconfig.Urls.leaderboardWebsite}/${item.eventId.toString()}`}
+            href={`${
+              awsconfig.Urls.leaderboardWebsite
+            }/leaderboard/${item.eventId.toString()}/?qr=true`}
             linkTextPrimary={i18next.t('events.leaderboard-link-same-tab')}
             linkTextExternal={i18next.t('events.leaderboard-link-new-tab')}
           />
@@ -186,15 +192,21 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
       cell: (item) =>
         (
           <EventLinksButtons
-            href={
-              awsconfig.Urls.streamingOverlayWebsite +
-              '/?' +
-              'event=' +
-              item.eventId.toString() +
-              '&chroma=1'
-            }
+            href={`${awsconfig.Urls.streamingOverlayWebsite}/${item.eventId.toString()}?chroma=1`}
             linkTextPrimary={i18next.t('events.streaming-overlay-link-chroma-same-tab')}
             linkTextExternal={i18next.t('events.streaming-overlay-link-chroma-new-tab')}
+          />
+        ) || '-',
+    },
+    {
+      id: 'eventLandingPageLink',
+      header: i18next.t('events.landing-page-link'),
+      cell: (item) =>
+        (
+          <EventLinksButtons
+            href={`${awsconfig.Urls.leaderboardWebsite}/landing-page/${item.eventId.toString()}/`}
+            linkTextPrimary={i18next.t('events.landing-page-link-same-tab')}
+            linkTextExternal={i18next.t('events.landing-page-link-new-tab')}
           />
         ) || '-',
     },

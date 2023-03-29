@@ -136,6 +136,9 @@
   "events.streaming-overlay-link-chroma": "Streaming overlay +chroma",
   "events.streaming-overlay-link-chroma-same-tab": "Open in this tab",
   "events.streaming-overlay-link-chroma-new-tab": "Open in new tab",
+  "events.landing-page-link": "Landing Page",
+  "events.landing-page-link-same-tab": "Open in this tab",
+  "events.landing-page-link-new-tab": "Open in new tab",
 
   "events.event-type": "Type of Event",
   "events.event-type-description": "",
@@ -233,7 +236,7 @@
   "fleets.edit-cars.taillight-label": "Tail Light",
   "fleets.edit-cars.update-tail-lights": "Update tail lights",
   "fleets.edit-cars.title": "Car Control",
-  "fleets.edit-cars.restart-ros": "restart ROS Service",
+  "fleets.edit-cars.restart-ros": "Restart ROS Service",
   "fleets.edit-cars.stop": "Emergency Stop",
   "fleets.error-exists": "Fleet already exists",
   "fleets.error-text-regex": "Must match regex: ^[a-zA-Z0-9-_]+$",
