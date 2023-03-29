@@ -19,7 +19,6 @@ const Leaderboard = ({ eventId, trackId, showQrCode }) => {
   const [leaderboardConfig, setLeaderboardConfig] = useState({
     headerText: '',
     followFooterText: '',
-    qrCodeVisible: false,
   });
   const [subscription, SetSubscription] = useState();
   const [onUpdateSubscription, SetOnUpdateSubscription] = useState();

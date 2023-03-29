@@ -2,7 +2,6 @@ import { EventLinksButtons } from '../../components/eventLinksButtons';
 import { Flag } from '../../components/flag';
 import awsconfig from '../../config.json';
 import i18next from '../../i18n';
-import { GetQrCodeOptionFromBoolean } from './leaderboardConfig';
 import {
   GetRaceResetsNameFromId,
   GetRaceTypeNameFromId,
@@ -74,10 +73,6 @@ export const VisibleContentOptions = () => {
         {
           id: 'eventLandingPageLink',
           label: i18next.t('events.landing-page-link'),
-        },
-        {
-          id: 'qrCodeIsVisible',
-          label: i18next.t('events.leaderboard.qr-code-header'),
         },
       ],
     },
@@ -209,11 +204,6 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
             linkTextExternal={i18next.t('events.landing-page-link-new-tab')}
           />
         ) || '-',
-    },
-    {
-      id: 'qrCodeIsVisible',
-      header: i18next.t('events.leaderboard.qr-code-header'),
-      cell: (item) => GetQrCodeOptionFromBoolean(item.qrCodeVisible) || '-',
     },
   ];
 };
