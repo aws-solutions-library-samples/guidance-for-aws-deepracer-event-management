@@ -18,7 +18,6 @@ export const event = {
         footerText: 'Follow the race #AWSDeepRacer',
         headerText: undefined,
         sponsor: undefined,
-        qrCodeVisible: false,
       },
       landingPageConfig: {
         links: [

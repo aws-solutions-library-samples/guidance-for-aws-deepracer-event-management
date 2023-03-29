@@ -19,7 +19,6 @@ const Leaderboard = ({ eventId, trackId, showQrCode }) => {
   const [leaderboardConfig, setLeaderboardConfig] = useState({
     headerText: '',
     followFooterText: '',
-    qrCodeVisible: false,
   });
   const [subscription, SetSubscription] = useState();
   const [onUpdateSubscription, SetOnUpdateSubscription] = useState();
@@ -219,10 +218,10 @@ const Leaderboard = ({ eventId, trackId, showQrCode }) => {
             <LeaderboardTable leaderboardEntries={leaderboardEntries} />
           </div>
           <FollowFooter visible text={leaderboardConfig.followFooterText} />
-          <RaceInfoFooter eventId={eventId} />
-          <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} />
         </div>
       )}
+      <RaceInfoFooter eventId={eventId} />
+      <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} />
     </>
   );
 };
