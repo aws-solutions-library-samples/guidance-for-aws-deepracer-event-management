@@ -192,13 +192,7 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
       cell: (item) =>
         (
           <EventLinksButtons
-            href={
-              awsconfig.Urls.streamingOverlayWebsite +
-              '/?' +
-              'event=' +
-              item.eventId.toString() +
-              '&chroma=1'
-            }
+            href={`${awsconfig.Urls.streamingOverlayWebsite}/${item.eventId.toString()}?chroma=1`}
             linkTextPrimary={i18next.t('events.streaming-overlay-link-chroma-same-tab')}
             linkTextExternal={i18next.t('events.streaming-overlay-link-chroma-new-tab')}
           />
