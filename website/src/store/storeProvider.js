@@ -51,7 +51,7 @@ export function useUsersContext() {
 export const StoreProvider = (props) => {
   const { t } = useTranslation();
   const permissions = usePermissionsContext();
-  console.info(permissions);
+
   const [events, eventsIsLoading] = useEventsApi(permissions.api.events);
   const [users, usersIsLoading] = useUsersApi(permissions.api.users);
   const [fleets, fleetsIsLoading] = useFleetsApi(permissions.api.fleets);
