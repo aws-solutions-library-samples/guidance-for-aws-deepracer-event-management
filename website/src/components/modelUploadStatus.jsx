@@ -48,7 +48,7 @@ export function ModelUploadStatus(props) {
     return () => {
       // Unmounting
     };
-  }, []);
+  }, [file, s3path, t]);
 
   return (
     <React.Fragment key={file.name}>
