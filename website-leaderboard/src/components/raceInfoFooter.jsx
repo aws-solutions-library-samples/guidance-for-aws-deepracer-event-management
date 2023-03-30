@@ -65,12 +65,12 @@ const RaceInfoFooter = ({ eventId }) => {
       {isVisible && (
         <div className={styles.footerRoot}>
           <div>
-            <span className={styles.footerHeader}>Currently racing: </span>
-            <span className={styles.footerText}>{raceInfo.username}</span>
+            <span className={styles.footerName}>Currently racing: </span>
+            <span className={styles.footerName}>{raceInfo.username}</span>
           </div>
           <div>
-            <span className={styles.footerHeader}>Time left: </span>
-            <span className={styles.footerText}>
+            
+            <span className={styles.footerCountdown}>
               <RaceTimer timerIsRunning={timerIsRunning} timeLeftInMs={raceInfo.timeLeftInMs} />
             </span>
           </div>
