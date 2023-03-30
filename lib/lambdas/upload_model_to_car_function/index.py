@@ -25,7 +25,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         # key=key_scope + body_parameters['key']
         key = body_parameters["key"]
         username = re.sub("[^0-9a-zA-Z-]+", "", key.split("/")[-3])
-        filename = re.sub("[^0-9a-zA-Z-.]+", "", key.split("/")[-1])
+        filename = re.sub("[^0-9a-zA-Z-_.]+", "", key.split("/")[-1])
         foldername = "{}-{}".format(username, filename.split(".")[0])
 
         logger.info(instance_id)
