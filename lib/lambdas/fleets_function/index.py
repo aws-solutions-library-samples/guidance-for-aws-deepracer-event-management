@@ -2,13 +2,12 @@
 # encoding=utf-8
 import json
 import os
-import uuid
-from datetime import datetime
 
 import boto3
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import AppSyncResolver
 from aws_lambda_powertools.logging import correlation_paths
+from aws_lambda_powertools.utilities.data_classes.appsync import scalar_types_utils
 
 tracer = Tracer()
 logger = Logger()
@@ -24,6 +23,8 @@ session = boto3.session.Session()
 credentials = session.get_credentials()
 region = session.region_name or "eu-west-1"
 graphql_endpoint = os.environ.get("APPSYNC_URL", None)
+
+sub = ""
 
 
 def post_eventbridge_carsUpdate_event(
@@ -60,6 +61,8 @@ def post_eventbridge_carsUpdate_event(
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
 @tracer.capture_lambda_handler
 def lambda_handler(event, context):
+    global sub
+    sub = event["identity"]["sub"]
     return app.resolve(event, context)
 
 
@@ -76,12 +79,17 @@ def getAllFleets():
 def addFleet(fleetName: str, carIds: list[str] = [], **args):
     # TODO add regular expression for tag validation
     # TODO verify that the wanted tag is not already in use for another track
-    fleetId = str(uuid.uuid4())
-    createdAt = datetime.utcnow().isoformat() + "Z"
+
+    global sub
+    fleetId = scalar_types_utils.make_id()
+    createdAt = scalar_types_utils.aws_datetime()
+    createdBy: str = sub
+
     item = {
         "fleetId": fleetId,
         "fleetName": fleetName,
         "createdAt": createdAt,
+        "createdBy": createdBy,
         "carIds": carIds,
         **args,
     }
