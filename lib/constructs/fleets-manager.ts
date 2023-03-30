@@ -112,7 +112,6 @@ export class FleetsManager extends Construct {
                 args: {
                     fleetName: GraphqlType.string({ isRequired: true }),
                     carIds: GraphqlType.string({ isList: true }),
-                    createdBy: GraphqlType.id({ isRequired: true }),
                 },
                 returnType: fleets_object_Type.attribute(),
                 dataSource: fleets_data_source,
