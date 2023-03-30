@@ -10,7 +10,7 @@ import { getLeaderboard } from '../graphql/queries';
 import {
   onDeleteLeaderboardEntry,
   onNewLeaderboardEntry,
-  onUpdateLeaderboardEntry,
+  onUpdateLeaderboardEntry
 } from '../graphql/subscriptions';
 import styles from './leaderboard.module.css';
 

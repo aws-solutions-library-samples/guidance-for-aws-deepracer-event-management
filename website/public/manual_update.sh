@@ -194,7 +194,7 @@ rm -rf /tmp/ssm
 
 # Enable, Configure and Start SSM if we have the right info
 if [ ${ssmCode} != NULL ]; then
-    echo -e -n "\nActovate SSM\n"
+    echo -e -n "\nActivate SSM\n"
     systemctl enable amazon-ssm-agent
     service amazon-ssm-agent stop
     amazon-ssm-agent -register -code "${ssmCode}" -id "${ssmId}" -region "${ssmRegion}"

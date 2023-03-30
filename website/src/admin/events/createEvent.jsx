@@ -1,5 +1,4 @@
 import { Button, Form, SpaceBetween } from '@cloudscape-design/components';
-import { Auth } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -33,9 +32,7 @@ export const CreateEvent = () => {
   };
 
   const onCreateEventHandler = async () => {
-    const user = await Auth.currentAuthenticatedUser();
-    const payload = { ...eventConfig, createdBy: user.attributes.sub };
-    send('addEvent', payload);
+    send('addEvent', eventConfig);
   };
 
   const formIsValidHandler = () => {
