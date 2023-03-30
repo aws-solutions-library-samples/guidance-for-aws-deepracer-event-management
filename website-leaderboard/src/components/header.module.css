@@ -7,17 +7,18 @@
   /* height: 13rem; */
   background-color: black;
   color: white;
-  text-align: center;
+  text-align: left;
+  text-align: left;
   z-index: 1000;
   align-items: center;
 }
 
 .headerText {
-    font-size: 6vmin;
-    font-weight: bold;
-    font-style: italic;
-    text-transform: uppercase;
-    width: 100%
+  font-size: 6vmin;
+  font-weight: bold;
+  font-style: italic;
+  text-transform: uppercase;
+  width: 100%;
 }
 
 .logo {
