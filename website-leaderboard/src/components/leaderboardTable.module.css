@@ -1,0 +1,193 @@
+.layout {
+  color: white;
+  width: 100%;
+  font-size: 2.5vmin;
+  top: 25rem;
+  left: 5rem;
+  right: 5rem;
+  /*transition: opacity 200ms 500ms linear;*/
+}
+
+.titles {
+  display: flex;
+  text-transform: uppercase;
+  align-items: center;
+  font-weight: bold;
+  font-style: italic;
+  height: 2rem;
+  font-size: 1em;
+  letter-spacing: 0.15ch;
+}
+
+.positionTitle {
+  margin-left: 2vmin;
+  width: 16vmin;
+}
+
+.racerTitle {
+  margin-left: 2.5vmin;
+}
+
+.timeTitle {
+  margin-left: auto;
+  margin-right: 4vmin;
+}
+/*
+.time {
+  text-align: right;
+  flex: 1 1 0px;
+  white-space: nowrap;
+  position: relative;
+
+}
+*/
+
+.entries {
+  overflow: scroll;
+  height: calc(100vh - 32vmin);
+  position: relative;
+  margin-top: 0;
+}
+
+.entries::-webkit-scrollbar{
+  display: none;
+}
+
+.entry {
+  margin-top: 0;
+  margin-left: 1.6vmin;
+  margin-right: 1.6vmin;
+  list-style: none;
+  color: black;
+  font-size: 1.2em;
+
+  height: 4em;
+  line-height: 4em;
+
+  transition: all 0.9s ease-out;
+
+  /*
+  transition-timing-function: linear;
+  transition:
+    top 600ms ease,
+    z-index 100ms 800ms linear,
+    transform 300ms 500ms ease,
+    font-size 600ms ease
+  */
+}
+
+.topThreeLiRacer {
+  /*width: 90vmin;*/
+  transition: all 0.9s ease-out;
+}
+
+.liPosition {
+  margin-left: 2vmin;
+  font-size: 2em;
+
+  width: 12vmin;
+  font-weight: 700;
+  color: inherit;
+  /*transition: color 600ms linear;*/
+}
+
+.liRacer {
+  font-weight: 300;
+  /*width: 90vmin;*/
+  font-size: 1.4em;
+}
+
+.racerCountryFlag {
+  display: inline-block;
+  /*padding-left: 2vw;*/
+  padding-right: 0.5vw;
+}
+
+.liTime {
+  padding-top: 1vmin;
+  padding-bottom: 1vmin;
+  margin-right: 4vmin;
+  font-size: 1.4em;
+  font-style: italic;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.row {
+  width: 100%;
+  border-radius: 2vmin;
+  background: rgba(113, 36, 131, 0.3);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, rgba(0, 255, 235, 0.2), rgba(117, 38, 134, 0.2));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 30%), 0 0.3rem 0.5rem rgb(0 0 0 / 50%);
+  z-index: 100;
+
+  transition: all 0.9s ease-out;
+  /*transition: top 600ms ease, z-index 100ms 800ms linear, transform 300ms 500ms ease, font-size 600ms ease;*/
+}
+
+.listEntry {
+  display: flex;
+  align-items: center;
+
+  color: rgb(225, 225, 225);
+  transition: all 0.9s ease-out;
+}
+
+.gold,
+.silver,
+.bronze {
+  color: black;
+  font-size: 1.6em;
+  font-weight: 300;
+
+  text-shadow: 0 0.2rem 0 rgba(255, 255, 255, 0.3);
+}
+
+.gold .liPosition,
+.silver .liPosition,
+.bronze .liPosition {
+  font-size: 1.3em;
+  letter-spacing: 0.15ch;
+}
+
+.bronze {
+  background: transparent;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, #fcae4d, #672f04);
+}
+
+.silver {
+  background: transparent;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, #c1c1c5, #44464c);
+}
+
+.gold {
+  background: transparent;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, #f0ba0a, #c47400);
+}
+
+.highlight {
+  box-shadow: 0 0 0 0.3rem #0095ff;
+}
+
+.animate {
+  background-image: linear-gradient(-225deg, #231557 0%, #44107a 29%, #ff1361 67%, #fff800 100%);
+  background-size: auto auto;
+  background-clip: border-box;
+  background-size: 200% auto;
+  color: #fff;
+  background-clip: text;
+  text-fill-color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textclip 2s linear infinite;
+}
+
+@keyframes textclip {
+  to {
+    background-position: 200% center;
+  }
+}

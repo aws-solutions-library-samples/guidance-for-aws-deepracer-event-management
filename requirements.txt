@@ -1,5 +1,0 @@
-aws.cdk-lib==2.47.0
-aws_cdk.aws_lambda_python_alpha==2.47.0a0
-aws_cdk.aws_appsync_alpha==2.47.0a0
-cdk-serverless-clamscan==2.4.7
-cdk-nag==2.20.5

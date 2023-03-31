@@ -131,8 +131,9 @@ elif [ $DISTRIB_RELEASE = "20.04" ]; then
     echo -e -n "\nUbuntu 20.04 detected\n"
 
     bundlePath=/opt/aws/deepracer/lib/device_console/static
-    webserverPath=/opt/aws/deepracer/lib/webserver_pkg/lib/python3.8/site-packages/webserver_pkg
     systemPath=/opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg
+    templatesPath=/opt/aws/deepracer/lib/device_console/templates
+    webserverPath=/opt/aws/deepracer/lib/webserver_pkg/lib/python3.8/site-packages/webserver_pkg
 
 else
     echo -e -n "\nNot sure what version of OS, terminating.\n"
@@ -193,7 +194,7 @@ rm -rf /tmp/ssm
 
 # Enable, Configure and Start SSM if we have the right info
 if [ ${ssmCode} != NULL ]; then
-    echo -e -n "\nActovate SSM\n"
+    echo -e -n "\nActivate SSM\n"
     systemctl enable amazon-ssm-agent
     service amazon-ssm-agent stop
     amazon-ssm-agent -register -code "${ssmCode}" -id "${ssmId}" -region "${ssmRegion}"
@@ -235,6 +236,12 @@ echo -e -n "\nUpdate the cookie duration\n"
 cp $webserverPath/login.py ${backupDir}/login.py.bak
 rm $webserverPath/login.py
 cat ${backupDir}/login.py.bak | sed -e "s/datetime.timedelta(hours=1)/datetime.timedelta(hours=12)/" > $webserverPath/login.py
+
+# Replace the login page
+echo -e -n "\nReplace the login.html page\n"
+cp $templatesPath/login.html ${backupDir}/login.html.bak
+rm $templatesPath/login.html
+mv login.html $templatesPath/login.html
 
 # Disable Gnome and other services
 # - to enable gnome - systemctl set-default graphical

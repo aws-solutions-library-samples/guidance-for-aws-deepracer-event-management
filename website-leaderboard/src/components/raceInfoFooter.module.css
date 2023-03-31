@@ -1,0 +1,69 @@
+.footerRoot {
+  padding-bottom: 2vmin;
+  padding-top: 1vmin;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 25vmin;
+  height: 25vmin;
+  z-index: 4000;
+
+  background: linear-gradient(
+    120deg,
+    #7305a0 0%,
+    #2f0c67 80%,
+    #fff 80%,
+    #fff 85%,
+    transparent 85%,
+    transparent
+  );
+  background-repeat: no-repeat;
+  background-size: 130% 130%;
+
+  animation-name: slide;
+  animation-duration: 4s;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+@keyframes slide {
+  from {
+    background-size: 1% 130%;
+  }
+  to {
+    background-size: 130% 130%;
+  }
+}
+
+.footerName {
+  font-size: 5vmin;
+  font-weight: normal;
+  animation: fadeInAnimation ease 3s;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+.footerCountdown {
+  font-weight: 500;
+  font-size: 10vmin;
+  color: #fff;
+  animation: fadeInAnimation ease 3s;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+@keyframes fadeInAnimation {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

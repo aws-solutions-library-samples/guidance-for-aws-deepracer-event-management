@@ -1,0 +1,16 @@
+export const defaultRace = {
+  eventId: null,
+  userId: null,
+  username: null,
+  laps: [],
+  trackId: 1,
+  racedByProxy: false,
+};
+
+export const defaultLap = {
+  lapId: null,
+  time: 0,
+  resets: 0,
+  isValid: false,
+  autTimerConnected: false,
+};

@@ -8,11 +8,14 @@ zip_repo:
     - release
     - esbjj
     - cdk-pipeline-askwith
-    - cdk-pipeline-dasmthc
-    - hotfix-manual-update
+    - dasmthc
+    - marbuss
+    - mrglover-overlay
+    - danlndnr
+    - csj
   stage: zip
   image:
-    name: ubuntu
+    name: public.ecr.aws/ubuntu/ubuntu:22.10_stable
   script:
     - apt-get -y update
     - apt-get -y install zip
@@ -29,11 +32,14 @@ upload_to_s3:
     - release
     - esbjj
     - cdk-pipeline-askwith
-    - cdk-pipeline-dasmthc
-    - hotfix-manual-update
+    - dasmthc
+    - marbuss
+    - mrglover-overlay
+    - danlndnr
+    - csj
   stage: upload
   image:
-    name: amazon/aws-cli
+    name: public.ecr.aws/aws-cli/aws-cli:latest
     entrypoint: [""]
   script:
     - aws --version
