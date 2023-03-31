@@ -2,7 +2,6 @@
   color: white;
   width: 100%;
   font-size: 2.5vmin;
-
   top: 25rem;
   left: 5rem;
   right: 5rem;
@@ -16,7 +15,7 @@
   font-weight: bold;
   font-style: italic;
   height: 2rem;
-  font-size: 0.8em;
+  font-size: 1em;
   letter-spacing: 0.15ch;
 }
 
@@ -47,6 +46,11 @@
   overflow: scroll;
   height: calc(100vh - 32vmin);
   position: relative;
+  margin-top: 0;
+}
+
+.entries::-webkit-scrollbar{
+  display: none;
 }
 
 .entry {
@@ -96,14 +100,14 @@
 .racerCountryFlag {
   display: inline-block;
   /*padding-left: 2vw;*/
-  padding-right: 1vw;
+  padding-right: 0.5vw;
 }
 
 .liTime {
   padding-top: 1vmin;
   padding-bottom: 1vmin;
   margin-right: 4vmin;
-  font-size: 1.5em;
+  font-size: 1.4em;
   font-style: italic;
   font-weight: 700;
   margin-left: auto;

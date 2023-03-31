@@ -1,6 +1,7 @@
 import { API, graphqlOperation } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { onNewOverlayInfo } from '../graphql/subscriptions';
+import { useWindowSize } from '../hooks/useWindowSize';
 import styles from './raceInfoFooter.module.css';
 import RaceTimer from './raceTimer';
 
@@ -21,6 +22,9 @@ const RaceInfoFooter = ({ eventId }) => {
   });
   const [isVisible, SetIsVisible] = useState(false);
   const [timerIsRunning, SetTimerIsRunning] = useState(false);
+
+  const windowSize = useWindowSize();
+  const aspectRatio = windowSize.width / windowSize.height;
 
   const ManageTimer = (raceStatus) => {
     if (raceStatus === 'RACE_IN_PROGRESS') {
@@ -60,16 +64,24 @@ const RaceInfoFooter = ({ eventId }) => {
     };
   }, [eventId]);
 
+  let username;
+  if (raceInfo) {
+    username = raceInfo.username;
+    if (aspectRatio < 1.2 && username.length > 15) {
+      username = username.substr(0, 20) + '...';
+    } else if (username.length > 30) {
+      username = username.substr(0, 30) + '...';
+    }
+  }
   return (
     <>
       {isVisible && (
         <div className={styles.footerRoot}>
           <div>
             <span className={styles.footerName}>Currently racing: </span>
-            <span className={styles.footerName}>{raceInfo.username}</span>
+            <span className={styles.footerName}>{username}</span>
           </div>
           <div>
-            
             <span className={styles.footerCountdown}>
               <RaceTimer timerIsRunning={timerIsRunning} timeLeftInMs={raceInfo.timeLeftInMs} />
             </span>

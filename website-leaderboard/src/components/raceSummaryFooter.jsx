@@ -1,4 +1,5 @@
 import React from 'react';
+import { useWindowSize } from '../hooks/useWindowSize';
 import { Flag } from './flag';
 import styles from './raceSummaryFooter.module.css';
 
@@ -16,6 +17,9 @@ const RaceSummaryFooter = ({
   countryCode,
   visible,
 }) => {
+  const windowSize = useWindowSize();
+  const aspectRatio = windowSize.width / windowSize.height;
+
   const convertMsToString = (timeInMS) => {
     const millisecondsAsString = String(Math.floor(timeInMS % 1000)).padStart(3, '0');
     const secondsAsString = String(Math.floor(timeInMS / 1000)).padStart(2, '0');
@@ -24,6 +28,14 @@ const RaceSummaryFooter = ({
     const timeAsString = `${minutesAsString}:${secondsAsString}.${millisecondsAsString}`;
     return timeAsString;
   };
+
+  if (username) {
+    if (aspectRatio < 1.2 && username.length > 15) {
+      username = username.substr(0, 10) + '...';
+    } else if (username.length > 30) {
+      username = username.substr(0, 10) + '...';
+    }
+  }
 
   return (
     <>

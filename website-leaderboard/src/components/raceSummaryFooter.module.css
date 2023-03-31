@@ -20,7 +20,7 @@
   color: white;
   text-align: left;
   justify-content: space-around;
-  z-index: 5000;
+  z-index: 3000;
   /* transition: all 2s linear; */
   font-size: 1vmin;
   animation-name: slide;
