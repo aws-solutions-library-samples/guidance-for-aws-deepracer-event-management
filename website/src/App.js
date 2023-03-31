@@ -8,6 +8,7 @@ import {
 } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import Amplify from 'aws-amplify';
+import { AwsRum } from 'aws-rum-web';
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import './App.css';
@@ -20,6 +21,19 @@ import { PermissionProvider } from './store/permissions/permissionsProvider';
 import { StoreProvider } from './store/storeProvider';
 
 Amplify.configure(awsconfig);
+
+let awsRum = null;
+try {
+  const config = JSON.parse(awsconfig.Rum.drem.config);
+  const APPLICATION_ID = awsconfig.Rum.drem.id;
+  const APPLICATION_VERSION = '1.0.0';
+  const APPLICATION_REGION = 'eu-west-1';
+
+  /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "awsRum" }]*/
+  awsRum = new AwsRum(APPLICATION_ID, APPLICATION_VERSION, APPLICATION_REGION, config);
+} catch (error) {
+  // Ignore errors thrown during CloudWatch RUM web client initialization
+}
 
 const components = {
   Header() {

@@ -34,6 +34,10 @@ with open("cfn.outputs") as json_file:
             leaderboardWebsite = key["OutputValue"]
         if key["OutputKey"] == "streamingOverlayWebsite":
             streamingOverlayWebsite = key["OutputValue"]
+        if key["OutputKey"] == "cwRumAppMonitorId":
+            cwRumAppMonitorId = key["OutputValue"]
+        if key["OutputKey"] == "cwRumAppMonitorConfig":
+            cwRumAppMonitorConfig = key["OutputValue"]
 
     output_data = {
         "Auth": {
@@ -63,6 +67,12 @@ with open("cfn.outputs") as json_file:
             "termsAndConditionsUrl": tacWebsite,
             "leaderboardWebsite": leaderboardWebsite,
             "streamingOverlayWebsite": streamingOverlayWebsite,
+        },
+        "Rum": {
+            "drem": {
+                "id": cwRumAppMonitorId,
+                "config": cwRumAppMonitorConfig,
+            },
         },
     }
 

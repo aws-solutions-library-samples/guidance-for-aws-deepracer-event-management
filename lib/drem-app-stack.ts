@@ -17,6 +17,7 @@ import { EventsManager } from './constructs/events-manager';
 import { FleetsManager } from './constructs/fleets-manager';
 import { GroupManager } from './constructs/group-manager';
 import { LabelPrinter } from './constructs/label-printer';
+import { LandingPageManager } from './constructs/landing-page';
 import { Leaderboard } from './constructs/leaderboard';
 import { ModelsManager } from './constructs/models-manager';
 import { RaceManager } from './constructs/race-manager';
@@ -24,7 +25,6 @@ import { RestApi } from './constructs/rest-api';
 import { StreamingOverlay } from './constructs/streaming-overlay';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
-import { LandingPageManager } from './constructs/landing-page';
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
     branchName: string;
@@ -155,6 +155,10 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             userPoolId: props.userPool.userPoolId,
             userPoolArn: props.userPool.userPoolArn,
             eventbus: props.eventbus,
+        });
+
+        const cwRumLeaderboardAppMonitor = new CwRumAppMonitor(this, 'CwRumLeaderboardAppMonitor', {
+            domainName: leaderboard.distribution.distributionDomainName,
         });
 
         const landingPage = new LandingPageManager(this, 'LandingPageManager', {
@@ -346,6 +350,22 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
         new cdk.CfnOutput(this, 'rumScript', {
             value: cwRumAppMonitor.script,
+        });
+
+        new cdk.CfnOutput(this, 'cwRumAppMonitorId', {
+            value: cwRumAppMonitor.id,
+        });
+
+        new cdk.CfnOutput(this, 'cwRumAppMonitorConfig', {
+            value: cwRumAppMonitor.config,
+        });
+
+        new cdk.CfnOutput(this, 'cwRumLeaderboardAppMonitorId', {
+            value: cwRumLeaderboardAppMonitor.id,
+        });
+
+        new cdk.CfnOutput(this, 'cwRumLeaderboardAppMonitorConfig', {
+            value: cwRumLeaderboardAppMonitor.config,
         });
 
         new cdk.CfnOutput(this, 'appsyncId', { value: appsyncApi.apiId });

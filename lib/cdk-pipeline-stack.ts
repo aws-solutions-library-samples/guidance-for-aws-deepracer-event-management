@@ -179,7 +179,7 @@ export class CdkPipelineStack extends cdk.Stack {
                     'aws cloudformation describe-stacks --stack-name ' +
                         `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
                     'python scripts/generate_amplify_config_cfn.py',
-                    'python scripts/update_index_html_with_script_tag_cfn.py',
+                    // 'python scripts/update_index_html_with_script_tag_cfn.py',
                     'appsyncId=`cat appsyncId.txt` && aws appsync' +
                         ' get-introspection-schema --api-id $appsyncId --format SDL' +
                         ' ./website/src/graphql/schema.graphql',
@@ -254,7 +254,7 @@ export class CdkPipelineStack extends cdk.Stack {
                     "echo 'Starting to deploy the Streaming overlay website'",
                     'echo website bucket= $streamingOverlaySourceBucketName',
                     'aws cloudformation describe-stacks --stack-name ' +
-                    `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
+                        `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
                     'python scripts/generate_amplify_config_cfn.py',
                     'python scripts/generate_stream_overlays_amplify_config_cfn.py',
                     'appsyncId=`cat appsyncId.txt` && aws appsync' +
