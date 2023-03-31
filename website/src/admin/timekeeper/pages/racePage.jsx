@@ -40,7 +40,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
   const [btnCaptureLap, setBtnCaptureLap] = useState(true);
   const [btnUndoReset, setBtnUndoReset] = useState(true);
   const [btnUndoFalseFinish, setBtnUndoFalseFinish] = useState(true);
-  const [btnEndRace, setBtnEndRace] = useState(true);
+  const [btnEndRace, setBtnEndRace] = useState(false);
   const [btnStartRace, setBtnStartRace] = useState(false);
 
   const [
