@@ -2,9 +2,19 @@
 
 const pow = Math.pow;
 
+export const scrollToTop = (element) => {
+  element.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  });
+};
+
 // The easing function that makes the scroll decelerate over time
 function easeOutQuart(x) {
-  return 1 - pow(1 - x, 6);
+  return x;
+  //return 1 - pow(1 - x, 4);
+  //return 1 - pow(x, 2);
+  //return pow(x, 2);
 }
 
 export function animateScroll({ targetPosition, initialPosition, duration, element }) {
@@ -19,9 +29,11 @@ export function animateScroll({ targetPosition, initialPosition, duration, eleme
   //const maxAvailableScroll =
   //  document.documentElement.scrollHeight - document.documentElement.clientHeight;
 
-  const maxAvailableScroll = element.scrollHeight - element.clientHeight - 25; // TODO had to add the minuse 25 to get the scrolling to stop, I assume this is due to that the table is not using the entire client height
+  //const maxAvailableScroll = element.scrollHeight - element.clientHeight;
 
-  const amountOfPixelsToScroll = initialPosition - targetPosition;
+  const maxAvailableScroll = element.scrollHeight;
+
+  const amountOfPixelsToScroll = initialPosition - maxAvailableScroll;
 
   function step(timestamp) {
     if (start === undefined) {
@@ -44,9 +56,8 @@ export function animateScroll({ targetPosition, initialPosition, duration, eleme
 
     // Stop when max scroll is reached
     //if (initialPosition !== maxAvailableScroll && window.scrollY === maxAvailableScroll) {
-    if (position >= maxAvailableScroll) {
-      // TODO is the right stopp condition?????
-      console.info('scrolling is done');
+    if (position == maxAvailableScroll) {
+      scrollToTop(element);
       cancelAnimationFrame(animationFrame);
       return;
     }
