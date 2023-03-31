@@ -2,6 +2,7 @@ import {
   Container,
   DatePicker,
   FormField,
+  Grid,
   Header,
   Input,
   Select,
@@ -112,14 +113,16 @@ export const EventInfoPanel = ({
           />
         </FormField>
         <FormField label={t('events.country')} description={t('events.country-description')}>
-          <Select
-            selectedOption={GetCountryOptionFromId(countryCode)}
-            onChange={({ detail }) => onChange({ countryCode: detail.selectedOption.value })}
-            options={countryOptions}
-            selectedAriaLabel="Selected"
-            filteringType="auto"
-          />
-          <Flag countryCode={countryCode}></Flag>
+          <Grid gridDefinition={[{ colspan: 10 }, { colspan: 2 }]}>
+            <Select
+              selectedOption={GetCountryOptionFromId(countryCode)}
+              onChange={({ detail }) => onChange({ countryCode: detail.selectedOption.value })}
+              options={countryOptions}
+              selectedAriaLabel="Selected"
+              filteringType="auto"
+            />
+            <Flag countryCode={countryCode}></Flag>
+          </Grid>
         </FormField>
       </SpaceBetween>
     </Container>

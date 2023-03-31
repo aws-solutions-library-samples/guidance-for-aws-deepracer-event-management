@@ -4,7 +4,7 @@ import * as queries from '../graphql/queries';
 import { onAddedEvent, onDeletedEvents, onUpdatedEvent } from '../graphql/subscriptions';
 
 export const useEventsApi = (userHasAccess = false) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [events, setEvents] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
 
