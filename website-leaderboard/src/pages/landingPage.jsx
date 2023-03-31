@@ -1,13 +1,12 @@
-import * as React from 'react';
-import Cards from '@cloudscape-design/components/cards';
-import Box from '@cloudscape-design/components/box';
-import { API } from 'aws-amplify';
-import { useEffect, useState } from 'react';
-import * as queries from '../graphql/queries';
 import { Link } from '@cloudscape-design/components';
-import styles from './landingPage.module.css';
-import Logo from '../assets/logo.png';
+import Box from '@cloudscape-design/components/box';
+import Cards from '@cloudscape-design/components/cards';
+import * as React from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import Logo from '../assets/logo.png';
+import awsconfig from '../config.json';
+import styles from './landingPage.module.css';
 
 
 export function LandingPage() {
@@ -32,21 +31,26 @@ export function LandingPage() {
       linkDescription: 'Get to know more about AWS DeepRacer.',
       linkHref: 'https://aws.amazon.com/deepracer',
     },
+    {
+      linkName: 'Upload your own model and race',
+      linkDescription: 'Upload your own autonomous racing model here and get started racing!',
+      linkHref: awsconfig.Urls.drem,
+    },
   ]
 
 
   const [landingPageItems, setLandingPageItems] = useState(defaultPageItems);
 
-  useEffect(() => {
-    API.graphql({
-      query: queries.getLandingPageConfig,
-      variables: { eventId: eventId },
-    }).then(
-      (item) => {
-        setLandingPageItems([...defaultPageItems, ...item.data.getLandingPageConfig.links]);
-      },
-    );
-  }, [eventId]);
+  // useEffect(() => {
+  //   API.graphql({
+  //     query: queries.getLandingPageConfig,
+  //     variables: { eventId: eventId },
+  //   }).then(
+  //     (item) => {
+  //       setLandingPageItems([...defaultPageItems, ...item.data.getLandingPageConfig.links]);
+  //     },
+  //   );
+  // }, [eventId]);
 
 
   return (
