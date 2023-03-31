@@ -39,7 +39,7 @@ const EventDetailsPanel = ({ event, i18nStrings }) => {
         </Grid>
         <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }, { colspan: 12 }]}>
           {attributeField(t('events.event-date'), event.eventDate)}
-          {attributeField(t('events.country'), event.country)}
+          {attributeField(t('events.country'), event.countryCode)}
           {attributeField(t('events.fleet-info.label'), getFleetNameFromId(event.fleetId))}
         </Grid>
         <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }, { colspan: 12 }, { colspan: 12 }]}>

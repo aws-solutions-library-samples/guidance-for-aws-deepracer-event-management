@@ -179,6 +179,7 @@
   "events.tracks.reinvent-2018": "re:Invent 2018",
   "events.tracks.reinvent-2019": "re:Invent 2019",
   "events.tracks.reinvent-2022": "2022 Summit speedway",
+  "events.tracks.atoz-speedway": "A to Z Speedway",
   "events.tracks.other": "Other",
   "events.tracks.choose": "Choose track",
   "events.tracks.choose-description": "What track will be used when hosting the event",
@@ -206,8 +207,10 @@
   "race-admin.is-valid": "Is Valid",
   "race-admin.aut-timer-connected": "Aut timer connected",
   "race-admin.edit-race": "Edit Race",
-  "race-admin.delete-laps": "Delete lap",
+  "race-admin.delete-laps": "Delete lap(s)",
+  "race-admin.delete-races": "Delete race(s)",
   "race-admin.delete-warning": "Are you sure you want to delete these lap(s)?",
+  "race-admin.delete-race-warning": "Are you sure you want to delete these race(s)?",
   "race-admin.laps-table-header": "Laps",
   "race-admin.multi-select.total-laps": "Total laps",
   "race-admin.multi-select.total-resets": "Total resets",
@@ -501,7 +504,6 @@
   "commentator.race.averagelapCount": "Average Laps per Run",
   "commentator.race.restSum": "# of Resets",
   "commentator.race.averageResetsPerLap": "Average Resets per Lap",
-
 
   "user-profile.header": "User Settings",
   "user-profile.header.details": "Account Details",
