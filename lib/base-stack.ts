@@ -20,6 +20,7 @@ export class BaseStack extends cdk.Stack {
     public readonly eventbridge: Eventbridge;
     public readonly idp: Idp;
     public readonly cloudfrontDistribution: Distribution;
+    public readonly tacSourceBucket: s3.Bucket;
     public readonly tacCloudfrontDistribution: Distribution;
     public readonly logsBucket: s3.Bucket;
     public readonly lambdaConfig: {
@@ -84,6 +85,7 @@ export class BaseStack extends cdk.Stack {
             logsBucket: logsBucket,
             cdnDistribution: cdn.distribution,
         });
+        this.tacSourceBucket = tacWebsite.sourceBucket;
 
         // Terms And Conditions cloudfront Distribution
         const tacCdn = new Cdn(this, 'tacCdn', {

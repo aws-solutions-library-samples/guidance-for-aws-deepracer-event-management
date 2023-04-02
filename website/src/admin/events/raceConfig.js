@@ -84,6 +84,7 @@ export const GetLapsOptionFromId = (id) => {
 // TRACK OPTIONS METHODS
 export const TrackTypeConfig = () => {
   return [
+    { label: i18next.t('events.tracks.atoz-speedway'), value: 'ATOZ_SPEEDWAY' },
     { label: i18next.t('events.tracks.reinvent-2018'), value: 'REINVENT_2018' },
     { label: i18next.t('events.tracks.reinvent-2019'), value: 'REINVENT_2019' },
     { label: i18next.t('events.tracks.reinvent-2022'), value: 'SUMMIT_SPEEDWAY' },
