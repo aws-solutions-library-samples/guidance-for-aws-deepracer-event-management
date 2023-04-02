@@ -1,6 +1,8 @@
 import { Box, ColumnLayout, Grid, SpaceBetween, SplitPanel } from '@cloudscape-design/components';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { EventLinksButtons } from '../../../components/eventLinksButtons';
+import awsconfig from '../../../config.json';
 import { useFleetsContext } from '../../../store/storeProvider';
 import { GetTypeOfEventNameFromId } from '../eventDomain';
 import {
@@ -57,7 +59,18 @@ const EventDetailsPanel = ({ event, i18nStrings }) => {
             GetRaceResetsNameFromId(event.tracks[0].raceConfig.numberOfResetsPerLap)
           )}
         </Grid>
-        <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }]}>
+        <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }, { colspan: 12 }]}>
+          {attributeField(
+            t('events.leaderboard-link'),
+
+            <EventLinksButtons
+              href={`${
+                awsconfig.Urls.leaderboardWebsite
+              }/leaderboard/${event.eventId.toString()}/?qr=true&scroll=true`}
+              linkTextPrimary={t('events.leaderboard-link-same-tab')}
+              linkTextExternal={t('events.leaderboard-link-new-tab')}
+            />
+          )}
           {attributeField(
             t('events.leaderboard.header'),
             event.tracks[0].leaderboardConfig.headerText
