@@ -14,12 +14,11 @@ import {
 } from '../graphql/subscriptions';
 import styles from './leaderboard.module.css';
 
-const Leaderboard = ({ eventId, trackId, showQrCode }) => {
+const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
   const [leaderboardEntries, SetleaderboardEntries] = useState([]);
   const [leaderboardConfig, setLeaderboardConfig] = useState({
     headerText: '',
     followFooterText: '',
-    qrCodeVisible: false,
   });
   const [subscription, SetSubscription] = useState();
   const [onUpdateSubscription, SetOnUpdateSubscription] = useState();
@@ -211,18 +210,17 @@ const Leaderboard = ({ eventId, trackId, showQrCode }) => {
       {leaderboardEntries.length > 0 && (
         <div className={styles.pageRoot}>
           <div className={styles.leaderboardRoot}>
-            <Header
-              headerText={leaderboardConfig.headerText}
-              qrCodeVisible={showQrCode}
-
+            <Header headerText={leaderboardConfig.headerText} qrCodeVisible={showQrCode} />
+            <LeaderboardTable
+              leaderboardEntries={leaderboardEntries}
+              scrollEnabled={scrollEnabled}
             />
-            <LeaderboardTable leaderboardEntries={leaderboardEntries} />
           </div>
           <FollowFooter visible text={leaderboardConfig.followFooterText} />
-          <RaceInfoFooter eventId={eventId} />
-          <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} />
         </div>
       )}
+      <RaceInfoFooter eventId={eventId} />
+      <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} />
     </>
   );
 };

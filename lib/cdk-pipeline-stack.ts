@@ -27,6 +27,8 @@ class InfrastructurePipelineStage extends Stage {
     public readonly leaderboardSourceBucketName: cdk.CfnOutput;
     public readonly streamingOverlayDistributionId: cdk.CfnOutput;
     public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
+    public readonly termAndConditionsDistributionId: cdk.CfnOutput;
+    public readonly termAndConditionsSourceBucketName: cdk.CfnOutput;
 
     constructor(scope: Construct, id: string, props: InfrastructurePipelineStageProps) {
         super(scope, id, props);
@@ -36,6 +38,7 @@ class InfrastructurePipelineStage extends Stage {
             branchName: props.branchName,
             cloudfrontDistribution: baseStack.cloudfrontDistribution,
             tacCloudfrontDistribution: baseStack.tacCloudfrontDistribution,
+            tacSourceBucket: baseStack.tacSourceBucket,
             logsBucket: baseStack.logsBucket,
             lambdaConfig: baseStack.lambdaConfig,
             adminGroupRole: baseStack.idp.adminGroupRole,
@@ -56,6 +59,8 @@ class InfrastructurePipelineStage extends Stage {
         this.leaderboardDistributionId = stack.leaderboardDistributionId;
         this.streamingOverlaySourceBucketName = stack.streamingOverlaySourceBucketName;
         this.streamingOverlayDistributionId = stack.streamingOverlayDistributionId;
+        this.termAndConditionsSourceBucketName = stack.tacSourceBucketName;
+        this.termAndConditionsDistributionId = stack.tacWebsitedistributionId;
     }
 }
 export interface CdkPipelineStackProps extends cdk.StackProps {
@@ -179,7 +184,6 @@ export class CdkPipelineStack extends cdk.Stack {
                     'aws cloudformation describe-stacks --stack-name ' +
                         `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
                     'python scripts/generate_amplify_config_cfn.py',
-                    'python scripts/update_index_html_with_script_tag_cfn.py',
                     'appsyncId=`cat appsyncId.txt` && aws appsync' +
                         ' get-introspection-schema --api-id $appsyncId --format SDL' +
                         ' ./website/src/graphql/schema.graphql',
@@ -254,7 +258,7 @@ export class CdkPipelineStack extends cdk.Stack {
                     "echo 'Starting to deploy the Streaming overlay website'",
                     'echo website bucket= $streamingOverlaySourceBucketName',
                     'aws cloudformation describe-stacks --stack-name ' +
-                    `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
+                        `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
                     'python scripts/generate_amplify_config_cfn.py',
                     'python scripts/generate_stream_overlays_amplify_config_cfn.py',
                     'appsyncId=`cat appsyncId.txt` && aws appsync' +
@@ -274,6 +278,28 @@ export class CdkPipelineStack extends cdk.Stack {
                     streamingOverlaySourceBucketName:
                         infrastructure.streamingOverlaySourceBucketName,
                     streamingOverlayDistributionId: infrastructure.streamingOverlayDistributionId,
+                },
+                rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
+            })
+        );
+
+        // Terms and Conditions website Deploy to S3
+        infrastructure_stage.addPost(
+            new pipelines.CodeBuildStep('TermsAndConditionsDeployToS3', {
+                buildEnvironment: {
+                    privileged: false,
+                    computeType: codebuild.ComputeType.LARGE,
+                },
+                commands: [
+                    // configure and deploy Terms and Conditions website
+                    "echo 'Starting to deploy the Terms and Conditions website'",
+                    'echo website bucket= $sourceBucketName',
+                    'aws s3 sync ./website-terms-and-conditions/ s3://$sourceBucketName/ --delete',
+                    "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'",
+                ],
+                envFromCfnOutputs: {
+                    sourceBucketName: infrastructure.termAndConditionsSourceBucketName,
+                    distributionId: infrastructure.termAndConditionsDistributionId,
                 },
                 rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
             })

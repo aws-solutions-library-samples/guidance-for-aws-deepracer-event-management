@@ -2,7 +2,6 @@ import { EventLinksButtons } from '../../components/eventLinksButtons';
 import { Flag } from '../../components/flag';
 import awsconfig from '../../config.json';
 import i18next from '../../i18n';
-import { GetQrCodeOptionFromBoolean } from './leaderboardConfig';
 import {
   GetRaceResetsNameFromId,
   GetRaceTypeNameFromId,
@@ -74,10 +73,6 @@ export const VisibleContentOptions = () => {
         {
           id: 'eventLandingPageLink',
           label: i18next.t('events.landing-page-link'),
-        },
-        {
-          id: 'qrCodeIsVisible',
-          label: i18next.t('events.leaderboard.qr-code-header'),
         },
       ],
     },
@@ -168,7 +163,7 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
           <EventLinksButtons
             href={`${
               awsconfig.Urls.leaderboardWebsite
-            }/leaderboard/${item.eventId.toString()}/?qr=true`}
+            }/leaderboard/${item.eventId.toString()}/?qr=true&scroll=true`}
             linkTextPrimary={i18next.t('events.leaderboard-link-same-tab')}
             linkTextExternal={i18next.t('events.leaderboard-link-new-tab')}
           />
@@ -192,13 +187,7 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
       cell: (item) =>
         (
           <EventLinksButtons
-            href={
-              awsconfig.Urls.streamingOverlayWebsite +
-              '/?' +
-              'event=' +
-              item.eventId.toString() +
-              '&chroma=1'
-            }
+            href={`${awsconfig.Urls.streamingOverlayWebsite}/${item.eventId.toString()}?chroma=1`}
             linkTextPrimary={i18next.t('events.streaming-overlay-link-chroma-same-tab')}
             linkTextExternal={i18next.t('events.streaming-overlay-link-chroma-new-tab')}
           />
@@ -215,11 +204,6 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
             linkTextExternal={i18next.t('events.landing-page-link-new-tab')}
           />
         ) || '-',
-    },
-    {
-      id: 'qrCodeIsVisible',
-      header: i18next.t('events.leaderboard.qr-code-header'),
-      cell: (item) => GetQrCodeOptionFromBoolean(item.qrCodeVisible) || '-',
     },
   ];
 };

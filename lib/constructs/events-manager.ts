@@ -126,7 +126,13 @@ export class EventsManager extends Construct {
 
         // Define API Schema
         const trackTypeMethodEnum = new EnumType('TrackType', {
-            definition: ['REINVENT_2018', 'REINVENT_2019', 'SUMMIT_SPEEDWAY', 'OTHER'],
+            definition: [
+                'REINVENT_2018',
+                'REINVENT_2019',
+                'SUMMIT_SPEEDWAY',
+                'ATOZ_SPEEDWAY',
+                'OTHER',
+            ],
         });
         props.appsyncApi.schema.addType(trackTypeMethodEnum);
 
@@ -200,7 +206,7 @@ export class EventsManager extends Construct {
                 createdAt: GraphqlType.awsDateTime(),
                 createdBy: GraphqlType.id(),
                 eventName: GraphqlType.string(),
-                typeOfEvent: typeOfEventEnum.attribute({ isRequired: true }),
+                typeOfEvent: typeOfEventEnum.attribute(),
                 eventDate: GraphqlType.awsDate(),
                 fleetId: GraphqlType.id(),
                 countryCode: GraphqlType.string(),
@@ -228,7 +234,6 @@ export class EventsManager extends Construct {
             new ResolvableField({
                 args: {
                     eventName: GraphqlType.string({ isRequired: true }),
-                    createdBy: GraphqlType.id({ isRequired: true }),
                     typeOfEvent: typeOfEventEnum.attribute({ isRequired: true }),
                     tracks: trackInputType.attribute({ isRequiredList: true }),
                     eventDate: GraphqlType.awsDate(),
@@ -236,12 +241,7 @@ export class EventsManager extends Construct {
                     countryCode: GraphqlType.string(),
                 },
                 returnType: eventObjectType.attribute(),
-                dataSource: eventsDataSourceDdb,
-                requestMappingTemplate: appsync.MappingTemplate.dynamoDbPutItem(
-                    appsync.PrimaryKey.partition('eventId').auto(),
-                    appsync.Values.projecting()
-                ),
-                responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultItem(),
+                dataSource: eventsDataSource,
                 directives: [Directive.cognito('admin', 'operator')],
             })
         );

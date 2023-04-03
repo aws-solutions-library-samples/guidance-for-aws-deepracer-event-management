@@ -1,5 +1,4 @@
 import { Button, Form, SpaceBetween } from '@cloudscape-design/components';
-import { Auth } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -37,9 +36,7 @@ export const CreateFleet = () => {
   };
 
   const onCreateHandler = async () => {
-    const user = await Auth.currentAuthenticatedUser();
-    const payload = { ...fleetConfig, createdBy: user.attributes.sub };
-    send('addFleet', payload);
+    send('addFleet', fleetConfig);
     send('carUpdates', {
       resourceIds: fleetConfig.carIds,
       fleetId: fleetConfig.fleetId,

@@ -4,8 +4,9 @@
 ## ----------------------------------------------------------------------------
 
 ## CONSTANTS
-dremSrcPath = 'website/src'
+dremSrcPath := website/src
 leaderboardSrcPath := website-leaderboard/src
+overlaysSrcPath := website-stream-overlays/src
 
 ## ----------------------------------------------------------------------------
 help:			## Show this help.
@@ -26,12 +27,12 @@ local.install:		## Install Python and Javascript dependencies + Generate Config 
 	npm install
 	npm install --prefix website
 	npm install --prefix website-leaderboard
+	npm install --prefix website-stream-overlays
 
 local.config:		## Setup local config based on branch
 	echo "{}" > ${dremSrcPath}/config.json
 	branch=`cat branch.txt` && aws cloudformation describe-stacks --stack-name drem-backend-$$branch-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
 	python scripts/generate_amplify_config_cfn.py
-	python scripts/update_index_html_with_script_tag_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $$appsyncId --format SDL ./$(dremSrcPath)/graphql/schema.graphql
 	pushd $(dremSrcPath)/graphql/ && amplify codegen; popd
 
@@ -40,18 +41,25 @@ local.config:		## Setup local config based on branch
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $$appsyncId --format SDL $(leaderboardSrcPath)/graphql/schema.graphql
 	pushd $(leaderboardSrcPath)/graphql/ && amplify codegen; popd
 
+	echo "{}" > $(overlaysSrcPath)/config.json
+	python scripts/generate_stream_overlays_amplify_config_cfn.py
+	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $$appsyncId --format SDL $(overlaysSrcPath)/graphql/schema.graphql
+	pushd $(overlaysSrcPath)/graphql/ && amplify codegen; popd
+
 local.run:		## Run the frontend application locally for development
 	PORT=3000 npm start --prefix website
 
 local.run-leaderboard:		## Run the frontend application locally for development
 	PORT=3001 npm start --prefix website-leaderboard
 
-# local.run-overlays:		## Run the frontend application locally for development
-# 	PORT=3002 npm start --prefix website-stream-overlays
+local.run-overlays:		## Run the frontend application locally for development
+	PORT=3002 npm start --prefix website-stream-overlays
 
 .PHONY: local.clean
 local.clean:		## Remove local packages and modules
 	pip freeze | grep -v "^-e" | xargs pip uninstall -y
 	rm -rf website/node_modules
+	rm -rf website-leaderboard/node_modules
+	rm -rf website-stream-overlays/node_modules
 
 .NOTPARALLEL:

@@ -15,6 +15,9 @@ export interface CwRumAppMonitorProps {
 
 export class CwRumAppMonitor extends Construct {
     public readonly script: string;
+    public readonly id: string;
+    public readonly config: string;
+
     constructor(scope: Construct, id: string, props: CwRumAppMonitorProps) {
         super(scope, id);
 
@@ -127,8 +130,17 @@ export class CwRumAppMonitor extends Construct {
 
         this.script = rumScript;
         // this.name = cfn_app_monitor.ref // TODO is this export needed?
-        // this.name = cfn_app_monitor.ref // TODO is this export needed?
-        // this.id = rum_appMonitorId // TODO is this export needed?
-        // this.script = rum_script // TODO is this export needed?
+        this.id = appMonitorId; // TODO is this export needed?
+
+        const rumConfig = `{
+            "sessionSampleRate": ${sessionSampleRate},
+            "guestRoleArn": "${rum_id_pool_unauth_user_role.roleArn}",
+            "identityPoolId": "${rum_identity_pool.ref}",
+            "endpoint": "https://dataplane.rum.eu-west-1.amazonaws.com",
+            "telemetries": [${telemetries}],
+            "allowCookies": ${allowCookies},
+            "enableXRay": ${enableXray}
+        }`;
+        this.config = rumConfig;
     }
 }

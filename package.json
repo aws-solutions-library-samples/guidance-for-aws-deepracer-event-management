@@ -8,7 +8,8 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "postinstall": "(cd website-leaderboard && npm install); (cd website-stream-overlays && npm install); (cd website && npm install)" 
   },
   "eslintConfig": {
     "extends": [

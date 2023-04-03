@@ -11,6 +11,7 @@ import {
 import React, { useRef, useState } from 'react';
 
 import { useMachine } from '@xstate/react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageLayout } from '../../../components/pageLayout';
 import useCounter from '../../../hooks/useCounter';
@@ -39,7 +40,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
   const [btnCaptureLap, setBtnCaptureLap] = useState(true);
   const [btnUndoReset, setBtnUndoReset] = useState(true);
   const [btnUndoFalseFinish, setBtnUndoFalseFinish] = useState(true);
-  const [btnEndRace, setBtnEndRace] = useState(true);
+  const [btnEndRace, setBtnEndRace] = useState(false);
   const [btnStartRace, setBtnStartRace] = useState(false);
 
   const [
@@ -52,6 +53,11 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
   const lapTimerRef = useRef();
   const raceTimerRef = useRef();
   const [PublishOverlay] = usePublishOverlay();
+
+  //populate the laps on page refresh, without this laps array in the overlay is empty
+  useEffect(() => {
+    lapsForOverlay.current = raceInfo.laps;
+  }, []);
 
   const [, send] = useMachine(stateMachine, {
     actions: {
@@ -172,6 +178,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
     updatedLap.isValid = !updatedLap.isValid;
     lapsCopy[id] = updatedLap;
 
+    lapsForOverlay.current = lapsCopy;
     setRaceInfo({ laps: lapsCopy });
   };
 

@@ -3,7 +3,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFleetsContext } from '../../../store/storeProvider';
 import { GetTypeOfEventNameFromId } from '../eventDomain';
-import { GetQrCodeLabelFromBoolean } from '../leaderboardConfig';
 import {
   GetRaceResetsNameFromId,
   GetRankingNameFromId,
@@ -40,7 +39,7 @@ const EventDetailsPanel = ({ event, i18nStrings }) => {
         </Grid>
         <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }, { colspan: 12 }]}>
           {attributeField(t('events.event-date'), event.eventDate)}
-          {attributeField(t('events.country'), event.country)}
+          {attributeField(t('events.country'), event.countryCode)}
           {attributeField(t('events.fleet-info.label'), getFleetNameFromId(event.fleetId))}
         </Grid>
         <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }, { colspan: 12 }, { colspan: 12 }]}>
@@ -58,7 +57,7 @@ const EventDetailsPanel = ({ event, i18nStrings }) => {
             GetRaceResetsNameFromId(event.tracks[0].raceConfig.numberOfResetsPerLap)
           )}
         </Grid>
-        <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }, { colspan: 12 }]}>
+        <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }]}>
           {attributeField(
             t('events.leaderboard.header'),
             event.tracks[0].leaderboardConfig.headerText
@@ -66,10 +65,6 @@ const EventDetailsPanel = ({ event, i18nStrings }) => {
           {attributeField(
             t('events.leaderboard.footer'),
             event.tracks[0].leaderboardConfig.footerText
-          )}
-          {attributeField(
-            t('events.leaderboard.qr-code-header'),
-            GetQrCodeLabelFromBoolean(event.tracks[0].leaderboardConfig.qrCodeVisible)
           )}
         </Grid>
       </ColumnLayout>

@@ -19,16 +19,15 @@
 }
 
 #dnf {
-  background-color: #161e2d;
-  color: ;
+  background-color: #232f3e;
 }
 
 #dnf:hover, #dnf:focus {
-  background-color: #161e2d;
+  background-color: #1c2532;
 }
 
 #dnf:active {
-  background-color: #161e2d;
+  background-color: #161e2a;
   transition: 0.5s;
   position:relative;
   top:2px;
@@ -40,15 +39,15 @@
 }
 
 #carreset {
-  background-color: #003181;
+  background-color: #2074d5;
 }
 
 #carreset:hover, #carreset:focus {
-  background-color: #003181;
+  background-color: #2864c8;
 }
 
 #carreset:active {
-  background-color: #003181;
+  background-color: #1F59B8;
   transition: 0.5s;
   position:relative;
   top:2px;
@@ -64,11 +63,11 @@
 }
 
 #capturelap:hover, #capturelap:focus {
-  background: #ff9900;
+  background: #e68e22;
 }
 
 #capturelap:active {
-  background: #ff9900;
+  background: #db8113;
   transition: 0.5s;
   position:relative;
   top:2px;
@@ -80,15 +79,15 @@
 }
 
 #undoreset {
-  background-color: #ffc107;
+  background-color: #fbd8bf;
 }
 
 #undoreset:hover, #undoreset:focus {
-  background-color: #ffca2c;
+  background-color: #e9c6a9;
 }
 
 #undoreset:active {
-  background-color: #ffca2c;
+  background-color: #d8b293;
   transition: 0.5s;
   position:relative;
   top:2px;
@@ -104,11 +103,11 @@
 }
 
 #undofalsefinish:hover, #undofalsefinish:focus {
-  background-color: #d4dada;
+  background-color: #ced0d0;
 }
 
 #undofalsefinish:active {
-  background-color: #d4dada;
+  background-color: #c1c3c3;
   transition: 0.5s;
   position:relative;
   top:2px;
@@ -124,11 +123,11 @@
 }
 
 #endrace:hover, #endrace:focus {
-  background-color: #161e2d;
+  background-color: #121825;
 }
 
 #endrace:active {
-  background-color: #161e2d;
+  background-color: #0b0f18;
   transition: 0.5s;
   position:relative;
   top:2px;
@@ -148,11 +147,11 @@
 }
 
 #startrace:hover, #startrace:focus {
-  background-color: #ff9900;
+  background-color: #e68e22;
 }
 
 #startrace:active {
-  background-color: #ff9900;
+  background-color: #db8113;
   transition: 0.5s;
   position:relative;
   top:2px;

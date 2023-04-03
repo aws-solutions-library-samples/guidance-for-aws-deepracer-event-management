@@ -17,6 +17,7 @@ import { EventsManager } from './constructs/events-manager';
 import { FleetsManager } from './constructs/fleets-manager';
 import { GroupManager } from './constructs/group-manager';
 import { LabelPrinter } from './constructs/label-printer';
+import { LandingPageManager } from './constructs/landing-page';
 import { Leaderboard } from './constructs/leaderboard';
 import { ModelsManager } from './constructs/models-manager';
 import { RaceManager } from './constructs/race-manager';
@@ -24,7 +25,6 @@ import { RestApi } from './constructs/rest-api';
 import { StreamingOverlay } from './constructs/streaming-overlay';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
-import { LandingPageManager } from './constructs/landing-page';
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
     branchName: string;
@@ -38,6 +38,7 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
     userPoolClientWeb: UserPoolClient;
     cloudfrontDistribution: IDistribution;
     tacCloudfrontDistribution: IDistribution;
+    tacSourceBucket: IBucket;
     logsBucket: IBucket;
     lambdaConfig: {
         // TODO Break out to it´s own class/struct etc
@@ -61,6 +62,8 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     public readonly leaderboardSourceBucketName: cdk.CfnOutput;
     public readonly streamingOverlayDistributionId: cdk.CfnOutput;
     public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
+    public readonly tacWebsitedistributionId: cdk.CfnOutput;
+    public readonly tacSourceBucketName: cdk.CfnOutput; // this is missing
 
     constructor(scope: Construct, id: string, props: DeepracerEventManagerStackProps) {
         super(scope, id, props);
@@ -155,6 +158,10 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             userPoolId: props.userPool.userPoolId,
             userPoolArn: props.userPool.userPoolArn,
             eventbus: props.eventbus,
+        });
+
+        const cwRumLeaderboardAppMonitor = new CwRumAppMonitor(this, 'CwRumLeaderboardAppMonitor', {
+            domainName: leaderboard.distribution.distributionDomainName,
         });
 
         const landingPage = new LandingPageManager(this, 'LandingPageManager', {
@@ -292,6 +299,15 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         new cdk.CfnOutput(this, 'tacWebsite', {
             value: 'https://' + props.tacCloudfrontDistribution.distributionDomainName,
         });
+        this.tacWebsitedistributionId = new cdk.CfnOutput(this, 'tacWebsitedistributionId', {
+            value: props.tacCloudfrontDistribution.distributionId,
+        });
+        new cdk.CfnOutput(this, 'tacWebsitedistributionName', {
+            value: props.tacCloudfrontDistribution.distributionDomainName,
+        });
+        this.tacSourceBucketName = new cdk.CfnOutput(this, 'tacSourceBucketName', {
+            value: props.tacSourceBucket.bucketName,
+        });
 
         this.distributionId = new cdk.CfnOutput(this, 'distributionId', {
             value: props.cloudfrontDistribution.distributionId,
@@ -346,6 +362,22 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
         new cdk.CfnOutput(this, 'rumScript', {
             value: cwRumAppMonitor.script,
+        });
+
+        new cdk.CfnOutput(this, 'cwRumAppMonitorId', {
+            value: cwRumAppMonitor.id,
+        });
+
+        new cdk.CfnOutput(this, 'cwRumAppMonitorConfig', {
+            value: cwRumAppMonitor.config,
+        });
+
+        new cdk.CfnOutput(this, 'cwRumLeaderboardAppMonitorId', {
+            value: cwRumLeaderboardAppMonitor.id,
+        });
+
+        new cdk.CfnOutput(this, 'cwRumLeaderboardAppMonitorConfig', {
+            value: cwRumLeaderboardAppMonitor.config,
         });
 
         new cdk.CfnOutput(this, 'appsyncId', { value: appsyncApi.apiId });

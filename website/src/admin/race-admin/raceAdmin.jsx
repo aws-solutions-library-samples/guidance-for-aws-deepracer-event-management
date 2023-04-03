@@ -185,9 +185,9 @@ const RaceAdmin = () => {
             </SpaceBetween>
           </Box>
         }
-        header={t('events.delete-event')}
+        header={t('race-admin.delete-races')}
       >
-        {t('events.delete-warning')}: <br></br>{' '}
+        {t('race-admin.delete-race-warning')}: <br></br>{' '}
         {SelectedRacesInTable.map((selectedRace) => {
           return selectedRace.raceId + ' ';
         })}

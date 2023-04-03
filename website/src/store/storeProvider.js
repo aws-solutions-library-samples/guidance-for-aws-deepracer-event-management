@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { event } from '../admin/events/eventDomain';
 import { useCarsApi } from '../hooks/useCarsApi';
@@ -51,13 +51,24 @@ export function useUsersContext() {
 export const StoreProvider = (props) => {
   const { t } = useTranslation();
   const permissions = usePermissionsContext();
-  console.info(permissions);
+
   const [events, eventsIsLoading] = useEventsApi(permissions.api.events);
   const [users, usersIsLoading] = useUsersApi(permissions.api.users);
   const [fleets, fleetsIsLoading] = useFleetsApi(permissions.api.fleets);
   const [cars, carsIsLoading] = useCarsApi(permissions.api.cars);
 
   const [selectedEvent, setSelectedEvent] = useLocalStorage('DREM-selected-event', defaultEvent(t));
+
+  //reset selected event if event is deleted
+  useEffect(() => {
+    if ('eventId' in selectedEvent && eventsIsLoading === false) {
+      const index = events.findIndex((event) => event.eventId === selectedEvent.eventId);
+      if (index === -1) {
+        console.info('reset selected event');
+        setSelectedEvent(defaultEvent(t));
+      }
+    }
+  }, [events, selectedEvent, t, eventsIsLoading, setSelectedEvent]);
 
   const getUserNameFromId = (userId) => {
     if (userId == null) return;
