@@ -145,6 +145,7 @@ export const RaceSetupPage = ({ onNext }) => {
               config: selectedEvent.tracks[race.trackId - 1].raceConfig,
             };
             raceDetails.config['eventName'] = selectedEvent.eventName;
+            raceDetails.race['eventId'] = selectedEvent.eventId;
             raceDetails.race['laps'] = [];
             onNext(raceDetails);
           }}
