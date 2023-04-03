@@ -95,10 +95,11 @@ const ActualRacerStats = () => {
         .filter((lap) => lap.isValid === true)
         .sort((a, b) => a.time > b.time);
 
-      SetFastesRacerTime(lapsSorted[0] || {});
-      SetSlowestRacerTime(lapsSorted.pop() || {});
       SetLapsCount(lapCount);
       SetInvalidCount(lapCount - lapsSorted.length);
+      
+      SetFastesRacerTime(lapsSorted[0] || {});
+      SetSlowestRacerTime(lapsSorted.pop() || {});
     }
 
     const calculateOfftrackInformation = (laps) => {
