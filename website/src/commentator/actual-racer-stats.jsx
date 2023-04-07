@@ -28,7 +28,7 @@ const ActualRacerStats = () => {
   const [actualLapTime, SetActualLapTime] = useState(0);
 
   const [restsSum, SetRestsSum] = useState('-');
-  const [avaerageResetsPerLap, SetAverageResetsPerLap] = useState('-');
+  const [averageResetsPerLap, SetAverageResetsPerLap] = useState('-');
   const [racesCount, SetRacesCount] = useState(0);
 
   const [subscription, SetSubscription] = useState();
@@ -104,13 +104,13 @@ const ActualRacerStats = () => {
 
       const validLaps = laps.filter((lap) => lap.isValid === true);
       const resets = validLaps.reduce((count, lap) => count + lap.resets, 0);
-      const avaerageResetsPerLap =
+      const averageResetsPerLap =
         resets > 0 && validLaps.length > 0 ? resets / validLaps.length : 0;
 
       SetRestsSum(resets);
-      SetAverageResetsPerLap(avaerageResetsPerLap.toFixed(1));
+      SetAverageResetsPerLap(averageResetsPerLap.toFixed(1));
       console.log('Resets: ' + resets);
-      console.log('Average Resets: ' + avaerageResetsPerLap);
+      console.log('Average Resets: ' + averageResetsPerLap);
     }
   };
 
@@ -213,7 +213,7 @@ const ActualRacerStats = () => {
             <ColumnLayout columns={2}>
               <ValueWithLabel label={t('commentator.race.restSum')}>{restsSum}</ValueWithLabel>
               <ValueWithLabel label={t('commentator.race.averageResetsPerLap')}>
-                {avaerageResetsPerLap}
+                {averageResetsPerLap}
               </ValueWithLabel>
             </ColumnLayout>
           </ColumnLayout>
