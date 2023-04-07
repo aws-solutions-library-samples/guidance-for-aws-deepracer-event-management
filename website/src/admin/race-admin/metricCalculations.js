@@ -27,6 +27,8 @@ const getRaceSummary = (lapsPerRace) => {
 };
 
 export const calculateMetrics = (races) => {
+  const uniqueRacers = [...new Set(races.map((a) => a.username))];
+  const uniqueRacersCount = uniqueRacers.length;
   const lapsPerRace = races.map((race) => race.laps);
   const summary = getRaceSummary(lapsPerRace);
   const numberOfRaces = races.length;
@@ -39,5 +41,6 @@ export const calculateMetrics = (races) => {
     avgLapTime: parseInt(summary.timeSum / summary.laps),
     fastestLap: summary.fasestTime,
     slowestLap: summary.slowestTime,
+    uniqueRacersCount: uniqueRacersCount,
   };
 };

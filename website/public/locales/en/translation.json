@@ -218,7 +218,8 @@
   "race-admin.multi-select.avg-laps-per-race": "Avg laps per race",
   "race-admin.multi-select.avg-lap-time": "Avg lap time",
   "race-admin.multi-select.fastest-lap-time": "Fastest lap time",
-  "race-admin.multi-select.sloweest-lap-time": "Slowest lap time",
+  "race-admin.multi-select.slowest-lap-time": "Slowest lap time",
+  "race-admin.multi-select.unique-racer-count": "Unique racer count",
   "race-admin.multi-select.header": "races selected",
 
   "fleets.create-fleet": "Create fleet",
