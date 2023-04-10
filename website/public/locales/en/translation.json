@@ -172,6 +172,7 @@
   "events.race.ranking.best-lap-time": "Best lap time",
   "events.race.ranking.average-lap-time": "Average lap time",
   "events.race.ranking.finish-x-laps": "Finish x laps",
+  "events.race.race-customisations": "Race customisations",
 
   "events.fleet-info.label": "Car Fleet",
   "events.fleet-info.description": "Select the fleet of cars to use for the event.",
