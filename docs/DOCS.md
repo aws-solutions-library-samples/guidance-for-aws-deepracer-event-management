@@ -48,7 +48,7 @@ All tables can be filtered and support pagination where there are more entries a
 
 ![Name fleet](./images/drem-fleets-create-1.png)
 
-3. Give you fleet a name, and if you already have cars activiated with DREM you can add them to the fleet (you can also add / remove to the fleet later if you wish)
+3. Give your fleet a name, and if you already have cars activiated with DREM you can add them to the fleet (you can also add / remove to the fleet later if you wish)
 
 4. Press "Create fleet" to complete the process
 
@@ -71,6 +71,14 @@ All tables can be filtered and support pagination where there are more entries a
 ![Edit fleet](./images/drem-fleets-edit-2.png)
 
 ### Delete a fleet
+
+1. Select the fleet you want to delete
+
+2. Once you have selected a fleet the "Delete" button is enabled. Should you need to you can also select more than one fleet
+
+![Delete fleet](./images/drem-fleets-edit-1.png)
+
+3. You'll be promted to confirm that you want to delete the fleet, clicking "Delete" will remove the selected fleets from DREM and you'll be returned to the "Fleets admin" screen
 
 ## FAQ
 
