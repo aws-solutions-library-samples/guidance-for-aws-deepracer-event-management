@@ -21,12 +21,7 @@ export const getPermissions = (groups) => {
   let permissions = defaultPermissions;
 
   // set topNavItems permissions
-  if (
-    groups.includes('admin') ||
-    groups.includes('operator') ||
-    groups.includes('commentator') ||
-    groups.includes('registration')
-  ) {
+  if (groups.includes('admin') || groups.includes('operator') || groups.includes('commentator')) {
     permissions.topNavItems.eventSelection = true;
   }
 
@@ -69,6 +64,12 @@ export const getPermissions = (groups) => {
       events: true,
       users: true,
       cars: true,
+    };
+  } else if (groups.includes('registration')) {
+    const apiPermissions = { ...permissions.api };
+    permissions.api = {
+      ...apiPermissions,
+      users: true,
     };
   }
 
