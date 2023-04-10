@@ -29,16 +29,20 @@ DREM homepage when logged in as an admin user
 
 ## General interface notes
 
-All tables can be filtered and support pagination where there are more entries available. Clicking on the settings cog next to the pagination information for the table will open a modal presenting options to personalise the page size
+All tables can be filtered and support pagination where there are more entries available. Clicking on the settings cog next to the pagination information for the table will open a modal presenting options to personalise the page size. Filtering works across all visible columns for the table data.
 
-## Fleets
+# Operator
+
+## Car management
+
+### Fleets
 
 -   Permissions required: Admin, Operator
 -   Navigation path: Operator -> Car management -> Fleets
 
 ![Fleets admin](./images/drem-fleets-admin.png)
 
-### Create a fleet
+#### Create a fleet
 
 1. To create a new fleet click "Create" at the top of the table on the right hand side side
 
@@ -58,7 +62,7 @@ All tables can be filtered and support pagination where there are more entries a
 
 ![List of fleets](./images/drem-fleets-create-3.png)
 
-### Edit a fleet
+#### Edit a fleet
 
 1. Select the fleet you want to edit
 
@@ -70,7 +74,7 @@ All tables can be filtered and support pagination where there are more entries a
 
 ![Edit fleet](./images/drem-fleets-edit-2.png)
 
-### Delete a fleet
+#### Delete a fleet
 
 1. Select the fleet you want to delete
 
@@ -79,6 +83,44 @@ All tables can be filtered and support pagination where there are more entries a
 ![Delete fleet](./images/drem-fleets-edit-1.png)
 
 3. You'll be promted to confirm that you want to delete the fleet, clicking "Delete" will remove the selected fleets from DREM and you'll be returned to the "Fleets admin" screen
+
+### Cars
+
+### Car activation
+
+## Event management
+
+### Events
+
+-   Permissions required: Admin, Operator
+-   Navigation path: Operator -> Event management -> Events
+
+![Events admin](./images/drem-events-admin.png)
+
+### Create an event
+
+1. To create a new event click "Create" at the top of the table on the right hand side
+
+![Create event](./images/drem-events-create.png)
+
+2. This will start the create event process and you'll be presented with the form below
+
+![Create event](./images/drem-events-create-1.png)
+
+3. Below is a completed example for the 2023 London Summit. **note:** Race customizations is closed by default
+
+![Create event](./images/drem-events-create-2.png)
+
+4. Once you have filled in all of the event information click "Click event" The event will be created and you will be return to the list of events with the newly created event visible in the list
+
+![Create event](./images/drem-events-create-3.png)
+
+### Manage race
+
+-   Permissions required: Admin, Operator
+-   Navigation path: Operator -> Event management -> Events
+
+![Events admin](./images/drem-race-admin.png)
 
 ## FAQ
 
