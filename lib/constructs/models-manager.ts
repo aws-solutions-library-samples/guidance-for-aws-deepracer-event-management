@@ -194,34 +194,8 @@ export class ModelsManager extends Construct {
             },
         });
 
-        // Models Function
-        const models_function = new lambdaPython.PythonFunction(this, 'get_models_function', {
-            entry: 'lib/lambdas/get_models_function/',
-            index: 'index.py',
-            handler: 'lambda_handler',
-            timeout: Duration.minutes(1),
-            runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
-            memorySize: 128,
-            architecture: props.lambdaConfig.architecture,
-            environment: {
-                bucket: modelsBucket.bucketName,
-                POWERTOOLS_SERVICE_NAME: 'get_models',
-                LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
-            },
-            bundling: {
-                image: props.lambdaConfig.bundlingImage,
-            },
-            layers: [
-                props.lambdaConfig.layersConfig.helperFunctionsLayer,
-                props.lambdaConfig.layersConfig.powerToolsLayer,
-            ],
-        });
-
-        // Permissions for s3 bucket read
-        modelsBucket.grantRead(models_function, 'private/*');
-
         // Quarantine Models Function
+        // TODO use graphql for quarantined models
         const quarantined_models_function = new lambdaPython.PythonFunction(
             this,
             'get_quarantined_models_function',
@@ -438,7 +412,7 @@ export class ModelsManager extends Construct {
         modelsBucket.grantReadWrite(models_md5_handler, 'private/*');
 
         const models_handler = new lambdaPython.PythonFunction(this, 'modelsFunction', {
-            entry: 'lib/lambdas/models_function/',
+            entry: 'lib/lambdas/models_api/',
             description: 'Models resolver',
             index: 'index.py',
             handler: 'lambda_handler',
@@ -451,6 +425,7 @@ export class ModelsManager extends Construct {
                 DDB_TABLE: models_table.tableName,
                 POWERTOOLS_SERVICE_NAME: 'models resolver',
                 LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+                MODELS_S3_BUCKET: modelsBucket.bucketName,
             },
             bundling: {
                 image: props.lambdaConfig.bundlingImage,
@@ -462,6 +437,7 @@ export class ModelsManager extends Construct {
         });
 
         models_table.grantReadWriteData(models_handler);
+        modelsBucket.grantRead(models_handler, 'private/*');
 
         // Define the data source for the API
         const models_dataSource = props.appsyncApi.api.addLambdaDataSource(
@@ -491,6 +467,7 @@ export class ModelsManager extends Construct {
             new ResolvableField({
                 returnType: model_object_type.attribute({ isList: true }),
                 dataSource: models_dataSource,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -502,6 +479,7 @@ export class ModelsManager extends Construct {
                 },
                 returnType: model_object_type.attribute({ isList: true }),
                 dataSource: models_dataSource,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -579,11 +557,6 @@ export class ModelsManager extends Construct {
             new apig.LambdaIntegration(quarantined_models_function),
             { authorizationType: apig.AuthorizationType.IAM }
         );
-
-        const api_models = props.restApi.api.root.addResource('models');
-        api_models.addMethod('GET', new apig.LambdaIntegration(models_function), {
-            authorizationType: apig.AuthorizationType.IAM,
-        });
 
         const api_cars = props.restApi.api.root.addResource('cars');
 

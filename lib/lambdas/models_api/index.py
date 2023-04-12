@@ -22,6 +22,10 @@ region = session.region_name or "eu-west-1"
 graphql_endpoint = os.environ.get("APPSYNC_URL", None)
 
 
+client_s3 = boto3.client("s3")
+bucket = os.environ["MODELS_S3_BUCKET"]
+
+
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
 @tracer.capture_lambda_handler
 def lambda_handler(event, context):
@@ -30,11 +34,37 @@ def lambda_handler(event, context):
 
 @app.resolver(type_name="Query", field_name="getAllModels")
 def getAllModels():
-    response = ddbTable.scan()
-    logger.info(response)
-    items = response["Items"]
-    logger.info(items)
-    return items
+    # TODO merge data from s3 and ddb
+    try:
+        s3_response = client_s3.list_objects_v2(
+            Bucket=bucket,
+            Prefix="private/",
+        )
+        if "Contents" in s3_response:
+            s3_contents = s3_response["Contents"]
+
+            table_response = ddbTable.scan()
+            table_items = table_response["Items"]
+
+            sorted_table_items = sorted(
+                table_items, key=lambda d: d["uploadedDateTime"], reverse=True
+            )
+
+            ddb_items_dict = {}
+            for item in sorted_table_items:
+                ddb_items_dict[item["modelKey"]] = item
+
+            merged_items = []
+            for s3_model in s3_contents:
+                s3_key = s3_model["Key"]
+
+                if s3_key in ddb_items_dict:
+                    merged_items.append(ddb_items_dict[s3_key])
+
+            return merged_items
+
+    except Exception as error:
+        logger.exception(error)
 
 
 @app.resolver(type_name="Query", field_name="getModelsForUser")

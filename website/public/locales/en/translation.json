@@ -360,6 +360,10 @@
   "models.upload-date": "Upload date",
   "models.user-name": "User name",
   "models.we-cant-find-a-match": "We can't find a match",
+  "models.model-id": "ID",
+  "models.md5-hash": "Model MD5",
+  "models.md5-hash-metadata": "Metadata MD5",
+  "models.model-s3-key": "S3 Key",
 
   "quarantine.breadcrumb": "Quarantined models",
   "quarantine.header": "Quarantined models",
