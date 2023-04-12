@@ -4,7 +4,7 @@ import Cards from '@cloudscape-design/components/cards';
 import * as React from 'react';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import Logo from '../assets/logo.png';
+import Logo from '../assets/logo512.png';
 import awsconfig from '../config.json';
 import styles from './landingPage.module.css';
 

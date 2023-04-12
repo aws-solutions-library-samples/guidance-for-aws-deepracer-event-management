@@ -19,6 +19,7 @@ const LeaderboardWrapper = () => {
 
   let showQRcode = queryParams.get('qr');
   if (showQRcode === null || showQRcode === 'false') showQRcode = false;
+  console.log(`showQRcode: ${showQRcode}`)
 
   let scroll = queryParams.get('scroll');
   console.info(scroll);
