@@ -41,47 +41,52 @@ dayjs.extend(timezone);
 const AdminModels = () => {
   const { t } = useTranslation();
 
-  const [allItems, setItems] = useState([]);
+  const [allModels, setAllModels] = useState([]);
   const [cars, setCars] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedModelsBtn, setSelectedModelsBtn] = useState(true);
 
+  async function getCarsOnline() {
+    console.log('Collecting cars...');
+    // Get CarsOnline
+    const response = await API.graphql({
+      query: queries.carsOnline,
+      variables: { online: true },
+    });
+    setCars(response.data.carsOnline);
+  }
+  async function getModels() {
+    console.log('Collecting models...');
+    const response = await API.graphql({
+      query: queries.getAllModels,
+    })
+    console.log(response);
+    const models_response = response.data.getAllModels;
+    const models = models_response.map(function (model, i) {
+      const modelKeyPieces = model.modelKey.split('/');
+      return {
+        key: model.modelKey,
+        userName: modelKeyPieces[modelKeyPieces.length - 3],
+        modelName: modelKeyPieces[modelKeyPieces.length - 1],
+        modelDate: dayjs(model.uploadedDateTime).format('YYYY-MM-DD HH:mm:ss (z)'),
+        ...model
+      };
+    });
+    setAllModels(models);
+  }
+
+
   useEffect(() => {
-    async function getData() {
-      console.log('Collecting models...');
-      const apiName = 'deepracerEventManager';
-      const apiPath = 'models';
+    getModels();
+    setIsLoading(false);
 
-      const response = await API.get(apiName, apiPath);
-      var models = response.map(function (model, i) {
-        // TODO: Fix inconsistency in model.Key / model.key in /admin/model.js and /models.js
-        const modelKeyPieces = model.Key.split('/');
-        return {
-          key: model.Key,
-          userName: modelKeyPieces[modelKeyPieces.length - 3],
-          modelName: modelKeyPieces[modelKeyPieces.length - 1],
-          modelDate: dayjs(model.LastModified).format('YYYY-MM-DD HH:mm:ss (z)'),
-        };
-      });
-      setItems(models);
-      console.log(allItems);
+    return () => {
+      // Unmounting
+    };
+  }, []);
 
-      console.log('Collecting cars...');
-      // Get CarsOnline
-      async function carsOnline() {
-        const response = await API.graphql({
-          query: queries.carsOnline,
-          variables: { online: true },
-        });
-        setCars(response.data.carsOnline);
-      }
-      carsOnline();
-
-      setIsLoading(false);
-    }
-    console.log(cars);
-    getData();
-
+  useEffect(() => {
+    getCarsOnline();
     return () => {
       // Unmounting
     };
@@ -95,7 +100,7 @@ const AdminModels = () => {
   const adminModelsColsConfig = AdminModelsColumnsConfig();
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(allItems, {
+    useCollection(allModels, {
       filtering: {
         empty: (
           <EmptyState title={t('models.no-models')} subtitle={t('models.no-models-to-display')} />
@@ -121,6 +126,10 @@ const AdminModels = () => {
       label: t('models.model-information'),
       options: [
         {
+          id: 'modelId',
+          label: t('models.model-id'),
+        },
+        {
           id: 'userName',
           label: t('models.user-name'),
           editable: false,
@@ -133,6 +142,18 @@ const AdminModels = () => {
         {
           id: 'modelDate',
           label: t('models.upload-date'),
+        },
+        {
+          id: 'modelMD5Hash',
+          label: t('models.md5-hash'),
+        },
+        {
+          id: 'modelMetadataMD5Hash',
+          label: t('models.md5-hash-metadata'),
+        },
+        {
+          id: 'modelS3Key',
+          label: t('models.model-s3-key'),
         },
       ],
     },
@@ -154,8 +175,8 @@ const AdminModels = () => {
           <Header
             counter={
               selectedItems.length
-                ? `(${selectedItems.length}/${allItems.length})`
-                : `(${allItems.length})`
+                ? `(${selectedItems.length}/${allModels.length})`
+                : `(${allModels.length})`
             }
             actions={
               <SpaceBetween direction="horizontal" size="xs">

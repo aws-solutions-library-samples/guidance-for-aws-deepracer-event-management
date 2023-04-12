@@ -202,11 +202,10 @@ export function UserModelsColumnsConfig() {
 export function AdminModelsColumnsConfig() {
   const rowHeaders = [
     {
-      id: 'id',
-      header: 'id',
-      cell: (item) => item.id,
-      width: 200,
-      minWidth: 150,
+      id: 'modelId',
+      header: i18next.t('models.model-id'),
+      cell: (item) => item.modelId,
+      width: 320,
     },
     {
       id: 'userName',
@@ -229,6 +228,27 @@ export function AdminModelsColumnsConfig() {
       header: i18next.t('models.upload-date'),
       cell: (item) => item.modelDate || '-',
       sortingField: 'modelDate',
+      width: 240,
+      minWidth: 150,
+    },
+    {
+      id: 'modelMD5Hash',
+      header: i18next.t('models.md5-hash'),
+      cell: (item) => item.modelMD5,
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'modelMetadataMD5Hash',
+      header: i18next.t('models.md5-hash-metadata'),
+      cell: (item) => item.modelMetadataMD5,
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'modelS3Key',
+      header: i18next.t('models.model-s3-key'),
+      cell: (item) => item.modelKey,
       width: 200,
       minWidth: 150,
     },
