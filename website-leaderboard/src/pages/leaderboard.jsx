@@ -1,6 +1,6 @@
 import { API, graphqlOperation } from 'aws-amplify';
 import React, { useCallback, useEffect, useState } from 'react';
-import Logo from '../assets/logo.png';
+import Logo from '../assets/logo1024.png';
 import { FollowFooter } from '../components/followFooter';
 import { Header } from '../components/header';
 import { LeaderboardTable } from '../components/leaderboardTable';
@@ -34,6 +34,7 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
     avgLapTime: undefined,
     lapCompletionRation: undefined,
     avgLapsPerAttempt: undefined,
+    countryCode: undefined,
   });
 
   /**
@@ -101,6 +102,7 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
     } else {
       newEntry.gapToFastest = newEntry.fastestLapTime - allEntries[0].fastestLapTime;
     }
+    console.log(newEntry)
     SetRaceSummaryData(newEntry);
   }, []);
 
@@ -153,6 +155,7 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
           next: ({ provider, value }) => {
             console.debug('onNewLeaderboardEntry');
             const newEntry = value.data.onNewLeaderboardEntry;
+            console.log(newEntry)
             updateLeaderboardEntries(newEntry);
             SetraceSummaryFooterIsVisible(true);
             setTimeout(() => {
@@ -210,13 +213,13 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
       {leaderboardEntries.length > 0 && (
         <div className={styles.pageRoot}>
           <div className={styles.leaderboardRoot}>
-            <Header headerText={leaderboardConfig.headerText} qrCodeVisible={showQrCode} />
+            <Header headerText={leaderboardConfig.headerText} eventId={eventId} qrCodeVisible={showQrCode} />
             <LeaderboardTable
               leaderboardEntries={leaderboardEntries}
               scrollEnabled={scrollEnabled}
             />
           </div>
-          <FollowFooter visible text={leaderboardConfig.followFooterText} />
+          <FollowFooter visible eventId={eventId} text={leaderboardConfig.followFooterText} qrCodeVisible={showQrCode} />
         </div>
       )}
       <RaceInfoFooter eventId={eventId} />
