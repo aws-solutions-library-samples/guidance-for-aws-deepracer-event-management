@@ -78,28 +78,6 @@ const DefaultRacingFooter = ({
   );
 };
 
-// const FinishXLapsFooter = ({ lapsToFinish, onChange, lapsToFinishOptions }) => {
-//     const { t } = useTranslation();
-//     return (
-//         <SpaceBetween size="l">
-//             <FormField
-//                 label={t('events.race.laps-to-finish')}
-//                 description={t('events.race.laps-to-finish-description')}
-//             >
-//                 <Select
-//                     selectedOption={GetLapsOptionFromId(lapsToFinish)}
-//                     onChange={({ detail }) =>
-//                         onChange({ lapsToFinish: detail.selectedOption.value })
-//                     }
-//                     options={lapsToFinishOptions}
-//                     selectedAriaLabel="Selected"
-//                     filteringType="auto"
-//                 />
-//             </FormField>
-//         </SpaceBetween>
-//     );
-// };
-
 export const TrackConfigPanel = ({
   trackId,
   numberOfResetsPerLap,
@@ -128,38 +106,8 @@ export const TrackConfigPanel = ({
     />
   );
 
-  // // Set default value on load if fields are empty
-  // useEffect(() => {
-  //     const raceConfig = {};
-
-  //     if (!numberOfResetsPerLap) {
-  //         raceConfig['numberOfResetsPerLap'] = resetOptions[0].value;
-  //     }
-  //     // if (!lapsToFinish) {
-  //     //     raceConfig['lapsToFinish'] = lapOptions[4].value;
-  //     // }
-  //     if (!raceTimeInMin) {
-  //         raceConfig['raceTimeInMin'] = raceTimeOptions[2].value;
-  //     }
-  //     if (!rankingMethod) {
-  //         raceConfig['rankingMethod'] = raceRankingOptions[0].value;
-  //     }
-  //     // if (raceConfig) {
-  //     //     UpdateConfig(raceConfig);
-  //     // }
-  // }, [numberOfResetsPerLap, rankingMethod, raceTimeInMin]);
-
   // Select race customizations footer
   useEffect(() => {
-    // if (rankingMethod && rankingMethod === 'FINISH_X_LAPS') {
-    //     setRaceCustomizationsFooter(
-    //         <FinishXLapsFooter
-    //             lapsToFinish={lapsToFinish}
-    //             onChange={UpdateConfig}
-    //             lapsToFinishOptions={lapOptions}
-    //         />
-    //     );
-    // } else {
     setRaceCustomizationsFooter(
       <DefaultRacingFooter
         numberOfResetsPerLap={numberOfResetsPerLap}
