@@ -306,12 +306,17 @@
   "users.email": "Email",
   "users.email-placeholder": "Email",
   "users.create-user": "Create user",
+  "users.notifications.creating-user": "Creating user...",
+  "users.notifications.user-created": "User created",
+  "users.notifications.user-not-created": "User could not be created",
   "users.terms-and-conditions": "Terms and Conditions",
   "users.terms-and-conditions-error": "Please agree to the terms and conditions",
   "users.terms-and-conditions-title": "Agreement",
   "users.country": "Country",
   "users.country-code": "Country Code",
   "users.flag": "Flag",
+
+  "users-list.header": "List users",
 
   "home.all-models-description": "List of the models uploaded by users",
   "home.all-models": "All models",
