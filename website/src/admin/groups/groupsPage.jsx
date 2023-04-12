@@ -8,8 +8,7 @@ import {
   Table,
   TextFilter,
 } from '@cloudscape-design/components';
-import { API } from 'aws-amplify';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   DefaultPreferences,
@@ -20,42 +19,15 @@ import {
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 
-import dayjs from 'dayjs';
 import { PageLayout } from '../../components/pageLayout';
+import { useGroupsApi } from '../../hooks/useGroupsApi';
+import { dateTimeToString } from './helper-functions/timeFormatting';
 
-// day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat');
-var utc = require('dayjs/plugin/utc');
-var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
-
-dayjs.extend(advancedFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
-export function AdminGroups() {
+export function GroupsPage() {
   const { t } = useTranslation();
 
-  const [allItems, setItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedItems] = useState([]);
-
-  const apiName = 'deepracerEventManager';
-
-  useEffect(() => {
-    const getData = async () => {
-      const apiPath = 'admin/groups';
-
-      const groups = await API.get(apiName, apiPath);
-      setItems(groups.Groups);
-      setIsLoading(false);
-    };
-
-    getData();
-
-    return () => {
-      // Unmounting
-    };
-  }, []);
+  const [groups, isLoading] = useGroupsApi();
 
   const [preferences, setPreferences] = useLocalStorage('DREM-groups-table-preferences', {
     ...DefaultPreferences,
@@ -86,7 +58,7 @@ export function AdminGroups() {
     {
       id: 'creationDate',
       header: t('groups.header-creation-date'),
-      cell: (item) => dayjs(item.creationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => dateTimeToString(item.creationDate) || '-',
       sortingField: 'creationDate',
       width: 200,
       minWidth: 150,
@@ -94,7 +66,7 @@ export function AdminGroups() {
     {
       id: 'lastModifiedDate',
       header: t('groups.header-last-modified-date'),
-      cell: (item) => dayjs(item.LastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => dateTimeToString(item.LastModifiedDate) || '-',
       sortingField: 'lastModifiedDate',
       width: 200,
       minWidth: 150,
@@ -128,7 +100,7 @@ export function AdminGroups() {
   ];
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(allItems, {
+    useCollection(groups, {
       filtering: {
         empty: (
           <EmptyState
@@ -167,8 +139,8 @@ export function AdminGroups() {
           <Header
             counter={
               selectedItems.length
-                ? `(${selectedItems.length}/${allItems.length})`
-                : `(${allItems.length})`
+                ? `(${selectedItems.length}/${groups.length})`
+                : `(${groups.length})`
             }
           >
             {t('groups.header')}
