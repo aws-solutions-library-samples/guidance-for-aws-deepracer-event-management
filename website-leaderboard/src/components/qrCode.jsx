@@ -1,6 +1,4 @@
 import { QRCodeSVG } from 'qrcode.react';
-import { useParams } from 'react-router-dom';
-
 import styles from './qrCode.module.css';
 // using large 1024px logo because we load it as part of leaderboard already
 import Logo from '../assets/logo1024.png';
