@@ -2,13 +2,13 @@ import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Button, Table } from '@cloudscape-design/components';
 import React, { useEffect, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DefaultPreferences, EmptyState } from '../../components/tableConfig';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { DefaultPreferences, EmptyState } from '../../../components/tableConfig';
+import { useLocalStorage } from '../../../hooks/useLocalStorage';
 import {
   ColumnDefinitions,
   EditableColumnDefinitions,
   VisibleContentOptions,
-} from './lapsTableConfig';
+} from '../support-functions/lapsTableConfig';
 
 const tableSettingsHandler = (state, action) => {
   console.info(action);

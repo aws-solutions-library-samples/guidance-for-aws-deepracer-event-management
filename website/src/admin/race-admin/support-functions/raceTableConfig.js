@@ -1,4 +1,4 @@
-import i18next from '../../i18n';
+import i18next from '../../../i18n';
 
 export const VisibleContentOptions = () => {
   return [

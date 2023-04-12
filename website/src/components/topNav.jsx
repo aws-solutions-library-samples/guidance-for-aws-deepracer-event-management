@@ -24,7 +24,7 @@ import { AdminGroups } from '../admin/groups/groups';
 import { AdminHome } from '../admin/home';
 import { AdminModels } from '../admin/models';
 import { AdminQuarantine } from '../admin/quarantine';
-import { EditRace } from '../admin/race-admin/editRace';
+import { EditRace } from '../admin/race-admin/pages/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { Timekeeper } from '../admin/timekeeper/timeKeeper';
 import { ProfileHome } from '../admin/user-profile/profile';

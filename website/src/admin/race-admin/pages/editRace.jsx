@@ -2,13 +2,13 @@ import { Box, Button, Modal, SpaceBetween } from '@cloudscape-design/components'
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { PageLayout } from '../../components/pageLayout';
-import { TableHeader } from '../../components/tableConfig';
-import useMutation from '../../hooks/useMutation';
-import { useSelectedEventContext } from '../../store/storeProvider';
-import { convertStringToMs } from '../../support-functions/time';
-import { LapsTable } from './lapsTable';
-import { RaceInfoPanel } from './raceInfoPanel';
+import { PageLayout } from '../../../components/pageLayout';
+import { TableHeader } from '../../../components/tableConfig';
+import useMutation from '../../../hooks/useMutation';
+import { useSelectedEventContext } from '../../../store/storeProvider';
+import { convertStringToMs } from '../../../support-functions/time';
+import { LapsTable } from '../components/lapsTable';
+import { RaceInfoPanel } from '../components/raceInfoPanel';
 
 export const EditRace = () => {
   const { t } = useTranslation();
