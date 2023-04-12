@@ -18,6 +18,7 @@ import {
     GraphqlType,
     ObjectType,
     ResolvableField,
+    InputType,
 } from 'awscdk-appsync-utils';
 import { ServerlessClamscan } from 'cdk-serverless-clamscan';
 
@@ -194,35 +195,8 @@ export class ModelsManager extends Construct {
             },
         });
 
-        // Models Function
-        const models_function = new lambdaPython.PythonFunction(this, 'get_models_function', {
-            entry: 'lib/lambdas/get_models_function/',
-            index: 'index.py',
-            handler: 'lambda_handler',
-            timeout: Duration.minutes(1),
-            runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
-            memorySize: 128,
-            architecture: props.lambdaConfig.architecture,
-            environment: {
-                bucket: modelsBucket.bucketName,
-                POWERTOOLS_SERVICE_NAME: 'get_models',
-                LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
-            },
-            bundling: {
-                image: props.lambdaConfig.bundlingImage,
-            },
-            layers: [
-                props.lambdaConfig.layersConfig.helperFunctionsLayer,
-                props.lambdaConfig.layersConfig.powerToolsLayer,
-            ],
-        });
-
-        // Permissions for s3 bucket read
-        modelsBucket.grantRead(models_function, 'private/*');
-
         // Quarantine Models Function
-        const quarantined_models_function = new lambdaPython.PythonFunction(
+        const quarantinedModelsHandler = new lambdaPython.PythonFunction(
             this,
             'get_quarantined_models_function',
             {
@@ -242,15 +216,18 @@ export class ModelsManager extends Construct {
                 bundling: {
                     image: props.lambdaConfig.bundlingImage,
                 },
-                layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer],
+                layers: [
+                    props.lambdaConfig.layersConfig.helperFunctionsLayer,
+                    props.lambdaConfig.layersConfig.powerToolsLayer,
+                ],
             }
         );
 
         // permissions for s3 bucket read
-        infectedBucket.grantRead(quarantined_models_function, 'private/*');
+        infectedBucket.grantRead(quarantinedModelsHandler, 'private/*');
 
         // upload_model_to_car_function
-        const upload_model_to_car_function = new lambdaPython.PythonFunction(
+        const uploadModelToCarFunctionLambda = new lambdaPython.PythonFunction(
             this,
             'upload_model_to_car_function',
             {
@@ -263,7 +240,7 @@ export class ModelsManager extends Construct {
                 memorySize: 128,
                 architecture: props.lambdaConfig.architecture,
                 environment: {
-                    bucket: modelsBucket.bucketName,
+                    MODELS_S3_BUCKET: modelsBucket.bucketName,
                     POWERTOOLS_SERVICE_NAME: 'upload_model_to_car',
                     LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
                 },
@@ -276,7 +253,7 @@ export class ModelsManager extends Construct {
                 ],
             }
         );
-        upload_model_to_car_function.addToRolePolicy(
+        uploadModelToCarFunctionLambda.addToRolePolicy(
             new iam.PolicyStatement({
                 effect: iam.Effect.ALLOW,
                 actions: ['ssm:GetCommandInvocation', 'ssm:SendCommand'],
@@ -285,9 +262,9 @@ export class ModelsManager extends Construct {
         );
 
         // upload_model_to_car_function
-        const upload_model_to_car_status_function = new lambdaPython.PythonFunction(
+        const uploadModelToCarStatusLambda = new lambdaPython.PythonFunction(
             this,
-            'upload_model_to_car_status_function',
+            'uploadModelToCarStatusLambda',
             {
                 entry: 'lib/lambdas/upload_model_to_car_status_function/',
                 index: 'index.py',
@@ -311,7 +288,7 @@ export class ModelsManager extends Construct {
             }
         );
 
-        upload_model_to_car_status_function.addToRolePolicy(
+        uploadModelToCarStatusLambda.addToRolePolicy(
             new iam.PolicyStatement({
                 effect: iam.Effect.ALLOW,
                 actions: ['ssm:GetCommandInvocation'],
@@ -319,7 +296,7 @@ export class ModelsManager extends Construct {
             })
         );
         // permissions for s3 bucket read
-        modelsBucket.grantRead(upload_model_to_car_function, 'private/*');
+        modelsBucket.grantRead(uploadModelToCarFunctionLambda, 'private/*');
 
         modelsBucket.addCorsRule({
             allowedHeaders: ['*'],
@@ -438,7 +415,7 @@ export class ModelsManager extends Construct {
         modelsBucket.grantReadWrite(models_md5_handler, 'private/*');
 
         const models_handler = new lambdaPython.PythonFunction(this, 'modelsFunction', {
-            entry: 'lib/lambdas/models_function/',
+            entry: 'lib/lambdas/models_api/',
             description: 'Models resolver',
             index: 'index.py',
             handler: 'lambda_handler',
@@ -451,6 +428,7 @@ export class ModelsManager extends Construct {
                 DDB_TABLE: models_table.tableName,
                 POWERTOOLS_SERVICE_NAME: 'models resolver',
                 LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+                MODELS_S3_BUCKET: modelsBucket.bucketName,
             },
             bundling: {
                 image: props.lambdaConfig.bundlingImage,
@@ -462,6 +440,7 @@ export class ModelsManager extends Construct {
         });
 
         models_table.grantReadWriteData(models_handler);
+        modelsBucket.grantRead(models_handler, 'private/*');
 
         // Define the data source for the API
         const models_dataSource = props.appsyncApi.api.addLambdaDataSource(
@@ -491,6 +470,7 @@ export class ModelsManager extends Construct {
             new ResolvableField({
                 returnType: model_object_type.attribute({ isList: true }),
                 dataSource: models_dataSource,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -502,6 +482,21 @@ export class ModelsManager extends Construct {
                 },
                 returnType: model_object_type.attribute({ isList: true }),
                 dataSource: models_dataSource,
+                directives: [Directive.cognito('admin', 'operator')],
+            })
+        );
+
+        const quarantinedModelsDataSource = props.appsyncApi.api.addLambdaDataSource(
+            'quarantinedModelsDataSource',
+            quarantinedModelsHandler
+        );
+
+        props.appsyncApi.schema.addQuery(
+            'getQuarantinedModels',
+            new ResolvableField({
+                returnType: model_object_type.attribute({ isList: true }),
+                dataSource: quarantinedModelsDataSource,
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
 
@@ -570,56 +565,69 @@ export class ModelsManager extends Construct {
             })
         );
 
-        // REST API
-        const api_admin_quarantined_models =
-            props.restApi.apiAdminResource.addResource('quarantinedmodels');
-
-        api_admin_quarantined_models.addMethod(
-            'GET',
-            new apig.LambdaIntegration(quarantined_models_function),
-            { authorizationType: apig.AuthorizationType.IAM }
-        );
-
-        const api_models = props.restApi.api.root.addResource('models');
-        api_models.addMethod('GET', new apig.LambdaIntegration(models_function), {
-            authorizationType: apig.AuthorizationType.IAM,
-        });
-
-        const api_cars = props.restApi.api.root.addResource('cars');
-
-        const apiCarsUploadResource = api_cars.addResource('upload');
-        this.apiCarsUploadResource = apiCarsUploadResource;
-
-        const instanceid_model = props.restApi.api.addModel('InstanceIdModel', {
-            contentType: 'application/json',
-            schema: {
-                schema: apig.JsonSchemaVersion.DRAFT4,
-                type: apig.JsonSchemaType.OBJECT,
-                properties: {
-                    InstanceId: { type: apig.JsonSchemaType.STRING },
-                },
+        // GraphQL upload model to car
+        const uploadModelToCarInputType = new InputType('UploadModelToCarInput', {
+            definition: {
+                carInstanceId: GraphqlType.string(),
+                modelKey: GraphqlType.string(),
             },
         });
 
-        apiCarsUploadResource.addMethod(
-            'POST',
-            new apig.LambdaIntegration(upload_model_to_car_function),
-            {
-                authorizationType: apig.AuthorizationType.IAM,
-                requestModels: { 'application/json': instanceid_model },
-                requestValidator: props.restApi.bodyValidator,
-            }
+        props.appsyncApi.schema.addType(uploadModelToCarInputType);
+
+        const uploadModelToCarType = new ObjectType('UploadModelToCar', {
+            definition: {
+                carInstanceId: GraphqlType.string(),
+                modelKey: GraphqlType.string(),
+                ssmCommandId: GraphqlType.string(),
+            },
+        });
+
+        props.appsyncApi.schema.addType(uploadModelToCarType);
+
+        const uploadModelToCarStatusType = new ObjectType('UploadModelToCarStatus', {
+            definition: {
+                carInstanceId: GraphqlType.string(),
+                ssmCommandId: GraphqlType.string(),
+                ssmCommandStatus: GraphqlType.string(),
+            },
+        });
+
+        props.appsyncApi.schema.addType(uploadModelToCarStatusType);
+
+        const uploadModelToCarStatusDataSource = props.appsyncApi.api.addLambdaDataSource(
+            'uploadModelToCarStatusDataSource',
+            uploadModelToCarStatusLambda
         );
 
-        const apiCarsUpload_status = apiCarsUploadResource.addResource('status');
-        apiCarsUpload_status.addMethod(
-            'POST',
-            new apig.LambdaIntegration(upload_model_to_car_status_function),
-            {
-                authorizationType: apig.AuthorizationType.IAM,
-                requestModels: { 'application/json': props.restApi.instanceidCommandIdModel },
-                requestValidator: props.restApi.bodyValidator,
-            }
+        const uploadModelToCarDataSource = props.appsyncApi.api.addLambdaDataSource(
+            'uploadModelToCarDataSource',
+            uploadModelToCarFunctionLambda
+        );
+
+        props.appsyncApi.schema.addMutation(
+            'uploadModelToCar',
+            new ResolvableField({
+                args: {
+                    entry: uploadModelToCarInputType.attribute({ isRequired: true }),
+                },
+                returnType: uploadModelToCarType.attribute(),
+                dataSource: uploadModelToCarDataSource,
+                directives: [Directive.iam(), Directive.cognito('admin', 'operator')],
+            })
+        );
+
+        props.appsyncApi.schema.addQuery(
+            'getUploadModelToCarStatus',
+            new ResolvableField({
+                args: {
+                    carInstanceId: GraphqlType.string({ isRequired: true }),
+                    ssmCommandId: GraphqlType.string({ isRequired: true }),
+                },
+                returnType: uploadModelToCarStatusType.attribute(),
+                dataSource: uploadModelToCarStatusDataSource,
+                directives: [Directive.iam(), Directive.cognito('admin', 'operator')],
+            })
         );
     }
 }

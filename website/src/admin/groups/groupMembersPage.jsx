@@ -10,12 +10,11 @@ import {
   TextFilter,
   Toggle,
 } from '@cloudscape-design/components';
-import { API, Auth } from 'aws-amplify';
+import { Auth } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
-
+import { PageLayout } from '../../components/pageLayout';
 import {
   DefaultPreferences,
   EmptyState,
@@ -23,46 +22,41 @@ import {
   PageSizePreference,
   WrapLines,
 } from '../../components/tableConfig';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useNotificationsDispatch } from '../../store/appLayoutProvider';
+import { useUsersContext } from '../../store/storeProvider';
+import {
+  addUserToGroupMutation,
+  getGroupMembersQuery,
+  removeUserFromGroupMutation,
+} from './helper-functions/apiCalls';
+import { dateTimeToString } from './helper-functions/timeFormatting';
 
-import dayjs from 'dayjs';
-import { PageLayout } from '../../components/pageLayout';
-
-// day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat');
-var utc = require('dayjs/plugin/utc');
-var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
-
-dayjs.extend(advancedFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
-export function AdminGroupsDetail() {
+export function GroupMembersPage() {
   const { t } = useTranslation();
 
   const { groupName } = useParams();
-  const [allItems, setItems] = useState([]);
+  const [usersWithGroupMetaData, setUsersWithGroupMetaData] = useState([]);
   const [selectedItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const setNotifications = useNotificationsDispatch();
 
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const apiName = 'deepracerEventManager';
+  const [users] = useUsersContext();
 
   useEffect(() => {
-    const getData = async () => {
-      const apiUserPath = 'users';
-
-      const userRsponse = await API.get(apiName, apiUserPath);
-      const users = userRsponse.map((u) => ({
+    const getMembersInGroup = async () => {
+      //add group meta data to users objects
+      const usersWithMetaData = users.map((u) => ({
         ...u,
         isMember: false,
         currentUser: false,
       }));
 
-      const apiGroupPath = 'admin/groups/' + groupName;
-      const groupResponse = await API.get(apiName, apiGroupPath);
-      groupResponse.forEach((group) => {
-        const i = users.findIndex((user) => user.Username === group.Username);
+      const groupUsers = await getGroupMembersQuery(groupName);
+      console.info(groupUsers);
+
+      groupUsers.forEach((group) => {
+        const i = usersWithMetaData.findIndex((user) => user.Username === group.Username);
         users[i].isMember = true;
       });
 
@@ -73,36 +67,55 @@ export function AdminGroupsDetail() {
         users[i].currentUser = true;
       });
 
-      setItems(users);
+      setUsersWithGroupMetaData(users);
       setIsLoading(false);
     };
 
-    getData();
+    getMembersInGroup();
+
     return () => {
       // Unmounting
     };
-  }, [refreshKey, groupName]);
+  }, [groupName, users]);
 
   const toggleUser = (user) => {
-    const apiName = 'deepracerEventManager';
+    const updateUserMembership = async () => {
+      // Check user is not attempting to remove self
+      const username = user.Username;
+      if (user.isMember) {
+        console.info('remove user from group');
+        await removeUserFromGroupMutation(username, groupName);
+      } else {
+        console.info('add user to group');
+        await addUserToGroupMutation(username, groupName);
+      }
 
-    // Check user is not attempting to remove self
+      // Update group membership status for updated user
+      const i = usersWithGroupMetaData.findIndex((user) => user.Username === username);
+      console.info(i);
+      if (i > -1) {
+        const updatedUsersWithGroupMetaData = [...usersWithGroupMetaData];
+        console.info(updatedUsersWithGroupMetaData[i].isMember);
+        updatedUsersWithGroupMetaData[i].isMember = !updatedUsersWithGroupMetaData[i].isMember;
+        console.info(updatedUsersWithGroupMetaData[i].isMember);
+        setUsersWithGroupMetaData(updatedUsersWithGroupMetaData);
+      }
+    };
 
-    if (user.isMember) {
-      const apiGroupUserPath = 'admin/groups/' + groupName + '/' + user.Username;
-      API.del(apiName, apiGroupUserPath);
-    } else {
-      const apiGroupUserPath = 'admin/groups/' + groupName;
-      const params = {
-        body: {
-          username: user.Username,
+    updateUserMembership().catch((e) => {
+      setNotifications([
+        {
+          type: 'error',
+          content: e.errors[0].message + ', user membership could not be changed',
+          id: 'group_error',
+          dismissible: true,
+          onDismiss: () => {
+            setNotifications([]);
+          },
         },
-      };
-      API.post(apiName, apiGroupUserPath, params);
-    }
-
-    // need to reload the user data
-    setRefreshKey(refreshKey + 1);
+      ]);
+      console.info(e.errors[0].message);
+    });
   };
 
   const userToggle = (user) => {
@@ -130,7 +143,7 @@ export function AdminGroupsDetail() {
     {
       id: 'userCreationDate',
       header: t('groups.detail.header-creation-date'),
-      cell: (item) => dayjs(item.UserCreateDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => dateTimeToString(item.UserCreateDate) || '-',
       sortingField: 'userCreationDate',
       width: 200,
       minWidth: 150,
@@ -138,7 +151,7 @@ export function AdminGroupsDetail() {
     {
       id: 'userLastModifiedDate',
       header: t('groups.detail.header-last-modified-date'),
-      cell: (item) => dayjs(item.UserLastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => dateTimeToString(item.UserLastModifiedDate) || '-',
       sortingField: 'userLastModifiedDate',
       width: 200,
       minWidth: 150,
@@ -191,7 +204,7 @@ export function AdminGroupsDetail() {
   ];
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(allItems, {
+    useCollection(usersWithGroupMetaData, {
       filtering: {
         empty: (
           <EmptyState
@@ -236,8 +249,8 @@ export function AdminGroupsDetail() {
           <Header
             counter={
               selectedItems.length
-                ? `(${selectedItems.length}/${allItems.length})`
-                : `(${allItems.length})`
+                ? `(${selectedItems.length}/${usersWithGroupMetaData.length})`
+                : `(${usersWithGroupMetaData.length})`
             }
           >
             {t('groups.detail.header')}
@@ -256,11 +269,13 @@ export function AdminGroupsDetail() {
           />
         }
         filter={
-          <TextFilter
-            {...filterProps}
-            countText={MatchesCountText(filteredItemsCount)}
-            filteringAriaLabel={t('groups.detail.filter-users')}
-          />
+          <>
+            <TextFilter
+              {...filterProps}
+              countText={MatchesCountText(filteredItemsCount)}
+              filteringAriaLabel={t('groups.detail.filter-users')}
+            ></TextFilter>
+          </>
         }
         loading={isLoading}
         loadingText={t('groups.detail.loading-users')}

@@ -4,7 +4,8 @@
     "dbaeumer.vscode-eslint",
     "ms-python.isort",
     "ms-python.python",
-    "statelyai.stately-vscode"
+    "statelyai.stately-vscode",
+    "Orta.vscode-jest"
   ],
 
   "unwantedRecommendations": []

@@ -163,7 +163,7 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
           <EventLinksButtons
             href={`${
               awsconfig.Urls.leaderboardWebsite
-            }/leaderboard/${item.eventId.toString()}/?qr=true&scroll=true`}
+            }/leaderboard/${item.eventId.toString()}/?qr=header&scroll=true`}
             linkTextPrimary={i18next.t('events.leaderboard-link-same-tab')}
             linkTextExternal={i18next.t('events.leaderboard-link-new-tab')}
           />

@@ -1,6 +1,6 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useRef, useState } from 'react';
-// import * as queries from '../graphql/queries';
+import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 // import * as subscriptions from '../graphql/subscriptions'
 import { useTranslation } from 'react-i18next';
@@ -65,7 +65,7 @@ const StatusModelContent = (props) => {
   const { t } = useTranslation();
 
   const [seconds, setSeconds] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState('');
+  const [ uploadStatus, setUploadStatus] = useState('');
   const [result, setResult] = useState([]);
   const [results, setResults] = useState([]);
   const [commandId, setCommandId] = useState('');
@@ -73,29 +73,22 @@ const StatusModelContent = (props) => {
   const [currentModel, setCurrentModel] = useState('');
 
   async function uploadModelToCar(car, model) {
-    // console.log(car.InstanceId)
-    // console.log(model.key)
-
-    const apiName = 'deepracerEventManager';
-    const apiPath = 'cars/upload';
-    const myInit = {
-      body: {
-        InstanceId: car.InstanceId,
-        key: model.key,
-      },
-    };
-
-    const response = await API.post(apiName, apiPath, myInit);
-    // console.log(response);
-    // console.log(response.CommandId);
+    const response = await API.graphql({
+      query: mutations.uploadModelToCar,
+      variables: {
+        entry: {
+          carInstanceId: car.InstanceId,
+          modelKey: model.modelKey,
+        }
+      }
+    });
     setResult(response);
-    setCommandId(response);
+    setCommandId(response.data.uploadModelToCar.ssmCommandId);
 
     setCurrentInstanceId(car.InstanceId);
 
     setCurrentModel(model);
     setUploadStatus('InProgress');
-    // setDimmerActive(true);
   }
 
   async function uploadModelToCarStatus(InstanceId, CommandId, model) {
@@ -107,17 +100,14 @@ const StatusModelContent = (props) => {
       return [];
     }
 
-    const apiName = 'deepracerEventManager';
-    const apiPath = 'cars/upload/status';
-    const myInit = {
-      body: {
-        InstanceId: InstanceId,
-        CommandId: CommandId,
-      },
-    };
-
-    const response = await API.post(apiName, apiPath, myInit);
-    // console.log(response)
+    const api_response = await API.graphql({
+      query: queries.getUploadModelToCarStatus,
+      variables: {
+        carInstanceId: InstanceId,
+        ssmCommandId: CommandId,
+      }
+    });
+    const ssmCommandStatus = api_response.data.getUploadModelToCarStatus.ssmCommandStatus
 
     const modelKeyPieces = model.key.split('/');
     const modelUser = modelKeyPieces[modelKeyPieces.length - 3];
@@ -126,7 +116,7 @@ const StatusModelContent = (props) => {
     const resultToAdd = {
       ModelName: modelUser + '-' + modelName,
       CommandId: CommandId,
-      Status: response,
+      Status: ssmCommandStatus,
     };
     const tempResultsArray = [];
     // console.log(resultToAdd);
@@ -148,11 +138,11 @@ const StatusModelContent = (props) => {
       tempResultsArray.push(resultToAdd);
     }
 
-    setResult(response);
-    setUploadStatus(response);
+    setResult(ssmCommandStatus);
+    setUploadStatus(ssmCommandStatus);
     setResults(tempResultsArray);
 
-    return response;
+    return ssmCommandStatus;
   }
 
   useInterval(() => {
@@ -180,7 +170,7 @@ const StatusModelContent = (props) => {
     } else {
       uploadModelToCarStatus(currentInstanceId, commandId, currentModel);
     }
-  }, 1000);
+  }, 500);
 
   // body of ticker code
 

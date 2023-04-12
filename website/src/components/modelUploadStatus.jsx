@@ -12,7 +12,7 @@ export function ModelUploadStatus(props) {
 
   const s3path = props.username + '/models/' + file.name;
 
-  // TODO - switch to flashbar with progres bar
+  // TODO - switch to flashbar with progress bar
   // https://cloudscape.design/components/flashbar/?tabId=playground&example=with-a-progress-bar
 
   useEffect(() => {

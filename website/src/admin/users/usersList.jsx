@@ -3,14 +3,15 @@ import {
   Button,
   CollectionPreferences,
   Header,
-  Link,
   Pagination,
   Table,
   TextFilter,
 } from '@cloudscape-design/components';
-import { API } from 'aws-amplify';
-import React, { useEffect, useState } from 'react';
+import dayjs from 'dayjs';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Flag } from '../../components/flag';
+import { PageLayout } from '../../components/pageLayout';
 import {
   DefaultPreferences,
   EmptyState,
@@ -19,83 +20,75 @@ import {
   WrapLines,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useUsersContext } from '../../store/storeProvider';
 
-import dayjs from 'dayjs';
-import { PageLayout } from '../../components/pageLayout';
-
-// day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat');
-var utc = require('dayjs/plugin/utc');
-var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
-
-dayjs.extend(advancedFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
-export function AdminGroups() {
+export const UsersList = () => {
   const { t } = useTranslation();
 
-  const [allItems, setItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedItems] = useState([]);
 
-  const apiName = 'deepracerEventManager';
-
-  useEffect(() => {
-    const getData = async () => {
-      const apiPath = 'admin/groups';
-
-      const groups = await API.get(apiName, apiPath);
-      setItems(groups.Groups);
-      setIsLoading(false);
-    };
-
-    getData();
-
-    return () => {
-      // Unmounting
-    };
-  }, []);
-
-  const [preferences, setPreferences] = useLocalStorage('DREM-groups-table-preferences', {
+  const [users, isLoading] = useUsersContext();
+  const [preferences, setPreferences] = useLocalStorage('DREM-user-table-preferences', {
     ...DefaultPreferences,
-    visibleContent: ['groupName', 'description'],
+    visibleContent: ['Username', 'Flag', 'UserCreateDate'],
   });
 
   const columnsConfig = [
     {
-      id: 'groupName',
-      header: t('groups.header-name'),
-      cell: (item) => (
-        <div>
-          <Link href={window.location.href + '/' + item.GroupName}>{item.GroupName}</Link>
-        </div>
-      ),
-      sortingField: 'groupName',
+      id: 'Username',
+      header: t('users.header-username'),
+      cell: (item) => item.Username || '-',
+      sortingField: 'Username',
       width: 200,
       minWidth: 150,
     },
     {
-      id: 'description',
-      header: t('groups.header-description'),
-      cell: (item) => item.Description || '-',
-      sortingField: 'description',
+      id: 'Flag',
+      header: t('users.flag'),
+      cell: (item) => {
+        const countryCode = item.Attributes.filter((obj) => {
+          return obj.Name === 'custom:countryCode';
+        });
+        if (countryCode.length > 0) {
+          return <Flag size="small" countryCode={countryCode[0].Value}></Flag>;
+        } else {
+          return '';
+        }
+      },
+      sortingField: 'Flag',
+      width: 120,
+      minWidth: 80,
+    },
+    {
+      id: 'CountryCode',
+      header: t('users.country-code'),
+      cell: (item) => {
+        const countryCode = item.Attributes.filter((obj) => {
+          return obj.Name === 'custom:countryCode';
+        });
+        if (countryCode.length > 0) {
+          return countryCode[0].Value;
+        } else {
+          return '';
+        }
+      },
+      sortingField: 'CountryCode',
+      width: 120,
+      minWidth: 80,
+    },
+    {
+      id: 'UserCreateDate',
+      header: t('users.header-creation-date'),
+      cell: (item) => dayjs(item.UserCreateDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      sortingField: 'UserCreateDate',
       width: 200,
       minWidth: 150,
     },
     {
-      id: 'creationDate',
-      header: t('groups.header-creation-date'),
-      cell: (item) => dayjs(item.creationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
-      sortingField: 'creationDate',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'lastModifiedDate',
-      header: t('groups.header-last-modified-date'),
-      cell: (item) => dayjs(item.LastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
-      sortingField: 'lastModifiedDate',
+      id: 'UserLastModifiedDate',
+      header: t('users.header-last-modified-date'),
+      cell: (item) => dayjs(item.UserLastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      sortingField: 'UserLastModifiedDate',
       width: 200,
       minWidth: 150,
     },
@@ -106,34 +99,39 @@ export function AdminGroups() {
       label: t('groups.information'),
       options: [
         {
-          id: 'groupName',
-          label: t('groups.header-name'),
+          id: 'Username',
+          label: t('users.header-username'),
           editable: false,
         },
         {
-          id: 'description',
-          label: t('groups.header-description'),
-          editable: false,
+          id: 'Flag',
+          label: t('users.flag'),
+          //editable: false,
         },
         {
-          id: 'creationDate',
-          label: t('groups.header-creation-date'),
+          id: 'CountryCode',
+          label: t('users.country-code'),
+          //editable: false,
         },
         {
-          id: 'lastModifiedDate',
-          label: t('groups.header-last-modified-date'),
+          id: 'UserCreateDate',
+          label: t('users.header-creation-date'),
+        },
+        {
+          id: 'UserLastModifiedDate',
+          label: t('users.header-last-modified-date'),
         },
       ],
     },
   ];
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(allItems, {
+    useCollection(users, {
       filtering: {
         empty: (
           <EmptyState
-            title={t('groups.no-groups')}
-            subtitle={t('groups.no-groups-have-been-defined')}
+            title={t('users.no-users')}
+            subtitle={t('users.no-users-have-been-defined')}
           />
         ),
         noMatch: (
@@ -147,18 +145,17 @@ export function AdminGroups() {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[0] } },
+      sorting: { defaultState: { sortingColumn: columnsConfig[3], isDescending: true } },
       selection: {},
     });
 
   return (
     <PageLayout
-      header={t('groups.header')}
-      description={t('groups.description')}
+      header={t('users-list.header')}
       breadcrumbs={[
         { text: t('home.breadcrumb'), href: '/' },
-        { text: t('admin.breadcrumb'), href: '/admin/home' },
-        { text: t('groups.breadcrumb') },
+        { text: t('topnav.registration'), href: '/registration' },
+        { text: t('users.breadcrumb') },
       ]}
     >
       <Table
@@ -167,11 +164,11 @@ export function AdminGroups() {
           <Header
             counter={
               selectedItems.length
-                ? `(${selectedItems.length}/${allItems.length})`
-                : `(${allItems.length})`
+                ? `(${selectedItems.length}/${users.length})`
+                : `(${users.length})`
             }
           >
-            {t('groups.header')}
+            {t('users.header-list')}
           </Header>
         }
         columnDefinitions={columnsConfig}
@@ -190,11 +187,11 @@ export function AdminGroups() {
           <TextFilter
             {...filterProps}
             countText={MatchesCountText(filteredItemsCount)}
-            filteringAriaLabel={t('groups.filter-groups')}
+            filteringAriaLabel={t('users.filter-groups')}
           />
         }
         loading={isLoading}
-        loadingText={t('groups.loading-groups')}
+        loadingText={t('users.loading-groups')}
         visibleColumns={preferences.visibleContent}
         selectedItems={selectedItems}
         stickyHeader="true"
@@ -207,7 +204,7 @@ export function AdminGroups() {
             cancelLabel={t('button.cancel')}
             onConfirm={({ detail }) => setPreferences(detail)}
             preferences={preferences}
-            pageSizePreference={PageSizePreference(t('groups.page-size-label'))}
+            pageSizePreference={PageSizePreference(t('users.page-size-label'))}
             visibleContentPreference={{
               title: t('table.select-visible-colunms'),
               options: visibleContentOptions,
@@ -218,4 +215,4 @@ export function AdminGroups() {
       />
     </PageLayout>
   );
-}
+};
