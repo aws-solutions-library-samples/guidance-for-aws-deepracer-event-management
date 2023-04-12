@@ -16,10 +16,10 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useRacesApi } from '../../hooks/useRacesApi';
 import { useSplitPanelOptionsDispatch } from '../../store/appLayoutProvider';
 import { useSelectedEventContext } from '../../store/storeProvider';
-import { EmptyPanel } from './emptyPanel';
-import { MultiChoicePanel } from './multiChoicePanel';
-import { RaceDetailsPanel } from './raceDetailsPanel';
-import { ColumnDefinitions, VisibleContentOptions } from './raceTableConfig';
+import { EmptyPanel } from './components/emptyPanel';
+import { MultiChoicePanel } from './components/multiChoicePanel';
+import { RaceDetailsPanel } from './components/raceDetailsPanel';
+import { ColumnDefinitions, VisibleContentOptions } from './support-functions/raceTableConfig';
 
 const RaceAdmin = () => {
   const { t } = useTranslation();

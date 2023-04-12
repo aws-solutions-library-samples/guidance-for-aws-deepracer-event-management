@@ -1,8 +1,8 @@
 import { ColumnLayout, FormField, SplitPanel } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { convertMsToString } from '../../support-functions/time';
-import { calculateMetrics } from './metricCalculations';
+import { convertMsToString } from '../../../support-functions/time';
+import { calculateMetrics } from '../support-functions/metricCalculations';
 
 const MultiChoicePanel = ({ races }) => {
   const { t } = useTranslation();
@@ -49,12 +49,13 @@ const MultiChoicePanel = ({ races }) => {
         <FormField label={t('race-admin.multi-select.fastest-lap-time')}>
           {convertMsToString(metrics.fastestLap)}
         </FormField>
-        <FormField label={t('race-admin.multi-select.slowest-lap-time')}>
+        <FormField label={t('race-admin.multi-select.sloweest-lap-time')}>
           {convertMsToString(metrics.slowestLap)}
         </FormField>
-        <FormField label={t('race-admin.multi-select.unique-racer-count')}>
-          {metrics.uniqueRacersCount}
-        </FormField>
+        <FormField label={'Number of unique racers'}>{metrics.numberOfUniqueRacers}</FormField>
+        <FormField label={'Number of races'}>{metrics.numberOfRaces}</FormField>
+        <FormField label={'Most races by user'}>{metrics.mostNumberOfRacesByUser}</FormField>
+        <FormField label={'Avg no. of races by users'}>{metrics.avgRacesPerUser}</FormField>
       </ColumnLayout>
     </SplitPanel>
   );
