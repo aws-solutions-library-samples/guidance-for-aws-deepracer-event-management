@@ -1,38 +1,47 @@
-import boto3
-import http_response
-import simplejson as json
-from aws_lambda_powertools import Logger
-from aws_lambda_powertools.utilities.typing import LambdaContext
+#!/usr/bin/python3
+# encoding=utf-8
 
+import boto3
+from aws_lambda_powertools import Logger, Tracer
+from aws_lambda_powertools.event_handler import AppSyncResolver
+from aws_lambda_powertools.logging import correlation_paths
+
+tracer = Tracer()
 logger = Logger()
+app = AppSyncResolver()
+
 client_ssm = boto3.client("ssm")
 
 
-@logger.inject_lambda_context
-def lambda_handler(event: dict, context: LambdaContext) -> str:
+@logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
+@tracer.capture_lambda_handler
+def lambda_handler(event, context):
+    logger.info(event)
+    return app.resolve(event, context)
 
+
+@app.resolver(type_name="Query", field_name="getUploadModelToCarStatus")
+def addEvent(carInstanceId: str, ssmCommandId: str):
     try:
-        logger.info(json.dumps(event))
+        logger.info(carInstanceId)
+        logger.info(ssmCommandId)
 
-        body_parameters = json.loads(event["body"])
-        instance_id = body_parameters["InstanceId"]
-        command_id = body_parameters["CommandId"]
+        instance_id = carInstanceId
+        command_id = ssmCommandId
 
-        logger.info(instance_id)
-        logger.info(command_id)
-
-        status_code = 200
-
-        logger.info(command_id)
         result = client_ssm.get_command_invocation(
             CommandId=command_id,
             InstanceId=instance_id,
         )
-        output = result["Status"]
-        logger.info(json.dumps(output))
+        ssmCommandStatus = result["Status"]
+        logger.info(ssmCommandStatus)
 
-        return http_response.response(status_code, output)
+        return {
+            "carInstanceId": carInstanceId,
+            "ssmCommandId": ssmCommandId,
+            "ssmCommandStatus": ssmCommandStatus,
+        }
 
     except Exception as error:
         logger.exception(error)
-        return http_response.response(500, error)
+        return error
