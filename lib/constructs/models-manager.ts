@@ -195,8 +195,7 @@ export class ModelsManager extends Construct {
         });
 
         // Quarantine Models Function
-        // TODO use graphql for quarantined models
-        const quarantined_models_function = new lambdaPython.PythonFunction(
+        const quarantinedModelsHandler = new lambdaPython.PythonFunction(
             this,
             'get_quarantined_models_function',
             {
@@ -216,12 +215,15 @@ export class ModelsManager extends Construct {
                 bundling: {
                     image: props.lambdaConfig.bundlingImage,
                 },
-                layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer],
+                layers: [
+                    props.lambdaConfig.layersConfig.helperFunctionsLayer,
+                    props.lambdaConfig.layersConfig.powerToolsLayer,
+                ],
             }
         );
 
         // permissions for s3 bucket read
-        infectedBucket.grantRead(quarantined_models_function, 'private/*');
+        infectedBucket.grantRead(quarantinedModelsHandler, 'private/*');
 
         // upload_model_to_car_function
         const upload_model_to_car_function = new lambdaPython.PythonFunction(
@@ -483,6 +485,20 @@ export class ModelsManager extends Construct {
             })
         );
 
+        const quarantinedModelsDataSource = props.appsyncApi.api.addLambdaDataSource(
+            'quarantinedModelsDataSource',
+            quarantinedModelsHandler
+        );
+
+        props.appsyncApi.schema.addQuery(
+            'getQuarantinedModels',
+            new ResolvableField({
+                returnType: model_object_type.attribute({ isList: true }),
+                dataSource: quarantinedModelsDataSource,
+                directives: [Directive.cognito('admin', 'operator')],
+            })
+        );
+
         props.appsyncApi.schema.addMutation(
             'addModel',
             new ResolvableField({
@@ -549,15 +565,6 @@ export class ModelsManager extends Construct {
         );
 
         // REST API
-        const api_admin_quarantined_models =
-            props.restApi.apiAdminResource.addResource('quarantinedmodels');
-
-        api_admin_quarantined_models.addMethod(
-            'GET',
-            new apig.LambdaIntegration(quarantined_models_function),
-            { authorizationType: apig.AuthorizationType.IAM }
-        );
-
         const api_cars = props.restApi.api.root.addResource('cars');
 
         const apiCarsUploadResource = api_cars.addResource('upload');
