@@ -1,6 +1,5 @@
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import { DockerImage, Duration } from 'aws-cdk-lib';
-import * as apig from 'aws-cdk-lib/aws-apigateway';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
@@ -22,11 +21,6 @@ export interface UserManagerProps {
     authenticatedUserRole: IRole;
     userPoolId: string;
     userPoolArn: string;
-    restApi: {
-        api: apig.RestApi;
-        apiAdminResource: apig.Resource;
-        bodyValidator: apig.RequestValidator;
-    };
     appsyncApi: {
         schema: CodeFirstSchema;
         api: appsync.GraphqlApi;
@@ -48,43 +42,12 @@ export interface UserManagerProps {
 export class UserManager extends Construct {
     // public readonly origin: cloudfront.IOrigin;
     // public readonly sourceBucket: s3.IBucket;
+    public readonly userApiObject: ObjectType;
 
     constructor(scope: Construct, id: string, props: UserManagerProps) {
         super(scope, id);
 
-        // List users Function
-        const get_users_function = new lambdaPython.PythonFunction(this, 'get_users_function', {
-            entry: 'lib/lambdas/get_users_function/',
-            description: 'List the users in cognito',
-            index: 'index.py',
-            handler: 'lambda_handler',
-            timeout: Duration.minutes(1),
-            runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
-            memorySize: 128,
-            architecture: props.lambdaConfig.architecture,
-            environment: {
-                user_pool_id: props.userPoolId,
-                POWERTOOLS_SERVICE_NAME: 'get_users',
-                LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
-            },
-            bundling: {
-                image: props.lambdaConfig.bundlingImage,
-            },
-            layers: [
-                props.lambdaConfig.layersConfig.helperFunctionsLayer,
-                props.lambdaConfig.layersConfig.powerToolsLayer,
-            ],
-        });
-        get_users_function.addToRolePolicy(
-            new iam.PolicyStatement({
-                effect: iam.Effect.ALLOW,
-                actions: ['cognito-idp:ListUsers'],
-                resources: [props.userPoolArn],
-            })
-        );
-
-        // List users Function
+        // delete users Function
         const delete_user_function = new lambdaPython.PythonFunction(this, 'delete_user_function', {
             entry: 'lib/lambdas/delete_user_function/',
             description: 'Delete current user from cognito',
@@ -119,14 +82,7 @@ export class UserManager extends Construct {
         props.eventbus.grantPutEventsTo(delete_user_function);
 
         // API RESOURCES
-        const api_users = props.restApi.api.root.addResource('users');
-        api_users.addMethod('GET', new apig.LambdaIntegration(get_users_function), {
-            authorizationType: apig.AuthorizationType.IAM,
-        });
-
-        // AppSync //
-
-        // List users Function
+        // List & create users Function
         const users_handler = new lambdaPython.PythonFunction(this, 'users_handler', {
             entry: 'lib/lambdas/users_function/',
             description: 'Work with Cognito users',
@@ -228,6 +184,7 @@ export class UserManager extends Construct {
         });
 
         props.appsyncApi.schema.addType(user_object);
+        this.userApiObject = user_object;
 
         const user_delete_object = new ObjectType('userDeleteObject', {
             definition: {

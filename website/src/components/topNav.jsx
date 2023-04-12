@@ -19,8 +19,8 @@ import { EditEvent } from '../admin/events/editEvent';
 import { AdminFleets } from '../admin/fleets/adminFleets';
 import { CreateFleet } from '../admin/fleets/createFleet';
 import { EditFleet } from '../admin/fleets/editFleet';
-import { AdminGroupsDetail } from '../admin/groups/detail';
-import { AdminGroups } from '../admin/groups/groups';
+import { GroupMembersPage } from '../admin/groups/groupMembersPage';
+import { GroupsPage } from '../admin/groups/groupsPage';
 import { AdminHome } from '../admin/home';
 import { AdminModels } from '../admin/models';
 import { AdminQuarantine } from '../admin/quarantine';
@@ -93,8 +93,8 @@ const operatorRoutes = [
 
 const adminRoutes = [
   <Route path="/admin/users" element={<UsersList />} />,
-  <Route path="/admin/groups" element={<AdminGroups />} />,
-  <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />,
+  <Route path="/admin/groups" element={<GroupsPage />} />,
+  <Route path="/admin/groups/:groupName" element={<GroupMembersPage />} />,
 ];
 
 const MenuRoutes = ({ permissions }) => {

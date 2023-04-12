@@ -204,18 +204,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
         new SystemsManager(this, 'SystemManager');
 
-        new GroupManager(this, 'GroupManagers', {
-            lambdaConfig: props.lambdaConfig,
-            userPoolArn: props.userPool.userPoolArn,
-            userPoolId: props.userPool.userPoolId,
-            restApi: {
-                api: restApi.api,
-                apiAdminResource: restApi.apiAdminResource,
-                bodyValidator: restApi.bodyValidator,
-            },
-        });
-
-        new UserManager(this, 'UserManager', {
+        const userManager = new UserManager(this, 'UserManager', {
             authenticatedUserRole: props.authenticatedUserRole,
             lambdaConfig: props.lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
@@ -225,12 +214,19 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            restApi: {
-                api: restApi.api,
-                apiAdminResource: restApi.apiAdminResource,
-                bodyValidator: restApi.bodyValidator,
-            },
             eventbus: props.eventbus,
+        });
+
+        new GroupManager(this, 'GroupManagers', {
+            lambdaConfig: props.lambdaConfig,
+            userPoolArn: props.userPool.userPoolArn,
+            userPoolId: props.userPool.userPoolId,
+            userApiObject: userManager.userApiObject,
+            appsyncApi: {
+                api: appsyncApi,
+                schema: schema,
+                noneDataSource: noneDataSoure,
+            },
         });
 
         new LabelPrinter(this, 'LabelPrinter', {
