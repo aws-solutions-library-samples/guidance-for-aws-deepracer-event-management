@@ -19,20 +19,19 @@ export const ResetConfig = () => {
 };
 
 export const GetRaceResetsNameFromId = (id) => {
-  if (id) {
-    const resetConfig = ResetConfig();
-    const item = resetConfig.find((item) => item.value.toString() === id.toString());
-    return item.label;
-  }
-  return '';
+  if (id == null) return '';
+
+  const resetConfig = ResetConfig();
+  const item = resetConfig.find((item) => item.value.toString() === id.toString());
+  return item.label;
 };
 
 export const GetResetOptionFromId = (id) => {
-  if (id) {
-    const resetConfig = ResetConfig();
-    const test = resetConfig.find((option) => option.value.toString() === id.toString());
-    return test;
-  }
+  if (id == null) return;
+
+  const resetConfig = ResetConfig();
+  const test = resetConfig.find((option) => option.value.toString() === id.toString());
+  return test;
 };
 
 // RACE TIME OPTIONS METHODS
@@ -52,10 +51,10 @@ export const RaceTimeConfig = () => {
 };
 
 export const GetRaceTimeOptionFromId = (id) => {
-  if (id) {
-    const raceTimeOptions = RaceTimeConfig();
-    return raceTimeOptions.find((option) => option.value.toString() === id.toString());
-  }
+  if (id == null) return;
+
+  const raceTimeOptions = RaceTimeConfig();
+  return raceTimeOptions.find((option) => option.value.toString() === id.toString());
 };
 
 // LAPS OPTIONS METHODS
@@ -75,10 +74,10 @@ export const LapConfig = () => {
 };
 
 export const GetLapsOptionFromId = (id) => {
-  if (id) {
-    const lapsToFinishOptions = LapConfig();
-    return lapsToFinishOptions.find((option) => option.value.toString() === id.toString());
-  }
+  if (id == null) return;
+
+  const lapsToFinishOptions = LapConfig();
+  return lapsToFinishOptions.find((option) => option.value.toString() === id.toString());
 };
 
 // TRACK OPTIONS METHODS
@@ -93,13 +92,15 @@ export const TrackTypeConfig = () => {
 };
 
 export const GetTrackOptionFromId = (id) => {
-  if (!id) return;
+  if (id == null) return;
+
   const trackOptions = TrackTypeConfig();
   return trackOptions.find((option) => option.value === id);
 };
 
 export const GetTrackTypeNameFromId = (id) => {
-  if (!id) return;
+  if (id == null) return;
+
   const trackOptions = TrackTypeConfig();
   const item = trackOptions.find((item) => item.value.toString() === id.toString());
   if (item && item.label) {
@@ -118,28 +119,27 @@ export const RaceTypeConfig = () => {
 };
 
 export const GetRankingOptionFromId = (id) => {
-  if (id) {
-    const raceRankingOptions = RaceTypeConfig();
-    return raceRankingOptions.find((option) => option.value === id);
-  }
+  if (id == null) return;
+
+  const raceRankingOptions = RaceTypeConfig();
+  return raceRankingOptions.find((option) => option.value === id);
 };
 
 export const GetRankingNameFromId = (id) => {
-  if (id) {
-    const raceRankingOptions = RaceTypeConfig();
-    const option = raceRankingOptions.find((option) => option.value === id);
-    return option.label;
-  }
+  if (id == null) return;
+
+  const raceRankingOptions = RaceTypeConfig();
+  const option = raceRankingOptions.find((option) => option.value === id);
+  return option.label;
 };
 
 export const GetRaceTypeNameFromId = (id) => {
-  if (id) {
-    const raceTypeConfig = RaceTypeConfig();
-    const item = raceTypeConfig.find((item) => item.value.toString() === id.toString());
-    if (item && item.label) {
-      return item.label;
-    }
-    return undefined;
+  if (id == null) return;
+
+  const raceTypeConfig = RaceTypeConfig();
+  const item = raceTypeConfig.find((item) => item.value.toString() === id.toString());
+  if (item && item.label) {
+    return item.label;
   }
   return undefined;
 };
