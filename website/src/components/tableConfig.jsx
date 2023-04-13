@@ -42,6 +42,8 @@ export function PageSizePreference(label = 'items') {
       { value: 20, label: `20 ${label}` },
       { value: 30, label: `30 ${label}` },
       { value: 50, label: `50 ${label}` },
+      { value: 100, label: `100 ${label}` },
+      { value: 200, label: `200 ${label}` },
     ],
   };
   return pageSize;
