@@ -102,7 +102,7 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
     } else {
       newEntry.gapToFastest = newEntry.fastestLapTime - allEntries[0].fastestLapTime;
     }
-    console.log(newEntry)
+    console.log(newEntry);
     SetRaceSummaryData(newEntry);
   }, []);
 
@@ -155,12 +155,12 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
           next: ({ provider, value }) => {
             console.debug('onNewLeaderboardEntry');
             const newEntry = value.data.onNewLeaderboardEntry;
-            console.log(newEntry)
+            console.log(newEntry);
             updateLeaderboardEntries(newEntry);
             SetraceSummaryFooterIsVisible(true);
             setTimeout(() => {
               SetraceSummaryFooterIsVisible(false);
-            }, 10000);
+            }, 12000);
           },
           error: (error) => console.warn(error),
         })
@@ -213,16 +213,25 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
       {leaderboardEntries.length > 0 && (
         <div className={styles.pageRoot}>
           <div className={styles.leaderboardRoot}>
-            <Header headerText={leaderboardConfig.headerText} eventId={eventId} qrCodeVisible={showQrCode} />
+            <Header
+              headerText={leaderboardConfig.headerText}
+              eventId={eventId}
+              qrCodeVisible={showQrCode}
+            />
             <LeaderboardTable
               leaderboardEntries={leaderboardEntries}
               scrollEnabled={scrollEnabled}
             />
           </div>
-          <FollowFooter visible eventId={eventId} text={leaderboardConfig.followFooterText} qrCodeVisible={showQrCode} />
+          <FollowFooter
+            visible
+            eventId={eventId}
+            text={leaderboardConfig.followFooterText}
+            qrCodeVisible={showQrCode}
+          />
         </div>
       )}
-      <RaceInfoFooter eventId={eventId} />
+      <RaceInfoFooter visible={!racSummaryFooterIsVisible} eventId={eventId} />
       <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} />
     </>
   );

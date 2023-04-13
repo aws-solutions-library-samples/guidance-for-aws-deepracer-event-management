@@ -1,5 +1,6 @@
 import { API, graphqlOperation } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { onNewOverlayInfo } from '../graphql/subscriptions';
 import { useWindowSize } from '../hooks/useWindowSize';
 import styles from './raceInfoFooter.module.css';
@@ -15,7 +16,8 @@ const racesStatusesWithFooterVisible = [
   //'RACE_FINSIHED',
 ];
 
-const RaceInfoFooter = ({ eventId }) => {
+const RaceInfoFooter = ({ eventId, visible }) => {
+  const { t } = useTranslation();
   const [raceInfo, SetRaceInfo] = useState({
     username: '',
     timeLeftInMs: null,
@@ -75,10 +77,12 @@ const RaceInfoFooter = ({ eventId }) => {
   }
   return (
     <>
-      {isVisible && (
+      {isVisible && visible && (
         <div className={styles.footerRoot}>
           <div>
-            <span className={styles.footerName}>Currently racing: </span>
+            <span className={styles.footerName}>
+              {t('leaderboard.race-info-footer.currently-racing')}:{' '}
+            </span>
             <span className={styles.footerName}>{username}</span>
           </div>
           <div>

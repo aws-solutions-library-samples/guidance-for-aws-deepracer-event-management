@@ -4,6 +4,7 @@ import classnames from 'classnames';
 import { useTranslation } from 'react-i18next';
 import { useWindowSize } from '../hooks/useWindowSize';
 import positionRank from '../positionRank';
+import { convertMsToString } from '../support-functions/time';
 import { scrollTo } from '../utils';
 import { Flag } from './flag';
 import styles from './leaderboardTable.module.css';
@@ -17,15 +18,6 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled }) => {
 
   const ScrollTo = ({ toId, toRef, duration, children }) => {
     return scrollTo({ id: toId, ref: toRef, duration });
-  };
-
-  const convertMsToString = (timeInMS) => {
-    const millisecondsAsString = String(Math.floor(timeInMS % 1000)).padStart(3, '0');
-    const secondsAsString = String(Math.floor(timeInMS / 1000)).padStart(2, '0');
-    const seconds = Math.floor(timeInMS / 1000);
-    const minutesAsString = String(Math.floor(seconds / 60)).padStart(2, '0');
-    const timeAsString = `${minutesAsString}:${secondsAsString}.${millisecondsAsString}`;
-    return timeAsString;
   };
 
   // Update the leaderboard list
@@ -91,7 +83,7 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled }) => {
 
       const timeOutBeforeScroll = 600000; // start scrolling every 10 min = 600000ms
       interval = setInterval(() => {
-        const scrollTimeDuration = 25000;
+        const scrollTimeDuration = leaderboardEntries.length * 1000;
 
         ScrollTo({ duration: scrollTimeDuration, toRef: entriesRef });
       }, timeOutBeforeScroll);
