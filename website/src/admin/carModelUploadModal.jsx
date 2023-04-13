@@ -1,7 +1,7 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useRef, useState } from 'react';
-import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
+import * as queries from '../graphql/queries';
 // import * as subscriptions from '../graphql/subscriptions'
 import { useTranslation } from 'react-i18next';
 
@@ -29,17 +29,6 @@ import {
   WrapLines,
 } from '../components/tableConfig';
 
-import dayjs from 'dayjs';
-
-// day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat');
-var utc = require('dayjs/plugin/utc');
-var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
-
-dayjs.extend(advancedFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
 // https://overreacted.io/making-setinterval-declarative-with-react-hooks/
 function useInterval(callback, delay) {
   const savedCallback = useRef();
@@ -65,7 +54,7 @@ const StatusModelContent = (props) => {
   const { t } = useTranslation();
 
   const [seconds, setSeconds] = useState(0);
-  const [ uploadStatus, setUploadStatus] = useState('');
+  const [uploadStatus, setUploadStatus] = useState('');
   const [result, setResult] = useState([]);
   const [results, setResults] = useState([]);
   const [commandId, setCommandId] = useState('');
@@ -79,8 +68,8 @@ const StatusModelContent = (props) => {
         entry: {
           carInstanceId: car.InstanceId,
           modelKey: model.modelKey,
-        }
-      }
+        },
+      },
     });
     setResult(response);
     setCommandId(response.data.uploadModelToCar.ssmCommandId);
@@ -105,9 +94,9 @@ const StatusModelContent = (props) => {
       variables: {
         carInstanceId: InstanceId,
         ssmCommandId: CommandId,
-      }
+      },
     });
-    const ssmCommandStatus = api_response.data.getUploadModelToCarStatus.ssmCommandStatus
+    const ssmCommandStatus = api_response.data.getUploadModelToCarStatus.ssmCommandStatus;
 
     const modelKeyPieces = model.key.split('/');
     const modelUser = modelKeyPieces[modelKeyPieces.length - 3];

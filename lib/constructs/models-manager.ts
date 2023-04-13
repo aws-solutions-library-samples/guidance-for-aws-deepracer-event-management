@@ -16,9 +16,9 @@ import {
     CodeFirstSchema,
     Directive,
     GraphqlType,
+    InputType,
     ObjectType,
     ResolvableField,
-    InputType,
 } from 'awscdk-appsync-utils';
 import { ServerlessClamscan } from 'cdk-serverless-clamscan';
 
@@ -33,12 +33,6 @@ export interface ModelsManagerProps {
         schema: CodeFirstSchema;
         api: appsync.IGraphqlApi;
         noneDataSource: appsync.NoneDataSource;
-    };
-    restApi: {
-        api: apig.RestApi;
-        apiAdminResource: apig.Resource;
-        bodyValidator: apig.RequestValidator;
-        instanceidCommandIdModel: apig.Model;
     };
     lambdaConfig: {
         runtime: lambda.Runtime;
@@ -124,8 +118,8 @@ export class ModelsManager extends Construct {
             })
         );
 
-        // Models table, used by delete_infected_files_function and also models_manager
-        const models_table = new dynamodb.Table(this, 'ModelsTable', {
+        // Models table, used by deleteInfectedFilesFunction and also models_manager
+        const modelsTable = new dynamodb.Table(this, 'ModelsTable', {
             partitionKey: {
                 name: 'modelId',
                 type: dynamodb.AttributeType.STRING,
@@ -136,7 +130,7 @@ export class ModelsManager extends Construct {
             removalPolicy: RemovalPolicy.DESTROY,
         });
 
-        models_table.addGlobalSecondaryIndex({
+        modelsTable.addGlobalSecondaryIndex({
             indexName: 'racerNameIndex',
             partitionKey: {
                 name: 'racerName',
@@ -150,9 +144,9 @@ export class ModelsManager extends Construct {
             projectionType: dynamodb.ProjectionType.INCLUDE,
         });
 
-        const delete_infected_files_function = new lambdaPython.PythonFunction(
+        const deleteInfectedFilesFunction = new lambdaPython.PythonFunction(
             this,
-            'delete_infected_files_function',
+            'deleteInfectedFilesFunction',
             {
                 entry: 'lib/lambdas/delete_infected_files_function/',
                 index: 'index.py',
@@ -163,7 +157,7 @@ export class ModelsManager extends Construct {
                 memorySize: 256,
                 architecture: props.lambdaConfig.architecture,
                 environment: {
-                    DDB_TABLE: models_table.tableName,
+                    DDB_TABLE: modelsTable.tableName,
                     MODELS_S3_BUCKET: modelsBucket.bucketName,
                     INFECTED_S3_BUCKET: infectedBucket.bucketName,
                     POWERTOOLS_SERVICE_NAME: 'delete_infected_files',
@@ -180,15 +174,15 @@ export class ModelsManager extends Construct {
         );
 
         // Bucket and DynamoDB permissions
-        modelsBucket.grantReadWrite(delete_infected_files_function, '*');
-        infectedBucket.grantReadWrite(delete_infected_files_function, '*');
-        models_table.grantReadWriteData(delete_infected_files_function);
+        modelsBucket.grantReadWrite(deleteInfectedFilesFunction, '*');
+        infectedBucket.grantReadWrite(deleteInfectedFilesFunction, '*');
+        modelsTable.grantReadWriteData(deleteInfectedFilesFunction);
 
         // Add clam av scan to S3 uploads bucket
         new ServerlessClamscan(this, 'ClamScan', {
             buckets: [modelsBucket],
-            onResult: new lambdaDestinations.LambdaDestination(delete_infected_files_function),
-            onError: new lambdaDestinations.LambdaDestination(delete_infected_files_function),
+            onResult: new lambdaDestinations.LambdaDestination(deleteInfectedFilesFunction),
+            onError: new lambdaDestinations.LambdaDestination(deleteInfectedFilesFunction),
             defsBucketAccessLogsConfig: {
                 logsBucket: props.logsBucket,
                 logsPrefix: 'access-logs/serverless-clam-scan/',
@@ -198,7 +192,7 @@ export class ModelsManager extends Construct {
         // Quarantine Models Function
         const quarantinedModelsHandler = new lambdaPython.PythonFunction(
             this,
-            'get_quarantined_models_function',
+            'quarantinedModelsHandler',
             {
                 entry: 'lib/lambdas/get_quarantined_models_function/',
                 index: 'index.py',
@@ -229,7 +223,7 @@ export class ModelsManager extends Construct {
         // upload_model_to_car_function
         const uploadModelToCarFunctionLambda = new lambdaPython.PythonFunction(
             this,
-            'upload_model_to_car_function',
+            'uploadModelToCarFunctionLambda',
             {
                 entry: 'lib/lambdas/upload_model_to_car_function/',
                 index: 'index.py',
@@ -321,7 +315,7 @@ export class ModelsManager extends Construct {
             maxAge: 3000,
         });
 
-        const get_models_policy = new iam.Policy(this, 'modelApiPolicy', {
+        const getModelsPolicy = new iam.Policy(this, 'modelApiPolicy', {
             statements: [
                 new iam.PolicyStatement({
                     effect: iam.Effect.ALLOW,
@@ -330,10 +324,10 @@ export class ModelsManager extends Construct {
                 }),
             ],
         });
-        get_models_policy.attachToRole(props.adminGroupRole);
-        get_models_policy.attachToRole(props.operatorGroupRole);
+        getModelsPolicy.attachToRole(props.adminGroupRole);
+        getModelsPolicy.attachToRole(props.operatorGroupRole);
 
-        const models_md5_handler = new lambdaPython.PythonFunction(this, 'modelsMD5Function', {
+        const modelsMd5Handler = new lambdaPython.PythonFunction(this, 'modelsMD5Function', {
             entry: 'lib/lambdas/models_md5/',
             description: 'Check MD5 on model files',
             index: 'index.py',
@@ -344,7 +338,7 @@ export class ModelsManager extends Construct {
             memorySize: 128,
             architecture: props.lambdaConfig.architecture,
             environment: {
-                DDB_TABLE: models_table.tableName,
+                DDB_TABLE: modelsTable.tableName,
                 MODELS_S3_BUCKET: modelsBucket.bucketName,
                 POWERTOOLS_SERVICE_NAME: 'md5_models',
                 LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
@@ -358,13 +352,13 @@ export class ModelsManager extends Construct {
             ],
         });
 
-        const dead_letter_queue = new sqs.Queue(this, 'deadLetterQueue');
-        models_md5_handler.addEventSource(
-            new lambdaEventSources.DynamoEventSource(models_table, {
+        const deadLetterQueue = new sqs.Queue(this, 'deadLetterQueue');
+        modelsMd5Handler.addEventSource(
+            new lambdaEventSources.DynamoEventSource(modelsTable, {
                 startingPosition: lambda.StartingPosition.TRIM_HORIZON,
                 batchSize: 1,
                 bisectBatchOnError: true,
-                onFailure: new lambdaEventSources.SqsDlq(dead_letter_queue),
+                onFailure: new lambdaEventSources.SqsDlq(deadLetterQueue),
                 retryAttempts: 5,
                 filters: [
                     lambda.FilterCriteria.filter({
@@ -407,14 +401,14 @@ export class ModelsManager extends Construct {
         ownModelsPolicy.attachToRole(props.operatorGroupRole);
 
         // Permissions for DynamoDB read / write
-        models_table.grantReadWriteData(models_md5_handler);
+        modelsTable.grantReadWriteData(modelsMd5Handler);
         // Permissions for DynamoDB stream read
-        models_table.grantStreamRead(models_md5_handler);
+        modelsTable.grantStreamRead(modelsMd5Handler);
 
         // Permissions for s3 bucket read / write
-        modelsBucket.grantReadWrite(models_md5_handler, 'private/*');
+        modelsBucket.grantReadWrite(modelsMd5Handler, 'private/*');
 
-        const models_handler = new lambdaPython.PythonFunction(this, 'modelsFunction', {
+        const modelsHandler = new lambdaPython.PythonFunction(this, 'modelsFunction', {
             entry: 'lib/lambdas/models_api/',
             description: 'Models resolver',
             index: 'index.py',
@@ -425,7 +419,7 @@ export class ModelsManager extends Construct {
             memorySize: 128,
             architecture: props.lambdaConfig.architecture,
             environment: {
-                DDB_TABLE: models_table.tableName,
+                DDB_TABLE: modelsTable.tableName,
                 POWERTOOLS_SERVICE_NAME: 'models resolver',
                 LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
                 MODELS_S3_BUCKET: modelsBucket.bucketName,
@@ -439,17 +433,17 @@ export class ModelsManager extends Construct {
             ],
         });
 
-        models_table.grantReadWriteData(models_handler);
-        modelsBucket.grantRead(models_handler, 'private/*');
+        modelsTable.grantReadWriteData(modelsHandler);
+        modelsBucket.grantRead(modelsHandler, 'private/*');
 
         // Define the data source for the API
-        const models_dataSource = props.appsyncApi.api.addLambdaDataSource(
+        const modelsDataSource = props.appsyncApi.api.addLambdaDataSource(
             'ModelsDataSource',
-            models_handler
+            modelsHandler
         );
 
         // GraphQL API
-        const model_object_type = new ObjectType('Models', {
+        const modelObjectType = new ObjectType('Models', {
             definition: {
                 modelId: GraphqlType.id(),
                 modelKey: GraphqlType.string(),
@@ -463,13 +457,13 @@ export class ModelsManager extends Construct {
             },
         });
 
-        props.appsyncApi.schema.addType(model_object_type);
+        props.appsyncApi.schema.addType(modelObjectType);
 
         props.appsyncApi.schema.addQuery(
             'getAllModels',
             new ResolvableField({
-                returnType: model_object_type.attribute({ isList: true }),
-                dataSource: models_dataSource,
+                returnType: modelObjectType.attribute({ isList: true }),
+                dataSource: modelsDataSource,
                 directives: [Directive.cognito('admin', 'operator')],
             })
         );
@@ -480,8 +474,8 @@ export class ModelsManager extends Construct {
                 args: {
                     racerName: GraphqlType.string({ isRequired: true }),
                 },
-                returnType: model_object_type.attribute({ isList: true }),
-                dataSource: models_dataSource,
+                returnType: modelObjectType.attribute({ isList: true }),
+                dataSource: modelsDataSource,
                 directives: [Directive.cognito('admin', 'operator')],
             })
         );
@@ -494,7 +488,7 @@ export class ModelsManager extends Construct {
         props.appsyncApi.schema.addQuery(
             'getQuarantinedModels',
             new ResolvableField({
-                returnType: model_object_type.attribute({ isList: true }),
+                returnType: modelObjectType.attribute({ isList: true }),
                 dataSource: quarantinedModelsDataSource,
                 directives: [Directive.cognito('admin', 'operator')],
             })
@@ -508,14 +502,14 @@ export class ModelsManager extends Construct {
                     racerName: GraphqlType.string({ isRequired: true }),
                     racerIdentityId: GraphqlType.string({ isRequired: true }),
                 },
-                returnType: model_object_type.attribute(),
-                dataSource: models_dataSource,
+                returnType: modelObjectType.attribute(),
+                dataSource: modelsDataSource,
             })
         );
         props.appsyncApi.schema.addSubscription(
             'addedModel',
             new ResolvableField({
-                returnType: model_object_type.attribute(),
+                returnType: modelObjectType.attribute(),
                 dataSource: props.appsyncApi.noneDataSource,
                 requestMappingTemplate: appsync.MappingTemplate.fromString(
                     `{
@@ -542,15 +536,15 @@ export class ModelsManager extends Construct {
                     modelMD5: GraphqlType.string(),
                     modelMetadataMD5: GraphqlType.string(),
                 },
-                returnType: model_object_type.attribute(),
-                dataSource: models_dataSource,
+                returnType: modelObjectType.attribute(),
+                dataSource: modelsDataSource,
             })
         );
 
         props.appsyncApi.schema.addSubscription(
             'updatedModel',
             new ResolvableField({
-                returnType: model_object_type.attribute(),
+                returnType: modelObjectType.attribute(),
                 dataSource: props.appsyncApi.noneDataSource,
                 requestMappingTemplate: appsync.MappingTemplate.fromString(
                     `{

@@ -1,4 +1,5 @@
 import i18next from '../../i18n';
+import { formatAwsDateTime } from '../../support-functions/time';
 
 export const VisibleContentOptions = () => {
   return [
@@ -43,7 +44,7 @@ export const ColumnDefinitions = (getUserNameFromId) => {
     {
       id: 'createdAt',
       header: i18next.t('fleets.created-at'),
-      cell: (item) => item.createdAt || '-',
+      cell: (item) => formatAwsDateTime(item.createdAt) || '-',
       sortingField: 'createdAt',
     },
     {

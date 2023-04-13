@@ -22,17 +22,7 @@ import {
   UserModelsColumnsConfig,
   WrapLines,
 } from './components/tableConfig';
-
-import dayjs from 'dayjs';
-
-// day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat');
-var utc = require('dayjs/plugin/utc');
-var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
-
-dayjs.extend(advancedFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
+import { formatAwsDateTime } from './support-functions/time';
 
 const Models = () => {
   const { t } = useTranslation();
@@ -55,7 +45,7 @@ const Models = () => {
                 return {
                   key: model.key,
                   modelName: modelKeyPieces[modelKeyPieces.length - 1],
-                  modelDate: dayjs(model.lastModified).format('YYYY-MM-DD HH:mm:ss (z)'),
+                  modelDate: formatAwsDateTime(model.lastModified),
                 };
               });
               setItems(userModels);

@@ -2,6 +2,7 @@ import { EventLinksButtons } from '../../components/eventLinksButtons';
 import { Flag } from '../../components/flag';
 import awsconfig from '../../config.json';
 import i18next from '../../i18n';
+import { formatAwsDateTime } from '../../support-functions/time';
 import {
   GetRaceResetsNameFromId,
   GetRaceTypeNameFromId,
@@ -141,11 +142,11 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
     {
       id: 'createdAt',
       header: i18next.t('events.created-at'),
-      cell: (item) => item.createdAt || '-',
+      cell: (item) => formatAwsDateTime(item.createdAt) || '-',
       sortingField: 'createdAt',
     },
     {
-      id: 'createdBy', // TODO: how to get the username from the user id???
+      id: 'createdBy',
       header: i18next.t('events.created-by'),
       cell: (item) => getUserNameFromId(item.createdBy) || '-',
       sortingField: 'createdBy',

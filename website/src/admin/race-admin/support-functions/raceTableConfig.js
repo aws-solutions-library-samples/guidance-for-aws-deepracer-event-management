@@ -1,4 +1,5 @@
 import i18next from '../../../i18n';
+import { formatAwsDateTime } from '../../../support-functions/time';
 
 export const VisibleContentOptions = () => {
   return [
@@ -43,7 +44,7 @@ export const ColumnDefinitions = () => {
     {
       id: 'createdAt',
       header: i18next.t('race-admin.created-at'),
-      cell: (item) => new Date(Date.parse(item.createdAt)).toLocaleString() || '-', // TODO add locale
+      cell: (item) => formatAwsDateTime(item.createdAt) || '-',
       sortingField: 'createdAt',
       width: 180,
     },
