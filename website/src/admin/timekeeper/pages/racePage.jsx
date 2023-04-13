@@ -17,7 +17,10 @@ import { PageLayout } from '../../../components/pageLayout';
 import useCounter from '../../../hooks/useCounter';
 import { usePublishOverlay } from '../../../hooks/usePublishOverlay';
 import useWebsocket from '../../../hooks/useWebsocket';
-import { GetRaceResetsNameFromId, GetRaceTypeNameFromId } from '../../events/raceConfig';
+import {
+  GetRaceResetsNameFromId,
+  GetRaceTypeNameFromId,
+} from '../../events/support-functions/raceConfig';
 import { LapTable } from '../components/lapTable';
 import LapTimer from '../components/lapTimer';
 import RaceTimer from '../components/raceTimer';

@@ -11,9 +11,9 @@ import {
 import { getNames, registerLocale } from 'i18n-iso-countries';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Flag } from '../../components/flag';
-import { useEventsContext } from '../../store/storeProvider';
-import { EventTypeConfig, GetTypeOfEventOptionFromId } from './eventDomain';
+import { Flag } from '../../../components/flag';
+import { useEventsContext } from '../../../store/storeProvider';
+import { EventTypeConfig, GetTypeOfEventOptionFromId } from '../support-functions/eventDomain';
 
 export const EventInfoPanel = ({
   onFormIsValid,

@@ -14,8 +14,8 @@ import { useTranslation } from 'react-i18next';
 import { AdminActivation } from '../admin/carActivation';
 import { AdminCars } from '../admin/cars';
 import { AdminEvents } from '../admin/events/adminEvents';
-import { CreateEvent } from '../admin/events/createEvent';
-import { EditEvent } from '../admin/events/editEvent';
+import { CreateEvent } from '../admin/events/pages/createEvent';
+import { EditEvent } from '../admin/events/pages/editEvent';
 import { AdminFleets } from '../admin/fleets/adminFleets';
 import { CreateFleet } from '../admin/fleets/createFleet';
 import { EditFleet } from '../admin/fleets/editFleet';
@@ -207,13 +207,11 @@ export function TopNav(props) {
             {
               type: 'link',
               text: t('topnav.events'),
-              info: <Badge color="blue">Beta</Badge>,
               href: '/admin/events',
             },
             {
               type: 'link',
               text: t('topnav.race-admin'),
-              info: <Badge color="blue">Beta</Badge>,
               href: '/admin/races',
             },
           ],
@@ -221,7 +219,6 @@ export function TopNav(props) {
         {
           type: 'link',
           text: t('topnav.time-keeper'),
-          info: <Badge color="blue">Beta</Badge>,
           href: '/admin/timekeeper',
         },
       ],
