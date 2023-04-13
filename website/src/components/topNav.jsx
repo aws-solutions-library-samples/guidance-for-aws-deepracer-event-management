@@ -207,13 +207,11 @@ export function TopNav(props) {
             {
               type: 'link',
               text: t('topnav.events'),
-              info: <Badge color="blue">Beta</Badge>,
               href: '/admin/events',
             },
             {
               type: 'link',
               text: t('topnav.race-admin'),
-              info: <Badge color="blue">Beta</Badge>,
               href: '/admin/races',
             },
           ],
@@ -221,7 +219,6 @@ export function TopNav(props) {
         {
           type: 'link',
           text: t('topnav.time-keeper'),
-          info: <Badge color="blue">Beta</Badge>,
           href: '/admin/timekeeper',
         },
       ],
