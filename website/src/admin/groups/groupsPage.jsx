@@ -21,7 +21,7 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 import { PageLayout } from '../../components/pageLayout';
 import { useGroupsApi } from '../../hooks/useGroupsApi';
-import { dateTimeToString } from './helper-functions/timeFormatting';
+import { formatAwsDateTime } from '../../support-functions/time';
 
 export function GroupsPage() {
   const { t } = useTranslation();
@@ -58,7 +58,7 @@ export function GroupsPage() {
     {
       id: 'creationDate',
       header: t('groups.header-creation-date'),
-      cell: (item) => dateTimeToString(item.creationDate) || '-',
+      cell: (item) => formatAwsDateTime(item.creationDate) || '-',
       sortingField: 'creationDate',
       width: 200,
       minWidth: 150,
@@ -66,7 +66,7 @@ export function GroupsPage() {
     {
       id: 'lastModifiedDate',
       header: t('groups.header-last-modified-date'),
-      cell: (item) => dateTimeToString(item.LastModifiedDate) || '-',
+      cell: (item) => formatAwsDateTime(item.LastModifiedDate) || '-',
       sortingField: 'lastModifiedDate',
       width: 200,
       minWidth: 150,

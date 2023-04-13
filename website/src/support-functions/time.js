@@ -8,7 +8,12 @@ dayjs.extend(advancedFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export const dateTimeToString = (dateTime) => {
+/**
+ * converts an an AWSDateTime to a more human readable string
+ * @param  {AWSDateTime} dateTime An extended ISO 8601 date and time string in the format YYYY-MM-DDThh:mm:ss.sssZ.
+ * @return {string} string representation YYYY-MM-DD HH:mm:ss (z)
+ */
+export const formatAwsDateTime = (dateTime) => {
   return dayjs(dateTime).format('YYYY-MM-DD HH:mm:ss (z)');
 };
 

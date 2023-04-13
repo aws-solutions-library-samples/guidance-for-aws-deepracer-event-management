@@ -25,12 +25,12 @@ import {
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useNotificationsDispatch } from '../../store/appLayoutProvider';
 import { useUsersContext } from '../../store/storeProvider';
+import { formatAwsDateTime } from '../../support-functions/time';
 import {
   addUserToGroupMutation,
   getGroupMembersQuery,
   removeUserFromGroupMutation,
 } from './helper-functions/apiCalls';
-import { dateTimeToString } from './helper-functions/timeFormatting';
 
 export function GroupMembersPage() {
   const { t } = useTranslation();
@@ -143,7 +143,7 @@ export function GroupMembersPage() {
     {
       id: 'userCreationDate',
       header: t('groups.detail.header-creation-date'),
-      cell: (item) => dateTimeToString(item.UserCreateDate) || '-',
+      cell: (item) => formatAwsDateTime(item.UserCreateDate) || '-',
       sortingField: 'userCreationDate',
       width: 200,
       minWidth: 150,
@@ -151,7 +151,7 @@ export function GroupMembersPage() {
     {
       id: 'userLastModifiedDate',
       header: t('groups.detail.header-last-modified-date'),
-      cell: (item) => dateTimeToString(item.UserLastModifiedDate) || '-',
+      cell: (item) => formatAwsDateTime(item.UserLastModifiedDate) || '-',
       sortingField: 'userLastModifiedDate',
       width: 200,
       minWidth: 150,

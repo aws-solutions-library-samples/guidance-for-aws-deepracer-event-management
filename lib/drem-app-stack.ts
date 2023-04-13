@@ -4,7 +4,6 @@ import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { IDistribution } from 'aws-cdk-lib/aws-cloudfront';
 import { CfnIdentityPool, IUserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import { EventBus } from 'aws-cdk-lib/aws-events';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
@@ -21,7 +20,6 @@ import { LandingPageManager } from './constructs/landing-page';
 import { Leaderboard } from './constructs/leaderboard';
 import { ModelsManager } from './constructs/models-manager';
 import { RaceManager } from './constructs/race-manager';
-import { RestApi } from './constructs/rest-api';
 import { StreamingOverlay } from './constructs/streaming-overlay';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
@@ -104,11 +102,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
         const noneDataSoure = appsyncApi.addNoneDataSource('none');
 
-        // Rest API - API GW
-        const restApi = new RestApi(this, 'restApi', {
-            cloudFrontDistributionName: props.cloudfrontDistribution.distributionDomainName,
-        });
-
         const modelsManager = new ModelsManager(this, 'ModelsManager', {
             adminGroupRole: props.adminGroupRole,
             operatorGroupRole: props.operatorGroupRole,
@@ -120,12 +113,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             },
             lambdaConfig: props.lambdaConfig,
             logsBucket: props.logsBucket,
-            restApi: {
-                api: restApi.api,
-                apiAdminResource: restApi.apiAdminResource,
-                bodyValidator: restApi.bodyValidator,
-                instanceidCommandIdModel: restApi.instanceidCommandidModel,
-            },
         });
 
         const carManager = new CarManager(this, 'CarManager', {
@@ -243,50 +230,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             domainName: props.cloudfrontDistribution.distributionDomainName,
         });
 
-        // TODO should be boken up and moved to the correspinding module
-        const adminPolicy = new iam.Policy(this, 'adminPolicy', {
-            statements: [
-                new iam.PolicyStatement({
-                    effect: iam.Effect.ALLOW,
-                    actions: ['execute-api:Invoke'],
-                    resources: [
-                        restApi.api.arnForExecuteApi('GET', '/models'),
-                        restApi.api.arnForExecuteApi('GET', '/cars/label'),
-                        restApi.api.arnForExecuteApi('POST', '/cars/upload'),
-                        restApi.api.arnForExecuteApi('POST', '/cars/upload/status'),
-                        restApi.api.arnForExecuteApi('GET', '/users'),
-                        restApi.api.arnForExecuteApi('GET', '/admin/quarantinedmodels'),
-                        restApi.api.arnForExecuteApi('GET', '/admin/groups'),
-                        restApi.api.arnForExecuteApi('POST', '/admin/groups'),
-                        restApi.api.arnForExecuteApi('DELETE', '/admin/groups'),
-                        restApi.api.arnForExecuteApi('GET', '/admin/groups/*'),
-                        restApi.api.arnForExecuteApi('POST', '/admin/groups/*'),
-                        restApi.api.arnForExecuteApi('DELETE', '/admin/groups/*'),
-                    ],
-                }),
-            ],
-        });
-        adminPolicy.attachToRole(props.adminGroupRole);
-
-        // TODO should be boken up and moved to the correspinding module
-        const operatorPolicy = new iam.Policy(this, 'operatorPolicy', {
-            statements: [
-                new iam.PolicyStatement({
-                    effect: iam.Effect.ALLOW,
-                    actions: ['execute-api:Invoke'],
-                    resources: [
-                        restApi.api.arnForExecuteApi('GET', '/models'),
-                        restApi.api.arnForExecuteApi('GET', '/cars/label'),
-                        restApi.api.arnForExecuteApi('POST', '/cars/upload'),
-                        restApi.api.arnForExecuteApi('POST', '/cars/upload/status'),
-                        restApi.api.arnForExecuteApi('GET', '/users'),
-                        restApi.api.arnForExecuteApi('GET', '/admin/quarantinedmodels'),
-                    ],
-                }),
-            ],
-        });
-        operatorPolicy.attachToRole(props.operatorGroupRole);
-
         // Outputs
         new cdk.CfnOutput(this, 'DremWebsite', {
             value: 'https://' + props.cloudfrontDistribution.distributionDomainName,
@@ -351,10 +294,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         // new cdk.CfnOutput(this, "stackRegion", { value: stack.region })
 
         new cdk.CfnOutput(this, 'region', { value: stack.region });
-
-        new cdk.CfnOutput(this, 'apiGatewayEndpoint', {
-            value: restApi.api.url,
-        });
 
         new cdk.CfnOutput(this, 'rumScript', {
             value: cwRumAppMonitor.script,

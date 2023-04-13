@@ -16,8 +16,8 @@ import {
   Table,
   TextFilter,
 } from '@cloudscape-design/components';
+import { formatAwsDateTime } from '../support-functions/time';
 
-import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import {
   AdminModelsColumnsConfig,
@@ -28,15 +28,6 @@ import {
   WrapLines,
 } from '../components/tableConfig';
 import CarModelUploadModal from './carModelUploadModal';
-
-// day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat');
-var utc = require('dayjs/plugin/utc');
-var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
-
-dayjs.extend(advancedFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 const AdminModels = () => {
   const { t } = useTranslation();
@@ -59,7 +50,7 @@ const AdminModels = () => {
     console.log('Collecting models...');
     const response = await API.graphql({
       query: queries.getAllModels,
-    })
+    });
     console.log(response);
     const models_response = response.data.getAllModels;
     const models = models_response.map(function (model, i) {
@@ -68,13 +59,12 @@ const AdminModels = () => {
         key: model.modelKey,
         userName: modelKeyPieces[modelKeyPieces.length - 3],
         modelName: modelKeyPieces[modelKeyPieces.length - 1],
-        modelDate: dayjs(model.uploadedDateTime).format('YYYY-MM-DD HH:mm:ss (z)'),
-        ...model
+        modelDate: formatAwsDateTime(model.uploadedDateTime),
+        ...model,
       };
     });
     setAllModels(models);
   }
-
 
   useEffect(() => {
     getModels();
