@@ -1,15 +1,15 @@
 import { Box, ColumnLayout, Grid, SpaceBetween, SplitPanel } from '@cloudscape-design/components';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { EventLinksButtons } from '../../../components/eventLinksButtons';
-import awsconfig from '../../../config.json';
-import { useFleetsContext } from '../../../store/storeProvider';
-import { GetTypeOfEventNameFromId } from '../eventDomain';
+import { EventLinksButtons } from '../../../../components/eventLinksButtons';
+import awsconfig from '../../../../config.json';
+import { useFleetsContext } from '../../../../store/storeProvider';
+import { GetTypeOfEventNameFromId } from '../../support-functions/eventDomain';
 import {
   GetRaceResetsNameFromId,
   GetRankingNameFromId,
   GetTrackTypeNameFromId,
-} from '../raceConfig';
+} from '../../support-functions/raceConfig';
 
 const EventDetailsPanel = ({ event, i18nStrings }) => {
   const { t } = useTranslation();
