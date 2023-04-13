@@ -2,14 +2,14 @@ import { Button, Form, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { PageLayout } from '../../components/pageLayout';
-import useMutation from '../../hooks/useMutation';
+import { PageLayout } from '../../../components/pageLayout';
+import useMutation from '../../../hooks/useMutation';
 
-import { merge } from '../../support-functions/merge';
-import { CarFleetPanel } from './carFleetPanel';
-import { event } from './eventDomain';
-import { EventInfoPanel } from './generalInfoPanel';
-import { RacePanel } from './racePanel';
+import { merge } from '../../../support-functions/merge';
+import { CarFleetPanel } from '../components/carFleetPanel';
+import { EventInfoPanel } from '../components/generalInfoPanel';
+import { RacePanel } from '../components/racePanel';
+import { event } from '../support-functions/eventDomain';
 
 export const CreateEvent = () => {
   const { t } = useTranslation();

@@ -1,8 +1,8 @@
-import { EventLinksButtons } from '../../components/eventLinksButtons';
-import { Flag } from '../../components/flag';
-import awsconfig from '../../config.json';
-import i18next from '../../i18n';
-import { formatAwsDateTime } from '../../support-functions/time';
+import { EventLinksButtons } from '../../../components/eventLinksButtons';
+import { Flag } from '../../../components/flag';
+import awsconfig from '../../../config.json';
+import i18next from '../../../i18n';
+import { formatAwsDateTime } from '../../../support-functions/time';
 import {
   GetRaceResetsNameFromId,
   GetRaceTypeNameFromId,

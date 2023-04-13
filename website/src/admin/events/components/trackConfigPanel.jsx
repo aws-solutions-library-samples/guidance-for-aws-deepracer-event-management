@@ -17,7 +17,7 @@ import {
   RaceTypeConfig,
   ResetConfig,
   TrackTypeConfig,
-} from './raceConfig';
+} from '../support-functions/raceConfig';
 
 const RaceCustomizationsFooter = (props) => {
   const { t } = useTranslation();

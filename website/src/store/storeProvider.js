@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { event } from '../admin/events/eventDomain';
+import { event } from '../admin/events/support-functions/eventDomain';
 import { useCarsApi } from '../hooks/useCarsApi';
 import { useEventsApi } from '../hooks/useEventsApi';
 import { useFleetsApi } from '../hooks/useFleetsApi';
