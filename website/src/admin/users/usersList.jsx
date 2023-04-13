@@ -7,7 +7,6 @@ import {
   Table,
   TextFilter,
 } from '@cloudscape-design/components';
-import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Flag } from '../../components/flag';
@@ -21,6 +20,7 @@ import {
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useUsersContext } from '../../store/storeProvider';
+import { formatAwsDateTime } from '../../support-functions/time';
 
 export const UsersList = () => {
   const { t } = useTranslation();
@@ -79,7 +79,7 @@ export const UsersList = () => {
     {
       id: 'UserCreateDate',
       header: t('users.header-creation-date'),
-      cell: (item) => dayjs(item.UserCreateDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => formatAwsDateTime(item.UserCreateDate) || '-',
       sortingField: 'UserCreateDate',
       width: 200,
       minWidth: 150,
@@ -87,7 +87,7 @@ export const UsersList = () => {
     {
       id: 'UserLastModifiedDate',
       header: t('users.header-last-modified-date'),
-      cell: (item) => dayjs(item.UserLastModifiedDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => formatAwsDateTime(item.UserLastModifiedDate) || '-',
       sortingField: 'UserLastModifiedDate',
       width: 200,
       minWidth: 150,

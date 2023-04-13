@@ -6,18 +6,10 @@ import {
   Pagination,
   SpaceBetween,
 } from '@cloudscape-design/components';
-import dayjs from 'dayjs';
+
 import { default as React } from 'react';
 import i18next from '../i18n';
-
-// day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat');
-var utc = require('dayjs/plugin/utc');
-var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
-
-dayjs.extend(advancedFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
+import { formatAwsDateTime } from '../support-functions/time';
 
 export function EmptyState({ title, subtitle, action }) {
   return (
@@ -105,13 +97,13 @@ export function CarColumnsConfig() {
     {
       id: 'registrationDate',
       header: i18next.t('cars.registration-date'),
-      cell: (item) => dayjs(item.RegistrationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => formatAwsDateTime(item.RegistrationDate) || '-',
       sortingField: 'registrationDate',
     },
     {
       id: 'lastPingDateTime',
       header: i18next.t('cars.last-ping-time'),
-      cell: (item) => dayjs(item.lastPingDateTime).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => formatAwsDateTime(item.lastPingDateTime) || '-',
       sortingField: 'lastPingDateTime',
     },
     {

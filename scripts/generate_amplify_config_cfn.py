@@ -4,24 +4,14 @@ with open("cfn.outputs") as json_file:
     data = json.load(json_file)
 
     for key in data:
-        if key["OutputKey"].startswith("apiGatewayEndpoint"):
-            apiGatewayEndpoint = key["OutputValue"]
         if key["OutputKey"].startswith("appsyncEndpoint"):
             appsyncEndpoint = key["OutputValue"]
-        # if key["OutputKey"] == "distributionId":
-        #     distributionId = key["OutputValue"]
-        # if key["OutputKey"] == "stackRegion":
-        #     stackRegion = key["OutputValue"]
         if key["OutputKey"].startswith("userPoolWebClientId"):
             userPoolWebClientId = key["OutputValue"]
-        # if key["OutputKey"] == "sourceBucketName":
-        #     sourceBucketName = key["OutputValue"]
         if key["OutputKey"] == "modelsBucketName":
             modelsBucketName = key["OutputValue"]
         if key["OutputKey"] == "region":
             region = key["OutputValue"]
-        # if key["OutputKey"] == "CFURL":
-        #     CFURL = key["OutputValue"]
         if key["OutputKey"].startswith("userPoolId"):
             userPoolId = key["OutputValue"]
         if key["OutputKey"].startswith("identityPoolId"):
@@ -52,13 +42,6 @@ with open("cfn.outputs") as json_file:
             "identityPoolId": identityPoolId,
         },
         "API": {
-            "endpoints": [
-                {
-                    "name": "deepracerEventManager",
-                    "endpoint": apiGatewayEndpoint,
-                    "region": region,
-                }
-            ],
             "aws_appsync_graphqlEndpoint": appsyncEndpoint,
             "aws_appsync_region": region,
             "aws_appsync_authenticationType": "AMAZON_COGNITO_USER_POOLS",

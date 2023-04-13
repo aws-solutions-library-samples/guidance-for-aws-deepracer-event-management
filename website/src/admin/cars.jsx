@@ -13,7 +13,6 @@ import {
   TextFilter,
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
-import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -30,15 +29,6 @@ import {
   WrapLines,
 } from '../components/tableConfig';
 import * as queries from '../graphql/queries';
-
-// day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat');
-var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
-var utc = require('dayjs/plugin/utc');
-
-dayjs.extend(advancedFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 const AdminCars = () => {
   const { t } = useTranslation();
