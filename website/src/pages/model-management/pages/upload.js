@@ -3,8 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Button, Container, FormField, SpaceBetween } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
-import { ModelUploadStatus } from './components/modelUploadStatus';
-import { PageLayout } from './components/pageLayout';
+import { PageLayout } from '../../../components/pageLayout';
+import { ModelUploadStatus } from '../components/modelUploadStatus';
 
 const Upload = () => {
   const { t } = useTranslation();
@@ -35,7 +35,7 @@ const Upload = () => {
     <>
       <PageLayout
         header={t('upload.header')}
-        description={t('upload.header-description')}
+        //description={t('upload.header-description')}
         breadcrumbs={[
           { text: t('home.breadcrumb'), href: '/' },
           { text: t('upload.breadcrumb'), href: '/upload' },
