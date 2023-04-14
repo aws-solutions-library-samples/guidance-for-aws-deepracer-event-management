@@ -1,8 +1,9 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Box, Button, Modal, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
+import { Button, Table, TextFilter } from '@cloudscape-design/components';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { DeleteModal, ItemList } from '../../components/deleteModal';
 import { PageLayout } from '../../components/pageLayout';
 import {
   DefaultPreferences,
@@ -16,6 +17,7 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useRacesApi } from '../../hooks/useRacesApi';
 import { useSplitPanelOptionsDispatch } from '../../store/appLayoutProvider';
 import { useSelectedEventContext } from '../../store/storeProvider';
+import { formatAwsDateTime } from '../../support-functions/time';
 import { EmptyPanel } from './components/emptyPanel';
 import { MultiChoicePanel } from './components/multiChoicePanel';
 import { RaceDetailsPanel } from './components/raceDetailsPanel';
@@ -163,35 +165,20 @@ const RaceAdmin = () => {
     >
       {raceTable}
 
-      <Modal
-        onDismiss={() => setDeleteModalVisible(false)}
-        visible={deleteModalVisible}
-        closeAriaLabel="Close modal"
-        footer={
-          <Box float="right">
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="link" onClick={() => setDeleteModalVisible(false)}>
-                {t('button.cancel')}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  deleteRaces();
-                  setDeleteModalVisible(false);
-                }}
-              >
-                {t('button.delete')}
-              </Button>
-            </SpaceBetween>
-          </Box>
-        }
+      <DeleteModal
         header={t('race-admin.delete-races')}
+        onDelete={deleteRaces}
+        onVisibleChange={setDeleteModalVisible}
+        visible={deleteModalVisible}
       >
         {t('race-admin.delete-race-warning')}: <br></br>{' '}
-        {SelectedRacesInTable.map((selectedRace) => {
-          return selectedRace.raceId + ' ';
-        })}
-      </Modal>
+        <ItemList
+          items={SelectedRacesInTable.map(
+            (selectedRace) =>
+              selectedRace.username + ': ' + formatAwsDateTime(selectedRace.createdAt)
+          )}
+        />
+      </DeleteModal>
     </PageLayout>
   );
 };

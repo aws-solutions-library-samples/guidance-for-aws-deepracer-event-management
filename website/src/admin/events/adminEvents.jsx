@@ -5,8 +5,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Box, Button, Modal, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
+import { Button, Table, TextFilter } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
+import { DeleteModal } from '../../components/deleteModal';
 import { PageLayout } from '../../components/pageLayout';
 import {
   DefaultPreferences,
@@ -179,50 +180,29 @@ const AdminEvents = () => {
 
   // JSX
   return (
-    <>
-      <PageLayout
-        header={t('events.header')}
-        description={t('events.description')}
-        breadcrumbs={[
-          { text: t('home.breadcrumb'), href: '/' },
-          { text: t('admin.breadcrumb'), href: '/admin/home' },
-          { text: t('events.breadcrumb') },
-        ]}
-      >
-        {eventsTable}
+    <PageLayout
+      header={t('events.header')}
+      description={t('events.description')}
+      breadcrumbs={[
+        { text: t('home.breadcrumb'), href: '/' },
+        { text: t('admin.breadcrumb'), href: '/admin/home' },
+        { text: t('events.breadcrumb') },
+      ]}
+    >
+      {eventsTable}
 
-        {/* delete modal */}
-        <Modal
-          onDismiss={() => setDeleteModalVisible(false)}
-          visible={deleteModalVisible}
-          closeAriaLabel="Close modal"
-          footer={
-            <Box float="right">
-              <SpaceBetween direction="horizontal" size="xs">
-                <Button variant="link" onClick={() => setDeleteModalVisible(false)}>
-                  {t('button.cancel')}
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    deleteEvents();
-                    setDeleteModalVisible(false);
-                  }}
-                >
-                  {t('button.delete')}
-                </Button>
-              </SpaceBetween>
-            </Box>
-          }
-          header={t('events.delete-event')}
-        >
-          {t('events.delete-warning')}: <br></br>{' '}
-          {SelectedEventsInTable.map((selectedEvent) => {
-            return selectedEvent.eventName + ' ';
-          })}
-        </Modal>
-      </PageLayout>
-    </>
+      <DeleteModal
+        header={t('events.delete-event')}
+        onDelete={deleteEvents}
+        onVisibleChange={setDeleteModalVisible}
+        visible={deleteModalVisible}
+      >
+        {t('events.delete-warning')}: <br></br>{' '}
+        {SelectedEventsInTable.map((selectedEvent) => {
+          return selectedEvent.eventName + ' ';
+        })}
+      </DeleteModal>
+    </PageLayout>
   );
 };
 
