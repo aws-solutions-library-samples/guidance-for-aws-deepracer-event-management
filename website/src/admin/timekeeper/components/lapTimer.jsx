@@ -69,7 +69,7 @@ const LapTimer = forwardRef((props, ref) => {
   );
 
   return (
-    <Header>
+    <Header variant="h3">
       {time.minutes}:{time.seconds}:{time.milliseconds}
     </Header>
   );
