@@ -49,7 +49,7 @@ const MultiChoicePanel = ({ races }) => {
         <FormField label={t('race-admin.multi-select.fastest-lap-time')}>
           {convertMsToString(metrics.fastestLap)}
         </FormField>
-        <FormField label={t('race-admin.multi-select.sloweest-lap-time')}>
+        <FormField label={t('race-admin.multi-select.slowest-lap-time')}>
           {convertMsToString(metrics.slowestLap)}
         </FormField>
         <FormField label={'Number of unique racers'}>{metrics.numberOfUniqueRacers}</FormField>
