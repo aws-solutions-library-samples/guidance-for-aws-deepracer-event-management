@@ -1,39 +1,62 @@
+import { Box, Button, Modal, SpaceBetween } from '@cloudscape-design/components';
 import { Storage } from 'aws-amplify';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNotificationsDispatch } from '../../../store/appLayoutProvider';
 
-import { Box, Button, Flashbar, Modal, SpaceBetween } from '@cloudscape-design/components';
+export const DeleteModelModal = ({ disabled, selectedModels, removeModel, variant }) => {
+  const { t } = useTranslation();
+  const [addNotification, dismissNotification] = useNotificationsDispatch();
 
-/* eslint import/no-anonymous-default-export: [2, {"allowArrowFunction": true}] */
-export default ({ disabled, selectedItems, removeItem, variant }) => {
   const [visible, setVisible] = useState(false);
-  const [msgs, setMsgs] = useState([]);
 
-  function modalOpen(selectedModels) {
-    setVisible(true);
-
+  const deleteModels = async () => {
+    setVisible(false);
     for (const i in selectedModels) {
       const model = selectedModels[i];
-      Storage.remove(model.key, { level: 'private' });
-
-      setMsgs((msgs) => [
-        ...msgs,
-        {
-          header: model.modelName,
-          type: 'success',
-          content: 'The model has been deleted.',
-          dismissible: true,
-          dismissLabel: 'Dismiss message',
-          onDismiss: () => setMsgs((msgs) => msgs.filter((msgs) => msgs.id !== model.key)),
-          id: model.key,
+      addNotification({
+        header: `Model ${model.modelName} is being deleted...`,
+        type: 'info',
+        loading: true,
+        dismissible: true,
+        dismissLabel: 'Dismiss message',
+        id: model.key,
+        onDismiss: () => {
+          dismissNotification(model.key);
         },
-      ]);
-      removeItem(model.key);
-    }
-  }
+      });
 
-  function modalClose() {
-    setVisible(false);
-  }
+      Storage.remove(model.key, { level: 'private' })
+        .then((response) => {
+          console.info(response);
+          addNotification({
+            header: `Model ${model.modelName} has been deleted`,
+            type: 'success',
+            dismissible: true,
+            dismissLabel: 'Dismiss message',
+            id: model.key,
+            onDismiss: () => {
+              dismissNotification(model.key);
+            },
+          });
+
+          removeModel(model.key);
+        })
+        .catch((error) => {
+          console.info(error);
+          addNotification({
+            header: `Model ${model.modelName} could not be deleted`,
+            type: 'error',
+            dismissible: true,
+            dismissLabel: 'Dismiss message',
+            id: model.key,
+            onDismiss: () => {
+              dismissNotification(model.key);
+            },
+          });
+        });
+    }
+  };
 
   return (
     <>
@@ -41,30 +64,41 @@ export default ({ disabled, selectedItems, removeItem, variant }) => {
         disabled={disabled}
         variant={variant}
         onClick={() => {
-          modalOpen(selectedItems);
+          setVisible(true);
         }}
       >
-        Delete models
+        {selectedModels.length > 1 ? t('models.delete-models') : t('models.delete-model')}
       </Button>
 
       <Modal
-        onDismiss={() => modalClose()}
+        onDismiss={() => setVisible(false)}
         visible={visible}
         closeAriaLabel="Close Modal"
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="primary" onClick={() => modalClose()}>
-                Ok
+              <Button onClick={() => setVisible(false)}>{t('button.cancel')}</Button>
+              <Button variant="primary" onClick={() => deleteModels()}>
+                {t('button.delete')}
               </Button>
             </SpaceBetween>
           </Box>
         }
-        header="Delete models"
+        header={t('models.delete-modal.header')}
       >
-        Deleting models
-        <Flashbar items={msgs} />
+        {t('models.delete-modal.description')}
+        <ItemsList items={selectedModels} />
       </Modal>
     </>
+  );
+};
+
+const ItemsList = ({ items }) => {
+  return (
+    <ul>
+      {items.map((item) => (
+        <li key={item.key}>{item.modelName}</li>
+      ))}
+    </ul>
   );
 };
