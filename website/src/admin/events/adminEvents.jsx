@@ -140,7 +140,7 @@ const AdminEvents = () => {
         setSelectedEventsInTable(detail.selectedItems);
       }}
       selectedItems={SelectedEventsInTable}
-      selectionType="multi"
+      selectionType="single"
       columnDefinitions={columnDefinitions}
       items={items}
       loading={eventIsLoading}
