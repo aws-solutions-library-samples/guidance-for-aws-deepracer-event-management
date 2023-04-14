@@ -24,7 +24,7 @@ const EventDetailsPanel = ({ event, i18nStrings }) => {
     );
   };
   // JSX
-  console.info(event);
+  console.debug(event);
   return (
     <SplitPanel
       header={event.eventName}

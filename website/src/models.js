@@ -38,9 +38,9 @@ const Models = () => {
         .then((user) => {
           const username = user.username;
           const s3Path = username + '/models';
-          Storage.list(s3Path, { level: 'private' }).then((models) => {
+          Storage.list(s3Path, { level: 'private', pageSize: 200 }).then((models) => {
             if (models !== undefined) {
-              var userModels = models.map(function (model) {
+              var userModels = models.results.map(function (model) {
                 const modelKeyPieces = model.key.split('/');
                 return {
                   key: model.key,

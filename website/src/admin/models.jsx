@@ -34,10 +34,12 @@ const AdminModels = () => {
 
   const [allModels, setAllModels] = useState([]);
   const [cars, setCars] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [modelsIsLoading, setModelsIsLoading] = useState(true);
+  const [carsIsLoading, setCarsIsLoading] = useState(true);
   const [selectedModelsBtn, setSelectedModelsBtn] = useState(true);
 
   async function getCarsOnline() {
+    setCarsIsLoading(true);
     console.log('Collecting cars...');
     // Get CarsOnline
     const response = await API.graphql({
@@ -45,8 +47,10 @@ const AdminModels = () => {
       variables: { online: true },
     });
     setCars(response.data.carsOnline);
+    setCarsIsLoading(false);
   }
   async function getModels() {
+    setModelsIsLoading(true);
     console.log('Collecting models...');
     const response = await API.graphql({
       query: queries.getAllModels,
@@ -64,19 +68,13 @@ const AdminModels = () => {
       };
     });
     setAllModels(models);
+    setModelsIsLoading(false);
   }
 
   useEffect(() => {
     getModels();
-    setIsLoading(false);
-
-    return () => {
-      // Unmounting
-    };
-  }, []);
-
-  useEffect(() => {
     getCarsOnline();
+
     return () => {
       // Unmounting
     };
@@ -208,7 +206,7 @@ const AdminModels = () => {
             filteringAriaLabel={t('models.filter-models')}
           />
         }
-        loading={isLoading}
+        loading={modelsIsLoading || carsIsLoading}
         loadingText={t('models.loading-models')}
         visibleColumns={preferences.visibleContent}
         selectedItems={selectedItems}
