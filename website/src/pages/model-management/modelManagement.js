@@ -1,6 +1,6 @@
 import { Auth, Storage } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
-import DeleteModelModal from './components/deleteModelModal';
+import { DeleteModelModal } from './components/deleteModelModal';
 import { ModelsTable } from './components/modelsTable';
 
 import { SpaceBetween } from '@cloudscape-design/components';
@@ -13,8 +13,8 @@ import { ModelUpload } from './components/modelUpload';
 export const ModelMangement = () => {
   const { t } = useTranslation();
 
-  const [allItems, setItems] = useState([]);
-  const [selectedItems, setSelectedItems] = useState([]);
+  const [models, setModels] = useState([]);
+  const [selectedModels, setSelectedModels] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export const ModelMangement = () => {
                   modelDate: formatAwsDateTime(model.lastModified),
                 };
               });
-              setItems(userModels);
+              setModels(userModels);
               setIsLoading(false);
             }
           });
@@ -50,18 +50,32 @@ export const ModelMangement = () => {
     };
   }, []);
 
-  const removeItem = (key) => {
-    setItems((items) => items.filter((items) => items.key !== key));
-    setSelectedItems((items) => items.filter((items) => items.key !== key));
+  const removeModelHandler = (key) => {
+    setModels((items) => items.filter((items) => items.key !== key));
+    setSelectedModels((items) => items.filter((items) => items.key !== key));
+  };
+
+  const addModelHandler = (newItem) => {
+    setModels((items) => {
+      const index = items.findIndex((item) => item.key === newItem.key);
+      console.info(index);
+      if (index > -1) {
+        const updatedItems = [...items];
+        updatedItems[newItem.key] = newItem;
+        return updatedItems;
+      } else {
+        return [...items, newItem];
+      }
+    });
   };
 
   const actionButtons = (
     <SpaceBetween direction="horizontal" size="xs">
-      <ModelUpload />
+      <ModelUpload addModel={addModelHandler} />
       <DeleteModelModal
-        disabled={selectedItems.length === 0}
-        selectedItems={selectedItems}
-        removeItem={removeItem}
+        disabled={selectedModels.length === 0}
+        selectedModels={selectedModels}
+        removeModel={removeModelHandler}
         variant="primary"
       />
     </SpaceBetween>
@@ -70,14 +84,13 @@ export const ModelMangement = () => {
   return (
     <PageLayout
       header={t('models.header')}
-      //description={t('models.list-of-your-uploaded-models')}
       breadcrumbs={[{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]}
     >
       <ModelsTable
         isLoading={isLoading}
-        models={allItems}
-        setSelectedModels={setSelectedItems}
-        selectedModels={selectedItems}
+        models={models}
+        setSelectedModels={setSelectedModels}
+        selectedModels={selectedModels}
         actionButtons={actionButtons}
       />
     </PageLayout>
