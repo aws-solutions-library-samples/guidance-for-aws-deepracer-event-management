@@ -34,7 +34,6 @@ def lambda_handler(event, context):
 
 @app.resolver(type_name="Query", field_name="getAllModels")
 def getAllModels():
-    # TODO merge data from s3 and ddb
     try:
         s3_response = client_s3.list_objects_v2(
             Bucket=bucket,
@@ -52,7 +51,9 @@ def getAllModels():
 
             ddb_items_dict = {}
             for item in sorted_table_items:
-                ddb_items_dict[item["modelKey"]] = item
+                # Only take latest version if the file has been uploaded multiple times
+                if item["modelKey"] not in ddb_items_dict:
+                    ddb_items_dict[item["modelKey"]] = item
 
             merged_items = []
             for s3_model in s3_contents:
