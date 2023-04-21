@@ -1,28 +1,20 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import {
-  Button,
-  CollectionPreferences,
-  Header,
-  Pagination,
-  Table,
-  TextFilter,
-} from '@cloudscape-design/components';
+import { Button, Header, Pagination, Table, TextFilter } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 
 import { useTranslation } from 'react-i18next';
-import { PageLayout } from '../components/pageLayout';
+import { PageLayout } from '../../components/pageLayout';
 import {
   AdminModelsColumnsConfig,
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
-  PageSizePreference,
-  WrapLines,
-} from '../components/tableConfig';
-import * as queries from '../graphql/queries';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import { formatAwsDateTime } from '../support-functions/time';
+  TablePreferences,
+} from '../../components/tableConfig';
+import * as queries from '../../graphql/queries';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { formatAwsDateTime } from '../../support-functions/time';
 
 const AdminQuarantine = () => {
   const { t } = useTranslation();
@@ -147,18 +139,10 @@ const AdminQuarantine = () => {
         loadingText={t('models.loading-models')}
         visibleColumns={preferences.visibleContent}
         preferences={
-          <CollectionPreferences
-            title={t('table.preferences')}
-            confirmLabel={t('button.confirm')}
-            cancelLabel={t('button.cancel')}
-            onConfirm={({ detail }) => setPreferences(detail)}
+          <TablePreferences
             preferences={preferences}
-            pageSizePreference={PageSizePreference(t('models.page-size-label'))}
-            visibleContentPreference={{
-              title: t('table.select-visible-colunms'),
-              options: visibleContentOptions,
-            }}
-            wrapLinesPreference={WrapLines}
+            setPreferences={setPreferences}
+            contentOptions={visibleContentOptions}
           />
         }
       />
