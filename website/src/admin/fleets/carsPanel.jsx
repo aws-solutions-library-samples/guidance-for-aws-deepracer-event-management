@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CarTable } from '../../components/carsTable';
+import { CarsTable } from '../../components/cars-table/carsTable';
 
 export const CarsPanel = ({ carIds, onChange }) => {
   const [selectedCars, setSelectedCars] = useState([]);
@@ -21,5 +21,5 @@ export const CarsPanel = ({ carIds, onChange }) => {
     }
   }, [carIds]);
 
-  return <CarTable selectedCarsInTable={selectedCars} setSelectedCarsInTable={UpdateConfig} />;
+  return <CarsTable selectedCarsInTable={selectedCars} setSelectedCarsInTable={UpdateConfig} />;
 };

@@ -1,7 +1,7 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useRef, useState } from 'react';
-import * as mutations from '../graphql/mutations';
-import * as queries from '../graphql/queries';
+import * as mutations from '../../graphql/mutations';
+import * as queries from '../../graphql/queries';
 // import * as subscriptions from '../graphql/subscriptions'
 import { useTranslation } from 'react-i18next';
 
@@ -11,7 +11,6 @@ import {
   Box,
   Button,
   Checkbox,
-  CollectionPreferences,
   Modal,
   ProgressBar,
   SpaceBetween,
@@ -20,14 +19,13 @@ import {
 } from '@cloudscape-design/components';
 
 import {
-  CarColumnsConfig,
-  CarVisibleContentOptions,
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
-  PageSizePreference,
-  WrapLines,
-} from '../components/tableConfig';
+  TablePreferences,
+} from '../../components/tableConfig';
+
+import { ColumnsConfig, VisibleContentOptions } from '../../components/cars-table/carTableConfig';
 
 // https://overreacted.io/making-setinterval-declarative-with-react-hooks/
 function useInterval(callback, delay) {
@@ -162,48 +160,46 @@ const StatusModelContent = (props) => {
   }, 500);
 
   // body of ticker code
+  const columnDefinitions = [
+    {
+      id: 'ModelName',
+      header: t('carmodelupload.modelname'),
+      cell: (item) => item.ModelName || '-',
+      sortingField: 'ModelName',
+    },
+    {
+      id: 'CommandId',
+      header: t('carmodelupload.commandid'),
+      cell: (item) => item.CommandId || '-',
+      sortingField: 'CommandId',
+    },
+    {
+      id: 'Status',
+      header: t('carmodelupload.status'),
+      cell: (item) => item.Status || '-',
+      sortingField: 'Status',
+    },
+  ];
 
   return (
-    <div>
-      <Table
-        columnDefinitions={[
-          {
-            id: 'ModelName',
-            header: t('carmodelupload.modelname'),
-            cell: (item) => item.ModelName || '-',
-            sortingField: 'ModelName',
-          },
-          {
-            id: 'CommandId',
-            header: t('carmodelupload.commandid'),
-            cell: (item) => item.CommandId || '-',
-            sortingField: 'CommandId',
-          },
-          {
-            id: 'Status',
-            header: t('carmodelupload.status'),
-            cell: (item) => item.Status || '-',
-            sortingField: 'Status',
-          },
-        ]}
-        items={results}
-        loadingText={t('carmodelupload.loading')}
-        sortingDisabled
-        empty={
-          <Alert visible={true} dismissAriaLabel="Close alert" header="Starting">
-            {t('carmodelupload.please-wait')}
-          </Alert>
-        }
-        header={
-          <ProgressBar
-            value={
-              ((props.modelsTotalCount - props.selectedModels.length) / props.modelsTotalCount) *
-              100
-            }
-          />
-        }
-      />
-    </div>
+    <Table
+      columnDefinitions={columnDefinitions}
+      items={results}
+      loadingText={t('carmodelupload.loading')}
+      sortingDisabled
+      empty={
+        <Alert visible={true} dismissAriaLabel="Close alert" header="Starting">
+          {t('carmodelupload.please-wait')}
+        </Alert>
+      }
+      header={
+        <ProgressBar
+          value={
+            ((props.modelsTotalCount - props.selectedModels.length) / props.modelsTotalCount) * 100
+          }
+        />
+      }
+    />
   );
 };
 
@@ -241,7 +237,8 @@ export default (props) => {
     );
   }
 
-  const carColumnsConfig = CarColumnsConfig();
+  const carColumnsConfig = ColumnsConfig();
+  const visibleContentOptions = VisibleContentOptions();
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(props.cars, {
@@ -286,18 +283,10 @@ export default (props) => {
       }
       resizableColumns
       preferences={
-        <CollectionPreferences
-          title={t('table.preferences')}
-          confirmLabel={t('button.confirm')}
-          cancelLabel={t('button.cancel')}
-          onConfirm={({ detail }) => setPreferences(detail)}
+        <TablePreferences
           preferences={preferences}
-          pageSizePreference={PageSizePreference('cars')}
-          visibleContentPreference={{
-            title: t('table.select-visible-colunms'),
-            options: CarVisibleContentOptions(),
-          }}
-          wrapLinesPreference={WrapLines}
+          setPreferences={setPreferences}
+          contentOptions={visibleContentOptions}
         />
       }
     />

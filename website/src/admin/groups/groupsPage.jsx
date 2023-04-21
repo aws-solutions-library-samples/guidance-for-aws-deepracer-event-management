@@ -1,21 +1,12 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import {
-  Button,
-  CollectionPreferences,
-  Header,
-  Link,
-  Pagination,
-  Table,
-  TextFilter,
-} from '@cloudscape-design/components';
+import { Button, Header, Link, Pagination, Table, TextFilter } from '@cloudscape-design/components';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
-  PageSizePreference,
-  WrapLines,
+  TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 
@@ -173,18 +164,10 @@ export function GroupsPage() {
         trackBy="GroupName"
         resizableColumns
         preferences={
-          <CollectionPreferences
-            title={t('table.preferences')}
-            confirmLabel={t('button.confirm')}
-            cancelLabel={t('button.cancel')}
-            onConfirm={({ detail }) => setPreferences(detail)}
+          <TablePreferences
             preferences={preferences}
-            pageSizePreference={PageSizePreference(t('groups.page-size-label'))}
-            visibleContentPreference={{
-              title: t('table.select-visible-colunms'),
-              options: visibleContentOptions,
-            }}
-            wrapLinesPreference={WrapLines}
+            setPreferences={setPreferences}
+            contentOptions={visibleContentOptions}
           />
         }
       />
