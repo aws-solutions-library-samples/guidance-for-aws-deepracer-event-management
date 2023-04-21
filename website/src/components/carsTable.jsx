@@ -3,7 +3,6 @@
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Button, Header, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
-import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import {
   CarColumnsConfig,
@@ -17,15 +16,6 @@ import {
 
 import { useTranslation } from 'react-i18next';
 import { useCarsContext } from '../store/storeProvider';
-
-// day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat');
-var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
-var utc = require('dayjs/plugin/utc');
-
-dayjs.extend(advancedFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 const Actions = ({ children, t, setOnline, setIsLoading, edit = false }) => {
   return (

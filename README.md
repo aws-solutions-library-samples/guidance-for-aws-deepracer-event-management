@@ -1,5 +1,15 @@
 # Welcome to DeepRacer Event Manager (DREM)
 
+## Translations
+
+Creating a version of DREM in another language ?
+
+Translation files:
+
+-   DREM - [translation.json](./website/public/locales/en/translation.json)
+-   Leaderboards - [translation.json](./website-leaderboard/public/locales/en/translation.json)
+-   Overlays - (coming soon)
+
 ## PreReqs
 
 -   [Docker Desktop](https://www.docker.com/)

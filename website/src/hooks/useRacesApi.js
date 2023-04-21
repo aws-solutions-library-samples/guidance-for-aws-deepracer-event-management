@@ -66,10 +66,10 @@ export const useRacesApi = (eventId) => {
       // used to display the loading resources after an event has been selected
       setIsLoading(true);
     } else if (!usersIsLoading) {
-      console.info(eventId);
+      console.debug(eventId);
       async function queryApi() {
         const response = await API.graphql(graphqlOperation(getRaces, { eventId: eventId }));
-        console.info('getRaces');
+        console.debug('getRaces');
         const races = response.data.getRaces;
         races.map((race) => addUserName(race));
         races.map((race) => addTimeHr(race));
@@ -131,19 +131,14 @@ export const useRacesApi = (eventId) => {
   const sendDelete = async (variables) => {
     try {
       setIsLoading(true);
-      console.info(variables);
-      //setData();
+      console.debug(variables);
       API.graphql(graphqlOperation(deleteRaces));
       const response = await API.graphql(graphqlOperation(deleteRaces, variables));
       console.log(response);
-      //setData({ ...response.data[method] });
       setIsLoading(false);
-      //setErrorMessage('');
     } catch (error) {
-      console.info(error);
+      console.debug(error);
       setIsLoading(false);
-      //setErrorMessage(error.errors[0].message);
-      //setData();
     }
   };
 

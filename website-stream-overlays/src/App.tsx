@@ -9,6 +9,10 @@ import * as helpers from './helperFunctions.js';
 import './init.js';
 import * as transitions from './transitions.js';
 
+import './i18n';
+
+import { useTranslation } from 'react-i18next';
+
 import './App.css';
 import awsExports from './config.json';
 Amplify.configure(awsExports);
@@ -23,9 +27,13 @@ function App() {
   var lowerThirdStateIN: boolean = false;
   var shouldShowChromaBackground: boolean = false;
   var chromaBgColor: string = '00ff00';
+  
+  const { t, i18n } = useTranslation();
 
   const [searchParams] = useSearchParams();
   const { eventId } = useParams();
+
+  const desiredLanguage = searchParams.get("lang")?.toString();
 
   const startTimer = () => {
     if (!timerState || isPaused) {
@@ -80,7 +88,11 @@ function App() {
 
         if (!lowerThirdStateIN) {
           // console.log('transition IN lower third.');
-          setTimeout(() => { (transitions as any).LowerThirdRacerAndLapInfoIn(); lowerThirdStateIN = true; }, 2000);
+          setTimeout(() => { 
+            (transitions as any).LowerThirdRacerAndLapInfoIn(); 
+            lowerThirdStateIN = true; 
+            helpers.SetLocalizedLowerThirdsLabels(t('lower-thirds.racer-name'), t('lower-thirds.time-remaining'), t('lower-thirds.fastest-lap'), t('lower-thirds.previous-lap'));
+          }, 2000);
         }
 
         var oldPauseState = isPaused;
@@ -119,6 +131,7 @@ function App() {
 
           if (!leaderBoardStateIN) {
             // console.log('Setting TimeOut to fade Leaderboard in!');
+            helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
             setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
           }
         }
@@ -208,6 +221,7 @@ function App() {
 
         if (!leaderBoardStateIN) {
           // console.log('Setting TimeOut to fade Leaderboard in!');
+          helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
           setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
         }
       }
@@ -263,6 +277,16 @@ function App() {
   }
 
   useEffect(() => {
+    
+    // set desired language
+    if (searchParams.get("lang") !== null) {
+      console.log("CHANGING LANGUAGE TO: " + desiredLanguage);
+      i18n.changeLanguage(desiredLanguage);
+    }
+
+    // Set Localized Labels
+    // helpers.SetLocalizedLowerThirdsLabels(t('lower-thirds.racer-name'), t('lower-thirds.time-remaining'), t('lower-thirds.fastest-lap'), t('lower-thirds.previous-lap'));
+
     // fetch current leaderboard state on-load.
     const apiGetLeaderboardState = API.graphql({
       query: queries.getLeaderboard,
@@ -283,6 +307,7 @@ function App() {
       // check if lower thirds is showing, if not, then show leaderboard.
       if (!lowerThirdStateIN) {
         // console.log('Setting TimeOut to fade Leaderboard in!');
+        helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
         setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
       }
     });
@@ -333,13 +358,13 @@ function App() {
         leaderboardSubscription.unsubscribe();
       }
     };
-  });
+  }, [i18n, desiredLanguage]);
 
   return (
     <div className="App">
       <ChromaBG />
       <div id="racerAndInfo">
-        <object type="image/svg+xml" data="assets/svg/RacerAndLapInfo.svg" id="lower-third-racer-and-lap-info">Lower Thirds SVG</object>
+        <object type="image/svg+xml" data="assets/svg/RacerAndLapInfo-Localized.svg" id="lower-third-racer-and-lap-info">Lower Thirds SVG</object>
       </div>
 
       <div id="track-overlay-frame">
@@ -347,7 +372,7 @@ function App() {
       </div>
 
       <div id="leaderboard-frame">
-        <object type="image/svg+xml" data="assets/svg/LeaderboardWithBackdrop.svg" id="leaderboard">Leaderboard SVG</object>
+        <object type="image/svg+xml" data="assets/svg/LeaderboardWithBackdrop-Wide.svg" id="leaderboard">Leaderboard SVG</object>
       </div>
 
       <div id="did-you-know-frame">

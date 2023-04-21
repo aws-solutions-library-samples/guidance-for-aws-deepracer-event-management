@@ -11,6 +11,7 @@ import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 
 import { useTranslation } from 'react-i18next';
+import { PageLayout } from '../components/pageLayout';
 import {
   AdminModelsColumnsConfig,
   DefaultPreferences,
@@ -19,19 +20,9 @@ import {
   PageSizePreference,
   WrapLines,
 } from '../components/tableConfig';
+import * as queries from '../graphql/queries';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-
-import dayjs from 'dayjs';
-import { PageLayout } from '../components/pageLayout';
-
-// day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat');
-var utc = require('dayjs/plugin/utc');
-var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
-
-dayjs.extend(advancedFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
+import { formatAwsDateTime } from '../support-functions/time';
 
 const AdminQuarantine = () => {
   const { t } = useTranslation();
@@ -39,30 +30,26 @@ const AdminQuarantine = () => {
   const [allItems, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  async function getQuarantinedModels() {
+    const response = await API.graphql({
+      query: queries.getQuarantinedModels,
+    });
+    const models_response = response.data.getQuarantinedModels;
+    const models = models_response.map(function (model, i) {
+      const modelKeyPieces = model.modelKey.split('/');
+      return {
+        id: i,
+        userName: modelKeyPieces[modelKeyPieces.length - 3],
+        modelName: modelKeyPieces[modelKeyPieces.length - 1],
+        modelDate: formatAwsDateTime(model.LastModified),
+      };
+    });
+    setItems(models);
+    setIsLoading(false);
+  }
+
   useEffect(() => {
-    async function getQuarantinedModels() {
-      console.log('Collecting models...');
-
-      const apiName = 'deepracerEventManager';
-      const apiPath = 'admin/quarantinedmodels';
-
-      const response = await API.get(apiName, apiPath);
-      var models = response.map(function (model, i) {
-        const modelKeyPieces = model.Key.split('/');
-        return {
-          id: i,
-          userName: modelKeyPieces[modelKeyPieces.length - 3],
-          modelName: modelKeyPieces[modelKeyPieces.length - 1],
-          modelDate: dayjs(model.LastModified).format('YYYY-MM-DD HH:mm:ss (z)'),
-        };
-      });
-      setItems(models);
-
-      setIsLoading(false);
-    }
-
     getQuarantinedModels();
-
     return () => {
       // Unmounting
     };

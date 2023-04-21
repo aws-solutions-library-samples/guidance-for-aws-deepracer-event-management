@@ -2,5 +2,16 @@
   "leaderboard.position": "Position",
   "leaderboard.racer": "Racer",
   "leaderboard.time": "Time",
-  "leaderboard.flag": "Flag"
+  "leaderboard.flag": "Flag",
+
+  "leaderboard.summary-footer.finsiher": "NEW FINISHER",
+  "leaderboard.summary-footer.rank": "OVERALL RANK",
+  "leaderboard.summary-footer.consistency": "CONSISTENCY",
+  "leaderboard.summary-footer.gap-to-fastest": "GAP TO FASTEST",
+  "leaderboard.summary-footer.fastest-time": "FASTEST TIME",
+  "leaderboard.summary-footer.avg-lap-time": "AVG. LAP TIME",
+  "leaderboard.summary-footer.lap-completion-ratio": "LAP COMPLETION RATIO",
+  "leaderboard.summary-footer.avg-laps-per-attempt": "AVG. LAPS PER ATTEMPT",
+
+  "leaderboard.race-info-footer.currently-racing": "Currently racing"
 }

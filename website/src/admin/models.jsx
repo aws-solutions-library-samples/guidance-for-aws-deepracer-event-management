@@ -16,8 +16,8 @@ import {
   Table,
   TextFilter,
 } from '@cloudscape-design/components';
+import { formatAwsDateTime } from '../support-functions/time';
 
-import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import {
   AdminModelsColumnsConfig,
@@ -29,58 +29,51 @@ import {
 } from '../components/tableConfig';
 import CarModelUploadModal from './carModelUploadModal';
 
-// day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat');
-var utc = require('dayjs/plugin/utc');
-var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
-
-dayjs.extend(advancedFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
 const AdminModels = () => {
   const { t } = useTranslation();
 
-  const [allItems, setItems] = useState([]);
+  const [allModels, setAllModels] = useState([]);
   const [cars, setCars] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [modelsIsLoading, setModelsIsLoading] = useState(true);
+  const [carsIsLoading, setCarsIsLoading] = useState(true);
   const [selectedModelsBtn, setSelectedModelsBtn] = useState(true);
 
+  async function getCarsOnline() {
+    setCarsIsLoading(true);
+    console.log('Collecting cars...');
+    // Get CarsOnline
+    const response = await API.graphql({
+      query: queries.carsOnline,
+      variables: { online: true },
+    });
+    setCars(response.data.carsOnline);
+    setCarsIsLoading(false);
+  }
+  async function getModels() {
+    setModelsIsLoading(true);
+    console.log('Collecting models...');
+    const response = await API.graphql({
+      query: queries.getAllModels,
+    });
+    console.log(response);
+    const models_response = response.data.getAllModels;
+    const models = models_response.map(function (model, i) {
+      const modelKeyPieces = model.modelKey.split('/');
+      return {
+        key: model.modelKey,
+        userName: modelKeyPieces[modelKeyPieces.length - 3],
+        modelName: modelKeyPieces[modelKeyPieces.length - 1],
+        modelDate: formatAwsDateTime(model.uploadedDateTime),
+        ...model,
+      };
+    });
+    setAllModels(models);
+    setModelsIsLoading(false);
+  }
+
   useEffect(() => {
-    async function getData() {
-      console.log('Collecting models...');
-      const apiName = 'deepracerEventManager';
-      const apiPath = 'models';
-
-      const response = await API.get(apiName, apiPath);
-      var models = response.map(function (model, i) {
-        // TODO: Fix inconsistency in model.Key / model.key in /admin/model.js and /models.js
-        const modelKeyPieces = model.Key.split('/');
-        return {
-          key: model.Key,
-          userName: modelKeyPieces[modelKeyPieces.length - 3],
-          modelName: modelKeyPieces[modelKeyPieces.length - 1],
-          modelDate: dayjs(model.LastModified).format('YYYY-MM-DD HH:mm:ss (z)'),
-        };
-      });
-      setItems(models);
-      console.log(allItems);
-
-      console.log('Collecting cars...');
-      // Get CarsOnline
-      async function carsOnline() {
-        const response = await API.graphql({
-          query: queries.carsOnline,
-          variables: { online: true },
-        });
-        setCars(response.data.carsOnline);
-      }
-      carsOnline();
-
-      setIsLoading(false);
-    }
-    console.log(cars);
-    getData();
+    getModels();
+    getCarsOnline();
 
     return () => {
       // Unmounting
@@ -95,7 +88,7 @@ const AdminModels = () => {
   const adminModelsColsConfig = AdminModelsColumnsConfig();
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(allItems, {
+    useCollection(allModels, {
       filtering: {
         empty: (
           <EmptyState title={t('models.no-models')} subtitle={t('models.no-models-to-display')} />
@@ -121,6 +114,10 @@ const AdminModels = () => {
       label: t('models.model-information'),
       options: [
         {
+          id: 'modelId',
+          label: t('models.model-id'),
+        },
+        {
           id: 'userName',
           label: t('models.user-name'),
           editable: false,
@@ -133,6 +130,18 @@ const AdminModels = () => {
         {
           id: 'modelDate',
           label: t('models.upload-date'),
+        },
+        {
+          id: 'modelMD5Hash',
+          label: t('models.md5-hash'),
+        },
+        {
+          id: 'modelMetadataMD5Hash',
+          label: t('models.md5-hash-metadata'),
+        },
+        {
+          id: 'modelS3Key',
+          label: t('models.model-s3-key'),
         },
       ],
     },
@@ -154,8 +163,8 @@ const AdminModels = () => {
           <Header
             counter={
               selectedItems.length
-                ? `(${selectedItems.length}/${allItems.length})`
-                : `(${allItems.length})`
+                ? `(${selectedItems.length}/${allModels.length})`
+                : `(${allModels.length})`
             }
             actions={
               <SpaceBetween direction="horizontal" size="xs">
@@ -197,7 +206,7 @@ const AdminModels = () => {
             filteringAriaLabel={t('models.filter-models')}
           />
         }
-        loading={isLoading}
+        loading={modelsIsLoading || carsIsLoading}
         loadingText={t('models.loading-models')}
         visibleColumns={preferences.visibleContent}
         selectedItems={selectedItems}

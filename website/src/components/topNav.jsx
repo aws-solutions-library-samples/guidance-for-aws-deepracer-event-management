@@ -14,21 +14,22 @@ import { useTranslation } from 'react-i18next';
 import { AdminActivation } from '../admin/carActivation';
 import { AdminCars } from '../admin/cars';
 import { AdminEvents } from '../admin/events/adminEvents';
-import { CreateEvent } from '../admin/events/createEvent';
-import { EditEvent } from '../admin/events/editEvent';
+import { CreateEvent } from '../admin/events/pages/createEvent';
+import { EditEvent } from '../admin/events/pages/editEvent';
 import { AdminFleets } from '../admin/fleets/adminFleets';
 import { CreateFleet } from '../admin/fleets/createFleet';
 import { EditFleet } from '../admin/fleets/editFleet';
-import { AdminGroupsDetail } from '../admin/groups/detail';
-import { AdminGroups } from '../admin/groups/groups';
+import { GroupMembersPage } from '../admin/groups/groupMembersPage';
+import { GroupsPage } from '../admin/groups/groupsPage';
 import { AdminHome } from '../admin/home';
 import { AdminModels } from '../admin/models';
 import { AdminQuarantine } from '../admin/quarantine';
-import { EditRace } from '../admin/race-admin/editRace';
+import { EditRace } from '../admin/race-admin/pages/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { Timekeeper } from '../admin/timekeeper/timeKeeper';
 import { ProfileHome } from '../admin/user-profile/profile';
 import { CreateUser } from '../admin/users/createUser';
+import { UsersList } from '../admin/users/usersList';
 import { CommentatorRaceStats } from '../commentator/race-stats';
 import { Home } from '../home';
 import useLink from '../hooks/useLink';
@@ -91,8 +92,9 @@ const operatorRoutes = [
 ];
 
 const adminRoutes = [
-  <Route path="/admin/groups" element={<AdminGroups />} />,
-  <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />,
+  <Route path="/admin/users" element={<UsersList />} />,
+  <Route path="/admin/groups" element={<GroupsPage />} />,
+  <Route path="/admin/groups/:groupName" element={<GroupMembersPage />} />,
 ];
 
 const MenuRoutes = ({ permissions }) => {
@@ -205,13 +207,11 @@ export function TopNav(props) {
             {
               type: 'link',
               text: t('topnav.events'),
-              info: <Badge color="blue">Beta</Badge>,
               href: '/admin/events',
             },
             {
               type: 'link',
               text: t('topnav.race-admin'),
-              info: <Badge color="blue">Beta</Badge>,
               href: '/admin/races',
             },
           ],
@@ -219,7 +219,6 @@ export function TopNav(props) {
         {
           type: 'link',
           text: t('topnav.time-keeper'),
-          info: <Badge color="blue">Beta</Badge>,
           href: '/admin/timekeeper',
         },
       ],
@@ -232,11 +231,8 @@ export function TopNav(props) {
       text: t('topnav.admin'),
       href: '/admin',
       items: [
-        {
-          type: 'expandable-link-group',
-          text: t('topnav.users'),
-          items: [{ type: 'link', text: t('topnav.groups'), href: '/admin/groups' }],
-        },
+        { type: 'link', text: t('topnav.users'), href: '/admin/users' },
+        { type: 'link', text: t('topnav.groups'), href: '/admin/groups' },
       ],
     },
   ];

@@ -19,10 +19,10 @@ import {
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useSplitPanelOptionsDispatch } from '../../store/appLayoutProvider';
 import { useEventsContext, useFleetsContext, useUsersContext } from '../../store/storeProvider';
-import { ColumnDefinitions, VisibleContentOptions } from './eventsTableConfig';
-import { EmptyPanel } from './split-panels/emptyPanel';
-import { EventDetailsPanel } from './split-panels/eventDetailsPanel';
-import { MultiChoicePanel } from './split-panels/multiChoicePanel';
+import { EmptyPanel } from './components/split-panels/emptyPanel';
+import { EventDetailsPanel } from './components/split-panels/eventDetailsPanel';
+import { MultiChoicePanel } from './components/split-panels/multiChoicePanel';
+import { ColumnDefinitions, VisibleContentOptions } from './support-functions/eventsTableConfig';
 
 const AdminEvents = () => {
   const { t } = useTranslation();
@@ -140,7 +140,7 @@ const AdminEvents = () => {
         setSelectedEventsInTable(detail.selectedItems);
       }}
       selectedItems={SelectedEventsInTable}
-      selectionType="multi"
+      selectionType="single"
       columnDefinitions={columnDefinitions}
       items={items}
       loading={eventIsLoading}

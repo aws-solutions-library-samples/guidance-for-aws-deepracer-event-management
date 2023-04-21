@@ -6,18 +6,10 @@ import {
   Pagination,
   SpaceBetween,
 } from '@cloudscape-design/components';
-import dayjs from 'dayjs';
+
 import { default as React } from 'react';
 import i18next from '../i18n';
-
-// day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat');
-var utc = require('dayjs/plugin/utc');
-var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
-
-dayjs.extend(advancedFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
+import { formatAwsDateTime } from '../support-functions/time';
 
 export function EmptyState({ title, subtitle, action }) {
   return (
@@ -50,6 +42,8 @@ export function PageSizePreference(label = 'items') {
       { value: 20, label: `20 ${label}` },
       { value: 30, label: `30 ${label}` },
       { value: 50, label: `50 ${label}` },
+      { value: 100, label: `100 ${label}` },
+      { value: 200, label: `200 ${label}` },
     ],
   };
   return pageSize;
@@ -105,13 +99,13 @@ export function CarColumnsConfig() {
     {
       id: 'registrationDate',
       header: i18next.t('cars.registration-date'),
-      cell: (item) => dayjs(item.RegistrationDate).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => formatAwsDateTime(item.RegistrationDate) || '-',
       sortingField: 'registrationDate',
     },
     {
       id: 'lastPingDateTime',
       header: i18next.t('cars.last-ping-time'),
-      cell: (item) => dayjs(item.lastPingDateTime).format('YYYY-MM-DD HH:mm:ss (z)') || '-',
+      cell: (item) => formatAwsDateTime(item.lastPingDateTime) || '-',
       sortingField: 'lastPingDateTime',
     },
     {
@@ -202,11 +196,10 @@ export function UserModelsColumnsConfig() {
 export function AdminModelsColumnsConfig() {
   const rowHeaders = [
     {
-      id: 'id',
-      header: 'id',
-      cell: (item) => item.id,
-      width: 200,
-      minWidth: 150,
+      id: 'modelId',
+      header: i18next.t('models.model-id'),
+      cell: (item) => item.modelId,
+      width: 320,
     },
     {
       id: 'userName',
@@ -229,6 +222,27 @@ export function AdminModelsColumnsConfig() {
       header: i18next.t('models.upload-date'),
       cell: (item) => item.modelDate || '-',
       sortingField: 'modelDate',
+      width: 240,
+      minWidth: 150,
+    },
+    {
+      id: 'modelMD5Hash',
+      header: i18next.t('models.md5-hash'),
+      cell: (item) => item.modelMD5,
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'modelMetadataMD5Hash',
+      header: i18next.t('models.md5-hash-metadata'),
+      cell: (item) => item.modelMetadataMD5,
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'modelS3Key',
+      header: i18next.t('models.model-s3-key'),
+      cell: (item) => item.modelKey,
       width: 200,
       minWidth: 150,
     },
