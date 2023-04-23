@@ -1,22 +1,21 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
-import { PageLayout } from '../components/pageLayout';
-import * as queries from '../graphql/queries';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { PageLayout } from '../../components/pageLayout';
+import * as queries from '../../graphql/queries';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
 // import * as mutations from '../graphql/mutations';
 // import * as subscriptions from '../graphql/subscriptions'
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
-  CollectionPreferences,
   Header,
   Pagination,
   SpaceBetween,
   Table,
   TextFilter,
 } from '@cloudscape-design/components';
-import { formatAwsDateTime } from '../support-functions/time';
+import { formatAwsDateTime } from '../../support-functions/time';
 
 import { useTranslation } from 'react-i18next';
 import {
@@ -24,9 +23,8 @@ import {
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
-  PageSizePreference,
-  WrapLines,
-} from '../components/tableConfig';
+  TablePreferences,
+} from '../../components/tableConfig';
 import CarModelUploadModal from './carModelUploadModal';
 
 const AdminModels = () => {
@@ -219,18 +217,10 @@ const AdminModels = () => {
         }}
         resizableColumns
         preferences={
-          <CollectionPreferences
-            title={t('table.preferences')}
-            confirmLabel={t('button.confirm')}
-            cancelLabel={t('button.cancel')}
-            onConfirm={({ detail }) => setPreferences(detail)}
+          <TablePreferences
             preferences={preferences}
-            pageSizePreference={PageSizePreference(t('models.page-size-label'))}
-            visibleContentPreference={{
-              title: t('table.select-visible-colunms'),
-              options: visibleContentOptions,
-            }}
-            wrapLinesPreference={WrapLines}
+            setPreferences={setPreferences}
+            contentOptions={visibleContentOptions}
           />
         }
       />

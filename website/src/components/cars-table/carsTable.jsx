@@ -1,55 +1,30 @@
-// import * as mutations from '../graphql/mutations';
-// import * as subscriptions from '../graphql/subscriptions'
-
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Button, Header, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import {
-  CarColumnsConfig,
-  CarVisibleContentOptions,
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
   TablePagination,
   TablePreferences,
-} from './tableConfig';
+} from '../tableConfig';
 
 import { useTranslation } from 'react-i18next';
-import { useCarsContext } from '../store/storeProvider';
+import { useCarsContext } from '../../store/storeProvider';
+import { ColumnsConfig, VisibleContentOptions } from './carTableConfig';
 
 const Actions = ({ children, t, setOnline, setIsLoading, edit = false }) => {
   return (
     <SpaceBetween direction="horizontal" size="xs">
-      {/* <ButtonDropdown
-        items={[
-          { text: t('cars.online'), id: 'Online', disabled: false },
-          { text: t('cars.offline'), id: 'Offline', disabled: false },
-        ]}
-        onItemClick={({ detail }) => {
-          setOnline(detail.id);
-          setIsLoading(true);
-        }}
-      > */}
       {children}
-      {/* </ButtonDropdown> */}
-      {/* {edit ? (
-        <EditCarsModal
-          disabled={selectedCarsBtnDisabled}
-          setRefresh={setRefresh}
-          selectedItems={selectedCarsInTable}
-          online={onlineBool}
-          variant="primary"
-        />
-      ) : undefined} */}
     </SpaceBetween>
   );
 };
 
-export const CarTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) => {
+export const CarsTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) => {
   const { t } = useTranslation();
   const [selectedCarsBtnDisabled, setSelectedCarsBtnDisabled] = useState(true);
   const [online, setOnline] = useState('Online');
-  const [onlineBool, setOnlineBool] = useState(true);
 
   const [cars, isLoading] = useCarsContext();
 
@@ -65,7 +40,8 @@ export const CarTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) =
     visibleContent: ['carName', 'fleetName', 'carIp'],
   });
 
-  const carColumnsConfig = CarColumnsConfig();
+  const columnsConfig = ColumnsConfig();
+  const visibleContentOptions = VisibleContentOptions();
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(cars, {
@@ -82,7 +58,7 @@ export const CarTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) =
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: carColumnsConfig[1] } },
+      sorting: { defaultState: { sortingColumn: columnsConfig[1] } },
       selection: {},
     });
 
@@ -96,16 +72,12 @@ export const CarTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) =
               ? `(${selectedCarsInTable.length}/${cars.length})`
               : `(${cars.length})`
           }
-          actions={
-            <Actions t={t} setOnline={setOnline} />
-            //   {online}
-            // </Actions>
-          }
+          actions={<Actions t={t} setOnline={setOnline} />}
         >
           {t('cars.header')}
         </Header>
       }
-      columnDefinitions={carColumnsConfig}
+      columnDefinitions={columnsConfig}
       items={items}
       pagination={<TablePagination paginationProps={paginationProps} />}
       filter={
@@ -132,7 +104,7 @@ export const CarTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) =
       resizableColumns
       preferences={
         <TablePreferences
-          contentOptions={CarVisibleContentOptions()}
+          contentOptions={visibleContentOptions}
           preferences={preferences}
           setPreferences={setPreferences}
         />

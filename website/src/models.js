@@ -1,7 +1,6 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
-  CollectionPreferences,
   Header,
   Pagination,
   SpaceBetween,
@@ -18,9 +17,8 @@ import {
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
-  PageSizePreference,
+  TablePreferences,
   UserModelsColumnsConfig,
-  WrapLines,
 } from './components/tableConfig';
 import { formatAwsDateTime } from './support-functions/time';
 
@@ -177,18 +175,10 @@ const Models = () => {
           selectedItems.length ? setSelectedModelsBtn(false) : setSelectedModelsBtn(true);
         }}
         preferences={
-          <CollectionPreferences
-            title={t('table.preferences')}
-            confirmLabel={t('button.confirm')}
-            cancelLabel={t('button.cancel')}
-            onConfirm={({ detail }) => setPreferences(detail)}
+          <TablePreferences
             preferences={preferences}
-            pageSizePreference={PageSizePreference(t('models.page-size-label'))}
-            visibleContentPreference={{
-              title: t('table.select-visible-colunms'),
-              options: visibleContentOptions,
-            }}
-            wrapLinesPreference={WrapLines}
+            setPreferences={setPreferences}
+            contentOptions={visibleContentOptions}
           />
         }
       />
