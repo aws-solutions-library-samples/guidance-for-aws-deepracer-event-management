@@ -21,69 +21,39 @@ export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction,
   const [buttonsIsDisabled, SetButtonsIsDisabled] = useState(false);
   const [sendMutation, loading, errorMessage, data] = useMutation();
   const [warningModalVisible, setWarningModalVisible] = useState(false);
-  const setNotifications = useNotificationsDispatch();
+  const [addNotification, dismissNotification] = useNotificationsDispatch();
 
   const messageDisplayTime = 2500;
-
-  const raceDiscardedNotification = [
-    {
-      type: 'warning',
-      content: t('timekeeper.end-session.race-discarded'),
-      id: 'discarding_race',
-      dismissible: true,
-      onDismiss: () => {
-        setNotifications([]);
-      },
-    },
-  ];
-  const raceSubmitInProgressNotification = [
-    {
-      type: 'success',
-      loading: true,
-      content: t('timekeeper.end-session.submitting-race'),
-      id: 'submitting_race',
-      dismissible: true,
-      onDismiss: () => {
-        setNotifications([]);
-      },
-    },
-  ];
-  const raceSubmittedSucessNotification = [
-    {
-      type: 'success',
-      content: t('timekeeper.end-session.info'),
-      id: 'submitting_race',
-      dismissible: true,
-      onDismiss: (event) => {
-        setNotifications([]);
-      },
-    },
-  ];
-
-  const raceSubmittedFailedNotification = [
-    {
-      type: 'error',
-      content: t('timekeeper.end-session.error'),
-      id: 'submitting_race',
-      dismissible: true,
-      onDismiss: (event) => {
-        setNotifications([]);
-      },
-    },
-  ];
+  const notificationId = 'race_submition';
 
   // Update submit message in modal depending on addRace mutation result
   useEffect(() => {
     console.info(data);
     if (!loading && errorMessage) {
-      setNotifications(raceSubmittedFailedNotification);
+      addNotification({
+        type: 'error',
+        content: t('timekeeper.end-session.error'),
+        id: notificationId,
+        dismissible: true,
+        onDismiss: (event) => {
+          dismissNotification(notificationId);
+        },
+      });
       setTimeout(() => {
         SetButtonsIsDisabled(false);
       }, messageDisplayTime);
     } else if (!loading && data) {
-      setNotifications(raceSubmittedSucessNotification);
+      addNotification({
+        type: 'success',
+        content: t('timekeeper.end-session.info'),
+        id: notificationId,
+        dismissible: true,
+        onDismiss: (event) => {
+          dismissNotification(notificationId);
+        },
+      });
       setTimeout(() => {
-        setNotifications([]);
+        dismissNotification(notificationId);
         SetButtonsIsDisabled(false);
         onNext();
       }, messageDisplayTime);
@@ -93,17 +63,34 @@ export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction,
   const submitRaceHandler = async () => {
     console.info(raceInfo);
     SetButtonsIsDisabled(true);
-    setNotifications(raceSubmitInProgressNotification);
+    addNotification({
+      type: 'success',
+      loading: true,
+      content: t('timekeeper.end-session.submitting-race'),
+      id: notificationId,
+      dismissible: true,
+      onDismiss: () => {
+        dismissNotification(notificationId);
+      },
+    });
     sendMutation('addRace', { ...raceInfo });
   };
 
   const discardRaceHandler = () => {
     SetButtonsIsDisabled(true);
     setWarningModalVisible(false);
-    setNotifications(raceDiscardedNotification);
+    addNotification({
+      type: 'warning',
+      content: t('timekeeper.end-session.race-discarded'),
+      id: 'race_submition',
+      dismissible: true,
+      onDismiss: () => {
+        dismissNotification(notificationId);
+      },
+    });
     setTimeout(() => {
       SetButtonsIsDisabled(false);
-      setNotifications([]);
+      dismissNotification(notificationId);
       onNext();
     }, messageDisplayTime);
   };
