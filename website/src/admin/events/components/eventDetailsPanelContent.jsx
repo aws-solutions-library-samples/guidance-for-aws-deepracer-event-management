@@ -37,6 +37,14 @@ export const EventDetailsPanelContent = ({ event }) => {
         {attributeField(t('events.event-date'), event.eventDate)}
         {attributeField(t('events.country'), event.countryCode)}
         {attributeField(t('events.fleet-info.label'), getFleetNameFromId(event.fleetId))}
+        {attributeField(
+          t('events.leaderboard.header'),
+          event.tracks[0].leaderboardConfig.headerText
+        )}
+        {attributeField(
+          t('events.leaderboard.footer'),
+          event.tracks[0].leaderboardConfig.footerText
+        )}
       </Grid>
       <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }, { colspan: 12 }, { colspan: 12 }]}>
         {attributeField(
@@ -66,12 +74,30 @@ export const EventDetailsPanelContent = ({ event }) => {
           />
         )}
         {attributeField(
-          t('events.leaderboard.header'),
-          event.tracks[0].leaderboardConfig.headerText
+          t('events.streaming-overlay-link'),
+
+          <EventLinksButtons
+            href={`${awsconfig.Urls.streamingOverlayWebsite}/${event.eventId.toString()}`}
+            linkTextPrimary={t('events.streaming-overlay-link-same-tab')}
+            linkTextExternal={t('events.streaming-overlay-link-new-tab')}
+          />
         )}
         {attributeField(
-          t('events.leaderboard.footer'),
-          event.tracks[0].leaderboardConfig.footerText
+          t('events.streaming-overlay-link-chroma'),
+
+          <EventLinksButtons
+            href={`${awsconfig.Urls.streamingOverlayWebsite}/${event.eventId.toString()}?chroma=1`}
+            linkTextPrimary={t('events.streaming-overlay-link-chroma-same-tab')}
+            linkTextExternal={t('events.streaming-overlay-link-chroma-new-tab')}
+          />
+        )}
+        {attributeField(
+          t('events.landing-page-link'),
+          <EventLinksButtons
+            href={`${awsconfig.Urls.leaderboardWebsite}/landing-page/${event.eventId.toString()}/`}
+            linkTextPrimary={t('events.landing-page-link-same-tab')}
+            linkTextExternal={t('events.landing-page-link-new-tab')}
+          />
         )}
       </Grid>
     </ColumnLayout>
