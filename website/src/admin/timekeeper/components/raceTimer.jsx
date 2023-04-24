@@ -91,7 +91,7 @@ const RaceTimer = forwardRef((props, ref) => {
   );
 
   return (
-    <Header>
+    <Header variant="h3">
       {time.minutes}:{time.seconds}
     </Header>
   );
