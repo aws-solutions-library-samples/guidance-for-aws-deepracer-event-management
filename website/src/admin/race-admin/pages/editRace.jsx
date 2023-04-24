@@ -1,7 +1,8 @@
-import { Box, Button, Modal, SpaceBetween } from '@cloudscape-design/components';
+import { Box, Button, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { DeleteModal, ItemList } from '../../../components/deleteModal';
 import { PageLayout } from '../../../components/pageLayout';
 import { TableHeader } from '../../../components/tableConfig';
 import useMutation from '../../../hooks/useMutation';
@@ -142,36 +143,15 @@ export const EditRace = () => {
           </SpaceBetween>
         </Box>
       </SpaceBetween>
-
-      <Modal
-        onDismiss={() => setDeleteModalVisible(false)}
-        visible={deleteModalVisible}
-        closeAriaLabel="Close modal"
-        footer={
-          <Box float="right">
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="link" onClick={() => setDeleteModalVisible(false)}>
-                {t('button.cancel')}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  deleteLapHandler();
-                  setDeleteModalVisible(false);
-                }}
-              >
-                {t('button.delete')}
-              </Button>
-            </SpaceBetween>
-          </Box>
-        }
+      <DeleteModal
         header={t('race-admin.delete-laps')}
+        onDelete={deleteLapHandler}
+        onVisibleChange={setDeleteModalVisible}
+        visible={deleteModalVisible}
       >
         {t('race-admin.delete-warning')}: <br></br>{' '}
-        {selectedLaps.map((selectedLap) => {
-          return selectedLap.lapId + ' ';
-        })}
-      </Modal>
+        <ItemList items={selectedLaps.map((selectedLap) => selectedLap.lapId)} />
+      </DeleteModal>
     </PageLayout>
   );
 };

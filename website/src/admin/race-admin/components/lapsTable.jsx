@@ -13,20 +13,6 @@ import {
 const tableSettingsHandler = (state, action) => {
   console.info(action);
   return { ...state, ...action };
-  // return {
-  //   stickyHeader: 'true',
-  //   resizableColumns: 'true',
-  //   header: (
-  //     <TableHeader
-  //       nrSelectedItems={0}
-  //       nrTotalItems={10}
-  //       //onEdit={editRaceHandler}
-  //       //onDelete={() => setDeleteModalVisible(true)}
-  //       //onAdd={addEventHandler}
-  //       header={'Laps'} //{t('race-admin.races-table-header')}
-  //     />
-  //   ),
-  // };
 };
 
 const LapsTable = ({ race, tableSettings, onSelectionChange, selectedLaps, isEditable }) => {
@@ -35,7 +21,6 @@ const LapsTable = ({ race, tableSettings, onSelectionChange, selectedLaps, isEdi
   const [tableConfig, dispatchTableConfig] = useReducer(tableSettingsHandler, {
     stickyHeader: 'true',
     stripedRows: 'true',
-    // resizableColumns: 'true',
   });
 
   useEffect(() => {
@@ -87,27 +72,8 @@ const LapsTable = ({ race, tableSettings, onSelectionChange, selectedLaps, isEdi
       selectedItems={selectedLaps}
       columnDefinitions={columnDefinitions}
       items={items}
-      //loading={loading}
-      //loadingText={t('events.loading')}
-      //      stickyHeader="true"
       trackBy="lapId"
-      // filter={
-      //   <TextFilter
-      //     {...filterProps}
-      //     countText={MatchesCountText(filteredItemsCount)}
-      //     filteringAriaLabel={t('events.filter')}
-      //   />
-      // }
-
-      //pagination={<TablePagination paginationProps={paginationProps} />}
       visibleColumns={preferences.visibleContent}
-      // preferences={
-      //   <TablePreferences
-      //     preferences={preferences}
-      //     setPreferences={setPreferences}
-      //     contentOptions={visibleContentOptions}
-      //   />
-      // }
     />
   );
 };
