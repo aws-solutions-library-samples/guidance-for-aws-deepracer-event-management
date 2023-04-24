@@ -1,10 +1,4 @@
-import {
-  AppLayout,
-  Badge,
-  Flashbar,
-  SideNavigation,
-  TopNavigation,
-} from '@cloudscape-design/components';
+import { AppLayout, Badge, SideNavigation, TopNavigation } from '@cloudscape-design/components';
 
 import React from 'react';
 
@@ -22,8 +16,8 @@ import { EditFleet } from '../admin/fleets/editFleet';
 import { GroupMembersPage } from '../admin/groups/groupMembersPage';
 import { GroupsPage } from '../admin/groups/groupsPage';
 import { AdminHome } from '../admin/home';
-import { AdminModels } from '../admin/models';
-import { AdminQuarantine } from '../admin/quarantine';
+import { AdminModels } from '../admin/model-management/models';
+import { AdminQuarantine } from '../admin/model-management/quarantine';
 import { EditRace } from '../admin/race-admin/pages/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { Timekeeper } from '../admin/timekeeper/timeKeeper';
@@ -33,7 +27,7 @@ import { UsersList } from '../admin/users/usersList';
 import { CommentatorRaceStats } from '../commentator/race-stats';
 import { Home } from '../home';
 import useLink from '../hooks/useLink';
-import { Models } from '../models';
+import { ModelMangement } from '../pages/model-management/modelManagement';
 import {
   useNotifications,
   useSideNavOptions,
@@ -47,7 +41,6 @@ import {
   useSelectedEventContext,
   useSelectedEventDispatch,
 } from '../store/storeProvider';
-import { Upload } from '../upload';
 
 function cwr(operation, payload) {
   // Instrument Routing to Record Page Views
@@ -66,8 +59,7 @@ const defaultRoutes = [
   <Route path="/" element={<Home />} />,
   <Route path="*" element={<Home />} />,
   <Route path="/user/profile" element={<ProfileHome />} />,
-  <Route path="/models/view" element={<Models />} />,
-  <Route path="/models/upload" element={<Upload />} />,
+  <Route path="/models/view" element={<ModelMangement />} />,
 ];
 
 const registrationRoutes = [<Route path="/registration/createuser" element={<CreateUser />} />];
@@ -135,13 +127,9 @@ export function TopNav(props) {
 
   const defaultSideNavItems = [
     {
-      type: 'section',
-      text: t('topnav.models'),
-      href: '/models',
-      items: [
-        { type: 'link', text: t('topnav.upload'), href: '/models/upload' },
-        { type: 'link', text: t('topnav.models'), href: '/models/view' },
-      ],
+      type: 'link',
+      text: t('topnav.models-own'),
+      href: '/models/view',
     },
   ];
 
@@ -291,6 +279,7 @@ export function TopNav(props) {
       },
     });
   }
+
   return (
     <div>
       <div id="h" style={{ position: 'sticky', top: 0, zIndex: 1002 }}>
@@ -315,23 +304,8 @@ export function TopNav(props) {
         />
       </div>
       <AppLayout
-        notifications={
-          <Flashbar
-            items={notifications}
-            i18nStrings={{
-              ariaLabel: 'Notifications',
-              notificationBarAriaLabel: 'View all notifications',
-              notificationBarText: 'Notifications',
-              errorIconAriaLabel: 'Error',
-              warningIconAriaLabel: 'Warning',
-              successIconAriaLabel: 'Success',
-              infoIconAriaLabel: 'Info',
-              inProgressIconAriaLabel: 'In progress',
-            }}
-            //stackItems
-          />
-        }
         stickyNotifications
+        notifications={notifications}
         toolsHide
         // headerSelector="#header"
         ariaLabels={{ navigationClose: 'close' }}
@@ -343,7 +317,6 @@ export function TopNav(props) {
             items={SideNavItems()}
           />
         }
-        // breadcrumbs={<BreadcrumbGroup items={breadcrumbs} expandAriaLabel="Show path" ariaLabel="Breadcrumbs" />}
         contentType="table"
         content={<MenuRoutes permissions={permissions} />}
         onNavigationChange={({ detail }) =>

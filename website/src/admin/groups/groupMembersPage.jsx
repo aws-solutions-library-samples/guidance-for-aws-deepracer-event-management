@@ -1,7 +1,6 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
-  CollectionPreferences,
   Header,
   Icon,
   Pagination,
@@ -19,8 +18,7 @@ import {
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
-  PageSizePreference,
-  WrapLines,
+  TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useNotificationsDispatch } from '../../store/appLayoutProvider';
@@ -284,18 +282,10 @@ export function GroupMembersPage() {
         trackBy="Username"
         resizableColumns
         preferences={
-          <CollectionPreferences
-            title={t('table.preferences')}
-            confirmLabel={t('button.confirm')}
-            cancelLabel={t('button.cancel')}
-            onConfirm={({ detail }) => setPreferences(detail)}
+          <TablePreferences
             preferences={preferences}
-            pageSizePreference={PageSizePreference(t('groups.detail.page-size-label'))}
-            visibleContentPreference={{
-              title: t('table.select-visible-colunms'),
-              options: visibleContentOptions,
-            }}
-            wrapLinesPreference={WrapLines}
+            setPreferences={setPreferences}
+            contentOptions={visibleContentOptions}
           />
         }
       />
