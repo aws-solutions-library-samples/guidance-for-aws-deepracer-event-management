@@ -79,7 +79,7 @@ export const AppLayoutProvider = (props) => {
       <splitPanelOptionsDispatchContext.Provider value={dispatchSplitPanelOptions}>
         <sideNavOptionsContext.Provider value={sideNavOptions}>
           <sideNavOptionsDispatch.Provider value={dispatchNavigationOptions}>
-            <notificationContext.Provider value={<Flashbar items={notifications} />}>
+            <notificationContext.Provider value={<Flashbar items={notifications} stackItems />}>
               <notificationDispatchContext.Provider value={[addNotification, dismissNotification]}>
                 {props.children}
               </notificationDispatchContext.Provider>
