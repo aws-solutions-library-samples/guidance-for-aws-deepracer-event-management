@@ -5,9 +5,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Box, Button, Modal, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
+import { Button, Table, TextFilter } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
+import { DeleteModal } from '../../components/deleteModal';
 import { PageLayout } from '../../components/pageLayout';
+import { DrSplitPanel } from '../../components/split-panels/dr-split-panel';
 import {
   DefaultPreferences,
   EmptyState,
@@ -19,9 +21,7 @@ import {
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useSplitPanelOptionsDispatch } from '../../store/appLayoutProvider';
 import { useEventsContext, useFleetsContext, useUsersContext } from '../../store/storeProvider';
-import { EmptyPanel } from './components/split-panels/emptyPanel';
-import { EventDetailsPanel } from './components/split-panels/eventDetailsPanel';
-import { MultiChoicePanel } from './components/split-panels/multiChoicePanel';
+import { EventDetailsPanelContent } from './components/eventDetailsPanelContent';
 import { ColumnDefinitions, VisibleContentOptions } from './support-functions/eventsTableConfig';
 
 const AdminEvents = () => {
@@ -87,33 +87,18 @@ const AdminEvents = () => {
       selection: {},
     });
 
-  const i18SplitPanel = {
-    preferencesTitle: t('common.panel.split-panel-preference-title'),
-    preferencesPositionLabel: t('common.panel.split-panel-position-label'),
-    preferencesPositionDescription: t('common.panel.split-panel-position-description'),
-    preferencesPositionSide: t('common.panel.position-side'),
-    preferencesPositionBottom: t('common.panel.position-bottom'),
-    preferencesConfirm: t('button.confirm'),
-    preferencesCancel: t('button.cancel'),
-    closeButtonAriaLabel: t('common.panel.close'),
-    openButtonAriaLabel: t('common.panel.open'),
-    resizeHandleAriaLabel: t('common.panel.split-panel-rezize-label'),
-  };
-
-  const i18SplitPanelHeader = t('events.split-panel-header');
-
   const selectPanelContent = useCallback((selectedItems) => {
     if (selectedItems.length === 0) {
-      return <EmptyPanel i18nStrings={i18SplitPanel} i18Header={i18SplitPanelHeader} />;
-    } else if (selectedItems.length === 1) {
-      return <EventDetailsPanel event={selectedItems[0]} i18nStrings={i18SplitPanel} />;
-    } else if (selectedItems.length > 1) {
       return (
-        <MultiChoicePanel
-          events={selectedItems}
-          i18nStrings={i18SplitPanel}
-          i18Header={i18SplitPanelHeader}
-        />
+        <DrSplitPanel header={`0 ${t('events.split-panel-header')}`}>
+          {t('events.split-panel.empty')}
+        </DrSplitPanel>
+      );
+    } else if (selectedItems.length === 1) {
+      return (
+        <DrSplitPanel header={selectedItems[0].eventName} noSelectedItems={selectedItems.length}>
+          <EventDetailsPanelContent event={selectedItems[0]} />
+        </DrSplitPanel>
       );
     }
   }, []);
@@ -179,50 +164,29 @@ const AdminEvents = () => {
 
   // JSX
   return (
-    <>
-      <PageLayout
-        header={t('events.header')}
-        description={t('events.description')}
-        breadcrumbs={[
-          { text: t('home.breadcrumb'), href: '/' },
-          { text: t('admin.breadcrumb'), href: '/admin/home' },
-          { text: t('events.breadcrumb') },
-        ]}
-      >
-        {eventsTable}
+    <PageLayout
+      header={t('events.header')}
+      description={t('events.description')}
+      breadcrumbs={[
+        { text: t('home.breadcrumb'), href: '/' },
+        { text: t('admin.breadcrumb'), href: '/admin/home' },
+        { text: t('events.breadcrumb') },
+      ]}
+    >
+      {eventsTable}
 
-        {/* delete modal */}
-        <Modal
-          onDismiss={() => setDeleteModalVisible(false)}
-          visible={deleteModalVisible}
-          closeAriaLabel="Close modal"
-          footer={
-            <Box float="right">
-              <SpaceBetween direction="horizontal" size="xs">
-                <Button variant="link" onClick={() => setDeleteModalVisible(false)}>
-                  {t('button.cancel')}
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    deleteEvents();
-                    setDeleteModalVisible(false);
-                  }}
-                >
-                  {t('button.delete')}
-                </Button>
-              </SpaceBetween>
-            </Box>
-          }
-          header={t('events.delete-event')}
-        >
-          {t('events.delete-warning')}: <br></br>{' '}
-          {SelectedEventsInTable.map((selectedEvent) => {
-            return selectedEvent.eventName + ' ';
-          })}
-        </Modal>
-      </PageLayout>
-    </>
+      <DeleteModal
+        header={t('events.delete-event')}
+        onDelete={deleteEvents}
+        onVisibleChange={setDeleteModalVisible}
+        visible={deleteModalVisible}
+      >
+        {t('events.delete-warning')}: <br></br>{' '}
+        {SelectedEventsInTable.map((selectedEvent) => {
+          return selectedEvent.eventName + ' ';
+        })}
+      </DeleteModal>
+    </PageLayout>
   );
 };
 

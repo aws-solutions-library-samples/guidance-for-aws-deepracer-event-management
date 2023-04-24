@@ -1,5 +1,5 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Box, Button, Modal, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
+import { Button, Table, TextFilter } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../../components/pageLayout';
 import * as mutations from '../../graphql/mutations';
 
+import { DeleteModal, ItemList } from '../../components/deleteModal';
 import {
   DefaultPreferences,
   EmptyState,
@@ -131,40 +132,17 @@ const AdminFleets = () => {
         { text: t('fleets.breadcrumb') },
       ]}
     >
-      <SpaceBetween direction="vertical" size="l">
-        {fleetsTable}
-      </SpaceBetween>
+      {fleetsTable}
 
-      {/* delete modal */}
-      <Modal
-        onDismiss={() => setDeleteModalVisible(false)}
-        visible={deleteModalVisible}
-        closeAriaLabel="Close modal"
-        footer={
-          <Box float="right">
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="link" onClick={() => setDeleteModalVisible(false)}>
-                {t('button.cancel')}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  deleteFleets();
-                  setDeleteModalVisible(false);
-                }}
-              >
-                {t('button.delete')}
-              </Button>
-            </SpaceBetween>
-          </Box>
-        }
+      <DeleteModal
         header={t('fleets.delete-fleet')}
+        onDelete={deleteFleets}
+        onVisibleChange={setDeleteModalVisible}
+        visible={deleteModalVisible}
       >
         {t('fleets.delete-warning')}: <br></br>{' '}
-        {selectedFleetsInTable.map((selectedFleet) => {
-          return selectedFleet.fleetName + ' ';
-        })}
-      </Modal>
+        <ItemList items={selectedFleetsInTable.map((selectedFleet) => selectedFleet.fleetName)} />
+      </DeleteModal>
     </PageLayout>
   );
 };
