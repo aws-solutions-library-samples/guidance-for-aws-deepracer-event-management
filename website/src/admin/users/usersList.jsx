@@ -35,6 +35,23 @@ export const UsersList = () => {
       minWidth: 150,
     },
     {
+      id: 'Email',
+      header: t('users.header-email'),
+      cell: (item) => {
+        const email = item.Attributes.filter((obj) => {
+          return obj.Name === 'email';
+        });
+        if (email.length > 0) {
+          return email[0].Value;
+        } else {
+          return '-';
+        }
+      },
+      sortingField: 'Email',
+      width: 200,
+      minWidth: 150,
+    },
+    {
       id: 'Flag',
       header: t('users.flag'),
       cell: (item) => {
@@ -44,7 +61,7 @@ export const UsersList = () => {
         if (countryCode.length > 0) {
           return <Flag size="small" countryCode={countryCode[0].Value}></Flag>;
         } else {
-          return '';
+          return '-';
         }
       },
       sortingField: 'Flag',
@@ -61,7 +78,7 @@ export const UsersList = () => {
         if (countryCode.length > 0) {
           return countryCode[0].Value;
         } else {
-          return '';
+          return '-';
         }
       },
       sortingField: 'CountryCode',
@@ -94,6 +111,11 @@ export const UsersList = () => {
           id: 'Username',
           label: t('users.header-username'),
           editable: false,
+        },
+        {
+          id: 'Email',
+          label: t('users.header-email'),
+          // editable: false,
         },
         {
           id: 'Flag',
