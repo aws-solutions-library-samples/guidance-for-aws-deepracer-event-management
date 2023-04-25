@@ -37,7 +37,7 @@ export function GroupMembersPage() {
   const [usersWithGroupMetaData, setUsersWithGroupMetaData] = useState([]);
   const [selectedItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const setNotifications = useNotificationsDispatch();
+  const [addNotification, dismissNotification] = useNotificationsDispatch();
 
   const [users] = useUsersContext();
 
@@ -76,6 +76,7 @@ export function GroupMembersPage() {
     };
   }, [groupName, users]);
 
+  const notificationId = 'group_error';
   const toggleUser = (user) => {
     const updateUserMembership = async () => {
       // Check user is not attempting to remove self
@@ -101,17 +102,18 @@ export function GroupMembersPage() {
     };
 
     updateUserMembership().catch((e) => {
-      setNotifications([
-        {
-          type: 'error',
-          content: e.errors[0].message + ', user membership could not be changed',
-          id: 'group_error',
-          dismissible: true,
-          onDismiss: () => {
-            setNotifications([]);
-          },
+      const userName = user.Username;
+      const errorMessage = e.errors[0].message;
+
+      addNotification({
+        type: 'error',
+        content: t('groups.notfications-error', { errorMessage, userName }),
+        id: notificationId,
+        dismissible: true,
+        onDismiss: () => {
+          dismissNotification(notificationId);
         },
-      ]);
+      });
       console.info(e.errors[0].message);
     });
   };
