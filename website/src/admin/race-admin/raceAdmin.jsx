@@ -1,9 +1,11 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Box, Button, Modal, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
+import { Button, Table, TextFilter } from '@cloudscape-design/components';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { DeleteModal, ItemList } from '../../components/deleteModal';
 import { PageLayout } from '../../components/pageLayout';
+import { DrSplitPanel } from '../../components/split-panels/dr-split-panel';
 import {
   DefaultPreferences,
   EmptyState,
@@ -16,9 +18,9 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useRacesApi } from '../../hooks/useRacesApi';
 import { useSplitPanelOptionsDispatch } from '../../store/appLayoutProvider';
 import { useSelectedEventContext } from '../../store/storeProvider';
-import { EmptyPanel } from './components/emptyPanel';
-import { MultiChoicePanel } from './components/multiChoicePanel';
-import { RaceDetailsPanel } from './components/raceDetailsPanel';
+import { formatAwsDateTime } from '../../support-functions/time';
+import { LapsTable } from './components/lapsTable';
+import { MultiChoicePanelContent } from './components/multiChoicePanelContent';
 import { ColumnDefinitions, VisibleContentOptions } from './support-functions/raceTableConfig';
 
 const RaceAdmin = () => {
@@ -63,6 +65,7 @@ const RaceAdmin = () => {
     }
     return <EmptyState title={'Please select an event in the top right corner'} />;
   };
+
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(races, {
       filtering: {
@@ -84,11 +87,24 @@ const RaceAdmin = () => {
 
   const selectPanelContent = useCallback((selectedItems) => {
     if (selectedItems.length === 0) {
-      return <EmptyPanel />;
+      return (
+        // TODO Add localisation
+        <DrSplitPanel header="0 races selected" noSelectedItems={selectedItems.length}>
+          Select a race to see its details
+        </DrSplitPanel>
+      );
     } else if (selectedItems.length === 1) {
-      return <RaceDetailsPanel race={selectedItems[0]} />;
+      return (
+        <DrSplitPanel header="Laps">
+          <LapsTable race={selectedItems[0]} tableSettings={{ variant: 'full-page' }} />
+        </DrSplitPanel>
+      );
     } else if (selectedItems.length > 1) {
-      return <MultiChoicePanel races={selectedItems} />;
+      return (
+        <DrSplitPanel header={`${selectedItems.length} races selected`}>
+          <MultiChoicePanelContent races={selectedItems} />
+        </DrSplitPanel>
+      );
     }
   }, []);
 
@@ -163,35 +179,20 @@ const RaceAdmin = () => {
     >
       {raceTable}
 
-      <Modal
-        onDismiss={() => setDeleteModalVisible(false)}
-        visible={deleteModalVisible}
-        closeAriaLabel="Close modal"
-        footer={
-          <Box float="right">
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="link" onClick={() => setDeleteModalVisible(false)}>
-                {t('button.cancel')}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  deleteRaces();
-                  setDeleteModalVisible(false);
-                }}
-              >
-                {t('button.delete')}
-              </Button>
-            </SpaceBetween>
-          </Box>
-        }
+      <DeleteModal
         header={t('race-admin.delete-races')}
+        onDelete={deleteRaces}
+        onVisibleChange={setDeleteModalVisible}
+        visible={deleteModalVisible}
       >
         {t('race-admin.delete-race-warning')}: <br></br>{' '}
-        {SelectedRacesInTable.map((selectedRace) => {
-          return selectedRace.raceId + ' ';
-        })}
-      </Modal>
+        <ItemList
+          items={SelectedRacesInTable.map(
+            (selectedRace) =>
+              selectedRace.username + ': ' + formatAwsDateTime(selectedRace.createdAt)
+          )}
+        />
+      </DeleteModal>
     </PageLayout>
   );
 };

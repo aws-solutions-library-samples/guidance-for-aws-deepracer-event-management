@@ -63,7 +63,16 @@ export const AppLayoutProvider = (props) => {
   const [notifications, setNotifications] = useState([]);
 
   const addNotification = (notificationToAdd) => {
-    setNotifications((notifications) => notifications.concat(notificationToAdd));
+    setNotifications((notifications) => {
+      const index = notifications.findIndex((index) => index.id === notificationToAdd.id);
+
+      if (index === -1) return notifications.concat(notificationToAdd);
+      else {
+        const notificationsCopy = [...notifications];
+        notificationsCopy[index] = notificationToAdd;
+        return notificationsCopy;
+      }
+    });
   };
 
   const dismissNotification = (idToDismiss) => {
@@ -79,7 +88,9 @@ export const AppLayoutProvider = (props) => {
       <splitPanelOptionsDispatchContext.Provider value={dispatchSplitPanelOptions}>
         <sideNavOptionsContext.Provider value={sideNavOptions}>
           <sideNavOptionsDispatch.Provider value={dispatchNavigationOptions}>
-            <notificationContext.Provider value={<Flashbar items={notifications} stackItems />}>
+            <notificationContext.Provider
+              value={<Flashbar items={notifications} stackItems={notifications.length > 3} />}
+            >
               <notificationDispatchContext.Provider value={[addNotification, dismissNotification]}>
                 {props.children}
               </notificationDispatchContext.Provider>
