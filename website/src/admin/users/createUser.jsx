@@ -20,6 +20,7 @@ import { useNotificationsDispatch } from '../../store/appLayoutProvider';
 
 import awsconfig from '../../config.json';
 
+const notificationId = 'create_user';
 export function CreateUser() {
   const { t } = useTranslation();
 
@@ -30,22 +31,20 @@ export function CreateUser() {
   const [tncChecked, setTncChecked] = useState(false);
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const [countryCode, setCountryCode] = useState('');
-  const setNotifications = useNotificationsDispatch();
+  const [addNotification, dismissNotification] = useNotificationsDispatch();
 
   async function createUserNow() {
     setButtonDisabled(true);
-    setNotifications([
-      {
-        type: 'success',
-        loading: true,
-        content: t('users.notifications.creating-user'),
-        id: 'create_user',
-        dismissible: true,
-        onDismiss: () => {
-          setNotifications([]);
-        },
+    addNotification({
+      type: 'success',
+      loading: true,
+      content: t('users.notifications.creating-user', { username }),
+      id: notificationId,
+      dismissible: true,
+      onDismiss: () => {
+        dismissNotification(notificationId);
       },
-    ]);
+    });
     try {
       const apiResponse = await API.graphql({
         query: mutations.createUser,
@@ -59,34 +58,32 @@ export function CreateUser() {
       const response = apiResponse['data']['createUser'];
       console.log(response);
 
-      setNotifications([
-        {
-          type: 'success',
-          content: t('users.notifications.user-created'),
-          id: 'create_user',
-          dismissible: true,
-          onDismiss: () => {
-            setNotifications([]);
-          },
+      addNotification({
+        type: 'success',
+        content: t('users.notifications.user-created', { username }),
+        id: notificationId,
+        dismissible: true,
+        onDismiss: () => {
+          dismissNotification(notificationId);
         },
-      ]);
+      });
 
       setUsername('');
       setEmail('');
       setCountryCode('');
       setTncChecked(false);
     } catch (response) {
-      setNotifications([
-        {
-          type: 'error',
-          content: t('users.notifications.user-not-created') + ', ' + response.errors[0].message,
-          id: 'create_user',
-          dismissible: true,
-          onDismiss: () => {
-            setNotifications([]);
-          },
+      const errorMessage = response.errors[0].message;
+
+      addNotification({
+        type: 'error',
+        content: t('users.notifications.user-not-created', { username, errorMessage }),
+        id: notificationId,
+        dismissible: true,
+        onDismiss: () => {
+          dismissNotification(notificationId);
         },
-      ]);
+      });
     } finally {
       setButtonDisabled(false);
     }
