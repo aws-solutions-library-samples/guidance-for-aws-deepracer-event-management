@@ -37,6 +37,7 @@ export interface LeaderboardProps {
         layersConfig: {
             powerToolsLogLevel: string;
             helperFunctionsLayer: lambda.ILayerVersion;
+            appsyncHelpersLayer: lambda.ILayerVersion;
             powerToolsLayer: lambda.ILayerVersion;
         };
     };
@@ -111,13 +112,6 @@ export class Leaderboard extends Construct {
             eventBus: props.eventbus,
         }).addTarget(new LambdaFunction(evbLcLambda));
 
-        const evbLeLambdaLayer = new lambdaPython.PythonLayerVersion(this, 'evbLeLambdaLayer', {
-            entry: 'lib/lambdas/leaderboard_entry_evb_layer/',
-            compatibleArchitectures: [props.lambdaConfig.architecture],
-            compatibleRuntimes: [props.lambdaConfig.runtime],
-            bundling: { image: props.lambdaConfig.bundlingImage },
-        });
-
         const evbLeLambda = new lambdaPython.PythonFunction(this, 'evbLeLambda', {
             entry: 'lib/lambdas/leaderboard_entry_evb/',
             description: 'Leaderboard handler',
@@ -134,7 +128,7 @@ export class Leaderboard extends Construct {
             layers: [
                 props.lambdaConfig.layersConfig.helperFunctionsLayer,
                 props.lambdaConfig.layersConfig.powerToolsLayer,
-                evbLeLambdaLayer,
+                props.lambdaConfig.layersConfig.appsyncHelpersLayer,
             ],
             environment: {
                 DDB_TABLE: ddbTable.tableName,
