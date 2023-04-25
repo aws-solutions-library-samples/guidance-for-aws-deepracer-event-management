@@ -1,17 +1,13 @@
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_dynamodb, DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
-import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import * as apig from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 
-import { Construct } from 'constructs';
 import { CodeFirstSchema, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
-import { FunctionUrl } from 'aws-cdk-lib/aws-lambda';
+import { Construct } from 'constructs';
 
 export interface LabelPrinterProps {
     logsbucket: IBucket;
@@ -69,7 +65,7 @@ export class LabelPrinter extends Construct {
             this,
             'print_functions',
             {
-                entry: 'lib/lambdas/print_functions_layer/',
+                entry: 'lib/lambda_layers/print_functions/',
                 compatibleArchitectures: [props.lambdaConfig.architecture],
                 compatibleRuntimes: [props.lambdaConfig.runtime],
                 bundling: {

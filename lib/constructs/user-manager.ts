@@ -33,6 +33,7 @@ export interface UserManagerProps {
         layersConfig: {
             powerToolsLogLevel: string;
             helperFunctionsLayer: lambda.ILayerVersion;
+            appsyncHelpersLayer: lambda.ILayerVersion;
             powerToolsLayer: lambda.ILayerVersion;
         };
     };
@@ -309,17 +310,6 @@ export class UserManager extends Construct {
         });
         user_api_policy.attachToRole(props.authenticatedUserRole);
 
-        const requestsAws4authLayer = new lambdaPython.PythonLayerVersion(
-            this,
-            'requestsAws4authLayer',
-            {
-                entry: 'lib/lambdas/helper_functions_layer/requests_aws4auth/',
-                compatibleArchitectures: [props.lambdaConfig.architecture],
-                compatibleRuntimes: [props.lambdaConfig.runtime],
-                bundling: { image: props.lambdaConfig.bundlingImage },
-            }
-        );
-
         // Eventbus Functions //
 
         // respond to new user event
@@ -346,7 +336,7 @@ export class UserManager extends Construct {
                 layers: [
                     props.lambdaConfig.layersConfig.helperFunctionsLayer,
                     props.lambdaConfig.layersConfig.powerToolsLayer,
-                    requestsAws4authLayer,
+                    props.lambdaConfig.layersConfig.appsyncHelpersLayer,
                 ],
             }
         );
