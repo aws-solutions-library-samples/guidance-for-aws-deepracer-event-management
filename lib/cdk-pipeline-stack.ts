@@ -35,7 +35,7 @@ class InfrastructurePipelineStage extends Stage {
 
         const baseStack = new BaseStack(this, 'base', { email: props.email });
         const stack = new DeepracerEventManagerStack(this, 'infrastructure', {
-            branchName: props.branchName,
+            baseStackName: baseStack.stackName,
             cloudfrontDistribution: baseStack.cloudfrontDistribution,
             tacCloudfrontDistribution: baseStack.tacCloudfrontDistribution,
             tacSourceBucket: baseStack.tacSourceBucket,

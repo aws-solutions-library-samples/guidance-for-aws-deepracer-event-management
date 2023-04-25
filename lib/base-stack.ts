@@ -4,6 +4,7 @@ import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
 import * as awsLambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import { Cdn } from './constructs/cdn';
 import { Eventbridge } from './constructs/eventbridge';
@@ -27,11 +28,6 @@ export class BaseStack extends cdk.Stack {
         runtime: awsLambda.Runtime;
         architecture: awsLambda.Architecture;
         bundlingImage: DockerImage;
-        layersConfig: {
-            helperFunctionsLayer: awsLambda.ILayerVersion;
-            powerToolsLayer: awsLambda.ILayerVersion;
-            powerToolsLogLevel: string;
-        };
     };
     public readonly dremWebsitebucket: s3.Bucket;
 
@@ -103,6 +99,7 @@ export class BaseStack extends cdk.Stack {
         );
 
         // Layers
+        // TODO: helperFunctionsLayer can be deleted when the infrastack has changed to usinging the ssm parameter with helperFunctionsLayerV2
         const helperFunctionsLayer = new lambdaPython.PythonLayerVersion(this, 'helper_functions', {
             entry: 'lib/lambdas/helper_functions_layer/http_response/',
             compatibleArchitectures: [lambda_architecture],
@@ -111,22 +108,27 @@ export class BaseStack extends cdk.Stack {
         });
 
         // Powertools layer
+        // TODO: delete after dependecies in the infrastack has been switched over to using ssm
         const powertoolsLayer = lambdaPython.PythonLayerVersion.fromLayerVersionArn(
             this,
             'lambda_powertools',
             `arn:aws:lambda:${stack.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2-Arm64:11`
         );
 
+        const lambdaLayers = this.lambdaLayers(
+            stack,
+            lambda_architecture,
+            lambda_runtime,
+            lambda_bundling_image
+        );
+
         this.lambdaConfig = {
             architecture: lambda_architecture,
             runtime: lambda_runtime,
             bundlingImage: lambda_bundling_image,
-            layersConfig: {
-                helperFunctionsLayer: helperFunctionsLayer,
-                powerToolsLayer: powertoolsLayer,
-                powerToolsLogLevel: powertoolsLogLevel,
-            },
         };
+
+        this.exportValue(helperFunctionsLayer.layerVersionArn); // TODO: delete after dependecies has been removed in the infra stack.
 
         // Event Bus
         this.eventbridge = new Eventbridge(this, 'eventbridge');
@@ -135,8 +137,70 @@ export class BaseStack extends cdk.Stack {
         this.idp = new Idp(this, 'idp', {
             distribution: cdn.distribution,
             defaultAdminEmail: props.email,
-            lambdaConfig: this.lambdaConfig,
+            lambdaConfig: {
+                ...this.lambdaConfig,
+                layersConfig: { ...lambdaLayers },
+            },
             eventbus: this.eventbridge.eventbus,
         });
     }
+
+    lambdaLayers = (
+        stack: cdk.Stack,
+        lambda_architecture: awsLambda.Architecture,
+        lambda_runtime: awsLambda.Runtime,
+        lambda_bundling_image: DockerImage
+    ) => {
+        // helper functions layer
+        const helperFunctionsLambdaLayer = new lambdaPython.PythonLayerVersion(
+            this,
+            'helperFunctionsLambdaLayer',
+            {
+                entry: 'lib/lambda_layers/helper_functions/',
+                compatibleArchitectures: [lambda_architecture],
+                compatibleRuntimes: [lambda_runtime],
+                bundling: { image: lambda_bundling_image },
+            }
+        );
+
+        new ssm.StringParameter(this, 'helperFunctionsLayerArn', {
+            stringValue: helperFunctionsLambdaLayer.layerVersionArn,
+            parameterName: `/${this.stackName}/helperFunctionsLambdaLayerArn`,
+        });
+
+        // Powertools layer
+        const powertoolsLambdaLayer = lambdaPython.PythonLayerVersion.fromLayerVersionArn(
+            this,
+            'lambdaPowertoolsLambdaLayer',
+            `arn:aws:lambda:${stack.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2-Arm64:11`
+        );
+
+        new ssm.StringParameter(this, 'powertoolsLayerArn', {
+            stringValue: powertoolsLambdaLayer.layerVersionArn,
+            parameterName: `/${this.stackName}/powertoolsLambdaLayerArn`,
+        });
+
+        // Appsync helpers layer
+        const appsyncHelpersLambdaLayer = new lambdaPython.PythonLayerVersion(
+            this,
+            'appsyncHelpersLambdaLayer',
+            {
+                entry: 'lib/lambda_layers/appsync_helpers/',
+                compatibleArchitectures: [lambda_architecture],
+                compatibleRuntimes: [lambda_runtime],
+                bundling: { image: lambda_bundling_image },
+            }
+        );
+
+        new ssm.StringParameter(this, 'appsyncHelperLambdaLayerArn', {
+            stringValue: appsyncHelpersLambdaLayer.layerVersionArn,
+            parameterName: `/${this.stackName}/appsyncHelpersLambdaLayerArn`,
+        });
+
+        return {
+            helperFunctionsLayer: helperFunctionsLambdaLayer,
+            powerToolsLayer: powertoolsLambdaLayer,
+            powerToolsLogLevel: 'INFO',
+        };
+    };
 }
