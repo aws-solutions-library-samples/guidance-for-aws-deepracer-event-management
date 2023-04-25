@@ -4,12 +4,12 @@ const HomeCards = () => {
   const cards = [
     {
       name: i18next.t('home.models'),
-      link: '/models',
+      link: '/models/view',
       description: i18next.t('home.models-description'),
     },
     {
       name: i18next.t('home.upload'),
-      link: '/upload',
+      link: '/models/upload',
       description: i18next.t('home.upload-description'),
     },
   ];
@@ -53,12 +53,7 @@ const AdminHomeCards = () => {
       link: '/admin/timekeeper',
       description: i18next.t('home.time-keeper-description'),
     },
-    {
-      name: i18next.t('home.leaderboard'),
-      link: '/admin/leaderboard',
-      description: i18next.t('home.leaderboard-description'),
-    },
   ];
   return cards;
 };
-export { HomeCards, AdminHomeCards };
+export { AdminHomeCards, HomeCards };

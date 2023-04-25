@@ -1,5 +1,37 @@
 import * as d3 from 'd3';
 
+export function SetLocalizedLowerThirdsLabels(
+  racerLabel,
+  remainingLabel,
+  fastestLabel,
+  previousLabel
+) {
+  const racerAndLapInfoObj = d3.select(
+    document.getElementById('lower-third-racer-and-lap-info').contentDocument
+  );
+
+  racerAndLapInfoObj.select('#RACER-LABEL').text(racerLabel);
+  racerAndLapInfoObj.select('#REMAINING-LABEL').text(remainingLabel);
+  racerAndLapInfoObj.select('#FASTEST-LABEL').text(fastestLabel);
+  racerAndLapInfoObj.select('#PREVIOUS-LABEL').text(previousLabel);
+}
+
+export function SetLocalizedLeaderboardLabels(
+  firstPlaceLabel,
+  secondPlaceLabel,
+  thirdPlaceLabel,
+  fourthPlaceLabel,
+  leaderboardLabel
+) {
+  const leaderboard = d3.select(document.getElementById('leaderboard').contentDocument);
+
+  leaderboard.select('#FIRST-PLACE-RANK-LABEL').text(firstPlaceLabel);
+  leaderboard.select('#SECOND-PLACE-RANK-LABEL').text(secondPlaceLabel);
+  leaderboard.select('#THIRD-PLACE-RANK-LABEL').text(thirdPlaceLabel);
+  leaderboard.select('#FOURTH-PLACE-RANK-LABEL').text(fourthPlaceLabel);
+  leaderboard.select('#LEADERBOARD-LOWER-RIGHT-LABEL').text(leaderboardLabel);
+}
+
 export function SetEventName(eventName) {
   // console.log(`SETTING EVENT NAME TO: ${eventName}`);
   // Event Name on Leaderboard.
@@ -10,35 +42,35 @@ export function SetEventName(eventName) {
   const racerAndLapInfoObj = d3.select(
     document.getElementById('lower-third-racer-and-lap-info').contentDocument
   );
-  racerAndLapInfoObj.select('#EVENT_x5F_NAME').text(eventName);
+  racerAndLapInfoObj.select('#EVENT-NAME-TEXT').text(eventName);
 }
 
 export function SetFirstPlaceRacerNameAndTime(racerName, racerTime) {
   // FirstPlaceRacerNameText
   const racerAndLapInfoObj = d3.select(document.getElementById('leaderboard').contentDocument);
-  racerAndLapInfoObj.select('#FirstPlaceRacerNameText').text(racerName);
-  racerAndLapInfoObj.select('#FirstPlaceLapTimeText').text(racerTime);
+  racerAndLapInfoObj.select('#FIRST-PLACE-RACER-NAME-TEXT').text(racerName);
+  racerAndLapInfoObj.select('#FIRST-PLACE-LAP-TIME-TEXT').text(racerTime);
 }
 
 export function SetSecondPlaceRacerNameAndTime(racerName, racerTime) {
   // FirstPlaceRacerNameText
   const racerAndLapInfoObj = d3.select(document.getElementById('leaderboard').contentDocument);
-  racerAndLapInfoObj.select('#SecondPlaceRacerNameText').text(racerName);
-  racerAndLapInfoObj.select('#SecondPlaceLapTimeText').text(racerTime);
+  racerAndLapInfoObj.select('#SECOND-PLACE-RACER-NAME-TEXT').text(racerName);
+  racerAndLapInfoObj.select('#SECOND-PLACE-LAP-TIME-TEXT').text(racerTime);
 }
 
 export function SetThirdPlaceRacerNameAndTime(racerName, racerTime) {
   // FirstPlaceRacerNameText
   const racerAndLapInfoObj = d3.select(document.getElementById('leaderboard').contentDocument);
-  racerAndLapInfoObj.select('#ThirdPlaceRacerNameText').text(racerName);
-  racerAndLapInfoObj.select('#ThirdPlaceLapTimeText').text(racerTime);
+  racerAndLapInfoObj.select('#THIRD-PLACE-RACER-NAME-TEXT').text(racerName);
+  racerAndLapInfoObj.select('#THIRD-PLACE-LAP-TIME-TEXT').text(racerTime);
 }
 
 export function SetFourthPlaceRacerNameAndTime(racerName, racerTime) {
   // FirstPlaceRacerNameText
   const racerAndLapInfoObj = d3.select(document.getElementById('leaderboard').contentDocument);
-  racerAndLapInfoObj.select('#FourthPlaceRacerNameText').text(racerName);
-  racerAndLapInfoObj.select('#FourthPlaceLapTimeText').text(racerTime);
+  racerAndLapInfoObj.select('#FOURTH-PLACE-RACER-NAME-TEXT').text(racerName);
+  racerAndLapInfoObj.select('#FOURTH-PLACE-LAP-TIME-TEXT').text(racerTime);
 }
 
 export function UpdateLeaderboard(leaderboardData) {
@@ -77,25 +109,25 @@ export function SetRacerInfoName(racerName) {
   const racerAndLapInfoObj = d3.select(
     document.getElementById('lower-third-racer-and-lap-info').contentDocument
   );
-  racerAndLapInfoObj.select('#RACER_x5F_NAME').text(racerName);
+  racerAndLapInfoObj.select('#RACER-NAME-TEXT').text(racerName);
 }
 export function SetRacerInfoFastestLap(bestTime) {
   const racerAndLapInfoObj = d3.select(
     document.getElementById('lower-third-racer-and-lap-info').contentDocument
   );
-  racerAndLapInfoObj.select('#FASTEST_x5F_LAP_x5F_TIME').text(bestTime);
+  racerAndLapInfoObj.select('#FASTEST-LAP-TIME-TEXT').text(bestTime);
 }
 export function SetRacerInfoLastLap(lastTime) {
   const racerAndLapInfoObj = d3.select(
     document.getElementById('lower-third-racer-and-lap-info').contentDocument
   );
-  racerAndLapInfoObj.select('#PREVIOUS_x5F_LAP_x5F_TIME').text(lastTime);
+  racerAndLapInfoObj.select('#PREVIOUS-LAP-TIME-TEXT').text(lastTime);
 }
 export function SetRacerInfoTotalTime(totalTimeRemaining) {
   const racerAndLapInfoObj = d3.select(
     document.getElementById('lower-third-racer-and-lap-info').contentDocument
   );
-  racerAndLapInfoObj.select('#TOTAL_x5F_TIME_x5F_REMAINING').text(totalTimeRemaining);
+  racerAndLapInfoObj.select('#TOTAL-TIME-REMAINING-TEXT').text(totalTimeRemaining);
 }
 
 export function SetDRCarPosition(x, y) {

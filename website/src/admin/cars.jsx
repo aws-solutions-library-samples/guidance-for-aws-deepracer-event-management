@@ -5,7 +5,6 @@ import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
   Button,
   ButtonDropdown,
-  CollectionPreferences,
   Header,
   Pagination,
   SpaceBetween,
@@ -13,7 +12,6 @@ import {
   TextFilter,
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
-import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -21,24 +19,15 @@ import { useTranslation } from 'react-i18next';
 import EditCarsModal from '../components/editCarsModal';
 import { PageLayout } from '../components/pageLayout';
 import {
-  CarColumnsConfig,
-  CarVisibleContentOptions,
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
-  PageSizePreference,
-  WrapLines,
+  TablePreferences,
 } from '../components/tableConfig';
+
+import { ColumnsConfig, VisibleContentOptions } from '../components/cars-table/carTableConfig';
+
 import * as queries from '../graphql/queries';
-
-// day.js
-var advancedFormat = require('dayjs/plugin/advancedFormat');
-var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
-var utc = require('dayjs/plugin/utc');
-
-dayjs.extend(advancedFormat);
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 const AdminCars = () => {
   const { t } = useTranslation();
@@ -92,7 +81,8 @@ const AdminCars = () => {
     visibleContent: ['carName', 'fleetName', 'carIp'],
   });
 
-  const carColumnsConfig = CarColumnsConfig();
+  const columnsConfig = ColumnsConfig();
+  const visibleContentOptions = VisibleContentOptions();
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(allItems, {
@@ -109,7 +99,7 @@ const AdminCars = () => {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: carColumnsConfig[1] } },
+      sorting: { defaultState: { sortingColumn: columnsConfig[1] } },
       selection: {},
     });
 
@@ -192,7 +182,7 @@ const AdminCars = () => {
             {t('cars.header')}
           </Header>
         }
-        columnDefinitions={carColumnsConfig}
+        columnDefinitions={columnsConfig}
         items={items}
         pagination={
           <Pagination
@@ -226,18 +216,10 @@ const AdminCars = () => {
         }}
         resizableColumns
         preferences={
-          <CollectionPreferences
-            title={t('table.preferences')}
-            confirmLabel={t('button.confirm')}
-            cancelLabel={t('button.cancel')}
-            onConfirm={({ detail }) => setPreferences(detail)}
+          <TablePreferences
             preferences={preferences}
-            pageSizePreference={PageSizePreference(t('cars.page-size-label'))}
-            visibleContentPreference={{
-              title: t('table.select-visible-colunms'),
-              options: CarVisibleContentOptions(),
-            }}
-            wrapLinesPreference={WrapLines}
+            setPreferences={setPreferences}
+            contentOptions={visibleContentOptions}
           />
         }
       />

@@ -343,7 +343,7 @@ const AdminActivation = (props) => {
           </ExpandableSection>
         </Container>
 
-        <Grid gridDefinition={[{ colspan: 4 }, { colspan: 4 }, { colspan: 4 }]}>
+        <Grid gridDefinition={[{ colspan: 4 }, { colspan: 4 }]}>
           <div></div>
           <div>
             <Button href="/manual_update.sh" iconAlign="right" iconName="external">

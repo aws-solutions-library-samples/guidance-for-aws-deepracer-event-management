@@ -17,7 +17,10 @@ import { PageLayout } from '../../../components/pageLayout';
 import useCounter from '../../../hooks/useCounter';
 import { usePublishOverlay } from '../../../hooks/usePublishOverlay';
 import useWebsocket from '../../../hooks/useWebsocket';
-import { GetRaceResetsNameFromId, GetRaceTypeNameFromId } from '../../events/raceConfig';
+import {
+  GetRaceResetsNameFromId,
+  GetRaceTypeNameFromId,
+} from '../../events/support-functions/raceConfig';
 import { LapTable } from '../components/lapTable';
 import LapTimer from '../components/lapTimer';
 import RaceTimer from '../components/raceTimer';
@@ -258,9 +261,9 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
 
   // JSX
   return (
-    <PageLayout breadcrumbs={breadcrumbs}>
+    <PageLayout breadcrumbs={breadcrumbs} header={t('timekeeper.race-page.page-header')}>
       <SpaceBetween size="l" direction="vertical">
-        <Container>
+        {/* <Container>
           <ColumnLayout columns={3} variant="text-grid">
             <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
               <Header variant="h3">{t('timekeeper.race-page.race-format-header')}: </Header>
@@ -279,40 +282,52 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
               </Header>
             </Grid>
           </ColumnLayout>
-        </Container>
-        <ColumnLayout columns={2} variant="text-grid">
+        </Container> */}
+        <ColumnLayout columns={2}>
           <Container>
             <SpaceBetween size="xs" direction="vertical">
+              <Header variant="h5">{t('timekeeper.current-racer')}:</Header>
+              <Header variant="h3">{raceInfo.username}</Header>
+
               <Grid
                 gridDefinition={[{ colspan: 6 }, { colspan: 6 }, { colspan: 6 }, { colspan: 6 }]}
               >
-                <Header>{t('timekeeper.time-left')}: </Header>
-                <RaceTimer
-                  onExpire={() => {
-                    return send('EXPIRE');
-                  }}
-                  ref={raceTimerRef}
-                />
-                <Header>{t('timekeeper.current-lap')}:</Header>
-                <LapTimer ref={lapTimerRef} />
+                <span>
+                  <Header variant="h5">{t('timekeeper.time-left')}: </Header>
+
+                  <RaceTimer
+                    onExpire={() => {
+                      return send('EXPIRE');
+                    }}
+                    ref={raceTimerRef}
+                  />
+                </span>
+                <span>
+                  <Header variant="h5">{t('timekeeper.current-lap')}:</Header>
+                  <LapTimer ref={lapTimerRef} />
+                </span>
               </Grid>
             </SpaceBetween>
-            <hr></hr>
             <Grid
               gridDefinition={[
+                { colspan: 12 },
                 { colspan: 6 },
                 { colspan: 6 },
-                { colspan: 12 },
-                { colspan: 12 },
-                { colspan: 3 },
-                { colspan: 3 },
+                { colspan: 4 },
+                { colspan: 2 },
                 { colspan: 6 },
-                { colspan: 12 },
                 { colspan: 6 },
                 { colspan: 6 },
               ]}
               className={styles.root}
             >
+              <button
+                id={styles.capturelap}
+                onClick={() => send('CAPTURE_LAP', { isValid: true })}
+                disabled={btnCaptureLap}
+              >
+                {t('timekeeper.capture-lap')}
+              </button>
               <button
                 id={styles.dnf}
                 onClick={() => send('DID_NOT_FINISH', { isValid: false })}
@@ -327,18 +342,8 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
               >
                 {t('timekeeper.car-reset')}
               </button>
-
-              <button
-                id={styles.capturelap}
-                onClick={() => send('CAPTURE_LAP', { isValid: true })}
-                disabled={btnCaptureLap}
-              >
-                {t('timekeeper.capture-lap')}
-              </button>
-
-              <hr></hr>
               <SpaceBetween>
-                <Header variant="h3">{t('timekeeper.resets')}:</Header>
+                <Header variant="h5">{t('timekeeper.resets')}:</Header>
                 <Header variant="h3">
                   {carResetCounter}/{allowedNrResets}
                 </Header>
@@ -357,8 +362,6 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
               >
                 {t('timekeeper.undo-false-finish')}
               </button>
-
-              <hr></hr>
               <button id={styles.endrace} onClick={() => send('END')} disabled={btnEndRace}>
                 {t('timekeeper.end-race')}
               </button>
@@ -367,23 +370,48 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
               </button>
             </Grid>
           </Container>
-          <Container>
+          <div>
             <SpaceBetween size="m" direction="horizontal">
-              <LapTable
-                variant="embedded"
-                header={t('timekeeper.fastest-lap')}
-                laps={fastestLap}
-                onAction={actionHandler}
-              />
+              <Container>
+                <SpaceBetween size="m" direction="horizontal">
+                  <ColumnLayout columns={2}>
+                    <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+                      <b>{t('timekeeper.race-page.race-format-header')}:</b>
+                      <br />
+                      {raceType}
+                    </Grid>
 
-              <LapTable
-                variant="embedded"
-                header={t('timekeeper.recorded-laps')}
-                laps={raceInfo.laps}
-                onAction={actionHandler}
-              />
+                    <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+                      <b>
+                        <nobr>{t('timekeeper.race-page.automated-timer-header')}:</nobr>
+                      </b>
+                      <br />
+                      {autTimerIsConnected
+                        ? t('timekeeper.race-page.automated-timer-connected')
+                        : t('timekeeper.race-page.automated-timer-not-connected')}{' '}
+                    </Grid>
+                  </ColumnLayout>
+                </SpaceBetween>
+              </Container>
+              <Container>
+                <SpaceBetween size="m" direction="horizontal">
+                  <LapTable
+                    variant="embedded"
+                    header={t('timekeeper.fastest-lap')}
+                    laps={fastestLap}
+                    onAction={actionHandler}
+                  />
+
+                  <LapTable
+                    variant="embedded"
+                    header={t('timekeeper.recorded-laps')}
+                    laps={raceInfo.laps}
+                    onAction={actionHandler}
+                  />
+                </SpaceBetween>
+              </Container>
             </SpaceBetween>
-          </Container>
+          </div>
         </ColumnLayout>
       </SpaceBetween>
       {warningModal}

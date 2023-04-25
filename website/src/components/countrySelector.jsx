@@ -23,7 +23,7 @@ export function CountrySelector(props) {
         registerLocale(require('i18n-iso-countries/langs/en.json'));
         setCountryOptionsAmplify(
             Object.entries(getNames('en', { select: 'official' })).map((_countryCode) => {
-                return <option key={_countryCode[0]} value={_countryCode[0]} label={_countryCode[1]}></option> ;
+                return <option key={_countryCode[0]} value={_countryCode[0]} label={_countryCode[1]}>{_countryCode[1]}</option> ;
             })
         );
     }, []);

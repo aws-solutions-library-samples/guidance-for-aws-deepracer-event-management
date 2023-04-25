@@ -1,14 +1,15 @@
+import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import * as cdk from 'aws-cdk-lib';
 import { DockerImage, Duration, Expiration } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { IDistribution } from 'aws-cdk-lib/aws-cloudfront';
 import { CfnIdentityPool, IUserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import { EventBus } from 'aws-cdk-lib/aws-events';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { CodeFirstSchema } from 'awscdk-appsync-utils';
 import { Construct } from 'constructs';
 import { CarManager } from './constructs/cars-manager';
@@ -21,13 +22,12 @@ import { LandingPageManager } from './constructs/landing-page';
 import { Leaderboard } from './constructs/leaderboard';
 import { ModelsManager } from './constructs/models-manager';
 import { RaceManager } from './constructs/race-manager';
-import { RestApi } from './constructs/rest-api';
 import { StreamingOverlay } from './constructs/streaming-overlay';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
-    branchName: string;
+    baseStackName: string;
     adminGroupRole: IRole;
     operatorGroupRole: IRole;
     commentatorGroupRole: IRole;
@@ -45,11 +45,6 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
         runtime: lambda.Runtime;
         architecture: lambda.Architecture;
         bundlingImage: DockerImage;
-        layersConfig: {
-            powerToolsLogLevel: string;
-            helperFunctionsLayer: lambda.ILayerVersion;
-            powerToolsLayer: lambda.ILayerVersion;
-        };
     };
     dremWebsiteBucket: IBucket;
     eventbus: EventBus;
@@ -69,6 +64,11 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         super(scope, id, props);
 
         const stack = cdk.Stack.of(this);
+
+        const lambdaConfig = {
+            ...props.lambdaConfig,
+            layersConfig: this.lambdaLayers(props.baseStackName),
+        };
 
         // Appsync API
         const schema = new CodeFirstSchema();
@@ -104,11 +104,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
         const noneDataSoure = appsyncApi.addNoneDataSource('none');
 
-        // Rest API - API GW
-        const restApi = new RestApi(this, 'restApi', {
-            cloudFrontDistributionName: props.cloudfrontDistribution.distributionDomainName,
-        });
-
         const modelsManager = new ModelsManager(this, 'ModelsManager', {
             adminGroupRole: props.adminGroupRole,
             operatorGroupRole: props.operatorGroupRole,
@@ -118,14 +113,8 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             logsBucket: props.logsBucket,
-            restApi: {
-                api: restApi.api,
-                apiAdminResource: restApi.apiAdminResource,
-                bodyValidator: restApi.bodyValidator,
-                instanceidCommandIdModel: restApi.instanceidCommandidModel,
-            },
         });
 
         const carManager = new CarManager(this, 'CarManager', {
@@ -133,7 +122,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 api: appsyncApi,
                 schema: schema,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             eventbus: props.eventbus,
         });
 
@@ -143,7 +132,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             eventbus: props.eventbus,
         });
 
@@ -154,7 +143,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             userPoolId: props.userPool.userPoolId,
             userPoolArn: props.userPool.userPoolArn,
             eventbus: props.eventbus,
@@ -171,7 +160,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             eventbus: props.eventbus,
         });
 
@@ -181,7 +170,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             leaderboardApi: leaderboard.api,
             landingPageApi: landingPage.api,
             eventbus: props.eventbus,
@@ -193,7 +182,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             userPoolId: props.userPool.userPoolId,
             eventbus: props.eventbus,
         });
@@ -204,20 +193,9 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
         new SystemsManager(this, 'SystemManager');
 
-        new GroupManager(this, 'GroupManagers', {
-            lambdaConfig: props.lambdaConfig,
-            userPoolArn: props.userPool.userPoolArn,
-            userPoolId: props.userPool.userPoolId,
-            restApi: {
-                api: restApi.api,
-                apiAdminResource: restApi.apiAdminResource,
-                bodyValidator: restApi.bodyValidator,
-            },
-        });
-
-        new UserManager(this, 'UserManager', {
+        const userManager = new UserManager(this, 'UserManager', {
             authenticatedUserRole: props.authenticatedUserRole,
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
             userPoolId: props.userPool.userPoolId,
             appsyncApi: {
@@ -225,16 +203,23 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            restApi: {
-                api: restApi.api,
-                apiAdminResource: restApi.apiAdminResource,
-                bodyValidator: restApi.bodyValidator,
-            },
             eventbus: props.eventbus,
         });
 
+        new GroupManager(this, 'GroupManagers', {
+            lambdaConfig: lambdaConfig,
+            userPoolArn: props.userPool.userPoolArn,
+            userPoolId: props.userPool.userPoolId,
+            userApiObject: userManager.userApiObject,
+            appsyncApi: {
+                api: appsyncApi,
+                schema: schema,
+                noneDataSource: noneDataSoure,
+            },
+        });
+
         new LabelPrinter(this, 'LabelPrinter', {
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             logsbucket: props.logsBucket,
             appsyncApi: {
                 api: appsyncApi,
@@ -246,50 +231,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         const cwRumAppMonitor = new CwRumAppMonitor(this, 'CwRumAppMonitor', {
             domainName: props.cloudfrontDistribution.distributionDomainName,
         });
-
-        // TODO should be boken up and moved to the correspinding module
-        const adminPolicy = new iam.Policy(this, 'adminPolicy', {
-            statements: [
-                new iam.PolicyStatement({
-                    effect: iam.Effect.ALLOW,
-                    actions: ['execute-api:Invoke'],
-                    resources: [
-                        restApi.api.arnForExecuteApi('GET', '/models'),
-                        restApi.api.arnForExecuteApi('GET', '/cars/label'),
-                        restApi.api.arnForExecuteApi('POST', '/cars/upload'),
-                        restApi.api.arnForExecuteApi('POST', '/cars/upload/status'),
-                        restApi.api.arnForExecuteApi('GET', '/users'),
-                        restApi.api.arnForExecuteApi('GET', '/admin/quarantinedmodels'),
-                        restApi.api.arnForExecuteApi('GET', '/admin/groups'),
-                        restApi.api.arnForExecuteApi('POST', '/admin/groups'),
-                        restApi.api.arnForExecuteApi('DELETE', '/admin/groups'),
-                        restApi.api.arnForExecuteApi('GET', '/admin/groups/*'),
-                        restApi.api.arnForExecuteApi('POST', '/admin/groups/*'),
-                        restApi.api.arnForExecuteApi('DELETE', '/admin/groups/*'),
-                    ],
-                }),
-            ],
-        });
-        adminPolicy.attachToRole(props.adminGroupRole);
-
-        // TODO should be boken up and moved to the correspinding module
-        const operatorPolicy = new iam.Policy(this, 'operatorPolicy', {
-            statements: [
-                new iam.PolicyStatement({
-                    effect: iam.Effect.ALLOW,
-                    actions: ['execute-api:Invoke'],
-                    resources: [
-                        restApi.api.arnForExecuteApi('GET', '/models'),
-                        restApi.api.arnForExecuteApi('GET', '/cars/label'),
-                        restApi.api.arnForExecuteApi('POST', '/cars/upload'),
-                        restApi.api.arnForExecuteApi('POST', '/cars/upload/status'),
-                        restApi.api.arnForExecuteApi('GET', '/users'),
-                        restApi.api.arnForExecuteApi('GET', '/admin/quarantinedmodels'),
-                    ],
-                }),
-            ],
-        });
-        operatorPolicy.attachToRole(props.operatorGroupRole);
 
         // Outputs
         new cdk.CfnOutput(this, 'DremWebsite', {
@@ -356,10 +297,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
         new cdk.CfnOutput(this, 'region', { value: stack.region });
 
-        new cdk.CfnOutput(this, 'apiGatewayEndpoint', {
-            value: restApi.api.url,
-        });
-
         new cdk.CfnOutput(this, 'rumScript', {
             value: cwRumAppMonitor.script,
         });
@@ -408,4 +345,48 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         // new cdk.CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
         // new cdk.CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
     }
+
+    lambdaLayers = (baseStackName: string) => {
+        // Helper functions layer
+        const helperFunctionsLambdaLayerArn = ssm.StringParameter.valueForStringParameter(
+            this,
+            `/${baseStackName}/helperFunctionsLambdaLayerArn`
+        );
+
+        const helperFunctionsLambdaLayer = lambdaPython.PythonLayerVersion.fromLayerVersionArn(
+            this,
+            'helperFunctionsLambdaLayer',
+            helperFunctionsLambdaLayerArn
+        );
+
+        // Power tools layer
+        const powertoolsLambdaLayerArn = ssm.StringParameter.valueForStringParameter(
+            this,
+            `/${baseStackName}/powertoolsLambdaLayerArn`
+        );
+
+        const powertoolsLambdaLayer = lambdaPython.PythonLayerVersion.fromLayerVersionArn(
+            this,
+            'lambdaPowertoolsLambdaLayer',
+            powertoolsLambdaLayerArn
+        );
+
+        // Appsync helpers layer
+        const appsyncHelpersLambdaLayerArn = ssm.StringParameter.valueForStringParameter(
+            this,
+            `/${baseStackName}/appsyncHelpersLambdaLayerArn`
+        );
+        const appsyncHelpersLambdaLayer = lambdaPython.PythonLayerVersion.fromLayerVersionArn(
+            this,
+            'appsyncHelpersLambdaLayer',
+            appsyncHelpersLambdaLayerArn
+        );
+
+        return {
+            powerToolsLogLevel: 'INFO',
+            powerToolsLayer: powertoolsLambdaLayer,
+            helperFunctionsLayer: helperFunctionsLambdaLayer,
+            appsyncHelpersLayer: appsyncHelpersLambdaLayer,
+        };
+    };
 }

@@ -1,10 +1,4 @@
-import {
-  AppLayout,
-  Badge,
-  Flashbar,
-  SideNavigation,
-  TopNavigation,
-} from '@cloudscape-design/components';
+import { AppLayout, Badge, SideNavigation, TopNavigation } from '@cloudscape-design/components';
 
 import React from 'react';
 
@@ -14,25 +8,26 @@ import { useTranslation } from 'react-i18next';
 import { AdminActivation } from '../admin/carActivation';
 import { AdminCars } from '../admin/cars';
 import { AdminEvents } from '../admin/events/adminEvents';
-import { CreateEvent } from '../admin/events/createEvent';
-import { EditEvent } from '../admin/events/editEvent';
+import { CreateEvent } from '../admin/events/pages/createEvent';
+import { EditEvent } from '../admin/events/pages/editEvent';
 import { AdminFleets } from '../admin/fleets/adminFleets';
 import { CreateFleet } from '../admin/fleets/createFleet';
 import { EditFleet } from '../admin/fleets/editFleet';
-import { AdminGroupsDetail } from '../admin/groups/detail';
-import { AdminGroups } from '../admin/groups/groups';
+import { GroupMembersPage } from '../admin/groups/groupMembersPage';
+import { GroupsPage } from '../admin/groups/groupsPage';
 import { AdminHome } from '../admin/home';
-import { AdminModels } from '../admin/models';
-import { AdminQuarantine } from '../admin/quarantine';
-import { EditRace } from '../admin/race-admin/editRace';
+import { AdminModels } from '../admin/model-management/models';
+import { AdminQuarantine } from '../admin/model-management/quarantine';
+import { EditRace } from '../admin/race-admin/pages/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { Timekeeper } from '../admin/timekeeper/timeKeeper';
 import { ProfileHome } from '../admin/user-profile/profile';
 import { CreateUser } from '../admin/users/createUser';
+import { UsersList } from '../admin/users/usersList';
 import { CommentatorRaceStats } from '../commentator/race-stats';
 import { Home } from '../home';
 import useLink from '../hooks/useLink';
-import { Models } from '../models';
+import { ModelMangement } from '../pages/model-management/modelManagement';
 import {
   useNotifications,
   useSideNavOptions,
@@ -46,7 +41,6 @@ import {
   useSelectedEventContext,
   useSelectedEventDispatch,
 } from '../store/storeProvider';
-import { Upload } from '../upload';
 
 function cwr(operation, payload) {
   // Instrument Routing to Record Page Views
@@ -65,8 +59,7 @@ const defaultRoutes = [
   <Route path="/" element={<Home />} />,
   <Route path="*" element={<Home />} />,
   <Route path="/user/profile" element={<ProfileHome />} />,
-  <Route path="/models/view" element={<Models />} />,
-  <Route path="/models/upload" element={<Upload />} />,
+  <Route path="/models/view" element={<ModelMangement />} />,
 ];
 
 const registrationRoutes = [<Route path="/registration/createuser" element={<CreateUser />} />];
@@ -91,8 +84,9 @@ const operatorRoutes = [
 ];
 
 const adminRoutes = [
-  <Route path="/admin/groups" element={<AdminGroups />} />,
-  <Route path="/admin/groups/:groupName" element={<AdminGroupsDetail />} />,
+  <Route path="/admin/users" element={<UsersList />} />,
+  <Route path="/admin/groups" element={<GroupsPage />} />,
+  <Route path="/admin/groups/:groupName" element={<GroupMembersPage />} />,
 ];
 
 const MenuRoutes = ({ permissions }) => {
@@ -133,13 +127,9 @@ export function TopNav(props) {
 
   const defaultSideNavItems = [
     {
-      type: 'section',
-      text: t('topnav.models'),
-      href: '/models',
-      items: [
-        { type: 'link', text: t('topnav.upload'), href: '/models/upload' },
-        { type: 'link', text: t('topnav.models'), href: '/models/view' },
-      ],
+      type: 'link',
+      text: t('topnav.models-own'),
+      href: '/models/view',
     },
   ];
 
@@ -205,13 +195,11 @@ export function TopNav(props) {
             {
               type: 'link',
               text: t('topnav.events'),
-              info: <Badge color="blue">Beta</Badge>,
               href: '/admin/events',
             },
             {
               type: 'link',
               text: t('topnav.race-admin'),
-              info: <Badge color="blue">Beta</Badge>,
               href: '/admin/races',
             },
           ],
@@ -219,7 +207,6 @@ export function TopNav(props) {
         {
           type: 'link',
           text: t('topnav.time-keeper'),
-          info: <Badge color="blue">Beta</Badge>,
           href: '/admin/timekeeper',
         },
       ],
@@ -232,11 +219,8 @@ export function TopNav(props) {
       text: t('topnav.admin'),
       href: '/admin',
       items: [
-        {
-          type: 'expandable-link-group',
-          text: t('topnav.users'),
-          items: [{ type: 'link', text: t('topnav.groups'), href: '/admin/groups' }],
-        },
+        { type: 'link', text: t('topnav.users'), href: '/admin/users' },
+        { type: 'link', text: t('topnav.groups'), href: '/admin/groups' },
       ],
     },
   ];
@@ -295,6 +279,7 @@ export function TopNav(props) {
       },
     });
   }
+
   return (
     <div>
       <div id="h" style={{ position: 'sticky', top: 0, zIndex: 1002 }}>
@@ -319,23 +304,8 @@ export function TopNav(props) {
         />
       </div>
       <AppLayout
-        notifications={
-          <Flashbar
-            items={notifications}
-            i18nStrings={{
-              ariaLabel: 'Notifications',
-              notificationBarAriaLabel: 'View all notifications',
-              notificationBarText: 'Notifications',
-              errorIconAriaLabel: 'Error',
-              warningIconAriaLabel: 'Warning',
-              successIconAriaLabel: 'Success',
-              infoIconAriaLabel: 'Info',
-              inProgressIconAriaLabel: 'In progress',
-            }}
-            //stackItems
-          />
-        }
         stickyNotifications
+        notifications={notifications}
         toolsHide
         // headerSelector="#header"
         ariaLabels={{ navigationClose: 'close' }}
@@ -347,7 +317,6 @@ export function TopNav(props) {
             items={SideNavItems()}
           />
         }
-        // breadcrumbs={<BreadcrumbGroup items={breadcrumbs} expandAriaLabel="Show path" ariaLabel="Breadcrumbs" />}
         contentType="table"
         content={<MenuRoutes permissions={permissions} />}
         onNavigationChange={({ detail }) =>

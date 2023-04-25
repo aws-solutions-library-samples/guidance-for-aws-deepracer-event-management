@@ -1,3 +1,4 @@
+import { Flashbar } from '@cloudscape-design/components';
 import React, { createContext, useContext, useReducer, useState } from 'react';
 
 const NavigationOptionsHandler = (state, action) => {
@@ -59,7 +60,27 @@ export const AppLayoutProvider = (props) => {
     splitPanelDefaultSettings
   );
 
-  const [notifications, dispatchNotifications] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+
+  const addNotification = (notificationToAdd) => {
+    setNotifications((notifications) => {
+      const index = notifications.findIndex((index) => index.id === notificationToAdd.id);
+
+      if (index === -1) return notifications.concat(notificationToAdd);
+      else {
+        const notificationsCopy = [...notifications];
+        notificationsCopy[index] = notificationToAdd;
+        return notificationsCopy;
+      }
+    });
+  };
+
+  const dismissNotification = (idToDismiss) => {
+    console.info(idToDismiss);
+    setNotifications((notifications) =>
+      notifications.filter((notification) => notification.id !== idToDismiss)
+    );
+  };
 
   return (
     // this is the provider providing state
@@ -67,8 +88,10 @@ export const AppLayoutProvider = (props) => {
       <splitPanelOptionsDispatchContext.Provider value={dispatchSplitPanelOptions}>
         <sideNavOptionsContext.Provider value={sideNavOptions}>
           <sideNavOptionsDispatch.Provider value={dispatchNavigationOptions}>
-            <notificationContext.Provider value={notifications}>
-              <notificationDispatchContext.Provider value={dispatchNotifications}>
+            <notificationContext.Provider
+              value={<Flashbar items={notifications} stackItems={notifications.length > 3} />}
+            >
+              <notificationDispatchContext.Provider value={[addNotification, dismissNotification]}>
                 {props.children}
               </notificationDispatchContext.Provider>
             </notificationContext.Provider>
