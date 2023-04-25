@@ -1,6 +1,15 @@
 {
   "leaderboard.position": "POSITION",
-  "leaderboard.racer": "RENNFAHRER",
+  "leaderboard.racer": "RENNFAHRER/IN",
   "leaderboard.time": "ZEIT",
-  "leaderboard.flag": "FLAGGE"
+  "leaderboard.flag": "FLAGGE",
+  "leaderboard.summary-footer.finsiher": "NEUER FINISHER",
+  "leaderboard.summary-footer.rank": "GESAMTRANG",
+  "leaderboard.summary-footer.consistency": "KONSISTENZ",
+  "leaderboard.summary-footer.gap-to-fastest": "ABSTAND ZUM SCHNELLSTEN",
+  "leaderboard.summary-footer.fastest-time": "SCHNELLSTE ZEIT",
+  "leaderboard.summary-footer.avg-lap-time": "Ø RUNDENZEIT",
+  "leaderboard.summary-footer.lap-completion-ratio": "RUNDEN-ABSCHLUSSQUOTE",
+  "leaderboard.summary-footer.avg-laps-per-attempt": "Ø RUNDEN PRO VERSUCH",
+  "leaderboard.race-info-footer.currently-racing": "Aktuell auf der Strecke"
 }
