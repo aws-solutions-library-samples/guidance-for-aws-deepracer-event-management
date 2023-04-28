@@ -1,6 +1,6 @@
 import { AppLayout, Badge, SideNavigation, TopNavigation } from '@cloudscape-design/components';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { Route, Routes, useLocation } from 'react-router-dom';
 
@@ -36,11 +36,8 @@ import {
   useSplitPanelOptionsDispatch,
 } from '../store/appLayoutProvider';
 import { usePermissionsContext } from '../store/permissions/permissionsProvider';
-import {
-  useEventsContext,
-  useSelectedEventContext,
-  useSelectedEventDispatch,
-} from '../store/storeProvider';
+import { useSelectedEventContext } from '../store/storeProvider';
+import { EventSelectorModal } from './eventSelectorModal';
 
 function cwr(operation, payload) {
   // Instrument Routing to Record Page Views
@@ -117,14 +114,12 @@ export function TopNav(props) {
 
   const { handleFollow } = useLink();
 
-  const [events] = useEventsContext();
   const selectedEvent = useSelectedEventContext();
-  const setSelectedEvent = useSelectedEventDispatch();
   const sideNavOptions = useSideNavOptions();
   const sideNavOptionsDispatch = useSideNavOptionsDispatch();
 
   const permissions = usePermissionsContext();
-
+  const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
   const defaultSideNavItems = [
     {
       type: 'link',
@@ -269,14 +264,9 @@ export function TopNav(props) {
 
   if (permissions.topNavItems.eventSelection) {
     topNavItems.unshift({
-      type: 'menu-dropdown',
+      type: 'button',
       text: selectedEvent.eventName,
-      items: events.map((event) => {
-        return { id: event.eventId, text: event.eventName };
-      }),
-      onItemClick: ({ detail }) => {
-        setSelectedEvent(events.find((item) => item.eventId === detail.id));
-      },
+      onClick: () => setEventSelectModalVisible(true),
     });
   }
 
@@ -307,7 +297,7 @@ export function TopNav(props) {
         stickyNotifications
         notifications={notifications}
         toolsHide
-        // headerSelector="#header"
+        headerSelector="#h"
         ariaLabels={{ navigationClose: 'close' }}
         navigationOpen={sideNavOptions.isOpen}
         navigation={
@@ -327,6 +317,12 @@ export function TopNav(props) {
         onSplitPanelToggle={(item) =>
           splitPanelOptionsDispatch({ type: 'UPDATE', value: { isOpen: item.detail.open } })
         }
+      />
+
+      <EventSelectorModal
+        visible={eventSelectModalVisible}
+        onDismiss={() => setEventSelectModalVisible(false)}
+        onOk={() => setEventSelectModalVisible(false)}
       />
     </div>
   );
