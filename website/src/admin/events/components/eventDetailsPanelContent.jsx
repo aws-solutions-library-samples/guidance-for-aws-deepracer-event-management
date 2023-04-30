@@ -2,8 +2,10 @@ import { Box, ColumnLayout, Grid, SpaceBetween } from '@cloudscape-design/compon
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { EventLinksButtons } from '../../../components/eventLinksButtons';
+import { Flag } from '../../../components/flag';
 import awsconfig from '../../../config.json';
-import { useFleetsContext } from '../../../store/storeProvider';
+import { useFleetsContext, useUsersContext } from '../../../store/storeProvider';
+import { formatAwsDateTime } from '../../../support-functions/time';
 import { GetTypeOfEventNameFromId } from '../support-functions/eventDomain';
 import {
   GetRaceResetsNameFromId,
@@ -14,6 +16,7 @@ import {
 export const EventDetailsPanelContent = ({ event }) => {
   const { t } = useTranslation();
 
+  const [users, usersIsLoading, getUserNameFromId] = useUsersContext();
   const [, , getFleetNameFromId] = useFleetsContext();
   const attributeField = (header, value) => {
     return (
@@ -30,12 +33,12 @@ export const EventDetailsPanelContent = ({ event }) => {
       <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }, { colspan: 12 }, { colspan: 12 }]}>
         {attributeField(t('events.event-type'), GetTypeOfEventNameFromId(event.typeOfEvent))}
         {attributeField(t('events.event-date'), event.eventDate)}
-        {attributeField(t('events.created-at'), event.createdAt)}
-        {attributeField(t('events.created-by'), event.createdBy)}
+        {attributeField(t('events.created-at'), formatAwsDateTime(event.createdAt) || '-')}
+        {attributeField(t('events.created-by'), getUserNameFromId(event.createdBy || '-'))}
       </Grid>
       <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }, { colspan: 12 }]}>
         {attributeField(t('events.event-date'), event.eventDate)}
-        {attributeField(t('events.country'), event.countryCode)}
+        {attributeField(t('events.country'), <Flag countryCode={event.countryCode}></Flag>)}
         {attributeField(t('events.fleet-info.label'), getFleetNameFromId(event.fleetId))}
         {attributeField(
           t('events.leaderboard.header'),
