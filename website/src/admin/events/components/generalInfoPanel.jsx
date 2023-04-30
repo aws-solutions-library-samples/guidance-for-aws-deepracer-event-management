@@ -98,7 +98,7 @@ export const EventInfoPanel = ({
           />
         </FormField>
 
-        <FormField label={t('events.event-date')} description={t('events.event-date-descriprion')}>
+        <FormField label={t('events.event-date')} description={t('events.event-date-description')}>
           <DatePicker
             onChange={({ detail }) => onChange({ eventDate: detail.value })}
             value={eventDate ?? eventDate | undefined}
