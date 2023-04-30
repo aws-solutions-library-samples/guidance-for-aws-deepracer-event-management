@@ -1,13 +1,10 @@
-import { API } from 'aws-amplify';
-import * as mutations from '../../graphql/mutations';
-
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Button, Table, TextFilter } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
-import { DeleteModal } from '../../components/deleteModal';
+import { DeleteModal, ItemList } from '../../components/deleteModal';
 import { PageLayout } from '../../components/pageLayout';
 import { DrSplitPanel } from '../../components/split-panels/dr-split-panel';
 import {
@@ -19,6 +16,7 @@ import {
   TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import useMutation from '../../hooks/useMutation';
 import { useSplitPanelOptionsDispatch } from '../../store/appLayoutProvider';
 import { useEventsContext, useFleetsContext, useUsersContext } from '../../store/storeProvider';
 import { EventDetailsPanelContent } from './components/eventDetailsPanelContent';
@@ -28,6 +26,7 @@ const AdminEvents = () => {
   const { t } = useTranslation();
   const [SelectedEventsInTable, setSelectedEventsInTable] = useState([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [send] = useMutation();
 
   const [preferences, setPreferences] = useLocalStorage('DREM-events-table-preferences', {
     ...DefaultPreferences,
@@ -53,14 +52,7 @@ const AdminEvents = () => {
   // Delete Event
   async function deleteEvents() {
     const eventIdsToDelete = SelectedEventsInTable.map((event) => event.eventId);
-
-    await API.graphql({
-      query: mutations.deleteEvents,
-      variables: {
-        eventIds: eventIdsToDelete,
-      },
-    });
-
+    send('deleteEvents', { eventIds: eventIdsToDelete });
     setSelectedEventsInTable([]);
   }
 
@@ -182,9 +174,7 @@ const AdminEvents = () => {
         visible={deleteModalVisible}
       >
         {t('events.delete-warning')}: <br></br>{' '}
-        {SelectedEventsInTable.map((selectedEvent) => {
-          return selectedEvent.eventName + ' ';
-        })}
+        <ItemList items={SelectedEventsInTable.map((selectedEvent) => selectedEvent.eventName)} />
       </DeleteModal>
     </PageLayout>
   );

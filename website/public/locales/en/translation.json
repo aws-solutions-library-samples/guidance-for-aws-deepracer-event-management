@@ -189,6 +189,14 @@
   "events.split-panel.empty": "Select an event to see its details",
   "events.split-panel-header": "events selected",
 
+  "events.selector.current-events": "Current events",
+  "events.selector.future-events": "Future events",
+  "events.selector.past-events": "Past events",
+  "events.selector.events-with-missing-date": "Events with missing event date",
+  "events.selector.option-description": "Event date: {{eventDate}}, Lead: {{eventLead}}",
+  "events.selector.track": "Track: {{trackId}}",
+  "events.selector.track-type": "Type: {{trackType}}",
+
   "race-admin.header": "Race management",
   "race-admin.description": "",
   "race-admin.breadcrumb": "Race",
@@ -320,6 +328,17 @@
   "users.flag": "Flag",
 
   "users-list.header": "List users",
+
+  "notifications.item-type-event": "Event",
+  "notifications.creating-item": "Creating {{itemType}} {{itemName}}...",
+  "notifications.create-item-success": "{{itemType}} {{itemName}} created",
+  "notifications.create-item-error": "{{itemType} {{itemName}} could not be created, {{errorMessage}}",
+  "notifications.upating-item": "Updating {{itemType}} {{itemName}}...",
+  "notifications.update-item-success": "{{itemType}} {{itemName}} updated",
+  "notifications.update-item-error": "{{itemType}} {{itemName}} could not be updated, {{errorMessage}}",
+  "notifications.deleting-item": "Deleting {{itemType}} {{itemName}}...",
+  "notifications.delete-item-success": "{{itemType}} {{itemName}} deleted",
+  "notifications.delete-item-error": "{{itemType}} {{itemName}} could not be deleted, {{errorMessage}}",
 
   "home.all-models-description": "List of the models uploaded by users",
   "home.all-models": "All models",
