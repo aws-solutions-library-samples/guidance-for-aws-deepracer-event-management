@@ -92,7 +92,7 @@
   "events.event-name-description": "Der Name des Events wird auf der Rangliste angezeigt",
   "events.event-name-placeholder": "Mein tolles Event",
   "events.event-date": "Veranstaltungsdatum",
-  "events.event-date-descriprion": "Das Datum, an dem die Veranstaltung stattfinden wird",
+  "events.event-date-description": "Das Datum, an dem die Veranstaltung stattfinden wird",
   "events.event-date-next-month": "Nächster Monat",
   "events.event-date-previous-month": "Vorheriger Monat",
   "events.event-date-today": "Heute",
