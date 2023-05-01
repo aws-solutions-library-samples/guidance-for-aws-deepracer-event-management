@@ -71,7 +71,7 @@ export const EventDetailsPanelContent = ({ event }) => {
           <EventLinksButtons
             href={`${
               awsconfig.Urls.leaderboardWebsite
-            }/leaderboard/${event.eventId.toString()}/?qr=true&scroll=true`}
+            }/leaderboard/${event.eventId.toString()}/?qr=header&scroll=true`}
             linkTextPrimary={t('events.leaderboard-link-same-tab')}
             linkTextExternal={t('events.leaderboard-link-new-tab')}
           />
