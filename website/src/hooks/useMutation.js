@@ -13,7 +13,6 @@ export default function useMutation() {
   const [addNotification, dismissNotification] = useNotificationsDispatch();
 
   const generateRequestNotification = useCallback((method, payload) => {
-    console.info(payload);
     const lowerCaseMethod = method.toLowerCase();
     let notificationInfo = {
       id: '',
@@ -28,7 +27,7 @@ export default function useMutation() {
         name: payload.eventName ?? '',
       };
 
-      let notificationHeader = '';
+      let notificationHeader;
       const itemType = notificationInfo.itemType;
       const itemName = notificationInfo.name;
       if (lowerCaseMethod.includes('add')) {
@@ -42,24 +41,27 @@ export default function useMutation() {
         notificationHeader = t('notifications.deleting-item', { itemType, itemName });
       }
 
-      addNotification({
-        header: notificationHeader,
-        type: 'info',
-        loading: true,
-        dismissible: true,
-        dismissLabel: 'Dismiss message',
-        id: notificationInfo.id,
-        onDismiss: () => {
-          dismissNotification(notificationInfo.id);
-        },
-      });
+      if (notificationHeader != null) {
+        console.info('Add request - notification');
+        addNotification({
+          header: notificationHeader,
+          type: 'info',
+          loading: true,
+          dismissible: true,
+          dismissLabel: 'Dismiss message',
+          id: notificationInfo.id,
+          onDismiss: () => {
+            dismissNotification(notificationInfo.id);
+          },
+        });
+      }
     }
 
     return notificationInfo;
   }, []);
 
   const generateResponseNotification = useCallback((notificationInfo, status, errorMessage) => {
-    let notificationHeader = '';
+    let notificationHeader;
     const itemType = notificationInfo.itemType;
     const itemName = notificationInfo.name;
     if (notificationInfo.action === 'add' && status === 'success')
@@ -87,16 +89,19 @@ export default function useMutation() {
         errorMessage,
       });
 
-    addNotification({
-      header: notificationHeader,
-      type: status,
-      dismissible: true,
-      dismissLabel: 'Dismiss message',
-      id: notificationInfo.id,
-      onDismiss: () => {
-        dismissNotification(notificationInfo.id);
-      },
-    });
+    if (notificationHeader != null) {
+      console.info('Add response - notification');
+      addNotification({
+        header: notificationHeader,
+        type: status,
+        dismissible: true,
+        dismissLabel: 'Dismiss message',
+        id: notificationInfo.id,
+        onDismiss: () => {
+          dismissNotification(notificationInfo.id);
+        },
+      });
+    }
   }, []);
 
   const send = useCallback(
