@@ -1,5 +1,6 @@
 import { Flashbar } from '@cloudscape-design/components';
-import React, { createContext, useContext, useReducer, useState } from 'react';
+import React, { createContext, useContext, useEffect, useReducer, useState } from 'react';
+import { useWindowSize } from '../hooks/useWindowsSize';
 
 const NavigationOptionsHandler = (state, action) => {
   if (action.type === 'SIDE_NAV_IS_OPEN') {
@@ -52,6 +53,7 @@ const SplitPanelOptionsHandler = (state, action) => {
 };
 
 export const AppLayoutProvider = (props) => {
+  const windowSize = useWindowSize();
   const [sideNavOptions, dispatchNavigationOptions] = useReducer(NavigationOptionsHandler, {
     isOpen: true,
   });
@@ -61,6 +63,14 @@ export const AppLayoutProvider = (props) => {
   );
 
   const [notifications, setNotifications] = useState([]);
+
+  // open/close based on the window size
+  useEffect(() => {
+    if (windowSize.width < 900)
+      dispatchNavigationOptions({ type: 'SIDE_NAV_IS_OPEN', value: false });
+    else if (windowSize.width >= 900)
+      dispatchNavigationOptions({ type: 'SIDE_NAV_IS_OPEN', value: true });
+  }, [windowSize]);
 
   const addNotification = (notificationToAdd) => {
     setNotifications((notifications) => {

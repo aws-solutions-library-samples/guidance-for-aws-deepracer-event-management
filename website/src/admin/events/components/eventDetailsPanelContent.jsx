@@ -36,7 +36,15 @@ export const EventDetailsPanelContent = ({ event }) => {
         {attributeField(t('events.created-at'), formatAwsDateTime(event.createdAt) || '-')}
         {attributeField(t('events.created-by'), getUserNameFromId(event.createdBy || '-'))}
       </Grid>
-      <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }, { colspan: 12 }]}>
+      <Grid
+        gridDefinition={[
+          { colspan: 12 },
+          { colspan: 12 },
+          { colspan: 12 },
+          { colspan: 12 },
+          { colspan: 12 },
+        ]}
+      >
         {attributeField(t('events.event-date'), event.eventDate)}
         {attributeField(t('events.country'), <Flag countryCode={event.countryCode}></Flag>)}
         {attributeField(t('events.fleet-info.label'), getFleetNameFromId(event.fleetId))}
@@ -64,7 +72,7 @@ export const EventDetailsPanelContent = ({ event }) => {
           GetRaceResetsNameFromId(event.tracks[0].raceConfig.numberOfResetsPerLap)
         )}
       </Grid>
-      <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }, { colspan: 12 }]}>
+      <Grid gridDefinition={[{ colspan: 12 }, { colspan: 12 }, { colspan: 12 }, { colspan: 12 }]}>
         {attributeField(
           t('events.leaderboard-link'),
 

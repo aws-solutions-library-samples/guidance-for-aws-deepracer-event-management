@@ -333,7 +333,7 @@
   "notifications.creating-item": "Creating {{itemType}} {{itemName}}...",
   "notifications.create-item-success": "{{itemType}} {{itemName}} created",
   "notifications.create-item-error": "{{itemType} {{itemName}} could not be created, {{errorMessage}}",
-  "notifications.upating-item": "Updating {{itemType}} {{itemName}}...",
+  "notifications.updating-item": "Updating {{itemType}} {{itemName}}...",
   "notifications.update-item-success": "{{itemType}} {{itemName}} updated",
   "notifications.update-item-error": "{{itemType}} {{itemName}} could not be updated, {{errorMessage}}",
   "notifications.deleting-item": "Deleting {{itemType}} {{itemName}}...",
@@ -516,6 +516,7 @@
   "topnav.registration": "Registration",
   "topnav.users": "Users",
   "topnav.operator": "Operator",
+  "topnav.stats": "Statistics",
 
   "upload.breadcrumb": "Upload models",
   "upload.chose-file": "Upload model",
