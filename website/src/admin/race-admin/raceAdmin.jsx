@@ -81,7 +81,7 @@ const RaceAdmin = () => {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
+      sorting: { defaultState: { sortingColumn: columnDefinitions[0], isDescending: true } },
       selection: {},
     });
 
