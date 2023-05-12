@@ -7,11 +7,6 @@ const HomeCards = () => {
       link: '/models/view',
       description: i18next.t('home.models-description'),
     },
-    {
-      name: i18next.t('home.upload'),
-      link: '/models/upload',
-      description: i18next.t('home.upload-description'),
-    },
   ];
   return cards;
 };
