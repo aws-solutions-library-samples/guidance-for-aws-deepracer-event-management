@@ -42,6 +42,7 @@ export class BaseStack extends cdk.Stack {
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
             enforceSSL: true,
             autoDeleteObjects: true,
+            objectOwnership: s3.ObjectOwnership.OBJECT_WRITER,
             removalPolicy: RemovalPolicy.DESTROY,
             lifecycleRules: [
                 { expiration: Duration.days(30) },
