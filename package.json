@@ -55,7 +55,7 @@
     "@typescript-eslint/parser": "^5.48.2",
     "aws-cdk-lib": "2.60.0",
     "awscdk-appsync-utils": "^0.0.4",
-    "cdk-nag": "^2.23.5",
+    "cdk-nag": "2.23.5",
     "cdk-serverless-clamscan": "^2.4.147",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21"
