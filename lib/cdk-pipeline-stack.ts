@@ -99,7 +99,7 @@ export class CdkPipelineStack extends cdk.Stack {
                     s3_repo_bucket,
                     props.branchName + '/drem.zip',
                     {
-                        trigger: codePipelineActions.S3Trigger.POLL,
+                        trigger: codePipelineActions.S3Trigger.EVENTS,
                     }
                 ),
                 commands: [
