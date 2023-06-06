@@ -46,13 +46,14 @@ export const ColumnDefinitions = () => {
       header: i18next.t('race-admin.created-at'),
       cell: (item) => formatAwsDateTime(item.createdAt) || '-',
       sortingField: 'createdAt',
-      width: 180,
+      width: 250,
     },
     {
       id: 'username',
       header: i18next.t('race-admin.username'),
       cell: (item) => item.username || '-',
       sortingField: 'username',
+      width: 200,
     },
     {
       id: 'userId',

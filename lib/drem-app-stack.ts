@@ -1,3 +1,4 @@
+import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import * as cdk from 'aws-cdk-lib';
 import { DockerImage, Duration, Expiration } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
@@ -8,6 +9,7 @@ import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { CodeFirstSchema } from 'awscdk-appsync-utils';
 import { Construct } from 'constructs';
 import { CarManager } from './constructs/cars-manager';
@@ -25,7 +27,7 @@ import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
-    branchName: string;
+    baseStackName: string;
     adminGroupRole: IRole;
     operatorGroupRole: IRole;
     commentatorGroupRole: IRole;
@@ -43,11 +45,6 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
         runtime: lambda.Runtime;
         architecture: lambda.Architecture;
         bundlingImage: DockerImage;
-        layersConfig: {
-            powerToolsLogLevel: string;
-            helperFunctionsLayer: lambda.ILayerVersion;
-            powerToolsLayer: lambda.ILayerVersion;
-        };
     };
     dremWebsiteBucket: IBucket;
     eventbus: EventBus;
@@ -67,6 +64,11 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         super(scope, id, props);
 
         const stack = cdk.Stack.of(this);
+
+        const lambdaConfig = {
+            ...props.lambdaConfig,
+            layersConfig: this.lambdaLayers(props.baseStackName),
+        };
 
         // Appsync API
         const schema = new CodeFirstSchema();
@@ -111,7 +113,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             logsBucket: props.logsBucket,
         });
 
@@ -120,7 +122,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 api: appsyncApi,
                 schema: schema,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             eventbus: props.eventbus,
         });
 
@@ -130,7 +132,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             eventbus: props.eventbus,
         });
 
@@ -141,7 +143,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             userPoolId: props.userPool.userPoolId,
             userPoolArn: props.userPool.userPoolArn,
             eventbus: props.eventbus,
@@ -158,7 +160,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             eventbus: props.eventbus,
         });
 
@@ -168,7 +170,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             leaderboardApi: leaderboard.api,
             landingPageApi: landingPage.api,
             eventbus: props.eventbus,
@@ -180,7 +182,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
                 schema: schema,
                 noneDataSource: noneDataSoure,
             },
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             userPoolId: props.userPool.userPoolId,
             eventbus: props.eventbus,
         });
@@ -193,7 +195,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
         const userManager = new UserManager(this, 'UserManager', {
             authenticatedUserRole: props.authenticatedUserRole,
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
             userPoolId: props.userPool.userPoolId,
             appsyncApi: {
@@ -205,7 +207,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new GroupManager(this, 'GroupManagers', {
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
             userPoolId: props.userPool.userPoolId,
             userApiObject: userManager.userApiObject,
@@ -217,7 +219,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new LabelPrinter(this, 'LabelPrinter', {
-            lambdaConfig: props.lambdaConfig,
+            lambdaConfig: lambdaConfig,
             logsbucket: props.logsBucket,
             appsyncApi: {
                 api: appsyncApi,
@@ -343,4 +345,48 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         // new cdk.CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
         // new cdk.CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
     }
+
+    lambdaLayers = (baseStackName: string) => {
+        // Helper functions layer
+        const helperFunctionsLambdaLayerArn = ssm.StringParameter.valueForStringParameter(
+            this,
+            `/${baseStackName}/helperFunctionsLambdaLayerArn`
+        );
+
+        const helperFunctionsLambdaLayer = lambdaPython.PythonLayerVersion.fromLayerVersionArn(
+            this,
+            'helperFunctionsLambdaLayer',
+            helperFunctionsLambdaLayerArn
+        );
+
+        // Power tools layer
+        const powertoolsLambdaLayerArn = ssm.StringParameter.valueForStringParameter(
+            this,
+            `/${baseStackName}/powertoolsLambdaLayerArn`
+        );
+
+        const powertoolsLambdaLayer = lambdaPython.PythonLayerVersion.fromLayerVersionArn(
+            this,
+            'lambdaPowertoolsLambdaLayer',
+            powertoolsLambdaLayerArn
+        );
+
+        // Appsync helpers layer
+        const appsyncHelpersLambdaLayerArn = ssm.StringParameter.valueForStringParameter(
+            this,
+            `/${baseStackName}/appsyncHelpersLambdaLayerArn`
+        );
+        const appsyncHelpersLambdaLayer = lambdaPython.PythonLayerVersion.fromLayerVersionArn(
+            this,
+            'appsyncHelpersLambdaLayer',
+            appsyncHelpersLambdaLayerArn
+        );
+
+        return {
+            powerToolsLogLevel: 'INFO',
+            powerToolsLayer: powertoolsLambdaLayer,
+            helperFunctionsLayer: helperFunctionsLambdaLayer,
+            appsyncHelpersLayer: appsyncHelpersLambdaLayer,
+        };
+    };
 }

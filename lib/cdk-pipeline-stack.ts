@@ -12,7 +12,7 @@ import { DeepracerEventManagerStack } from './drem-app-stack';
 
 // Constants
 const NODE_VERSION = '16'; // other possible options: stable, latest, lts
-const CDK_VERSION = '2.60.0'; // other possible options: latest
+const CDK_VERSION = '2.72.1'; // other possible options: latest
 
 export interface InfrastructurePipelineStageProps extends cdk.StackProps {
     branchName: string;
@@ -35,7 +35,7 @@ class InfrastructurePipelineStage extends Stage {
 
         const baseStack = new BaseStack(this, 'base', { email: props.email });
         const stack = new DeepracerEventManagerStack(this, 'infrastructure', {
-            branchName: props.branchName,
+            baseStackName: baseStack.stackName,
             cloudfrontDistribution: baseStack.cloudfrontDistribution,
             tacCloudfrontDistribution: baseStack.tacCloudfrontDistribution,
             tacSourceBucket: baseStack.tacSourceBucket,

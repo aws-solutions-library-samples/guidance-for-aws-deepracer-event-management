@@ -3,10 +3,12 @@ import dayjs from 'dayjs';
 var advancedFormat = require('dayjs/plugin/advancedFormat');
 var utc = require('dayjs/plugin/utc');
 var timezone = require('dayjs/plugin/timezone'); // dependent on utc plugin
+var relativeTime = require('dayjs/plugin/relativeTime'); // dependent on utc plugin
 
 dayjs.extend(advancedFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
+dayjs.extend(relativeTime);
 
 /**
  * converts an an AWSDateTime to a more human readable string
@@ -45,4 +47,9 @@ export const convertStringToMs = (stringTime) => {
   const minutesInMs = parseInt(stringTime.substring(0, 2)) * 60000;
   const sum = milliseconds + secondsInMs + minutesInMs;
   return sum;
+};
+
+/** returns a date */
+export const getCurrentDateTime = () => {
+  return dayjs();
 };
