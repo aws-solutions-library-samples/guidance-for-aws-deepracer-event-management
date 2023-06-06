@@ -275,11 +275,6 @@
   "home.quarantined": "Unter Quarantäne gestellte Modelle",
   "home.time-keeper-description": "Zeitmesser für die Veranstaltung",
   "home.time-keeper": "Zeitwächter",
-<<<<<<< HEAD
-  "home.upload-description": "Lade Modelle in DREM hoch, um sie an Rennwagen zu schicken",
-  "home.upload": "Hochladen",
-=======
->>>>>>> origin/main
   "models.all-header": "Modelle",
   "models.breadcrumb": "Modelle",
   "models.clear-filter": "Filter löschen",
@@ -520,10 +515,6 @@
   "users.notifications.creating-user": "Benutzer {{username}} anlegen...",
   "users.notifications.user-created": "Benutzer {{username}} angelegt",
   "users.notifications.user-not-created": "Benutzer {{username}} konnte nicht angelegt werden, {{errorMessage}}",
-<<<<<<< HEAD
-  "user-profile.settings.form.pw_changed": "Passwort erflogreich geändert"
-}
-=======
   "user-profile.settings.form.pw_changed": "Passwort erflogreich geändert",
   "events.selector.current-events": "Aktuelle Events",
   "events.selector.events-with-missing-date": "Events ohne Event Datum",
@@ -545,4 +536,3 @@
   "topnav.stats": "Statistiken",
   "user-profile.settings.form.label.new_pw_conf.ph": "Bestätige neues Passwort"
 }
->>>>>>> origin/main
