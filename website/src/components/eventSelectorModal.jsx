@@ -1,11 +1,21 @@
-import { Box, Button, FormField, Modal, Select, SpaceBetween } from '@cloudscape-design/components';
-import React, { useEffect, useState } from 'react';
+import {
+  Box,
+  Button,
+  Form,
+  FormField,
+  Modal,
+  Select,
+  SpaceBetween,
+} from '@cloudscape-design/components';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GetTrackTypeNameFromId } from '../admin/events/support-functions/raceConfig';
 import {
   useEventsContext,
   useSelectedEventContext,
   useSelectedEventDispatch,
+  useSelectedTrackContext,
+  useSelectedTrackDispatch,
   useUsersContext,
 } from '../store/storeProvider';
 import { getCurrentDateTime } from '../support-functions/time';
@@ -37,9 +47,14 @@ export const EventSelectorModal = ({ visible, onDismiss, onOk }) => {
   const [events] = useEventsContext();
   const selectedEvent = useSelectedEventContext();
   const setSelectedEvent = useSelectedEventDispatch();
+  const selectedTrack = useSelectedTrackContext();
+  const setSelectedTrack = useSelectedTrackDispatch();
   const [config, SetConfig] = useState({ ...selectedEvent });
   const [eventSelectionIsNotValid, setEventSelectionIsNotValid] = useState(true);
   const [eventSelectItems, setEventSelectItems] = useState([]);
+  const [nextSelectedTrack, setNextSelectedTrack] = useState(selectedTrack);
+  const [nextSelectedTrackInvalid, setNextSelectedTrackInvalid] = useState(true);
+  const [trackSelectItems, setTrackSelectItems] = useState([]);
 
   const [users, usersIsLoading, getUserNameFromId] = useUsersContext();
 
@@ -53,21 +68,21 @@ export const EventSelectorModal = ({ visible, onDismiss, onOk }) => {
     return undefined;
   };
 
-  const GetEventOptions = (event) => {
-    const eventDate = event.eventDate;
-    const eventLead = getUserNameFromId(event.createdBy);
-    const trackType = GetTrackTypeNameFromId(event.tracks[0].raceConfig.trackType);
-    const trackId = 1;
-    return {
-      label: event.eventName,
-      value: event.eventId,
-      description: t('events.selector.option-description', { eventDate, eventLead }),
-      tags: [
-        t('events.selector.track', { trackId }),
-        t('events.selector.track-type', { trackType }),
-      ],
-    };
-  };
+  const GetEventOptions = useCallback(
+    (event) => {
+      const eventDate = event.eventDate;
+      const eventLead = getUserNameFromId(event.createdBy);
+      const trackType = GetTrackTypeNameFromId(event.raceConfig.trackType);
+      const trackId = 1;
+      return {
+        label: event.eventName,
+        value: event.eventId,
+        description: t('events.selector.option-description', { eventDate, eventLead }),
+        tags: [t('events.selector.track-type', { trackType })],
+      };
+    },
+    [getUserNameFromId, t]
+  );
 
   useEffect(() => {
     if (events) {
@@ -94,7 +109,7 @@ export const EventSelectorModal = ({ visible, onDismiss, onOk }) => {
         ];
       });
     }
-  }, [events, users]);
+  }, [GetEventOptions, events, t, users]);
 
   useEffect(() => {
     if (config.eventId == null) {
@@ -104,9 +119,10 @@ export const EventSelectorModal = ({ visible, onDismiss, onOk }) => {
     }
   }, [config]);
 
-  const changeEvent = () => {
+  const changeEventAndTrack = () => {
     const event = events.find((event) => event.eventId === config.eventId);
     setSelectedEvent(event);
+    setSelectedTrack(nextSelectedTrack);
     onOk();
   };
 
@@ -116,38 +132,104 @@ export const EventSelectorModal = ({ visible, onDismiss, onOk }) => {
     });
   };
 
+  useEffect(() => {
+    const selectedEvent = events.find((event) => event.eventId === config.eventId);
+    if (selectedEvent) {
+      setNextSelectedTrackInvalid(!selectedEvent.tracks.includes(nextSelectedTrack));
+    }
+  }, [config, events, nextSelectedTrack]);
+
+  useEffect(() => {
+    // set track select options
+    console.log(config);
+    const selectedEvent = events.find((event) => event.eventId === config.eventId);
+    if (selectedEvent) {
+      console.log(selectedEvent);
+      const options = selectedEvent.tracks
+        .filter((track) => track.trackId !== 'combined') // filter out the combined leaderboard
+        .map((track) => {
+          return { value: track.trackId, label: track.leaderBoardTitle };
+        });
+
+      setTrackSelectItems(options);
+    }
+  }, [config, events]);
+
+  useEffect(() => {
+    // set next selected track to default track if new selected event
+    const selectedEvent = events.find((event) => event.eventId === config.eventId);
+    if (selectedEvent && !selectedEvent.tracks.includes(nextSelectedTrack)) {
+      setNextSelectedTrack(selectedEvent.tracks[0]);
+    }
+  }, [config, events, nextSelectedTrack]);
+
+  const GetSelectedTrackOption = () => {
+    if (nextSelectedTrack) {
+      return {
+        label: nextSelectedTrack.leaderBoardTitle || 'x',
+        value: nextSelectedTrack.trackId,
+      };
+    }
+    return undefined;
+  };
+
+  const trackSelectHandler = (detail) => {
+    const selectedEvent = events.find((event) => event.eventId === config.eventId);
+    setNextSelectedTrack(selectedEvent.tracks.find((item) => item.trackId === detail.trackId));
+  };
+
   return (
-    <Modal
-      visible={visible}
-      footer={
-        <Box float="right">
-          <SpaceBetween direction="horizontal" size="xs">
-            <Button variant="link" onClick={onDismiss}>
-              {t('button.cancel')}
-            </Button>
-            <Button variant="primary" onClick={changeEvent} disabled={eventSelectionIsNotValid}>
-              {t('button.ok')}
-            </Button>
-          </SpaceBetween>
-        </Box>
-      }
-      header={t('timekeeper.racer-selector.select-event')}
-    >
-      <FormField>
-        <Select
-          selectedOption={GetEventOptionFromId(config.eventId)}
-          onChange={(detail) => {
-            configHandler({ eventId: detail.detail.selectedOption.value });
-          }}
-          options={eventSelectItems}
-          selectedAriaLabel={t('timekeeper.racer-selector.selected')}
-          filteringType="auto"
-          virtualScroll
-          autoFocus
-          invalid={eventSelectionIsNotValid}
-          loadingText={t('timekeeper.racer-selector.loading-events')}
-        />
-      </FormField>
+    <Modal visible={visible} header={t('event-selector-modal.event-section-header')}>
+      <Form
+        actions={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button variant="link" onClick={onDismiss}>
+                {t('button.cancel')}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={changeEventAndTrack}
+                disabled={eventSelectionIsNotValid && nextSelectedTrackInvalid}
+              >
+                {t('button.ok')}
+              </Button>
+            </SpaceBetween>
+          </Box>
+        }
+      >
+        <SpaceBetween size={'l'}>
+          <FormField label={'Event'}>
+            <Select
+              selectedOption={GetEventOptionFromId(config.eventId)}
+              onChange={(detail) => {
+                configHandler({ eventId: detail.detail.selectedOption.value });
+              }}
+              options={eventSelectItems}
+              selectedAriaLabel={t('timekeeper.racer-selector.selected')}
+              filteringType="auto"
+              virtualScroll
+              autoFocus
+              invalid={eventSelectionIsNotValid}
+              loadingText={t('timekeeper.racer-selector.loading-events')}
+            />
+          </FormField>
+          <FormField label={t('event-selector-modal.select-track')}>
+            <Select
+              selectedOption={GetSelectedTrackOption()}
+              onChange={(detail) => {
+                trackSelectHandler({ trackId: detail.detail.selectedOption.value });
+              }}
+              options={trackSelectItems}
+              selectedAriaLabel={t('timekeeper.racer-selector.selected')}
+              filteringType="auto"
+              autoFocus
+              invalid={nextSelectedTrackInvalid}
+              loadingText={t('timekeeper.racer-selector.loading-events')}
+            />
+          </FormField>
+        </SpaceBetween>
+      </Form>
     </Modal>
   );
 };

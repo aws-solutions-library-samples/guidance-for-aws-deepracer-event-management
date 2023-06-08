@@ -15,20 +15,28 @@ import { EventSelectorModal } from '../../../components/eventSelectorModal';
 import { PageLayout } from '../../../components/pageLayout';
 import useMutation from '../../../hooks/useMutation';
 import { RacesStatusEnum } from '../../../hooks/usePublishOverlay';
-import { useSelectedEventContext, useUsersContext } from '../../../store/storeProvider';
+import {
+  useRacesContext,
+  useSelectedEventContext,
+  useSelectedTrackContext,
+  useUsersContext,
+} from '../../../store/storeProvider';
+import { GetMaxRunsPerRacerFromId } from '../../events/support-functions/raceConfig';
 import { breadcrumbs } from '../support-functions/supportFunctions';
 
 export const RaceSetupPage = ({ onNext }) => {
   const { t } = useTranslation();
   const [SendMutation] = useMutation();
   const selectedEvent = useSelectedEventContext();
+  const selectedTrack = useSelectedTrackContext();
   const [users, isLoadingRacers] = useUsersContext();
+  const [races, racesIsLoading] = useRacesContext();
 
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
 
   const [race, setRace] = useState({
     eventId: selectedEvent.eventId,
-    trackId: 1,
+    trackId: selectedTrack.trackId,
     userId: undefined,
     racedByProxy: false,
   });
@@ -48,15 +56,26 @@ export const RaceSetupPage = ({ onNext }) => {
   }, [selectedEvent]);
 
   useEffect(() => {
+    // update race setup when track or event is changed while on page
+    setRace((preValue) => {
+      return {
+        ...preValue,
+        eventId: selectedEvent.eventId,
+        trackId: selectedTrack.trackId,
+      };
+    });
+  }, [selectedEvent.eventId, selectedTrack.trackId]);
+
+  useEffect(() => {
     if (selectedEvent == null) return;
 
     const message = {
       eventId: selectedEvent.eventId,
-      trackId: 1,
+      trackId: selectedTrack.trackId,
       raceStatus: RacesStatusEnum.NO_RACER_SELECTED,
     };
     SendMutation('updateOverlayInfo', message);
-  }, [selectedEvent, SendMutation]);
+  }, [selectedEvent, SendMutation, selectedTrack.trackId]);
 
   // input validation
   useEffect(() => {
@@ -78,14 +97,25 @@ export const RaceSetupPage = ({ onNext }) => {
 
   // Populate racer selection
   useEffect(() => {
-    if (users) {
+    if (!isLoadingRacers && !racesIsLoading) {
+      const maxRunsPerRacer = selectedEvent.raceConfig.maxRunsPerRacer;
       SetUserOptions(
         users.map((user) => {
-          return { label: user.Username, value: user.sub };
+          let option = { label: user.Username, value: user.sub };
+          const numberOfRacesDoneByRacer = races.filter((race) => race.userId === user.sub);
+          option.labelTag = `${numberOfRacesDoneByRacer.length}/${GetMaxRunsPerRacerFromId(
+            maxRunsPerRacer
+          )}`;
+
+          // uncomment if user should be disabled if done the max allowed no races
+          // if (numberOfRacesDoneByRacer.length >= maxRunsPerRacer) {
+          //   option.disabled = true;
+          // }
+          return option;
         })
       );
     }
-  }, [users]);
+  }, [users, races, isLoadingRacers, racesIsLoading, selectedEvent]);
 
   const GetRacerOptionFromId = (id) => {
     if (!id) return;
@@ -142,7 +172,7 @@ export const RaceSetupPage = ({ onNext }) => {
           onClick={() => {
             const raceDetails = {
               race: race,
-              config: selectedEvent.tracks[race.trackId - 1].raceConfig,
+              config: selectedEvent.raceConfig,
             };
             raceDetails.config['eventName'] = selectedEvent.eventName;
             raceDetails.race['eventId'] = selectedEvent.eventId;
@@ -159,7 +189,9 @@ export const RaceSetupPage = ({ onNext }) => {
   return (
     <PageLayout
       breadcrumbs={breadcrumbs}
-      header={t('timekeeper.race-setup-page.page-header') + `: ${selectedEvent.eventName}`}
+      header={`${t('timekeeper.race-setup-page.page-header')}: ${selectedEvent.eventName} ${t(
+        'timekeeper.race-setup-page.racing-on-trackId'
+      )} ${selectedTrack.leaderBoardTitle} `}
       description={t('timekeeper.race-setup-page.page-description')}
     >
       <EventSelectorModal
