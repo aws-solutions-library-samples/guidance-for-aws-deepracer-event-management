@@ -16,7 +16,7 @@ const racesStatusesWithFooterVisible = [
   //'RACE_FINSIHED',
 ];
 
-const RaceInfoFooter = ({ eventId, visible }) => {
+const RaceInfoFooter = ({ eventId, trackId, visible }) => {
   const { t } = useTranslation();
   const [raceInfo, SetRaceInfo] = useState({
     username: '',
@@ -38,7 +38,7 @@ const RaceInfoFooter = ({ eventId, visible }) => {
 
   useEffect(() => {
     const subscription = API.graphql(
-      graphqlOperation(onNewOverlayInfo, { eventId: eventId })
+      graphqlOperation(onNewOverlayInfo, { eventId: eventId, trackId: trackId })
     ).subscribe({
       next: ({ provider, value }) => {
         const raceInfo = value.data.onNewOverlayInfo;

@@ -5,29 +5,29 @@ export const event = {
   countryCode: undefined,
   fleetId: undefined,
   typeOfEvent: undefined,
+  raceConfig: {
+    rankingMethod: 'BEST_LAP_TIME',
+    raceTimeInMin: '3',
+    maxRunsPerRacer: '3',
+    numberOfResetsPerLap: '9999',
+    trackType: 'REINVENT_2018',
+  },
+  sponsor: undefined,
+  landingPageConfig: {
+    links: [
+      {
+        linkName: 'Upload your own model and race',
+        linkDescription: 'Upload your own autonomous racing model here and get started racing!',
+        linkHref: `${window.location.origin}/upload`,
+      },
+    ],
+  },
   tracks: [
     {
       trackId: 1,
-      raceConfig: {
-        rankingMethod: 'BEST_LAP_TIME',
-        raceTimeInMin: '3',
-        numberOfResetsPerLap: '9999',
-        trackType: 'REINVENT_2018',
-      },
-      leaderboardConfig: {
-        footerText: 'Follow the race #AWSDeepRacer',
-        headerText: undefined,
-        sponsor: undefined,
-      },
-      landingPageConfig: {
-        links: [
-          {
-            linkName: 'Upload your own model and race',
-            linkDescription: 'Upload your own autonomous racing model here and get started racing!',
-            linkHref: `${window.location.origin}/upload`,
-          },
-        ],
-      },
+      leaderBoardTitle: undefined,
+      leaderBoardFooter: 'Follow the race #AWSDeepRacer',
+      fleetId: undefined,
     },
   ],
 };

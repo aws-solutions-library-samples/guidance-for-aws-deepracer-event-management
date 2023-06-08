@@ -1,11 +1,13 @@
 {
-    "lower-thirds.racer-name": "FAHRER:",
-    "lower-thirds.time-remaining": "VERB. ZEIT:",
-    "lower-thirds.fastest-lap": "BESTE:",
-    "lower-thirds.previous-lap": "LETZTE:",
-    "leaderboard.lower-text": "BESTENLISTE",
-    "leaderboard.first-place": "#1 ",
-    "leaderboard.second place": "#2 ",
-    "leaderboard.third-place": "#3 ",
-    "leaderboard.vierter Platz": "#4"
+  "lower-thirds.racer-name": "FAHRER:",
+  "lower-thirds.time-remaining": "VERB. ZEIT:",
+  "lower-thirds.fastest-lap": "BESTE:",
+  "lower-thirds.previous-lap": "LETZTE:",
+  "leaderboard.lower-text": "BESTENLISTE",
+  "leaderboard.first-place": "#1 ",
+  "leaderboard.second place": "#2 ",
+  "leaderboard.third-place": "#3 ",
+  "leaderboard.vierter Platz": "#4",
+  "leaderboard.fourth-place": "#4",
+  "leaderboard.second-place": "#2"
 }

@@ -6,13 +6,15 @@ import {
   Select,
   SpaceBetween,
 } from '@cloudscape-design/components';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  GetMaxRunsPerRacerOptionFromId,
   GetRaceTimeOptionFromId,
   GetRankingOptionFromId,
   GetResetOptionFromId,
   GetTrackOptionFromId,
+  MaxRunsPerRacerConfig,
   RaceTimeConfig,
   RaceTypeConfig,
   ResetConfig,
@@ -42,6 +44,8 @@ const RaceCustomizationsFooter = (props) => {
 
 const DefaultRacingFooter = ({
   numberOfResetsPerLap,
+  maxRunsPerRacer,
+  maxRunsPerRacerOptions,
   raceTimeInMin,
   onChange,
   raceTimeOptions,
@@ -74,35 +78,45 @@ const DefaultRacingFooter = ({
           filteringType="auto"
         />
       </FormField>
+      <FormField
+        label={t('events.race.allowed-races-per-racer-label')}
+        description={t('events.race.allowed-races-per-racer-description')}
+      >
+        <Select
+          selectedOption={GetMaxRunsPerRacerOptionFromId(maxRunsPerRacer)}
+          onChange={({ detail }) => onChange({ maxRunsPerRacer: detail.selectedOption.value })}
+          options={maxRunsPerRacerOptions}
+          selectedAriaLabel="Selected"
+          filteringType="auto"
+        />
+      </FormField>
     </SpaceBetween>
   );
 };
 
-export const TrackConfigPanel = ({
-  trackId,
-  numberOfResetsPerLap,
-  raceTimeInMin,
-  trackType,
-  rankingMethod,
-  onChange,
-}) => {
+export const RaceConfigPanel = ({ raceConfig, onChange }) => {
   const raceTimeOptions = RaceTimeConfig();
   const raceRankingOptions = RaceTypeConfig();
+  const maxRunsPerRacerOptions = MaxRunsPerRacerConfig();
   const resetOptions = ResetConfig();
   const trackOptions = TrackTypeConfig();
   const { t } = useTranslation();
-
-  const UpdateConfig = (attr) => {
-    onChange({ raceConfig: { ...attr } });
-  };
-
+  const UpdateConfig = useCallback(
+    (attr) => {
+      const updatePayload = { raceConfig: { ...raceConfig, ...attr } };
+      onChange(updatePayload);
+    },
+    [raceConfig, onChange]
+  );
   const [raceCustomizationsFooter, setRaceCustomizationsFooter] = useState(
     <DefaultRacingFooter
-      numberOfResetsPerLap={numberOfResetsPerLap}
-      raceTimeInMin={raceTimeInMin}
+      numberOfResetsPerLap={raceConfig.numberOfResetsPerLap}
+      raceTimeInMin={raceConfig.raceTimeInMin}
+      maxRunsPerRacer={raceConfig.maxRunsPerRacer}
       onChange={UpdateConfig}
       resetOptions={resetOptions}
       raceTimeOptions={raceTimeOptions}
+      maxRunsPerRacerOptions={maxRunsPerRacerOptions}
     />
   );
 
@@ -110,29 +124,29 @@ export const TrackConfigPanel = ({
   useEffect(() => {
     setRaceCustomizationsFooter(
       <DefaultRacingFooter
-        numberOfResetsPerLap={numberOfResetsPerLap}
-        raceTimeInMin={raceTimeInMin}
+        numberOfResetsPerLap={raceConfig.numberOfResetsPerLap}
+        raceTimeInMin={raceConfig.raceTimeInMin}
+        maxRunsPerRacer={raceConfig.maxRunsPerRacer}
         onChange={UpdateConfig}
         resetOptions={resetOptions}
         raceTimeOptions={raceTimeOptions}
+        maxRunsPerRacerOptions={maxRunsPerRacerOptions}
       />
     );
     // }
-  }, [numberOfResetsPerLap, raceTimeInMin]);
+  }, [UpdateConfig, raceConfig.numberOfResetsPerLap, raceConfig.raceTimeInMin]);
 
   // JSX
   return (
-    <Container
-      header={<Header variant="h2">Race settings</Header>}
-      footer={<RaceCustomizationsFooter>{raceCustomizationsFooter}</RaceCustomizationsFooter>}
-    >
+    <Container>
       <SpaceBetween size="xl">
+        <Header variant="h2">Race Settings</Header>
         <FormField
           label={t('events.tracks.choose')}
           description={t('events.tracks.choose-description')}
         >
           <Select
-            selectedOption={GetTrackOptionFromId(trackType)}
+            selectedOption={GetTrackOptionFromId(raceConfig.trackType)}
             onChange={({ detail }) => UpdateConfig({ trackType: detail.selectedOption.value })}
             options={trackOptions}
             selectedAriaLabel="Selected"
@@ -144,13 +158,15 @@ export const TrackConfigPanel = ({
           description={t('events.race.ranking-method-description')}
         >
           <Select
-            selectedOption={GetRankingOptionFromId(rankingMethod)}
+            selectedOption={GetRankingOptionFromId(raceConfig.rankingMethod)}
             onChange={({ detail }) => UpdateConfig({ rankingMethod: detail.selectedOption.value })}
             options={raceRankingOptions}
             selectedAriaLabel="Selected"
             filteringType="auto"
           />
         </FormField>
+
+        <RaceCustomizationsFooter>{raceCustomizationsFooter}</RaceCustomizationsFooter>
       </SpaceBetween>
     </Container>
   );

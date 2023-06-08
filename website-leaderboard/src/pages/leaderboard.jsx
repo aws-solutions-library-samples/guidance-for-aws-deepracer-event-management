@@ -102,7 +102,7 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
     } else {
       newEntry.gapToFastest = newEntry.fastestLapTime - allEntries[0].fastestLapTime;
     }
-    console.log(newEntry);
+    //console.log(newEntry);
     SetRaceSummaryData(newEntry);
   }, []);
 
@@ -122,7 +122,18 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
       console.debug(oldEntryIndex);
       console.debug(oldEntry);
       if (oldEntryIndex >= 0) {
-        newState[oldEntryIndex] = newLeaderboardEntry;
+        if (trackId === 'combined') {
+          // for combined leaderboard, only update  the entry when new entry has faster lap time
+          // this might be done in the backend in the future
+          console.log(oldEntry.fastestLapTime);
+          console.log(newLeaderboardEntry.fastestLapTime);
+          newState[oldEntryIndex] =
+            oldEntry.fastestLapTime < newLeaderboardEntry.fastestLapTime
+              ? oldEntry
+              : newLeaderboardEntry;
+        } else {
+          newState[oldEntryIndex] = newLeaderboardEntry;
+        }
       } else {
         newState = prevState.concat(newLeaderboardEntry);
       }
@@ -142,7 +153,7 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
           graphqlOperation(getLeaderboard, { eventId: eventId, trackId: trackId })
         );
         const leaderboard = response.data.getLeaderboard;
-        SetleaderboardEntries(leaderboard.entries);
+        response.data.getLeaderboard.entries.forEach((entry) => updateLeaderboardEntries(entry));
         setLeaderboardConfig(leaderboard.config);
       };
       getLeaderboardData();
@@ -150,8 +161,15 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
       if (subscription) {
         subscription.unsubscribe();
       }
+      // get all updates if trackId == 'combined'
+      const subscriptionTrackId = trackId === 'combined' ? undefined : trackId;
       SetSubscription(
-        API.graphql(graphqlOperation(onNewLeaderboardEntry, { eventId: eventId })).subscribe({
+        API.graphql(
+          graphqlOperation(onNewLeaderboardEntry, {
+            eventId: eventId,
+            trackId: subscriptionTrackId,
+          })
+        ).subscribe({
           next: ({ provider, value }) => {
             console.debug('onNewLeaderboardEntry');
             const newEntry = value.data.onNewLeaderboardEntry;
@@ -170,7 +188,12 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
         onUpdateSubscription.unsubscribe();
       }
       SetOnUpdateSubscription(
-        API.graphql(graphqlOperation(onUpdateLeaderboardEntry, { eventId: eventId })).subscribe({
+        API.graphql(
+          graphqlOperation(onUpdateLeaderboardEntry, {
+            eventId: eventId,
+            trackId: subscriptionTrackId,
+          })
+        ).subscribe({
           next: ({ provider, value }) => {
             console.debug('onUpdateLeaderboardEntry');
             const newEntry = value.data.onUpdateLeaderboardEntry;
@@ -184,7 +207,12 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
         onDeleteSubscription.unsubscribe();
       }
       SetOnDeleteSubscription(
-        API.graphql(graphqlOperation(onDeleteLeaderboardEntry, { eventId: eventId })).subscribe({
+        API.graphql(
+          graphqlOperation(onDeleteLeaderboardEntry, {
+            eventId: eventId,
+            trackId: subscriptionTrackId,
+          })
+        ).subscribe({
           next: ({ provider, value }) => {
             console.debug('onDeleteLeaderboardEntry');
             const entryToDelete = value.data.onDeleteLeaderboardEntry;
@@ -214,7 +242,7 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
         <div className={styles.pageRoot}>
           <div className={styles.leaderboardRoot}>
             <Header
-              headerText={leaderboardConfig.headerText}
+              headerText={leaderboardConfig.leaderBoardTitle}
               eventId={eventId}
               qrCodeVisible={showQrCode}
             />
@@ -226,12 +254,12 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
           <FollowFooter
             visible
             eventId={eventId}
-            text={leaderboardConfig.followFooterText}
+            text={leaderboardConfig.leaderBoardFooter}
             qrCodeVisible={showQrCode}
           />
         </div>
       )}
-      <RaceInfoFooter visible={!racSummaryFooterIsVisible} eventId={eventId} />
+      <RaceInfoFooter visible={!racSummaryFooterIsVisible} eventId={eventId} trackId={trackId} />
       <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} />
     </>
   );

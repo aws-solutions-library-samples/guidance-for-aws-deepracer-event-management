@@ -33,7 +33,7 @@ const AdminEvents = () => {
     visibleContent: ['eventName', 'eventDate', 'createdAt'],
   });
 
-  const [users, usersIsLoading, getUserNameFromId] = useUsersContext();
+  const [, , getUserNameFromId] = useUsersContext();
   const [events, eventIsLoading] = useEventsContext();
   const [fleets] = useFleetsContext();
 

@@ -32,10 +32,15 @@ def lambda_handler(event, context):
 def getLeaderboard(eventId: str, trackId: str = "1"):
     logger.info(f"eventId: {eventId}, trackId: {trackId}")
 
-    response = ddbTable.query(
-        KeyConditionExpression=Key("eventId").eq(eventId)
-        & Key("sk").begins_with(trackId)
-    )
+    if trackId == "combined":
+        # return all entries for a combined leaderboard
+        response = ddbTable.query(KeyConditionExpression=Key("eventId").eq(eventId))
+    else:
+        # return entries for a single track
+        response = ddbTable.query(
+            KeyConditionExpression=Key("eventId").eq(eventId)
+            & Key("sk").begins_with(trackId)
+        )
     logger.info(response["Items"])
 
     leaderboard = {"config": {}, "entries": []}

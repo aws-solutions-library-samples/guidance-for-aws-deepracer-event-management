@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import * as queries from '../graphql/queries';
 import { onAddedEvent, onDeletedEvents, onUpdatedEvent } from '../graphql/subscriptions';
 
-export const useEventsApi = (userHasAccess = false) => {
+export const useEventsApi = (selectedEvent, setSelectedEvent, userHasAccess = false) => {
   const [isLoading, setIsLoading] = useState(true);
   const [events, setEvents] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
@@ -17,8 +17,9 @@ export const useEventsApi = (userHasAccess = false) => {
           query: queries.getEvents,
         });
         const events = responseGetEvents.data.getEvents;
-        console.info(events);
-        setEvents([...events]);
+        const eventsInNewFormat = events.filter((event) => event.raceConfig !== null); // TODO can be removed after testing
+        console.info(eventsInNewFormat);
+        setEvents([...eventsInNewFormat]);
         setIsLoading(false);
       }
       getEvents();
@@ -63,6 +64,11 @@ export const useEventsApi = (userHasAccess = false) => {
             modifiedEvents[indexOfUpdatedEvent] = updatedEvent;
             return modifiedEvents;
           });
+          //update the selected event if it has been updated
+          if (selectedEvent != null && updatedEvent.eventId === selectedEvent.eventId) {
+            console.info('update the selected event');
+            setSelectedEvent(updatedEvent);
+          }
         },
       });
     }

@@ -38,6 +38,8 @@ def lambda_handler(evbEvent, context):
 def __convertEvbEventToLeaderboardConfig(detail: dict) -> list:
     leaderboardConfigs = []
     eventId = detail["eventId"]
+    ranking_method = detail["raceConfig"]["rankingMethod"]
+
     for track in detail["tracks"]:
         trackId = track["trackId"]
         leaderboardConfigs.append(
@@ -45,9 +47,10 @@ def __convertEvbEventToLeaderboardConfig(detail: dict) -> list:
                 "eventId": eventId,
                 "sk": trackId,
                 "trackId": trackId,
-                "rankingMethod": track["raceConfig"]["rankingMethod"],
+                "rankingMethod": ranking_method,
                 "type": "leaderboard_config",
-                **track["leaderboardConfig"],
+                "leaderBoardTitle": track["leaderBoardTitle"],
+                "leaderBoardFooter": track["leaderBoardFooter"],
             }
         )
     return leaderboardConfigs
