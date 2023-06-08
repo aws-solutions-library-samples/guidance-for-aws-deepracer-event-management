@@ -36,7 +36,7 @@ import {
   useSplitPanelOptionsDispatch,
 } from '../store/appLayoutProvider';
 import { usePermissionsContext } from '../store/permissions/permissionsProvider';
-import { useSelectedEventContext } from '../store/storeProvider';
+import { useSelectedEventContext, useSelectedTrackContext } from '../store/storeProvider';
 import { EventSelectorModal } from './eventSelectorModal';
 
 function cwr(operation, payload) {
@@ -115,11 +115,13 @@ export function TopNav(props) {
   const { handleFollow } = useLink();
 
   const selectedEvent = useSelectedEventContext();
+  const selectedTrack = useSelectedTrackContext();
   const sideNavOptions = useSideNavOptions();
   const sideNavOptionsDispatch = useSideNavOptionsDispatch();
 
   const permissions = usePermissionsContext();
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
+
   const defaultSideNavItems = [
     {
       type: 'link',
@@ -263,6 +265,14 @@ export function TopNav(props) {
   ];
 
   if (permissions.topNavItems.eventSelection) {
+    // race track selector
+    topNavItems.unshift({
+      type: 'button',
+      text: selectedTrack ? selectedTrack.leaderBoardTitle : 'No track selected',
+      onClick: () => setEventSelectModalVisible(true),
+    });
+
+    // event selector
     topNavItems.unshift({
       type: 'button',
       text: selectedEvent.eventName,

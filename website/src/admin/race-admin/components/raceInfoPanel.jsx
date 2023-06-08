@@ -1,9 +1,12 @@
 import { ColumnLayout, Container, FormField, Header, Toggle } from '@cloudscape-design/components';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useUsersContext } from '../../../store/storeProvider';
+import { formatAwsDateTime } from '../../../support-functions/time';
 
 export const RaceInfoPanel = ({ race, onChange }) => {
   const { t } = useTranslation();
+  const [, , getUserNameFromId] = useUsersContext();
 
   return (
     <Container header={<Header variant="h2">General info</Header>}>
@@ -20,14 +23,14 @@ export const RaceInfoPanel = ({ race, onChange }) => {
           //description=''//{t('events.event-type-description')}
           //errorText={typeOfEventErrorMessage}
         >
-          {race.createdAt}
+          {formatAwsDateTime(race.createdAt)}
         </FormField>
         <FormField
           label="Racer" //{t('events.event-type')}
           //description=''//{t('events.event-type-description')}
           //errorText={typeOfEventErrorMessage}
         >
-          {race.username}
+          {getUserNameFromId(race.userId)}
         </FormField>
         <FormField
           label="Raced By Proxy" //{t('events.event-type')}

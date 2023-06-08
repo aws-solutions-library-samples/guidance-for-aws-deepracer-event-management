@@ -11,7 +11,6 @@ import {
 } from '../support-functions/lapsTableConfig';
 
 const tableSettingsHandler = (state, action) => {
-  console.info(action);
   return { ...state, ...action };
 };
 
@@ -26,7 +25,6 @@ const LapsTable = ({ race, tableSettings, onSelectionChange, selectedLaps, isEdi
   useEffect(() => {
     if (!race) return;
     setLaps(race.laps);
-    console.log(race);
   }, [race]);
 
   useEffect(() => {

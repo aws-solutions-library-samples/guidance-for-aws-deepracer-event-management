@@ -1,4 +1,4 @@
-import { Container, FormField, Header, Select, SpaceBetween } from '@cloudscape-design/components';
+import { FormField, Select, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFleetsContext } from '../../../store/storeProvider';
@@ -23,23 +23,20 @@ export const CarFleetPanel = ({ fleetId, onChange }) => {
   const GetCarFleetOptionFromId = (id) => {
     return carFleetOptions.find((carFleet) => carFleet.lable === id);
   };
-
   return (
-    <Container header={<Header variant="h2">Fleet selection</Header>}>
-      <SpaceBetween size="l">
-        <FormField
-          label={t('events.fleet-info.label')}
-          description={t('events.fleet-info.description')}
-        >
-          <Select
-            selectedOption={GetCarFleetOptionFromId(fleetId)}
-            onChange={({ detail }) => onChange({ fleetId: detail.selectedOption.lable })}
-            options={carFleetOptions}
-            selectedAriaLabel="Selected"
-            filteringType="auto"
-          />
-        </FormField>
-      </SpaceBetween>
-    </Container>
+    <SpaceBetween size="l">
+      <FormField
+        label={t('events.fleet-info.label')}
+        description={t('events.fleet-info.description')}
+      >
+        <Select
+          selectedOption={GetCarFleetOptionFromId(fleetId)}
+          onChange={({ detail }) => onChange(detail.selectedOption.lable)}
+          options={carFleetOptions}
+          selectedAriaLabel="Selected"
+          filteringType="auto"
+        />
+      </FormField>
+    </SpaceBetween>
   );
 };

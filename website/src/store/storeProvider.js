@@ -5,8 +5,14 @@ import { useCarsApi } from '../hooks/useCarsApi';
 import { useEventsApi } from '../hooks/useEventsApi';
 import { useFleetsApi } from '../hooks/useFleetsApi';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useRacesApi } from '../hooks/useRacesApi';
 import { useUsersApi } from '../hooks/useUsersApi';
 import { usePermissionsContext } from './permissions/permissionsProvider';
+
+const racesContext = createContext();
+export function useRacesContext() {
+  return useContext(racesContext);
+}
 
 // CARS
 const carsContext = createContext();
@@ -42,6 +48,16 @@ export function useSelectedEventDispatch() {
   return useContext(selectedEventDispatch);
 }
 
+const selectedTrackContext = createContext();
+export function useSelectedTrackContext() {
+  return useContext(selectedTrackContext);
+}
+
+const selectedTrackDispatch = createContext();
+export function useSelectedTrackDispatch() {
+  return useContext(selectedTrackDispatch);
+}
+
 // USERS
 const userContext = createContext();
 export function useUsersContext() {
@@ -52,12 +68,23 @@ export const StoreProvider = (props) => {
   const { t } = useTranslation();
   const permissions = usePermissionsContext();
 
-  const [events, eventsIsLoading] = useEventsApi(permissions.api.events);
+  const [selectedEvent, setSelectedEvent] = useLocalStorage('DREM-selected-event', defaultEvent(t));
+
+  const [events, eventsIsLoading] = useEventsApi(
+    selectedEvent,
+    setSelectedEvent,
+    permissions.api.events
+  );
   const [users, usersIsLoading] = useUsersApi(permissions.api.users);
   const [fleets, fleetsIsLoading] = useFleetsApi(permissions.api.fleets);
   const [cars, carsIsLoading] = useCarsApi(permissions.api.cars);
 
-  const [selectedEvent, setSelectedEvent] = useLocalStorage('DREM-selected-event', defaultEvent(t));
+  const [selectedTrack, setSelectedTrack] = useLocalStorage(
+    'DREM-selected-event-track',
+    selectedEvent.tracks[0]
+  );
+
+  const [races, racesIsLoading, sendDelete] = useRacesApi(selectedEvent.eventId);
 
   //reset selected event if event is deleted
   useEffect(() => {
@@ -66,9 +93,10 @@ export const StoreProvider = (props) => {
       if (index === -1) {
         console.info('reset selected event');
         setSelectedEvent(defaultEvent(t));
+        setSelectedTrack(selectedEvent.tracks[0]);
       }
     }
-  }, [events, selectedEvent, t, eventsIsLoading, setSelectedEvent]);
+  }, [events, selectedEvent, t, eventsIsLoading, setSelectedEvent, setSelectedTrack]);
 
   const getUserNameFromId = (userId) => {
     if (userId == null) return;
@@ -95,7 +123,13 @@ export const StoreProvider = (props) => {
           <eventContext.Provider value={[events, eventsIsLoading]}>
             <selectedEventContext.Provider value={selectedEvent}>
               <selectedEventDispatch.Provider value={setSelectedEvent}>
-                {props.children}
+                <selectedTrackContext.Provider value={selectedTrack}>
+                  <selectedTrackDispatch.Provider value={setSelectedTrack}>
+                    <racesContext.Provider value={[races, racesIsLoading, sendDelete]}>
+                      {props.children}
+                    </racesContext.Provider>
+                  </selectedTrackDispatch.Provider>
+                </selectedTrackContext.Provider>
               </selectedEventDispatch.Provider>
             </selectedEventContext.Provider>
           </eventContext.Provider>
