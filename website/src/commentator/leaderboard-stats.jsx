@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import Header from '@cloudscape-design/components/header';
 import { getLeaderboard } from '../graphql/queries';
-import { useSelectedEventContext } from '../store/storeProvider';
+import { useSelectedEventContext, useSelectedTrackContext } from '../store/storeProvider';
 
 import { Table } from '@cloudscape-design/components';
 import { RaceTimeAsString } from '../components/raceTimeAsString';
@@ -17,6 +17,7 @@ const LeaderboardStats = ({itemsToShow = 5}) => {
     const { t } = useTranslation();
 
     const selectedEvent = useSelectedEventContext();
+    const selectedTrack = useSelectedTrackContext();
     const [subscription, SetSubscription] = useState();
 
     const [fastesLapsForTrack, SetFastestLapsForTrack] = useState([]);
@@ -26,7 +27,7 @@ const LeaderboardStats = ({itemsToShow = 5}) => {
         const eventId = selectedEvent.eventId;
 
         const response = await API.graphql(
-          graphqlOperation(getLeaderboard, { eventId: eventId, trackId: 1 })
+          graphqlOperation(getLeaderboard, { eventId: eventId, trackId: selectedTrack.trackId })
         );
         const leaderboard = response.data.getLeaderboard;
         const mustBeSliced = leaderboard.entries.length > itemsToShow
@@ -42,7 +43,7 @@ const LeaderboardStats = ({itemsToShow = 5}) => {
       };
 
     useEffect(() => {
-        if (selectedEvent) {
+        if (selectedEvent || selectedTrack) {
           loadLeaderboard();
 
           if (subscription) {
@@ -50,10 +51,10 @@ const LeaderboardStats = ({itemsToShow = 5}) => {
           }
 
           const eventId = selectedEvent.eventId;
-          console.info(eventId);
+          console.info(selectedEvent);
 
           SetSubscription(
-            API.graphql(graphqlOperation(onNewLeaderboardEntry, { eventId: eventId })).subscribe({
+            API.graphql(graphqlOperation(onNewLeaderboardEntry, { eventId: eventId, trackId: selectedTrack.trackId })).subscribe({
                 next: () => loadLeaderboard(),
                 error: (error) => console.warn(error),
             })
@@ -65,7 +66,7 @@ const LeaderboardStats = ({itemsToShow = 5}) => {
             }
           };
         }
-    }, [selectedEvent]);
+    }, [selectedEvent, selectedTrack]);
 
     const columnDefinitions = [
         {
