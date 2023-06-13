@@ -7,7 +7,7 @@ import Container from '@cloudscape-design/components/container';
 import Header from '@cloudscape-design/components/header';
 import { getRaces } from '../graphql/queries';
 import { onNewOverlayInfo } from '../graphql/subscriptions';
-import { useSelectedEventContext } from '../store/storeProvider';
+import { useSelectedEventContext, useSelectedTrackContext } from '../store/storeProvider';
 
 import { SpaceBetween } from '@cloudscape-design/components';
 import { RaceTimeAsString } from '../components/raceTimeAsString';
@@ -19,6 +19,7 @@ const ActualRacerStats = () => {
   const { t } = useTranslation();
 
   const selectedEvent = useSelectedEventContext();
+  const selectedTrack = useSelectedTrackContext();
   const [actualRacer, SetActualRacer] = useState({});
 
   const [fastesRacerTime, SetFastesRacerTime] = useState({});
@@ -54,14 +55,14 @@ const ActualRacerStats = () => {
   };
 
   useEffect(() => {
-    if (selectedEvent) {
+    if (selectedEvent || selectedTrack) {
       if (subscription) {
         subscription.unsubscribe();
       }
       const eventId = selectedEvent.eventId;
 
       SetSubscription(
-        API.graphql(graphqlOperation(onNewOverlayInfo, { eventId: eventId })).subscribe({
+        API.graphql(graphqlOperation(onNewOverlayInfo, { eventId: eventId, trackId: selectedTrack.trackId })).subscribe({
           next: (event) => {
             const eventData = event.value.data.onNewOverlayInfo;
             if (eventData.userId !== actualRacer.userId) {
@@ -86,7 +87,7 @@ const ActualRacerStats = () => {
         }
       };
     }
-  }, [selectedEvent, actualRacer]);
+  }, [selectedEvent, selectedTrack, actualRacer]);
 
   const caclulateLapsInformation = (laps) => {
     const lapCount = laps.length;
