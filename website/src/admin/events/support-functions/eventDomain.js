@@ -35,7 +35,7 @@ export const event = {
 export const EventTypeConfig = () => {
   return [
     { label: i18next.t('events.type.private-workshop'), value: 'PRIVATE_WORKSHOP' },
-    { label: i18next.t('events.type.offical-workshop'), value: 'OFFICIAL_WORKSHOP' },
+    { label: i18next.t('events.type.official-workshop'), value: 'OFFICIAL_WORKSHOP' },
     { label: i18next.t('events.type.private-track-race'), value: 'PRIVATE_TRACK_RACE' },
     { label: i18next.t('events.type.official-track-race'), value: 'OFFICIAL_TRACK_RACE' },
     { label: i18next.t('events.type.other'), value: 'OTHER' },

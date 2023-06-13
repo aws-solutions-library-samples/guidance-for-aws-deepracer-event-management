@@ -135,6 +135,7 @@ const AdminEvents = () => {
         <TableHeader
           nrSelectedItems={SelectedEventsInTable.length}
           nrTotalItems={events.length}
+          actions={<Button>Export CSV</Button>}
           onEdit={editEventHandler}
           onDelete={() => setDeleteModalVisible(true)}
           onAdd={addEventHandler}
