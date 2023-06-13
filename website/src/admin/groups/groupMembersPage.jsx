@@ -13,6 +13,7 @@ import { Auth } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
+import { Flag } from '../../components/flag';
 import { PageLayout } from '../../components/pageLayout';
 import {
   DefaultPreferences,
@@ -51,18 +52,21 @@ export function GroupMembersPage() {
       }));
 
       const groupUsers = await getGroupMembersQuery(groupName);
-      console.info(groupUsers);
 
       groupUsers.forEach((group) => {
         const i = usersWithMetaData.findIndex((user) => user.Username === group.Username);
-        users[i].isMember = true;
+        if (i > -1) {
+          users[i].isMember = true;
+        }
       });
 
       // Need to get the current user and flag them in the data
       // (Current user can't remove themselves from a group they are members of)
       Auth.currentAuthenticatedUser().then((loggedInUser) => {
         const i = users.findIndex((user) => user.Username === loggedInUser.username);
-        users[i].currentUser = true;
+        if (i > -1) {
+          users[i].currentUser = true;
+        }
       });
 
       setUsersWithGroupMetaData(users);
@@ -91,12 +95,12 @@ export function GroupMembersPage() {
 
       // Update group membership status for updated user
       const i = usersWithGroupMetaData.findIndex((user) => user.Username === username);
-      console.info(i);
+      // console.info(i);
       if (i > -1) {
         const updatedUsersWithGroupMetaData = [...usersWithGroupMetaData];
-        console.info(updatedUsersWithGroupMetaData[i].isMember);
+        // console.info(updatedUsersWithGroupMetaData[i].isMember);
         updatedUsersWithGroupMetaData[i].isMember = !updatedUsersWithGroupMetaData[i].isMember;
-        console.info(updatedUsersWithGroupMetaData[i].isMember);
+        // console.info(updatedUsersWithGroupMetaData[i].isMember);
         setUsersWithGroupMetaData(updatedUsersWithGroupMetaData);
       }
     };
@@ -107,14 +111,13 @@ export function GroupMembersPage() {
 
       addNotification({
         type: 'error',
-        content: t('groups.notfications-error', { errorMessage, userName }),
+        content: t('groups.notifications-error', { errorMessage, userName }),
         id: notificationId,
         dismissible: true,
         onDismiss: () => {
           dismissNotification(notificationId);
         },
       });
-      console.info(e.errors[0].message);
     });
   };
 
@@ -139,6 +142,57 @@ export function GroupMembersPage() {
       sortingField: 'userName',
       width: 200,
       minWidth: 150,
+    },
+    {
+      id: 'Email',
+      header: t('groups.detail.header-email'),
+      cell: (item) => {
+        const email = item.Attributes.filter((obj) => {
+          return obj.Name === 'email';
+        });
+        if (email.length > 0) {
+          return email[0].Value;
+        } else {
+          return '-';
+        }
+      },
+      sortingField: 'Email',
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'Flag',
+      header: t('users.flag'),
+      cell: (item) => {
+        const countryCode = item.Attributes.filter((obj) => {
+          return obj.Name === 'custom:countryCode';
+        });
+        if (countryCode.length > 0) {
+          return <Flag size="small" countryCode={countryCode[0].Value}></Flag>;
+        } else {
+          return '-';
+        }
+      },
+      sortingField: 'Flag',
+      width: 120,
+      minWidth: 80,
+    },
+    {
+      id: 'CountryCode',
+      header: t('users.country-code'),
+      cell: (item) => {
+        const countryCode = item.Attributes.filter((obj) => {
+          return obj.Name === 'custom:countryCode';
+        });
+        if (countryCode.length > 0) {
+          return countryCode[0].Value;
+        } else {
+          return '-';
+        }
+      },
+      sortingField: 'CountryCode',
+      width: 120,
+      minWidth: 80,
     },
     {
       id: 'userCreationDate',
@@ -176,12 +230,26 @@ export function GroupMembersPage() {
 
   const visibleContentOptions = [
     {
-      label: t('groups.detail.infromation'),
+      label: t('groups.detail.information'),
       options: [
         {
           id: 'userName',
           label: t('groups.detail.header-name'),
           editable: false,
+        },
+        {
+          id: 'Email',
+          label: t('groups.detail.header-email'),
+        },
+        {
+          id: 'Flag',
+          label: t('users.flag'),
+          //editable: false,
+        },
+        {
+          id: 'CountryCode',
+          label: t('users.country-code'),
+          //editable: false,
         },
         {
           id: 'userCreationDate',
