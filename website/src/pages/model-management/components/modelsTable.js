@@ -127,7 +127,7 @@ export const ModelsTable = ({
           preferences={preferences}
           pageSizePreference={PageSizePreference(t('models.page-size-label'))}
           visibleContentPreference={{
-            title: t('table.select-visible-colunms'),
+            title: t('table.select-visible-columns'),
             options: visibleContentOptions,
           }}
           wrapLinesPreference={WrapLines}
