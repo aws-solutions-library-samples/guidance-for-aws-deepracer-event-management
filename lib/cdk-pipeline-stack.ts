@@ -172,7 +172,7 @@ export class CdkPipelineStack extends cdk.Stack {
         // Main website Deploy to S3
         infrastructure_stage.addPost(
             new pipelines.CodeBuildStep('MainSiteDeployToS3', {
-                installCommands: ['npm install -g @aws-amplify/cli'],
+                installCommands: ['npm install -g @aws-amplify/cli@12.0.3'],
                 buildEnvironment: {
                     privileged: true,
                     computeType: codebuild.ComputeType.LARGE,
@@ -210,7 +210,7 @@ export class CdkPipelineStack extends cdk.Stack {
         // Leaderboard website Deploy to S3
         infrastructure_stage.addPost(
             new pipelines.CodeBuildStep('LeaderboardDeployToS3', {
-                installCommands: ['npm install -g @aws-amplify/cli'],
+                installCommands: ['npm install -g @aws-amplify/cli@12.0.3'],
                 buildEnvironment: {
                     privileged: true,
                     computeType: codebuild.ComputeType.LARGE,
@@ -248,7 +248,7 @@ export class CdkPipelineStack extends cdk.Stack {
         // Streaming overlay website Deploy to S3
         infrastructure_stage.addPost(
             new pipelines.CodeBuildStep('StreamingOverlayDeployToS3', {
-                installCommands: ['npm install -g @aws-amplify/cli'],
+                installCommands: ['npm install -g @aws-amplify/cli@12.0.3'],
                 buildEnvironment: {
                     privileged: true,
                     computeType: codebuild.ComputeType.LARGE,
