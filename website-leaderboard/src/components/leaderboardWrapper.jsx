@@ -15,14 +15,13 @@ const LeaderboardWrapper = () => {
   if (language === null) language = 'en';
 
   let trackId = queryParams.get('track');
-  if (trackId === null) trackId = 1;
+  if (trackId === null) trackId = 'combined';
 
   let showQRcode = queryParams.get('qr');
   if (showQRcode === null || showQRcode === 'false') showQRcode = false;
   console.log(`showQRcode: ${showQRcode}`)
 
   let scroll = queryParams.get('scroll');
-  console.info(scroll);
   if (scroll === null) {
     scroll = true;
   } else {

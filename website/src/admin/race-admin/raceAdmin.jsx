@@ -15,9 +15,12 @@ import {
   TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useRacesApi } from '../../hooks/useRacesApi';
 import { useSplitPanelOptionsDispatch } from '../../store/appLayoutProvider';
-import { useSelectedEventContext } from '../../store/storeProvider';
+import {
+  useRacesContext,
+  useSelectedEventContext,
+  useUsersContext,
+} from '../../store/storeProvider';
 import { formatAwsDateTime } from '../../support-functions/time';
 import { LapsTable } from './components/lapsTable';
 import { MultiChoicePanelContent } from './components/multiChoicePanelContent';
@@ -26,7 +29,8 @@ import { ColumnDefinitions, VisibleContentOptions } from './support-functions/ra
 const RaceAdmin = () => {
   const { t } = useTranslation();
   const selectedEvent = useSelectedEventContext();
-  const [races, loading, sendDelete] = useRacesApi(selectedEvent.eventId);
+  const [, , getUserNameFromId] = useUsersContext();
+  const [races, loading, sendDelete] = useRacesContext();
   const [SelectedRacesInTable, setSelectedRacesInTable] = useState([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
@@ -43,11 +47,11 @@ const RaceAdmin = () => {
 
   async function deleteRaces() {
     const racesToDelete = SelectedRacesInTable.map((race) => {
-      return { userId: race.userId, raceId: race.raceId };
+      console.info(race);
+      return { userId: race.userId, raceId: race.raceId, trackId: race.trackId };
     });
     const deleteVariables = {
-      eventId: SelectedRacesInTable[0]['eventId'],
-      trackId: SelectedRacesInTable[0]['trackId'],
+      eventId: selectedEvent.eventId,
       racesToDelete: racesToDelete,
     };
     console.info(deleteVariables);
@@ -56,7 +60,7 @@ const RaceAdmin = () => {
   }
 
   // Table config
-  const columnDefinitions = ColumnDefinitions();
+  const columnDefinitions = ColumnDefinitions(getUserNameFromId);
   const visibleContentOptions = VisibleContentOptions();
 
   const selectEmptyStateMessage = () => {
@@ -81,7 +85,7 @@ const RaceAdmin = () => {
         ),
       },
       pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
+      sorting: { defaultState: { sortingColumn: columnDefinitions[0], isDescending: true } },
       selection: {},
     });
 
@@ -109,7 +113,6 @@ const RaceAdmin = () => {
   }, []);
 
   useEffect(() => {
-    console.log('show split panel');
     splitPanelOptionsDispatch({
       type: 'UPDATE',
       value: {

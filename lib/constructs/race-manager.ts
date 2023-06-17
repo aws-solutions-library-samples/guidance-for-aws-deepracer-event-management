@@ -144,6 +144,7 @@ export class RaceManager extends Construct {
             definition: {
                 userId: GraphqlType.id({ isRequired: true }),
                 raceId: GraphqlType.id({ isRequired: true }),
+                trackId: GraphqlType.id({ isRequired: true }),
             },
             directives: [Directive.cognito('admin', 'operator')],
         });
@@ -153,7 +154,6 @@ export class RaceManager extends Construct {
         const raceDeleteObjectType = new ObjectType('RaceDeleteObject', {
             definition: {
                 eventId: GraphqlType.id({ isRequired: true }),
-                trackId: GraphqlType.id({ isRequired: true }),
                 raceIds: GraphqlType.id({ isList: true }),
             },
             directives: [Directive.cognito('admin', 'operator')],
@@ -224,7 +224,6 @@ export class RaceManager extends Construct {
             new ResolvableField({
                 args: {
                     eventId: GraphqlType.id({ isRequired: true }),
-                    trackId: GraphqlType.id({ isRequired: true }),
                     racesToDelete: raceDeleteInputType.attribute({ isRequiredList: true }),
                 },
                 returnType: raceDeleteObjectType.attribute(),
@@ -264,7 +263,6 @@ export class RaceManager extends Construct {
             new ResolvableField({
                 args: {
                     eventId: GraphqlType.string({ isRequired: true }),
-                    userId: GraphqlType.string(),
                 },
                 returnType: raceObjectType.attribute({ isList: true }),
                 dataSource: raceDataSource,

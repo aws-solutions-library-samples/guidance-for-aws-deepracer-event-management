@@ -20,7 +20,6 @@ import { AdminModels } from '../admin/model-management/models';
 import { AdminQuarantine } from '../admin/model-management/quarantine';
 import { EditRace } from '../admin/race-admin/pages/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
-import { Timekeeper } from '../admin/timekeeper/timeKeeper';
 import { ProfileHome } from '../admin/user-profile/profile';
 import { CreateUser } from '../admin/users/createUser';
 import { UsersList } from '../admin/users/usersList';
@@ -28,6 +27,7 @@ import { CommentatorRaceStats } from '../commentator/race-stats';
 import { Home } from '../home';
 import useLink from '../hooks/useLink';
 import { ModelMangement } from '../pages/model-management/modelManagement';
+import { Timekeeper } from '../pages/timekeeper/timeKeeper';
 import {
   useNotifications,
   useSideNavOptions,
@@ -36,7 +36,7 @@ import {
   useSplitPanelOptionsDispatch,
 } from '../store/appLayoutProvider';
 import { usePermissionsContext } from '../store/permissions/permissionsProvider';
-import { useSelectedEventContext } from '../store/storeProvider';
+import { useSelectedEventContext, useSelectedTrackContext } from '../store/storeProvider';
 import { EventSelectorModal } from './eventSelectorModal';
 
 function cwr(operation, payload) {
@@ -115,11 +115,13 @@ export function TopNav(props) {
   const { handleFollow } = useLink();
 
   const selectedEvent = useSelectedEventContext();
+  const selectedTrack = useSelectedTrackContext();
   const sideNavOptions = useSideNavOptions();
   const sideNavOptionsDispatch = useSideNavOptionsDispatch();
 
   const permissions = usePermissionsContext();
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
+
   const defaultSideNavItems = [
     {
       type: 'link',
@@ -263,6 +265,14 @@ export function TopNav(props) {
   ];
 
   if (permissions.topNavItems.eventSelection) {
+    // race track selector
+    topNavItems.unshift({
+      type: 'button',
+      text: selectedTrack ? selectedTrack.leaderBoardTitle : 'No track selected',
+      onClick: () => setEventSelectModalVisible(true),
+    });
+
+    // event selector
     topNavItems.unshift({
       type: 'button',
       text: selectedEvent.eventName,

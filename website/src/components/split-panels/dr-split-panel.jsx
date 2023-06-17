@@ -14,7 +14,7 @@ export const DrSplitPanel = ({ header, children }) => {
     preferencesCancel: t('button.cancel'),
     closeButtonAriaLabel: t('common.panel.close'),
     openButtonAriaLabel: t('common.panel.open'),
-    resizeHandleAriaLabel: t('common.panel.split-panel-rezize-label'),
+    resizeHandleAriaLabel: t('common.panel.split-panel-resize-label'),
   };
 
   // JSX

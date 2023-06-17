@@ -211,7 +211,7 @@ export default (props) => {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState(modalTable);
   const [selectedCars, setSelectedCars] = useState([]);
-  const [checked, setChecked] = useState(false);
+  const [checked, setChecked] = useState(true);
 
   var models = [...props.selectedModels]; // clone models array
 

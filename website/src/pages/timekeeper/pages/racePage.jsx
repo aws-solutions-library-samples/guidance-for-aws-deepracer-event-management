@@ -13,14 +13,14 @@ import React, { useRef, useState } from 'react';
 import { useMachine } from '@xstate/react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  GetRaceResetsNameFromId,
+  GetRaceTypeNameFromId,
+} from '../../../admin/events/support-functions/raceConfig';
 import { PageLayout } from '../../../components/pageLayout';
 import useCounter from '../../../hooks/useCounter';
 import { usePublishOverlay } from '../../../hooks/usePublishOverlay';
 import useWebsocket from '../../../hooks/useWebsocket';
-import {
-  GetRaceResetsNameFromId,
-  GetRaceTypeNameFromId,
-} from '../../events/support-functions/raceConfig';
 import { LapTable } from '../components/lapTable';
 import LapTimer from '../components/lapTimer';
 import RaceTimer from '../components/raceTimer';

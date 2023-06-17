@@ -39,20 +39,21 @@ export const VisibleContentOptions = () => {
   ];
 };
 
-export const ColumnDefinitions = () => {
+export const ColumnDefinitions = (getUserNameFromId) => {
   return [
     {
       id: 'createdAt',
       header: i18next.t('race-admin.created-at'),
       cell: (item) => formatAwsDateTime(item.createdAt) || '-',
       sortingField: 'createdAt',
-      width: 180,
+      width: 250,
     },
     {
       id: 'username',
       header: i18next.t('race-admin.username'),
-      cell: (item) => item.username || '-',
+      cell: (item) => getUserNameFromId(item.userId) || '-',
       sortingField: 'username',
+      width: 200,
     },
     {
       id: 'userId',

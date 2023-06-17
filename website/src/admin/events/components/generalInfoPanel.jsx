@@ -23,6 +23,7 @@ export const EventInfoPanel = ({
   eventName = undefined,
   countryCode = '',
   eventDate = undefined,
+  sponsor,
 }) => {
   const [errorMessage, setErrorMessage] = useState();
   const [typeOfEventErrorMessage, setTypeOfEventErrorMessage] = useState();
@@ -98,7 +99,7 @@ export const EventInfoPanel = ({
           />
         </FormField>
 
-        <FormField label={t('events.event-date')} description={t('events.event-date-descriprion')}>
+        <FormField label={t('events.event-date')} description={t('events.event-date-description')}>
           <DatePicker
             onChange={({ detail }) => onChange({ eventDate: detail.value })}
             value={eventDate ?? eventDate | undefined}
@@ -123,6 +124,12 @@ export const EventInfoPanel = ({
             />
             <Flag countryCode={countryCode}></Flag>
           </Grid>
+        </FormField>
+        <FormField
+          label={t('events.leaderboard.sponsor')}
+          description={t('events.leaderboard.sponsor-description')}
+        >
+          <Input onChange={({ detail }) => onChange({ sponsor: detail.value })} value={sponsor} />
         </FormField>
       </SpaceBetween>
     </Container>

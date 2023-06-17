@@ -1,6 +1,6 @@
 {
     "admin.breadcrumb": "管理",
-  
+
     "button.cancel": "キャンセル",
     "button.clear-selected": "消去",
     "button.confirm": "OK",
@@ -10,14 +10,14 @@
     "button.create": "作る",
     "button.next": "次",
     "button.ok": "OK",
-  
+
     "common.in-progress": "働く",
     "common.error": "誤り",
     "common.success": "成功",
     "common.info": "情報",
     "common.yes": "はい",
     "common.no": "いいえ",
-  
+
     "common.panel.open": "パネルを開く",
     "common.panel.close": "パネルを閉じる",
     "common.panel.position-side": "側",
@@ -25,8 +25,8 @@
     "common.panel.split-panel-preference-title": "分割パネル設定",
     "common.panel.split-panel-position-label": "分割パネルの位置",
     "common.panel.split-panel-position-description": "Choose the default split panel position for the service.",
-    "common.panel.split-panel-rezize-label": "分割ペインのサイズ変更",
-  
+    "common.panel.split-panel-resize-label": "分割ペインのサイズ変更",
+
     "car-activation.breadcrumb": "車アクティベーション",
     "car-activation.copied-to-clipboard": "クリップボードに",
     "car-activation.description": "Create systems manager activation to register and update cars.",
@@ -46,13 +46,13 @@
     "car-activation.wifi-config": "Optional WiFi config for networks with hidden SSIDs",
     "car-activation.wifi-placeholder": "wifimagic",
     "car-activation.wifi": "WiFi パスワード",
-  
+
     "label-printer.printable-label-header": "印刷可能なラベル",
     "label-printer.printable-label-alt-text": "印刷可能なラベル",
     "label-printer.printable-label-copy-button": "印刷用ラベルの URL をコピー",
     "label-printer.download-printable-label": "印刷可能なラベルのダウンロード",
     "label-printer.download-printable-labels": "印刷可能なラベルのダウンロード",
-  
+
     "carmodelupload.clear-filter": "検索フィルターを削除",
     "carmodelupload.clear": "車のストレージにある AI ファイルを削除しますか?",
     "carmodelupload.commandid": "CommandId",
@@ -72,9 +72,9 @@
     "carmodelupload.status": "稼働状況",
     "carmodelupload.upload": "AI ファイルを車両にアップロードする",
     "carmodelupload.we-cant-find-a-match": "検索結果がありません",
-  
+
     "carmodelupload-modal.file-regex": "does not match regex: ^[a-zA-Z0-9-_]+.tar.gz$",
-  
+
     "cars.agent-version": "Agent version",
     "cars.breadcrumb": "Cars",
     "cars.car-information": "Car information",
@@ -94,7 +94,7 @@
     "cars.online": "Online",
     "cars.page-size-label": "cars",
     "cars.registration-date": "Registration date",
-  
+
     "events.events-information": "イベント情報",
     "event-provider.please-select-an-event": "イベントを選択してください",
     "events.create-event": "イベント作る",
@@ -110,7 +110,7 @@
     "events.event-name-description": "The Name of the Event, will be displayed on leaderboard",
     "events.event-name-placeholder": "イベント名",
     "events.event-date": "イベント日時",
-    "events.event-date-descriprion": "The date for when the event will be held",
+    "events.event-date-description": "The date for when the event will be held",
     "events.event-date-next-month": "来月",
     "events.event-date-previous-month": "前月",
     "events.event-date-today": "今日",
@@ -139,15 +139,15 @@
     "events.landing-page-link": "ランディングページ",
     "events.landing-page-link-same-tab": "このタブで開く",
     "events.landing-page-link-new-tab": "新しいタブで開く",
-  
+
     "events.event-type": "イベントタイプ",
     "events.event-type-description": "",
     "events.type.private-workshop": "Private workshop",
-    "events.type.offical-workshop": "Public workshop",
+    "events.type.official-workshop": "Public workshop",
     "events.type.private-track-race": "Private track race",
     "events.type.official-track-race": "Public track race",
     "events.type.other": "Other",
-  
+
     "events.leaderboard.header": "Header text",
     "events.leaderboard.header-description": "Text displayed on top of the leaderboard",
     "events.leaderboard.footer": "Footer text",
@@ -159,7 +159,7 @@
     "events.leaderboard.qr-code-visible": "Visible",
     "events.leaderboard.qr-code-hidden": "Hidden",
     "events.leaderboard.validation-error-message": "Not allowed to be empty",
-  
+
     "events.race.ranking-method": "Ranking method",
     "events.race.ranking-method-description": "Define how the racers shall be ranked in the leaderboard",
     "events.race.race-time": "Race time (min)",
@@ -172,10 +172,10 @@
     "events.race.ranking.best-lap-time": "Best lap time",
     "events.race.ranking.average-lap-time": "Average lap time",
     "events.race.ranking.finish-x-laps": "Finish x laps",
-  
+
     "events.fleet-info.label": "Car Fleet",
     "events.fleet-info.description": "Select the fleet of cars to use for the event.",
-  
+
     "events.tracks.reinvent-2018": "re:Invent 2018",
     "events.tracks.reinvent-2019": "re:Invent 2019",
     "events.tracks.reinvent-2022": "2022 Summit speedway",
@@ -183,11 +183,11 @@
     "events.tracks.other": "Other",
     "events.tracks.choose": "Choose track",
     "events.tracks.choose-description": "What track will be used when hosting the event",
-  
+
     "events.split-panel.multi-choice-text": "Select 1 event to see the event details",
     "events.split-panel.empty": "Select an event to see its details",
     "events.split-panel-header": "events selected",
-  
+
     "race-admin.header": "Race 管理者",
     "race-admin.description": "",
     "race-admin.breadcrumb": "Race",
@@ -221,7 +221,7 @@
     "race-admin.multi-select.slowest-lap-time": "Slowest lap time",
     "race-admin.multi-select.unique-racer-count": "Unique racer count",
     "race-admin.multi-select.header": "races selected",
-  
+
     "fleets.create-fleet": "Create fleet",
     "fleets.edit-fleet": "Edit fleet",
     "fleets.breadcrumb": "Fleets",
@@ -240,7 +240,7 @@
     "fleets.edit-cars.taillight-label": "Tail Light",
     "fleets.edit-cars.update-tail-lights": "Update tail lights",
     "fleets.edit-cars.title": "Car Control",
-    "fleets.edit-cars.restart-ros": "Restart ROS Service",
+    "fleets.edit-cars.restart-ros": "Restart DeepRacer Service",
     "fleets.edit-cars.stop": "Emergency Stop",
     "fleets.error-exists": "Fleet already exists",
     "fleets.error-text-regex": "Must match regex: ^[a-zA-Z0-9-_]+$",
@@ -251,7 +251,7 @@
     "fleets.fleet-name-description": "The name of the Fleet.",
     "fleets.no-fleet": "No Fleets",
     "fleets.no-fleet-message": "Please create a fleet.",
-    "fleets.fleet-name-placeholder": "My awsome fleet",
+    "fleets.fleet-name-placeholder": "My awesome fleet",
     "fleets.fleet-name-empty-message": "Fleet name cannot be empty",
     "fleets.header": "Fleets admin",
     "fleets.loading": "Loading fleets",
@@ -260,7 +260,7 @@
     "fleets.no-fleets": "No fleets",
     "fleets.placeholder": "AwesomeFleet",
     "fleets.table-header": "Fleets",
-  
+
     "groups.breadcrumb": "Groups",
     "groups.description": "List of user groups.",
     "groups.detail.content-description": "Add / remove users from the '{{groupName}}' group.",
@@ -272,7 +272,7 @@
     "groups.detail.header-name": "User name",
     "groups.detail.header-user-enabled": "User enabled?",
     "groups.detail.header": "Users",
-    "groups.detail.infromation": "User information",
+    "groups.detail.information": "User information",
     "groups.detail.loading-users": "Loading users",
     "groups.detail.page-size-label": "users",
     "groups.filter-groups": "Filter groups",
@@ -288,7 +288,7 @@
     "groups.no-users-have-been-defined": "No users have been defined.",
     "groups.no-users": "No users",
     "groups.page-size-label": "groups",
-  
+
     "users.breadcrumb": "Create user",
     "users.description": "User creation",
     "users.header": "Create user",
@@ -312,7 +312,7 @@
     "users.country": "Country",
     "users.country-code": "Country Code",
     "users.flag": "Flag",
-  
+
     "home.all-models-description": "List of the models uploaded by users",
     "home.all-models": "All models",
     "home.breadcrumb": "Home",
@@ -328,15 +328,13 @@
     "home.header": "DeepRacer Event Manager",
     "home.leaderboard-description": "Access event leaderboards",
     "home.leaderboard": "Leaderboard",
-    "home.models-description": "List of the models you have uploaded",
+    "home.models-description": "Model management",
     "home.models": "Models",
     "home.quarantined-description": "Any models that have been flagged as suspicious during upload",
     "home.quarantined": "Quarantined models",
     "home.time-keeper-description": "Event time keeper",
     "home.time-keeper": "Time keeper",
-    "home.upload-description": "Upload models into DREM ready to send to cars for racing",
-    "home.upload": "Upload",
-  
+
     "models.all-header": "Models",
     "models.breadcrumb": "Models",
     "models.clear-filter": "Clear filter",
@@ -354,12 +352,12 @@
     "models.upload-date": "Upload date",
     "models.user-name": "User name",
     "models.we-cant-find-a-match": "We can't find a match",
-  
+
     "quarantine.breadcrumb": "Quarantined models",
     "quarantine.header": "Quarantined models",
     "quarantine.list-of-all-models": "List of all quarantined models.",
     "quarantine.no-models-to-display": "No quarantined models to display.",
-  
+
     "table.agent-version": "Agent version",
     "table.clear-filter": "Clear filter",
     "table.fleet-id": "Fleet ID",
@@ -376,11 +374,11 @@
     "table.previous-page": "Previous page",
     "table.registration-date": "Registration date",
     "table.select-page-size": "Select page size",
-    "table.select-visible-colunms": "Select visible colunms",
+    "table.select-visible-columns": "Select visible columns",
     "table.we-cant-find-a-match": "We can't find a match",
     "table.wrap-lines": "Wrap lines",
     "table.wrap-lines-description": "Check to see all the text and wrap the lines",
-  
+
     "timekeeper.automated-timer-connected": "Automated timer connected",
     "timekeeper.automated-timer-not-connected": "Automated timer not connected",
     "timekeeper.capture-lap": "Capture lap",
@@ -389,10 +387,10 @@
     "timekeeper.current-racer": "Racer",
     "timekeeper.dnf": "Did not finish",
     "timekeeper.end-race": "End race",
-  
+
     "timekeeper.race-setup-page.page-header": "Race setup",
     "timekeeper.race-setup-page.page-description": "Configure the race",
-  
+
     "timekeeper.race-page.page-header": "Time keeper",
     "timekeeper.race-page.warning-modal.text": "Are you sure you want to end the race?",
     "timekeeper.race-page.warning-modal.header": "Warning!",
@@ -401,7 +399,7 @@
     "timekeeper.race-page.automated-timer-connected": "Connected",
     "timekeeper.race-page.automated-timer-not-connected": "Not connected",
     "timekeeper.race-page.resume-race": "Resume race",
-  
+
     "timekeeper.end-session.discard-race": "Discard race",
     "timekeeper.end-session.race-discarded": "Race discarded!",
     "timekeeper.end-session.error": "Could not submit race. Please try again!",
@@ -417,7 +415,7 @@
     "timekeeper.end-session.warning-message": "Discarding the race will delete the race without saving it!",
     "timekeeper.end-session.page-header": "Review race",
     "timekeeper.end-session.page-description": "Verify that all laps and racer details are accurate before submitting the race.",
-  
+
     "timekeeper.fastest-lap": "Fastest lap",
     "timekeeper.lap-table.valid": "Valid",
     "timekeeper.lap-table.not-valid": "Not valid",
@@ -431,22 +429,22 @@
     "timekeeper.racer-selector.loading-racers": "Loading racers",
     "timekeeper.racer-selector.loading-cars": "Loading cars",
     "timekeeper.racer-selector.loading": "loading",
-    "timekeeper.racer-selector.select-event": "Select event",
+    "event-selector-modal.select-event": "Select event",
     "timekeeper.racer-selector.select-racer": "Select racer",
-    "timekeeper.racer-selector.select-track": "Track",
+    "event-selector-modal.select-track": "Track",
     "timekeeper.racer-selector.select-car": "Select car from event car fleet",
     "timekeeper.racer-selector.select-car-empty": "Event has not been associated with a car fleet or there is no cars in the fleet",
     "timekeeper.racer-selector.select-model": "Select model",
     "timekeeper.racer-selector.select-model-empty": "The user has not upload any models",
     "timekeeper.racer-selector.selected": "Selected",
     "timekeeper.racer-selector.racer-section-header": "Racer selection",
-    "timekeeper.racer-selector.event-section-header": "Event & track selection",
+    "event-selector-modal.event-section-header": "Event & track selection",
     "timekeeper.recorded-laps": "Recorded Laps",
     "timekeeper.resets": "Resets",
     "timekeeper.start-race": "Start race",
     "timekeeper.time-left": "Time Left",
     "timekeeper.undo-false-finish": "Undo false finish",
-  
+
     "topnav.admin": "Admin",
     "topnav.all-models": "All models",
     "topnav.all": "All",
@@ -475,7 +473,7 @@
     "topnav.registration": "Registration",
     "topnav.users": "Users",
     "topnav.operator": "Operator",
-  
+
     "upload.breadcrumb": "Upload models",
     "upload.chose-file": "Choose model file(s)",
     "upload.constraint-description": "Upload physical model for racing on the track",
@@ -483,7 +481,7 @@
     "upload.header-description": "Upload models into DREM ready for racing on the track.",
     "upload.header": "Upload models",
     "upload.label": "Upload model",
-  
+
     "commentator.race.header": "Race",
     "commentator.race.stats": "Statistics about the race and current racer",
     "commentator.breadcrumb": "Commentator",
@@ -505,7 +503,7 @@
     "commentator.race.averagelapCount": "Average laps per Run",
     "commentator.race.restSum": "# of Resets",
     "commentator.race.averageResetsPerLap": "Average resets per Lap",
-  
+
     "user-profile.header": "User settings",
     "user-profile.header.details": "Account details",
     "user-profile.description": "Update your user settings",
@@ -530,4 +528,3 @@
     "user-profile.settings.form.error": "Error changing password, please check your old password and try again",
     "user-profile.settings.form.pw.error": "New passwords do not match."
   }
-  
