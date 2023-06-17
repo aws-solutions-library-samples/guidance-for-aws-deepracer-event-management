@@ -38,12 +38,11 @@ def lambda_handler(event, context):
 
 
 @app.resolver(type_name="Query", field_name="getRaces")
-def getRaces(eventId, trackId=1, userId=None):
+def getRaces(eventId):
     response = {}
-    sort_key = __generate_sort_key(trackId, userId)
+
     response = ddbTable.query(
-        KeyConditionExpression=Key("eventId").eq(eventId)
-        & Key("sk").begins_with(sort_key),
+        KeyConditionExpression=Key("eventId").eq(eventId),
         FilterExpression=Attr("type").eq(RACE_TYPE),
     )
 
@@ -53,15 +52,15 @@ def getRaces(eventId, trackId=1, userId=None):
 
 
 @app.resolver(type_name="Mutation", field_name="deleteRaces")
-def deleteRaces(eventId, racesToDelete, trackId=1):
+def deleteRaces(eventId, racesToDelete):
     event_id = eventId
-    track_id = trackId
     user_ids_to_publish_events_for = []
     deleted_race_ids = []
     with ddbTable.batch_writer() as batch:
         for race in racesToDelete:
             user_id = race["userId"]
             race_id = race["raceId"]
+            track_id = race["trackId"]
             sort_key = __generate_sort_key(track_id, user_id, race_id)
             try:
                 response = batch.delete_item(Key={"eventId": event_id, "sk": sort_key})
@@ -118,7 +117,6 @@ def deleteRaces(eventId, racesToDelete, trackId=1):
 
     return_object = {
         "eventId": event_id,
-        "trackId": track_id,
         "raceIds": deleted_race_ids,
     }
     logger.info(return_object)
@@ -198,6 +196,7 @@ def updateRace(**args):
 ##################
 # Helper functions
 ##################
+
 
 # TODO move into lambda layer
 def __generate_update_query(key_fields, fields):

@@ -1,5 +1,5 @@
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
-import { DockerImage, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
+import { CustomResource, DockerImage, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { EventBus } from 'aws-cdk-lib/aws-events';
@@ -60,6 +60,33 @@ export class EventsManager extends Construct {
             removalPolicy: RemovalPolicy.DESTROY,
             stream: dynamodb.StreamViewType.NEW_IMAGE,
         });
+
+        // Update existing events to new data model
+        // Can be removed after the changes has been propagated to all environments
+        const updateExisitngEventsFunction = new lambdaPython.PythonFunction(
+            this,
+            'updateExistingEvents',
+            {
+                entry: 'lib/lambdas/cr_update_stored_events_to_new_format/',
+                description: 'Updates exisitng events to new format',
+                index: 'index.py',
+                handler: 'lambda_handler',
+                timeout: Duration.minutes(1),
+                runtime: props.lambdaConfig.runtime,
+                tracing: lambda.Tracing.ACTIVE,
+                memorySize: 128,
+                bundling: { image: props.lambdaConfig.bundlingImage },
+                layers: [props.lambdaConfig.layersConfig.powerToolsLayer],
+
+                environment: {
+                    DDB_TABLE_NAME: eventsTable.tableName,
+                },
+            }
+        );
+        new CustomResource(this, 'UpdateExistingEventsCr', {
+            serviceToken: updateExisitngEventsFunction.functionArn,
+        });
+        eventsTable.grantReadWriteData(updateExisitngEventsFunction);
 
         const ddbstreamToEventBridgeFunction = new lambdaPython.PythonFunction(
             this,
@@ -147,6 +174,7 @@ export class EventsManager extends Construct {
                 numberOfResetsPerLap: GraphqlType.int(),
                 trackType: trackTypeMethodEnum.attribute(),
                 rankingMethod: raceRankingMethodEnum.attribute(),
+                maxRunsPerRacer: GraphqlType.string(),
             },
             directives: [Directive.cognito('admin', 'commentator', 'operator')],
         });
@@ -158,6 +186,7 @@ export class EventsManager extends Construct {
                 numberOfResetsPerLap: GraphqlType.int(),
                 trackType: trackTypeMethodEnum.attribute(),
                 rankingMethod: raceRankingMethodEnum.attribute(),
+                maxRunsPerRacer: GraphqlType.string(),
             },
             directives: [Directive.cognito('admin', 'operator')],
         });
@@ -166,9 +195,9 @@ export class EventsManager extends Construct {
         const trackObjectType = new ObjectType('Track', {
             definition: {
                 trackId: GraphqlType.id(),
-                raceConfig: raceConfigObjectType.attribute(),
-                leaderboardConfig: props.leaderboardApi.leaderboardConfigObjectType.attribute(),
-                landingPageConfig: props.landingPageApi.landingPageConfigObjectType.attribute(),
+                fleetId: GraphqlType.id(),
+                leaderBoardTitle: GraphqlType.string(),
+                leaderBoardFooter: GraphqlType.string(),
             },
             directives: [Directive.cognito('admin', 'commentator', 'operator')],
         });
@@ -177,13 +206,9 @@ export class EventsManager extends Construct {
         const trackInputType = new InputType('TrackInput', {
             definition: {
                 trackId: GraphqlType.id({ isRequired: true }),
-                raceConfig: raceConfigInputType.attribute({ isRequired: true }),
-                leaderboardConfig: props.leaderboardApi.leaderboardConfigInputype.attribute({
-                    isRequired: true,
-                }),
-                landingPageConfig: props.landingPageApi.landingPageConfigInputType.attribute({
-                    isRequired: true,
-                }),
+                fleetId: GraphqlType.id(),
+                leaderBoardTitle: GraphqlType.string({ isRequired: true }),
+                leaderBoardFooter: GraphqlType.string({ isRequired: true }),
             },
             directives: [Directive.cognito('admin', 'operator')],
         });
@@ -208,9 +233,11 @@ export class EventsManager extends Construct {
                 eventName: GraphqlType.string(),
                 typeOfEvent: typeOfEventEnum.attribute(),
                 eventDate: GraphqlType.awsDate(),
-                fleetId: GraphqlType.id(),
+                sponsor: GraphqlType.string(),
                 countryCode: GraphqlType.string(),
+                raceConfig: raceConfigObjectType.attribute(),
                 tracks: trackObjectType.attribute({ isList: true }),
+                landingPageConfig: props.landingPageApi.landingPageConfigObjectType.attribute(),
             },
             directives: [Directive.cognito('admin', 'operator', 'commentator', 'registration')],
         });
@@ -237,8 +264,10 @@ export class EventsManager extends Construct {
                     typeOfEvent: typeOfEventEnum.attribute({ isRequired: true }),
                     tracks: trackInputType.attribute({ isRequiredList: true }),
                     eventDate: GraphqlType.awsDate(),
-                    fleetId: GraphqlType.id(),
+                    sponsor: GraphqlType.string(),
                     countryCode: GraphqlType.string(),
+                    raceConfig: raceConfigInputType.attribute({ isRequired: true }),
+                    landingPageConfig: props.landingPageApi.landingPageConfigInputType.attribute(),
                 },
                 returnType: eventObjectType.attribute(),
                 dataSource: eventsDataSource,
@@ -306,8 +335,10 @@ export class EventsManager extends Construct {
                     typeOfEvent: typeOfEventEnum.attribute({ isRequired: true }),
                     tracks: trackInputType.attribute({ isRequiredList: true }),
                     eventDate: GraphqlType.awsDate(),
-                    fleetId: GraphqlType.id(),
+                    sponsor: GraphqlType.string(),
                     countryCode: GraphqlType.string(),
+                    raceConfig: raceConfigInputType.attribute({ isRequired: true }),
+                    landingPageConfig: props.landingPageApi.landingPageConfigInputType.attribute(),
                 },
                 returnType: eventObjectType.attribute(),
                 dataSource: eventsDataSource,

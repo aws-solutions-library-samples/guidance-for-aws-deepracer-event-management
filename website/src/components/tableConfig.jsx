@@ -213,7 +213,7 @@ export const TablePreferences = ({ preferences, setPreferences, contentOptions }
       preferences={preferences}
       pageSizePreference={PageSizePreference()}
       visibleContentPreference={{
-        title: i18next.t('table.select-visible-colunms'),
+        title: i18next.t('table.select-visible-columns'),
         options: contentOptions,
       }}
       wrapLinesPreference={wrapLines}

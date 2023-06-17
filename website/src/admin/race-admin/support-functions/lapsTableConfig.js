@@ -1,5 +1,6 @@
 import { Input, Select } from '@cloudscape-design/components';
 import i18next from '../../../i18n';
+import { convertMsToString } from '../../../support-functions/time';
 
 export const VisibleContentOptions = () => {
   return [
@@ -43,7 +44,7 @@ export const ColumnDefinitions = () => {
     {
       id: 'time',
       header: i18next.t('race-admin.time'),
-      cell: (item) => item.timeHr || '-',
+      cell: (item) => convertMsToString(item.time) || '-',
       sortingField: 'time',
       width: 200,
     },
@@ -82,7 +83,7 @@ export const EditableColumnDefinitions = () => {
     {
       id: 'time',
       header: i18next.t('race-admin.time'),
-      cell: (item) => item.timeHr || '-',
+      cell: (item) => convertMsToString(item.time) || '-',
       sortingField: 'time',
       width: 230,
       editConfig: {
@@ -90,19 +91,15 @@ export const EditableColumnDefinitions = () => {
         editIconAriaLabel: 'editable',
         errorIconAriaLabel: 'Time Error',
         editingCell: (item, { currentValue, setValue }) => {
-          console.info(currentValue);
-          console.info(item);
           return (
             <Input
               autoFocus={true}
-              value={currentValue ?? item.timeHr}
+              value={currentValue ?? convertMsToString(item.time)}
               onChange={(event) => setValue(event.detail.value)}
             />
           );
         },
         validation: (item, value) => {
-          console.info(item);
-          console.info(value);
           if (value === undefined) return undefined;
           const regExpression = '[0-5]{1}\\d{1}:[0-5]{1}\\d{1}\\.\\d{3}$';
           const regex = new RegExp(regExpression);
@@ -124,7 +121,6 @@ export const EditableColumnDefinitions = () => {
         editIconAriaLabel: 'editable',
         errorIconAriaLabel: 'Reset Error',
         editingCell: (item, { currentValue, setValue }) => {
-          console.info(currentValue);
           return (
             <Input
               autoFocus={true}
@@ -134,8 +130,6 @@ export const EditableColumnDefinitions = () => {
           );
         },
         validation: (item, value) => {
-          console.info(item);
-          console.info(value);
           if (value === undefined) return undefined;
           const regExpression = '^[0-9]+$';
           const regex = new RegExp(regExpression);

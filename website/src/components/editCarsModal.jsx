@@ -135,7 +135,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
     });*/
   }
 
-  // Restart ROS Service
+  // Restart DeepRacer Service
   async function carRestartService() {
     const InstanceIds = selectedItems.map((i) => i.InstanceId);
 

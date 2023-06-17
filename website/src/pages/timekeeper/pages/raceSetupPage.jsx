@@ -5,7 +5,6 @@ import {
   FormField,
   Grid,
   Header,
-  Select,
   SpaceBetween,
   Toggle,
 } from '@cloudscape-design/components';
@@ -15,20 +14,22 @@ import { EventSelectorModal } from '../../../components/eventSelectorModal';
 import { PageLayout } from '../../../components/pageLayout';
 import useMutation from '../../../hooks/useMutation';
 import { RacesStatusEnum } from '../../../hooks/usePublishOverlay';
-import { useSelectedEventContext, useUsersContext } from '../../../store/storeProvider';
+import { useSelectedEventContext, useSelectedTrackContext } from '../../../store/storeProvider';
+import { RacerSelector } from '../components/racerSelector.jsx';
+import { RacesDoneByUser } from '../components/racesDoneByUser';
 import { breadcrumbs } from '../support-functions/supportFunctions';
 
 export const RaceSetupPage = ({ onNext }) => {
   const { t } = useTranslation();
   const [SendMutation] = useMutation();
   const selectedEvent = useSelectedEventContext();
-  const [users, isLoadingRacers] = useUsersContext();
+  const selectedTrack = useSelectedTrackContext();
 
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
 
   const [race, setRace] = useState({
     eventId: selectedEvent.eventId,
-    trackId: 1,
+    trackId: selectedTrack.trackId,
     userId: undefined,
     racedByProxy: false,
   });
@@ -38,8 +39,6 @@ export const RaceSetupPage = ({ onNext }) => {
     isDisabled: false,
   });
 
-  const [userOptions, SetUserOptions] = useState([]);
-
   // Show event selector modal if no event has been selected, timekeeper must have an event selected to work
   useEffect(() => {
     if (selectedEvent.eventId == null) {
@@ -48,15 +47,26 @@ export const RaceSetupPage = ({ onNext }) => {
   }, [selectedEvent]);
 
   useEffect(() => {
+    // update race setup when track or event is changed while on page
+    setRace((preValue) => {
+      return {
+        ...preValue,
+        eventId: selectedEvent.eventId,
+        trackId: selectedTrack.trackId,
+      };
+    });
+  }, [selectedEvent.eventId, selectedTrack.trackId]);
+
+  useEffect(() => {
     if (selectedEvent == null) return;
 
     const message = {
       eventId: selectedEvent.eventId,
-      trackId: 1,
+      trackId: selectedTrack.trackId,
       raceStatus: RacesStatusEnum.NO_RACER_SELECTED,
     };
     SendMutation('updateOverlayInfo', message);
-  }, [selectedEvent, SendMutation]);
+  }, [selectedEvent, SendMutation, selectedTrack.trackId]);
 
   // input validation
   useEffect(() => {
@@ -76,61 +86,11 @@ export const RaceSetupPage = ({ onNext }) => {
     };
   }, [race.eventId, race.userId]);
 
-  // Populate racer selection
-  useEffect(() => {
-    if (users) {
-      SetUserOptions(
-        users.map((user) => {
-          return { label: user.Username, value: user.sub };
-        })
-      );
-    }
-  }, [users]);
-
-  const GetRacerOptionFromId = (id) => {
-    if (!id) return;
-    const selectedUser = userOptions.find((userOption) => userOption.value === id);
-    if (selectedUser) return selectedUser;
-    return undefined;
-  };
-
   const configUpdateHandler = (attr) => {
     setRace((prevState) => {
       return { ...prevState, ...attr };
     });
   };
-
-  const racerSelectorPanel = (
-    <Container header={<Header>{t('timekeeper.racer-selector.racer-section-header')}</Header>}>
-      <Grid gridDefinition={[{ colspan: 7 }, { colspan: 3 }]}>
-        <FormField label={t('timekeeper.racer-selector.select-racer')}>
-          <Select
-            selectedOption={GetRacerOptionFromId(race.userId)}
-            onChange={({ detail }) =>
-              configUpdateHandler({
-                userId: detail.selectedOption.value,
-                username: detail.selectedOption.label,
-              })
-            }
-            options={userOptions}
-            selectedAriaLabel={t('timekeeper.racer-selector.selected')}
-            filteringType="auto"
-            virtualScroll
-            invalid={racerValidation.isInvalid}
-            disabled={racerValidation.isDisabled}
-            loadingText={t('timekeeper.racer-selector.loading-racers')}
-            statusType={isLoadingRacers ? t('timekeeper.racer-selector.loading') : ''}
-          />
-        </FormField>
-        <FormField label={t('race-admin.raced-by-proxy')}>
-          <Toggle
-            checked={race.racedByProxy}
-            onChange={(value) => configUpdateHandler({ racedByProxy: value.detail.checked })}
-          />
-        </FormField>
-      </Grid>
-    </Container>
-  );
 
   const actionButtons = (
     <Box float="right">
@@ -142,7 +102,7 @@ export const RaceSetupPage = ({ onNext }) => {
           onClick={() => {
             const raceDetails = {
               race: race,
-              config: selectedEvent.tracks[race.trackId - 1].raceConfig,
+              config: selectedEvent.raceConfig,
             };
             raceDetails.config['eventName'] = selectedEvent.eventName;
             raceDetails.race['eventId'] = selectedEvent.eventId;
@@ -159,7 +119,9 @@ export const RaceSetupPage = ({ onNext }) => {
   return (
     <PageLayout
       breadcrumbs={breadcrumbs}
-      header={t('timekeeper.race-setup-page.page-header') + `: ${selectedEvent.eventName}`}
+      header={`${t('timekeeper.race-setup-page.page-header')}: ${selectedEvent.eventName} ${t(
+        'timekeeper.race-setup-page.racing-on-trackId'
+      )} ${selectedTrack.leaderBoardTitle} `}
       description={t('timekeeper.race-setup-page.page-description')}
     >
       <EventSelectorModal
@@ -168,8 +130,24 @@ export const RaceSetupPage = ({ onNext }) => {
         onOk={() => setEventSelectModalVisible(false)}
       />
       <SpaceBetween direction="vertical" size="l">
-        {racerSelectorPanel}
-        {actionButtons}
+        <Container header={<Header>{t('timekeeper.racer-selector.racer-section-header')}</Header>}>
+          <Grid gridDefinition={[{ colspan: 6 }, { colspan: 3 }, { colspan: 3 }, { colspan: 12 }]}>
+            <RacerSelector
+              race={race}
+              onConfigUpdate={configUpdateHandler}
+              racerValidation={racerValidation}
+              selectedEvent={selectedEvent}
+            />
+            <RacesDoneByUser selecedEvent={selectedEvent} selecedUserId={race.userId} />
+            <FormField label={t('race-admin.raced-by-proxy')}>
+              <Toggle
+                checked={race.racedByProxy}
+                onChange={(value) => configUpdateHandler({ racedByProxy: value.detail.checked })}
+              />
+            </FormField>
+            {actionButtons}
+          </Grid>
+        </Container>
       </SpaceBetween>
     </PageLayout>
   );

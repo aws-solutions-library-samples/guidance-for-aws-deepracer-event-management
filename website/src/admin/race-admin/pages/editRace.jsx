@@ -6,7 +6,7 @@ import { DeleteModal, ItemList } from '../../../components/deleteModal';
 import { PageLayout } from '../../../components/pageLayout';
 import { TableHeader } from '../../../components/tableConfig';
 import useMutation from '../../../hooks/useMutation';
-import { useSelectedEventContext } from '../../../store/storeProvider';
+import { useSelectedEventContext, useSelectedTrackContext } from '../../../store/storeProvider';
 import { convertStringToMs } from '../../../support-functions/time';
 import { LapsTable } from '../components/lapsTable';
 import { RaceInfoPanel } from '../components/raceInfoPanel';
@@ -17,6 +17,7 @@ export const EditRace = () => {
   const selectedRace = location.state;
   const navigate = useNavigate();
   const selectedEvent = useSelectedEventContext();
+  const selectedTrack = useSelectedTrackContext();
   const [send, loading, errorMessage, data] = useMutation();
   const [createButtonIsDisabled, setCreateButtonIsDisabled] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -37,22 +38,18 @@ export const EditRace = () => {
     if (raceConfig.laps.length === 0) {
       const config = {
         eventId: selectedEvent.eventId,
-        trackId: '1', // TODO remove hardcoded trackID
+        trackId: selectedTrack.trackId,
         racesToDelete: [{ userId: raceConfig.userId, raceId: raceConfig.raceId }],
       };
       send('deleteRaces', config);
     } else {
-      console.info(raceConfig);
       const payload = { ...raceConfig };
       payload.laps.map((lap) => delete lap.timeHr); // Strip timeHr filed form laps, only used in FE
-      console.info(raceConfig);
-      console.info(payload);
       send('updateRace', payload);
     }
   };
 
   const updateRaceHandler = (attribute) => {
-    console.info(attribute);
     setRaceConfig((prevState) => {
       return { ...prevState, ...attribute };
     });

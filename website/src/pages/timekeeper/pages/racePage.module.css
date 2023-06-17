@@ -22,15 +22,16 @@
   background-color: #232f3e;
 }
 
-#dnf:hover, #dnf:focus {
+#dnf:hover,
+#dnf:focus {
   background-color: #1c2532;
 }
 
 #dnf:active {
   background-color: #161e2a;
   transition: 0.5s;
-  position:relative;
-  top:2px;
+  position: relative;
+  top: 2px;
 }
 
 #dnf:disabled {
@@ -42,15 +43,16 @@
   background-color: #2074d5;
 }
 
-#carreset:hover, #carreset:focus {
+#carreset:hover,
+#carreset:focus {
   background-color: #2864c8;
 }
 
 #carreset:active {
-  background-color: #1F59B8;
+  background-color: #1f59b8;
   transition: 0.5s;
-  position:relative;
-  top:2px;
+  position: relative;
+  top: 2px;
 }
 
 #carreset:disabled {
@@ -62,15 +64,16 @@
   background: #ff9900;
 }
 
-#capturelap:hover, #capturelap:focus {
+#capturelap:hover,
+#capturelap:focus {
   background: #e68e22;
 }
 
 #capturelap:active {
   background: #db8113;
   transition: 0.5s;
-  position:relative;
-  top:2px;
+  position: relative;
+  top: 2px;
 }
 
 #capturelap:disabled {
@@ -82,15 +85,16 @@
   background-color: #fbd8bf;
 }
 
-#undoreset:hover, #undoreset:focus {
+#undoreset:hover,
+#undoreset:focus {
   background-color: #e9c6a9;
 }
 
 #undoreset:active {
   background-color: #d8b293;
   transition: 0.5s;
-  position:relative;
-  top:2px;
+  position: relative;
+  top: 2px;
 }
 
 #undoreset:disabled {
@@ -102,15 +106,16 @@
   background-color: #d4dada;
 }
 
-#undofalsefinish:hover, #undofalsefinish:focus {
+#undofalsefinish:hover,
+#undofalsefinish:focus {
   background-color: #ced0d0;
 }
 
 #undofalsefinish:active {
   background-color: #c1c3c3;
   transition: 0.5s;
-  position:relative;
-  top:2px;
+  position: relative;
+  top: 2px;
 }
 
 #undofalsefinish:disabled {
@@ -122,15 +127,16 @@
   background-color: #161e2d;
 }
 
-#endrace:hover, #endrace:focus {
+#endrace:hover,
+#endrace:focus {
   background-color: #121825;
 }
 
 #endrace:active {
   background-color: #0b0f18;
   transition: 0.5s;
-  position:relative;
-  top:2px;
+  position: relative;
+  top: 2px;
 }
 
 #endrace:disabled {
@@ -146,13 +152,14 @@
   background-color: #ff9900;
 }
 
-#startrace:hover, #startrace:focus {
+#startrace:hover,
+#startrace:focus {
   background-color: #e68e22;
 }
 
 #startrace:active {
   background-color: #db8113;
   transition: 0.5s;
-  position:relative;
-  top:2px;
+  position: relative;
+  top: 2px;
 }

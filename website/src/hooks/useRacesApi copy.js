@@ -1,12 +1,17 @@
 import { API, graphqlOperation } from 'aws-amplify';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { deleteRaces } from '../graphql/mutations';
 import { getRaces } from '../graphql/queries';
 import { onAddedRace, onDeletedRaces } from '../graphql/subscriptions';
+import { useUsersContext } from '../store/storeProvider';
+// import * as mutations from '../graphql/mutations';
+import { convertMsToString } from '../support-functions/time';
 
 export const useRacesApi = (eventId) => {
+  const [users, usersIsLoading] = useUsersContext();
   const [isLoading, setIsLoading] = useState(true);
   const [races, setRaces] = useState([]);
+  //const [errorMessage, setErrorMessage] = useState('');
 
   const removeRace = (raceId) => {
     setRaces((prevState) => {
@@ -21,18 +26,54 @@ export const useRacesApi = (eventId) => {
     });
   };
 
+  const addTimeHr = useCallback((race) => {
+    race.laps = race.laps.map((lap) => {
+      lap['timeHr'] = convertMsToString(lap.time);
+      return lap;
+    });
+    return race;
+  }, []);
+
+  const fixLapIDs = useCallback((race) => {
+    race.laps = race.laps.map((lap) => {
+      lap['lapId'] = ('0' + (parseInt(lap['lapId']) + 1)).slice(-2);
+      return lap;
+    });
+    return race;
+  }, []);
+
+  const addUserName = useCallback(
+    (race) => {
+      const user = users.find((user) => user.sub === race.userId);
+      console.debug(user);
+      if (user) {
+        race['username'] = user.Username;
+      } else {
+        race['username'] = 'Username not found'; //TODO add to localisation
+      }
+      return race;
+    },
+    [users]
+  );
+
   // initial data load, need to wait for users to be loaded before getting the races
   // TODO fetching races and users can be done in parallell and then merged when both of them exist
   useEffect(() => {
     if (!eventId) {
       // used to display a message that an event need to be selected
       setIsLoading(false);
-    } else {
+    } else if (eventId && usersIsLoading) {
+      // used to display the loading resources after an event has been selected
+      setIsLoading(true);
+    } else if (!usersIsLoading) {
       console.debug(eventId);
       async function queryApi() {
         const response = await API.graphql(graphqlOperation(getRaces, { eventId: eventId }));
         console.debug('getRaces');
         const races = response.data.getRaces;
+        races.map((race) => addUserName(race));
+        races.map((race) => addTimeHr(race));
+        races.map((race) => fixLapIDs(race));
         setRaces(races);
         setIsLoading(false);
       }
@@ -42,7 +83,7 @@ export const useRacesApi = (eventId) => {
     return () => {
       // Unmounting
     };
-  }, [eventId]);
+  }, [eventId, addUserName, addTimeHr, usersIsLoading]);
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
@@ -74,7 +115,10 @@ export const useRacesApi = (eventId) => {
         next: (event) => {
           console.log('onAddedRace');
           const addedRace = event.value.data.onAddedRace;
-          setRaces((prevState) => [...prevState, addedRace]);
+          const raceWithUsername = addUserName(addedRace);
+          const raceWithTimeHr = addTimeHr(addedRace);
+          console.log(raceWithUsername);
+          setRaces((prevState) => [...prevState, raceWithUsername, raceWithTimeHr]);
         },
       });
     }
@@ -82,17 +126,21 @@ export const useRacesApi = (eventId) => {
     return () => {
       if (subscription) subscription.unsubscribe();
     };
-  }, [eventId]);
+  }, [eventId, addUserName, addTimeHr]);
 
   const sendDelete = async (variables) => {
-    setIsLoading(true);
-    console.debug(variables);
-    API.graphql(graphqlOperation(deleteRaces, variables))
-      .catch((error) => {
-        console.info(error);
-      })
-      .finally(setIsLoading(false));
+    try {
+      setIsLoading(true);
+      console.debug(variables);
+      API.graphql(graphqlOperation(deleteRaces));
+      const response = await API.graphql(graphqlOperation(deleteRaces, variables));
+      console.log(response);
+      setIsLoading(false);
+    } catch (error) {
+      console.debug(error);
+      setIsLoading(false);
+    }
   };
 
-  return [races, isLoading, sendDelete];
+  return [races, isLoading, sendDelete]; //, errorMessage];
 };
