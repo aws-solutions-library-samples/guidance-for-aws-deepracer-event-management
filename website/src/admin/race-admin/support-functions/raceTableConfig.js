@@ -51,7 +51,7 @@ export const ColumnDefinitions = (getUserNameFromId) => {
     {
       id: 'username',
       header: i18next.t('race-admin.username'),
-      cell: (item) => getUserNameFromId(item.userId) || '-',
+      cell: (item) => item.username || '-',
       sortingField: 'username',
       width: 200,
     },
