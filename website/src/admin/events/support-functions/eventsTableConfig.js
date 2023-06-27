@@ -111,26 +111,25 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
     {
       id: 'trackType',
       header: i18next.t('events.track-type'),
-      cell: (item) => GetTrackTypeNameFromId(item.tracks[0].raceConfig.trackType) || '-',
+      cell: (item) => GetTrackTypeNameFromId(item.raceConfig.trackType) || '-',
       sortingField: 'trackType',
     },
     {
       id: 'rankingMethod',
       header: i18next.t('events.race.ranking-method'),
-      cell: (item) => GetRaceTypeNameFromId(item.tracks[0].raceConfig.rankingMethod) || '-',
+      cell: (item) => GetRaceTypeNameFromId(item.raceConfig.rankingMethod) || '-',
       sortingField: 'rankingMethod',
     },
     {
       id: 'raceTimeInMin',
       header: i18next.t('events.race.race-time'),
-      cell: (item) => item.tracks[0].raceConfig.raceTimeInMin || '-',
+      cell: (item) => item.raceConfig.raceTimeInMin || '-',
       sortingField: 'raceTimeInMin',
     },
     {
       id: 'raceNumberOfResets',
       header: i18next.t('events.race.resets-per-lap'),
-      cell: (item) =>
-        GetRaceResetsNameFromId(item.tracks[0].raceConfig.numberOfResetsPerLap) || '-',
+      cell: (item) => GetRaceResetsNameFromId(item.raceConfig.numberOfResetsPerLap) || '-',
       sortingField: 'raceNumberOfResets',
     },
     {
