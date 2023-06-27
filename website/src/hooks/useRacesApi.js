@@ -27,7 +27,8 @@ export const useRacesApi = (eventId) => {
 
   const getUserNameFromId = (userId) => {
     if (userId == null) return;
-
+    console.log('here');
+    console.log(users);
     const user = users.find((user) => user.sub === userId);
     if (user == null) return userId;
 
@@ -48,8 +49,8 @@ export const useRacesApi = (eventId) => {
         console.debug('getRaces');
         const races = response.data.getRaces;
 
-        // Add in the username #250 racer search isn't working
-        var racesData = races.map((r) => ({
+        // Add in the username
+        const racesData = races.map((r) => ({
           ...r,
           username: getUserNameFromId(r.userId),
         }));
@@ -71,9 +72,7 @@ export const useRacesApi = (eventId) => {
     if (eventId) {
       subscription = API.graphql(graphqlOperation(onDeletedRaces, { eventId: eventId })).subscribe({
         next: (event) => {
-          console.log('onDeletedRaces');
           const deletedRaces = event.value.data.onDeletedRaces;
-          console.log(deletedRaces);
           deletedRaces.raceIds.map((raceId) => removeRace(raceId));
         },
         error: (error) => {
@@ -93,8 +92,11 @@ export const useRacesApi = (eventId) => {
     if (eventId) {
       subscription = API.graphql(graphqlOperation(onAddedRace, { eventId: eventId })).subscribe({
         next: (event) => {
-          console.log('onAddedRace');
           const addedRace = event.value.data.onAddedRace;
+
+          // Add in the username
+          addedRace['username'] = getUserNameFromId(addedRace['userId']);
+
           setRaces((prevState) => [...prevState, addedRace]);
         },
       });
@@ -103,7 +105,7 @@ export const useRacesApi = (eventId) => {
     return () => {
       if (subscription) subscription.unsubscribe();
     };
-  }, [eventId]);
+  }, [eventId, users]);
 
   const sendDelete = async (variables) => {
     setIsLoading(true);
