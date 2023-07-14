@@ -1,6 +1,6 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Button, Header, Pagination, Table, TextFilter } from '@cloudscape-design/components';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Flag } from '../../components/flag';
 import { PageLayout } from '../../components/pageLayout';
@@ -11,6 +11,7 @@ import {
   TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 import { useUsersContext } from '../../store/storeProvider';
 import { formatAwsDateTime } from '../../support-functions/time';
 
@@ -24,6 +25,30 @@ export const UsersList = () => {
     ...DefaultPreferences,
     visibleContent: ['Username', 'Flag', 'UserCreateDate'],
   });
+
+  // Help panel
+  const toolsOptionsDispatch = useToolsOptionsDispatch();
+  const helpPanelHidden = true;
+  useEffect(() => {
+    toolsOptionsDispatch({
+      type: 'UPDATE',
+      value: {
+        //isOpen: true,
+        isHidden: helpPanelHidden,
+        // content: (
+        //   <SimpleHelpPanelLayout
+        //     headerContent={t('header', { ns: 'help-admin-user-list' })}
+        //     bodyContent={t('content', { ns: 'help-admin-user-list' })}
+        //     footerContent={t('footer', { ns: 'help-admin-user-list' })}
+        //   />
+        // ),
+      },
+    });
+
+    return () => {
+      toolsOptionsDispatch({ type: 'RESET' });
+    };
+  }, [toolsOptionsDispatch]);
 
   const columnsConfig = [
     {
@@ -165,6 +190,7 @@ export const UsersList = () => {
 
   return (
     <PageLayout
+      helpPanelHidden={helpPanelHidden}
       header={t('users-list.header')}
       breadcrumbs={[
         { text: t('home.breadcrumb'), href: '/' },

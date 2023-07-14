@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 // import { ListOfFleets } from '../components/listOfFleets';
 import * as mutations from '../graphql/mutations';
+import { useToolsOptionsDispatch } from '../store/appLayoutProvider';
 
 import {
   Box,
@@ -54,6 +55,30 @@ const AdminActivation = (props) => {
       window.location.hostname +
       (window.location.port ? ':' + window.location.port : '')
   );
+
+  // Help panel
+  const toolsOptionsDispatch = useToolsOptionsDispatch();
+  const helpPanelHidden = true;
+  useEffect(() => {
+    toolsOptionsDispatch({
+      type: 'UPDATE',
+      value: {
+        //isOpen: true,
+        isHidden: helpPanelHidden,
+        // content: (
+        //   <SimpleHelpPanelLayout
+        //     headerContent={t('header', { ns: 'help-admin-car-activation' })}
+        //     bodyContent={t('content', { ns: 'help-admin-car-activation' })}
+        //     footerContent={t('footer', { ns: 'help-admin-car-activation' })}
+        //   />
+        // ),
+      },
+    });
+
+    return () => {
+      toolsOptionsDispatch({ type: 'RESET' });
+    };
+  }, [toolsOptionsDispatch]);
 
   // convert fleets data to dropdown format
   useEffect(() => {
@@ -137,6 +162,7 @@ const AdminActivation = (props) => {
 
   return (
     <PageLayout
+      helpPanelHidden={helpPanelHidden}
       header={t('car-activation.header')}
       description={t('car-activation.description')}
       breadcrumbs={[

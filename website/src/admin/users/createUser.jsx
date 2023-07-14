@@ -16,7 +16,7 @@ import { CountrySelector } from '../../components/countrySelector';
 import { Flag } from '../../components/flag';
 import { PageLayout } from '../../components/pageLayout';
 import * as mutations from '../../graphql/mutations';
-import { useNotificationsDispatch } from '../../store/appLayoutProvider';
+import { useNotificationsDispatch, useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 
 import awsconfig from '../../config.json';
 
@@ -32,6 +32,7 @@ export function CreateUser() {
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const [countryCode, setCountryCode] = useState('');
   const [addNotification, dismissNotification] = useNotificationsDispatch();
+  const toolsOptionsDispatch = useToolsOptionsDispatch();
 
   async function createUserNow() {
     setButtonDisabled(true);
@@ -116,8 +117,32 @@ export function CreateUser() {
     };
   }, [username, email, tncChecked, countryCode]);
 
+  // Help panel
+  const helpPanelHidden = true;
+  useEffect(() => {
+    toolsOptionsDispatch({
+      type: 'UPDATE',
+      value: {
+        //isOpen: true,
+        isHidden: helpPanelHidden,
+        // content: (
+        //   <SimpleHelpPanelLayout
+        //     headerContent={t('header', { ns: 'help-create-user' })}
+        //     bodyContent={t('content', { ns: 'help-create-user' })}
+        //     footerContent={t('footer', { ns: 'help-create-user' })}
+        //   />
+        // ),
+      },
+    });
+
+    return () => {
+      toolsOptionsDispatch({ type: 'RESET' });
+    };
+  }, [toolsOptionsDispatch]);
+
   return (
     <PageLayout
+      helpPanelHidden={helpPanelHidden}
       header={t('users.header')}
       description={t('users.description')}
       breadcrumbs={[

@@ -244,7 +244,7 @@
   "fleets.created-by": "Created by",
   "fleets.delete-fleet": "Delete fleet",
   "fleets.delete-warning": "Are you sure you want to delete fleet(s)",
-  "fleets.description": "List of fleets.",
+  "fleets.description": "List of fleets",
   "fleets.edit-cars.delete-models": "Delete models",
   "fleets.edit-cars.delete-models-header": "Delete models on cars",
   "fleets.edit-cars.delete-models-message": "Are you sure you want to delete models on cars(s)",

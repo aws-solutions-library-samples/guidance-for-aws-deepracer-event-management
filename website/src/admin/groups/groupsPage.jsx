@@ -1,6 +1,6 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Button, Header, Link, Pagination, Table, TextFilter } from '@cloudscape-design/components';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   DefaultPreferences,
@@ -9,6 +9,7 @@ import {
   TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 
 import { PageLayout } from '../../components/pageLayout';
 import { useGroupsApi } from '../../hooks/useGroupsApi';
@@ -24,6 +25,30 @@ export function GroupsPage() {
     ...DefaultPreferences,
     visibleContent: ['groupName', 'description'],
   });
+
+  // Help panel
+  const toolsOptionsDispatch = useToolsOptionsDispatch();
+  const helpPanelHidden = true;
+  useEffect(() => {
+    toolsOptionsDispatch({
+      type: 'UPDATE',
+      value: {
+        //isOpen: true,
+        isHidden: helpPanelHidden,
+        // content: (
+        //   <SimpleHelpPanelLayout
+        //     headerContent={t('header', { ns: 'help-admin-groups' })}
+        //     bodyContent={t('content', { ns: 'help-admin-groups' })}
+        //     footerContent={t('footer', { ns: 'help-admin-groups' })}
+        //   />
+        // ),
+      },
+    });
+
+    return () => {
+      toolsOptionsDispatch({ type: 'RESET' });
+    };
+  }, [toolsOptionsDispatch]);
 
   const columnsConfig = [
     {
@@ -116,6 +141,7 @@ export function GroupsPage() {
 
   return (
     <PageLayout
+      helpPanelHidden={helpPanelHidden}
       header={t('groups.header')}
       description={t('groups.description')}
       breadcrumbs={[

@@ -1,7 +1,7 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Button, Table, TextFilter } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../../components/pageLayout';
@@ -17,6 +17,8 @@ import {
   TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
+
 import { useFleetsContext, useUsersContext } from '../../store/storeProvider';
 import { ColumnDefinitions, VisibleContentOptions } from './fleetsTableConfig';
 
@@ -31,6 +33,30 @@ const AdminFleets = () => {
   const navigate = useNavigate();
   const columnDefinitions = ColumnDefinitions(getUserNameFromId);
   const visibleContentOptions = VisibleContentOptions();
+
+  // Help panel
+  const toolsOptionsDispatch = useToolsOptionsDispatch();
+  const helpPanelHidden = true;
+  useEffect(() => {
+    toolsOptionsDispatch({
+      type: 'UPDATE',
+      value: {
+        //isOpen: true,
+        isHidden: helpPanelHidden,
+        // content: (
+        //   <SimpleHelpPanelLayout
+        //     headerContent={t('header', { ns: 'help-admin-fleets' })}
+        //     bodyContent={t('content', { ns: 'help-admin-fleets' })}
+        //     footerContent={t('footer', { ns: 'help-admin-fleets' })}
+        //   />
+        // ),
+      },
+    });
+
+    return () => {
+      toolsOptionsDispatch({ type: 'RESET' });
+    };
+  }, [toolsOptionsDispatch]);
 
   // Edit Fleet
   const editFleetHandler = () => {
@@ -124,6 +150,7 @@ const AdminFleets = () => {
 
   return (
     <PageLayout
+      helpPanelHidden={helpPanelHidden}
       header={t('fleets.header')}
       description={t('fleets.description')}
       breadcrumbs={[
