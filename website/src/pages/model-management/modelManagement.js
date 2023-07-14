@@ -7,6 +7,7 @@ import { SpaceBetween } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
 import { PageLayout } from '../../components/pageLayout';
 
+import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 import { formatAwsDateTime } from '../../support-functions/time';
 import { ModelUpload } from './components/modelUpload';
 
@@ -16,6 +17,30 @@ export const ModelMangement = () => {
   const [models, setModels] = useState([]);
   const [selectedModels, setSelectedModels] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Help panel
+  const toolsOptionsDispatch = useToolsOptionsDispatch();
+  const helpPanelHidden = true;
+  useEffect(() => {
+    toolsOptionsDispatch({
+      type: 'UPDATE',
+      value: {
+        //isOpen: true,
+        isHidden: helpPanelHidden,
+        // content: (
+        //   <SimpleHelpPanelLayout
+        //     headerContent={t('header', { ns: 'help-models' })}
+        //     bodyContent={t('content', { ns: 'help-models' })}
+        //     footerContent={t('footer', { ns: 'help-models' })}
+        //   />
+        // ),
+      },
+    });
+
+    return () => {
+      toolsOptionsDispatch({ type: 'RESET' });
+    };
+  }, [toolsOptionsDispatch]);
 
   useEffect(() => {
     const getData = async () => {
@@ -83,6 +108,7 @@ export const ModelMangement = () => {
 
   return (
     <PageLayout
+      helpPanelHidden={helpPanelHidden}
       header={t('models.header')}
       breadcrumbs={[{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]}
     >
