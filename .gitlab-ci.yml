@@ -13,6 +13,7 @@ zip_repo:
     - mrglover-overlay
     - danlndnr
     - csj
+    - hejoro
   stage: zip
   image:
     name: public.ecr.aws/ubuntu/ubuntu:22.10_stable
@@ -21,7 +22,7 @@ zip_repo:
     - apt-get -y install zip
     - echo $CI_COMMIT_REF_NAME > branch.txt
     - echo $EMAIL > email.txt
-    - zip -r drem.zip .
+    - zip -r drem.zip . -x '*node_modules*' -x '*.git*' -x '*.venv*' -x '*cdk.out*'
   artifacts:
     paths:
     - drem.zip
@@ -37,6 +38,7 @@ upload_to_s3:
     - mrglover-overlay
     - danlndnr
     - csj
+    - hejoro
   stage: upload
   image:
     name: public.ecr.aws/aws-cli/aws-cli:latest

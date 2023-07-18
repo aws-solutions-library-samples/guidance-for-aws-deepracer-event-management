@@ -12,7 +12,10 @@ import { useTranslation } from 'react-i18next';
 
 import { PageLayout } from '../../../components/pageLayout';
 import useMutation from '../../../hooks/useMutation';
-import { useNotificationsDispatch } from '../../../store/appLayoutProvider';
+import {
+  useNotificationsDispatch,
+  useToolsOptionsDispatch,
+} from '../../../store/appLayoutProvider';
 import { LapTable } from '../components/lapTable';
 import { breadcrumbs } from '../support-functions/supportFunctions';
 
@@ -25,6 +28,30 @@ export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction,
 
   const messageDisplayTime = 2500;
   const notificationId = 'race_submition';
+
+  // Help panel
+  const toolsOptionsDispatch = useToolsOptionsDispatch();
+  const helpPanelHidden = true;
+  useEffect(() => {
+    toolsOptionsDispatch({
+      type: 'UPDATE',
+      value: {
+        //isOpen: true,
+        isHidden: helpPanelHidden,
+        // content: (
+        //   <SimpleHelpPanelLayout
+        //     headerContent={t('header', { ns: 'help-admin-race-finish' })}
+        //     bodyContent={t('content', { ns: 'help-admin-race-finish' })}
+        //     footerContent={t('footer', { ns: 'help-admin-race-finish' })}
+        //   />
+        // ),
+      },
+    });
+
+    return () => {
+      toolsOptionsDispatch({ type: 'RESET' });
+    };
+  }, [toolsOptionsDispatch]);
 
   // Update submit message in modal depending on addRace mutation result
   useEffect(() => {
@@ -183,6 +210,7 @@ export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction,
   );
   return (
     <PageLayout
+      helpPanelHidden={helpPanelHidden}
       breadcrumbs={breadcrumbs}
       header={t('timekeeper.end-session.page-header')}
       description={t('timekeeper.end-session.page-description')}

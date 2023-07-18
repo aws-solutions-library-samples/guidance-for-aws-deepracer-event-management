@@ -3,10 +3,14 @@ import { useEffect, useState } from 'react';
 import { deleteRaces } from '../graphql/mutations';
 import { getRaces } from '../graphql/queries';
 import { onAddedRace, onDeletedRaces } from '../graphql/subscriptions';
+import { usePermissionsContext } from '../store/permissions/permissionsProvider';
+import { useUsersApi } from './useUsersApi';
 
 export const useRacesApi = (eventId) => {
+  const permissions = usePermissionsContext();
   const [isLoading, setIsLoading] = useState(true);
   const [races, setRaces] = useState([]);
+  const [users] = useUsersApi(permissions.api.users);
 
   const removeRace = (raceId) => {
     setRaces((prevState) => {
@@ -21,8 +25,17 @@ export const useRacesApi = (eventId) => {
     });
   };
 
+  const getUserNameFromId = (userId) => {
+    if (userId == null) return;
+    const user = users.find((user) => user.sub === userId);
+    if (user == null) return userId;
+
+    return user.Username;
+  };
+
   // initial data load, need to wait for users to be loaded before getting the races
-  // TODO fetching races and users can be done in parallell and then merged when both of them exist
+  // TODO fetching races and users can be done in parallel and then merged when both of them exist
+  //      suspect this can be improved with a re-write - DS
   useEffect(() => {
     if (!eventId) {
       // used to display a message that an event need to be selected
@@ -33,7 +46,14 @@ export const useRacesApi = (eventId) => {
         const response = await API.graphql(graphqlOperation(getRaces, { eventId: eventId }));
         console.debug('getRaces');
         const races = response.data.getRaces;
-        setRaces(races);
+
+        // Add in the username
+        const racesData = races.map((r) => ({
+          ...r,
+          username: getUserNameFromId(r.userId),
+        }));
+
+        setRaces(racesData);
         setIsLoading(false);
       }
       queryApi();
@@ -42,7 +62,7 @@ export const useRacesApi = (eventId) => {
     return () => {
       // Unmounting
     };
-  }, [eventId]);
+  }, [eventId, users]);
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
@@ -50,9 +70,7 @@ export const useRacesApi = (eventId) => {
     if (eventId) {
       subscription = API.graphql(graphqlOperation(onDeletedRaces, { eventId: eventId })).subscribe({
         next: (event) => {
-          console.log('onDeletedRaces');
           const deletedRaces = event.value.data.onDeletedRaces;
-          console.log(deletedRaces);
           deletedRaces.raceIds.map((raceId) => removeRace(raceId));
         },
         error: (error) => {
@@ -72,8 +90,11 @@ export const useRacesApi = (eventId) => {
     if (eventId) {
       subscription = API.graphql(graphqlOperation(onAddedRace, { eventId: eventId })).subscribe({
         next: (event) => {
-          console.log('onAddedRace');
           const addedRace = event.value.data.onAddedRace;
+
+          // Add in the username
+          addedRace['username'] = getUserNameFromId(addedRace['userId']);
+
           setRaces((prevState) => [...prevState, addedRace]);
         },
       });
@@ -82,7 +103,7 @@ export const useRacesApi = (eventId) => {
     return () => {
       if (subscription) subscription.unsubscribe();
     };
-  }, [eventId]);
+  }, [eventId, users]);
 
   const sendDelete = async (variables) => {
     setIsLoading(true);

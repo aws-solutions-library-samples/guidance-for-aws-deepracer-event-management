@@ -1,5 +1,6 @@
 import { Flashbar } from '@cloudscape-design/components';
 import React, { createContext, useContext, useEffect, useReducer, useState } from 'react';
+import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
 import { useWindowSize } from '../hooks/useWindowsSize';
 
 const NavigationOptionsHandler = (state, action) => {
@@ -29,6 +30,16 @@ export function useSplitPanelOptionsDispatch() {
   return useContext(splitPanelOptionsDispatchContext);
 }
 
+const toolsOptionsContext = createContext();
+export function useToolsOptions() {
+  return useContext(toolsOptionsContext);
+}
+
+const toolsOptionsDispatchContext = createContext();
+export function useToolsOptionsDispatch() {
+  return useContext(toolsOptionsDispatchContext);
+}
+
 const notificationContext = createContext();
 export function useNotifications() {
   return useContext(notificationContext);
@@ -52,6 +63,20 @@ const SplitPanelOptionsHandler = (state, action) => {
   }
 };
 
+const toolsDefaultSettings = {
+  isOpen: false,
+  isHidden: false,
+  content: <SimpleHelpPanelLayout headerContent="No info available" />,
+};
+
+const ToolsOptionsHandler = (state, action) => {
+  if (action.type === 'UPDATE') {
+    return { ...state, ...action.value };
+  } else if (action.type === 'RESET') {
+    return { ...state, content: <SimpleHelpPanelLayout headerContent="No info available" /> };
+  }
+};
+
 export const AppLayoutProvider = (props) => {
   const windowSize = useWindowSize();
   const [sideNavOptions, dispatchNavigationOptions] = useReducer(NavigationOptionsHandler, {
@@ -61,6 +86,8 @@ export const AppLayoutProvider = (props) => {
     SplitPanelOptionsHandler,
     splitPanelDefaultSettings
   );
+
+  const [toolOptions, dispatchToolOptions] = useReducer(ToolsOptionsHandler, toolsDefaultSettings);
 
   const [notifications, setNotifications] = useState([]);
 
@@ -98,13 +125,19 @@ export const AppLayoutProvider = (props) => {
       <splitPanelOptionsDispatchContext.Provider value={dispatchSplitPanelOptions}>
         <sideNavOptionsContext.Provider value={sideNavOptions}>
           <sideNavOptionsDispatch.Provider value={dispatchNavigationOptions}>
-            <notificationContext.Provider
-              value={<Flashbar items={notifications} stackItems={notifications.length > 3} />}
-            >
-              <notificationDispatchContext.Provider value={[addNotification, dismissNotification]}>
-                {props.children}
-              </notificationDispatchContext.Provider>
-            </notificationContext.Provider>
+            <toolsOptionsContext.Provider value={toolOptions}>
+              <toolsOptionsDispatchContext.Provider value={dispatchToolOptions}>
+                <notificationContext.Provider
+                  value={<Flashbar items={notifications} stackItems={notifications.length > 3} />}
+                >
+                  <notificationDispatchContext.Provider
+                    value={[addNotification, dismissNotification]}
+                  >
+                    {props.children}
+                  </notificationDispatchContext.Provider>
+                </notificationContext.Provider>
+              </toolsOptionsDispatchContext.Provider>
+            </toolsOptionsContext.Provider>
           </sideNavOptionsDispatch.Provider>
         </sideNavOptionsContext.Provider>
       </splitPanelOptionsDispatchContext.Provider>

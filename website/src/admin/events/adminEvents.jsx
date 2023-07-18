@@ -17,7 +17,10 @@ import {
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import useMutation from '../../hooks/useMutation';
-import { useSplitPanelOptionsDispatch } from '../../store/appLayoutProvider';
+import {
+  useSplitPanelOptionsDispatch,
+  useToolsOptionsDispatch,
+} from '../../store/appLayoutProvider';
 import { useEventsContext, useFleetsContext, useUsersContext } from '../../store/storeProvider';
 import { EventDetailsPanelContent } from './components/eventDetailsPanelContent';
 import { ColumnDefinitions, VisibleContentOptions } from './support-functions/eventsTableConfig';
@@ -43,6 +46,30 @@ const AdminEvents = () => {
   const editEventHandler = () => {
     navigate('/admin/events/edit', { state: SelectedEventsInTable[0] });
   };
+
+  // Help panel
+  const toolsOptionsDispatch = useToolsOptionsDispatch();
+  const helpPanelHidden = true;
+  useEffect(() => {
+    toolsOptionsDispatch({
+      type: 'UPDATE',
+      value: {
+        //isOpen: true,
+        isHidden: helpPanelHidden,
+        // content: (
+        //   <SimpleHelpPanelLayout
+        //     headerContent={t('header', { ns: 'help-admin-events' })}
+        //     bodyContent={t('content', { ns: 'help-admin-events' })}
+        //     footerContent={t('footer', { ns: 'help-admin-events' })}
+        //   />
+        // ),
+      },
+    });
+
+    return () => {
+      toolsOptionsDispatch({ type: 'RESET' });
+    };
+  }, [toolsOptionsDispatch]);
 
   // Add Event
   const addEventHandler = () => {
@@ -157,6 +184,7 @@ const AdminEvents = () => {
   // JSX
   return (
     <PageLayout
+      helpPanelHidden={helpPanelHidden}
       header={t('events.header')}
       description={t('events.description')}
       breadcrumbs={[

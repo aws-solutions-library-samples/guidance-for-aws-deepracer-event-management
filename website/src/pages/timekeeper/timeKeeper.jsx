@@ -17,8 +17,8 @@ export const Timekeeper = () => {
 
   const sideNavOptionsDispatch = useSideNavOptionsDispatch();
 
-  console.info(selectedEvent);
-  console.info(selectedTrack);
+  // console.info(selectedEvent);
+  // console.info(selectedTrack);
   // change event info and race config when a user select another event
   useEffect(() => {
     if (selectedEvent.eventId !== race.eventId) {
