@@ -34,6 +34,11 @@ function App() {
   const { eventId } = useParams();
 
   const desiredLanguage = searchParams.get("lang")?.toString();
+  
+  let trackId = searchParams.get("trackId")?.toString();
+  if (typeof trackId === "undefined") {
+    trackId = "1";
+  }
 
   const startTimer = () => {
     if (!timerState || isPaused) {
@@ -292,7 +297,7 @@ function App() {
       query: queries.getLeaderboard,
       variables: {
         eventId: eventId,
-        trackId: 1,
+        trackId: trackId,
       },
     }) as Promise<GraphQLResult<any>>
 
@@ -302,7 +307,7 @@ function App() {
       const leaderboardConfig = response.data.getLeaderboard.config;
 
       (helpers as any).UpdateLeaderboard(leaderboardData);
-      (helpers as any).SetEventName(leaderboardConfig.headerText.toUpperCase());
+      (helpers as any).SetEventName(leaderboardConfig.leaderBoardTitle.toUpperCase());
 
       // check if lower thirds is showing, if not, then show leaderboard.
       if (!lowerThirdStateIN) {
@@ -314,7 +319,7 @@ function App() {
 
     // subscribe to "obNewOverlayInfo" to receive live messages for in progress race data.
     const overlaySubscription = (API.graphql<GraphQLSubscription<any>>(
-      graphqlOperation(subscriptions.onNewOverlayInfo, { eventId: eventId })) as any
+      graphqlOperation(subscriptions.onNewOverlayInfo, { eventId: eventId, trackId: trackId })) as any
     ).subscribe({
       next: ({ provider, value }: any) => {
         const raceInfo = value.data.onNewOverlayInfo;
@@ -328,7 +333,7 @@ function App() {
 
     // subscribe to "onNewLeaderboardEntry" so that we can refresh the leaderboard data when a race is "submitted"
     const leaderboardSubscription = (API.graphql<GraphQLSubscription<any>>(
-      graphqlOperation(subscriptions.onNewLeaderboardEntry, { eventId: eventId, trackId: 1 })) as any
+      graphqlOperation(subscriptions.onNewLeaderboardEntry, { eventId: eventId, trackId: trackId })) as any
     ).subscribe({
       next: ({ provider, value }: any) => {
 
@@ -337,7 +342,7 @@ function App() {
           query: queries.getLeaderboard,
           variables: {
             eventId: eventId,
-            trackId: 1,
+            trackId: trackId,
           },
         }) as Promise<GraphQLResult<any>>
 
