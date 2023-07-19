@@ -132,7 +132,7 @@ const RaceAdmin = () => {
   }, [SelectedRacesInTable, splitPanelOptionsDispatch, selectPanelContent]);
 
   // Help panel
-  const helpPanelHidden = false;
+  const helpPanelHidden = true;
   useEffect(() => {
     toolsOptionsDispatch({
       type: 'UPDATE',
