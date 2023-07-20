@@ -22,25 +22,21 @@ def lambda_handler(event, context):
         )
 
         now = datetime.now()
-        unused_activations = []
+        expired_activations = []
         for response in response_iterator:
             for activation in response["ActivationList"]:
-                if activation["RegistrationsCount"] == 0:
-                    # print("not used")
-                    if activation["ExpirationDate"].isoformat() < now.isoformat():
-                        # print("too old")
-                        unused_activations.append(activation)
+                # if activation is expired, delete it
+                if activation["ExpirationDate"].isoformat() < now.isoformat():
+                    expired_activations.append(activation)
 
-        for activation in unused_activations:
-            logger.info(activation["ActivationId"])
+        for activation in expired_activations:
             response = client.delete_activation(ActivationId=activation["ActivationId"])
             logger.info(
                 json.dumps(activation, default=http_response.json_serial, indent=4)
             )
-            # print('')
 
         return_data = {
-            "unusedActivationsRemoved": len(unused_activations),
+            "expiredActivationsRemoved": len(expired_activations),
         }
 
         logger.info(return_data)
