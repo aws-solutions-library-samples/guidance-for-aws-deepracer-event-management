@@ -153,6 +153,7 @@
   "events.type.other": "Other",
 
   "events.leaderboard.header": "Header text",
+  "events.leaderboard.links": "Leaderboard Links",
   "events.leaderboard.header-description": "Text displayed on top of the leaderboard",
   "events.leaderboard.footer": "Footer text",
   "events.leaderboard.footer-description": "Text displayed at the bottom of the leaderboard",

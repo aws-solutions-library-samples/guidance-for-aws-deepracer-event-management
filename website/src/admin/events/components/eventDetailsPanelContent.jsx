@@ -49,24 +49,6 @@ export const EventDetailsPanelContent = ({ event }) => {
         )}
         {attributeField(t('events.sponsor.label'), event.sponsor || '-')}
         {attributeField(
-          t('events.streaming-overlay-link'),
-
-          <EventLinksButtons
-            href={`${awsconfig.Urls.streamingOverlayWebsite}/${event.eventId.toString()}`}
-            linkTextPrimary={t('events.streaming-overlay-link-same-tab')}
-            linkTextExternal={t('events.streaming-overlay-link-new-tab')}
-          />
-        )}
-        {attributeField(
-          t('events.streaming-overlay-link-chroma'),
-
-          <EventLinksButtons
-            href={`${awsconfig.Urls.streamingOverlayWebsite}/${event.eventId.toString()}?chroma=1`}
-            linkTextPrimary={t('events.streaming-overlay-link-chroma-same-tab')}
-            linkTextExternal={t('events.streaming-overlay-link-chroma-new-tab')}
-          />
-        )}
-        {attributeField(
           t('events.landing-page-link'),
           <EventLinksButtons
             href={`${awsconfig.Urls.leaderboardWebsite}/landing-page/${event.eventId.toString()}/`}
