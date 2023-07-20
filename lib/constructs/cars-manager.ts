@@ -209,6 +209,48 @@ export class CarManager extends Construct {
             })
         );
 
+        // car_activation_clean method - clean up unactivated and expired hybrid activations
+        const car_activation_clean_handler = new lambdaPython.PythonFunction(
+            this,
+            'car_activation_clean_handler',
+            {
+                entry: 'lib/lambdas/car_activation_clean/',
+                description: 'Car Activation clean up unused activations',
+                index: 'index.py',
+                handler: 'lambda_handler',
+                timeout: Duration.minutes(2),
+                runtime: props.lambdaConfig.runtime,
+                tracing: lambda.Tracing.ACTIVE,
+                memorySize: 128,
+                architecture: props.lambdaConfig.architecture,
+                bundling: {
+                    image: props.lambdaConfig.bundlingImage,
+                },
+                layers: [
+                    props.lambdaConfig.layersConfig.helperFunctionsLayer,
+                    props.lambdaConfig.layersConfig.powerToolsLayer,
+                ],
+
+                environment: {
+                    POWERTOOLS_SERVICE_NAME: 'car_activation_clean',
+                    LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+                },
+            }
+        );
+
+        new awsEvents.Rule(this, 'car_activation_clean_handler_cron', {
+            schedule: awsEvents.Schedule.cron({ minute: '0', hour: '1' }),
+            targets: [new awsEventsTargets.LambdaFunction(car_activation_clean_handler)],
+        });
+
+        car_activation_clean_handler.addToRolePolicy(
+            new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ['ssm:DeleteActivation', 'ssm:DescribeActivations'],
+                resources: ['*'],
+            })
+        );
+
         // Define the data source for the API
         const car_activation_data_source = props.appsyncApi.api.addLambdaDataSource(
             'car_activation_data_source',

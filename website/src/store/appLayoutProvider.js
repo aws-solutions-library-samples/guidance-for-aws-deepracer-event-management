@@ -65,7 +65,7 @@ const SplitPanelOptionsHandler = (state, action) => {
 
 const toolsDefaultSettings = {
   isOpen: false,
-  isHidden: false,
+  isHidden: true,
   content: <SimpleHelpPanelLayout headerContent="No info available" />,
 };
 
