@@ -15,7 +15,7 @@
   },
   "eslint.validate": ["javascript"],
   "editor.formatOnSave": true,
-  "python.formatting.provider": "black",
+  "python.formatting.provider": "none",
   "python.formatting.blackArgs": ["--experimental-string-processing"],
   "python.linting.flake8Enabled": true,
   "python.linting.enabled": true,
@@ -29,5 +29,8 @@
     "website/public/locales",
     "website-leaderboard/public/locales",
     "website-stream-overlays/public/locales"
-  ]
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  }
 }
