@@ -21,6 +21,7 @@ import { AdminQuarantine } from '../admin/model-management/quarantine';
 import { EditRace } from '../admin/race-admin/pages/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { ProfileHome } from '../admin/user-profile/profile';
+// import { ToolsContent } from '../admin/users/common-components';
 import { CreateUser } from '../admin/users/createUser';
 import { UsersList } from '../admin/users/usersList';
 import { CommentatorRaceStats } from '../commentator/race-stats';
@@ -34,6 +35,8 @@ import {
   useSideNavOptionsDispatch,
   useSplitPanelOptions,
   useSplitPanelOptionsDispatch,
+  useToolsOptions,
+  useToolsOptionsDispatch,
 } from '../store/appLayoutProvider';
 import { usePermissionsContext } from '../store/permissions/permissionsProvider';
 import { useSelectedEventContext, useSelectedTrackContext } from '../store/storeProvider';
@@ -121,6 +124,10 @@ export function TopNav(props) {
 
   const permissions = usePermissionsContext();
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
+
+  //const [toolsOpen, setToolsOpen] = useState(true);
+  const toolsOptions = useToolsOptions();
+  const toolsOptionsDispatch = useToolsOptionsDispatch();
 
   const defaultSideNavItems = [
     {
@@ -306,7 +313,12 @@ export function TopNav(props) {
       <AppLayout
         stickyNotifications
         notifications={notifications}
-        toolsHide
+        tools={toolsOptions.content}
+        toolsOpen={toolsOptions.isOpen}
+        toolsHide={toolsOptions.isHidden}
+        onToolsChange={(item) =>
+          toolsOptionsDispatch({ type: 'UPDATE', value: { isOpen: item.detail.open } })
+        }
         headerSelector="#h"
         ariaLabels={{ navigationClose: 'close' }}
         navigationOpen={sideNavOptions.isOpen}

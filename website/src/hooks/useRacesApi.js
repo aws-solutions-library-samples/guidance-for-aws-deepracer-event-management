@@ -27,8 +27,6 @@ export const useRacesApi = (eventId) => {
 
   const getUserNameFromId = (userId) => {
     if (userId == null) return;
-    console.log('here');
-    console.log(users);
     const user = users.find((user) => user.sub === userId);
     if (user == null) return userId;
 

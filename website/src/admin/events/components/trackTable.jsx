@@ -24,6 +24,24 @@ export const TrackTable = ({ eventId, tracks }) => {
               linkTextExternal={t('events.leaderboard-link-new-tab')}
             />
           ),
+          streamingOverlayLinks: (
+            <EventLinksButtons
+              href={`${
+                awsconfig.Urls.streamingOverlayWebsite
+              }/${eventId.toString()}&track=${track.trackId.toString()}`}
+              linkTextPrimary={t('events.streaming-overlay-link-same-tab')}
+              linkTextExternal={t('events.streaming-overlay-link-new-tab')}
+            />
+          ),
+          streamingOverlayChromaLinks: (
+            <EventLinksButtons
+              href={`${
+                awsconfig.Urls.streamingOverlayWebsite
+              }/${eventId.toString()}&track=${track.trackId.toString()}&chroma=1`}
+              linkTextPrimary={t('events.streaming-overlay-link-same-tab')}
+              linkTextExternal={t('events.streaming-overlay-link-new-tab')}
+            />
+          ),
         };
       })
     );
@@ -32,30 +50,40 @@ export const TrackTable = ({ eventId, tracks }) => {
   const columnsConfig = [
     {
       id: 'trackId',
-      header: 'Track',
+      header: t('events.track-type'),
       cell: (item) => item.trackId || '-',
       width: 100,
       minWidth: 100,
     },
     {
       id: 'fleetId',
-      header: 'Car fleet',
+      header: t('events.car-fleet'),
       cell: (item) => getFleetNameFromId(item.fleetId) || '-',
     },
     {
       id: 'leaderBoardTitle',
-      header: 'Header Text',
+      header: t('events.leaderboard.header'),
       cell: (item) => item.leaderBoardTitle || '-',
     },
     {
       id: 'leaderBoardFooter',
-      header: 'Footer Text',
+      header: t('events.leaderboard.footer'),
       cell: (item) => item.leaderBoardFooter || '-',
     },
     {
       id: 'leaderboardLinks',
-      header: 'Leaderboard Links',
+      header: t('events.leaderboard.links'),
       cell: (item) => item.leaderboardLinks || '-',
+    },
+    {
+      id: 'streamingOverlayLinks',
+      header: t('events.streaming-overlay-link'),
+      cell: (item) => item.streamingOverlayLinks || '-',
+    },
+    {
+      id: 'streamingOverlayChromaLinks',
+      header: t('events.streaming-overlay-link-chroma'),
+      cell: (item) => item.streamingOverlayLinks || '-',
     },
   ];
   console.info(tableItems);

@@ -22,7 +22,7 @@ const ActualRacerStats = () => {
   const selectedTrack = useSelectedTrackContext();
   const [actualRacer, SetActualRacer] = useState({});
 
-  const [fastesRacerTime, SetFastesRacerTime] = useState({});
+  const [fastestRacerTime, SetFastestRacerTime] = useState({});
   const [slowestRacerTime, SetSlowestRacerTime] = useState({});
   const [lapsCount, SetLapsCount] = useState('-');
   const [invalidCount, SetInvalidCount] = useState('-');
@@ -45,7 +45,7 @@ const ActualRacerStats = () => {
   };
 
   const clearRacerStats = () => {
-    SetFastesRacerTime({});
+    SetFastestRacerTime({});
     SetSlowestRacerTime({});
     SetLapsCount('-');
     SetInvalidCount('-');
@@ -62,7 +62,9 @@ const ActualRacerStats = () => {
       const eventId = selectedEvent.eventId;
 
       SetSubscription(
-        API.graphql(graphqlOperation(onNewOverlayInfo, { eventId: eventId, trackId: selectedTrack.trackId })).subscribe({
+        API.graphql(
+          graphqlOperation(onNewOverlayInfo, { eventId: eventId, trackId: selectedTrack.trackId })
+        ).subscribe({
           next: (event) => {
             const eventData = event.value.data.onNewOverlayInfo;
             if (eventData.userId !== actualRacer.userId) {
@@ -93,7 +95,7 @@ const ActualRacerStats = () => {
     const lapCount = laps.length;
     const lapsSorted = laps.filter((lap) => lap.isValid === true).sort((a, b) => a.time > b.time);
 
-    SetFastesRacerTime(lapsSorted[0] || {});
+    SetFastestRacerTime(lapsSorted[0] || {});
     SetSlowestRacerTime(lapsSorted.pop() || {});
     SetLapsCount(lapCount);
     SetInvalidCount(lapCount - lapsSorted.length);
@@ -197,7 +199,7 @@ const ActualRacerStats = () => {
         >
           <ColumnLayout columns={2} borders="horizontal">
             <ValueWithLabel label={t('commentator.race.racerFastestLap')}>
-              <RaceTimeAsString timeInMS={fastesRacerTime.time}></RaceTimeAsString>
+              <RaceTimeAsString timeInMS={fastestRacerTime.time}></RaceTimeAsString>
             </ValueWithLabel>
             <ValueWithLabel label={t('commentator.race.racerSlowestLap')}>
               <RaceTimeAsString timeInMS={slowestRacerTime.time}></RaceTimeAsString>

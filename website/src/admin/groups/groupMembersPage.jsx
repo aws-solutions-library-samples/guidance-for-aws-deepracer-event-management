@@ -22,7 +22,7 @@ import {
   TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useNotificationsDispatch } from '../../store/appLayoutProvider';
+import { useNotificationsDispatch, useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 import { useUsersContext } from '../../store/storeProvider';
 import { formatAwsDateTime } from '../../support-functions/time';
 import {
@@ -41,6 +41,30 @@ export function GroupMembersPage() {
   const [addNotification, dismissNotification] = useNotificationsDispatch();
 
   const [users] = useUsersContext();
+
+  // Help panel
+  const toolsOptionsDispatch = useToolsOptionsDispatch();
+  const helpPanelHidden = true;
+  useEffect(() => {
+    toolsOptionsDispatch({
+      type: 'UPDATE',
+      value: {
+        //isOpen: true,
+        isHidden: helpPanelHidden,
+        // content: (
+        //   <SimpleHelpPanelLayout
+        //     headerContent={t('header', { ns: 'help-admin-group-members' })}
+        //     bodyContent={t('content', { ns: 'help-admin-group-members' })}
+        //     footerContent={t('footer', { ns: 'help-admin-group-members' })}
+        //   />
+        // ),
+      },
+    });
+
+    return () => {
+      toolsOptionsDispatch({ type: 'RESET' });
+    };
+  }, [toolsOptionsDispatch]);
 
   useEffect(() => {
     const getMembersInGroup = async () => {
@@ -302,6 +326,7 @@ export function GroupMembersPage() {
 
   return (
     <PageLayout
+      helpPanelHidden={helpPanelHidden}
       header={t('groups.detail.content-header', { groupName })}
       description={t('groups.detail.content-description', { groupName })}
       breadcrumbs={[

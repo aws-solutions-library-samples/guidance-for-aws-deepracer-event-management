@@ -14,6 +14,7 @@ import { EventSelectorModal } from '../../../components/eventSelectorModal';
 import { PageLayout } from '../../../components/pageLayout';
 import useMutation from '../../../hooks/useMutation';
 import { RacesStatusEnum } from '../../../hooks/usePublishOverlay';
+import { useToolsOptionsDispatch } from '../../../store/appLayoutProvider';
 import { useSelectedEventContext, useSelectedTrackContext } from '../../../store/storeProvider';
 import { RacerSelector } from '../components/racerSelector.jsx';
 import { RacesDoneByUser } from '../components/racesDoneByUser';
@@ -38,6 +39,30 @@ export const RaceSetupPage = ({ onNext }) => {
     isInvalid: true,
     isDisabled: false,
   });
+
+  // Help panel
+  const toolsOptionsDispatch = useToolsOptionsDispatch();
+  const helpPanelHidden = true;
+  useEffect(() => {
+    toolsOptionsDispatch({
+      type: 'UPDATE',
+      value: {
+        //isOpen: true,
+        isHidden: helpPanelHidden,
+        // content: (
+        //   <SimpleHelpPanelLayout
+        //     headerContent={t('header', { ns: 'help-admin-race-setup' })}
+        //     bodyContent={t('content', { ns: 'help-admin-race-setup' })}
+        //     footerContent={t('footer', { ns: 'help-admin-race-setup' })}
+        //   />
+        // ),
+      },
+    });
+
+    return () => {
+      toolsOptionsDispatch({ type: 'RESET' });
+    };
+  }, [toolsOptionsDispatch]);
 
   // Show event selector modal if no event has been selected, timekeeper must have an event selected to work
   useEffect(() => {
@@ -118,6 +143,7 @@ export const RaceSetupPage = ({ onNext }) => {
 
   return (
     <PageLayout
+      helpPanelHidden={helpPanelHidden}
       breadcrumbs={breadcrumbs}
       header={`${t('timekeeper.race-setup-page.page-header')}: ${selectedEvent.eventName} ${t(
         'timekeeper.race-setup-page.racing-on-trackId'

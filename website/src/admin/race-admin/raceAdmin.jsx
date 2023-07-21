@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { DeleteModal, ItemList } from '../../components/deleteModal';
+import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
 import { DrSplitPanel } from '../../components/split-panels/dr-split-panel';
 import {
@@ -15,7 +16,10 @@ import {
   TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useSplitPanelOptionsDispatch } from '../../store/appLayoutProvider';
+import {
+  useSplitPanelOptionsDispatch,
+  useToolsOptionsDispatch,
+} from '../../store/appLayoutProvider';
 import {
   useRacesContext,
   useSelectedEventContext,
@@ -27,13 +31,14 @@ import { MultiChoicePanelContent } from './components/multiChoicePanelContent';
 import { ColumnDefinitions, VisibleContentOptions } from './support-functions/raceTableConfig';
 
 const RaceAdmin = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-races']);
   const selectedEvent = useSelectedEventContext();
   const [, , getUserNameFromId] = useUsersContext();
   const [races, loading, sendDelete] = useRacesContext();
   const [SelectedRacesInTable, setSelectedRacesInTable] = useState([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
+  const toolsOptionsDispatch = useToolsOptionsDispatch();
 
   const [preferences, setPreferences] = useLocalStorage('DREM-races-table-preferences', {
     ...DefaultPreferences,
@@ -126,6 +131,29 @@ const RaceAdmin = () => {
     };
   }, [SelectedRacesInTable, splitPanelOptionsDispatch, selectPanelContent]);
 
+  // Help panel
+  const helpPanelHidden = true;
+  useEffect(() => {
+    toolsOptionsDispatch({
+      type: 'UPDATE',
+      value: {
+        //isOpen: true,
+        isHidden: helpPanelHidden,
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-races' })}
+            bodyContent={t('content', { ns: 'help-admin-races' })}
+            footerContent={t('footer', { ns: 'help-admin-races' })}
+          />
+        ),
+      },
+    });
+
+    return () => {
+      toolsOptionsDispatch({ type: 'RESET' });
+    };
+  }, [toolsOptionsDispatch]);
+
   const raceTable = (
     <Table
       {...collectionProps}
@@ -172,6 +200,7 @@ const RaceAdmin = () => {
   // JSX
   return (
     <PageLayout
+      helpPanelHidden={helpPanelHidden}
       header={t('race-admin.header')}
       description={t('race-admin.description')}
       breadcrumbs={[
