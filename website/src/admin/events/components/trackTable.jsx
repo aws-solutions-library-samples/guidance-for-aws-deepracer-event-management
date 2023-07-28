@@ -83,7 +83,7 @@ export const TrackTable = ({ eventId, tracks }) => {
     {
       id: 'streamingOverlayChromaLinks',
       header: t('events.streaming-overlay-link-chroma'),
-      cell: (item) => item.streamingOverlayLinks || '-',
+      cell: (item) => item.streamingOverlayChromaLinks || '-',
     },
   ];
   console.info(tableItems);
