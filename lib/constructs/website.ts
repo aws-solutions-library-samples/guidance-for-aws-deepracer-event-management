@@ -1,4 +1,4 @@
-import { Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { RemovalPolicy } from 'aws-cdk-lib';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as cloudfront_origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -11,8 +11,8 @@ export interface WebsiteProps {
     cdnDistribution?: cloudfront.Distribution;
     contentPath?: string;
     pathPattern?: string;
+    lifecycleRules?: s3.LifecycleRule[];
 }
-
 export class Website extends Construct {
     public readonly origin: cloudfront.IOrigin;
     public readonly sourceBucket: s3.Bucket;
@@ -28,10 +28,7 @@ export class Website extends Construct {
             enforceSSL: true,
             autoDeleteObjects: true,
             removalPolicy: RemovalPolicy.DESTROY,
-            lifecycleRules: [
-                { expiration: Duration.days(30) },
-                { abortIncompleteMultipartUploadAfter: Duration.days(1) },
-            ],
+            lifecycleRules: props.lifecycleRules,
         });
 
         this.sourceBucket = sourceBucket;
