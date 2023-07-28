@@ -28,7 +28,7 @@ export const TrackTable = ({ eventId, tracks }) => {
             <EventLinksButtons
               href={`${
                 awsconfig.Urls.streamingOverlayWebsite
-              }/${eventId.toString()}&track=${track.trackId.toString()}`}
+              }/${eventId.toString()}?trackId=${track.trackId.toString()}`}
               linkTextPrimary={t('events.streaming-overlay-link-same-tab')}
               linkTextExternal={t('events.streaming-overlay-link-new-tab')}
             />
@@ -37,7 +37,7 @@ export const TrackTable = ({ eventId, tracks }) => {
             <EventLinksButtons
               href={`${
                 awsconfig.Urls.streamingOverlayWebsite
-              }/${eventId.toString()}&track=${track.trackId.toString()}&chroma=1`}
+              }/${eventId.toString()}?trackId=${track.trackId.toString()}&chroma=1`}
               linkTextPrimary={t('events.streaming-overlay-link-same-tab')}
               linkTextExternal={t('events.streaming-overlay-link-new-tab')}
             />
@@ -83,7 +83,7 @@ export const TrackTable = ({ eventId, tracks }) => {
     {
       id: 'streamingOverlayChromaLinks',
       header: t('events.streaming-overlay-link-chroma'),
-      cell: (item) => item.streamingOverlayLinks || '-',
+      cell: (item) => item.streamingOverlayChromaLinks || '-',
     },
   ];
   console.info(tableItems);
