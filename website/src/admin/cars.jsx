@@ -7,26 +7,29 @@ import {
   ButtonDropdown,
   Header,
   Pagination,
+  PropertyFilter,
   SpaceBetween,
   Table,
-  TextFilter,
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 import { useTranslation } from 'react-i18next';
+import {
+  ColumnsConfig,
+  FilteringProperties,
+  VisibleContentOptions,
+} from '../components/cars-table/carTableConfig';
 import EditCarsModal from '../components/editCarsModal';
 import { PageLayout } from '../components/pageLayout';
 import {
-  DefaultPreferences,
-  EmptyState,
-  MatchesCountText,
-  TablePreferences,
-} from '../components/tableConfig';
+  PropertyFilterI18nStrings,
+  TableEmptyState,
+  TableNoMatchState,
+} from '../components/tableCommon';
+import { DefaultPreferences, MatchesCountText, TablePreferences } from '../components/tableConfig';
 import { useToolsOptionsDispatch } from '../store/appLayoutProvider';
-
-import { ColumnsConfig, VisibleContentOptions } from '../components/cars-table/carTableConfig';
 
 import * as queries from '../graphql/queries';
 
@@ -108,25 +111,34 @@ const AdminCars = () => {
 
   const columnsConfig = ColumnsConfig();
   const visibleContentOptions = VisibleContentOptions();
-
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(allItems, {
-      filtering: {
-        empty: <EmptyState title={t('cars.no-cars')} subtitle={t('cars.no-cars-message')} />,
-        noMatch: (
-          <EmptyState
-            title={t('models.no-matches')}
-            subtitle={t('models.we-cant-find-a-match')}
-            action={
-              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
-            }
-          />
-        ),
-      },
-      pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[1] } },
-      selection: {},
-    });
+  const filteringProperties = FilteringProperties();
+  console.debug(allItems);
+  const {
+    items,
+    actions,
+    filteredItemsCount,
+    collectionProps,
+    propertyFilterProps,
+    paginationProps,
+  } = useCollection(allItems, {
+    propertyFiltering: {
+      filteringProperties,
+      empty: <TableEmptyState resourceName="Car" />,
+      noMatch: (
+        <TableNoMatchState
+          onClearFilter={() => {
+            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
+          }}
+          label={t('common.no-matches')}
+          description={t('common.we-cant-find-a-match')}
+          buttonLabel={t('button.clear-filters')}
+        />
+      ),
+    },
+    pagination: { pageSize: preferences.pageSize },
+    sorting: { defaultState: { sortingColumn: columnsConfig[1] } },
+    selection: {},
+  });
 
   function getLabelSync(instanceId) {
     API.graphql({
@@ -210,6 +222,9 @@ const AdminCars = () => {
         }
         columnDefinitions={columnsConfig}
         items={items}
+        stripedRows={preferences.stripedRows}
+        contentDensity={preferences.contentDensity}
+        wrapLines={preferences.wrapLines}
         pagination={
           <Pagination
             {...paginationProps}
@@ -221,10 +236,12 @@ const AdminCars = () => {
           />
         }
         filter={
-          <TextFilter
-            {...filterProps}
+          <PropertyFilter
+            {...propertyFilterProps}
+            i18nStrings={PropertyFilterI18nStrings('cars')}
             countText={MatchesCountText(filteredItemsCount)}
-            filteringAriaLabel={t('cars.filter-cars')}
+            filteringAriaLabel={t('cars.filter-groups')}
+            expandToViewport={true}
           />
         }
         loading={isLoading}

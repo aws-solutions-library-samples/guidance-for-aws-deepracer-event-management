@@ -1,5 +1,5 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Button, Table, TextFilter } from '@cloudscape-design/components';
+import { Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -9,18 +9,21 @@ import * as mutations from '../../graphql/mutations';
 
 import { DeleteModal, ItemList } from '../../components/deleteModal';
 import {
+  PropertyFilterI18nStrings,
+  TableEmptyState,
+  TableNoMatchState,
+} from '../../components/tableCommon';
+import {
   DefaultPreferences,
-  EmptyState,
   MatchesCountText,
   TableHeader,
-  TablePagination,
   TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 
 import { useFleetsContext, useUsersContext } from '../../store/storeProvider';
-import { ColumnDefinitions, VisibleContentOptions } from './fleetsTableConfig';
+import { ColumnDefinitions, FilteringProperties, VisibleContentOptions } from './fleetsTableConfig';
 
 const AdminFleets = () => {
   const { t } = useTranslation();
@@ -32,6 +35,7 @@ const AdminFleets = () => {
 
   const navigate = useNavigate();
   const columnDefinitions = ColumnDefinitions(getUserNameFromId);
+  const filteringProperties = FilteringProperties();
   const visibleContentOptions = VisibleContentOptions();
 
   // Help panel
@@ -85,24 +89,32 @@ const AdminFleets = () => {
     visibleContent: ['fleetName', 'fleetId', 'createdAt'],
   });
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(fleets, {
-      filtering: {
-        empty: <EmptyState title={t('fleets.no-fleet')} subtitle={t('fleets.no-fleet-message')} />,
-        noMatch: (
-          <EmptyState
-            title={t('models.no-matches')}
-            subtitle={t('models.we-cant-find-a-match')}
-            action={
-              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
-            }
-          />
-        ),
-      },
-      pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
-      selection: {},
-    });
+  const {
+    items,
+    actions,
+    filteredItemsCount,
+    collectionProps,
+    propertyFilterProps,
+    paginationProps,
+  } = useCollection(fleets, {
+    propertyFiltering: {
+      filteringProperties,
+      empty: <TableEmptyState resourceName="Model" />,
+      noMatch: (
+        <TableNoMatchState
+          onClearFilter={() => {
+            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
+          }}
+          label={t('common.no-matches')}
+          description={t('common.we-cant-find-a-match')}
+          buttonLabel={t('button.clear-filters')}
+        />
+      ),
+    },
+    pagination: { pageSize: preferences.pageSize },
+    sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
+    selection: {},
+  });
 
   const fleetsTable = (
     <Table
@@ -114,15 +126,20 @@ const AdminFleets = () => {
       selectionType="multi"
       columnDefinitions={columnDefinitions}
       items={items}
+      stripedRows={preferences.stripedRows}
+      contentDensity={preferences.contentDensity}
+      wrapLines={preferences.wrapLines}
       loading={isLoading}
       loadingText={t('fleets.loading')}
       stickyHeader="true"
       trackBy="fleetId"
       filter={
-        <TextFilter
-          {...filterProps}
+        <PropertyFilter
+          {...propertyFilterProps}
+          i18nStrings={PropertyFilterI18nStrings('fleets')}
           countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel={t('fleets.filter-cars')}
+          filteringAriaLabel={t('models.filter-groups')}
+          expandToViewport={true}
         />
       }
       header={
@@ -135,7 +152,16 @@ const AdminFleets = () => {
           header={t('fleets.table-header')}
         />
       }
-      pagination={<TablePagination paginationProps={paginationProps} />}
+      pagination={
+        <Pagination
+          {...paginationProps}
+          ariaLabels={{
+            nextPageLabel: t('table.next-page'),
+            previousPageLabel: t('table.previous-page'),
+            pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
+          }}
+        />
+      }
       visibleColumns={preferences.visibleContent}
       resizableColumns
       preferences={

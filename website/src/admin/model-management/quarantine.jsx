@@ -1,14 +1,18 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Button, Header, Pagination, Table, TextFilter } from '@cloudscape-design/components';
+import { Header, Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 
 import { useTranslation } from 'react-i18next';
 import { PageLayout } from '../../components/pageLayout';
 import {
+  PropertyFilterI18nStrings,
+  TableEmptyState,
+  TableNoMatchState,
+} from '../../components/tableCommon';
+import {
   AdminModelsColumnsConfig,
   DefaultPreferences,
-  EmptyState,
   MatchesCountText,
   TablePreferences,
 } from '../../components/tableConfig';
@@ -80,27 +84,47 @@ const AdminQuarantine = () => {
 
   const adminModelsColsConfig = AdminModelsColumnsConfig();
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(allItems, {
-      filtering: {
-        empty: (
-          <EmptyState title={t('models.no-models')} subtitle={t('models.no-models-to-display')} />
-        ),
-        noMatch: (
-          <EmptyState
-            title={t('models.no-matches')}
-            subtitle={t('models.we-cant-find-a-match')}
-            action={
-              <Button onClick={() => actions.setFiltering('')}>{t('models.clear-filter')}</Button>
-            }
-          />
-        ),
-      },
-      pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: adminModelsColsConfig[3], isDescending: true } },
-      selection: {},
-    });
-  const { selectedItems } = collectionProps;
+  const filteringProperties = [
+    {
+      key: 'userName',
+      propertyLabel: t('models.user-name'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'modelName',
+      propertyLabel: t('models.model-name'),
+      operators: [':', '!:', '=', '!='],
+    },
+    // {
+    //   key: 'modelDate',
+    //   propertyLabel: t('models.upload-date'),
+    //   groupValuesLabel: 'Created at value',
+    //   defaultOperator: '>',
+    //   operators: ['<', '<=', '>', '>='].map((operator) => ({
+    //     operator,
+    //     form: ({ value, onChange }) => (
+    //       <div className="date-form">
+    //         {' '}
+    //         <FormField>
+    //           {' '}
+    //           <DateInput
+    //             value={value ?? ''}
+    //             onChange={(event) => onChange(event.detail.value)}
+    //             placeholder="YYYY/MM/DD"
+    //           />{' '}
+    //         </FormField>{' '}
+    //         <Calendar
+    //           value={value ?? ''}
+    //           onChange={(event) => onChange(event.detail.value)}
+    //           locale="en-GB"
+    //         />{' '}
+    //       </div>
+    //     ),
+    //     format: formatAwsDateTime,
+    //     match: 'date',
+    //   })),
+    // },
+  ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
 
   const visibleContentOptions = [
     {
@@ -118,6 +142,34 @@ const AdminQuarantine = () => {
       ],
     },
   ];
+
+  const {
+    items,
+    actions,
+    filteredItemsCount,
+    collectionProps,
+    propertyFilterProps,
+    paginationProps,
+  } = useCollection(allItems, {
+    propertyFiltering: {
+      filteringProperties,
+      empty: <TableEmptyState resourceName="Model" />,
+      noMatch: (
+        <TableNoMatchState
+          onClearFilter={() => {
+            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
+          }}
+          label={t('common.no-matches')}
+          description={t('common.we-cant-find-a-match')}
+          buttonLabel={t('button.clear-filters')}
+        />
+      ),
+    },
+    pagination: { pageSize: preferences.pageSize },
+    sorting: { defaultState: { sortingColumn: adminModelsColsConfig[3], isDescending: true } },
+    selection: {},
+  });
+  const { selectedItems } = collectionProps;
 
   return (
     <PageLayout
@@ -145,6 +197,9 @@ const AdminQuarantine = () => {
         }
         columnDefinitions={adminModelsColsConfig}
         items={items}
+        stripedRows={preferences.stripedRows}
+        contentDensity={preferences.contentDensity}
+        wrapLines={preferences.wrapLines}
         pagination={
           <Pagination
             {...paginationProps}
@@ -156,10 +211,12 @@ const AdminQuarantine = () => {
           />
         }
         filter={
-          <TextFilter
-            {...filterProps}
+          <PropertyFilter
+            {...propertyFilterProps}
+            i18nStrings={PropertyFilterI18nStrings('models')}
             countText={MatchesCountText(filteredItemsCount)}
-            filteringAriaLabel={t('models.filter-models')}
+            filteringAriaLabel={t('models.filter-groups')}
+            expandToViewport={true}
           />
         }
         loading={isLoading}
