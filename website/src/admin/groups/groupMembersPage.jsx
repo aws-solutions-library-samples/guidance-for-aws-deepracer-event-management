@@ -1,30 +1,36 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
-  Button,
   Header,
   Icon,
   Pagination,
+  PropertyFilter,
   StatusIndicator,
   Table,
-  TextFilter,
   Toggle,
 } from '@cloudscape-design/components';
 import { Auth } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { Flag } from '../../components/flag';
 import { PageLayout } from '../../components/pageLayout';
 import {
+  PropertyFilterI18nStrings,
+  TableEmptyState,
+  TableNoMatchState,
+} from '../../components/tableCommon';
+import {
   DefaultPreferences,
-  EmptyState,
   MatchesCountText,
   TablePreferences,
 } from '../../components/tableConfig';
+import {
+  ColumnDefinitions,
+  FilteringProperties,
+  VisibleContentOptions,
+} from '../../components/tableUserConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useNotificationsDispatch, useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 import { useUsersContext } from '../../store/storeProvider';
-import { formatAwsDateTime } from '../../support-functions/time';
 import {
   addUserToGroupMutation,
   getGroupMembersQuery,
@@ -41,6 +47,11 @@ export function GroupMembersPage() {
   const [addNotification, dismissNotification] = useNotificationsDispatch();
 
   const [users] = useUsersContext();
+
+  // Table config
+  const columnDefinitions = ColumnDefinitions();
+  const filteringProperties = FilteringProperties();
+  const visibleContentOptions = VisibleContentOptions();
 
   // Help panel
   const toolsOptionsDispatch = useToolsOptionsDispatch();
@@ -104,16 +115,48 @@ export function GroupMembersPage() {
     };
   }, [groupName, users]);
 
+  useEffect(() => {
+    columnDefinitions.push(
+      {
+        id: 'isMember',
+        header: t('groups.detail.header-group-member'),
+        cell: (item) => userToggle(item),
+        sortingField: 'isMember',
+        width: 200,
+        minWidth: 150,
+      },
+      {
+        id: 'isEnabled',
+        header: t('groups.detail.header-user-enabled'),
+        cell: (item) => <StatusIndicator {...isMemberIndicator[item.Enabled]} />,
+        sortingField: 'isEnabled',
+        width: 200,
+        minWidth: 150,
+      }
+    );
+
+    visibleContentOptions[0]['options'].push(
+      {
+        id: 'isMember',
+        label: t('groups.detail.header-group-member'),
+      },
+      {
+        id: 'isEnabled',
+        label: t('groups.detail.header-user-enabled'),
+      }
+    );
+  }, []);
+
   const notificationId = 'group_error';
   const toggleUser = (user) => {
     const updateUserMembership = async () => {
       // Check user is not attempting to remove self
       const username = user.Username;
       if (user.isMember) {
-        console.info('remove user from group');
+        // console.info('remove user from group');
         await removeUserFromGroupMutation(username, groupName);
       } else {
-        console.info('add user to group');
+        // console.info('add user to group');
         await addUserToGroupMutation(username, groupName);
       }
 
@@ -158,166 +201,32 @@ export function GroupMembersPage() {
     visibleContent: ['userName', 'isMember'],
   });
 
-  const columnsConfig = [
-    {
-      id: 'userName',
-      header: t('groups.detail.header-name'),
-      cell: (item) => item.Username,
-      sortingField: 'userName',
-      width: 200,
-      minWidth: 150,
+  const {
+    items,
+    actions,
+    filteredItemsCount,
+    collectionProps,
+    paginationProps,
+    propertyFilterProps,
+  } = useCollection(usersWithGroupMetaData, {
+    propertyFiltering: {
+      filteringProperties,
+      empty: <TableEmptyState resourceName="User" />,
+      noMatch: (
+        <TableNoMatchState
+          onClearFilter={() => {
+            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
+          }}
+          label={t('common.no-matches')}
+          description={t('common.we-cant-find-a-match')}
+          buttonLabel={t('button.clear-filters')}
+        />
+      ),
     },
-    {
-      id: 'Email',
-      header: t('groups.detail.header-email'),
-      cell: (item) => {
-        const email = item.Attributes.filter((obj) => {
-          return obj.Name === 'email';
-        });
-        if (email.length > 0) {
-          return email[0].Value;
-        } else {
-          return '-';
-        }
-      },
-      sortingField: 'Email',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'Flag',
-      header: t('users.flag'),
-      cell: (item) => {
-        const countryCode = item.Attributes.filter((obj) => {
-          return obj.Name === 'custom:countryCode';
-        });
-        if (countryCode.length > 0) {
-          return <Flag size="small" countryCode={countryCode[0].Value}></Flag>;
-        } else {
-          return '-';
-        }
-      },
-      sortingField: 'Flag',
-      width: 120,
-      minWidth: 80,
-    },
-    {
-      id: 'CountryCode',
-      header: t('users.country-code'),
-      cell: (item) => {
-        const countryCode = item.Attributes.filter((obj) => {
-          return obj.Name === 'custom:countryCode';
-        });
-        if (countryCode.length > 0) {
-          return countryCode[0].Value;
-        } else {
-          return '-';
-        }
-      },
-      sortingField: 'CountryCode',
-      width: 120,
-      minWidth: 80,
-    },
-    {
-      id: 'userCreationDate',
-      header: t('groups.detail.header-creation-date'),
-      cell: (item) => formatAwsDateTime(item.UserCreateDate) || '-',
-      sortingField: 'userCreationDate',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'userLastModifiedDate',
-      header: t('groups.detail.header-last-modified-date'),
-      cell: (item) => formatAwsDateTime(item.UserLastModifiedDate) || '-',
-      sortingField: 'userLastModifiedDate',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'isMember',
-      header: t('groups.detail.header-group-member'),
-      cell: (item) => userToggle(item),
-      sortingField: 'isMember',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'isEnabled',
-      header: t('groups.detail.header-user-enabled'),
-      cell: (item) => <StatusIndicator {...isMemberIndicator[item.Enabled]} />,
-      sortingField: 'isEnabled',
-      width: 200,
-      minWidth: 150,
-    },
-  ];
-
-  const visibleContentOptions = [
-    {
-      label: t('groups.detail.information'),
-      options: [
-        {
-          id: 'userName',
-          label: t('groups.detail.header-name'),
-          editable: false,
-        },
-        {
-          id: 'Email',
-          label: t('groups.detail.header-email'),
-        },
-        {
-          id: 'Flag',
-          label: t('users.flag'),
-          //editable: false,
-        },
-        {
-          id: 'CountryCode',
-          label: t('users.country-code'),
-          //editable: false,
-        },
-        {
-          id: 'userCreationDate',
-          label: t('groups.detail.header-creation-date'),
-        },
-        {
-          id: 'userLastModifiedDate',
-          label: t('groups.detail.header-last-modified-date'),
-        },
-        {
-          id: 'isMember',
-          label: t('groups.detail.header-group-member'),
-        },
-        {
-          id: 'isEnabled',
-          label: t('groups.detail.header-user-enabled'),
-        },
-      ],
-    },
-  ];
-
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(usersWithGroupMetaData, {
-      filtering: {
-        empty: (
-          <EmptyState
-            title={t('groups.no-users')}
-            subtitle={t('groups.no-users-have-been-defined')}
-          />
-        ),
-        noMatch: (
-          <EmptyState
-            title={t('models.no-matches')}
-            subtitle={t('models.we-cant-find-a-match')}
-            action={
-              <Button onClick={() => actions.setFiltering('')}>{t('models.clear-filter')}</Button>
-            }
-          />
-        ),
-      },
-      pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[0] } },
-      selection: {},
-    });
+    pagination: { pageSize: preferences.pageSize },
+    sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
+    selection: {},
+  });
 
   const isMemberIndicator = {
     true: { type: 'success', children: '' },
@@ -349,8 +258,11 @@ export function GroupMembersPage() {
             {t('groups.detail.header')}
           </Header>
         }
-        columnDefinitions={columnsConfig}
+        columnDefinitions={columnDefinitions}
         items={items}
+        stripedRows={preferences.stripedRows}
+        contentDensity={preferences.contentDensity}
+        wrapLines={preferences.wrapLines}
         pagination={
           <Pagination
             {...paginationProps}
@@ -362,13 +274,13 @@ export function GroupMembersPage() {
           />
         }
         filter={
-          <>
-            <TextFilter
-              {...filterProps}
-              countText={MatchesCountText(filteredItemsCount)}
-              filteringAriaLabel={t('groups.detail.filter-users')}
-            ></TextFilter>
-          </>
+          <PropertyFilter
+            {...propertyFilterProps}
+            i18nStrings={PropertyFilterI18nStrings('users')}
+            countText={MatchesCountText(filteredItemsCount)}
+            filteringAriaLabel={t('users.filter-groups')}
+            expandToViewport={true}
+          />
         }
         loading={isLoading}
         loadingText={t('groups.detail.loading-users')}

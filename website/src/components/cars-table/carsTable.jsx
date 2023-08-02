@@ -49,8 +49,8 @@ export const CarsTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) 
         empty: <EmptyState title={t('cars.no-cars')} subtitle={t('cars.no-cars-message')} />,
         noMatch: (
           <EmptyState
-            title={t('models.no-matches')}
-            subtitle={t('models.we-cant-find-a-match')}
+            title={t('common.no-matches')}
+            subtitle={t('common.we-cant-find-a-match')}
             action={
               <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
             }
