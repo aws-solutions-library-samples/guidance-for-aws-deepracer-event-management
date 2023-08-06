@@ -64,7 +64,7 @@ export const ColumnDefinitions = () => {
 export const VisibleContentOptions = () => {
   return [
     {
-      label: i18next.t('groups.information'),
+      label: i18next.t('users.information'),
       options: [
         {
           id: 'Username',

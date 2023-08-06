@@ -12,6 +12,7 @@ import { Auth } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
+import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
 import {
   PropertyFilterI18nStrings,
@@ -48,11 +49,6 @@ export function GroupMembersPage() {
 
   const [users] = useUsersContext();
 
-  // Table config
-  const columnDefinitions = ColumnDefinitions();
-  const filteringProperties = FilteringProperties();
-  const visibleContentOptions = VisibleContentOptions();
-
   // Help panel
   const toolsOptionsDispatch = useToolsOptionsDispatch();
   const helpPanelHidden = true;
@@ -62,13 +58,13 @@ export function GroupMembersPage() {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-group-members' })}
-        //     bodyContent={t('content', { ns: 'help-admin-group-members' })}
-        //     footerContent={t('footer', { ns: 'help-admin-group-members' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-group-members' })}
+            bodyContent={t('content', { ns: 'help-admin-group-members' })}
+            footerContent={t('footer', { ns: 'help-admin-group-members' })}
+          />
+        ),
       },
     });
 
@@ -115,37 +111,42 @@ export function GroupMembersPage() {
     };
   }, [groupName, users]);
 
-  useEffect(() => {
-    columnDefinitions.push(
-      {
-        id: 'isMember',
-        header: t('groups.detail.header-group-member'),
-        cell: (item) => userToggle(item),
-        sortingField: 'isMember',
-        width: 200,
-        minWidth: 150,
-      },
-      {
-        id: 'isEnabled',
-        header: t('groups.detail.header-user-enabled'),
-        cell: (item) => <StatusIndicator {...isMemberIndicator[item.Enabled]} />,
-        sortingField: 'isEnabled',
-        width: 200,
-        minWidth: 150,
-      }
-    );
+  // Table config
+  let columnDefinitions = ColumnDefinitions();
+  let filteringProperties = FilteringProperties();
+  let visibleContentOptions = VisibleContentOptions();
 
-    visibleContentOptions[0]['options'].push(
-      {
-        id: 'isMember',
-        label: t('groups.detail.header-group-member'),
-      },
-      {
-        id: 'isEnabled',
-        label: t('groups.detail.header-user-enabled'),
-      }
-    );
-  }, []);
+  columnDefinitions.push(
+    {
+      id: 'isMember',
+      header: t('groups.detail.header-group-member'),
+      cell: (item) => userToggle(item),
+      sortingField: 'isMember',
+      width: 200,
+      minWidth: 150,
+    },
+    {
+      id: 'isEnabled',
+      header: t('groups.detail.header-user-enabled'),
+      cell: (item) => <StatusIndicator {...isMemberIndicator[item.Enabled]} />,
+      sortingField: 'isEnabled',
+      width: 200,
+      minWidth: 150,
+    }
+  );
+
+  visibleContentOptions[0]['options'].push(
+    {
+      id: 'isMember',
+      label: t('groups.detail.header-group-member'),
+      alwaysVisible: true,
+    },
+    {
+      id: 'isEnabled',
+      label: t('groups.detail.header-user-enabled'),
+      alwaysVisible: true,
+    }
+  );
 
   const notificationId = 'group_error';
   const toggleUser = (user) => {
@@ -153,21 +154,16 @@ export function GroupMembersPage() {
       // Check user is not attempting to remove self
       const username = user.Username;
       if (user.isMember) {
-        // console.info('remove user from group');
         await removeUserFromGroupMutation(username, groupName);
       } else {
-        // console.info('add user to group');
         await addUserToGroupMutation(username, groupName);
       }
 
       // Update group membership status for updated user
       const i = usersWithGroupMetaData.findIndex((user) => user.Username === username);
-      // console.info(i);
       if (i > -1) {
         const updatedUsersWithGroupMetaData = [...usersWithGroupMetaData];
-        // console.info(updatedUsersWithGroupMetaData[i].isMember);
         updatedUsersWithGroupMetaData[i].isMember = !updatedUsersWithGroupMetaData[i].isMember;
-        // console.info(updatedUsersWithGroupMetaData[i].isMember);
         setUsersWithGroupMetaData(updatedUsersWithGroupMetaData);
       }
     };
