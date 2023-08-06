@@ -11,8 +11,8 @@ import { BaseStack } from './base-stack';
 import { DeepracerEventManagerStack } from './drem-app-stack';
 
 // Constants
-const NODE_VERSION = '16'; // other possible options: stable, latest, lts
-const CDK_VERSION = '2.72.1'; // other possible options: latest
+const NODE_VERSION = '18'; // other possible options: stable, latest, lts
+const CDK_VERSION = '2.89.0'; // other possible options: latest
 const AMPLIFY_VERSION = '12.0.3';
 
 export interface InfrastructurePipelineStageProps extends cdk.StackProps {
@@ -94,7 +94,7 @@ export class CdkPipelineStack extends cdk.Stack {
             publishAssetsInParallel: false,
             synth: new pipelines.CodeBuildStep('SynthAndDeployBackend', {
                 buildEnvironment: {
-                    buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0,
+                    buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
                 },
                 input: pipelines.CodePipelineSource.s3(
                     s3_repo_bucket,
@@ -193,7 +193,7 @@ export class CdkPipelineStack extends cdk.Stack {
                     'amplify codegen', // I'm not repeating myself ;)
                     'cd ../..',
                     'docker run --rm -v $(pwd):/foo -w /foo' +
-                        " public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install" +
+                        " public.ecr.aws/sam/build-nodejs18.x bash -c 'npm install" +
                         " --cache /tmp/empty-cache && npm run build'",
                     'aws s3 sync ./build/ s3://$sourceBucketName/ --delete',
                     'echo distributionId=$distributionId',
@@ -232,7 +232,7 @@ export class CdkPipelineStack extends cdk.Stack {
                     'amplify codegen', // I'm not repeating myself ;)
                     'cd ../..',
                     'docker run --rm -v $(pwd):/foo -w /foo' +
-                        " public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install" +
+                        " public.ecr.aws/sam/build-nodejs18.x bash -c 'npm install" +
                         " --cache /tmp/empty-cache && npm run build'",
                     'aws s3 sync ./build/ s3://$leaderboardSourceBucketName/ --delete',
                     "aws cloudfront create-invalidation --distribution-id $leaderboardDistributionId --paths '/*'",
@@ -270,7 +270,7 @@ export class CdkPipelineStack extends cdk.Stack {
                     'amplify codegen', // I'm not repeating myself ;)
                     'cd ../..',
                     'docker run --rm -v $(pwd):/foo -w /foo' +
-                        " public.ecr.aws/sam/build-nodejs16.x bash -c 'npm install" +
+                        " public.ecr.aws/sam/build-nodejs18.x bash -c 'npm install" +
                         " --cache /tmp/empty-cache && npm run build'",
                     'aws s3 sync ./build/ s3://$streamingOverlaySourceBucketName/ --delete',
                     "aws cloudfront create-invalidation --distribution-id $streamingOverlayDistributionId --paths '/*'",
