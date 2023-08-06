@@ -1,3 +1,4 @@
+// import { Calendar, DateInput, FormField } from '@cloudscape-design/components';
 import i18next from '../../i18n';
 import { formatAwsDateTime } from '../../support-functions/time';
 
@@ -108,3 +109,81 @@ export function VisibleContentOptions() {
   ];
   return rowHeaders;
 }
+
+export const FilteringProperties = () => {
+  return [
+    {
+      key: 'ComputerName',
+      propertyLabel: i18next.t('cars.host-name'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'fleetName',
+      propertyLabel: i18next.t('cars.fleet-name'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'IpAddress',
+      propertyLabel: i18next.t('cars.car-ip'),
+      operators: [':', '!:', '=', '!='],
+    },
+    // {
+    //   key: 'RegistrationDate',
+    //   propertyLabel: i18next.t('cars.registration-date'),
+    //   groupValuesLabel: 'Created at value',
+    //   defaultOperator: '>',
+    //   operators: ['<', '<=', '>', '>='].map((operator) => ({
+    //     operator,
+    //     form: ({ value, onChange }) => (
+    //       <div className="date-form">
+    //         {' '}
+    //         <FormField>
+    //           {' '}
+    //           <DateInput
+    //             value={value ?? ''}
+    //             onChange={(event) => onChange(event.detail.value)}
+    //             placeholder="YYYY/MM/DD"
+    //           />{' '}
+    //         </FormField>{' '}
+    //         <Calendar
+    //           value={value ?? ''}
+    //           onChange={(event) => onChange(event.detail.value)}
+    //           locale="en-GB"
+    //         />{' '}
+    //       </div>
+    //     ),
+    //     format: formatAwsDateTime,
+    //     match: 'date',
+    //   })),
+    // },
+    // {
+    //   key: 'LastPingDateTime',
+    //   propertyLabel: i18next.t('cars.last-ping-time'),
+    //   groupValuesLabel: 'Created at value',
+    //   defaultOperator: '>',
+    //   operators: ['<', '<=', '>', '>='].map((operator) => ({
+    //     operator,
+    //     form: ({ value, onChange }) => (
+    //       <div className="date-form">
+    //         {' '}
+    //         <FormField>
+    //           {' '}
+    //           <DateInput
+    //             value={value ?? ''}
+    //             onChange={(event) => onChange(event.detail.value)}
+    //             placeholder="YYYY/MM/DD"
+    //           />{' '}
+    //         </FormField>{' '}
+    //         <Calendar
+    //           value={value ?? ''}
+    //           onChange={(event) => onChange(event.detail.value)}
+    //           locale="en-GB"
+    //         />{' '}
+    //       </div>
+    //     ),
+    //     format: formatAwsDateTime,
+    //     match: 'date',
+    //   })),
+    // },
+  ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
+};

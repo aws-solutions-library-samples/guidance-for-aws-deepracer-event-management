@@ -1,19 +1,26 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Button, Header, Link, Pagination, Table, TextFilter } from '@cloudscape-design/components';
+import { Header, Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PageLayout } from '../../components/pageLayout';
+import {
+  PropertyFilterI18nStrings,
+  TableEmptyState,
+  TableNoMatchState,
+} from '../../components/tableCommon';
 import {
   DefaultPreferences,
-  EmptyState,
   MatchesCountText,
   TablePreferences,
 } from '../../components/tableConfig';
+import {
+  ColumnDefinitions,
+  FilteringProperties,
+  VisibleContentOptions,
+} from '../../components/tableGroupConfig';
+import { useGroupsApi } from '../../hooks/useGroupsApi';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
-
-import { PageLayout } from '../../components/pageLayout';
-import { useGroupsApi } from '../../hooks/useGroupsApi';
-import { formatAwsDateTime } from '../../support-functions/time';
 
 export function GroupsPage() {
   const { t } = useTranslation();
@@ -50,94 +57,37 @@ export function GroupsPage() {
     };
   }, [toolsOptionsDispatch]);
 
-  const columnsConfig = [
-    {
-      id: 'groupName',
-      header: t('groups.header-name'),
-      cell: (item) => (
-        <div>
-          <Link href={window.location.href + '/' + item.GroupName}>{item.GroupName}</Link>
-        </div>
+  // Table config
+  const columnDefinitions = ColumnDefinitions();
+  const filteringProperties = FilteringProperties();
+  const visibleContentOptions = VisibleContentOptions();
+
+  const {
+    items,
+    actions,
+    filteredItemsCount,
+    collectionProps,
+    paginationProps,
+    propertyFilterProps,
+  } = useCollection(groups, {
+    propertyFiltering: {
+      filteringProperties,
+      empty: <TableEmptyState resourceName="Group" />,
+      noMatch: (
+        <TableNoMatchState
+          onClearFilter={() => {
+            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
+          }}
+          label={t('common.no-matches')}
+          description={t('common.we-cant-find-a-match')}
+          buttonLabel={t('button.clear-filters')}
+        />
       ),
-      sortingField: 'groupName',
-      width: 200,
-      minWidth: 150,
     },
-    {
-      id: 'description',
-      header: t('groups.header-description'),
-      cell: (item) => item.Description || '-',
-      sortingField: 'description',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'creationDate',
-      header: t('groups.header-creation-date'),
-      cell: (item) => formatAwsDateTime(item.creationDate) || '-',
-      sortingField: 'creationDate',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'lastModifiedDate',
-      header: t('groups.header-last-modified-date'),
-      cell: (item) => formatAwsDateTime(item.LastModifiedDate) || '-',
-      sortingField: 'lastModifiedDate',
-      width: 200,
-      minWidth: 150,
-    },
-  ];
-
-  const visibleContentOptions = [
-    {
-      label: t('groups.information'),
-      options: [
-        {
-          id: 'groupName',
-          label: t('groups.header-name'),
-          editable: false,
-        },
-        {
-          id: 'description',
-          label: t('groups.header-description'),
-          editable: false,
-        },
-        {
-          id: 'creationDate',
-          label: t('groups.header-creation-date'),
-        },
-        {
-          id: 'lastModifiedDate',
-          label: t('groups.header-last-modified-date'),
-        },
-      ],
-    },
-  ];
-
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(groups, {
-      filtering: {
-        empty: (
-          <EmptyState
-            title={t('groups.no-groups')}
-            subtitle={t('groups.no-groups-have-been-defined')}
-          />
-        ),
-        noMatch: (
-          <EmptyState
-            title={t('models.no-matches')}
-            subtitle={t('models.we-cant-find-a-match')}
-            action={
-              <Button onClick={() => actions.setFiltering('')}>{t('models.clear-filter')}</Button>
-            }
-          />
-        ),
-      },
-      pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[0] } },
-      selection: {},
-    });
+    pagination: { pageSize: preferences.pageSize },
+    sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
+    selection: {},
+  });
 
   return (
     <PageLayout
@@ -163,8 +113,11 @@ export function GroupsPage() {
             {t('groups.header')}
           </Header>
         }
-        columnDefinitions={columnsConfig}
+        columnDefinitions={columnDefinitions}
         items={items}
+        stripedRows={preferences.stripedRows}
+        contentDensity={preferences.contentDensity}
+        wrapLines={preferences.wrapLines}
         pagination={
           <Pagination
             {...paginationProps}
@@ -176,10 +129,12 @@ export function GroupsPage() {
           />
         }
         filter={
-          <TextFilter
-            {...filterProps}
+          <PropertyFilter
+            {...propertyFilterProps}
+            i18nStrings={PropertyFilterI18nStrings('groups')}
             countText={MatchesCountText(filteredItemsCount)}
             filteringAriaLabel={t('groups.filter-groups')}
+            expandToViewport={true}
           />
         }
         loading={isLoading}

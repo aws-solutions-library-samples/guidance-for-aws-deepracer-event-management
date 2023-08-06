@@ -66,12 +66,10 @@
     "carmodelupload.loading": "リソースを探しています",
     "carmodelupload.modelname": "AI ファイル名",
     "carmodelupload.no-cars": "車なし",
-    "carmodelupload.no-matches": "No matches",
     "carmodelupload.online": "オンラインの車はありません",
     "carmodelupload.please-wait": "Please wait whilst model upload jobs are submitted",
     "carmodelupload.status": "稼働状況",
     "carmodelupload.upload": "AI ファイルを車両にアップロードする",
-    "carmodelupload.we-cant-find-a-match": "検索結果がありません",
 
     "carmodelupload-modal.file-regex": "does not match regex: ^[a-zA-Z0-9-_]+.tar.gz$",
 

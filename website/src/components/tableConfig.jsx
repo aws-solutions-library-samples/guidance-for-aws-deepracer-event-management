@@ -31,6 +31,8 @@ export function MatchesCountText(count) {
 export const DefaultPreferences = {
   pageSize: 20,
   wrapLines: false,
+  stripedRows: false,
+  contentDensity: 'comfortable',
 };
 
 export function PageSizePreference(label = 'items') {
@@ -52,6 +54,20 @@ export const WrapLines = () => {
   return {
     label: i18next.t('table.wrap-lines'),
     description: i18next.t('table.wrap-lines-description'),
+  };
+};
+
+export const StripedRows = () => {
+  return {
+    label: i18next.t('table.striped-rows'),
+    description: i18next.t('table.striped-rows-description'),
+  };
+};
+
+export const ContentDensity = () => {
+  return {
+    label: i18next.t('table.content-density'),
+    description: i18next.t('table.content-density-description'),
   };
 };
 
@@ -204,6 +220,8 @@ export const TableHeader = ({
 
 export const TablePreferences = ({ preferences, setPreferences, contentOptions }) => {
   const wrapLines = WrapLines();
+  const stripedRows = StripedRows();
+  const contentDensity = ContentDensity();
   return (
     <CollectionPreferences
       title={i18next.t('table.preferences')}
@@ -217,6 +235,8 @@ export const TablePreferences = ({ preferences, setPreferences, contentOptions }
         options: contentOptions,
       }}
       wrapLinesPreference={wrapLines}
+      stripedRowsPreference={stripedRows}
+      contentDensityPreference={contentDensity}
     />
   );
 };

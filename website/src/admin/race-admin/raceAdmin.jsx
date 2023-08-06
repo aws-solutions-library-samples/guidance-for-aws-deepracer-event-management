@@ -81,8 +81,8 @@ const RaceAdmin = () => {
         empty: selectEmptyStateMessage(),
         noMatch: (
           <EmptyState
-            title={t('table.no-matches')}
-            subtitle={t('table.we-cant-find-a-match')}
+            title={t('common.no-matches')}
+            subtitle={t('common.we-cant-find-a-match')}
             action={
               <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
             }
@@ -164,6 +164,9 @@ const RaceAdmin = () => {
       selectionType="multi"
       columnDefinitions={columnDefinitions}
       items={items}
+      stripedRows={preferences.stripedRows}
+      contentDensity={preferences.contentDensity}
+      wrapLines={preferences.wrapLines}
       loading={loading}
       loadingText={t('events.loading')}
       stickyHeader="true"

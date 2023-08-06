@@ -1,22 +1,18 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import {
-  Button,
-  CollectionPreferences,
-  Header,
-  Pagination,
-  Table,
-  TextFilter,
-} from '@cloudscape-design/components';
+import { Header, Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
 import React, { useState } from 'react';
 
 import { useTranslation } from 'react-i18next';
 import {
+  PropertyFilterI18nStrings,
+  TableEmptyState,
+  TableNoMatchState,
+} from '../../../components/tableCommon';
+import {
   DefaultPreferences,
-  EmptyState,
   MatchesCountText,
-  PageSizePreference,
+  TablePreferences,
   UserModelsColumnsConfig,
-  WrapLines,
 } from '../../../components/tableConfig';
 
 export const ModelsTable = ({
@@ -35,26 +31,69 @@ export const ModelsTable = ({
 
   const userModelsColsConfig = UserModelsColumnsConfig();
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(models, {
-      filtering: {
-        empty: (
-          <EmptyState title={t('models.no-models')} subtitle={t('models.no-models-to-display')} />
-        ),
-        noMatch: (
-          <EmptyState
-            title={t('models.no-matches')}
-            subtitle={t('models.we-cant-find-a-match')}
-            action={
-              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
-            }
-          />
-        ),
-      },
-      pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: userModelsColsConfig[2], isDescending: true } },
-      selection: {},
-    });
+  const filteringProperties = [
+    {
+      key: 'modelName',
+      propertyLabel: t('models.model-name'),
+      operators: [':', '!:', '=', '!='],
+    },
+    // {
+    //   key: 'modelDate',
+    //   propertyLabel: t('models.upload-date'),
+    //   groupValuesLabel: 'Created at value',
+    //   defaultOperator: '>',
+    //   operators: ['<', '<=', '>', '>='].map((operator) => ({
+    //     operator,
+    //     form: ({ value, onChange }) => (
+    //       <div className="date-form">
+    //         {' '}
+    //         <FormField>
+    //           {' '}
+    //           <DateInput
+    //             value={value ?? ''}
+    //             onChange={(event) => onChange(event.detail.value)}
+    //             placeholder="YYYY/MM/DD"
+    //           />{' '}
+    //         </FormField>{' '}
+    //         <Calendar
+    //           value={value ?? ''}
+    //           onChange={(event) => onChange(event.detail.value)}
+    //           locale="en-GB"
+    //         />{' '}
+    //       </div>
+    //     ),
+    //     format: formatAwsDateTime,
+    //     match: 'date',
+    //   })),
+    // },
+  ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
+
+  const {
+    items,
+    actions,
+    filteredItemsCount,
+    collectionProps,
+    propertyFilterProps,
+    paginationProps,
+  } = useCollection(models, {
+    propertyFiltering: {
+      filteringProperties,
+      empty: <TableEmptyState resourceName="Model" />,
+      noMatch: (
+        <TableNoMatchState
+          onClearFilter={() => {
+            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
+          }}
+          label={t('common.no-matches')}
+          description={t('common.we-cant-find-a-match')}
+          buttonLabel={t('button.clear-filters')}
+        />
+      ),
+    },
+    pagination: { pageSize: preferences.pageSize },
+    sorting: { defaultState: { sortingColumn: userModelsColsConfig[2], isDescending: true } },
+    selection: {},
+  });
 
   const visibleContentOptions = [
     {
@@ -90,6 +129,9 @@ export const ModelsTable = ({
       }
       columnDefinitions={userModelsColsConfig}
       items={items}
+      stripedRows={preferences.stripedRows}
+      contentDensity={preferences.contentDensity}
+      wrapLines={preferences.wrapLines}
       pagination={
         <Pagination
           {...paginationProps}
@@ -101,10 +143,12 @@ export const ModelsTable = ({
         />
       }
       filter={
-        <TextFilter
-          {...filterProps}
+        <PropertyFilter
+          {...propertyFilterProps}
+          i18nStrings={PropertyFilterI18nStrings('models')}
           countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel={t('models.filter-models')}
+          filteringAriaLabel={t('models.filter-groups')}
+          expandToViewport={true}
         />
       }
       loading={isLoading}
@@ -119,18 +163,10 @@ export const ModelsTable = ({
         setSelectedModels(selectedItems);
       }}
       preferences={
-        <CollectionPreferences
-          title={t('table.preferences')}
-          confirmLabel={t('button.confirm')}
-          cancelLabel={t('button.cancel')}
-          onConfirm={({ detail }) => setPreferences(detail)}
+        <TablePreferences
           preferences={preferences}
-          pageSizePreference={PageSizePreference(t('models.page-size-label'))}
-          visibleContentPreference={{
-            title: t('table.select-visible-columns'),
-            options: visibleContentOptions,
-          }}
-          wrapLinesPreference={WrapLines}
+          setPreferences={setPreferences}
+          contentOptions={visibleContentOptions}
         />
       }
     />
