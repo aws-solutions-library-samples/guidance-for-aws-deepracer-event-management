@@ -95,7 +95,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
         SetCurrentLap(defaultLap);
       },
       endRace: () => {
-        console.log('Ending race state');
+        console.debug('Ending race state');
         setWarningModalVisible(true);
         // Buttons
         setBtnEndRace(true);
@@ -201,7 +201,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
 
   // handlers functions
   const actionHandler = (id) => {
-    console.log('alter lap status for lap id: ' + id);
+    console.debug('alter lap status for lap id: ' + id);
     const lapsCopy = [...raceInfo.laps];
     const updatedLap = { ...raceInfo.laps[id] };
     updatedLap.isValid = !updatedLap.isValid;

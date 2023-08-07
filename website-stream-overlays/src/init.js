@@ -6,7 +6,7 @@ var timerState = false;
 var isPaused = false;
 
 function SetEventName(eventName) {
-  console.log(`SETTING EVENT NAME TO: ${eventName}`);
+  console.debug(`SETTING EVENT NAME TO: ${eventName}`);
   // Event Name on Leaderboard.
   const leaderboardObj = d3.select(document.getElementById('leaderboard-frame').contentDocument);
   leaderboardObj.select('#LeaderboardUpperLeftTitleText').text(eventName);

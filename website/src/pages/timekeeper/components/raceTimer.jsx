@@ -26,7 +26,7 @@ const RaceTimer = forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => ({
     start() {
-      // console.log('Start Timer');
+      // console.debug('Start Timer');
       setPrevTime(null);
       setIsRunning(true);
     },
@@ -34,7 +34,7 @@ const RaceTimer = forwardRef((props, ref) => {
       setIsRunning(false);
     },
     reset(startingTime = 0) {
-      // console.log('Reset race Timer =' + JSON.stringify(startingTime));
+      // console.debug('Reset race Timer =' + JSON.stringify(startingTime));
       setPrevTime(null);
       setTime(toTime(startingTime));
       setTimeInMilliseconds(startingTime);

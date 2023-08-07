@@ -57,7 +57,7 @@ export function CreateUser() {
         authMode: 'AMAZON_COGNITO_USER_POOLS',
       });
       const response = apiResponse['data']['createUser'];
-      console.log(response);
+      console.debug(response);
 
       addNotification({
         type: 'success',

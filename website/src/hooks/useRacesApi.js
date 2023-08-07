@@ -15,7 +15,7 @@ export const useRacesApi = (eventId) => {
   const removeRace = (raceId) => {
     setRaces((prevState) => {
       const index = prevState.findIndex((race) => race.raceId === raceId);
-      console.log(index);
+      console.debug(index);
       if (index >= 0) {
         const updatedRaces = [...prevState];
         updatedRaces.splice(index, 1);
