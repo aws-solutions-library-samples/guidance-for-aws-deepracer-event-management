@@ -84,14 +84,17 @@ const AdminActivation = (props) => {
   useEffect(() => {
     if (fleets.length > 0) {
       setDropDownFleets(
-        fleets.map((thisFleet) => {
-          return {
-            id: thisFleet.fleetId,
-            text: thisFleet.fleetName,
-          };
-        })
+        fleets
+          .map((thisFleet) => {
+            return {
+              id: thisFleet.fleetId,
+              text: thisFleet.fleetName,
+            };
+          })
+          .sort((a, b) => (a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1))
       );
     }
+
     return () => {
       // Unmounting
     };
