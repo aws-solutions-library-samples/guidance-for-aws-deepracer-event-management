@@ -35,7 +35,7 @@ export const useEventsApi = (selectedEvent, setSelectedEvent, userHasAccess = fa
     if (userHasAccess) {
       onAddEventSubscription = API.graphql(graphqlOperation(onAddedEvent)).subscribe({
         next: (event) => {
-          console.log(event);
+          console.debug(event);
           setEvents([...events, event.value.data.onAddedEvent]);
         },
       });
@@ -53,7 +53,7 @@ export const useEventsApi = (selectedEvent, setSelectedEvent, userHasAccess = fa
     if (userHasAccess) {
       onUpdatedEventSubscription = API.graphql(graphqlOperation(onUpdatedEvent)).subscribe({
         next: (event) => {
-          console.log(event);
+          console.debug(event);
           const updatedEvent = event.value.data.onUpdatedEvent;
 
           setEvents((prevState) => {

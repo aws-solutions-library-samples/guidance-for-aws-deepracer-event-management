@@ -95,7 +95,7 @@ export const CarsTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) 
       trackBy="InstanceId"
       selectedItems={selectedCarsInTable}
       onSelectionChange={({ detail: { selectedItems } }) => {
-        console.log(selectedItems);
+        console.debug(selectedItems);
         setSelectedCarsInTable(selectedItems);
         selectedCarsInTable.length
           ? setSelectedCarsBtnDisabled(false)

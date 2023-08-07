@@ -28,10 +28,10 @@ export default function useWebsocket(url, onMessage) {
         client.onclose = () => {
           if (wsClientRef.current) {
             // Connection failed
-            console.log('ws closed by server');
+            console.debug('ws closed by server');
           } else {
             // Cleanup initiated from app side, can return here, to not attempt a reconnect
-            console.log('ws closed by app component unmount');
+            console.debug('ws closed by app component unmount');
             return;
           }
 

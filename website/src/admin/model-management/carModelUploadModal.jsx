@@ -79,9 +79,9 @@ const StatusModelContent = (props) => {
   }
 
   async function uploadModelToCarStatus(InstanceId, CommandId, model) {
-    // console.log("InstanceId: " + InstanceId)
-    // console.log("CommandId: " + CommandId)
-    // console.log(model)
+    // console.debug("InstanceId: " + InstanceId)
+    // console.debug("CommandId: " + CommandId)
+    // console.debug(model)
 
     if (InstanceId === '' || CommandId === '') {
       return [];
@@ -106,16 +106,16 @@ const StatusModelContent = (props) => {
       Status: ssmCommandStatus,
     };
     const tempResultsArray = [];
-    // console.log(resultToAdd);
+    // console.debug(resultToAdd);
 
     let updatedElement = false;
     for (const currentResult in results) {
       if (results[currentResult].CommandId === CommandId) {
-        // console.log('update');
+        // console.debug('update');
         tempResultsArray.push(resultToAdd);
         updatedElement = true;
       } else {
-        // console.log('dont update');
+        // console.debug('dont update');
         tempResultsArray.push(results[currentResult]);
       }
     }
@@ -135,23 +135,23 @@ const StatusModelContent = (props) => {
   useInterval(() => {
     // Your custom logic here
     setSeconds(seconds + 1);
-    // console.log("useInterval seconds: " + seconds)
+    // console.debug("useInterval seconds: " + seconds)
 
     const models = props.selectedModels;
     const car = props.selectedCars[0];
-    // console.log(models);
-    // console.log(car);
+    // console.debug(models);
+    // console.debug(car);
 
-    // console.log('Models in array: ' + models.length)
+    // console.debug('Models in array: ' + models.length)
     if (uploadStatus !== 'InProgress') {
-      // console.log(uploadStatus + " !== InProgress")
+      // console.debug(uploadStatus + " !== InProgress")
       if (models.length > 0) {
         setUploadStatus('InProgress');
         const model = models.pop();
-        // console.log('POP!');
+        // console.debug('POP!');
         uploadModelToCar(car, model);
       } else {
-        // console.log('uploadStatus: ' + 'Complete');
+        // console.debug('uploadStatus: ' + 'Complete');
         // setDimmerActive(false);
       }
     } else {

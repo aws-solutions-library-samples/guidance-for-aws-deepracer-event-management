@@ -45,7 +45,7 @@ const AdminModels = () => {
 
   async function getCarsOnline() {
     setCarsIsLoading(true);
-    console.log('Collecting cars...');
+    console.debug('Collecting cars...');
     // Get CarsOnline
     const response = await API.graphql({
       query: queries.carsOnline,
@@ -56,11 +56,11 @@ const AdminModels = () => {
   }
   async function getModels() {
     setModelsIsLoading(true);
-    console.log('Collecting models...');
+    console.debug('Collecting models...');
     const response = await API.graphql({
       query: queries.getAllModels,
     });
-    console.log(response);
+    console.debug(response);
     const models_response = response.data.getAllModels;
     const models = models_response.map(function (model, i) {
       const modelKeyPieces = model.modelKey.split('/');

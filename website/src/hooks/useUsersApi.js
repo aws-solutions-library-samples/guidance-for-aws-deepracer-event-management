@@ -57,7 +57,7 @@ export const useUsersApi = (userHasAccess = false) => {
     if (userHasAccess) {
       subscription = API.graphql(graphqlOperation(onUserCreated)).subscribe({
         next: (event) => {
-          console.log(event);
+          console.debug(event);
           setUsers([...users, event.value.data.onUserCreated]);
         },
       });
@@ -67,7 +67,7 @@ export const useUsersApi = (userHasAccess = false) => {
       //   authMode: 'AMAZON_COGNITO_USER_POOLS',
       // }).subscribe({
       //   next: (event) => {
-      //     console.log(event);
+      //     console.debug(event);
       //     setUsers([...users, event.value.data.onUserCreated]);
       //   },
       // });

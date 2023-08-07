@@ -1,5 +1,5 @@
 import { GraphQLResult, GraphQLSubscription } from '@aws-amplify/api';
-import { Amplify, API, graphqlOperation } from 'aws-amplify';
+import { API, Amplify, graphqlOperation } from 'aws-amplify';
 import { useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
@@ -27,14 +27,14 @@ function App() {
   var lowerThirdStateIN: boolean = false;
   var shouldShowChromaBackground: boolean = false;
   var chromaBgColor: string = '00ff00';
-  
+
   const { t, i18n } = useTranslation();
 
   const [searchParams] = useSearchParams();
   const { eventId } = useParams();
 
   const desiredLanguage = searchParams.get("lang")?.toString();
-  
+
   let trackId = searchParams.get("trackId")?.toString();
   if (typeof trackId === "undefined") {
     trackId = "1";
@@ -73,7 +73,7 @@ function App() {
 
       // all code in this function is retrofitted from GoSquared (old) overlay system.
       // this whole function could use some TLC and modernization (old solution was just raw JS).
-      // I literally pasted this in and modified slightly to make this work on the time schedule 
+      // I literally pasted this in and modified slightly to make this work on the time schedule
       // that @dasmtch needed for first summit of 2023.
       var data = message;
 
@@ -82,51 +82,51 @@ function App() {
       data.running = data.raceStatus === 'RACE_IN_PROGRESS';
 
       if (data.username) {
-        // console.log('competitor found!');
-        // console.log('TimerState: ' + timerState);
+        // console.debug('competitor found!');
+        // console.debug('TimerState: ' + timerState);
 
         if (leaderBoardStateIN) {
-          // console.log('fade out leaderboard');
+          // console.debug('fade out leaderboard');
           (transitions as any).LeaderboardFadeOut();
           leaderBoardStateIN = false;
         }
 
         if (!lowerThirdStateIN) {
-          // console.log('transition IN lower third.');
-          setTimeout(() => { 
-            (transitions as any).LowerThirdRacerAndLapInfoIn(); 
-            lowerThirdStateIN = true; 
+          // console.debug('transition IN lower third.');
+          setTimeout(() => {
+            (transitions as any).LowerThirdRacerAndLapInfoIn();
+            lowerThirdStateIN = true;
             helpers.SetLocalizedLowerThirdsLabels(t('lower-thirds.racer-name'), t('lower-thirds.time-remaining'), t('lower-thirds.fastest-lap'), t('lower-thirds.previous-lap'));
           }, 2000);
         }
 
         var oldPauseState = isPaused;
         isPaused = data.paused;
-        // console.log(`Old Paused: ${oldPauseState}, New Paused: ${isPaused}`);
+        // console.debug(`Old Paused: ${oldPauseState}, New Paused: ${isPaused}`);
 
         if (oldPauseState && !data.paused && !data.finished && data.running) {
-          // console.log("RESUMING TIMER!");
+          // console.debug("RESUMING TIMER!");
           timerState = true;
           startTimer();
         }
-        // console.log(`DATA.PAUSED: ${data.paused} !!!!!!!!!!!!!!!!!!!!!!!!!`);
+        // console.debug(`DATA.PAUSED: ${data.paused} !!!!!!!!!!!!!!!!!!!!!!!!!`);
 
         if (data.finished) {
-          // console.log('FINISHED, RESET TIMER!');
+          // console.debug('FINISHED, RESET TIMER!');
           // resetTimer();
 
           if (lowerThirdStateIN) {
-            // console.log('Lower Third OUT!');
+            // console.debug('Lower Third OUT!');
             (transitions as any).LowerThirdRacerAndLapInfoOut();
             lowerThirdStateIN = false;
 
-            // console.log('Setting TimeOut to remove racer info from lower third.');
+            // console.debug('Setting TimeOut to remove racer info from lower third.');
             setTimeout(() => {
               (helpers as any).SetRacerInfoName("");
               (helpers as any).SetRacerInfoFastestLap("00.000");
               (helpers as any).SetRacerInfoLastLap("00.000");
               (helpers as any).SetRacerInfoTotalTime(180000);
-              // console.log(`CURRENT TIMER STATE: ${timerState}`);
+              // console.debug(`CURRENT TIMER STATE: ${timerState}`);
               if (timerState) {
                 timerState = false;
                 resetTimer();
@@ -135,30 +135,30 @@ function App() {
           }
 
           if (!leaderBoardStateIN) {
-            // console.log('Setting TimeOut to fade Leaderboard in!');
+            // console.debug('Setting TimeOut to fade Leaderboard in!');
             helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
             setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
           }
         }
 
         if (!timerState && data.running) {
-          // console.log('Timer Not Running, set state to true and start timer.');
+          // console.debug('Timer Not Running, set state to true and start timer.');
           timerState = true;
           startTimer();
         }
 
         var racer = data.username;
         (helpers as any).SetRacerInfoName(racer);
-        // console.log("Racer: " + racer)
+        // console.debug("Racer: " + racer)
 
         var timeLeft = data.timeLeftInMs;
-        // console.log('Total Time Remaining: ' + (helpers as any).GetFormattedTotalTime(timeLeft));
+        // console.debug('Total Time Remaining: ' + (helpers as any).GetFormattedTotalTime(timeLeft));
         (helpers as any).SetRacerInfoTotalTime((helpers as any).GetFormattedTotalTime(timeLeft));
         currentTotalTimerMS = timeLeft;
 
         if (data.laps) {
-          // console.log(`Found Laps:`);
-          // console.log(data.laps);
+          // console.debug(`Found Laps:`);
+          // console.debug(data.laps);
           if (data.laps) {
             var fastestLap = (data.laps as any[])
               .filter(item => item.isValid)
@@ -173,11 +173,11 @@ function App() {
               })[0];
 
             if (fastestLap) {
-              // console.log('Fastest Lap: ' + (helpers as any).GetFormattedLapTime(fastestLap.time));
+              // console.debug('Fastest Lap: ' + (helpers as any).GetFormattedLapTime(fastestLap.time));
               (helpers as any).SetRacerInfoFastestLap((helpers as any).GetFormattedLapTime(fastestLap.time))
             }
 
-            // console.log(data.laps);
+            // console.debug(data.laps);
 
             var laps = (data.laps as any[]).filter(obj => {
               return obj.isValid
@@ -196,27 +196,27 @@ function App() {
               })[0];
 
             if (lastLap) {
-              // console.log('Last Lap: ' + (helpers as any).GetFormattedLapTime(lastLap.time));
+              // console.debug('Last Lap: ' + (helpers as any).GetFormattedLapTime(lastLap.time));
               (helpers as any).SetRacerInfoLastLap((helpers as any).GetFormattedLapTime(lastLap.time));
             }
           }
         }
       }
       else if ('competitor' in data && data.competitor === null) {
-        // console.log('Competitor NOT FOUND!');
+        // console.debug('Competitor NOT FOUND!');
 
         if (lowerThirdStateIN) {
-          // console.log('Lower Third OUT!');
+          // console.debug('Lower Third OUT!');
           (transitions as any).LowerThirdRacerAndLapInfoOut();
           lowerThirdStateIN = false;
 
-          // console.log('Setting TimeOut to remove racer info from lower third.');
+          // console.debug('Setting TimeOut to remove racer info from lower third.');
           setTimeout(() => {
             (helpers as any).SetRacerInfoName("");
             (helpers as any).SetRacerInfoFastestLap("00.000");
             (helpers as any).SetRacerInfoLastLap("00.000");
             (helpers as any).SetRacerInfoTotalTime(180000);
-            // console.log(`CURRENT TIMER STATE: ${timerState}`);
+            // console.debug(`CURRENT TIMER STATE: ${timerState}`);
             if (timerState) {
               timerState = false;
               resetTimer();
@@ -225,21 +225,21 @@ function App() {
         }
 
         if (!leaderBoardStateIN) {
-          // console.log('Setting TimeOut to fade Leaderboard in!');
+          // console.debug('Setting TimeOut to fade Leaderboard in!');
           helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
           setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
         }
       }
       // else if ('previous' in data && 'current' in data) {
       //   // event name info
-      //   // console.log('Event Config');
-      //   // console.log(data.current.state.reported.config);
+      //   // console.debug('Event Config');
+      //   // console.debug(data.current.state.reported.config);
       //   eventName = data.current.state.reported.config.localName === "" ? data.current.state.reported.config.name : data.current.state.reported.config.localName;
-      //   console.log(`EVENT NAME SET TO: ${eventName}`);
+      //   console.debug(`EVENT NAME SET TO: ${eventName}`);
       //   (helpers as any).SetEventName(eventName.toUpperCase());
 
       //   // leaderboard data.
-      //   console.log(data.current.state.reported.entries);
+      //   console.debug(data.current.state.reported.entries);
       //   leaderboardData = (helpers as any).getLeaderboardData(data.current.state.reported.entries);
 
       //   (helpers as any).SetFirstPlaceRacerNameAndTime('', '');
@@ -255,13 +255,13 @@ function App() {
       // else if ('state' in data && 'metadata' in data) { // this is initial state message.
       //   leaderboardData = (helpers as any).getLeaderboardData(data.state.reported.entries);
       //   let eventMsgConfig = data.state.reported.config;
-      //   console.log(eventMsgConfig);
+      //   console.debug(eventMsgConfig);
       //   eventName = eventMsgConfig.localName === "" ? eventMsgConfig.name : eventMsgConfig.localName;
-      //   console.log(`EVENT NAME SET TO: ${eventName}`);
+      //   console.debug(`EVENT NAME SET TO: ${eventName}`);
       //   (helpers as any).SetEventName(eventName.toUpperCase());
       // }
     } catch (e) {
-      console.log("error! " + e);
+      console.debug("error! " + e);
     }
   }
 
@@ -282,10 +282,10 @@ function App() {
   }
 
   useEffect(() => {
-    
+
     // set desired language
     if (searchParams.get("lang") !== null) {
-      console.log("CHANGING LANGUAGE TO: " + desiredLanguage);
+      console.debug("CHANGING LANGUAGE TO: " + desiredLanguage);
       i18n.changeLanguage(desiredLanguage);
     }
 
@@ -311,7 +311,7 @@ function App() {
 
       // check if lower thirds is showing, if not, then show leaderboard.
       if (!lowerThirdStateIN) {
-        // console.log('Setting TimeOut to fade Leaderboard in!');
+        // console.debug('Setting TimeOut to fade Leaderboard in!');
         helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
         setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
       }
