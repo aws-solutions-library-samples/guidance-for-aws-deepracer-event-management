@@ -8,6 +8,7 @@ import { PageLayout } from '../../components/pageLayout';
 import * as mutations from '../../graphql/mutations';
 
 import { DeleteModal, ItemList } from '../../components/deleteModal';
+import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import {
   PropertyFilterI18nStrings,
   TableEmptyState,
@@ -26,7 +27,7 @@ import { useFleetsContext, useUsersContext } from '../../store/storeProvider';
 import { ColumnDefinitions, FilteringProperties, VisibleContentOptions } from './fleetsTableConfig';
 
 const AdminFleets = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-fleets']);
   const [selectedFleetsInTable, setSelectedFleetsInTable] = useState([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [, , getUserNameFromId] = useUsersContext();
@@ -47,13 +48,13 @@ const AdminFleets = () => {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-fleets' })}
-        //     bodyContent={t('content', { ns: 'help-admin-fleets' })}
-        //     footerContent={t('footer', { ns: 'help-admin-fleets' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-fleets' })}
+            bodyContent={t('content', { ns: 'help-admin-fleets' })}
+            footerContent={t('footer', { ns: 'help-admin-fleets' })}
+          />
+        ),
       },
     });
 

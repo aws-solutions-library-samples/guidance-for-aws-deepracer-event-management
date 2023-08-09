@@ -2,6 +2,7 @@ import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Header, Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
+import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 
 import { useTranslation } from 'react-i18next';
 import { PageLayout } from '../../components/pageLayout';
@@ -22,7 +23,7 @@ import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 import { formatAwsDateTime } from '../../support-functions/time';
 
 const AdminQuarantine = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-model-quarantine']);
 
   const [allItems, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,13 +63,13 @@ const AdminQuarantine = () => {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-models-quarantine' })}
-        //     bodyContent={t('content', { ns: 'help-admin-models-quarantine' })}
-        //     footerContent={t('footer', { ns: 'help-admin-models-quarantine' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-model-quarantine' })}
+            bodyContent={t('content', { ns: 'help-admin-model-quarantine' })}
+            footerContent={t('footer', { ns: 'help-admin-model-quarantine' })}
+          />
+        ),
       },
     });
 

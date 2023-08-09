@@ -31,7 +31,7 @@ import { MultiChoicePanelContent } from './components/multiChoicePanelContent';
 import { ColumnDefinitions, VisibleContentOptions } from './support-functions/raceTableConfig';
 
 const RaceAdmin = () => {
-  const { t } = useTranslation(['translation', 'help-admin-races']);
+  const { t } = useTranslation(['translation', 'help-admin-race-admin']);
   const selectedEvent = useSelectedEventContext();
   const [, , getUserNameFromId] = useUsersContext();
   const [races, loading, sendDelete] = useRacesContext();
@@ -141,9 +141,9 @@ const RaceAdmin = () => {
         isHidden: helpPanelHidden,
         content: (
           <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-races' })}
-            bodyContent={t('content', { ns: 'help-admin-races' })}
-            footerContent={t('footer', { ns: 'help-admin-races' })}
+            headerContent={t('header', { ns: 'help-admin-race-admin' })}
+            bodyContent={t('content', { ns: 'help-admin-race-admin' })}
+            footerContent={t('footer', { ns: 'help-admin-race-admin' })}
           />
         ),
       },
