@@ -11,6 +11,7 @@ import {
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EventSelectorModal } from '../../../components/eventSelectorModal';
+import { SimpleHelpPanelLayout } from '../../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../../components/pageLayout';
 import useMutation from '../../../hooks/useMutation';
 import { RacesStatusEnum } from '../../../hooks/usePublishOverlay';
@@ -21,7 +22,7 @@ import { RacesDoneByUser } from '../components/racesDoneByUser';
 import { breadcrumbs } from '../support-functions/supportFunctions';
 
 export const RaceSetupPage = ({ onNext }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-race-setup']);
   const [SendMutation] = useMutation();
   const selectedEvent = useSelectedEventContext();
   const selectedTrack = useSelectedTrackContext();
@@ -49,13 +50,13 @@ export const RaceSetupPage = ({ onNext }) => {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-race-setup' })}
-        //     bodyContent={t('content', { ns: 'help-admin-race-setup' })}
-        //     footerContent={t('footer', { ns: 'help-admin-race-setup' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-race-setup' })}
+            bodyContent={t('content', { ns: 'help-admin-race-setup' })}
+            footerContent={t('footer', { ns: 'help-admin-race-setup' })}
+          />
+        ),
       },
     });
 
