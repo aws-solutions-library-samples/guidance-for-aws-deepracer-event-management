@@ -5,6 +5,7 @@ import { useCollection } from '@cloudscape-design/collection-hooks';
 import { PropertyFilter, Table } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
 import { DeleteModal, ItemList } from '../../components/deleteModal';
+import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
 import { DrSplitPanel } from '../../components/split-panels/dr-split-panel';
 import {
@@ -34,7 +35,7 @@ import {
 } from './support-functions/eventsTableConfig';
 
 const AdminEvents = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-events']);
   const [SelectedEventsInTable, setSelectedEventsInTable] = useState([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [send] = useMutation();
@@ -64,13 +65,13 @@ const AdminEvents = () => {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-events' })}
-        //     bodyContent={t('content', { ns: 'help-admin-events' })}
-        //     footerContent={t('footer', { ns: 'help-admin-events' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-events' })}
+            bodyContent={t('content', { ns: 'help-admin-events' })}
+            footerContent={t('footer', { ns: 'help-admin-events' })}
+          />
+        ),
       },
     });
 

@@ -13,6 +13,7 @@ import {
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
+import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 import { useTranslation } from 'react-i18next';
@@ -34,7 +35,7 @@ import { useToolsOptionsDispatch } from '../store/appLayoutProvider';
 import * as queries from '../graphql/queries';
 
 const AdminCars = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-cars']);
   const [allItems, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCarsBtnDisabled, setSelectedCarsBtnDisabled] = useState(true);
@@ -52,13 +53,13 @@ const AdminCars = () => {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-cars' })}
-        //     bodyContent={t('content', { ns: 'help-admin-cars' })}
-        //     footerContent={t('footer', { ns: 'help-admin-cars' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-cars' })}
+            bodyContent={t('content', { ns: 'help-admin-cars' })}
+            footerContent={t('footer', { ns: 'help-admin-cars' })}
+          />
+        ),
       },
     });
 

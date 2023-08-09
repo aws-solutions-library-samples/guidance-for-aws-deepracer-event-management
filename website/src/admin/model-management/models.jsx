@@ -1,5 +1,6 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
+import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
 import * as queries from '../../graphql/queries';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
@@ -34,7 +35,7 @@ import {
 import CarModelUploadModal from './carModelUploadModal';
 
 const AdminModels = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-models']);
 
   const [allModels, setAllModels] = useState([]);
   const [cars, setCars] = useState([]);
@@ -93,13 +94,13 @@ const AdminModels = () => {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-models' })}
-        //     bodyContent={t('content', { ns: 'help-admin-models' })}
-        //     footerContent={t('footer', { ns: 'help-admin-models' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-models' })}
+            bodyContent={t('content', { ns: 'help-admin-models' })}
+            footerContent={t('footer', { ns: 'help-admin-models' })}
+          />
+        ),
       },
     });
 

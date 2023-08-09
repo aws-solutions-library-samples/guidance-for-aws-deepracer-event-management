@@ -2,6 +2,7 @@ import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Header, Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
 import {
   PropertyFilterI18nStrings,
@@ -23,7 +24,7 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 
 export function GroupsPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-groups']);
 
   const [selectedItems] = useState([]);
   const [groups, isLoading] = useGroupsApi();
@@ -42,13 +43,13 @@ export function GroupsPage() {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-groups' })}
-        //     bodyContent={t('content', { ns: 'help-admin-groups' })}
-        //     footerContent={t('footer', { ns: 'help-admin-groups' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-groups' })}
+            bodyContent={t('content', { ns: 'help-admin-groups' })}
+            footerContent={t('footer', { ns: 'help-admin-groups' })}
+          />
+        ),
       },
     });
 

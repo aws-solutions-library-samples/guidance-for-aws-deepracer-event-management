@@ -10,6 +10,7 @@ import {
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { SimpleHelpPanelLayout } from '../../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../../components/pageLayout';
 import useMutation from '../../../hooks/useMutation';
 import {
@@ -38,13 +39,13 @@ export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction,
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-race-finish' })}
-        //     bodyContent={t('content', { ns: 'help-admin-race-finish' })}
-        //     footerContent={t('footer', { ns: 'help-admin-race-finish' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-race-finish' })}
+            bodyContent={t('content', { ns: 'help-admin-race-finish' })}
+            footerContent={t('footer', { ns: 'help-admin-race-finish' })}
+          />
+        ),
       },
     });
 
