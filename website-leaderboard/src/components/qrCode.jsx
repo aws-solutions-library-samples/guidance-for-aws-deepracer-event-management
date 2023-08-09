@@ -3,11 +3,10 @@ import styles from './qrCode.module.css';
 // using large 1024px logo because we load it as part of leaderboard already
 import Logo from '../assets/logo1024.png';
 
-
 const QrCode = ({ eventId }) => {
   function createLandingPageHref() {
-    const href = `${window.location.origin}/landing-page/${eventId.toString()}`
-    console.log(href)
+    const href = `${window.location.origin}/landing-page/${eventId.toString()}`;
+    console.debug(href);
     return href;
   }
 
@@ -25,8 +24,7 @@ const QrCode = ({ eventId }) => {
         }}
       />
     </div>
-  )
-}
-
+  );
+};
 
 export { QrCode };

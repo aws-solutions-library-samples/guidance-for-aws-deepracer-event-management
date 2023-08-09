@@ -51,7 +51,7 @@ function cwr(operation, payload) {
 function usePageViews() {
   const location = useLocation();
   React.useEffect(() => {
-    // console.log(location.pathname);
+    // console.debug(location.pathname);
     cwr('recordPageView', location.pathname);
   }, [location]);
 }

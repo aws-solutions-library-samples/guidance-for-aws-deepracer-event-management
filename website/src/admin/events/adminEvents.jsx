@@ -140,7 +140,7 @@ const AdminEvents = () => {
   }, []);
 
   useEffect(() => {
-    console.log('show split panel');
+    console.debug('show split panel');
     splitPanelOptionsDispatch({
       type: 'UPDATE',
       value: {

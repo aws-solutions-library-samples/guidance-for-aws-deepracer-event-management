@@ -141,10 +141,10 @@ export const EventSelectorModal = ({ visible, onDismiss, onOk }) => {
 
   useEffect(() => {
     // set track select options
-    console.log(config);
+    console.debug(config);
     const selectedEvent = events.find((event) => event.eventId === config.eventId);
     if (selectedEvent) {
-      console.log(selectedEvent);
+      console.debug(selectedEvent);
       const options = selectedEvent.tracks
         .filter((track) => track.trackId !== 'combined') // filter out the combined leaderboard
         .map((track) => {

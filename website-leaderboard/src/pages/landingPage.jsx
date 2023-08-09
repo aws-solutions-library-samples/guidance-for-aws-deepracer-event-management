@@ -8,11 +8,10 @@ import Logo from '../assets/logo512.png';
 import awsconfig from '../config.json';
 import styles from './landingPage.module.css';
 
-
 export function LandingPage() {
   const urlParams = useParams();
   const eventId = urlParams.eventId;
-  console.log(eventId);
+  console.debug(eventId);
 
   // let language = queryParams.get('lang');
   // if (language === null) language = 'en';
@@ -22,8 +21,8 @@ export function LandingPage() {
 
   const defaultPageItems = [
     {
-      linkName: "Follow the race live!",
-      linkDescription: "View the DeepRacer Leaderboard live.",
+      linkName: 'Follow the race live!',
+      linkDescription: 'View the DeepRacer Leaderboard live.',
       linkHref: `${window.location.origin}/leaderboard/${eventId}`,
     },
     {
@@ -36,8 +35,7 @@ export function LandingPage() {
       linkDescription: 'Upload your own autonomous racing model here and get started racing!',
       linkHref: awsconfig.Urls.drem,
     },
-  ]
-
+  ];
 
   const [landingPageItems, setLandingPageItems] = useState(defaultPageItems);
 
@@ -52,11 +50,8 @@ export function LandingPage() {
   //   );
   // }, [eventId]);
 
-
   return (
-    <div
-      className={styles.landingPageRoot} >
-
+    <div className={styles.landingPageRoot}>
       <div className={styles.logodiv}>
         <img src={Logo} alt="DeepRacer Logo" className={styles.logo} />
       </div>
@@ -68,12 +63,8 @@ export function LandingPage() {
             selectionGroupLabel: 'Item selection',
           }}
           cardDefinition={{
-            header: item => (
-              <Link
-                external
-                externalIconAriaLabel='Opens in new tab'
-                href={item.linkHref}
-              >
+            header: (item) => (
+              <Link external externalIconAriaLabel="Opens in new tab" href={item.linkHref}>
                 {item.linkName}
               </Link>
             ),
@@ -81,21 +72,17 @@ export function LandingPage() {
               {
                 id: 'description',
                 header: 'Description',
-                content: item => item.linkDescription,
+                content: (item) => item.linkDescription,
               },
             ],
           }}
           cardsPerRow={[{ cards: 1 }]}
           items={landingPageItems}
-          loadingText='Loading resources'
+          loadingText="Loading resources"
           empty={
-            <Box textAlign='center' color='inherit'>
+            <Box textAlign="center" color="inherit">
               <b>No resources</b>
-              <Box
-                padding={{ bottom: 's' }}
-                variant='p'
-                color='inherit'
-              >
+              <Box padding={{ bottom: 's' }} variant="p" color="inherit">
                 No resources to display.
               </Box>
             </Box>
@@ -103,7 +90,5 @@ export function LandingPage() {
         />
       </div>
     </div>
-
   );
-
 }

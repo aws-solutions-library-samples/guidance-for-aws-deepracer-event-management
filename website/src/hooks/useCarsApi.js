@@ -49,7 +49,7 @@ export const useCarsApi = (userHasAccess = false) => {
   // useEffect(() => {
   //   const subscription = API.graphql(graphqlOperation(onAddedEvent)).subscribe({
   //     next: (event) => {
-  //       console.log(event);
+  //       console.debug(event);
   //       setEvents([...events, event.value.data.onAddedEvent]);
   //     },
   //   });
@@ -63,7 +63,7 @@ export const useCarsApi = (userHasAccess = false) => {
   // useEffect(() => {
   //   const subscription = API.graphql(graphqlOperation(onUpdatedEvent)).subscribe({
   //     next: (event) => {
-  //       console.log(event);
+  //       console.debug(event);
   //       const updatedEvent = event.value.data.onUpdatedEvent;
 
   //       setEvents((prevState) => {

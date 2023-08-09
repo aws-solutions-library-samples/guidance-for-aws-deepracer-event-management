@@ -64,7 +64,7 @@ export const ModelMangement = () => {
           });
         })
         .catch((err) => {
-          console.log(err);
+          console.debug(err);
         });
     };
 
