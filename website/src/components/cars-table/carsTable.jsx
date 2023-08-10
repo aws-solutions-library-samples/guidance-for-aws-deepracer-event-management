@@ -1,9 +1,13 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Button, Header, SpaceBetween, Table, TextFilter } from '@cloudscape-design/components';
+import { Header, PropertyFilter, SpaceBetween, Table } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import {
+  PropertyFilterI18nStrings,
+  TableEmptyState,
+  TableNoMatchState,
+} from '../../components/tableCommon';
+import {
   DefaultPreferences,
-  EmptyState,
   MatchesCountText,
   TablePagination,
   TablePreferences,
@@ -11,7 +15,7 @@ import {
 
 import { useTranslation } from 'react-i18next';
 import { useCarsContext } from '../../store/storeProvider';
-import { ColumnsConfig, VisibleContentOptions } from './carTableConfig';
+import { ColumnsConfig, FilteringProperties, VisibleContentOptions } from './carTableConfig';
 
 const Actions = ({ children, t, setOnline, setIsLoading, edit = false }) => {
   return (
@@ -21,11 +25,10 @@ const Actions = ({ children, t, setOnline, setIsLoading, edit = false }) => {
   );
 };
 
-export const CarsTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) => {
+export const CarsTable = ({ selectedCarsInTable = [], setSelectedCarsInTable, fleetName = '' }) => {
   const { t } = useTranslation();
   const [selectedCarsBtnDisabled, setSelectedCarsBtnDisabled] = useState(true);
   const [online, setOnline] = useState('Online');
-
   const [cars, isLoading] = useCarsContext();
 
   useEffect(() => {
@@ -35,32 +38,56 @@ export const CarsTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) 
     };
   }, [online]);
 
+  useEffect(() => {
+    return () => {
+      // Unmounting
+    };
+  }, [fleetName]);
+
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
     visibleContent: ['carName', 'fleetName', 'carIp'],
   });
 
-  const columnsConfig = ColumnsConfig();
+  const columnDefinitions = ColumnsConfig();
+  const filteringProperties = FilteringProperties();
   const visibleContentOptions = VisibleContentOptions();
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(cars, {
-      filtering: {
-        empty: <EmptyState title={t('cars.no-cars')} subtitle={t('cars.no-cars-message')} />,
-        noMatch: (
-          <EmptyState
-            title={t('common.no-matches')}
-            subtitle={t('common.we-cant-find-a-match')}
-            action={
-              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
-            }
-          />
-        ),
-      },
-      pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[1] } },
-      selection: {},
-    });
+  let defaultQuery = { tokens: [], operation: 'and' };
+  if (fleetName.length > 0) {
+    defaultQuery = {
+      tokens: [{ propertyKey: 'fleetName', value: fleetName, operator: '=' }],
+      operation: 'and',
+    };
+  }
+
+  const {
+    items,
+    actions,
+    filteredItemsCount,
+    collectionProps,
+    propertyFilterProps,
+    paginationProps,
+  } = useCollection(cars, {
+    propertyFiltering: {
+      filteringProperties,
+      defaultQuery: defaultQuery,
+      empty: <TableEmptyState resourceName="Car" />,
+      noMatch: (
+        <TableNoMatchState
+          onClearFilter={() => {
+            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
+          }}
+          label={t('common.no-matches')}
+          description={t('common.we-cant-find-a-match')}
+          buttonLabel={t('button.clear-filters')}
+        />
+      ),
+    },
+    pagination: { pageSize: preferences.pageSize },
+    sorting: { defaultState: { sortingColumn: columnDefinitions[1] } },
+    selection: {},
+  });
 
   return (
     <Table
@@ -77,14 +104,16 @@ export const CarsTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) 
           {t('cars.header')}
         </Header>
       }
-      columnDefinitions={columnsConfig}
+      columnDefinitions={columnDefinitions}
       items={items}
       pagination={<TablePagination paginationProps={paginationProps} />}
       filter={
-        <TextFilter
-          {...filterProps}
+        <PropertyFilter
+          {...propertyFilterProps}
+          i18nStrings={PropertyFilterI18nStrings('cars')}
           countText={MatchesCountText(filteredItemsCount)}
           filteringAriaLabel={t('cars.filter-cars')}
+          expandToViewport={true}
         />
       }
       loading={isLoading}
@@ -95,7 +124,6 @@ export const CarsTable = ({ selectedCarsInTable = [], setSelectedCarsInTable }) 
       trackBy="InstanceId"
       selectedItems={selectedCarsInTable}
       onSelectionChange={({ detail: { selectedItems } }) => {
-        console.debug(selectedItems);
         setSelectedCarsInTable(selectedItems);
         selectedCarsInTable.length
           ? setSelectedCarsBtnDisabled(false)
