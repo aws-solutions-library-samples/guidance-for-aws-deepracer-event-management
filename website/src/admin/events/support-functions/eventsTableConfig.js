@@ -60,18 +60,6 @@ export const VisibleContentOptions = () => {
           label: i18next.t('events.event-id'),
         },
         {
-          id: 'eventLeaderboardLink',
-          label: i18next.t('events.leaderboard-link'),
-        },
-        {
-          id: 'eventStreamingOverlayLink',
-          label: i18next.t('events.streaming-overlay-link'),
-        },
-        {
-          id: 'eventStreamingOverlayLinkChroma',
-          label: i18next.t('events.streaming-overlay-link-chroma'),
-        },
-        {
           id: 'eventLandingPageLink',
           label: i18next.t('events.landing-page-link'),
         },
@@ -154,44 +142,6 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
       id: 'eventId',
       header: i18next.t('events.event-id'),
       cell: (item) => item.eventId || '-',
-    },
-    {
-      id: 'eventLeaderboardLink',
-      header: i18next.t('events.leaderboard-link'),
-      cell: (item) =>
-        (
-          <EventLinksButtons
-            href={`${
-              awsconfig.Urls.leaderboardWebsite
-            }/leaderboard/${item.eventId.toString()}/?qr=header&scroll=true`}
-            linkTextPrimary={i18next.t('events.leaderboard-link-same-tab')}
-            linkTextExternal={i18next.t('events.leaderboard-link-new-tab')}
-          />
-        ) || '-',
-    },
-    {
-      id: 'eventStreamingOverlayLink',
-      header: i18next.t('events.streaming-overlay-link'),
-      cell: (item) =>
-        (
-          <EventLinksButtons
-            href={`${awsconfig.Urls.streamingOverlayWebsite}/${item.eventId.toString()}`}
-            linkTextPrimary={i18next.t('events.streaming-overlay-link-same-tab')}
-            linkTextExternal={i18next.t('events.streaming-overlay-link-new-tab')}
-          />
-        ) || '-',
-    },
-    {
-      id: 'eventStreamingOverlayLinkChroma',
-      header: i18next.t('events.streaming-overlay-link-chroma'),
-      cell: (item) =>
-        (
-          <EventLinksButtons
-            href={`${awsconfig.Urls.streamingOverlayWebsite}/${item.eventId.toString()}?chroma=1`}
-            linkTextPrimary={i18next.t('events.streaming-overlay-link-chroma-same-tab')}
-            linkTextExternal={i18next.t('events.streaming-overlay-link-chroma-new-tab')}
-          />
-        ) || '-',
     },
     {
       id: 'eventLandingPageLink',
