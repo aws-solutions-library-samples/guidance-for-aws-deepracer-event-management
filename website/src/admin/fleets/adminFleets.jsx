@@ -100,7 +100,7 @@ const AdminFleets = () => {
   } = useCollection(fleets, {
     propertyFiltering: {
       filteringProperties,
-      empty: <TableEmptyState resourceName="Model" />,
+      empty: <TableEmptyState resourceName="Fleet" />,
       noMatch: (
         <TableNoMatchState
           onClearFilter={() => {
@@ -139,7 +139,7 @@ const AdminFleets = () => {
           {...propertyFilterProps}
           i18nStrings={PropertyFilterI18nStrings('fleets')}
           countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel={t('models.filter-groups')}
+          filteringAriaLabel={t('fleets.filter-groups')}
           expandToViewport={true}
         />
       }

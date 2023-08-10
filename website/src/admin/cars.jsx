@@ -113,7 +113,7 @@ const AdminCars = () => {
   const columnsConfig = ColumnsConfig();
   const visibleContentOptions = VisibleContentOptions();
   const filteringProperties = FilteringProperties();
-  console.debug(allItems);
+
   const {
     items,
     actions,
