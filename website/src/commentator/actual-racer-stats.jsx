@@ -112,8 +112,8 @@ const ActualRacerStats = () => {
 
       SetRestsSum(resets);
       SetAverageResetsPerLap(averageResetsPerLap.toFixed(1));
-      console.log('Resets: ' + resets);
-      console.log('Average Resets: ' + averageResetsPerLap);
+      console.debug('Resets: ' + resets);
+      console.debug('Average Resets: ' + averageResetsPerLap);
     }
   };
 
@@ -122,7 +122,7 @@ const ActualRacerStats = () => {
     const userId = actualRacer.userId;
 
     if (eventId && userId) {
-      console.info('Load data for ' + actualRacer.username);
+      console.debug('Load data for ' + actualRacer.username);
 
       const loadUserLaps = async () => {
         const response = await API.graphql(
@@ -130,7 +130,7 @@ const ActualRacerStats = () => {
         );
         const laps = response.data.getRaces.flatMap((race) => race.laps);
 
-        console.info(laps);
+        console.debug(laps);
         SetRacesCount(response.data?.getRaces.length);
         caclulateLapsInformation(laps);
         calculateOfftrackInformation(laps);

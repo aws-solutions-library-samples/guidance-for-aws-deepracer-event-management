@@ -14,7 +14,7 @@ export const CarFleetPanel = ({ fleetId, onChange }) => {
     if (fleets) {
       setCarFleetOptions(
         fleets.map((fleet) => {
-          return { lable: fleet.fleetId, value: fleet.fleetName };
+          return { label: fleet.fleetId, value: fleet.fleetName };
         })
       );
     }

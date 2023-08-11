@@ -1,22 +1,30 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Button, Header, Pagination, Table, TextFilter } from '@cloudscape-design/components';
+import { Header, Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Flag } from '../../components/flag';
+import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
 import {
+  PropertyFilterI18nStrings,
+  TableEmptyState,
+  TableNoMatchState,
+} from '../../components/tableCommon';
+import {
   DefaultPreferences,
-  EmptyState,
   MatchesCountText,
   TablePreferences,
 } from '../../components/tableConfig';
+import {
+  ColumnDefinitions,
+  FilteringProperties,
+  VisibleContentOptions,
+} from '../../components/tableUserConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 import { useUsersContext } from '../../store/storeProvider';
-import { formatAwsDateTime } from '../../support-functions/time';
 
 export const UsersList = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-users-list']);
 
   const [selectedItems] = useState([]);
 
@@ -35,13 +43,13 @@ export const UsersList = () => {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-user-list' })}
-        //     bodyContent={t('content', { ns: 'help-admin-user-list' })}
-        //     footerContent={t('footer', { ns: 'help-admin-user-list' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-users-list' })}
+            bodyContent={t('content', { ns: 'help-admin-users-list' })}
+            footerContent={t('footer', { ns: 'help-admin-users-list' })}
+          />
+        ),
       },
     });
 
@@ -50,143 +58,37 @@ export const UsersList = () => {
     };
   }, [toolsOptionsDispatch]);
 
-  const columnsConfig = [
-    {
-      id: 'Username',
-      header: t('users.header-username'),
-      cell: (item) => item.Username || '-',
-      sortingField: 'Username',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'Email',
-      header: t('users.header-email'),
-      cell: (item) => {
-        const email = item.Attributes.filter((obj) => {
-          return obj.Name === 'email';
-        });
-        if (email.length > 0) {
-          return email[0].Value;
-        } else {
-          return '-';
-        }
-      },
-      sortingField: 'Email',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'Flag',
-      header: t('users.flag'),
-      cell: (item) => {
-        const countryCode = item.Attributes.filter((obj) => {
-          return obj.Name === 'custom:countryCode';
-        });
-        if (countryCode.length > 0) {
-          return <Flag size="small" countryCode={countryCode[0].Value}></Flag>;
-        } else {
-          return '-';
-        }
-      },
-      sortingField: 'Flag',
-      width: 120,
-      minWidth: 80,
-    },
-    {
-      id: 'CountryCode',
-      header: t('users.country-code'),
-      cell: (item) => {
-        const countryCode = item.Attributes.filter((obj) => {
-          return obj.Name === 'custom:countryCode';
-        });
-        if (countryCode.length > 0) {
-          return countryCode[0].Value;
-        } else {
-          return '-';
-        }
-      },
-      sortingField: 'CountryCode',
-      width: 120,
-      minWidth: 80,
-    },
-    {
-      id: 'UserCreateDate',
-      header: t('users.header-creation-date'),
-      cell: (item) => formatAwsDateTime(item.UserCreateDate) || '-',
-      sortingField: 'UserCreateDate',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'UserLastModifiedDate',
-      header: t('users.header-last-modified-date'),
-      cell: (item) => formatAwsDateTime(item.UserLastModifiedDate) || '-',
-      sortingField: 'UserLastModifiedDate',
-      width: 200,
-      minWidth: 150,
-    },
-  ];
+  // Table config
+  const columnDefinitions = ColumnDefinitions();
+  const filteringProperties = FilteringProperties();
+  const visibleContentOptions = VisibleContentOptions();
 
-  const visibleContentOptions = [
-    {
-      label: t('groups.information'),
-      options: [
-        {
-          id: 'Username',
-          label: t('users.header-username'),
-          editable: false,
-        },
-        {
-          id: 'Email',
-          label: t('users.header-email'),
-          // editable: false,
-        },
-        {
-          id: 'Flag',
-          label: t('users.flag'),
-          //editable: false,
-        },
-        {
-          id: 'CountryCode',
-          label: t('users.country-code'),
-          //editable: false,
-        },
-        {
-          id: 'UserCreateDate',
-          label: t('users.header-creation-date'),
-        },
-        {
-          id: 'UserLastModifiedDate',
-          label: t('users.header-last-modified-date'),
-        },
-      ],
+  const {
+    items,
+    actions,
+    filteredItemsCount,
+    collectionProps,
+    paginationProps,
+    propertyFilterProps,
+  } = useCollection(users, {
+    propertyFiltering: {
+      filteringProperties,
+      empty: <TableEmptyState resourceName="User" />,
+      noMatch: (
+        <TableNoMatchState
+          onClearFilter={() => {
+            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
+          }}
+          label={t('common.no-matches')}
+          description={t('common.we-cant-find-a-match')}
+          buttonLabel={t('button.clear-filters')}
+        />
+      ),
     },
-  ];
-
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(users, {
-      filtering: {
-        empty: (
-          <EmptyState
-            title={t('users.no-users')}
-            subtitle={t('users.no-users-have-been-defined')}
-          />
-        ),
-        noMatch: (
-          <EmptyState
-            title={t('models.no-matches')}
-            subtitle={t('models.we-cant-find-a-match')}
-            action={
-              <Button onClick={() => actions.setFiltering('')}>{t('models.clear-filter')}</Button>
-            }
-          />
-        ),
-      },
-      pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnsConfig[3], isDescending: true } },
-      selection: {},
-    });
+    pagination: { pageSize: preferences.pageSize },
+    sorting: { defaultState: { sortingColumn: columnDefinitions[0], isDescending: false } },
+    selection: {},
+  });
 
   return (
     <PageLayout
@@ -211,8 +113,11 @@ export const UsersList = () => {
             {t('users.header-list')}
           </Header>
         }
-        columnDefinitions={columnsConfig}
+        columnDefinitions={columnDefinitions}
         items={items}
+        stripedRows={preferences.stripedRows}
+        contentDensity={preferences.contentDensity}
+        wrapLines={preferences.wrapLines}
         pagination={
           <Pagination
             {...paginationProps}
@@ -224,10 +129,12 @@ export const UsersList = () => {
           />
         }
         filter={
-          <TextFilter
-            {...filterProps}
+          <PropertyFilter
+            {...propertyFilterProps}
+            i18nStrings={PropertyFilterI18nStrings('users')}
             countText={MatchesCountText(filteredItemsCount)}
             filteringAriaLabel={t('users.filter-groups')}
+            expandToViewport={true}
           />
         }
         loading={isLoading}
@@ -235,7 +142,7 @@ export const UsersList = () => {
         visibleColumns={preferences.visibleContent}
         selectedItems={selectedItems}
         stickyHeader="true"
-        trackBy="GroupName"
+        trackBy="Username"
         resizableColumns
         preferences={
           <TablePreferences

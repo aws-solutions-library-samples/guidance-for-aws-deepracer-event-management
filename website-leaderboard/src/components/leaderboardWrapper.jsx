@@ -19,7 +19,7 @@ const LeaderboardWrapper = () => {
 
   let showQRcode = queryParams.get('qr');
   if (showQRcode === null || showQRcode === 'false') showQRcode = false;
-  console.log(`showQRcode: ${showQRcode}`)
+  console.debug(`showQRcode: ${showQRcode}`);
 
   let scroll = queryParams.get('scroll');
   if (scroll === null) {
@@ -28,10 +28,10 @@ const LeaderboardWrapper = () => {
     scroll = /true/i.test(scroll);
   }
 
-  console.info('eventId: ' + eventId);
-  console.info('language: ' + language);
-  console.info('trackId: ' + trackId);
-  console.info('scroll: ' + scroll);
+  console.debug('eventId: ' + eventId);
+  console.debug('language: ' + language);
+  console.debug('trackId: ' + trackId);
+  console.debug('scroll: ' + scroll);
 
   useEffect(() => {
     i18n.changeLanguage(language);

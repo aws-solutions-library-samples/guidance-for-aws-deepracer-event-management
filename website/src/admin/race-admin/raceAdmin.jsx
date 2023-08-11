@@ -31,7 +31,7 @@ import { MultiChoicePanelContent } from './components/multiChoicePanelContent';
 import { ColumnDefinitions, VisibleContentOptions } from './support-functions/raceTableConfig';
 
 const RaceAdmin = () => {
-  const { t } = useTranslation(['translation', 'help-admin-races']);
+  const { t } = useTranslation(['translation', 'help-admin-race-admin']);
   const selectedEvent = useSelectedEventContext();
   const [, , getUserNameFromId] = useUsersContext();
   const [races, loading, sendDelete] = useRacesContext();
@@ -81,8 +81,8 @@ const RaceAdmin = () => {
         empty: selectEmptyStateMessage(),
         noMatch: (
           <EmptyState
-            title={t('table.no-matches')}
-            subtitle={t('table.we-cant-find-a-match')}
+            title={t('common.no-matches')}
+            subtitle={t('common.we-cant-find-a-match')}
             action={
               <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
             }
@@ -141,9 +141,9 @@ const RaceAdmin = () => {
         isHidden: helpPanelHidden,
         content: (
           <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-races' })}
-            bodyContent={t('content', { ns: 'help-admin-races' })}
-            footerContent={t('footer', { ns: 'help-admin-races' })}
+            headerContent={t('header', { ns: 'help-admin-race-admin' })}
+            bodyContent={t('content', { ns: 'help-admin-race-admin' })}
+            footerContent={t('footer', { ns: 'help-admin-race-admin' })}
           />
         ),
       },
@@ -164,6 +164,9 @@ const RaceAdmin = () => {
       selectionType="multi"
       columnDefinitions={columnDefinitions}
       items={items}
+      stripedRows={preferences.stripedRows}
+      contentDensity={preferences.contentDensity}
+      wrapLines={preferences.wrapLines}
       loading={loading}
       loadingText={t('events.loading')}
       stickyHeader="true"

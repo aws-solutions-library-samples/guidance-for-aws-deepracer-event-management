@@ -38,7 +38,7 @@ export function useFleetsApi(userHasAccess = false) {
     if (userHasAccess) {
       subscription = API.graphql(graphqlOperation(onAddedFleet)).subscribe({
         next: (fleet) => {
-          // console.log(fleet);
+          // console.debug(fleet);
           setFleets([...fleets, fleet.value.data.onAddedFleet]);
         },
         error: (error) => console.warn(error),

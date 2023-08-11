@@ -1,18 +1,18 @@
+import { SpaceBetween } from '@cloudscape-design/components';
 import { Auth, Storage } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
+import { PageLayout } from '../../components/pageLayout';
 import { DeleteModelModal } from './components/deleteModelModal';
 import { ModelsTable } from './components/modelsTable';
-
-import { SpaceBetween } from '@cloudscape-design/components';
-import { useTranslation } from 'react-i18next';
-import { PageLayout } from '../../components/pageLayout';
 
 import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 import { formatAwsDateTime } from '../../support-functions/time';
 import { ModelUpload } from './components/modelUpload';
 
 export const ModelMangement = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-model-management']);
 
   const [models, setModels] = useState([]);
   const [selectedModels, setSelectedModels] = useState([]);
@@ -27,13 +27,13 @@ export const ModelMangement = () => {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-models' })}
-        //     bodyContent={t('content', { ns: 'help-models' })}
-        //     footerContent={t('footer', { ns: 'help-models' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-model-management' })}
+            bodyContent={t('content', { ns: 'help-model-management' })}
+            footerContent={t('footer', { ns: 'help-model-management' })}
+          />
+        ),
       },
     });
 
@@ -64,7 +64,7 @@ export const ModelMangement = () => {
           });
         })
         .catch((err) => {
-          console.log(err);
+          console.debug(err);
         });
     };
 

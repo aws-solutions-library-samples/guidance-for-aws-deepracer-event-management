@@ -9,6 +9,22 @@ export const useUsersApi = (userHasAccess = false) => {
   const [users, setUsers] = useState([]);
   //const [errorMessage, setErrorMessage] = useState('');
 
+  function getUserEmail(item) {
+    const email = item.Attributes.filter((obj) => {
+      return obj.Name === 'email';
+    });
+    if (email.length > 0) {
+      return email[0].Value;
+    }
+  }
+
+  function getUserCountryCode(item) {
+    const countryCode = item.Attributes.filter((obj) => {
+      return obj.Name === 'custom:countryCode';
+    });
+    return countryCode.length > 0 ? countryCode[0].Value : '';
+  }
+
   // initial data load
   useEffect(() => {
     if (userHasAccess) {
@@ -18,7 +34,14 @@ export const useUsersApi = (userHasAccess = false) => {
           query: queries.listUsers,
           authMode: 'AMAZON_COGNITO_USER_POOLS',
         });
-        setUsers([...response.data.listUsers]);
+        const tempUsers = response.data.listUsers;
+
+        const users = tempUsers.map((u) => ({
+          ...u,
+          Email: getUserEmail(u),
+          CountryCode: getUserCountryCode(u),
+        }));
+        setUsers([...users]);
         setIsLoading(false);
       }
       listUsers();
@@ -34,7 +57,7 @@ export const useUsersApi = (userHasAccess = false) => {
     if (userHasAccess) {
       subscription = API.graphql(graphqlOperation(onUserCreated)).subscribe({
         next: (event) => {
-          console.log(event);
+          console.debug(event);
           setUsers([...users, event.value.data.onUserCreated]);
         },
       });
@@ -44,7 +67,7 @@ export const useUsersApi = (userHasAccess = false) => {
       //   authMode: 'AMAZON_COGNITO_USER_POOLS',
       // }).subscribe({
       //   next: (event) => {
-      //     console.log(event);
+      //     console.debug(event);
       //     setUsers([...users, event.value.data.onUserCreated]);
       //   },
       // });

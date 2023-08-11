@@ -74,7 +74,7 @@ export const Timekeeper = () => {
 
   // handlers functions
   const actionHandler = (id) => {
-    console.log('alter lap status for lap id: ' + id);
+    console.debug('alter lap status for lap id: ' + id);
     const lapsCopy = [...race.laps];
     const updatedLap = { ...race.laps[id] };
     updatedLap.isValid = !updatedLap.isValid;

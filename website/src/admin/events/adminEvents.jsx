@@ -2,14 +2,19 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Button, Table, TextFilter } from '@cloudscape-design/components';
+import { PropertyFilter, Table } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
 import { DeleteModal, ItemList } from '../../components/deleteModal';
+import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
 import { DrSplitPanel } from '../../components/split-panels/dr-split-panel';
 import {
+  PropertyFilterI18nStrings,
+  TableEmptyState,
+  TableNoMatchState,
+} from '../../components/tableCommon';
+import {
   DefaultPreferences,
-  EmptyState,
   MatchesCountText,
   TableHeader,
   TablePagination,
@@ -23,10 +28,14 @@ import {
 } from '../../store/appLayoutProvider';
 import { useEventsContext, useFleetsContext, useUsersContext } from '../../store/storeProvider';
 import { EventDetailsPanelContent } from './components/eventDetailsPanelContent';
-import { ColumnDefinitions, VisibleContentOptions } from './support-functions/eventsTableConfig';
+import {
+  ColumnDefinitions,
+  FilteringProperties,
+  VisibleContentOptions,
+} from './support-functions/eventsTableConfig';
 
 const AdminEvents = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-events']);
   const [SelectedEventsInTable, setSelectedEventsInTable] = useState([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [send] = useMutation();
@@ -56,13 +65,13 @@ const AdminEvents = () => {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-events' })}
-        //     bodyContent={t('content', { ns: 'help-admin-events' })}
-        //     footerContent={t('footer', { ns: 'help-admin-events' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-events' })}
+            bodyContent={t('content', { ns: 'help-admin-events' })}
+            footerContent={t('footer', { ns: 'help-admin-events' })}
+          />
+        ),
       },
     });
 
@@ -85,26 +94,35 @@ const AdminEvents = () => {
 
   // Table config
   const columnDefinitions = ColumnDefinitions(getUserNameFromId, fleets);
+  const filteringProperties = FilteringProperties();
   const visibleContentOptions = VisibleContentOptions();
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(events, {
-      filtering: {
-        empty: <EmptyState title={t('events.no-events')} subtitle={t('events.create-an-event')} />,
-        noMatch: (
-          <EmptyState
-            title={t('table.no-matches')}
-            subtitle={t('table.we-cant-find-a-match')}
-            action={
-              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
-            }
-          />
-        ),
-      },
-      pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
-      selection: {},
-    });
+  const {
+    items,
+    actions,
+    filteredItemsCount,
+    collectionProps,
+    propertyFilterProps,
+    paginationProps,
+  } = useCollection(events, {
+    propertyFiltering: {
+      filteringProperties,
+      empty: <TableEmptyState resourceName="Event" />,
+      noMatch: (
+        <TableNoMatchState
+          onClearFilter={() => {
+            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
+          }}
+          label={t('common.no-matches')}
+          description={t('common.we-cant-find-a-match')}
+          buttonLabel={t('button.clear-filters')}
+        />
+      ),
+    },
+    pagination: { pageSize: preferences.pageSize },
+    sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
+    selection: {},
+  });
 
   const selectPanelContent = useCallback((selectedItems) => {
     if (selectedItems.length === 0) {
@@ -123,7 +141,7 @@ const AdminEvents = () => {
   }, []);
 
   useEffect(() => {
-    console.log('show split panel');
+    console.debug('show split panel');
     splitPanelOptionsDispatch({
       type: 'UPDATE',
       value: {
@@ -147,15 +165,20 @@ const AdminEvents = () => {
       selectionType="single"
       columnDefinitions={columnDefinitions}
       items={items}
+      stripedRows={preferences.stripedRows}
+      contentDensity={preferences.contentDensity}
+      wrapLines={preferences.wrapLines}
       loading={eventIsLoading}
       loadingText={t('events.loading')}
       stickyHeader="true"
       trackBy="eventId"
       filter={
-        <TextFilter
-          {...filterProps}
+        <PropertyFilter
+          {...propertyFilterProps}
+          i18nStrings={PropertyFilterI18nStrings('events')}
           countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel={t('events.filter')}
+          filteringAriaLabel={t('cars.filter-groups')}
+          expandToViewport={true}
         />
       }
       header={

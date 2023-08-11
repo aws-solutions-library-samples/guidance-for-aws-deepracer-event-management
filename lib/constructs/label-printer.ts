@@ -6,7 +6,13 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 
-import { CodeFirstSchema, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
+import {
+    CodeFirstSchema,
+    GraphqlType,
+    ObjectType,
+    ResolvableField,
+    Directive,
+} from 'awscdk-appsync-utils';
 import { Construct } from 'constructs';
 
 export interface LabelPrinterProps {
@@ -134,6 +140,7 @@ export class LabelPrinter extends Construct {
                 },
                 dataSource: printableLabelDataSource,
                 returnType: GraphqlType.string(),
+                directives: [Directive.cognito('admin', 'operator')],
             })
         );
     }
