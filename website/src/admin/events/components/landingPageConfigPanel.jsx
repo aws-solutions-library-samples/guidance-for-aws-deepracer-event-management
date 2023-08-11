@@ -8,23 +8,19 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export const LandingPageConfigPanel = ({
-                                         onChange,
-                                         onFormIsValid,
-                                         onFormIsInvalid,
-                                       }) => {
+export const LandingPageConfigPanel = ({ onChange, onFormIsValid, onFormIsInvalid }) => {
   const { t } = useTranslation();
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    console.log(items)
-    UpdateConfig(items)
-  }, [items])
+    console.debug(items);
+    UpdateConfig(items);
+  }, [items]);
   const UpdateConfig = (attr) => {
     const landingPageConfig = {
       landingPageConfig: {
         // We merge this data upstream, so removing elements becomes impossible.
-        links: items
+        links: items,
       },
     };
     onChange(landingPageConfig);
@@ -36,7 +32,7 @@ export const LandingPageConfigPanel = ({
         value={value}
         placeholder={placeholder}
         onChange={({ detail }) => {
-          setItems(items => {
+          setItems((items) => {
             const updatedItems = [...items];
             updatedItems[index] = {
               ...updatedItems[index],
@@ -49,54 +45,54 @@ export const LandingPageConfigPanel = ({
     );
   });
 
-  const definition = useMemo(() =>([
-    {
-      label: t('events.landing-page.settings.link-name'),
-      control: (item, itemIndex) => (
-        <Control
-          prop="linkName"
-          value={item.linkName}
-          index={itemIndex}
-          placeholder="Enter Link Name"
-          setItems={setItems}
-        />
-      ),
-    },
-    {
-      label: t('events.landing-page.settings.link-description'),
-      control: (item, itemIndex) => (
-        <Control
-          prop="linkDescription"
-          value={item.linkDescription}
-          index={itemIndex}
-          placeholder="Enter Link Description"
-          setItems={setItems}
-        />
-      ),
-    },
-    {
-      label: 'Link href',
-      control: (item, itemIndex) => (
-        <Control
-          prop="linkHref"
-          value={item.linkHref}
-          index={itemIndex}
-          placeholder="Enter href"
-          setItems={setItems}
-        />
-      ),
-    },
-  ]),
+  const definition = useMemo(
+    () => [
+      {
+        label: t('events.landing-page.settings.link-name'),
+        control: (item, itemIndex) => (
+          <Control
+            prop="linkName"
+            value={item.linkName}
+            index={itemIndex}
+            placeholder="Enter Link Name"
+            setItems={setItems}
+          />
+        ),
+      },
+      {
+        label: t('events.landing-page.settings.link-description'),
+        control: (item, itemIndex) => (
+          <Control
+            prop="linkDescription"
+            value={item.linkDescription}
+            index={itemIndex}
+            placeholder="Enter Link Description"
+            setItems={setItems}
+          />
+        ),
+      },
+      {
+        label: 'Link href',
+        control: (item, itemIndex) => (
+          <Control
+            prop="linkHref"
+            value={item.linkHref}
+            index={itemIndex}
+            placeholder="Enter href"
+            setItems={setItems}
+          />
+        ),
+      },
+    ],
     []
   );
 
-
   const onAddButtonClick = useCallback(() => {
-    setItems(items => [...items, {}]);
+    setItems((items) => [...items, {}]);
   }, []);
 
   const onRemoveButtonClick = useCallback(({ detail: { itemIndex } }) => {
-    setItems(items => {
+    setItems((items) => {
       const newItems = items.slice();
       newItems.splice(itemIndex, 1);
       return newItems;
@@ -106,8 +102,8 @@ export const LandingPageConfigPanel = ({
   // JSX
   return (
     <>
-      <Container header={<Header variant='h2'>{t('events.landing-page.settings.header')}</Header>}>
-        <SpaceBetween size='xl'>
+      <Container header={<Header variant="h2">{t('events.landing-page.settings.header')}</Header>}>
+        <SpaceBetween size="xl">
           <AttributeEditor
             onAddButtonClick={onAddButtonClick}
             onRemoveButtonClick={onRemoveButtonClick}

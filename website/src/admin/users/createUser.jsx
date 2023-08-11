@@ -14,6 +14,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CountrySelector } from '../../components/countrySelector';
 import { Flag } from '../../components/flag';
+import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
 import * as mutations from '../../graphql/mutations';
 import { useNotificationsDispatch, useToolsOptionsDispatch } from '../../store/appLayoutProvider';
@@ -22,7 +23,7 @@ import awsconfig from '../../config.json';
 
 const notificationId = 'create_user';
 export function CreateUser() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-create-user']);
 
   const [username, setUsername] = useState('');
   const [usernameErrorText, setUsernameErrorText] = useState('');
@@ -57,7 +58,7 @@ export function CreateUser() {
         authMode: 'AMAZON_COGNITO_USER_POOLS',
       });
       const response = apiResponse['data']['createUser'];
-      console.log(response);
+      console.debug(response);
 
       addNotification({
         type: 'success',
@@ -125,13 +126,13 @@ export function CreateUser() {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-create-user' })}
-        //     bodyContent={t('content', { ns: 'help-create-user' })}
-        //     footerContent={t('footer', { ns: 'help-create-user' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-create-user' })}
+            bodyContent={t('content', { ns: 'help-admin-create-user' })}
+            footerContent={t('footer', { ns: 'help-admin-create-user' })}
+          />
+        ),
       },
     });
 

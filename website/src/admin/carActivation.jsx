@@ -2,6 +2,7 @@ import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 // import { ListOfFleets } from '../components/listOfFleets';
+import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
 import * as mutations from '../graphql/mutations';
 import { useToolsOptionsDispatch } from '../store/appLayoutProvider';
 
@@ -25,7 +26,7 @@ import { PageLayout } from '../components/pageLayout';
 import { useFleetsContext } from '../store/storeProvider';
 
 const AdminActivation = (props) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-car-activation']);
 
   const [result, setResult] = useState('');
   const [activationCode, setActivationCode] = useState('');
@@ -65,13 +66,13 @@ const AdminActivation = (props) => {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-car-activation' })}
-        //     bodyContent={t('content', { ns: 'help-admin-car-activation' })}
-        //     footerContent={t('footer', { ns: 'help-admin-car-activation' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-car-activation' })}
+            bodyContent={t('content', { ns: 'help-admin-car-activation' })}
+            footerContent={t('footer', { ns: 'help-admin-car-activation' })}
+          />
+        ),
       },
     });
 
@@ -84,14 +85,17 @@ const AdminActivation = (props) => {
   useEffect(() => {
     if (fleets.length > 0) {
       setDropDownFleets(
-        fleets.map((thisFleet) => {
-          return {
-            id: thisFleet.fleetId,
-            text: thisFleet.fleetName,
-          };
-        })
+        fleets
+          .map((thisFleet) => {
+            return {
+              id: thisFleet.fleetId,
+              text: thisFleet.fleetName,
+            };
+          })
+          .sort((a, b) => (a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1))
       );
     }
+
     return () => {
       // Unmounting
     };

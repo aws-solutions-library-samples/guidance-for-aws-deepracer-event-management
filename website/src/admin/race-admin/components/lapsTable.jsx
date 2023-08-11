@@ -46,8 +46,8 @@ const LapsTable = ({ race, tableSettings, onSelectionChange, selectedLaps, isEdi
         empty: <EmptyState title={t('race-admin.no-races')} />,
         noMatch: (
           <EmptyState
-            title={t('table.no-matches')}
-            subtitle={t('table.we-cant-find-a-match')}
+            title={t('common.no-matches')}
+            subtitle={t('common.we-cant-find-a-match')}
             action={
               <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
             }

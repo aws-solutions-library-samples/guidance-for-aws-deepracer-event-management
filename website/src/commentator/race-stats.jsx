@@ -1,8 +1,8 @@
+import { SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
-import { SpaceBetween } from '@cloudscape-design/components';
 import { EventSelectorModal } from '../components/eventSelectorModal';
+import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
 import { PageLayout } from '../components/pageLayout';
 import { useToolsOptionsDispatch } from '../store/appLayoutProvider';
 import { useSelectedEventContext } from '../store/storeProvider';
@@ -25,13 +25,13 @@ const CommentatorRaceStats = () => {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-race-stats' })}
-        //     bodyContent={t('content', { ns: 'help-race-stats' })}
-        //     footerContent={t('footer', { ns: 'help-race-stats' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-race-stats' })}
+            bodyContent={t('content', { ns: 'help-race-stats' })}
+            footerContent={t('footer', { ns: 'help-race-stats' })}
+          />
+        ),
       },
     });
 

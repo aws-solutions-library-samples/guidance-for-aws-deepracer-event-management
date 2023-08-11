@@ -33,7 +33,7 @@ export function SetLocalizedLeaderboardLabels(
 }
 
 export function SetEventName(eventName) {
-  // console.log(`SETTING EVENT NAME TO: ${eventName}`);
+  // console.debug(`SETTING EVENT NAME TO: ${eventName}`);
   // Event Name on Leaderboard.
   const leaderboardObj = d3.select(document.getElementById('leaderboard').contentDocument);
   leaderboardObj.select('#LeaderboardUpperLeftTitleText').text(eventName);
@@ -164,7 +164,7 @@ export function GetLeaderboardDataSorted(entries) {
 }
 
 export function GetFormattedTotalTime(timeInMS) {
-  // console.log(timeInMS)
+  // console.debug(timeInMS)
   if (timeInMS < 0) {
     return '00:00.0';
   }

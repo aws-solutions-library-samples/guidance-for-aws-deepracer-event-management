@@ -60,18 +60,6 @@ export const VisibleContentOptions = () => {
           label: i18next.t('events.event-id'),
         },
         {
-          id: 'eventLeaderboardLink',
-          label: i18next.t('events.leaderboard-link'),
-        },
-        {
-          id: 'eventStreamingOverlayLink',
-          label: i18next.t('events.streaming-overlay-link'),
-        },
-        {
-          id: 'eventStreamingOverlayLinkChroma',
-          label: i18next.t('events.streaming-overlay-link-chroma'),
-        },
-        {
           id: 'eventLandingPageLink',
           label: i18next.t('events.landing-page-link'),
         },
@@ -156,44 +144,6 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
       cell: (item) => item.eventId || '-',
     },
     {
-      id: 'eventLeaderboardLink',
-      header: i18next.t('events.leaderboard-link'),
-      cell: (item) =>
-        (
-          <EventLinksButtons
-            href={`${
-              awsconfig.Urls.leaderboardWebsite
-            }/leaderboard/${item.eventId.toString()}/?qr=header&scroll=true`}
-            linkTextPrimary={i18next.t('events.leaderboard-link-same-tab')}
-            linkTextExternal={i18next.t('events.leaderboard-link-new-tab')}
-          />
-        ) || '-',
-    },
-    {
-      id: 'eventStreamingOverlayLink',
-      header: i18next.t('events.streaming-overlay-link'),
-      cell: (item) =>
-        (
-          <EventLinksButtons
-            href={`${awsconfig.Urls.streamingOverlayWebsite}/${item.eventId.toString()}`}
-            linkTextPrimary={i18next.t('events.streaming-overlay-link-same-tab')}
-            linkTextExternal={i18next.t('events.streaming-overlay-link-new-tab')}
-          />
-        ) || '-',
-    },
-    {
-      id: 'eventStreamingOverlayLinkChroma',
-      header: i18next.t('events.streaming-overlay-link-chroma'),
-      cell: (item) =>
-        (
-          <EventLinksButtons
-            href={`${awsconfig.Urls.streamingOverlayWebsite}/${item.eventId.toString()}?chroma=1`}
-            linkTextPrimary={i18next.t('events.streaming-overlay-link-chroma-same-tab')}
-            linkTextExternal={i18next.t('events.streaming-overlay-link-chroma-new-tab')}
-          />
-        ) || '-',
-    },
-    {
       id: 'eventLandingPageLink',
       header: i18next.t('events.landing-page-link'),
       cell: (item) =>
@@ -206,4 +156,43 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
         ) || '-',
     },
   ];
+};
+
+export const FilteringProperties = () => {
+  return [
+    {
+      key: 'eventName',
+      propertyLabel: i18next.t('events.event-name'),
+      operators: [':', '!:', '=', '!='],
+    },
+    // {
+    //   key: 'eventDate',
+    //   propertyLabel: i18next.t('events.event-date'),
+    //   groupValuesLabel: 'Created at value',
+    //   defaultOperator: '>',
+    //   operators: ['<', '<=', '>', '>='].map((operator) => ({
+    //     operator,
+    //     form: ({ value, onChange }) => (
+    //       <div className="date-form">
+    //         {' '}
+    //         <FormField>
+    //           {' '}
+    //           <DateInput
+    //             value={value ?? ''}
+    //             onChange={(event) => onChange(event.detail.value)}
+    //             placeholder="YYYY/MM/DD"
+    //           />{' '}
+    //         </FormField>{' '}
+    //         <Calendar
+    //           value={value ?? ''}
+    //           onChange={(event) => onChange(event.detail.value)}
+    //           locale="en-GB"
+    //         />{' '}
+    //       </div>
+    //     ),
+    //     format: formatAwsDateTime,
+    //     match: 'date',
+    //   })),
+    // },
+  ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
 };

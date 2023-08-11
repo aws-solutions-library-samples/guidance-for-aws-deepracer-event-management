@@ -56,7 +56,7 @@ export function ModelUpload({ addModel }) {
           },
         })
           .then((result) => {
-            console.log(result);
+            console.debug(result);
             addNotification({
               type: 'success',
               content: (
@@ -85,7 +85,7 @@ export function ModelUpload({ addModel }) {
             });
           })
           .catch((err) => {
-            console.log(err);
+            console.debug(err);
             addNotification({
               header: t('models.notifications.could-not-upload') + ' ' + file.name,
               type: 'error',

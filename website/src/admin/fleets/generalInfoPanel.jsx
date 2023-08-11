@@ -2,39 +2,15 @@ import { Container, FormField, Header, Input, SpaceBetween } from '@cloudscape-d
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export const GeneralInfoPanel = ({
-  onFormIsValid,
-  onFormIsInvalid,
-  fleetName,
-  // currentItems = [],
-  onChange,
-}) => {
-  // const [name, setName] = useState('');
+export const GeneralInfoPanel = ({ onFormIsValid, onFormIsInvalid, fleetName, onChange }) => {
   const [errorMessage, setErrorMessage] = useState();
   const { t } = useTranslation();
 
   // Input validation for the fleet name
   useEffect(() => {
     if (fleetName) {
-      // if (
-      //   currentItems &&
-      //   currentItems
-      //     .map((fleet) => {
-      //       return fleet.fleetName;
-      //     })
-      //     .includes(name.trim())
-      // ) {
-      //   if (selectedItem && selectedItem.fleetName && selectedItem.fleetName !== name.trim()) {
-      //     setErrorMessage(`Fleet with name ${name} already exists`);
-      //     onFormIsInvalid();
-      //   } else {
-      //     setErrorMessage('');
-      //     onFormIsValid();
-      //   }
-      // } else {
       setErrorMessage('');
       onFormIsValid();
-      //  }
     } else {
       setErrorMessage(t('fleets.fleet-name-empty-message'));
       onFormIsInvalid();

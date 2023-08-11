@@ -1,5 +1,6 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
+import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
 import * as queries from '../../graphql/queries';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
@@ -13,24 +14,28 @@ import {
   Button,
   Header,
   Pagination,
+  PropertyFilter,
   SpaceBetween,
   Table,
-  TextFilter,
 } from '@cloudscape-design/components';
 import { formatAwsDateTime } from '../../support-functions/time';
 
 import { useTranslation } from 'react-i18next';
 import {
+  PropertyFilterI18nStrings,
+  TableEmptyState,
+  TableNoMatchState,
+} from '../../components/tableCommon';
+import {
   AdminModelsColumnsConfig,
   DefaultPreferences,
-  EmptyState,
   MatchesCountText,
   TablePreferences,
 } from '../../components/tableConfig';
 import CarModelUploadModal from './carModelUploadModal';
 
 const AdminModels = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-models']);
 
   const [allModels, setAllModels] = useState([]);
   const [cars, setCars] = useState([]);
@@ -41,7 +46,7 @@ const AdminModels = () => {
 
   async function getCarsOnline() {
     setCarsIsLoading(true);
-    console.log('Collecting cars...');
+    console.debug('Collecting cars...');
     // Get CarsOnline
     const response = await API.graphql({
       query: queries.carsOnline,
@@ -52,11 +57,11 @@ const AdminModels = () => {
   }
   async function getModels() {
     setModelsIsLoading(true);
-    console.log('Collecting models...');
+    console.debug('Collecting models...');
     const response = await API.graphql({
       query: queries.getAllModels,
     });
-    console.log(response);
+    console.debug(response);
     const models_response = response.data.getAllModels;
     const models = models_response.map(function (model, i) {
       const modelKeyPieces = model.modelKey.split('/');
@@ -89,13 +94,13 @@ const AdminModels = () => {
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-models' })}
-        //     bodyContent={t('content', { ns: 'help-admin-models' })}
-        //     footerContent={t('footer', { ns: 'help-admin-models' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-models' })}
+            bodyContent={t('content', { ns: 'help-admin-models' })}
+            footerContent={t('footer', { ns: 'help-admin-models' })}
+          />
+        ),
       },
     });
 
@@ -111,27 +116,62 @@ const AdminModels = () => {
 
   const adminModelsColsConfig = AdminModelsColumnsConfig();
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(allModels, {
-      filtering: {
-        empty: (
-          <EmptyState title={t('models.no-models')} subtitle={t('models.no-models-to-display')} />
-        ),
-        noMatch: (
-          <EmptyState
-            title={t('models.no-matches')}
-            subtitle={t('models.we-cant-find-a-match')}
-            action={
-              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
-            }
-          />
-        ),
-      },
-      pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: adminModelsColsConfig[3], isDescending: true } },
-      selection: {},
-    });
-  const [selectedItems, setSelectedItems] = useState([]);
+  const filteringProperties = [
+    {
+      key: 'userName',
+      propertyLabel: t('models.user-name'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'modelName',
+      propertyLabel: t('models.model-name'),
+      operators: [':', '!:', '=', '!='],
+    },
+    // {
+    //   key: 'modelDate',
+    //   propertyLabel: t('models.upload-date'),
+    //   groupValuesLabel: 'Created at value',
+    //   defaultOperator: '>',
+    //   operators: ['<', '<=', '>', '>='].map((operator) => ({
+    //     operator,
+    //     form: ({ value, onChange }) => (
+    //       <div className="date-form">
+    //         {' '}
+    //         <FormField>
+    //           {' '}
+    //           <DateInput
+    //             value={value ?? ''}
+    //             onChange={(event) => onChange(event.detail.value)}
+    //             placeholder="YYYY/MM/DD"
+    //           />{' '}
+    //         </FormField>{' '}
+    //         <Calendar
+    //           value={value ?? ''}
+    //           onChange={(event) => onChange(event.detail.value)}
+    //           locale="en-GB"
+    //         />{' '}
+    //       </div>
+    //     ),
+    //     format: formatAwsDateTime,
+    //     match: 'date',
+    //   })),
+    // },
+    // {
+    //   key: 'modelMD5Hash',
+    //   propertyLabel: t('models.md5-hash'),
+    //   operators: [':', '!:', '=', '!='],
+    // },
+    // {
+    //   key: 'modelMetadataMD5Hash',
+    //   propertyLabel: t('models.md5-hash-metadata'),
+    //   operators: [':', '!:', '=', '!='],
+    // },
+    // {
+    //   key: 'modelS3Key',
+    //   propertyLabel: t('models.model-s3-key'),
+    //   operators: [':', '!:', '=', '!='],
+    // },
+  ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
 
   const visibleContentOptions = [
     {
@@ -170,6 +210,34 @@ const AdminModels = () => {
       ],
     },
   ];
+
+  const {
+    items,
+    actions,
+    filteredItemsCount,
+    collectionProps,
+    propertyFilterProps,
+    paginationProps,
+  } = useCollection(allModels, {
+    propertyFiltering: {
+      filteringProperties,
+      empty: <TableEmptyState resourceName="Model" />,
+      noMatch: (
+        <TableNoMatchState
+          onClearFilter={() => {
+            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
+          }}
+          label={t('common.no-matches')}
+          description={t('common.we-cant-find-a-match')}
+          buttonLabel={t('button.clear-filters')}
+        />
+      ),
+    },
+    pagination: { pageSize: preferences.pageSize },
+    sorting: { defaultState: { sortingColumn: adminModelsColsConfig[3], isDescending: true } },
+    selection: {},
+  });
+  const [selectedItems, setSelectedItems] = useState([]);
 
   return (
     <PageLayout
@@ -214,6 +282,9 @@ const AdminModels = () => {
         }
         columnDefinitions={adminModelsColsConfig}
         items={items}
+        stripedRows={preferences.stripedRows}
+        contentDensity={preferences.contentDensity}
+        wrapLines={preferences.wrapLines}
         pagination={
           <Pagination
             {...paginationProps}
@@ -225,10 +296,12 @@ const AdminModels = () => {
           />
         }
         filter={
-          <TextFilter
-            {...filterProps}
+          <PropertyFilter
+            {...propertyFilterProps}
+            i18nStrings={PropertyFilterI18nStrings('models')}
             countText={MatchesCountText(filteredItemsCount)}
-            filteringAriaLabel={t('models.filter-models')}
+            filteringAriaLabel={t('models.filter-groups')}
+            expandToViewport={true}
           />
         }
         loading={modelsIsLoading || carsIsLoading}

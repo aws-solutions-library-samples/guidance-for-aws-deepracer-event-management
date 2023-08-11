@@ -102,7 +102,7 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
     } else {
       newEntry.gapToFastest = newEntry.fastestLapTime - allEntries[0].fastestLapTime;
     }
-    //console.log(newEntry);
+    //console.debug(newEntry);
     SetRaceSummaryData(newEntry);
   }, []);
 
@@ -125,8 +125,8 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
         if (trackId === 'combined') {
           // for combined leaderboard, only update  the entry when new entry has faster lap time
           // this might be done in the backend in the future
-          console.log(oldEntry.fastestLapTime);
-          console.log(newLeaderboardEntry.fastestLapTime);
+          console.debug(oldEntry.fastestLapTime);
+          console.debug(newLeaderboardEntry.fastestLapTime);
           newState[oldEntryIndex] =
             oldEntry.fastestLapTime < newLeaderboardEntry.fastestLapTime
               ? oldEntry
@@ -173,7 +173,7 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
           next: ({ provider, value }) => {
             console.debug('onNewLeaderboardEntry');
             const newEntry = value.data.onNewLeaderboardEntry;
-            console.log(newEntry);
+            console.debug(newEntry);
             updateLeaderboardEntries(newEntry);
             SetraceSummaryFooterIsVisible(true);
             setTimeout(() => {

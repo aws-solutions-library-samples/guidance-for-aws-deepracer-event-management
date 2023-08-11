@@ -8,15 +8,14 @@ import {
   Modal,
   SpaceBetween,
 } from '@cloudscape-design/components';
-import React, { useRef, useState } from 'react';
-
 import { useMachine } from '@xstate/react';
-import { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   GetRaceResetsNameFromId,
   GetRaceTypeNameFromId,
 } from '../../../admin/events/support-functions/raceConfig';
+import { SimpleHelpPanelLayout } from '../../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../../components/pageLayout';
 import useCounter from '../../../hooks/useCounter';
 import { usePublishOverlay } from '../../../hooks/usePublishOverlay';
@@ -32,7 +31,7 @@ import { breadcrumbs } from '../support-functions/supportFunctions';
 import styles from './racePage.module.css';
 
 export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-race-page']);
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const [currentLap, SetCurrentLap] = useState(defaultLap);
   const lapsForOverlay = useRef([]);
@@ -68,13 +67,13 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
       value: {
         //isOpen: true,
         isHidden: helpPanelHidden,
-        // content: (
-        //   <SimpleHelpPanelLayout
-        //     headerContent={t('header', { ns: 'help-admin-race-page' })}
-        //     bodyContent={t('content', { ns: 'help-admin-race-page' })}
-        //     footerContent={t('footer', { ns: 'help-admin-race-page' })}
-        //   />
-        // ),
+        content: (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-race-page' })}
+            bodyContent={t('content', { ns: 'help-admin-race-page' })}
+            footerContent={t('footer', { ns: 'help-admin-race-page' })}
+          />
+        ),
       },
     });
 
@@ -95,7 +94,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
         SetCurrentLap(defaultLap);
       },
       endRace: () => {
-        console.log('Ending race state');
+        console.debug('Ending race state');
         setWarningModalVisible(true);
         // Buttons
         setBtnEndRace(true);
@@ -201,7 +200,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
 
   // handlers functions
   const actionHandler = (id) => {
-    console.log('alter lap status for lap id: ' + id);
+    console.debug('alter lap status for lap id: ' + id);
     const lapsCopy = [...raceInfo.laps];
     const updatedLap = { ...raceInfo.laps[id] };
     updatedLap.isValid = !updatedLap.isValid;
