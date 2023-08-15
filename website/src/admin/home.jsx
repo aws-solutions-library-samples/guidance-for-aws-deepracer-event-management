@@ -1,7 +1,7 @@
 import { Cards, Grid, Header, Link } from '@cloudscape-design/components';
-import { AdminHomeCards } from '../components/homeCards';
-
 import React from 'react';
+import { AdminHomeCards } from '../components/homeCards';
+import i18next from '../i18n';
 
 const AdminHome = () => {
   return (
@@ -29,14 +29,13 @@ const AdminHome = () => {
             sections: [
               {
                 id: 'description',
-                header: 'Description',
                 content: (item) => item.description,
               },
             ],
           }}
           cardsPerRow={[{ cards: 1 }, { minWidth: 500, cards: 2 }]}
           items={AdminHomeCards()}
-          header={<Header>DeepRacer Event Manager Admin</Header>}
+          header={<Header>{i18next.t('admin.home-header')}</Header>}
         />
         <div></div>
       </Grid>
