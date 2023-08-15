@@ -64,7 +64,7 @@ const LapTable = (props) => {
         },
         {
           id: 'valid',
-          header: t('timekeeper.lap-table.valid'),
+          header: t('timekeeper.lap-table.valid-header'),
           cell: (item) => item.valid || '',
           width: '200px',
         },

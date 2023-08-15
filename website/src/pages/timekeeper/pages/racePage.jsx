@@ -26,7 +26,7 @@ import LapTimer from '../components/lapTimer';
 import RaceTimer from '../components/raceTimer';
 import { defaultLap } from '../support-functions/raceDomain';
 import { stateMachine } from '../support-functions/stateMachine';
-import { breadcrumbs } from '../support-functions/supportFunctions';
+import { Breadcrumbs } from '../support-functions/supportFunctions';
 
 import styles from './racePage.module.css';
 
@@ -285,6 +285,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
   );
 
   // JSX
+  const breadcrumbs = Breadcrumbs();
   return (
     <PageLayout
       helpPanelHidden={helpPanelHidden}
@@ -292,26 +293,6 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
       header={t('timekeeper.race-page.page-header')}
     >
       <SpaceBetween size="l" direction="vertical">
-        {/* <Container>
-          <ColumnLayout columns={3} variant="text-grid">
-            <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-              <Header variant="h3">{t('timekeeper.race-page.race-format-header')}: </Header>
-              <Header variant="h3">{raceType} </Header>
-            </Grid>
-            <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-              <Header variant="h3">{t('timekeeper.current-racer')}:</Header>
-              <Header variant="h3">{raceInfo.username}</Header>
-            </Grid>
-            <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-              <Header variant="h3">{t('timekeeper.race-page.automated-timer-header')}: </Header>
-              <Header variant="h3">
-                {autTimerIsConnected
-                  ? t('timekeeper.race-page.automated-timer-connected')
-                  : t('timekeeper.race-page.automated-timer-not-connected')}{' '}
-              </Header>
-            </Grid>
-          </ColumnLayout>
-        </Container> */}
         <ColumnLayout columns={2}>
           <Container>
             <SpaceBetween size="xs" direction="vertical">
@@ -322,7 +303,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
                 gridDefinition={[{ colspan: 6 }, { colspan: 6 }, { colspan: 6 }, { colspan: 6 }]}
               >
                 <span>
-                  <Header variant="h5">{t('timekeeper.time-left')}: </Header>
+                  <Header variant="h5">{t('timekeeper.time-left')}</Header>
 
                   <RaceTimer
                     onExpire={() => {
@@ -332,7 +313,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
                   />
                 </span>
                 <span>
-                  <Header variant="h5">{t('timekeeper.current-lap')}:</Header>
+                  <Header variant="h5">{t('timekeeper.current-lap')}</Header>
                   <LapTimer ref={lapTimerRef} />
                 </span>
               </Grid>
@@ -372,7 +353,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
                 {t('timekeeper.car-reset')}
               </button>
               <SpaceBetween>
-                <Header variant="h5">{t('timekeeper.resets')}:</Header>
+                <Header variant="h5">{t('timekeeper.resets')}</Header>
                 <Header variant="h3">
                   {carResetCounter}/{allowedNrResets}
                 </Header>
@@ -405,14 +386,14 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
                 <SpaceBetween size="m" direction="horizontal">
                   <ColumnLayout columns={2}>
                     <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-                      <b>{t('timekeeper.race-page.race-format-header')}:</b>
+                      <b>{t('timekeeper.race-page.race-format-header')}</b>
                       <br />
                       {raceType}
                     </Grid>
 
                     <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
                       <b>
-                        <nobr>{t('timekeeper.race-page.automated-timer-header')}:</nobr>
+                        <nobr>{t('timekeeper.race-page.automated-timer-header')}</nobr>
                       </b>
                       <br />
                       {autTimerIsConnected

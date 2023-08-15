@@ -135,7 +135,7 @@ export const EditRace = () => {
               onClick={onSaveRaceHandler}
               disabled={loading || createButtonIsDisabled}
             >
-              Save Changes
+              {t('button.save-changes')}
             </Button>
           </SpaceBetween>
         </Box>

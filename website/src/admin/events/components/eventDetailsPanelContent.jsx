@@ -21,7 +21,7 @@ export const EventDetailsPanelContent = ({ event }) => {
   const attributeField = (header, value) => {
     return (
       <SpaceBetween size="xxxs">
-        <Box fontWeight="bold">{header}:</Box>
+        <Box fontWeight="bold">{header}</Box>
         <div>{value ?? '-'}</div>
       </SpaceBetween>
     );
