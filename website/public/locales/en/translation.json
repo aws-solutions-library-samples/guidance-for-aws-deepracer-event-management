@@ -3,6 +3,7 @@
   "admin.home-header": "DeepRacer Event Manager administration",
 
   "operator.breadcrumb": "Operator",
+  "car-management.breadcrumb": "Car management",
   "event-management.breadcrumb": "Event management",
 
   "button.cancel": "Cancel",
@@ -344,6 +345,7 @@
   "groups.page-size-label": "groups",
 
   "users.breadcrumb": "Create user",
+  "users-admin.breadcrumb": "Users",
   "users.description": "User creation",
   "users.header": "Create user",
   "users.information": "Users information",

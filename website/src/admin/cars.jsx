@@ -169,10 +169,8 @@ const AdminCars = () => {
       description={t('cars.description')}
       breadcrumbs={[
         { text: t('home.breadcrumb'), href: '/' },
-        {
-          text: t('admin.breadcrumb'),
-          href: '/admin/home',
-        },
+        { text: t('operator.breadcrumb'), href: '/admin/home' },
+        { text: t('car-management.breadcrumb'), href: '/admin/home' },
         { text: t('cars.breadcrumb') },
       ]}
     >

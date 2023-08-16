@@ -212,7 +212,8 @@ const AdminEvents = () => {
       description={t('events.description')}
       breadcrumbs={[
         { text: t('home.breadcrumb'), href: '/' },
-        { text: t('admin.breadcrumb'), href: '/admin/home' },
+        { text: t('operator.breadcrumb'), href: '/admin/home' },
+        { text: t('event-management.breadcrumb'), href: '/admin/home' },
         { text: t('events.breadcrumb') },
       ]}
     >

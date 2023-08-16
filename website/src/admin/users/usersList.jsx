@@ -96,8 +96,8 @@ export const UsersList = () => {
       header={t('users-list.header')}
       breadcrumbs={[
         { text: t('home.breadcrumb'), href: '/' },
-        { text: t('topnav.registration'), href: '/registration' },
-        { text: t('users.breadcrumb') },
+        { text: t('admin.breadcrumb'), href: '/home/admin' },
+        { text: t('users-admin.breadcrumb') },
       ]}
     >
       <Table
