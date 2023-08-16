@@ -31,7 +31,6 @@ const Home = () => {
             sections: [
               {
                 id: 'description',
-                header: t('home.description', 'Description'),
                 content: (item) => item.description,
               },
             ],

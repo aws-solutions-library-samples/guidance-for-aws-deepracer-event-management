@@ -179,7 +179,8 @@ const AdminQuarantine = () => {
       description={t('quarantine.list-of-all-models')}
       breadcrumbs={[
         { text: t('home.breadcrumb'), href: '/' },
-        { text: t('admin.breadcrumb'), href: '/admin/home' },
+        { text: t('operator.breadcrumb'), href: '/admin/home' },
+        { text: t('models.breadcrumb'), href: '/admin/home' },
         { text: t('quarantine.breadcrumb') },
       ]}
     >

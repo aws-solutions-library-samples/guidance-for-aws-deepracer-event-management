@@ -62,8 +62,9 @@ export const EditFleet = () => {
 
   return (
     <PageLayout
+      helpPanelHidden="true"
       header={t('fleets.edit-fleet')}
-      description={t('fleets.description')}
+      description={t('fleets.edit-description')}
       breadcrumbs={[
         { text: t('home.breadcrumb'), href: '/' },
         { text: t('admin.breadcrumb'), href: '/admin/home' },
@@ -83,7 +84,7 @@ export const EditFleet = () => {
                 onClick={onUpdateHandler}
                 disabled={loading || createButtonIsDisabled}
               >
-                Save Changes
+                {t('button.save-changes')}
               </Button>
             </SpaceBetween>
           }

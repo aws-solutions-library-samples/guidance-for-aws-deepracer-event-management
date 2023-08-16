@@ -246,8 +246,9 @@ const AdminModels = () => {
       description={t('models.list-of-all-uploaded-models')}
       breadcrumbs={[
         { text: t('home.breadcrumb'), href: '/' },
-        { text: t('admin.breadcrumb'), href: '/admin/home' },
-        { text: t('models.breadcrumb') },
+        { text: t('operator.breadcrumb'), href: '/admin/home' },
+        { text: t('models.breadcrumb'), href: '/admin/home' },
+        { text: t('models.all-breadcrumb') },
       ]}
     >
       <Table
