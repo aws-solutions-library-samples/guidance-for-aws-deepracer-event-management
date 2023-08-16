@@ -62,6 +62,7 @@ export const EditFleet = () => {
 
   return (
     <PageLayout
+      helpPanelHidden="true"
       header={t('fleets.edit-fleet')}
       description={t('fleets.edit-description')}
       breadcrumbs={[
