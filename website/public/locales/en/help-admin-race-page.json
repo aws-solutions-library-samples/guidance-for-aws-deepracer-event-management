@@ -1,5 +1,5 @@
 {
-  "header": "## Race",
-  "content": "",
+  "header": "## Timer",
+  "content": "In this page, you start and stop races and capture individual lap times. To start a race,  select the **Start race** button. To capture individual lap times, select the **Capture lap** button (when the AWS DeepRacer car crosses over the finish line). If a racer’s car can’t complete a lap within the 3 minute time limit, you can select **Did not finish** and the score will not appear on the leaderboard. If a car needs to be reset because all 4 tires go off the track, select **Car reset**. (Add here something about number of allowed reset? Is this number  constant or can event organizers decide how many resets?)  When the time limit for the race has elapsed (the time limit for a race), you end the race by selecting **End race**. Details for the current racer, such as their fastest lap and recorded laps appear in the **Fastest lap** and **Recorded laps** fields." ,
   "footer": ""
 }
