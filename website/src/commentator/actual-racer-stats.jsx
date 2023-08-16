@@ -166,8 +166,8 @@ const ActualRacerStats = () => {
       <SpaceBetween size="l">
         <Container
           header={
-            <Header variant="h2" description={t('commentator.race.actualRacerStats')}>
-              Current Racer:{' '}
+            <Header variant="h2" description={t('commentator.race.actual-racer-stats')}>
+              {t('commentator.race.actual-racer-stats-header')}{' '}
               <Box color="text-status-info" display="inline" variant="h2">
                 {actualRacer.username}
               </Box>

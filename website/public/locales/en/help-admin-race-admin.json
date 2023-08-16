@@ -1,5 +1,5 @@
 {
-  "header": "## Race manager",
-  "content": "So let's put some content\n * in\n * here\n * with\n * markdown",
-  "footer": "### Footer info \n\nWhich is nice\n\n[AWS DeepRacer](https://aws.amazon.com/deepracer/)"
+  "header": "## Race management",
+  "content": "On this page, you can view race details and edit or delete a race. When you select a race,  you can see the details for recorded **Laps**, including **Resets** and whether the lap was **Valid**.",
+  "footer": ""
 }

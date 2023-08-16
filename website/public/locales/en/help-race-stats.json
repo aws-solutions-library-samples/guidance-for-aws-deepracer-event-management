@@ -1,0 +1,5 @@
+{
+  "header": "## Race",
+  "content": "On this page, you can view details for the current race and the current racer. The top content pane displays the **Current racer**, as well as the **Current lap time** and the **Time left** in the current race. The bottom content pane displays the **Fastest racer** and the **Slowest racer**. AWS DeepRacer commentators use the information presented here to provide quick and timely commentary during races.",
+  "footer": ""
+}
