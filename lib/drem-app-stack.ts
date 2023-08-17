@@ -10,6 +10,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import { CodeFirstSchema } from 'awscdk-appsync-utils';
 import { Construct } from 'constructs';
 import { CarManager } from './constructs/cars-manager';
@@ -41,7 +42,6 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
     tacSourceBucket: IBucket;
     logsBucket: IBucket;
     lambdaConfig: {
-        // TODO Break out to it´s own class/struct etc
         runtime: lambda.Runtime;
         architecture: lambda.Architecture;
         bundlingImage: DockerImage;
@@ -70,79 +70,43 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             layersConfig: this.lambdaLayers(props.baseStackName),
         };
 
-        // Appsync API
-        const schema = new CodeFirstSchema();
-        const appsyncApi = new appsync.GraphqlApi(this, 'graphQlApi', {
-            name: `api-${stack.stackName}`,
-            schema: schema,
-            authorizationConfig: {
-                defaultAuthorization: {
-                    authorizationType: appsync.AuthorizationType.USER_POOL,
-                    userPoolConfig: {
-                        userPool: props.userPool,
-                        // defaultAction: appsync.UserPoolDefaultAction.DENY, // NOT possible to use when having addiotnal auth modes
-                    },
-                },
-                additionalAuthorizationModes: [
-                    {
-                        authorizationType: appsync.AuthorizationType.API_KEY,
-                        apiKeyConfig: {
-                            name: 'unauthApiKey',
-                            expires: Expiration.after(Duration.days(365)),
-                        },
-                    },
-                    {
-                        authorizationType: appsync.AuthorizationType.IAM,
-                    },
-                ],
-            },
-            xrayEnabled: true,
-            logConfig: {
-                retention: RetentionDays.ONE_WEEK,
-            },
-        });
+        // Get the WAF Web ACL ARN from SSM, created in the base stack
+        const wafWebAclRegionalArn = ssm.StringParameter.valueForStringParameter(
+            this,
+            `/${props.baseStackName}/regionalWafWebAclArn`
+        );
 
-        const noneDataSoure = appsyncApi.addNoneDataSource('none');
+        // Appsync API
+        const appsyncResources = this.appsyncApi(
+            this.stackName,
+            props.userPool,
+            wafWebAclRegionalArn
+        );
 
         const modelsManager = new ModelsManager(this, 'ModelsManager', {
             adminGroupRole: props.adminGroupRole,
             operatorGroupRole: props.operatorGroupRole,
             authenticatedUserRole: props.authenticatedUserRole,
-            appsyncApi: {
-                api: appsyncApi,
-                schema: schema,
-                noneDataSource: noneDataSoure,
-            },
+            appsyncApi: appsyncResources,
             lambdaConfig: lambdaConfig,
             logsBucket: props.logsBucket,
         });
 
         const carManager = new CarManager(this, 'CarManager', {
-            appsyncApi: {
-                api: appsyncApi,
-                schema: schema,
-            },
+            appsyncApi: appsyncResources,
             lambdaConfig: lambdaConfig,
             eventbus: props.eventbus,
         });
 
         new RaceManager(this, 'RaceManager', {
-            appsyncApi: {
-                api: appsyncApi,
-                schema: schema,
-                noneDataSource: noneDataSoure,
-            },
+            appsyncApi: appsyncResources,
             lambdaConfig: lambdaConfig,
             eventbus: props.eventbus,
         });
 
         const leaderboard = new Leaderboard(this, 'Leaderboard', {
             logsBucket: props.logsBucket,
-            appsyncApi: {
-                api: appsyncApi,
-                schema: schema,
-                noneDataSource: noneDataSoure,
-            },
+            appsyncApi: appsyncResources,
             lambdaConfig: lambdaConfig,
             userPoolId: props.userPool.userPoolId,
             userPoolArn: props.userPool.userPoolArn,
@@ -155,21 +119,13 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
         const landingPage = new LandingPageManager(this, 'LandingPageManager', {
             adminGroupRole: props.adminGroupRole,
-            appsyncApi: {
-                api: appsyncApi,
-                schema: schema,
-                noneDataSource: noneDataSoure,
-            },
+            appsyncApi: appsyncResources,
             lambdaConfig: lambdaConfig,
             eventbus: props.eventbus,
         });
 
         new EventsManager(this, 'EventsManager', {
-            appsyncApi: {
-                api: appsyncApi,
-                schema: schema,
-                noneDataSource: noneDataSoure,
-            },
+            appsyncApi: appsyncResources,
             lambdaConfig: lambdaConfig,
             leaderboardApi: leaderboard.api,
             landingPageApi: landingPage.api,
@@ -177,11 +133,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         });
 
         new FleetsManager(this, 'FleetsManager', {
-            appsyncApi: {
-                api: appsyncApi,
-                schema: schema,
-                noneDataSource: noneDataSoure,
-            },
+            appsyncApi: appsyncResources,
             lambdaConfig: lambdaConfig,
             userPoolId: props.userPool.userPoolId,
             eventbus: props.eventbus,
@@ -198,11 +150,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             lambdaConfig: lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
             userPoolId: props.userPool.userPoolId,
-            appsyncApi: {
-                api: appsyncApi,
-                schema: schema,
-                noneDataSource: noneDataSoure,
-            },
+            appsyncApi: appsyncResources,
             eventbus: props.eventbus,
         });
 
@@ -211,20 +159,13 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             userPoolArn: props.userPool.userPoolArn,
             userPoolId: props.userPool.userPoolId,
             userApiObject: userManager.userApiObject,
-            appsyncApi: {
-                api: appsyncApi,
-                schema: schema,
-                noneDataSource: noneDataSoure,
-            },
+            appsyncApi: appsyncResources,
         });
 
         new LabelPrinter(this, 'LabelPrinter', {
             lambdaConfig: lambdaConfig,
             logsbucket: props.logsBucket,
-            appsyncApi: {
-                api: appsyncApi,
-                schema: schema,
-            },
+            appsyncApi: appsyncResources,
             carStatusDataHandlerLambda: carManager.carStatusDataHandlerLambda,
         });
 
@@ -293,8 +234,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             value: modelsManager.infectedBucket.bucketName,
         });
 
-        // new cdk.CfnOutput(this, "stackRegion", { value: stack.region })
-
         new cdk.CfnOutput(this, 'region', { value: stack.region });
 
         new cdk.CfnOutput(this, 'rumScript', {
@@ -317,14 +256,14 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             value: cwRumLeaderboardAppMonitor.config,
         });
 
-        new cdk.CfnOutput(this, 'appsyncId', { value: appsyncApi.apiId });
+        new cdk.CfnOutput(this, 'appsyncId', { value: appsyncResources.api.apiId });
 
         new cdk.CfnOutput(this, 'appsyncEndpoint', {
-            value: appsyncApi.graphqlUrl,
+            value: appsyncResources.api.graphqlUrl,
         });
 
         new cdk.CfnOutput(this, 'appsyncApiKey', {
-            value: appsyncApi.apiKey || '',
+            value: appsyncResources.api.apiKey || '',
         });
 
         new cdk.CfnOutput(this, 'userPoolWebClientId', {
@@ -338,12 +277,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         new cdk.CfnOutput(this, 'userPoolId', {
             value: props.userPool.userPoolId,
         });
-
-        // new cdk.CfnOutput(this, "DefaultAdminUserUsername", {value: defaultAdminUserName})
-        // new cdk.CfnOutput(this, "DefaultAdminUserUsername", {value: defaultAdminUserName})
-
-        // new cdk.CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
-        // new cdk.CfnOutput(this,"DefaultAdminEmail" , {value: props.defaultAdminEmail})
     }
 
     lambdaLayers = (baseStackName: string) => {
@@ -387,6 +320,53 @@ export class DeepracerEventManagerStack extends cdk.Stack {
             powerToolsLayer: powertoolsLambdaLayer,
             helperFunctionsLayer: helperFunctionsLambdaLayer,
             appsyncHelpersLayer: appsyncHelpersLambdaLayer,
+        };
+    };
+
+    appsyncApi = (stackName: string, userPool: IUserPool, wafWebAclRegionalArn: string) => {
+        const schema = new CodeFirstSchema();
+        const appsyncApi = new appsync.GraphqlApi(this, 'graphQlApi', {
+            name: `api-${stackName}`,
+            schema: schema,
+            authorizationConfig: {
+                defaultAuthorization: {
+                    authorizationType: appsync.AuthorizationType.USER_POOL,
+                    userPoolConfig: {
+                        userPool: userPool,
+                        // defaultAction: appsync.UserPoolDefaultAction.DENY, // NOT possible to use when having addiotnal auth modes
+                    },
+                },
+                additionalAuthorizationModes: [
+                    {
+                        authorizationType: appsync.AuthorizationType.API_KEY,
+                        apiKeyConfig: {
+                            name: 'unauthApiKey',
+                            expires: Expiration.after(Duration.days(365)),
+                        },
+                    },
+                    {
+                        authorizationType: appsync.AuthorizationType.IAM,
+                    },
+                ],
+            },
+            xrayEnabled: true,
+            logConfig: {
+                retention: RetentionDays.ONE_WEEK,
+            },
+        });
+
+        // protect Appsync API with WAF
+        new wafv2.CfnWebACLAssociation(this, 'cognitoWafAssociation', {
+            webAclArn: wafWebAclRegionalArn,
+            resourceArn: appsyncApi.arn,
+        });
+
+        const noneDataSoure = appsyncApi.addNoneDataSource('none');
+
+        return {
+            noneDataSource: noneDataSoure,
+            api: appsyncApi,
+            schema: schema,
         };
     };
 }
