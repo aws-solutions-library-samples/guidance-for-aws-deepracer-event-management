@@ -5,17 +5,17 @@ import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
 import * as awsLambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import { Construct } from 'constructs';
 import { Cdn } from './constructs/cdn';
 import { Eventbridge } from './constructs/eventbridge';
 import { Idp } from './constructs/idp';
 import { Website } from './constructs/website';
 
+const WAF_IP_RATE_LIMIT = 1000; // number of allowed reuested per 5 minute per IP
 export interface BaseStackProps extends cdk.StackProps {
     email: string;
 }
-
-const powertoolsLogLevel = 'INFO';
 
 export class BaseStack extends cdk.Stack {
     public readonly eventbridge: Eventbridge;
@@ -60,6 +60,9 @@ export class BaseStack extends cdk.Stack {
                 conditions: { NumericLessThan: { 's3:TlsVersion': '1.2' } },
             })
         );
+
+        // Web Application Firewall
+        const wafWebAclRegional = this.webApplicationFirewall(WAF_IP_RATE_LIMIT);
 
         // Cloudfront resources for serving multiple pages via the same distribution
         const dremWebsite = new Website(this, 'DremWebSite', {
@@ -144,6 +147,12 @@ export class BaseStack extends cdk.Stack {
             },
             eventbus: this.eventbridge.eventbus,
         });
+
+        // protect cognito with WAF
+        new wafv2.CfnWebACLAssociation(this, 'cognitoWafAssociation', {
+            webAclArn: wafWebAclRegional.attrArn,
+            resourceArn: `arn:${this.partition}:cognito-idp:${this.region}:${this.account}:userpool/${this.idp.userPool.userPoolId}`,
+        });
     }
 
     lambdaLayers = (
@@ -203,5 +212,45 @@ export class BaseStack extends cdk.Stack {
             powerToolsLayer: powertoolsLambdaLayer,
             powerToolsLogLevel: 'INFO',
         };
+    };
+
+    webApplicationFirewall = (rateLimit: number) => {
+        const wafWebAclRegional = new wafv2.CfnWebACL(this, 'wafWebAclRegional', {
+            scope: 'REGIONAL',
+            defaultAction: { allow: {} },
+            visibilityConfig: {
+                cloudWatchMetricsEnabled: true,
+                metricName: `DREM-WAF-WebACL-Regional-${this.stackName}`,
+                sampledRequestsEnabled: true,
+            },
+            rules: [
+                {
+                    name: 'RateBasedRule',
+                    priority: 0,
+                    action: {
+                        count: {}, // TODO set to block: {} after testing at summit/big customer event which use a proxy
+                    },
+                    visibilityConfig: {
+                        sampledRequestsEnabled: true,
+                        cloudWatchMetricsEnabled: true,
+                        metricName: `RateBasedRule-${this.stackName}`,
+                    },
+                    statement: {
+                        rateBasedStatement: {
+                            limit: rateLimit,
+                            aggregateKeyType: 'IP',
+                        },
+                    },
+                },
+            ],
+        });
+
+        // SSM Parameter used to share the WAF web ACL ARN with the app stack
+        new ssm.StringParameter(this, 'wafWebAclRegionalSSM', {
+            stringValue: wafWebAclRegional.attrArn,
+            parameterName: `/${this.stackName}/regionalWafWebAclArn`,
+        });
+
+        return wafWebAclRegional;
     };
 }
