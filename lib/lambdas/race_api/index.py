@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 # encoding=utf-8
-import decimal
 import json
 import os
 import uuid
@@ -8,6 +7,7 @@ from datetime import datetime
 from statistics import mean
 
 import boto3
+import dynamo_helpers
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import AppSyncResolver
 from aws_lambda_powertools.logging import correlation_paths
@@ -91,7 +91,7 @@ def deleteRaces(eventId, racesToDelete):
         try:
             race_summary = __calculate_race_summary(event_id, track_id, user_id)
 
-            race_summary_combined = __replace_decimal_with_float(
+            race_summary_combined = dynamo_helpers.replace_decimal_with_float(
                 {**race_info, **race_summary}
             )
 
@@ -137,11 +137,13 @@ def addRace(eventId, userId, laps, racedByProxy, trackId=1):
     }
     logger.info(laps)
     if laps:
-        __store_race({**race_info, "laps": __replace_floats_with_decimal(laps)})
+        __store_race(
+            {**race_info, "laps": dynamo_helpers.replace_floats_with_decimal(laps)}
+        )
 
         race_summary = __calculate_race_summary(eventId, trackId, userId)
 
-        race_summary_combined = __replace_decimal_with_float(
+        race_summary_combined = dynamo_helpers.replace_decimal_with_float(
             {**race_info, **race_summary}
         )
 
@@ -166,12 +168,14 @@ def updateRace(**args):
     raced_by_proxy = args["racedByProxy"]
 
     if args["laps"]:  # if no laps left, delete entire race
-        update_expressions = __generate_update_query(["eventId", "sk"], args)
+        update_expressions = dynamo_helpers.generate_update_query(
+            args, ["eventId", "sk"]
+        )
         sort_key = __generate_sort_key(track_id, user_id, race_id)
         ddb_item = __update_race(event_id, sort_key, update_expressions)
 
         race_summary = __calculate_race_summary(event_id, track_id, user_id)
-        race_summary_combined = __replace_decimal_with_float(
+        race_summary_combined = dynamo_helpers.replace_decimal_with_float(
             {
                 "eventId": event_id,
                 "trackId": track_id,
@@ -196,24 +200,6 @@ def updateRace(**args):
 ##################
 # Helper functions
 ##################
-
-
-# TODO move into lambda layer
-def __generate_update_query(key_fields, fields):
-    exp = {
-        "UpdateExpression": "set",
-        "ExpressionAttributeNames": {},
-        "ExpressionAttributeValues": {},
-    }
-    ddb_attributes = __replace_floats_with_decimal(fields)
-    for key, value in ddb_attributes.items():
-        if key not in key_fields:
-            exp["UpdateExpression"] += f" #{key} = :{key},"
-            exp["ExpressionAttributeNames"][f"#{key}"] = key
-            exp["ExpressionAttributeValues"][f":{key}"] = value
-    exp["UpdateExpression"] = exp["UpdateExpression"][0:-1]
-    logger.info(exp)
-    return exp
 
 
 def __store_race(item: dict) -> None:
@@ -294,7 +280,7 @@ def __get_races_by_event_id_and_user_id(
         FilterExpression=Attr("type").eq(RACE_TYPE),
     )
     logger.info(response)
-    return __replace_decimal_with_float(response["Items"])
+    return dynamo_helpers.replace_decimal_with_float(response["Items"])
 
 
 def __put_evb_events(evbEvents: list) -> dict:
@@ -308,35 +294,3 @@ def __generate_sort_key(track_id: str, user_id: str, race_id: str = None) -> str
     if race_id:
         sort_key = sort_key + f"#RACE#{race_id}"
     return sort_key
-
-
-def __replace_floats_with_decimal(obj):
-    if isinstance(obj, list):
-        for i in range(len(obj)):
-            obj[i] = __replace_floats_with_decimal(obj[i])
-        return obj
-    elif isinstance(obj, dict):
-        for k in obj:
-            obj[k] = __replace_floats_with_decimal(obj[k])
-        return obj
-    elif isinstance(obj, float):
-        return decimal.Decimal(obj).quantize(
-            decimal.Decimal(".0001"), rounding=decimal.ROUND_DOWN
-        )
-    else:
-        return obj
-
-
-def __replace_decimal_with_float(obj):
-    if isinstance(obj, list):
-        for i in range(len(obj)):
-            obj[i] = __replace_decimal_with_float(obj[i])
-        return obj
-    elif isinstance(obj, dict):
-        for k in obj:
-            obj[k] = __replace_decimal_with_float(obj[k])
-        return obj
-    elif isinstance(obj, decimal.Decimal):
-        return float(obj)
-    else:
-        return obj

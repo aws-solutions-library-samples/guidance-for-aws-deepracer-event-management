@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 # encoding=utf-8
-import decimal
 import os
 
 import boto3
@@ -58,41 +57,3 @@ def getLeaderboard(eventId: str, trackId: str = "1"):
     logger.info(leaderboard)
 
     return leaderboard
-
-
-def dbEntriesToRaceList(dbEntries):
-    lapsPerRace = {}
-    for dbEntry in dbEntries:
-        userId = dbEntry["sk"].split("#")[0]
-        raceId = dbEntry["sk"].split("#")[1]
-        lapId = dbEntry["sk"].split("#")[2]
-        dbEntry["lapId"] = lapId
-
-        if raceId in lapsPerRace:
-            lapsPerRace[raceId]["laps"].append(dbEntry)
-        else:
-            lapsPerRace[raceId] = {
-                "id": raceId,
-                "userId": userId,
-                "laps": [dbEntry],
-            }
-    logger.info(f"lapsPerRace: {lapsPerRace}")
-
-    return list(lapsPerRace.values())
-
-
-def __replace_floats_with_decimal(obj):
-    if isinstance(obj, list):
-        for i in range(len(obj)):
-            obj[i] = __replace_floats_with_decimal(obj[i])
-        return obj
-    elif isinstance(obj, dict):
-        for k in obj:
-            obj[k] = __replace_floats_with_decimal(obj[k])
-        return obj
-    elif isinstance(obj, float):
-        return decimal.Decimal(obj).quantize(
-            decimal.Decimal(".0001"), rounding=decimal.ROUND_DOWN
-        )
-    else:
-        return obj

@@ -1,5 +1,5 @@
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
-import { CustomResource, DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
@@ -66,34 +66,6 @@ export class Leaderboard extends Construct {
             encryption: dynamodb.TableEncryption.AWS_MANAGED,
             removalPolicy: RemovalPolicy.DESTROY,
         });
-
-        // Update existing events to new data model
-        // Can be removed after the changes has been propagated to all environments
-        const updateExisitngLeaderboardConfigsFunction = new lambdaPython.PythonFunction(
-            this,
-            'updateExistingLeaderboardConfigs',
-            {
-                entry: 'lib/lambdas/cr_update_stored_leaderboard_configs_to_new_format/',
-                description: 'Updates exisitng leaderboard configs to new format',
-                index: 'index.py',
-                handler: 'lambda_handler',
-                timeout: Duration.minutes(1),
-                runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
-                memorySize: 128,
-                bundling: { image: props.lambdaConfig.bundlingImage },
-                layers: [props.lambdaConfig.layersConfig.powerToolsLayer],
-
-                environment: {
-                    DDB_TABLE_NAME: ddbTable.tableName,
-                },
-            }
-        );
-
-        new CustomResource(this, 'UpdateExistingLeaderboardCr', {
-            serviceToken: updateExisitngLeaderboardConfigsFunction.functionArn,
-        });
-        ddbTable.grantReadWriteData(updateExisitngLeaderboardConfigsFunction);
 
         // WEBSITE
         const websiteHosting = new Website(this, 'websiteHosting', {

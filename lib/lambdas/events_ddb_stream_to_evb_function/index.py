@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 import json
 import os
-from decimal import Decimal
 
 import boto3
+import dynamo_helpers
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import AppSyncResolver
 from boto3.dynamodb.types import TypeDeserializer
@@ -38,7 +38,9 @@ def lambda_handler(event, context):
 
         detail_normal_json = __convertDdbJsonToNormalJson(detail)
         logger.info(detail_normal_json)
-        detail_normal_json = __replace_decimal_with_float(detail_normal_json)
+        detail_normal_json = dynamo_helpers.replace_decimal_with_float(
+            detail_normal_json
+        )
         logger.info(detail_normal_json)
 
         evbEvents.append(
@@ -59,18 +61,3 @@ def __convertDdbJsonToNormalJson(event):
 
 def __put_evb_events(evbEvents):
     return cloudwatch_events.put_events(Entries=evbEvents)
-
-
-def __replace_decimal_with_float(obj):
-    if isinstance(obj, list):
-        for i in range(len(obj)):
-            obj[i] = __replace_decimal_with_float(obj[i])
-        return obj
-    elif isinstance(obj, dict):
-        for k in obj:
-            obj[k] = __replace_decimal_with_float(obj[k])
-        return obj
-    elif isinstance(obj, Decimal):
-        return float(obj)
-    else:
-        return obj

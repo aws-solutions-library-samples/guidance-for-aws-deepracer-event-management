@@ -100,22 +100,6 @@ export class BaseStack extends cdk.Stack {
         );
 
         // Layers
-        // TODO: helperFunctionsLayer can be deleted when the infrastack has changed to usinging the ssm parameter with helperFunctionsLayerV2
-        const helperFunctionsLayer = new lambdaPython.PythonLayerVersion(this, 'helper_functions', {
-            entry: 'lib/lambdas/helper_functions_layer/http_response/',
-            compatibleArchitectures: [lambda_architecture],
-            compatibleRuntimes: [lambda_runtime],
-            bundling: { image: lambda_bundling_image },
-        });
-
-        // Powertools layer
-        // TODO: delete after dependecies in the infrastack has been switched over to using ssm
-        const powertoolsLayer = lambdaPython.PythonLayerVersion.fromLayerVersionArn(
-            this,
-            'lambda_powertools',
-            `arn:aws:lambda:${stack.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2-Arm64:11`
-        );
-
         const lambdaLayers = this.lambdaLayers(
             stack,
             lambda_architecture,
@@ -128,8 +112,6 @@ export class BaseStack extends cdk.Stack {
             runtime: lambda_runtime,
             bundlingImage: lambda_bundling_image,
         };
-
-        this.exportValue(helperFunctionsLayer.layerVersionArn); // TODO: delete after dependecies has been removed in the infra stack.
 
         // Event Bus
         this.eventbridge = new Eventbridge(this, 'eventbridge');
