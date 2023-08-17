@@ -1,5 +1,5 @@
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
-import { CustomResource, DockerImage, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
+import { DockerImage, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { EventBus } from 'aws-cdk-lib/aws-events';
@@ -61,33 +61,6 @@ export class EventsManager extends Construct {
             stream: dynamodb.StreamViewType.NEW_IMAGE,
         });
 
-        // Update existing events to new data model
-        // Can be removed after the changes has been propagated to all environments
-        const updateExisitngEventsFunction = new lambdaPython.PythonFunction(
-            this,
-            'updateExistingEvents',
-            {
-                entry: 'lib/lambdas/cr_update_stored_events_to_new_format/',
-                description: 'Updates exisitng events to new format',
-                index: 'index.py',
-                handler: 'lambda_handler',
-                timeout: Duration.minutes(1),
-                runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
-                memorySize: 128,
-                bundling: { image: props.lambdaConfig.bundlingImage },
-                layers: [props.lambdaConfig.layersConfig.powerToolsLayer],
-
-                environment: {
-                    DDB_TABLE_NAME: eventsTable.tableName,
-                },
-            }
-        );
-        new CustomResource(this, 'UpdateExistingEventsCr', {
-            serviceToken: updateExisitngEventsFunction.functionArn,
-        });
-        eventsTable.grantReadWriteData(updateExisitngEventsFunction);
-
         const ddbstreamToEventBridgeFunction = new lambdaPython.PythonFunction(
             this,
             'ddbStreamToEvbFunction',
@@ -128,7 +101,10 @@ export class EventsManager extends Construct {
             tracing: lambda.Tracing.ACTIVE,
             memorySize: 128,
             bundling: { image: props.lambdaConfig.bundlingImage },
-            layers: [props.lambdaConfig.layersConfig.powerToolsLayer],
+            layers: [
+                props.lambdaConfig.layersConfig.powerToolsLayer,
+                props.lambdaConfig.layersConfig.helperFunctionsLayer,
+            ],
 
             environment: {
                 DDB_TABLE: eventsTable.tableName,

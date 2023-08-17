@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 # encoding=utf-8
-import decimal
 import os
 
 import appsync_helpers
 import boto3
+import dynamo_helpers
 from aws_lambda_powertools import Logger, Tracer
 
 tracer = Tracer()
@@ -93,26 +93,11 @@ def __store_leaderboard_entry(item: dict):
         "type": LEADERBOARD_ENTRY_TYPE,
         **item,
     }
-    response = ddbTable.put_item(Item=__replace_floats_with_decimal(item_to_store))
+    response = ddbTable.put_item(
+        Item=dynamo_helpers.replace_floats_with_decimal(item_to_store)
+    )
     logger.info(response)
     return
-
-
-def __replace_floats_with_decimal(obj):
-    if isinstance(obj, list):
-        for i in range(len(obj)):
-            obj[i] = __replace_floats_with_decimal(obj[i])
-        return obj
-    elif isinstance(obj, dict):
-        for k in obj:
-            obj[k] = __replace_floats_with_decimal(obj[k])
-        return obj
-    elif isinstance(obj, float):
-        return decimal.Decimal(obj).quantize(
-            decimal.Decimal(".0001"), rounding=decimal.ROUND_DOWN
-        )
-    else:
-        return obj
 
 
 def __add_to_leaderboard(variables):

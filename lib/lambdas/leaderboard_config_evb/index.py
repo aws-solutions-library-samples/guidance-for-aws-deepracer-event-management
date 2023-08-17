@@ -3,6 +3,7 @@
 import os
 
 import boto3
+import dynamo_helpers
 from aws_lambda_powertools import Logger, Tracer
 
 tracer = Tracer()
@@ -83,7 +84,9 @@ def __update_leaderboard_config(leaderboard_configs: list) -> None:
         sk = leaderboard_config["sk"]
         del leaderboard_config["sk"]
 
-        ddb_update_expressions = __generate_update_query(leaderboard_config)
+        ddb_update_expressions = dynamo_helpers.generate_update_query(
+            leaderboard_config
+        )
 
         response = ddbTable.update_item(
             Key={
@@ -99,17 +102,3 @@ def __update_leaderboard_config(leaderboard_configs: list) -> None:
         )
         updatedEvent = response["Attributes"]
     return updatedEvent
-
-
-def __generate_update_query(fields):
-    exp = {
-        "UpdateExpression": "set",
-        "ExpressionAttributeNames": {},
-        "ExpressionAttributeValues": {},
-    }
-    for key, value in fields.items():
-        exp["UpdateExpression"] += f" #{key} = :{key},"
-        exp["ExpressionAttributeNames"][f"#{key}"] = key
-        exp["ExpressionAttributeValues"][f":{key}"] = value
-    exp["UpdateExpression"] = exp["UpdateExpression"][0:-1]
-    return exp
