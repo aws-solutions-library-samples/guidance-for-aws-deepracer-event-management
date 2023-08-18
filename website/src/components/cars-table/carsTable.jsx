@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { useCarsContext } from '../../store/storeProvider';
 import { ColumnsConfig, FilteringProperties, VisibleContentOptions } from './carTableConfig';
 
-const Actions = ({ children, t, setOnline, setIsLoading, edit = false }) => {
+const Actions = ({ children, t, setOnline, setIsLoading }) => {
   return (
     <SpaceBetween direction="horizontal" size="xs">
       {children}
@@ -25,11 +25,16 @@ const Actions = ({ children, t, setOnline, setIsLoading, edit = false }) => {
   );
 };
 
-export const CarsTable = ({ selectedCarsInTable = [], setSelectedCarsInTable, fleetName = '' }) => {
+export const CarsTable = ({
+  selectedCarsInTable = [],
+  setSelectedCarsInTable,
+  editFleetName = '',
+}) => {
   const { t } = useTranslation();
   const [selectedCarsBtnDisabled, setSelectedCarsBtnDisabled] = useState(true);
   const [online, setOnline] = useState('Online');
   const [cars, isLoading] = useCarsContext();
+  const [query, setQuery] = useState({ tokens: [], operation: 'and' });
 
   useEffect(() => {
     // getCars();
@@ -39,10 +44,16 @@ export const CarsTable = ({ selectedCarsInTable = [], setSelectedCarsInTable, fl
   }, [online]);
 
   useEffect(() => {
+    if (editFleetName.length > 0) {
+      setQuery({
+        tokens: [{ propertyKey: 'fleetName', value: editFleetName, operator: '=' }],
+        operation: 'and',
+      });
+    }
     return () => {
       // Unmounting
     };
-  }, [fleetName]);
+  }, [editFleetName]);
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
@@ -52,14 +63,6 @@ export const CarsTable = ({ selectedCarsInTable = [], setSelectedCarsInTable, fl
   const columnDefinitions = ColumnsConfig();
   const filteringProperties = FilteringProperties();
   const visibleContentOptions = VisibleContentOptions();
-
-  let defaultQuery = { tokens: [], operation: 'and' };
-  if (fleetName.length > 0) {
-    defaultQuery = {
-      tokens: [{ propertyKey: 'fleetName', value: fleetName, operator: '=' }],
-      operation: 'and',
-    };
-  }
 
   const {
     items,
@@ -71,7 +74,6 @@ export const CarsTable = ({ selectedCarsInTable = [], setSelectedCarsInTable, fl
   } = useCollection(cars, {
     propertyFiltering: {
       filteringProperties,
-      defaultQuery: defaultQuery,
       empty: <TableEmptyState resourceName="Car" />,
       noMatch: (
         <TableNoMatchState
@@ -110,6 +112,8 @@ export const CarsTable = ({ selectedCarsInTable = [], setSelectedCarsInTable, fl
       filter={
         <PropertyFilter
           {...propertyFilterProps}
+          onChange={({ detail }) => setQuery(detail)}
+          query={query}
           i18nStrings={PropertyFilterI18nStrings('cars')}
           countText={MatchesCountText(filteredItemsCount)}
           filteringAriaLabel={t('cars.filter-cars')}
