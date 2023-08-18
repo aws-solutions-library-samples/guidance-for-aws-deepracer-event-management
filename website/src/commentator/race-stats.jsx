@@ -10,7 +10,7 @@ import { ActualRacerStats } from './actual-racer-stats';
 import { LeaderboardStats } from './leaderboard-stats';
 
 const CommentatorRaceStats = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-race-stats']);
 
   const selectedEvent = useSelectedEventContext();
 
@@ -18,7 +18,7 @@ const CommentatorRaceStats = () => {
 
   // Help panel
   const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = true;
+  const helpPanelHidden = false;
   useEffect(() => {
     toolsOptionsDispatch({
       type: 'UPDATE',

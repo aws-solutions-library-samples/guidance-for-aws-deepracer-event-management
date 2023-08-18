@@ -19,7 +19,7 @@ import { useToolsOptionsDispatch } from '../../../store/appLayoutProvider';
 import { useSelectedEventContext, useSelectedTrackContext } from '../../../store/storeProvider';
 import { RacerSelector } from '../components/racerSelector.jsx';
 import { RacesDoneByUser } from '../components/racesDoneByUser';
-import { breadcrumbs } from '../support-functions/supportFunctions';
+import { Breadcrumbs } from '../support-functions/supportFunctions';
 
 export const RaceSetupPage = ({ onNext }) => {
   const { t } = useTranslation(['translation', 'help-admin-race-setup']);
@@ -142,11 +142,12 @@ export const RaceSetupPage = ({ onNext }) => {
     </Box>
   );
 
+  const breadcrumbs = Breadcrumbs();
   return (
     <PageLayout
       helpPanelHidden={helpPanelHidden}
       breadcrumbs={breadcrumbs}
-      header={`${t('timekeeper.race-setup-page.page-header')}: ${selectedEvent.eventName} ${t(
+      header={`${t('timekeeper.race-setup-page.page-header')} ${selectedEvent.eventName} ${t(
         'timekeeper.race-setup-page.racing-on-trackId'
       )} ${selectedTrack.leaderBoardTitle} `}
       description={t('timekeeper.race-setup-page.page-description')}

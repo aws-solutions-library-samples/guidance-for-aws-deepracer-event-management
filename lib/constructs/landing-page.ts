@@ -15,9 +15,8 @@ import {
     ResolvableField,
 } from 'awscdk-appsync-utils';
 
-import { Construct } from 'constructs';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
-import * as iam from 'aws-cdk-lib/aws-iam';
+import { Construct } from 'constructs';
 
 export interface LandingPageManagerProps {
     adminGroupRole: IRole;
@@ -79,7 +78,10 @@ export class LandingPageManager extends Construct {
                 tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 bundling: { image: props.lambdaConfig.bundlingImage },
-                layers: [props.lambdaConfig.layersConfig.powerToolsLayer],
+                layers: [
+                    props.lambdaConfig.layersConfig.powerToolsLayer,
+                    props.lambdaConfig.layersConfig.helperFunctionsLayer,
+                ],
 
                 environment: {
                     DDB_TABLE: landingPageConfigsTable.tableName,

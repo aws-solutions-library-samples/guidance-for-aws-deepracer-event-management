@@ -18,7 +18,7 @@ import {
   useToolsOptionsDispatch,
 } from '../../../store/appLayoutProvider';
 import { LapTable } from '../components/lapTable';
-import { breadcrumbs } from '../support-functions/supportFunctions';
+import { Breadcrumbs } from '../support-functions/supportFunctions';
 
 export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction, onNext }) => {
   const { t } = useTranslation();
@@ -209,6 +209,8 @@ export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction,
       {t('timekeeper.end-session.warning-message')}
     </Modal>
   );
+
+  const breadcrumbs = Breadcrumbs();
   return (
     <PageLayout
       helpPanelHidden={helpPanelHidden}

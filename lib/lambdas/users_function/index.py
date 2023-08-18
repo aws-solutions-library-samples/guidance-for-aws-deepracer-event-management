@@ -1,8 +1,8 @@
 import json
 import os
-from datetime import date, datetime
 
 import boto3
+import http_response
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import AppSyncResolver
 from aws_lambda_powertools.logging import correlation_paths
@@ -18,16 +18,8 @@ client_cognito = boto3.client("cognito-idp")
 user_pool_id = os.environ["user_pool_id"]
 
 
-def json_serial(obj):
-    """JSON serializer for objects not serializable by default json code"""
-
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    raise TypeError("Type %s not serializable" % type(obj))
-
-
 def clean_json(obj):
-    temp = json.dumps(obj, default=json_serial)  # sort out datetime
+    temp = json.dumps(obj, default=http_response.json_serial)  # sort out datetime
     temp2 = json.loads(temp)
     return temp2
 

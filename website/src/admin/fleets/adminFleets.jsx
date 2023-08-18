@@ -25,6 +25,7 @@ import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 
 import { useFleetsContext, useUsersContext } from '../../store/storeProvider';
 import { ColumnDefinitions, FilteringProperties, VisibleContentOptions } from './fleetsTableConfig';
+import { Breadcrumbs } from './support-functions/supportFunctions';
 
 const AdminFleets = () => {
   const { t } = useTranslation(['translation', 'help-admin-fleets']);
@@ -41,7 +42,7 @@ const AdminFleets = () => {
 
   // Help panel
   const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = true;
+  const helpPanelHidden = false;
   useEffect(() => {
     toolsOptionsDispatch({
       type: 'UPDATE',
@@ -175,16 +176,15 @@ const AdminFleets = () => {
     />
   );
 
+  const breadcrumbs = Breadcrumbs();
+  breadcrumbs.push({ text: t('fleets.breadcrumb') });
+
   return (
     <PageLayout
       helpPanelHidden={helpPanelHidden}
       header={t('fleets.header')}
       description={t('fleets.description')}
-      breadcrumbs={[
-        { text: t('home.breadcrumb'), href: '/' },
-        { text: t('admin.breadcrumb'), href: '/admin/home' },
-        { text: t('fleets.breadcrumb') },
-      ]}
+      breadcrumbs={breadcrumbs}
     >
       {fleetsTable}
 

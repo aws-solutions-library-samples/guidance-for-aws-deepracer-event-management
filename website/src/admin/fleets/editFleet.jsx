@@ -8,6 +8,7 @@ import { merge } from '../../support-functions/merge';
 import { CarsPanel } from './carsPanel';
 import { fleet } from './fleetDomain';
 import { GeneralInfoPanel } from './generalInfoPanel';
+import { Breadcrumbs } from './support-functions/supportFunctions';
 
 export const EditFleet = () => {
   const { t } = useTranslation();
@@ -60,30 +61,29 @@ export const EditFleet = () => {
     setCreateButtonIsDisabled(true);
   };
 
+  const breadcrumbs = Breadcrumbs();
+  breadcrumbs.push({ text: t('fleets.edit-fleet') });
+
   return (
     <PageLayout
+      helpPanelHidden="true"
       header={t('fleets.edit-fleet')}
-      description={t('fleets.description')}
-      breadcrumbs={[
-        { text: t('home.breadcrumb'), href: '/' },
-        { text: t('admin.breadcrumb'), href: '/admin/home' },
-        { text: t('fleets.breadcrumb'), href: '/admin/fleets' },
-        { text: t('fleets.edit-fleet') },
-      ]}
+      description={t('fleets.edit-description')}
+      breadcrumbs={breadcrumbs}
     >
       <form onSubmit={(event) => event.preventDefault()}>
         <Form
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button variant="link" onClick={() => navigate(-1)} disabled={loading}>
-                Cancel
+                {t('button.cancel')}
               </Button>
               <Button
                 variant="primary"
                 onClick={onUpdateHandler}
                 disabled={loading || createButtonIsDisabled}
               >
-                Save Changes
+                {t('button.save-changes')}
               </Button>
             </SpaceBetween>
           }

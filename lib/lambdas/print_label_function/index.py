@@ -1,6 +1,7 @@
 import json
 import os
 import uuid
+import tempfile
 
 import boto3
 import http_response
@@ -60,7 +61,9 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
     # Create temp file
     # hostname in filename makes it easier to find label in downloads folder
     filename = device_hostname + str(uuid.uuid4())[:8]
-    out_file_path = f"/tmp/{filename}.png"
+    tmpdir = tempfile.mkdtemp()
+    png_filename = f"{filename}.png"
+    out_file_path = os.path.join(tmpdir, png_filename)
     label_img.save(out_file_path)
 
     # Upload to S3

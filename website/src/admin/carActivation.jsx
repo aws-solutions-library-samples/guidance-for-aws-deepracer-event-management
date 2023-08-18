@@ -45,7 +45,9 @@ const AdminActivation = (props) => {
   const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
 
   const [dropDownFleets, setDropDownFleets] = useState([{ id: 'none', text: 'none' }]);
-  const [dropDownSelectedItem, setDropDownSelectedItem] = useState({ fleetName: 'Select Fleet' });
+  const [dropDownSelectedItem, setDropDownSelectedItem] = useState({
+    fleetName: t('fleets.edit-cars.select-fleet'),
+  });
 
   const [isLoading, setIsLoading] = useState(true);
   const [fleets] = useFleetsContext();
@@ -59,7 +61,7 @@ const AdminActivation = (props) => {
 
   // Help panel
   const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = true;
+  const helpPanelHidden = false;
   useEffect(() => {
     toolsOptionsDispatch({
       type: 'UPDATE',
@@ -112,7 +114,11 @@ const AdminActivation = (props) => {
 
   // watch properties for changes and enable generate button if required
   useEffect(() => {
-    if (password !== '' && hostname !== '' && dropDownSelectedItem.fleetName !== 'Select Fleet') {
+    if (
+      password !== '' &&
+      hostname !== '' &&
+      dropDownSelectedItem.fleetName !== t('fleets.edit-cars.select-fleet')
+    ) {
       setButtonDisabled(false);
     }
     return () => {
@@ -171,7 +177,8 @@ const AdminActivation = (props) => {
       description={t('car-activation.description')}
       breadcrumbs={[
         { text: t('home.breadcrumb'), href: '/' },
-        { text: t('admin.breadcrumb'), href: '/admin/home' },
+        { text: t('operator.breadcrumb'), href: '/admin/home' },
+        { text: t('car-management.breadcrumb'), href: '/admin/home' },
         { text: t('car-activation.breadcrumb') },
       ]}
     >
