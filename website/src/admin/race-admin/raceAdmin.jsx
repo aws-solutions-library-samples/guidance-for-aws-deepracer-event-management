@@ -1,5 +1,5 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Button, Table, TextFilter } from '@cloudscape-design/components';
+import { PropertyFilter, Table } from '@cloudscape-design/components';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -8,8 +8,12 @@ import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-
 import { PageLayout } from '../../components/pageLayout';
 import { DrSplitPanel } from '../../components/split-panels/dr-split-panel';
 import {
+  PropertyFilterI18nStrings,
+  TableEmptyState,
+  TableNoMatchState,
+} from '../../components/tableCommon';
+import {
   DefaultPreferences,
-  EmptyState,
   MatchesCountText,
   TableHeader,
   TablePagination,
@@ -28,7 +32,11 @@ import {
 import { formatAwsDateTime } from '../../support-functions/time';
 import { LapsTable } from './components/lapsTable';
 import { MultiChoicePanelContent } from './components/multiChoicePanelContent';
-import { ColumnDefinitions, VisibleContentOptions } from './support-functions/raceTableConfig';
+import {
+  ColumnDefinitions,
+  FilteringProperties,
+  VisibleContentOptions,
+} from './support-functions/raceTableConfig';
 
 const RaceAdmin = () => {
   const { t } = useTranslation(['translation', 'help-admin-race-admin']);
@@ -66,40 +74,48 @@ const RaceAdmin = () => {
 
   // Table config
   const columnDefinitions = ColumnDefinitions(getUserNameFromId);
+  const filteringProperties = FilteringProperties();
   const visibleContentOptions = VisibleContentOptions();
 
   const selectEmptyStateMessage = () => {
     if (selectedEvent.eventId) {
       return <EmptyState title={t('race-admin.no-races')} />;
     }
-    return <EmptyState title={'Please select an event in the top right corner'} />;
+    return <EmptyState title={t('race-admin.select-event')} />;
   };
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(races, {
-      filtering: {
-        empty: selectEmptyStateMessage(),
-        noMatch: (
-          <EmptyState
-            title={t('common.no-matches')}
-            subtitle={t('common.we-cant-find-a-match')}
-            action={
-              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
-            }
-          />
-        ),
-      },
-      pagination: { pageSize: preferences.pageSize },
-      sorting: { defaultState: { sortingColumn: columnDefinitions[0], isDescending: true } },
-      selection: {},
-    });
+  const {
+    items,
+    actions,
+    filteredItemsCount,
+    collectionProps,
+    propertyFilterProps,
+    paginationProps,
+  } = useCollection(races, {
+    propertyFiltering: {
+      filteringProperties,
+      empty: <TableEmptyState resourceName="Race" />,
+      noMatch: (
+        <TableNoMatchState
+          onClearFilter={() => {
+            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
+          }}
+          label={t('common.no-matches')}
+          description={t('common.we-cant-find-a-match')}
+          buttonLabel={t('button.clear-filters')}
+        />
+      ),
+    },
+    pagination: { pageSize: preferences.pageSize },
+    sorting: { defaultState: { sortingColumn: columnDefinitions[0], isDescending: true } },
+    selection: {},
+  });
 
   const selectPanelContent = useCallback((selectedItems) => {
     if (selectedItems.length === 0) {
       return (
-        // TODO Add localisation
         <DrSplitPanel header="0 races selected" noSelectedItems={selectedItems.length}>
-          Select a race to see its details
+          {t('race-admin.select-a-race')}
         </DrSplitPanel>
       );
     } else if (selectedItems.length === 1) {
@@ -172,10 +188,12 @@ const RaceAdmin = () => {
       stickyHeader="true"
       trackBy="raceId"
       filter={
-        <TextFilter
-          {...filterProps}
+        <PropertyFilter
+          {...propertyFilterProps}
+          i18nStrings={PropertyFilterI18nStrings('races')}
           countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel={t('events.filter')}
+          filteringAriaLabel={t('races.filter-groups')}
+          expandToViewport={true}
         />
       }
       header={
