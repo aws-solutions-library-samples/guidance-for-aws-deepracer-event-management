@@ -59,7 +59,7 @@ export const EditFleet = () => {
   const formIsInvalidHandler = () => {
     setCreateButtonIsDisabled(true);
   };
-
+  console.debug(fleetConfig);
   return (
     <PageLayout
       helpPanelHidden="true"
@@ -77,7 +77,7 @@ export const EditFleet = () => {
           actions={
             <SpaceBetween direction="horizontal" size="xs">
               <Button variant="link" onClick={() => navigate(-1)} disabled={loading}>
-                Cancel
+                {t('button.cancel')}
               </Button>
               <Button
                 variant="primary"

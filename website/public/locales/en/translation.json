@@ -273,6 +273,8 @@
   "race-admin.multi-select.slowest-lap-time": "Slowest lap time",
   "race-admin.multi-select.unique-racer-count": "Unique racer count",
   "race-admin.multi-select.header": "Races selected",
+  "race-admin.select-a-race": "Select a race to see its details",
+  "race-admin.select-event": "Please select an event in the top right corner",
 
   "fleets.create-fleet": "Create fleet",
   "fleets.edit-fleet": "Edit fleet",

@@ -3,6 +3,7 @@
 import os
 
 import boto3
+import dynamo_helpers
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import AppSyncResolver
 from aws_lambda_powertools.logging import correlation_paths
@@ -68,7 +69,7 @@ def udpateEvent(
     **args,
 ):
     logger.info(f"udpateEvent: eventId={eventId}")
-    ddb_update_expressions = __generate_update_query(args)
+    ddb_update_expressions = dynamo_helpers.generate_update_query(args)
 
     response = ddbTable.update_item(
         Key={"eventId": eventId},
@@ -79,18 +80,3 @@ def udpateEvent(
     )
     updatedEvent = response["Attributes"]
     return updatedEvent
-
-
-# TODO move into lambda layer
-def __generate_update_query(fields):
-    exp = {
-        "UpdateExpression": "set",
-        "ExpressionAttributeNames": {},
-        "ExpressionAttributeValues": {},
-    }
-    for key, value in fields.items():
-        exp["UpdateExpression"] += f" #{key} = :{key},"
-        exp["ExpressionAttributeNames"][f"#{key}"] = key
-        exp["ExpressionAttributeValues"][f":{key}"] = value
-    exp["UpdateExpression"] = exp["UpdateExpression"][0:-1]
-    return exp
