@@ -8,6 +8,7 @@ import { merge } from '../../support-functions/merge';
 import { CarsPanel } from './carsPanel';
 import { fleet } from './fleetDomain';
 import { GeneralInfoPanel } from './generalInfoPanel';
+import { Breadcrumbs } from './support-functions/supportFunctions';
 
 export const EditFleet = () => {
   const { t } = useTranslation();
@@ -59,18 +60,16 @@ export const EditFleet = () => {
   const formIsInvalidHandler = () => {
     setCreateButtonIsDisabled(true);
   };
-  console.debug(fleetConfig);
+
+  const breadcrumbs = Breadcrumbs();
+  breadcrumbs.push({ text: t('fleets.edit-fleet') });
+
   return (
     <PageLayout
       helpPanelHidden="true"
       header={t('fleets.edit-fleet')}
       description={t('fleets.edit-description')}
-      breadcrumbs={[
-        { text: t('home.breadcrumb'), href: '/' },
-        { text: t('admin.breadcrumb'), href: '/admin/home' },
-        { text: t('fleets.breadcrumb'), href: '/admin/fleets' },
-        { text: t('fleets.edit-fleet') },
-      ]}
+      breadcrumbs={breadcrumbs}
     >
       <form onSubmit={(event) => event.preventDefault()}>
         <Form
