@@ -1,6 +1,7 @@
 import hashlib
 import os
 import tarfile
+import tempfile
 from datetime import datetime
 
 import boto3
@@ -21,7 +22,10 @@ def md5_file(file):
     try:
         with open(file, "rb") as file_to_md5:
             data = file_to_md5.read()
-            return hashlib.md5(data).hexdigest()
+            hashing_lib=hashlib.new('md5',usedforsecurity=False)
+            hashing_lib.update(data)
+            hex=hashing_lib.hexdigest()
+            return hex
     except Exception as error:
         logger.exception(error)
 
@@ -42,22 +46,28 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
     model_filename_parts = model_filename.split(".")
     model_name = model_filename_parts[0]
 
+    tmpdir = tempfile.mkdtemp()
+    model_filename_full_path = os.path.join(tmpdir, model_filename)
+    model_name_full_path = os.path.join(tmpdir, model_name)
+    modelpb_path_name = os.path.join(model_name_full_path, "agent/model.pb")
+    modelmeta_path_name = os.path.join(model_name_full_path, "model_metadata.json")
+
     # Get the MD5 of model elements and update the DB
     try:
-        s3.download_file(bucket, model_key, f"/tmp/{model_filename}")
-        tar = tarfile.open(f"/tmp/{model_filename}")
-        tar.extractall(f"/tmp/{model_name}")
+        s3.download_file(bucket, model_key, model_filename_full_path)
+        tar = tarfile.open(model_filename_full_path)
+        tar.extractall(model_name_full_path)
         tar.close()
 
         # Get the MD5
-        model_md5 = md5_file(f"/tmp/{model_name}/agent/model.pb")
-        logger.debug(f"{model_name}/agent/model.pb MD5 => {model_md5}")
+        model_md5 = md5_file(modelpb_path_name)
+        logger.debug(f"{modelpb_path_name} MD5 => {model_md5}")
 
-        model_metadata_md5 = md5_file(f"/tmp/{model_name}/model_metadata.json")
-        logger.debug(f"{model_name}/model_metadata.json MD5 => {model_metadata_md5}")
+        model_metadata_md5 = md5_file(modelmeta_path_name)
+        logger.debug(f"{modelmeta_path_name} MD5 => {model_metadata_md5}")
 
         # Get sensor, training algorithm and action space from model_metadata.jsom
-        with open(f"/tmp/{model_name}/model_metadata.json") as json_file:
+        with open(modelmeta_path_name) as json_file:
             model_metadata_contents = json_file.read()
 
         logger.debug(f"model_metadata_content => {model_metadata_contents}")
