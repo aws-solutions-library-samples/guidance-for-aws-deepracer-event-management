@@ -14,14 +14,14 @@ export const CarFleetPanel = ({ fleetId, onChange }) => {
     if (fleets) {
       setCarFleetOptions(
         fleets.map((fleet) => {
-          return { label: fleet.fleetId, value: fleet.fleetName };
+          return { label: fleet.fleetName, value: fleet.fleetName };
         })
       );
     }
   }, [fleets]);
 
   const GetCarFleetOptionFromId = (id) => {
-    return carFleetOptions.find((carFleet) => carFleet.lable === id);
+    return carFleetOptions.find((carFleet) => carFleet.label === id);
   };
   return (
     <SpaceBetween size="l">
@@ -31,7 +31,7 @@ export const CarFleetPanel = ({ fleetId, onChange }) => {
       >
         <Select
           selectedOption={GetCarFleetOptionFromId(fleetId)}
-          onChange={({ detail }) => onChange(detail.selectedOption.lable)}
+          onChange={({ detail }) => onChange(detail.selectedOption.label)}
           options={carFleetOptions}
           selectedAriaLabel="Selected"
           filteringType="auto"

@@ -114,7 +114,7 @@ const RaceAdmin = () => {
     } else if (selectedItems.length === 1) {
       return (
         <DrSplitPanel header="Laps">
-          <LapsTable race={selectedItems[0]} tableSettings={{ variant: 'full-page' }} />
+          <LapsTable race={selectedItems[0]} tableSettings={{ variant: 'embedded' }} />
         </DrSplitPanel>
       );
     } else if (selectedItems.length > 1) {
