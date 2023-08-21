@@ -32,17 +32,17 @@ local.install:		## Install Python and Javascript dependencies + Generate Config 
 local.config:		## Setup local config based on branch
 	echo "{}" > ${dremSrcPath}/config.json
 	branch=`cat branch.txt` && aws cloudformation describe-stacks --stack-name drem-backend-$$branch-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
-	python scripts/generate_amplify_config_cfn.py
+	python3 scripts/generate_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $$appsyncId --format SDL ./$(dremSrcPath)/graphql/schema.graphql
 	pushd $(dremSrcPath)/graphql/ && amplify codegen; popd
 
 	echo "{}" > $(leaderboardSrcPath)/config.json
-	python scripts/generate_leaderboard_amplify_config_cfn.py
+	python3 scripts/generate_leaderboard_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $$appsyncId --format SDL $(leaderboardSrcPath)/graphql/schema.graphql
 	pushd $(leaderboardSrcPath)/graphql/ && amplify codegen; popd
 
 	echo "{}" > $(overlaysSrcPath)/config.json
-	python scripts/generate_stream_overlays_amplify_config_cfn.py
+	python3 scripts/generate_stream_overlays_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $$appsyncId --format SDL $(overlaysSrcPath)/graphql/schema.graphql
 	pushd $(overlaysSrcPath)/graphql/ && amplify codegen; popd
 
