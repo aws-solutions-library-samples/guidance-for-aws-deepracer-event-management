@@ -77,13 +77,6 @@ const RaceAdmin = () => {
   const filteringProperties = FilteringProperties();
   const visibleContentOptions = VisibleContentOptions();
 
-  const selectEmptyStateMessage = () => {
-    if (selectedEvent.eventId) {
-      return <EmptyState title={t('race-admin.no-races')} />;
-    }
-    return <EmptyState title={t('race-admin.select-event')} />;
-  };
-
   const {
     items,
     actions,
@@ -121,7 +114,7 @@ const RaceAdmin = () => {
     } else if (selectedItems.length === 1) {
       return (
         <DrSplitPanel header="Laps">
-          <LapsTable race={selectedItems[0]} tableSettings={{ variant: 'full-page' }} />
+          <LapsTable race={selectedItems[0]} tableSettings={{ variant: 'embedded' }} />
         </DrSplitPanel>
       );
     } else if (selectedItems.length > 1) {
