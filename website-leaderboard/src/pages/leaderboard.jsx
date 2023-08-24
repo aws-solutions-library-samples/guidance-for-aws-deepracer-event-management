@@ -127,10 +127,16 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
           // this might be done in the backend in the future
           console.debug(oldEntry.fastestLapTime);
           console.debug(newLeaderboardEntry.fastestLapTime);
-          newState[oldEntryIndex] =
+          newState[oldEntryIndex] = newLeaderboardEntry;
+
+          if (
+            oldEntry.trackId !== newLeaderboardEntry.trackId &&
             oldEntry.fastestLapTime < newLeaderboardEntry.fastestLapTime
-              ? oldEntry
-              : newLeaderboardEntry;
+          ) {
+            newState[oldEntryIndex] = oldEntry;
+          } else {
+            newState[oldEntryIndex] = newLeaderboardEntry;
+          }
         } else {
           newState[oldEntryIndex] = newLeaderboardEntry;
         }
