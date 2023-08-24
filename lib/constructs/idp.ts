@@ -290,12 +290,14 @@ export class Idp extends Construct {
         //  Add a default Admin user to the system
         const defaultAdminUserName = 'admin';
 
-        new CognitoUser(this, 'DefaultAdminUser', {
+        const adminUser = new CognitoUser(this, 'DefaultAdminUser', {
             username: defaultAdminUserName,
             email: props.defaultAdminEmail,
             userPool: userPool,
             groupName: adminGroup.ref,
         });
+        adminUser.node.addDependency(adminGroup);
+        adminUser.node.addDependency(userPool);
     }
 }
 

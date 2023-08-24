@@ -111,6 +111,7 @@ export const EventInfoPanel = ({
             placeholder={t('events.event-date-placeholder')}
             previousMonthAriaLabel={t('events.event-date-previous-month')}
             todayAriaLabel={t('events.event-date-today')}
+            isDateEnabled={(date) => date >= new Date().setHours(0, 0, 0, 0)}
           />
         </FormField>
         <FormField label={t('events.country')} description={t('events.country-description')}>
