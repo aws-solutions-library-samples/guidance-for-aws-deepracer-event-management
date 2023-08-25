@@ -12,7 +12,7 @@ import { DeepracerEventManagerStack } from './drem-app-stack';
 
 // Constants
 const NODE_VERSION = '18'; // other possible options: stable, latest, lts
-const CDK_VERSION = '2.89.0'; // other possible options: latest
+const CDK_VERSION = '2.93.0'; // other possible options: latest
 const AMPLIFY_VERSION = '12.0.3';
 
 export interface InfrastructurePipelineStageProps extends cdk.StackProps {
