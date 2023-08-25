@@ -59,6 +59,7 @@ export class EventsManager extends Construct {
             encryption: dynamodb.TableEncryption.AWS_MANAGED,
             removalPolicy: RemovalPolicy.DESTROY,
             stream: dynamodb.StreamViewType.NEW_IMAGE,
+            pointInTimeRecovery: true,
         });
 
         const ddbstreamToEventBridgeFunction = new lambdaPython.PythonFunction(

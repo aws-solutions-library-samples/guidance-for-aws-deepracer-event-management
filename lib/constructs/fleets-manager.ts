@@ -47,6 +47,7 @@ export class FleetsManager extends Construct {
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
             encryption: dynamodb.TableEncryption.AWS_MANAGED,
             removalPolicy: RemovalPolicy.DESTROY,
+            pointInTimeRecovery: true,
         });
 
         const fleets_handler = new lambdaPython.PythonFunction(this, 'fleetsFunction', {

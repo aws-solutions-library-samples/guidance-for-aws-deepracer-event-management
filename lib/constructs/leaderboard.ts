@@ -65,6 +65,7 @@ export class Leaderboard extends Construct {
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
             encryption: dynamodb.TableEncryption.AWS_MANAGED,
             removalPolicy: RemovalPolicy.DESTROY,
+            pointInTimeRecovery: true,
         });
 
         // WEBSITE
