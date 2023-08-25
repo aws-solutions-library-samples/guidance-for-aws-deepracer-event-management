@@ -74,7 +74,10 @@ export class EventsManager extends Construct {
                 tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 bundling: { image: props.lambdaConfig.bundlingImage },
-                layers: [props.lambdaConfig.layersConfig.powerToolsLayer],
+                layers: [
+                    props.lambdaConfig.layersConfig.powerToolsLayer,
+                    props.lambdaConfig.layersConfig.helperFunctionsLayer,
+                ],
 
                 environment: {
                     EVENT_BUS_NAME: props.eventbus.eventBusName,

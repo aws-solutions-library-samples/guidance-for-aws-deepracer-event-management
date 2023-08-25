@@ -25,10 +25,10 @@ export const CreateEvent = () => {
   }, [loading, data, errorMessage, navigate]);
 
   const UpdateConfigHandler = (attr) => {
-    console.info(attr);
+    console.debug(attr);
     setEventConfig((prevState) => {
       const merged = { ...prevState, ...attr };
-      console.info(merged);
+      console.debug(merged);
       return merged;
     });
   };

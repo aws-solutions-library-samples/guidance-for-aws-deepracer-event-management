@@ -119,7 +119,7 @@ export function CreateUser() {
   }, [username, email, tncChecked, countryCode]);
 
   // Help panel
-  const helpPanelHidden = true;
+  const helpPanelHidden = false;
   useEffect(() => {
     toolsOptionsDispatch({
       type: 'UPDATE',
