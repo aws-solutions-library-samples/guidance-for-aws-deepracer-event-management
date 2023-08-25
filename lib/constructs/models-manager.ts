@@ -128,6 +128,7 @@ export class ModelsManager extends Construct {
             encryption: dynamodb.TableEncryption.AWS_MANAGED,
             stream: dynamodb.StreamViewType.NEW_IMAGE,
             removalPolicy: RemovalPolicy.DESTROY,
+            pointInTimeRecovery: true,
         });
 
         modelsTable.addGlobalSecondaryIndex({

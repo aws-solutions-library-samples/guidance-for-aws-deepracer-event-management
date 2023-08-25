@@ -52,6 +52,7 @@ export class CarManager extends Construct {
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
             encryption: dynamodb.TableEncryption.AWS_MANAGED,
             removalPolicy: RemovalPolicy.DESTROY,
+            pointInTimeRecovery: true,
         });
 
         const carsTable_ping_state_index_name = 'pingStatus';
