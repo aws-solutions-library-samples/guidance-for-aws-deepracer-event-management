@@ -58,7 +58,7 @@ const AdminEvents = () => {
 
   // Help panel
   const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = false;
+  const helpPanelHidden = true;
   useEffect(() => {
     toolsOptionsDispatch({
       type: 'UPDATE',
