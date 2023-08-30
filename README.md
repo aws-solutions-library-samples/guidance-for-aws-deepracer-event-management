@@ -25,7 +25,7 @@ Translation files:
 Gitlab builds the Zipfile from the repo and uploads it to the DREM Dev Account (dasmthc+deepracer@amazon.com).
 A new file in the S3 Bucket then triggers the pipeline in that account. That pipeline builds the Backend end Frontend.
 
-### PreReqs
+### Prerequisites
 
 -   Have at least Maintainer Role in the Gitlab Project to make the Branch a `protected` Branch
 -   Access to the DREM Dev Account (`dasmthc+deepracer@amazon.com`)
