@@ -365,6 +365,8 @@
   "users.racer-name-placeholder": "Username",
   "users.email": "Email",
   "users.email-placeholder": "Email",
+  "users.roles": "Roles",
+  "users.status": "Status",
   "users.create-user": "Create user",
   "users.notifications.creating-user": "Creating user {{username}}...",
   "users.notifications.user-created": "User {{username}} created",
@@ -379,6 +381,7 @@
   "users-list.header": "Users",
 
   "notifications.item-type-event": "Event",
+  "notifications.item-type-user": "User",
   "notifications.creating-item": "Creating {{itemType}} {{itemName}}...",
   "notifications.create-item-success": "{{itemType}} {{itemName}} created",
   "notifications.create-item-error": "{{itemType} {{itemName}} could not be created, {{errorMessage}}",

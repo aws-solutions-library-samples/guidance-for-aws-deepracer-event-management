@@ -32,6 +32,7 @@ const getPermissions = (groups) => {
       fleets: false,
       events: false,
       users: false,
+      races: false,
       cars: false,
       races: false,
     },
@@ -91,6 +92,7 @@ const getPermissions = (groups) => {
       fleets: true,
       events: true,
       users: true,
+      races: true,
       cars: true,
       races: true,
     };

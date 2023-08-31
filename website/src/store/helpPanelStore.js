@@ -10,7 +10,7 @@ const helpPanelDefaultSettings = {
 const configureStore = () => {
   const actions = {
     HELP_PANEL_IS_OPEN: (curState, isOpen) => {
-      console.info('HELP_PANEL_IS_OPEN DISPATCH FUNCTION', isOpen);
+      console.debug('HELP_PANEL_IS_OPEN DISPATCH FUNCTION', isOpen);
       const updatedSplitPanel = { ...curState.helpPanel };
       updatedSplitPanel.isOpen = isOpen;
       return { helpPanel: updatedSplitPanel };

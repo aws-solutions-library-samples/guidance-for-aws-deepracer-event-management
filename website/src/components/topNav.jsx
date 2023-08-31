@@ -19,8 +19,6 @@ import { EditEvent } from '../admin/events/pages/editEvent';
 import { AdminFleets } from '../admin/fleets/adminFleets';
 import { CreateFleet } from '../admin/fleets/createFleet';
 import { EditFleet } from '../admin/fleets/editFleet';
-import { GroupMembersPage } from '../admin/groups/groupMembersPage';
-import { GroupsPage } from '../admin/groups/groupsPage';
 import { AdminHome } from '../admin/home';
 import { AdminModels } from '../admin/model-management/models';
 import { AdminQuarantine } from '../admin/model-management/quarantine';
@@ -28,7 +26,6 @@ import { EditRace } from '../admin/race-admin/pages/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { ProfileHome } from '../admin/user-profile/profile';
 import { CreateUser } from '../admin/users/createUser';
-import { UsersList } from '../admin/users/usersList';
 import { CommentatorRaceStats } from '../commentator/race-stats';
 import { Home } from '../home';
 import { useCarsApi } from '../hooks/useCarsApi';
@@ -41,6 +38,7 @@ import { useUsersApi } from '../hooks/useUsersApi';
 import { useWindowSize } from '../hooks/useWindowsSize';
 import { ModelMangement } from '../pages/model-management/modelManagement';
 import { Timekeeper } from '../pages/timekeeper/timeKeeper';
+import { UserManagement } from '../pages/user-manager/userManagement';
 import {
   useSelectedEventContext,
   useSelectedEventDispatch,
@@ -48,7 +46,6 @@ import {
 } from '../store/contexts/storeProvider';
 import { useStore } from '../store/store';
 import { EventSelectorModal } from './eventSelectorModal';
-
 function cwr(operation, payload) {
   // Instrument Routing to Record Page Views
   // https://github.com/aws-observability/aws-rum-web/blob/main/docs/cdn_react.md
@@ -90,11 +87,7 @@ const operatorRoutes = [
   <Route path="/admin/races/edit" element={<EditRace />} />,
 ];
 
-const adminRoutes = [
-  <Route path="/admin/users" element={<UsersList />} />,
-  <Route path="/admin/groups" element={<GroupsPage />} />,
-  <Route path="/admin/groups/:groupName" element={<GroupMembersPage />} />,
-];
+const adminRoutes = [<Route path="/admin/user-management" element={<UserManagement />} />];
 
 const MenuRoutes = ({ permissions }) => {
   usePageViews();
@@ -233,10 +226,7 @@ export function TopNav(props) {
       type: 'section',
       text: t('topnav.admin'),
       href: '/admin',
-      items: [
-        { type: 'link', text: t('topnav.users'), href: '/admin/users' },
-        { type: 'link', text: t('topnav.groups'), href: '/admin/groups' },
-      ],
+      items: [{ type: 'link', text: t('topnav.users'), href: '/admin/user-management' }],
     },
   ];
 

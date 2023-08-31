@@ -9,6 +9,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import {
     CodeFirstSchema,
     Directive,
+    EnumType,
     GraphqlType,
     InputType,
     ObjectType,
@@ -111,7 +112,14 @@ export class UserManager extends Construct {
         users_handler.addToRolePolicy(
             new iam.PolicyStatement({
                 effect: iam.Effect.ALLOW,
-                actions: ['cognito-idp:ListUsers', 'cognito-idp:AdminCreateUser'],
+                actions: [
+                    'cognito-idp:AdminCreateUser',
+                    'cognito-idp:ListUsers',
+                    'cognito-idp:ListGroups',
+                    'cognito-idp:ListUsersInGroup',
+                    'cognito-idp:AdminAddUserToGroup',
+                    'cognito-idp:AdminRemoveUserFromGroup',
+                ],
                 resources: [props.userPoolArn],
             })
         );
@@ -170,6 +178,11 @@ export class UserManager extends Construct {
 
         props.appsyncApi.schema.addType(user_object_mfa_options_input);
 
+        const userRolesEnum = new EnumType('UserRolesType', {
+            definition: ['admin', 'operator', 'commentator', 'registration', 'racer'],
+        });
+        props.appsyncApi.schema.addType(userRolesEnum);
+
         const user_object = new ObjectType('userObject', {
             definition: {
                 Username: GraphqlType.string(),
@@ -177,6 +190,7 @@ export class UserManager extends Construct {
                 UserCreateDate: GraphqlType.awsDateTime(),
                 UserLastModifiedDate: GraphqlType.awsDateTime(),
                 Enabled: GraphqlType.boolean(),
+                Roles: userRolesEnum.attribute({ isList: true }),
                 UserStatus: GraphqlType.string(),
                 MFAOptions: user_object_mfa_options.attribute({ isList: true, isRequired: false }),
                 sub: GraphqlType.id({ isRequired: false }),
@@ -243,6 +257,40 @@ export class UserManager extends Construct {
                     $utils.toJson($context.result)`
                 ),
                 // directive: all users shall be able to delete themself
+            })
+        );
+
+        props.appsyncApi.schema.addMutation(
+            'updateUser',
+            new ResolvableField({
+                args: {
+                    username: GraphqlType.string({ isRequired: true }),
+                    roles: GraphqlType.string({ isRequiredList: true }),
+                },
+                returnType: user_object.attribute(),
+                dataSource: users_data_source,
+                directives: [Directive.cognito('admin')],
+            })
+        );
+
+        props.appsyncApi.schema.addSubscription(
+            'onUserUpdated',
+            new ResolvableField({
+                returnType: user_object.attribute(),
+                dataSource: props.appsyncApi.noneDataSource,
+                requestMappingTemplate: appsync.MappingTemplate.fromString(
+                    `{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments.entry)
+                    }`
+                ),
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    '$util.toJson($context.result)'
+                ),
+                directives: [
+                    Directive.subscribe('updateUser'),
+                    Directive.cognito('admin', 'operator'),
+                ],
             })
         );
 
