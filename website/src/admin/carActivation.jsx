@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 // import { ListOfFleets } from '../components/listOfFleets';
 import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
 import * as mutations from '../graphql/mutations';
-import { useToolsOptionsDispatch } from '../store/appLayoutProvider';
 
 import {
   Box,
@@ -23,7 +22,7 @@ import {
   TextContent,
 } from '@cloudscape-design/components';
 import { PageLayout } from '../components/pageLayout';
-import { useFleetsContext } from '../store/storeProvider';
+import { useStore } from '../store/store';
 
 const AdminActivation = (props) => {
   const { t } = useTranslation(['translation', 'help-admin-car-activation']);
@@ -49,8 +48,8 @@ const AdminActivation = (props) => {
     fleetName: t('fleets.edit-cars.select-fleet'),
   });
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [fleets] = useFleetsContext();
+  const [state] = useStore();
+  const fleets = state.fleets.fleets;
 
   const [dremUrl, setDremUrl] = useState(
     window.location.protocol +
@@ -58,30 +57,6 @@ const AdminActivation = (props) => {
       window.location.hostname +
       (window.location.port ? ':' + window.location.port : '')
   );
-
-  // Help panel
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = false;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-car-activation' })}
-            bodyContent={t('content', { ns: 'help-admin-car-activation' })}
-            footerContent={t('footer', { ns: 'help-admin-car-activation' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
 
   // convert fleets data to dropdown format
   useEffect(() => {
@@ -172,7 +147,14 @@ const AdminActivation = (props) => {
 
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={false}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-car-activation' })}
+          bodyContent={t('content', { ns: 'help-admin-car-activation' })}
+          footerContent={t('footer', { ns: 'help-admin-car-activation' })}
+        />
+      }
       header={t('car-activation.header')}
       description={t('car-activation.description')}
       breadcrumbs={[

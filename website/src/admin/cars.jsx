@@ -30,7 +30,6 @@ import {
   TableNoMatchState,
 } from '../components/tableCommon';
 import { DefaultPreferences, MatchesCountText, TablePreferences } from '../components/tableConfig';
-import { useToolsOptionsDispatch } from '../store/appLayoutProvider';
 
 import * as queries from '../graphql/queries';
 
@@ -43,30 +42,6 @@ const AdminCars = () => {
   const [online, setOnline] = useState('Online');
   const [onlineBool, setOnlineBool] = useState(true);
   const [refresh, setRefresh] = useState(false);
-
-  // Help panel
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = false;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-cars' })}
-            bodyContent={t('content', { ns: 'help-admin-cars' })}
-            footerContent={t('footer', { ns: 'help-admin-cars' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
 
   // Get Cars
   async function getCars() {
@@ -164,7 +139,14 @@ const AdminCars = () => {
 
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={false}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-cars' })}
+          bodyContent={t('content', { ns: 'help-admin-cars' })}
+          footerContent={t('footer', { ns: 'help-admin-cars' })}
+        />
+      }
       header={t('cars.header')}
       description={t('cars.description')}
       breadcrumbs={[

@@ -1,13 +1,11 @@
 import { API, graphqlOperation } from 'aws-amplify';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import * as queries from '../graphql/queries';
 import { onUserCreated } from '../graphql/subscriptions';
-// import * as mutations from '../graphql/mutations';
+import { useStore } from '../store/store';
 
 export const useUsersApi = (userHasAccess = false) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [users, setUsers] = useState([]);
-  //const [errorMessage, setErrorMessage] = useState('');
+  const [, dispatch] = useStore();
 
   function getUserEmail(item) {
     const email = item.Attributes.filter((obj) => {
@@ -29,20 +27,20 @@ export const useUsersApi = (userHasAccess = false) => {
   useEffect(() => {
     if (userHasAccess) {
       async function listUsers() {
-        setIsLoading(true);
+        dispatch('USERS_IS_LOADING', true);
         const response = await API.graphql({
           query: queries.listUsers,
           authMode: 'AMAZON_COGNITO_USER_POOLS',
         });
         const tempUsers = response.data.listUsers;
-
+        console.debug('LIST USERS reply');
         const users = tempUsers.map((u) => ({
           ...u,
           Email: getUserEmail(u),
           CountryCode: getUserCountryCode(u),
         }));
-        setUsers([...users]);
-        setIsLoading(false);
+        dispatch('ADD_USERS', users);
+        dispatch('USERS_IS_LOADING', false);
       }
       listUsers();
     }
@@ -55,10 +53,17 @@ export const useUsersApi = (userHasAccess = false) => {
   useEffect(() => {
     let subscription;
     if (userHasAccess) {
+      console.debug('register onUserCreated subscription');
       subscription = API.graphql(graphqlOperation(onUserCreated)).subscribe({
         next: (event) => {
-          console.debug(event);
-          setUsers([...users, event.value.data.onUserCreated]);
+          console.debug('onUserCreated recived');
+          const user = {
+            ...event.value.data.onUserCreated,
+            Email: getUserEmail(event.value.data.onUserCreated),
+            CountryCode: getUserCountryCode(event.value.data.onUserCreated),
+          };
+
+          dispatch('UPDATE_USER', user);
         },
       });
 
@@ -74,11 +79,11 @@ export const useUsersApi = (userHasAccess = false) => {
     }
 
     return () => {
+      //   console.debug('onUserCreated subscription cleanup');
       if (subscription) {
+        console.debug('deregister onUserCreated subscription');
         subscription.unsubscribe();
       }
     };
-  }, [users, userHasAccess]);
-
-  return [users, isLoading]; //, errorMessage];
+  }, [dispatch, userHasAccess]);
 };

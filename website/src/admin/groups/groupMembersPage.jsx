@@ -30,8 +30,7 @@ import {
   VisibleContentOptions,
 } from '../../components/tableUserConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useNotificationsDispatch, useToolsOptionsDispatch } from '../../store/appLayoutProvider';
-import { useUsersContext } from '../../store/storeProvider';
+import { useStore } from '../../store/store';
 import {
   addUserToGroupMutation,
   getGroupMembersQuery,
@@ -45,33 +44,9 @@ export function GroupMembersPage() {
   const [usersWithGroupMetaData, setUsersWithGroupMetaData] = useState([]);
   const [selectedItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [addNotification, dismissNotification] = useNotificationsDispatch();
 
-  const [users] = useUsersContext();
-
-  // Help panel
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = true;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-group-members' })}
-            bodyContent={t('content', { ns: 'help-admin-group-members' })}
-            footerContent={t('footer', { ns: 'help-admin-group-members' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
+  const [state, dispatch] = useStore();
+  const users = state.users.users;
 
   useEffect(() => {
     const getMembersInGroup = async () => {
@@ -172,13 +147,13 @@ export function GroupMembersPage() {
       const userName = user.Username;
       const errorMessage = e.errors[0].message;
 
-      addNotification({
+      dispatch('ADD_NOTIFICATION', {
         type: 'error',
         content: t('groups.notifications-error', { errorMessage, userName }),
         id: notificationId,
         dismissible: true,
         onDismiss: () => {
-          dismissNotification(notificationId);
+          dispatch('DISMISS_NOTIFICATION', notificationId);
         },
       });
     });
@@ -231,7 +206,14 @@ export function GroupMembersPage() {
 
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={true}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-group-members' })}
+          bodyContent={t('content', { ns: 'help-admin-group-members' })}
+          footerContent={t('footer', { ns: 'help-admin-group-members' })}
+        />
+      }
       header={t('groups.detail.content-header', { groupName })}
       description={t('groups.detail.content-description', { groupName })}
       breadcrumbs={[

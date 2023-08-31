@@ -7,7 +7,6 @@ import { PageLayout } from '../../components/pageLayout';
 import { DeleteModelModal } from './components/deleteModelModal';
 import { ModelsTable } from './components/modelsTable';
 
-import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 import { formatAwsDateTime } from '../../support-functions/time';
 import { ModelUpload } from './components/modelUpload';
 
@@ -17,30 +16,6 @@ export const ModelMangement = () => {
   const [models, setModels] = useState([]);
   const [selectedModels, setSelectedModels] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Help panel
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = false;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-model-management' })}
-            bodyContent={t('content', { ns: 'help-model-management' })}
-            footerContent={t('footer', { ns: 'help-model-management' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
 
   useEffect(() => {
     const getData = async () => {
@@ -108,7 +83,14 @@ export const ModelMangement = () => {
 
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={false}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-model-management' })}
+          bodyContent={t('content', { ns: 'help-model-management' })}
+          footerContent={t('footer', { ns: 'help-model-management' })}
+        />
+      }
       header={t('models.header')}
       breadcrumbs={[{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]}
     >

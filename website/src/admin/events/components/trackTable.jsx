@@ -3,12 +3,10 @@ import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EventLinksButtons } from '../../../components/eventLinksButtons';
 import awsconfig from '../../../config.json';
-import { useFleetsContext } from '../../../store/storeProvider';
 
 export const TrackTable = ({ eventId, tracks }) => {
   const { t } = useTranslation();
   const [tableItems, setTableItems] = React.useState([]);
-  const [, , getFleetNameFromId] = useFleetsContext();
 
   useEffect(() => {
     setTableItems(
@@ -58,7 +56,7 @@ export const TrackTable = ({ eventId, tracks }) => {
     {
       id: 'fleetId',
       header: t('events.car-fleet'),
-      cell: (item) => getFleetNameFromId(item.fleetId) || '-',
+      cell: (item) => item.fleetId || '-',
     },
     {
       id: 'leaderBoardTitle',

@@ -2,13 +2,15 @@ import { FormField, Grid } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GetMaxRunsPerRacerFromId } from '../../../admin/events/support-functions/raceConfig';
-import { useRacesContext } from '../../../store/storeProvider';
+import { useStore } from '../../../store/store';
 
 export const RacesDoneByUser = ({ selecedEvent, selecedUserId }) => {
   const { t } = useTranslation();
-  const [races, racesIsLoading] = useRacesContext();
   const [racesDoneByRacer, setRacesDoneByRacer] = useState('-');
   const [maxAllowedRacesPerRacer, setMaxAllowedRacesPerRacer] = useState('-');
+  const [state] = useStore();
+  const races = state.races.races;
+  const racesIsLoading = state.races.isLoading;
 
   useEffect(() => {
     if (selecedEvent != null) {

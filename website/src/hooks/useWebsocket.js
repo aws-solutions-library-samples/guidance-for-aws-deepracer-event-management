@@ -12,12 +12,12 @@ export default function useWebsocket(url, onMessage) {
       }
 
       if (!wsClientRef.current) {
-        console.info(`Websocket trying to connect to server on url ${url}`);
+        console.debug(`Websocket trying to connect to server on url ${url}`);
         const client = new WebSocket(url);
         wsClientRef.current = client;
 
         client.onopen = () => {
-          console.info('WebSocket Connected');
+          console.debug('WebSocket Connected');
           setIsConnected(true);
         };
 

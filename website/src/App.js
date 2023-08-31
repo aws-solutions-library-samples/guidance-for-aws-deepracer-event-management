@@ -16,11 +16,12 @@ import './App.css';
 import { CountrySelector } from './components/countrySelector';
 import TopNav from './components/topNav';
 import awsconfig from './config.json';
-import { AppLayoutProvider } from './store/appLayoutProvider';
-import { PermissionProvider } from './store/permissions/permissionsProvider';
-import { StoreProvider } from './store/storeProvider';
+import { StoreProvider } from './store/contexts/storeProvider';
+import initDataStores from './store/initStore';
 
 Amplify.configure(awsconfig);
+
+initDataStores();
 
 let awsRum = null;
 try {
@@ -111,15 +112,11 @@ export default function App() {
     >
       {({ signOut, user }) => (
         <main>
-          <PermissionProvider>
-            <AppLayoutProvider>
-              <StoreProvider>
-                <Router>
-                  <TopNav user={user.username} signout={signOut} />
-                </Router>
-              </StoreProvider>
-            </AppLayoutProvider>
-          </PermissionProvider>
+          <StoreProvider>
+            <Router>
+              <TopNav user={user.username} signout={signOut} />
+            </Router>
+          </StoreProvider>
         </main>
       )}
     </Authenticator>

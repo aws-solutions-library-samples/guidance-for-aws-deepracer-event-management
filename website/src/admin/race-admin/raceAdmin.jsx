@@ -20,15 +20,10 @@ import {
   TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import {
-  useSplitPanelOptionsDispatch,
-  useToolsOptionsDispatch,
-} from '../../store/appLayoutProvider';
-import {
-  useRacesContext,
-  useSelectedEventContext,
-  useUsersContext,
-} from '../../store/storeProvider';
+import useMutation from '../../hooks/useMutation';
+import { useUsers } from '../../hooks/useUsers';
+import { useSelectedEventContext } from '../../store/contexts/storeProvider';
+import { useStore } from '../../store/store';
 import { formatAwsDateTime } from '../../support-functions/time';
 import { LapsTable } from './components/lapsTable';
 import { MultiChoicePanelContent } from './components/multiChoicePanelContent';
@@ -41,12 +36,13 @@ import {
 const RaceAdmin = () => {
   const { t } = useTranslation(['translation', 'help-admin-race-admin']);
   const selectedEvent = useSelectedEventContext();
-  const [, , getUserNameFromId] = useUsersContext();
-  const [races, loading, sendDelete] = useRacesContext();
+  const [send] = useMutation();
   const [SelectedRacesInTable, setSelectedRacesInTable] = useState([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
+  const [state, dispatch] = useStore();
+  const races = state.races.races;
+  const isLoading = state.races.isLoading;
+  const [, , getUserNameFromId] = useUsers();
 
   const [preferences, setPreferences] = useLocalStorage('DREM-races-table-preferences', {
     ...DefaultPreferences,
@@ -68,7 +64,7 @@ const RaceAdmin = () => {
       racesToDelete: racesToDelete,
     };
     console.info(deleteVariables);
-    sendDelete(deleteVariables);
+    send('deleteRaces', deleteVariables);
     setSelectedRacesInTable([]);
   }
 
@@ -127,41 +123,15 @@ const RaceAdmin = () => {
   }, []);
 
   useEffect(() => {
-    splitPanelOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        isOpen: true,
-        content: selectPanelContent(SelectedRacesInTable),
-      },
+    dispatch('UPDATE_SPLIT_PANEL', {
+      isOpen: true,
+      content: selectPanelContent(SelectedRacesInTable),
     });
 
     return () => {
-      splitPanelOptionsDispatch({ type: 'RESET' });
+      dispatch('RESET_SPLIT_PANEL');
     };
-  }, [SelectedRacesInTable, splitPanelOptionsDispatch, selectPanelContent]);
-
-  // Help panel
-  const helpPanelHidden = false;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-race-admin' })}
-            bodyContent={t('content', { ns: 'help-admin-race-admin' })}
-            footerContent={t('footer', { ns: 'help-admin-race-admin' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
+  }, [SelectedRacesInTable, selectPanelContent]);
 
   const raceTable = (
     <Table
@@ -176,7 +146,7 @@ const RaceAdmin = () => {
       stripedRows={preferences.stripedRows}
       contentDensity={preferences.contentDensity}
       wrapLines={preferences.wrapLines}
-      loading={loading}
+      loading={isLoading}
       loadingText={t('events.loading')}
       stickyHeader="true"
       trackBy="raceId"
@@ -214,7 +184,14 @@ const RaceAdmin = () => {
   // JSX
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={false}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-race-admin' })}
+          bodyContent={t('content', { ns: 'help-admin-race-admin' })}
+          footerContent={t('footer', { ns: 'help-admin-race-admin' })}
+        />
+      }
       header={t('race-admin.header')}
       description={t('race-admin.description')}
       breadcrumbs={[

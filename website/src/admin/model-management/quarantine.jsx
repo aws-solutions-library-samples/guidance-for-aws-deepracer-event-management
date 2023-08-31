@@ -19,7 +19,6 @@ import {
 } from '../../components/tableConfig';
 import * as queries from '../../graphql/queries';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 import { formatAwsDateTime } from '../../support-functions/time';
 
 const AdminQuarantine = () => {
@@ -27,8 +26,6 @@ const AdminQuarantine = () => {
 
   const [allItems, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
 
   async function getQuarantinedModels() {
     const response = await API.graphql({
@@ -54,29 +51,6 @@ const AdminQuarantine = () => {
       // Unmounting
     };
   }, []);
-
-  // Help panel
-  const helpPanelHidden = true;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-model-quarantine' })}
-            bodyContent={t('content', { ns: 'help-admin-model-quarantine' })}
-            footerContent={t('footer', { ns: 'help-admin-model-quarantine' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
 
   const [preferences, setPreferences] = useLocalStorage('DREM-quarantine-table-preferences', {
     ...DefaultPreferences,
@@ -174,7 +148,14 @@ const AdminQuarantine = () => {
 
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={true}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-model-quarantine' })}
+          bodyContent={t('content', { ns: 'help-admin-model-quarantine' })}
+          footerContent={t('footer', { ns: 'help-admin-model-quarantine' })}
+        />
+      }
       header={t('quarantine.header')}
       description={t('quarantine.list-of-all-models')}
       breadcrumbs={[
