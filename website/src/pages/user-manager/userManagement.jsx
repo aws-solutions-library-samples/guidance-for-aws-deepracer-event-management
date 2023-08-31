@@ -1,5 +1,6 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Header, Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
+import { Button, Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
+import { Auth } from 'aws-amplify';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
@@ -12,6 +13,7 @@ import {
 import {
   DefaultPreferences,
   MatchesCountText,
+  TableHeader,
   TablePreferences,
 } from '../../components/tableConfig';
 import {
@@ -20,18 +22,41 @@ import {
   VisibleContentOptions,
 } from '../../components/tableUserConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useUsers } from '../../hooks/useUsers';
+import useMutation from '../../hooks/useMutation';
+import { useStore } from '../../store/store';
+import { ChangeRoleModal } from './changeRoleModal';
 
-export const UsersList = () => {
+export const UserManagement = () => {
   const { t } = useTranslation(['translation', 'help-admin-users-list']);
 
-  const [selectedItems] = useState([]);
-  const [users, isLoading] = useUsers();
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [changeRoleModalVisible, setChangeRoleModalVisible] = useState(false);
+  const [send] = useMutation();
+  const [state] = useStore();
+  const currentUser = Auth.user;
+  const users = state.users.users;
+  const isLoading = state.users.isLoading;
 
   const [preferences, setPreferences] = useLocalStorage('DREM-user-table-preferences', {
     ...DefaultPreferences,
-    visibleContent: ['Username', 'Flag', 'UserCreateDate'],
+    visibleContent: ['Username', 'Roles', 'UserStatus', 'UserCreateDate'],
   });
+
+  // Role membership management
+  const changeRoleHandler = (role) => {
+    setSelectedItems((prevState) => {
+      prevState.forEach((selectedUser) => {
+        if (role === 'racer') role = [];
+        send('updateUser', {
+          username: selectedUser.Username,
+          roles: role,
+        });
+      });
+
+      return [];
+    });
+    setChangeRoleModalVisible(false);
+  };
 
   // Table config
   const columnDefinitions = ColumnDefinitions();
@@ -64,7 +89,6 @@ export const UsersList = () => {
     sorting: { defaultState: { sortingColumn: columnDefinitions[0], isDescending: false } },
     selection: {},
   });
-
   return (
     <PageLayout
       helpPanelHidden={true}
@@ -85,18 +109,25 @@ export const UsersList = () => {
       <Table
         {...collectionProps}
         header={
-          <Header
-            counter={
-              selectedItems.length
-                ? `(${selectedItems.length}/${users.length})`
-                : `(${users.length})`
+          <TableHeader
+            nrSelectedItems={selectedItems.length}
+            nrTotalItems={users.length}
+            header={t('users.header-list')}
+            actions={
+              <>
+                <Button onClick={() => setChangeRoleModalVisible(true)}>Change Role</Button>
+              </>
             }
-          >
-            {t('users.header-list')}
-          </Header>
+          />
         }
+        isItemDisabled={(item) => item.sub === currentUser.attributes.sub}
         columnDefinitions={columnDefinitions}
         items={items}
+        onSelectionChange={({ detail }) => {
+          setSelectedItems(detail.selectedItems);
+        }}
+        selectedItems={selectedItems}
+        selectionType="multi"
         stripedRows={preferences.stripedRows}
         contentDensity={preferences.contentDensity}
         wrapLines={preferences.wrapLines}
@@ -122,7 +153,6 @@ export const UsersList = () => {
         loading={isLoading}
         loadingText={t('users.loading-groups')}
         visibleColumns={preferences.visibleContent}
-        selectedItems={selectedItems}
         stickyHeader="true"
         trackBy="Username"
         resizableColumns
@@ -133,6 +163,13 @@ export const UsersList = () => {
             contentOptions={visibleContentOptions}
           />
         }
+      />
+      <ChangeRoleModal
+        onDismiss={() => setChangeRoleModalVisible(false)}
+        visible={changeRoleModalVisible}
+        onSave={(data) => {
+          changeRoleHandler(data);
+        }}
       />
     </PageLayout>
   );

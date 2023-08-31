@@ -13,10 +13,26 @@ export const ColumnDefinitions = () => {
       minWidth: 200,
     },
     {
+      id: 'Roles',
+      header: i18next.t('users.roles'),
+      cell: (item) => item.Roles || '-',
+      sortingField: 'Roles',
+      width: 250,
+      minWidth: 200,
+    },
+    {
       id: 'Email',
       header: i18next.t('users.header-email'),
       cell: (item) => item.Email || '-',
       sortingField: 'Email',
+      width: 250,
+      minWidth: 200,
+    },
+    {
+      id: 'UserStatus',
+      header: i18next.t('users.status'),
+      cell: (item) => item.UserStatus || '-',
+      sortingField: 'UserStatus',
       width: 250,
       minWidth: 200,
     },
@@ -72,8 +88,17 @@ export const VisibleContentOptions = () => {
           alwaysVisible: true,
         },
         {
+          id: 'Roles',
+          label: i18next.t('users.roles'),
+          alwaysVisible: true,
+        },
+        {
           id: 'Email',
           label: i18next.t('users.header-email'),
+        },
+        {
+          id: 'UserStatus',
+          label: i18next.t('users.status'),
         },
         {
           id: 'Flag',
@@ -101,6 +126,11 @@ export const FilteringProperties = () => {
     {
       key: 'Username',
       propertyLabel: i18next.t('users.header-username'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'Roles',
+      propertyLabel: i18next.t('users.roles'),
       operators: [':', '!:', '=', '!='],
     },
     {

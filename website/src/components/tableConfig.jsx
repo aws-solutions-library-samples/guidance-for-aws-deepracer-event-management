@@ -1,14 +1,17 @@
 import {
   Box,
+  BreadcrumbGroup,
   Button,
   CollectionPreferences,
   Header,
+  Link,
   Pagination,
   SpaceBetween,
 } from '@cloudscape-design/components';
 
-import { default as React } from 'react';
+import { default as React, useEffect } from 'react';
 import i18next from '../i18n';
+import { useStore } from '../store/store';
 
 export function EmptyState({ title, subtitle, action }) {
   return (
@@ -188,13 +191,64 @@ const HeaderActions = ({ onEdit, onDelete, onAdd, nrSelectedItems }) => {
   );
 };
 
-export const TableHeader = ({
-  onEdit,
-  onDelete,
-  onAdd,
+export const FullPageTableHeader = ({
   nrSelectedItems,
   nrTotalItems,
   header,
+  breadcrumbs,
+  actions = undefined,
+  helpPanelHidden = true,
+  helpPanelContent = undefined,
+}) => {
+  const [, dispatch] = useStore();
+
+  // Help panel
+  useEffect(() => {
+    dispatch('UPDATE_HELP_PANEL', {
+      //isOpen: true,
+      isHidden: helpPanelHidden,
+      content: helpPanelContent,
+    });
+
+    return () => {
+      dispatch('RESET_HELP_PANEL');
+    };
+  }, [dispatch, helpPanelHidden]);
+
+  return (
+    <>
+      <BreadcrumbGroup items={breadcrumbs} ariaLabel="Breadcrumbs" />
+      {helpPanelHidden ? (
+        <Header
+          actions={actions}
+          counter={<ItemsCount nrTotalItems={nrTotalItems} nrSelectedItems={nrSelectedItems} />}
+        >
+          {header}
+        </Header>
+      ) : (
+        <Header
+          info={
+            <Link variant="info" onFollow={() => dispatch('HELP_PANEL_IS_OPEN', true)}>
+              Info
+            </Link>
+          }
+          actions={actions}
+          counter={<ItemsCount nrTotalItems={nrTotalItems} nrSelectedItems={nrSelectedItems} />}
+        >
+          {header}
+        </Header>
+      )}
+    </>
+  );
+};
+
+export const TableHeader = ({
+  nrSelectedItems,
+  nrTotalItems,
+  header,
+  onEdit = undefined,
+  onDelete = undefined,
+  onAdd = undefined,
   actions = undefined,
 }) => {
   return (

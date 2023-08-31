@@ -17,7 +17,6 @@ import { CarManager } from './constructs/cars-manager';
 import { CwRumAppMonitor } from './constructs/cw-rum';
 import { EventsManager } from './constructs/events-manager';
 import { FleetsManager } from './constructs/fleets-manager';
-import { GroupManager } from './constructs/group-manager';
 import { LabelPrinter } from './constructs/label-printer';
 import { LandingPageManager } from './constructs/landing-page';
 import { Leaderboard } from './constructs/leaderboard';
@@ -145,21 +144,13 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
         new SystemsManager(this, 'SystemManager');
 
-        const userManager = new UserManager(this, 'UserManager', {
+        new UserManager(this, 'UserManager', {
             authenticatedUserRole: props.authenticatedUserRole,
             lambdaConfig: lambdaConfig,
             userPoolArn: props.userPool.userPoolArn,
             userPoolId: props.userPool.userPoolId,
             appsyncApi: appsyncResources,
             eventbus: props.eventbus,
-        });
-
-        new GroupManager(this, 'GroupManagers', {
-            lambdaConfig: lambdaConfig,
-            userPoolArn: props.userPool.userPoolArn,
-            userPoolId: props.userPool.userPoolId,
-            userApiObject: userManager.userApiObject,
-            appsyncApi: appsyncResources,
         });
 
         new LabelPrinter(this, 'LabelPrinter', {
