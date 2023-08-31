@@ -101,50 +101,6 @@ const AdminModels = () => {
       propertyLabel: t('models.model-name'),
       operators: [':', '!:', '=', '!='],
     },
-    // {
-    //   key: 'modelDate',
-    //   propertyLabel: t('models.upload-date'),
-    //   groupValuesLabel: 'Created at value',
-    //   defaultOperator: '>',
-    //   operators: ['<', '<=', '>', '>='].map((operator) => ({
-    //     operator,
-    //     form: ({ value, onChange }) => (
-    //       <div className="date-form">
-    //         {' '}
-    //         <FormField>
-    //           {' '}
-    //           <DateInput
-    //             value={value ?? ''}
-    //             onChange={(event) => onChange(event.detail.value)}
-    //             placeholder="YYYY/MM/DD"
-    //           />{' '}
-    //         </FormField>{' '}
-    //         <Calendar
-    //           value={value ?? ''}
-    //           onChange={(event) => onChange(event.detail.value)}
-    //           locale="en-GB"
-    //         />{' '}
-    //       </div>
-    //     ),
-    //     format: formatAwsDateTime,
-    //     match: 'date',
-    //   })),
-    // },
-    // {
-    //   key: 'modelMD5Hash',
-    //   propertyLabel: t('models.md5-hash'),
-    //   operators: [':', '!:', '=', '!='],
-    // },
-    // {
-    //   key: 'modelMetadataMD5Hash',
-    //   propertyLabel: t('models.md5-hash-metadata'),
-    //   operators: [':', '!:', '=', '!='],
-    // },
-    // {
-    //   key: 'modelS3Key',
-    //   propertyLabel: t('models.model-s3-key'),
-    //   operators: [':', '!:', '=', '!='],
-    // },
   ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
 
   const visibleContentOptions = [

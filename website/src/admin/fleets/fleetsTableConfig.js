@@ -36,40 +36,6 @@ export const FilteringProperties = () => {
       propertyLabel: i18next.t('fleets.fleet-name'),
       operators: [':', '!:', '=', '!='],
     },
-    // {
-    //   key: 'createdAt',
-    //   propertyLabel: i18next.t('fleets.created-at'),
-    //   groupValuesLabel: 'Created at value',
-    //   defaultOperator: '>',
-    //   operators: ['<', '<=', '>', '>='].map((operator) => ({
-    //     operator,
-    //     form: ({ value, onChange }) => (
-    //       <div className="date-form">
-    //         {' '}
-    //         <FormField>
-    //           {' '}
-    //           <DateInput
-    //             value={value ?? ''}
-    //             onChange={(event) => onChange(event.detail.value)}
-    //             placeholder="YYYY/MM/DD"
-    //           />{' '}
-    //         </FormField>{' '}
-    //         <Calendar
-    //           value={value ?? ''}
-    //           onChange={(event) => onChange(event.detail.value)}
-    //           locale="en-GB"
-    //         />{' '}
-    //       </div>
-    //     ),
-    //     format: formatAwsDateTime,
-    //     match: 'date',
-    //   })),
-    // },
-    // {
-    //   key: 'createdBy',
-    //   propertyLabel: i18next.t('fleets.created-by'),
-    //   operators: [':', '!:', '=', '!='],
-    // },
   ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
 };
 
