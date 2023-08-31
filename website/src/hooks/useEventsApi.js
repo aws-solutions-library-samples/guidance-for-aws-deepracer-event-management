@@ -1,26 +1,24 @@
 import { API, graphqlOperation } from 'aws-amplify';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import * as queries from '../graphql/queries';
 import { onAddedEvent, onDeletedEvents, onUpdatedEvent } from '../graphql/subscriptions';
+import { useStore } from '../store/store';
 
 export const useEventsApi = (selectedEvent, setSelectedEvent, userHasAccess = false) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [events, setEvents] = useState([]);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [, dispatch] = useStore();
 
   // initial data load
   useEffect(() => {
     if (userHasAccess) {
       async function getEvents() {
-        setIsLoading(true);
+        dispatch('EVENTS_IS_LOADING', true);
         const responseGetEvents = await API.graphql({
           query: queries.getEvents,
         });
         const events = responseGetEvents.data.getEvents;
         const eventsInNewFormat = events.filter((event) => event.raceConfig !== null); // TODO can be removed after testing
-        console.info(eventsInNewFormat);
-        setEvents([...eventsInNewFormat]);
-        setIsLoading(false);
+        dispatch('ADD_EVENTS', eventsInNewFormat);
+        dispatch('EVENTS_IS_LOADING', false);
       }
       getEvents();
     }
@@ -35,8 +33,8 @@ export const useEventsApi = (selectedEvent, setSelectedEvent, userHasAccess = fa
     if (userHasAccess) {
       onAddEventSubscription = API.graphql(graphqlOperation(onAddedEvent)).subscribe({
         next: (event) => {
-          console.debug(event);
-          setEvents([...events, event.value.data.onAddedEvent]);
+          console.debug('onAddedEvent received', event);
+          dispatch('UPDATE_EVENT', event.value.data.onAddedEvent);
         },
       });
     }
@@ -45,7 +43,7 @@ export const useEventsApi = (selectedEvent, setSelectedEvent, userHasAccess = fa
         onAddEventSubscription.unsubscribe();
       }
     };
-  }, [events, userHasAccess]);
+  }, [userHasAccess]);
 
   // subscribe to updated events and update local array
   useEffect(() => {
@@ -56,17 +54,11 @@ export const useEventsApi = (selectedEvent, setSelectedEvent, userHasAccess = fa
           console.debug(event);
           const updatedEvent = event.value.data.onUpdatedEvent;
 
-          setEvents((prevState) => {
-            const indexOfUpdatedEvent = events.findIndex(
-              (event) => event.eventId === updatedEvent.eventId
-            );
-            const modifiedEvents = [...prevState];
-            modifiedEvents[indexOfUpdatedEvent] = updatedEvent;
-            return modifiedEvents;
-          });
+          dispatch('UPDATE_EVENT', updatedEvent);
+
           //update the selected event if it has been updated
           if (selectedEvent != null && updatedEvent.eventId === selectedEvent.eventId) {
-            console.info('update the selected event');
+            console.debug('update the selected event');
             setSelectedEvent(updatedEvent);
           }
         },
@@ -77,7 +69,7 @@ export const useEventsApi = (selectedEvent, setSelectedEvent, userHasAccess = fa
         onUpdatedEventSubscription.unsubscribe();
       }
     };
-  }, [events, userHasAccess]);
+  }, [userHasAccess]);
 
   // subscribe to delete data changes and delete them from local array
   useEffect(() => {
@@ -88,26 +80,7 @@ export const useEventsApi = (selectedEvent, setSelectedEvent, userHasAccess = fa
           const eventIdsToDelete = event.value.data.onDeletedEvents.map(
             (event) => JSON.parse(event).eventId
           );
-
-          setEvents((prevState) => {
-            const indexes = [];
-            eventIdsToDelete.map((eventId) => {
-              const index = events.findIndex((event) => event.eventId === eventId);
-              if (index > -1) {
-                indexes.push(index);
-              }
-            });
-
-            // To make sure events with highest index are deleted first
-            indexes.sort().reverse();
-
-            if (indexes) {
-              const updatedState = [...prevState];
-              indexes.map((index) => updatedState.splice(index, 1));
-              return updatedState;
-            }
-            return prevState;
-          });
+          dispatch('DELETE_EVENTS', eventIdsToDelete);
         },
       });
     }
@@ -116,7 +89,5 @@ export const useEventsApi = (selectedEvent, setSelectedEvent, userHasAccess = fa
         onDeletedEventsSubscription.unsubscribe();
       }
     };
-  }, [events, userHasAccess]);
-
-  return [events, isLoading, errorMessage];
+  }, [userHasAccess]);
 };

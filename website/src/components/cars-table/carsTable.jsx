@@ -14,9 +14,8 @@ import {
 } from '../tableConfig';
 
 import { useTranslation } from 'react-i18next';
-import { useCarsContext } from '../../store/storeProvider';
+import { useStore } from '../../store/store';
 import { ColumnsConfig, FilteringProperties, VisibleContentOptions } from './carTableConfig';
-
 const Actions = ({ children, t, setOnline, setIsLoading }) => {
   return (
     <SpaceBetween direction="horizontal" size="xs">
@@ -33,7 +32,11 @@ export const CarsTable = ({
   const { t } = useTranslation();
   const [selectedCarsBtnDisabled, setSelectedCarsBtnDisabled] = useState(true);
   const [online, setOnline] = useState('Online');
-  const [cars, isLoading] = useCarsContext();
+
+  const [state] = useStore();
+  const cars = state.cars.cars;
+  const isLoading = state.cars.isLoading;
+
   const [query, setQuery] = useState({ tokens: [], operation: 'and' });
 
   useEffect(() => {

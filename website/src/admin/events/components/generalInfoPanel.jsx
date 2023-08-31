@@ -12,7 +12,7 @@ import { getNames, registerLocale } from 'i18n-iso-countries';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Flag } from '../../../components/flag';
-import { useEventsContext } from '../../../store/storeProvider';
+import { useStore } from '../../../store/store';
 import { EventTypeConfig, GetTypeOfEventOptionFromId } from '../support-functions/eventDomain';
 
 export const EventInfoPanel = ({
@@ -25,12 +25,13 @@ export const EventInfoPanel = ({
   eventDate = undefined,
   sponsor,
 }) => {
+  const { t } = useTranslation();
   const [errorMessage, setErrorMessage] = useState();
   const [typeOfEventErrorMessage, setTypeOfEventErrorMessage] = useState();
   const [countryOptions, setCountryOptions] = useState();
-  const [events] = useEventsContext();
   const eventTypeOptions = EventTypeConfig();
-  const { t } = useTranslation();
+  const [state] = useStore();
+  const events = state.events.events;
 
   // Populate country options for select dropdown
   useEffect(() => {

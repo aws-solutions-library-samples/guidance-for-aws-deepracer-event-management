@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { EventLinksButtons } from '../../../components/eventLinksButtons';
 import { Flag } from '../../../components/flag';
 import awsconfig from '../../../config.json';
-import { useFleetsContext, useUsersContext } from '../../../store/storeProvider';
+import { useUsers } from '../../../hooks/useUsers';
 import { GetTypeOfEventNameFromId } from '../support-functions/eventDomain';
 import {
   GetRaceResetsNameFromId,
@@ -16,8 +16,8 @@ import { TrackTable } from './trackTable';
 export const EventDetailsPanelContent = ({ event }) => {
   const { t } = useTranslation();
 
-  const [users, usersIsLoading, getUserNameFromId] = useUsersContext();
-  const [, , getFleetNameFromId] = useFleetsContext();
+  const [, , getUserNameFromId] = useUsers();
+
   const attributeField = (header, value) => {
     return (
       <SpaceBetween size="xxxs">

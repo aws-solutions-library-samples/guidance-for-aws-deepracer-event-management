@@ -20,7 +20,6 @@ import { PageLayout } from '../../../components/pageLayout';
 import useCounter from '../../../hooks/useCounter';
 import { usePublishOverlay } from '../../../hooks/usePublishOverlay';
 import useWebsocket from '../../../hooks/useWebsocket';
-import { useToolsOptionsDispatch } from '../../../store/appLayoutProvider';
 import { LapTable } from '../components/lapTable';
 import LapTimer from '../components/lapTimer';
 import RaceTimer from '../components/raceTimer';
@@ -38,7 +37,6 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
   const [startButtonText, setStartButtonText] = useState(t('timekeeper.start-race'));
   const raceType = GetRaceTypeNameFromId(raceConfig.rankingMethod);
   const allowedNrResets = GetRaceResetsNameFromId(raceConfig.numberOfResetsPerLap);
-
   const [btnDNF, setBtnDNF] = useState(true);
   const [btnCarReset, setBtnCarReset] = useState(true);
   const [btnCaptureLap, setBtnCaptureLap] = useState(true);
@@ -57,30 +55,6 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
   const lapTimerRef = useRef();
   const raceTimerRef = useRef();
   const [PublishOverlay] = usePublishOverlay();
-
-  // Help panel
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = false;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-race-page' })}
-            bodyContent={t('content', { ns: 'help-admin-race-page' })}
-            footerContent={t('footer', { ns: 'help-admin-race-page' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
 
   //populate the laps on page refresh, without this laps array in the overlay is empty
   useEffect(() => {
@@ -288,7 +262,14 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
   const breadcrumbs = Breadcrumbs();
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={false}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-race-page' })}
+          bodyContent={t('content', { ns: 'help-admin-race-page' })}
+          footerContent={t('footer', { ns: 'help-admin-race-page' })}
+        />
+      }
       breadcrumbs={breadcrumbs}
       header={t('timekeeper.race-page.page-header')}
     >

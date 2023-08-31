@@ -1,12 +1,15 @@
 import { FormField, Select } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useUsersContext } from '../../../store/storeProvider';
+import { useStore } from '../../../store/store';
 
 export const RacerSelector = ({ onConfigUpdate, race, racerValidation, selectedEvent }) => {
   const { t } = useTranslation();
   const [userOptions, SetUserOptions] = useState([]);
-  const [racers, isLoadingRacers] = useUsersContext();
+
+  const [state] = useStore();
+  const racers = state.users.users;
+  const isLoadingRacers = state.users.isLoading;
 
   useEffect(() => {
     if (!isLoadingRacers) {

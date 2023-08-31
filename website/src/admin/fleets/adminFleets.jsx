@@ -1,7 +1,7 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../../components/pageLayout';
@@ -21,9 +21,9 @@ import {
   TablePreferences,
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 
-import { useFleetsContext, useUsersContext } from '../../store/storeProvider';
+import { useUsers } from '../../hooks/useUsers';
+import { useStore } from '../../store/store';
 import { ColumnDefinitions, FilteringProperties, VisibleContentOptions } from './fleetsTableConfig';
 import { Breadcrumbs } from './support-functions/supportFunctions';
 
@@ -31,38 +31,16 @@ const AdminFleets = () => {
   const { t } = useTranslation(['translation', 'help-admin-fleets']);
   const [selectedFleetsInTable, setSelectedFleetsInTable] = useState([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [, , getUserNameFromId] = useUsersContext();
 
-  const [fleets, isLoading] = useFleetsContext();
+  const [state] = useStore();
+  const fleets = state.fleets.fleets;
+  const isLoading = state.fleets.isLoading;
+  const [, , getUserNameFromId] = useUsers();
 
   const navigate = useNavigate();
   const columnDefinitions = ColumnDefinitions(getUserNameFromId);
   const filteringProperties = FilteringProperties();
   const visibleContentOptions = VisibleContentOptions();
-
-  // Help panel
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = false;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-fleets' })}
-            bodyContent={t('content', { ns: 'help-admin-fleets' })}
-            footerContent={t('footer', { ns: 'help-admin-fleets' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
 
   // Edit Fleet
   const editFleetHandler = () => {
@@ -181,7 +159,14 @@ const AdminFleets = () => {
 
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={false}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-fleets' })}
+          bodyContent={t('content', { ns: 'help-admin-fleets' })}
+          footerContent={t('footer', { ns: 'help-admin-fleets' })}
+        />
+      }
       header={t('fleets.header')}
       description={t('fleets.description')}
       breadcrumbs={breadcrumbs}

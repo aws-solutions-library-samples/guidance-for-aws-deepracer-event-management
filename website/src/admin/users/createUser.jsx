@@ -17,9 +17,9 @@ import { Flag } from '../../components/flag';
 import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
 import * as mutations from '../../graphql/mutations';
-import { useNotificationsDispatch, useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 
 import awsconfig from '../../config.json';
+import { useStore } from '../../store/store';
 
 const notificationId = 'create_user';
 export function CreateUser() {
@@ -32,19 +32,18 @@ export function CreateUser() {
   const [tncChecked, setTncChecked] = useState(false);
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const [countryCode, setCountryCode] = useState('');
-  const [addNotification, dismissNotification] = useNotificationsDispatch();
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
+  const [, dispatch] = useStore();
 
   async function createUserNow() {
     setButtonDisabled(true);
-    addNotification({
+    dispatch('ADD_NOTIFICATION', {
       type: 'success',
       loading: true,
       content: t('users.notifications.creating-user', { username }),
       id: notificationId,
       dismissible: true,
       onDismiss: () => {
-        dismissNotification(notificationId);
+        dispatch('DISMISS_NOTIFICATION', notificationId);
       },
     });
     try {
@@ -60,13 +59,13 @@ export function CreateUser() {
       const response = apiResponse['data']['createUser'];
       console.debug(response);
 
-      addNotification({
+      dispatch('ADD_NOTIFICATION', {
         type: 'success',
         content: t('users.notifications.user-created', { username }),
         id: notificationId,
         dismissible: true,
         onDismiss: () => {
-          dismissNotification(notificationId);
+          dispatch('DISMISS_NOTIFICATION', notificationId);
         },
       });
 
@@ -77,13 +76,13 @@ export function CreateUser() {
     } catch (response) {
       const errorMessage = response.errors[0].message;
 
-      addNotification({
+      dispatch('ADD_NOTIFICATION', {
         type: 'error',
         content: t('users.notifications.user-not-created', { username, errorMessage }),
         id: notificationId,
         dismissible: true,
         onDismiss: () => {
-          dismissNotification(notificationId);
+          dispatch('DISMISS_NOTIFICATION', notificationId);
         },
       });
     } finally {
@@ -118,32 +117,16 @@ export function CreateUser() {
     };
   }, [username, email, tncChecked, countryCode]);
 
-  // Help panel
-  const helpPanelHidden = false;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-create-user' })}
-            bodyContent={t('content', { ns: 'help-admin-create-user' })}
-            footerContent={t('footer', { ns: 'help-admin-create-user' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
-
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={false}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-create-user' })}
+          bodyContent={t('content', { ns: 'help-admin-create-user' })}
+          footerContent={t('footer', { ns: 'help-admin-create-user' })}
+        />
+      }
       header={t('users.header')}
       description={t('users.description')}
       breadcrumbs={[

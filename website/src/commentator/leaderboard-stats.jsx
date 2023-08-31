@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import Header from '@cloudscape-design/components/header';
 import { getLeaderboard } from '../graphql/queries';
-import { useSelectedEventContext, useSelectedTrackContext } from '../store/storeProvider';
+import { useSelectedEventContext, useSelectedTrackContext } from '../store/contexts/storeProvider';
 
 import { Table } from '@cloudscape-design/components';
 import { RaceTimeAsString } from '../components/raceTimeAsString';

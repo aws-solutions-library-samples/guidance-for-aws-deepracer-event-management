@@ -3,14 +3,14 @@ import { useCallback, useState } from 'react';
 
 import { useTranslation } from 'react-i18next';
 import * as mutations from '../graphql/mutations';
-import { useNotificationsDispatch } from '../store/appLayoutProvider';
+import { useStore } from '../store/store';
 
 export default function useMutation() {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState();
   const [errorMessage, setErrorMessage] = useState('');
-  const [addNotification, dismissNotification] = useNotificationsDispatch();
+  const [, dispatch] = useStore();
 
   const generateRequestNotification = useCallback((method, payload) => {
     const lowerCaseMethod = method.toLowerCase();
@@ -42,8 +42,8 @@ export default function useMutation() {
       }
 
       if (notificationHeader != null) {
-        console.info('Add request - notification');
-        addNotification({
+        console.debug('Add request - notification');
+        dispatch('ADD_NOTIFICATION', {
           header: notificationHeader,
           type: 'info',
           loading: true,
@@ -51,7 +51,7 @@ export default function useMutation() {
           dismissLabel: 'Dismiss message',
           id: notificationInfo.id,
           onDismiss: () => {
-            dismissNotification(notificationInfo.id);
+            dispatch('DISMISS_NOTIFICATION', notificationInfo.id);
           },
         });
       }
@@ -90,15 +90,15 @@ export default function useMutation() {
       });
 
     if (notificationHeader != null) {
-      console.info('Add response - notification');
-      addNotification({
+      console.debug('Add response - notification');
+      dispatch('ADD_NOTIFICATION', {
         header: notificationHeader,
         type: status,
         dismissible: true,
         dismissLabel: 'Dismiss message',
         id: notificationInfo.id,
         onDismiss: () => {
-          dismissNotification(notificationInfo.id);
+          dispatch('DISMISS_NOTIFICATION', notificationInfo.id);
         },
       });
     }

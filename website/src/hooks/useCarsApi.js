@@ -1,40 +1,39 @@
 import { API } from 'aws-amplify';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import * as queries from '../graphql/queries';
+import { useStore } from '../store/store';
 
 export const useCarsApi = (userHasAccess = false) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [cars, setCars] = useState([]);
-  const [errorMessage, setErrorMessage] = useState('');
-
+  const [, dispatch] = useStore();
   // initial data load
   useEffect(() => {
     if (userHasAccess) {
       async function getCars(online) {
-        setIsLoading(true);
+        dispatch('CARS_IS_LOADING', true);
         const response = await API.graphql({
           query: queries.carsOnline,
           variables: { online: online },
         });
-        setCars((prevState) => {
-          const updatedCars = [...prevState];
-          const carsFetched = response.data.carsOnline;
+        dispatch('ADD_CARS', response.data.carsOnline);
+        // setCars((prevState) => {
+        //   const updatedCars = [...prevState];
+        //   const carsFetched = response.data.carsOnline;
 
-          // Deduplicate cars before updaing state
-          const duplicatedCarsToDelete = carsFetched.map((newCar) => {
-            const index = updatedCars.findIndex(
-              (existingCar) => existingCar.InstanceId === newCar.InstanceId
-            );
-            if (index > -1) {
-              return index;
-            }
-          });
-          duplicatedCarsToDelete.sort().reverse();
-          duplicatedCarsToDelete.map((index) => updatedCars.splice(index, 1));
-          return [...updatedCars, ...carsFetched];
-        });
+        //   // Deduplicate cars before updaing state
+        //   const duplicatedCarsToDelete = carsFetched.map((newCar) => {
+        //     const index = updatedCars.findIndex(
+        //       (existingCar) => existingCar.InstanceId === newCar.InstanceId
+        //     );
+        //     if (index > -1) {
+        //       return index;
+        //     }
+        //   });
+        //   duplicatedCarsToDelete.sort().reverse();
+        //   duplicatedCarsToDelete.map((index) => updatedCars.splice(index, 1));
+        //   return [...updatedCars, ...carsFetched];
+        // });
 
-        setIsLoading(false);
+        dispatch('CARS_IS_LOADING', false);
       }
       getCars(true);
       getCars(false);
@@ -115,5 +114,5 @@ export const useCarsApi = (userHasAccess = false) => {
   //   };
   // }, [events]);
 
-  return [cars, isLoading, errorMessage];
+  //return [cars, isLoading, errorMessage];
 };

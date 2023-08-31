@@ -2,11 +2,11 @@ import { Box, Button, Modal, SpaceBetween } from '@cloudscape-design/components'
 import { Storage } from 'aws-amplify';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNotificationsDispatch } from '../../../store/appLayoutProvider';
+import { useStore } from '../../../store/store';
 
 export const DeleteModelModal = ({ disabled, selectedModels, removeModel, variant }) => {
   const { t } = useTranslation();
-  const [addNotification, dismissNotification] = useNotificationsDispatch();
+  const [, dispatch] = useStore();
 
   const [visible, setVisible] = useState(false);
 
@@ -14,7 +14,7 @@ export const DeleteModelModal = ({ disabled, selectedModels, removeModel, varian
     setVisible(false);
     for (const i in selectedModels) {
       const model = selectedModels[i];
-      addNotification({
+      dispatch('ADD_NOTIFICATION', {
         header: `Model ${model.modelName} is being deleted...`,
         type: 'info',
         loading: true,
@@ -22,21 +22,21 @@ export const DeleteModelModal = ({ disabled, selectedModels, removeModel, varian
         dismissLabel: 'Dismiss message',
         id: model.key,
         onDismiss: () => {
-          dismissNotification(model.key);
+          dispatch('DISMISS_NOTIFICATION', model.key);
         },
       });
 
       Storage.remove(model.key, { level: 'private' })
         .then((response) => {
           console.info(response);
-          addNotification({
+          dispatch('ADD_NOTIFICATION', {
             header: `Model ${model.modelName} has been deleted`,
             type: 'success',
             dismissible: true,
             dismissLabel: 'Dismiss message',
             id: model.key,
             onDismiss: () => {
-              dismissNotification(model.key);
+              dispatch('DISMISS_NOTIFICATION', model.key);
             },
           });
 
@@ -44,14 +44,14 @@ export const DeleteModelModal = ({ disabled, selectedModels, removeModel, varian
         })
         .catch((error) => {
           console.info(error);
-          addNotification({
+          dispatch('ADD_NOTIFICATION', {
             header: `Model ${model.modelName} could not be deleted`,
             type: 'error',
             dismissible: true,
             dismissLabel: 'Dismiss message',
             id: model.key,
             onDismiss: () => {
-              dismissNotification(model.key);
+              dispatch('DISMISS_NOTIFICATION', model.key);
             },
           });
         });

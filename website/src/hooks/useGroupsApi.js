@@ -15,7 +15,7 @@ export const useGroupsApi = () => {
         query: queries.listGroups,
       });
       const groups = responseGetGroups.data.listGroups;
-      console.info(groups);
+      console.debug(groups);
       setGroups(groups);
       setIsLoading(false);
     }
