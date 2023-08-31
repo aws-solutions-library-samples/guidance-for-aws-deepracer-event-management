@@ -26,35 +26,47 @@ export default function useMutation() {
         itemType: t('notifications.item-type-event'),
         name: payload.eventName ?? '',
       };
+    } else if (lowerCaseMethod.includes('user')) {
+      notificationInfo = {
+        id: payload.username ?? '',
+        itemType: t('notifications.item-type-user'),
+        name: payload.username ?? '',
+      };
+    } else {
+      notificationInfo = {
+        id: '',
+        itemType: 'unknown',
+        name: '',
+      };
+    }
 
-      let notificationHeader;
-      const itemType = notificationInfo.itemType;
-      const itemName = notificationInfo.name;
-      if (lowerCaseMethod.includes('add')) {
-        notificationInfo['action'] = 'add';
-        notificationHeader = t('notifications.creating-item', { itemType, itemName });
-      } else if (lowerCaseMethod.includes('update')) {
-        notificationInfo['action'] = 'update';
-        notificationHeader = t('notifications.updating-item', { itemType, itemName });
-      } else if (lowerCaseMethod.includes('delete')) {
-        notificationInfo['action'] = 'delete';
-        notificationHeader = t('notifications.deleting-item', { itemType, itemName });
-      }
+    let notificationHeader;
+    const itemType = notificationInfo.itemType;
+    const itemName = notificationInfo.name;
+    if (lowerCaseMethod.includes('add')) {
+      notificationInfo['action'] = 'add';
+      notificationHeader = t('notifications.creating-item', { itemType, itemName });
+    } else if (lowerCaseMethod.includes('update')) {
+      notificationInfo['action'] = 'update';
+      notificationHeader = t('notifications.updating-item', { itemType, itemName });
+    } else if (lowerCaseMethod.includes('delete')) {
+      notificationInfo['action'] = 'delete';
+      notificationHeader = t('notifications.deleting-item', { itemType, itemName });
+    }
 
-      if (notificationHeader != null) {
-        console.debug('Add request - notification');
-        dispatch('ADD_NOTIFICATION', {
-          header: notificationHeader,
-          type: 'info',
-          loading: true,
-          dismissible: true,
-          dismissLabel: 'Dismiss message',
-          id: notificationInfo.id,
-          onDismiss: () => {
-            dispatch('DISMISS_NOTIFICATION', notificationInfo.id);
-          },
-        });
-      }
+    if (notificationHeader != null) {
+      console.debug('Add request - notification');
+      dispatch('ADD_NOTIFICATION', {
+        header: notificationHeader,
+        type: 'info',
+        loading: true,
+        dismissible: true,
+        dismissLabel: 'Dismiss message',
+        id: notificationInfo.id,
+        onDismiss: () => {
+          dispatch('DISMISS_NOTIFICATION', notificationInfo.id);
+        },
+      });
     }
 
     return notificationInfo;

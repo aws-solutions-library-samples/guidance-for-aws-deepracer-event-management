@@ -13,10 +13,26 @@ export const ColumnDefinitions = () => {
       minWidth: 200,
     },
     {
+      id: 'Roles',
+      header: i18next.t('users.roles'),
+      cell: (item) => item.Roles || '-',
+      sortingField: 'Roles',
+      width: 250,
+      minWidth: 200,
+    },
+    {
       id: 'Email',
       header: i18next.t('users.header-email'),
       cell: (item) => item.Email || '-',
       sortingField: 'Email',
+      width: 250,
+      minWidth: 200,
+    },
+    {
+      id: 'UserStatus',
+      header: i18next.t('users.status'),
+      cell: (item) => item.UserStatus || '-',
+      sortingField: 'UserStatus',
       width: 250,
       minWidth: 200,
     },
@@ -72,8 +88,17 @@ export const VisibleContentOptions = () => {
           alwaysVisible: true,
         },
         {
+          id: 'Roles',
+          label: i18next.t('users.roles'),
+          alwaysVisible: true,
+        },
+        {
           id: 'Email',
           label: i18next.t('users.header-email'),
+        },
+        {
+          id: 'UserStatus',
+          label: i18next.t('users.status'),
         },
         {
           id: 'Flag',
@@ -104,43 +129,14 @@ export const FilteringProperties = () => {
       operators: [':', '!:', '=', '!='],
     },
     {
+      key: 'Roles',
+      propertyLabel: i18next.t('users.roles'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
       key: 'Email',
       propertyLabel: i18next.t('users.header-email'),
       operators: [':', '!:', '=', '!='],
     },
-    // {
-    //   key: 'CountryCode',
-    //   propertyLabel: i18next.t('users.flag'),
-    //   operators: ['=', '!='],
-    // },
-    // {
-    //   key: 'UserCreateDate',
-    //   propertyLabel: i18next.t('users.header-creation-date'),
-    //   groupValuesLabel: 'Created at value',
-    //   defaultOperator: '>',
-    //   operators: ['<', '<=', '>', '>='].map((operator) => ({
-    //     operator,
-    //     form: ({ value, onChange }) => (
-    //       <div className="date-form">
-    //         {' '}
-    //         <FormField>
-    //           {' '}
-    //           <DateInput
-    //             value={value ?? ''}
-    //             onChange={(event) => onChange(event.detail.value)}
-    //             placeholder="YYYY/MM/DD"
-    //           />{' '}
-    //         </FormField>{' '}
-    //         <Calendar
-    //           value={value ?? ''}
-    //           onChange={(event) => onChange(event.detail.value)}
-    //           locale="en-GB"
-    //         />{' '}
-    //       </div>
-    //     ),
-    //     format: formatAwsDateTime,
-    //     match: 'date',
-    //   })),
-    // },
   ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
 };

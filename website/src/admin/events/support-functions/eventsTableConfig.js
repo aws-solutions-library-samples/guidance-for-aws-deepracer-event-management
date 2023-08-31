@@ -40,10 +40,6 @@ export const VisibleContentOptions = () => {
           label: i18next.t('events.race.resets-per-lap'),
         },
         {
-          id: 'carFleet',
-          label: i18next.t('events.car-fleet'),
-        },
-        {
           id: 'country',
           label: i18next.t('events.country'),
         },
@@ -81,20 +77,6 @@ export const ColumnDefinitions = (getUserNameFromId, allCarFleets = undefined) =
       header: i18next.t('events.event-date'),
       cell: (item) => item.eventDate || '-',
       sortingField: 'eventDate',
-    },
-    {
-      id: 'carFleet',
-      header: i18next.t('events.car-fleet'),
-      cell: (item) => {
-        if (allCarFleets) {
-          const currentFleet = allCarFleets.find((fleet) => fleet.fleetId === item.fleetId);
-          if (currentFleet) {
-            return currentFleet.fleetName;
-          }
-        }
-        return '-';
-      },
-      sortingField: 'fleet',
     },
     {
       id: 'trackType',
@@ -165,34 +147,5 @@ export const FilteringProperties = () => {
       propertyLabel: i18next.t('events.event-name'),
       operators: [':', '!:', '=', '!='],
     },
-    // {
-    //   key: 'eventDate',
-    //   propertyLabel: i18next.t('events.event-date'),
-    //   groupValuesLabel: 'Created at value',
-    //   defaultOperator: '>',
-    //   operators: ['<', '<=', '>', '>='].map((operator) => ({
-    //     operator,
-    //     form: ({ value, onChange }) => (
-    //       <div className="date-form">
-    //         {' '}
-    //         <FormField>
-    //           {' '}
-    //           <DateInput
-    //             value={value ?? ''}
-    //             onChange={(event) => onChange(event.detail.value)}
-    //             placeholder="YYYY/MM/DD"
-    //           />{' '}
-    //         </FormField>{' '}
-    //         <Calendar
-    //           value={value ?? ''}
-    //           onChange={(event) => onChange(event.detail.value)}
-    //           locale="en-GB"
-    //         />{' '}
-    //       </div>
-    //     ),
-    //     format: formatAwsDateTime,
-    //     match: 'date',
-    //   })),
-    // },
   ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
 };

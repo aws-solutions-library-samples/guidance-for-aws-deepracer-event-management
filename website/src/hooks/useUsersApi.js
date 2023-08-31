@@ -1,7 +1,7 @@
 import { API, graphqlOperation } from 'aws-amplify';
 import { useEffect } from 'react';
 import * as queries from '../graphql/queries';
-import { onUserCreated } from '../graphql/subscriptions';
+import { onUserCreated, onUserUpdated } from '../graphql/subscriptions';
 import { useStore } from '../store/store';
 
 export const useUsersApi = (userHasAccess = false) => {
@@ -23,6 +23,12 @@ export const useUsersApi = (userHasAccess = false) => {
     return countryCode.length > 0 ? countryCode[0].Value : '';
   }
 
+  // Convert user roles to a comma delimited string
+  function parseRoles(user) {
+    if (!('Roles' in user) || user.Roles == null) return null;
+    return user.Roles.join(',');
+  }
+
   // initial data load
   useEffect(() => {
     if (userHasAccess) {
@@ -30,14 +36,14 @@ export const useUsersApi = (userHasAccess = false) => {
         dispatch('USERS_IS_LOADING', true);
         const response = await API.graphql({
           query: queries.listUsers,
-          authMode: 'AMAZON_COGNITO_USER_POOLS',
         });
         const tempUsers = response.data.listUsers;
-        console.debug('LIST USERS reply');
+        console.debug('LIST USERS reply', tempUsers);
         const users = tempUsers.map((u) => ({
           ...u,
           Email: getUserEmail(u),
           CountryCode: getUserCountryCode(u),
+          Roles: parseRoles(u),
         }));
         dispatch('ADD_USERS', users);
         dispatch('USERS_IS_LOADING', false);
@@ -47,7 +53,7 @@ export const useUsersApi = (userHasAccess = false) => {
     return () => {
       // Unmounting
     };
-  }, [userHasAccess]);
+  }, [userHasAccess, dispatch]);
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
@@ -56,26 +62,18 @@ export const useUsersApi = (userHasAccess = false) => {
       console.debug('register onUserCreated subscription');
       subscription = API.graphql(graphqlOperation(onUserCreated)).subscribe({
         next: (event) => {
-          console.debug('onUserCreated recived');
-          const user = {
-            ...event.value.data.onUserCreated,
-            Email: getUserEmail(event.value.data.onUserCreated),
-            CountryCode: getUserCountryCode(event.value.data.onUserCreated),
+          console.debug('onUserCreated received', event);
+          const user = event.value.data.onUserCreated;
+          const enrichedUser = {
+            ...user,
+            Email: getUserEmail(user),
+            CountryCode: getUserCountryCode(user),
+            Roles: parseRoles(user),
           };
 
-          dispatch('UPDATE_USER', user);
+          dispatch('UPDATE_USER', enrichedUser);
         },
       });
-
-      // const subscription = API.graphql({
-      //   ...graphqlOperation(onUserCreated),
-      //   authMode: 'AMAZON_COGNITO_USER_POOLS',
-      // }).subscribe({
-      //   next: (event) => {
-      //     console.debug(event);
-      //     setUsers([...users, event.value.data.onUserCreated]);
-      //   },
-      // });
     }
 
     return () => {
@@ -86,4 +84,59 @@ export const useUsersApi = (userHasAccess = false) => {
       }
     };
   }, [dispatch, userHasAccess]);
+
+  // subscribe to user updates
+  useEffect(() => {
+    let subscription;
+    if (userHasAccess) {
+      subscription = API.graphql(graphqlOperation(onUserUpdated)).subscribe({
+        next: (event) => {
+          console.debug('onUserUpdated received', event);
+          const user = event.value.data.onUserUpdated;
+          const enrichedUser = {
+            ...user,
+            Email: getUserEmail(user),
+            CountryCode: getUserCountryCode(user),
+            Roles: parseRoles(user),
+          };
+
+          dispatch('UPDATE_USER', enrichedUser);
+        },
+      });
+    }
+    return () => {
+      //   console.debug('onUserCreated subscription cleanup');
+      if (subscription) {
+        console.debug('deregister onUserCreated subscription');
+        subscription.unsubscribe();
+      }
+    };
+  }, [dispatch, userHasAccess]);
+
+  // subscribe to user updates
+  useEffect(() => {
+    let subscription;
+    if (userHasAccess) {
+      subscription = API.graphql(graphqlOperation(onUserUpdated)).subscribe({
+        next: (event) => {
+          console.debug('onUserUpdated received', event);
+          const user = event.value.data.onUserUpdated;
+          const enrichedUser = {
+            ...user,
+            Email: getUserEmail(user),
+            CountryCode: getUserCountryCode(user),
+            Roles: parseRoles(user),
+          };
+
+          dispatch('UPDATE_USER', enrichedUser);
+        },
+      });
+    }
+    return () => {
+      //   console.debug('onUserCreated subscription cleanup');
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
+  }, [userHasAccess, dispatch]);
 };
