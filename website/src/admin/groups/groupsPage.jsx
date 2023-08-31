@@ -1,6 +1,6 @@
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { Header, Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
@@ -21,7 +21,6 @@ import {
 } from '../../components/tableGroupConfig';
 import { useGroupsApi } from '../../hooks/useGroupsApi';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 
 export function GroupsPage() {
   const { t } = useTranslation(['translation', 'help-admin-groups']);
@@ -33,30 +32,6 @@ export function GroupsPage() {
     ...DefaultPreferences,
     visibleContent: ['groupName', 'description'],
   });
-
-  // Help panel
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = true;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-groups' })}
-            bodyContent={t('content', { ns: 'help-admin-groups' })}
-            footerContent={t('footer', { ns: 'help-admin-groups' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
 
   // Table config
   const columnDefinitions = ColumnDefinitions();
@@ -92,7 +67,14 @@ export function GroupsPage() {
 
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={true}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-groups' })}
+          bodyContent={t('content', { ns: 'help-admin-groups' })}
+          footerContent={t('footer', { ns: 'help-admin-groups' })}
+        />
+      }
       header={t('groups.header')}
       description={t('groups.description')}
       breadcrumbs={[

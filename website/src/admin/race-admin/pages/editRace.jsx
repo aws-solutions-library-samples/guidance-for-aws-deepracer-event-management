@@ -6,7 +6,10 @@ import { DeleteModal, ItemList } from '../../../components/deleteModal';
 import { PageLayout } from '../../../components/pageLayout';
 import { TableHeader } from '../../../components/tableConfig';
 import useMutation from '../../../hooks/useMutation';
-import { useSelectedEventContext, useSelectedTrackContext } from '../../../store/storeProvider';
+import {
+  useSelectedEventContext,
+  useSelectedTrackContext,
+} from '../../../store/contexts/storeProvider';
 import { convertStringToMs } from '../../../support-functions/time';
 import { LapsTable } from '../components/lapsTable';
 import { RaceInfoPanel } from '../components/raceInfoPanel';

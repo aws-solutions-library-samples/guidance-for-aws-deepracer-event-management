@@ -30,7 +30,7 @@ export const usePublishOverlay = () => {
     Publish(message);
 
     intervalTimerId.current = setInterval(() => {
-      console.info('overlay - published: ' + intervalTimerId.current);
+      console.debug('overlay - published: ' + intervalTimerId.current);
 
       const message = callback();
       Publish(message);
@@ -50,7 +50,7 @@ export const usePublishOverlay = () => {
 
   useEffect(() => {
     return () => {
-      console.info('STOP OVERLAY PUBLISHING - UNMOUNT');
+      console.debug('STOP OVERLAY PUBLISHING - UNMOUNT');
       stopPublish();
 
       const message = {

@@ -2,15 +2,15 @@ import { Button, ProgressBar } from '@cloudscape-design/components';
 import { Auth, Storage } from 'aws-amplify';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNotificationsDispatch } from '../../../store/appLayoutProvider';
+import { useStore } from '../../../store/store';
 import { formatAwsDateTime } from '../../../support-functions/time';
 
 export function ModelUpload({ addModel }) {
-  const [addNotification, dismissNotification] = useNotificationsDispatch();
   const { t } = useTranslation();
   const [username, setUsername] = useState();
   const [uploadFiles, setUploadFiles] = useState([]);
   const fileInputRef = useRef(null);
+  const [, dispatch] = useStore();
 
   useEffect(() => {
     const getData = async () => {
@@ -38,7 +38,7 @@ export function ModelUpload({ addModel }) {
           contentType: file.type,
           tagging: 'lifecycle=true',
           progressCallback(progress) {
-            addNotification({
+            dispatch('ADD_NOTIFICATION', {
               type: 'info',
               content: (
                 <ProgressBar
@@ -50,14 +50,14 @@ export function ModelUpload({ addModel }) {
               id: file.name,
               dismissible: true,
               onDismiss: () => {
-                dismissNotification(file.name);
+                dispatch('DISMISS_NOTIFICATION', file.name);
               },
             });
           },
         })
           .then((result) => {
             console.debug(result);
-            addNotification({
+            dispatch('ADD_NOTIFICATION', {
               type: 'success',
               content: (
                 <ProgressBar
@@ -75,7 +75,7 @@ export function ModelUpload({ addModel }) {
               id: file.name,
               dismissible: true,
               onDismiss: () => {
-                dismissNotification(file.name);
+                dispatch('DISMISS_NOTIFICATION', file.name);
               },
             });
             addModel({
@@ -86,7 +86,7 @@ export function ModelUpload({ addModel }) {
           })
           .catch((err) => {
             console.debug(err);
-            addNotification({
+            dispatch('ADD_NOTIFICATION', {
               header: t('models.notifications.could-not-upload') + ' ' + file.name,
               type: 'error',
               content: t('common.error'),
@@ -94,12 +94,12 @@ export function ModelUpload({ addModel }) {
               dismissLabel: 'Dismiss message',
               id: file.name,
               onDismiss: () => {
-                dismissNotification(file.name);
+                dispatch('DISMISS_NOTIFICATION', file.name);
               },
             });
           });
       } else {
-        addNotification({
+        dispatch('ADD_NOTIFICATION', {
           header: t('models.notifications.could-not-upload') + ' ' + file.name,
           type: 'error',
           content: file.name + ' ' + t('carmodelupload-modal.file-regex'),
@@ -107,7 +107,7 @@ export function ModelUpload({ addModel }) {
           dismissLabel: 'Dismiss message',
           id: file.name,
           onDismiss: () => {
-            dismissNotification(file.name);
+            dispatch('DISMISS_NOTIFICATION', file.name);
           },
         });
       }

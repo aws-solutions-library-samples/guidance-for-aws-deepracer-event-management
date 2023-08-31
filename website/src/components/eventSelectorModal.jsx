@@ -10,14 +10,14 @@ import {
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GetTrackTypeNameFromId } from '../admin/events/support-functions/raceConfig';
+import { useUsers } from '../hooks/useUsers';
 import {
-  useEventsContext,
   useSelectedEventContext,
   useSelectedEventDispatch,
   useSelectedTrackContext,
   useSelectedTrackDispatch,
-  useUsersContext,
-} from '../store/storeProvider';
+} from '../store/contexts/storeProvider';
+import { useStore } from '../store/store';
 import { getCurrentDateTime } from '../support-functions/time';
 
 const sortEventsInBuckets = (events) => {
@@ -44,7 +44,6 @@ const sortEventsInBuckets = (events) => {
 
 export const EventSelectorModal = ({ visible, onDismiss, onOk }) => {
   const { t } = useTranslation();
-  const [events] = useEventsContext();
   const selectedEvent = useSelectedEventContext();
   const setSelectedEvent = useSelectedEventDispatch();
   const selectedTrack = useSelectedTrackContext();
@@ -56,7 +55,10 @@ export const EventSelectorModal = ({ visible, onDismiss, onOk }) => {
   const [nextSelectedTrackInvalid, setNextSelectedTrackInvalid] = useState(true);
   const [trackSelectItems, setTrackSelectItems] = useState([]);
 
-  const [users, usersIsLoading, getUserNameFromId] = useUsersContext();
+  // TODO MOVE TO STORE / COMMON FILE
+  const [state] = useStore();
+  const events = state.events.events;
+  const [users, , getUserNameFromId] = useUsers();
 
   const GetEventOptionFromId = (id) => {
     if (!id) return;

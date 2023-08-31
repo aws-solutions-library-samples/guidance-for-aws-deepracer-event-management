@@ -5,27 +5,40 @@ import {
   Link,
   SpaceBetween,
 } from '@cloudscape-design/components';
-import { useToolsOptionsDispatch } from '../store/appLayoutProvider';
+import { useEffect } from 'react';
+import { useStore } from '../store/store';
 
-export function PageLayout({ onLinkClick, ...props }) {
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
+export function PageLayout({
+  onLinkClick,
+  breadcrumbs,
+  description,
+  header,
+  simplified = false,
+  helpPanelHidden = true,
+  helpPanelContent = undefined,
+  ...props
+}) {
+  const [, dispatch] = useStore();
 
-  const openHelpPanelHandler = () => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        isOpen: true,
-      },
+  // Help panel
+  useEffect(() => {
+    dispatch('UPDATE_HELP_PANEL', {
+      isHidden: helpPanelHidden,
+      content: helpPanelContent,
     });
-  };
 
-  if (props.simplified === true) {
+    return () => {
+      dispatch('RESET_HELP_PANEL');
+    };
+  }, [dispatch]);
+
+  if (simplified === true) {
     return (
       <>
-        <BreadcrumbGroup items={props.breadcrumbs} ariaLabel="Breadcrumbs" />
+        <BreadcrumbGroup items={breadcrumbs} ariaLabel="Breadcrumbs" />
 
-        <Header variant="h1" description={props.description}>
-          {props.header}
+        <Header variant="h1" description={description}>
+          {header}
         </Header>
         {props.children}
       </>
@@ -35,22 +48,22 @@ export function PageLayout({ onLinkClick, ...props }) {
       <ContentLayout
         header={
           <SpaceBetween size="m">
-            <BreadcrumbGroup items={props.breadcrumbs} ariaLabel="Breadcrumbs" />
-            {props.helpPanelHidden ? (
-              <Header variant="h1" description={props.description}>
-                {props.header}
+            <BreadcrumbGroup items={breadcrumbs} ariaLabel="Breadcrumbs" />
+            {helpPanelHidden ? (
+              <Header variant="h1" description={description}>
+                {header}
               </Header>
             ) : (
               <Header
                 variant="h1"
                 info={
-                  <Link variant="info" onFollow={openHelpPanelHandler}>
+                  <Link variant="info" onFollow={() => dispatch('HELP_PANEL_IS_OPEN', true)}>
                     Info
                   </Link>
                 }
-                description={props.description}
+                description={description}
               >
-                {props.header}
+                {header}
               </Header>
             )}
           </SpaceBetween>

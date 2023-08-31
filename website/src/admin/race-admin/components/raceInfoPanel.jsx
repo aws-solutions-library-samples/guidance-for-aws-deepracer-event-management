@@ -1,12 +1,11 @@
 import { ColumnLayout, Container, FormField, Header, Toggle } from '@cloudscape-design/components';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { useUsersContext } from '../../../store/storeProvider';
+
+import { useUsers } from '../../../hooks/useUsers';
 import { formatAwsDateTime } from '../../../support-functions/time';
 
 export const RaceInfoPanel = ({ race, onChange }) => {
-  const { t } = useTranslation();
-  const [, , getUserNameFromId] = useUsersContext();
+  const [, , getUserNameFromId] = useUsers();
 
   return (
     <Container header={<Header variant="h2">General info</Header>}>

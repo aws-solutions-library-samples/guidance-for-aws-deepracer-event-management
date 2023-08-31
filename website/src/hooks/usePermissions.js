@@ -1,4 +1,31 @@
-export const getPermissions = (groups) => {
+import { Auth } from 'aws-amplify';
+import { useEffect, useState } from 'react';
+
+/**
+ * custom hook to get the permissions of the current user
+ * @returns {Object} user permissions
+ */
+export const usePermissions = () => {
+  const [permissions, setPermissions] = useState(getPermissions([]));
+
+  useEffect(() => {
+    // Config Groups
+    Auth.currentAuthenticatedUser().then((user) => {
+      const groups = user.signInUserSession.accessToken.payload['cognito:groups'];
+      if (groups !== undefined) {
+        setPermissions(getPermissions(groups));
+      }
+    });
+
+    return () => {
+      // Unmounting
+    };
+  }, []);
+
+  return permissions;
+};
+
+const getPermissions = (groups) => {
   const defaultPermissions = {
     api: {
       // API:s used in globally shared contexts, used to controll if they shall be invoked to fetch items or not
@@ -6,6 +33,7 @@ export const getPermissions = (groups) => {
       events: false,
       users: false,
       cars: false,
+      races: false,
     },
     sideNavItems: {
       registration: false,
@@ -64,6 +92,7 @@ export const getPermissions = (groups) => {
       events: true,
       users: true,
       cars: true,
+      races: true,
     };
   } else if (groups.includes('registration')) {
     const apiPermissions = { ...permissions.api };

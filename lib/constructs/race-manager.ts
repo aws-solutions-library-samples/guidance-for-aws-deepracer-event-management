@@ -220,6 +220,31 @@ export class RaceManager extends Construct {
             })
         );
 
+        props.appsyncApi.schema.addSubscription(
+            'onUpdatedRace',
+            new ResolvableField({
+                args: {
+                    eventId: GraphqlType.id({ isRequired: true }),
+                    trackId: GraphqlType.id(),
+                },
+                returnType: raceObjectType.attribute(),
+                dataSource: props.appsyncApi.noneDataSource,
+                requestMappingTemplate: appsync.MappingTemplate.fromString(
+                    `{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments.entry)
+                    }`
+                ),
+                responseMappingTemplate: appsync.MappingTemplate.fromString(
+                    '$util.toJson($context.result)'
+                ),
+                directives: [
+                    Directive.subscribe('updateRace'),
+                    Directive.cognito('admin', 'operator'),
+                ],
+            })
+        );
+
         props.appsyncApi.schema.addMutation(
             'deleteRaces',
             new ResolvableField({

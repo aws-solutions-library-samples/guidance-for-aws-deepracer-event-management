@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useSideNavOptionsDispatch } from '../../store/appLayoutProvider';
-import { useSelectedEventContext, useSelectedTrackContext } from '../../store/storeProvider';
+import {
+  useSelectedEventContext,
+  useSelectedTrackContext,
+} from '../../store/contexts/storeProvider';
+import { useStore } from '../../store/store';
 import { RaceFinishPage } from './pages/raceFinishPage';
 import { RacePage } from './pages/racePage';
 import { RaceSetupPage } from './pages/raceSetupPage';
@@ -15,8 +18,7 @@ export const Timekeeper = () => {
   const selectedEvent = useSelectedEventContext();
   const selectedTrack = useSelectedTrackContext();
 
-  const sideNavOptionsDispatch = useSideNavOptionsDispatch();
-
+  const [, dispatch] = useStore();
   // console.info(selectedEvent);
   // console.info(selectedTrack);
   // change event info and race config when a user select another event
@@ -41,8 +43,8 @@ export const Timekeeper = () => {
   }, []);
 
   useEffect(() => {
-    sideNavOptionsDispatch({ type: 'SIDE_NAV_IS_OPEN', value: false });
-  }, [sideNavOptionsDispatch]);
+    dispatch('SIDE_NAV_IS_OPEN', false);
+  }, [dispatch]);
 
   // Find the fastest lap
   useEffect(() => {

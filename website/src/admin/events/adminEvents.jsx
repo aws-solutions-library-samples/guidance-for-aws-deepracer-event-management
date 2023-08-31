@@ -22,11 +22,8 @@ import {
 } from '../../components/tableConfig';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import useMutation from '../../hooks/useMutation';
-import {
-  useSplitPanelOptionsDispatch,
-  useToolsOptionsDispatch,
-} from '../../store/appLayoutProvider';
-import { useEventsContext, useFleetsContext, useUsersContext } from '../../store/storeProvider';
+import { useUsers } from '../../hooks/useUsers';
+import { useStore } from '../../store/store';
 import { EventDetailsPanelContent } from './components/eventDetailsPanelContent';
 import {
   ColumnDefinitions,
@@ -45,40 +42,17 @@ const AdminEvents = () => {
     visibleContent: ['eventName', 'eventDate', 'createdAt'],
   });
 
-  const [, , getUserNameFromId] = useUsersContext();
-  const [events, eventIsLoading] = useEventsContext();
-  const [fleets] = useFleetsContext();
+  const [state, dispatch] = useStore();
+  const fleets = state.fleets.fleets;
+  const events = state.events.events;
+  const eventIsLoading = state.events.isLoading;
+  const [, , getUserNameFromId] = useUsers();
 
-  const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
   const navigate = useNavigate();
 
   const editEventHandler = () => {
     navigate('/admin/events/edit', { state: SelectedEventsInTable[0] });
   };
-
-  // Help panel
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = true;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-events' })}
-            bodyContent={t('content', { ns: 'help-admin-events' })}
-            footerContent={t('footer', { ns: 'help-admin-events' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
 
   // Add Event
   const addEventHandler = () => {
@@ -142,18 +116,15 @@ const AdminEvents = () => {
 
   useEffect(() => {
     console.debug('show split panel');
-    splitPanelOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        isOpen: true,
-        content: selectPanelContent(SelectedEventsInTable),
-      },
+    dispatch('UPDATE_SPLIT_PANEL', {
+      isOpen: true,
+      content: selectPanelContent(SelectedEventsInTable),
     });
 
     return () => {
-      splitPanelOptionsDispatch({ type: 'RESET' });
+      dispatch('RESET_SPLIT_PANEL');
     };
-  }, [SelectedEventsInTable, splitPanelOptionsDispatch, selectPanelContent]);
+  }, [SelectedEventsInTable, selectPanelContent]);
 
   const eventsTable = (
     <Table
@@ -207,7 +178,14 @@ const AdminEvents = () => {
   // JSX
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={false}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-events' })}
+          bodyContent={t('content', { ns: 'help-admin-events' })}
+          footerContent={t('footer', { ns: 'help-admin-events' })}
+        />
+      }
       header={t('events.header')}
       description={t('events.description')}
       breadcrumbs={[

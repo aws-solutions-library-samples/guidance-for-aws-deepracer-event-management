@@ -4,7 +4,6 @@ import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-
 import { PageLayout } from '../../components/pageLayout';
 import * as queries from '../../graphql/queries';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
 
 // import * as mutations from '../graphql/mutations';
 // import * as subscriptions from '../graphql/subscriptions'
@@ -42,7 +41,6 @@ const AdminModels = () => {
   const [modelsIsLoading, setModelsIsLoading] = useState(true);
   const [carsIsLoading, setCarsIsLoading] = useState(true);
   const [selectedModelsBtn, setSelectedModelsBtn] = useState(true);
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
 
   async function getCarsOnline() {
     setCarsIsLoading(true);
@@ -61,7 +59,6 @@ const AdminModels = () => {
     const response = await API.graphql({
       query: queries.getAllModels,
     });
-    console.debug(response);
     const models_response = response.data.getAllModels;
     const models = models_response.map(function (model, i) {
       const modelKeyPieces = model.modelKey.split('/');
@@ -85,29 +82,6 @@ const AdminModels = () => {
       // Unmounting
     };
   }, []);
-
-  // Help panel
-  const helpPanelHidden = true;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-models' })}
-            bodyContent={t('content', { ns: 'help-admin-models' })}
-            footerContent={t('footer', { ns: 'help-admin-models' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
 
   const [preferences, setPreferences] = useLocalStorage('DREM-models-table-preferences', {
     ...DefaultPreferences,
@@ -241,7 +215,14 @@ const AdminModels = () => {
 
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={true}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-models' })}
+          bodyContent={t('content', { ns: 'help-admin-models' })}
+          footerContent={t('footer', { ns: 'help-admin-models' })}
+        />
+      }
       header={t('models.all-header')}
       description={t('models.list-of-all-uploaded-models')}
       breadcrumbs={[

@@ -1,6 +1,12 @@
-import { AppLayout, Badge, SideNavigation, TopNavigation } from '@cloudscape-design/components';
+import {
+  AppLayout,
+  Badge,
+  Flashbar,
+  SideNavigation,
+  TopNavigation,
+} from '@cloudscape-design/components';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Route, Routes, useLocation } from 'react-router-dom';
 
@@ -21,25 +27,26 @@ import { AdminQuarantine } from '../admin/model-management/quarantine';
 import { EditRace } from '../admin/race-admin/pages/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { ProfileHome } from '../admin/user-profile/profile';
-// import { ToolsContent } from '../admin/users/common-components';
 import { CreateUser } from '../admin/users/createUser';
 import { UsersList } from '../admin/users/usersList';
 import { CommentatorRaceStats } from '../commentator/race-stats';
 import { Home } from '../home';
+import { useCarsApi } from '../hooks/useCarsApi';
+import { useEventsApi } from '../hooks/useEventsApi';
+import { useFleetsApi } from '../hooks/useFleetsApi';
 import useLink from '../hooks/useLink';
+import { usePermissions } from '../hooks/usePermissions';
+import { useRacesApi } from '../hooks/useRacesApi';
+import { useUsersApi } from '../hooks/useUsersApi';
+import { useWindowSize } from '../hooks/useWindowsSize';
 import { ModelMangement } from '../pages/model-management/modelManagement';
 import { Timekeeper } from '../pages/timekeeper/timeKeeper';
 import {
-  useNotifications,
-  useSideNavOptions,
-  useSideNavOptionsDispatch,
-  useSplitPanelOptions,
-  useSplitPanelOptionsDispatch,
-  useToolsOptions,
-  useToolsOptionsDispatch,
-} from '../store/appLayoutProvider';
-import { usePermissionsContext } from '../store/permissions/permissionsProvider';
-import { useSelectedEventContext, useSelectedTrackContext } from '../store/storeProvider';
+  useSelectedEventContext,
+  useSelectedEventDispatch,
+  useSelectedTrackContext,
+} from '../store/contexts/storeProvider';
+import { useStore } from '../store/store';
 import { EventSelectorModal } from './eventSelectorModal';
 
 function cwr(operation, payload) {
@@ -110,24 +117,28 @@ const MenuRoutes = ({ permissions }) => {
 
 export function TopNav(props) {
   const { t } = useTranslation();
-
-  const splitPanelOptions = useSplitPanelOptions();
-  const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
-  const notifications = useNotifications();
+  const windowSize = useWindowSize();
 
   const { handleFollow } = useLink();
 
   const selectedEvent = useSelectedEventContext();
+  const setSelectedEvent = useSelectedEventDispatch();
   const selectedTrack = useSelectedTrackContext();
-  const sideNavOptions = useSideNavOptions();
-  const sideNavOptionsDispatch = useSideNavOptionsDispatch();
+  const [state, dispatch] = useStore();
 
-  const permissions = usePermissionsContext();
+  const permissions = usePermissions();
+  useUsersApi(permissions.api.users);
+  useRacesApi(permissions.api.races, selectedEvent.eventId);
+  useCarsApi(permissions.api.cars);
+  useFleetsApi(permissions.api.fleets);
+  useEventsApi(selectedEvent, setSelectedEvent, permissions.api.events);
+
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
 
-  //const [toolsOpen, setToolsOpen] = useState(true);
-  const toolsOptions = useToolsOptions();
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
+  useEffect(() => {
+    if (windowSize.width < 900) dispatch('SIDE_NAV_IS_OPEN', false);
+    else if (windowSize.width >= 900) dispatch('SIDE_NAV_IS_OPEN', true);
+  }, [windowSize]);
 
   const defaultSideNavItems = [
     {
@@ -312,16 +323,16 @@ export function TopNav(props) {
       </div>
       <AppLayout
         stickyNotifications
-        notifications={notifications}
-        tools={toolsOptions.content}
-        toolsOpen={toolsOptions.isOpen}
-        toolsHide={toolsOptions.isHidden}
-        onToolsChange={(item) =>
-          toolsOptionsDispatch({ type: 'UPDATE', value: { isOpen: item.detail.open } })
+        notifications={
+          <Flashbar items={state.notifications} stackItems={state.notifications.length > 3} />
         }
+        tools={state.helpPanel.content}
+        toolsOpen={state.helpPanel.isOpen}
+        toolsHide={state.helpPanel.isHidden}
+        onToolsChange={(item) => dispatch('HELP_PANEL_IS_OPEN', item.detail.open)}
         headerSelector="#h"
         ariaLabels={{ navigationClose: 'close' }}
-        navigationOpen={sideNavOptions.isOpen}
+        navigationOpen={state.sideNav.isOpen}
         navigation={
           <SideNavigation
             activeHref={window.location.pathname}
@@ -331,14 +342,10 @@ export function TopNav(props) {
         }
         contentType="table"
         content={<MenuRoutes permissions={permissions} />}
-        onNavigationChange={({ detail }) =>
-          sideNavOptionsDispatch({ type: 'SIDE_NAV_IS_OPEN', value: detail.open })
-        }
-        splitPanel={splitPanelOptions.content}
-        splitPanelOpen={splitPanelOptions.isOpen}
-        onSplitPanelToggle={(item) =>
-          splitPanelOptionsDispatch({ type: 'UPDATE', value: { isOpen: item.detail.open } })
-        }
+        onNavigationChange={({ detail }) => dispatch('SIDE_NAV_IS_OPEN', detail.open)}
+        splitPanel={state.splitPanel.content}
+        splitPanelOpen={state.splitPanel.isOpen}
+        onSplitPanelToggle={(item) => dispatch('SPLIT_PANEL_IS_OPEN', item.detail.open)}
       />
 
       <EventSelectorModal
