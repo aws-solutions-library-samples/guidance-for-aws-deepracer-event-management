@@ -84,34 +84,5 @@ export const FilteringProperties = () => {
       propertyLabel: i18next.t('groups.header-description'),
       operators: [':', '!:', '=', '!='],
     },
-    // {
-    //   key: 'creationDate',
-    //   propertyLabel: i18next.t('groups.header-creation-date'),
-    //   groupValuesLabel: 'Created at value',
-    //   defaultOperator: '>',
-    //   operators: ['<', '<=', '>', '>='].map((operator) => ({
-    //     operator,
-    //     form: ({ value, onChange }) => (
-    //       <div className="date-form">
-    //         {' '}
-    //         <FormField>
-    //           {' '}
-    //           <DateInput
-    //             value={value ?? ''}
-    //             onChange={(event) => onChange(event.detail.value)}
-    //             placeholder="YYYY/MM/DD"
-    //           />{' '}
-    //         </FormField>{' '}
-    //         <Calendar
-    //           value={value ?? ''}
-    //           onChange={(event) => onChange(event.detail.value)}
-    //           locale="en-GB"
-    //         />{' '}
-    //       </div>
-    //     ),
-    //     format: formatAwsDateTime,
-    //     match: 'date',
-    //   })),
-    // },
   ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
 };
