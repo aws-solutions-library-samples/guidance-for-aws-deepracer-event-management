@@ -74,6 +74,9 @@ export class Idp extends Construct {
                 countryCode: new cognito.StringAttribute({
                     mutable: true,
                 }),
+                displayName: new cognito.StringAttribute({
+                    mutable: true,
+                }),
             },
             mfa: cognito.Mfa.OPTIONAL,
             advancedSecurityMode: cognito.AdvancedSecurityMode.ENFORCED,
