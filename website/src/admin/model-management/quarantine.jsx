@@ -52,7 +52,7 @@ const AdminQuarantine = () => {
 
   return (
     <PageLayout
-      helpPanelHidden={true}
+      helpPanelHidden={false}
       helpPanelContent={
         <SimpleHelpPanelLayout
           headerContent={t('header', { ns: 'help-admin-model-quarantine' })}

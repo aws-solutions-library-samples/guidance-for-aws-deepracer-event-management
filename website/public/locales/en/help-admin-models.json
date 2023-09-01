@@ -1,5 +1,5 @@
 {
-  "header": "## Model management",
-  "content": "",
+  "header": "## Models",
+  "content": "On this page, you can select models already available in DREM and upload them to AWS DeepRacer cars. You can sort models by **User name**, **Model name**, and **Upload date**.\n\nWhen you’ve selected the model you want to upload, choose **Upload models to car**. In the pop-up, select the car to which you want to upload the model.",
   "footer": ""
 }

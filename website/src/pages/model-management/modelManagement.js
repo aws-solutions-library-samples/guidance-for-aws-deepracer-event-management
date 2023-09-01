@@ -12,7 +12,7 @@ import { ColumnConfiguration, FilteringProperties } from '../../components/table
 import { formatAwsDateTime } from '../../support-functions/time';
 import { ModelUpload } from './components/modelUpload';
 
-export const ModelMangement = () => {
+export const ModelManagement = () => {
   const { t } = useTranslation(['translation', 'help-model-management']);
 
   const [models, setModels] = useState([]);

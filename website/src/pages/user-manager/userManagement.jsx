@@ -12,7 +12,7 @@ import { useStore } from '../../store/store';
 import { ChangeRoleModal } from './changeRoleModal';
 
 export const UserManagement = () => {
-  const { t } = useTranslation(['translation', 'help-admin-users-list']);
+  const { t } = useTranslation(['translation', 'help-admin-users']);
 
   const [selectedItems, setSelectedItems] = useState([]);
   const [changeRoleModalVisible, setChangeRoleModalVisible] = useState(false);
@@ -55,12 +55,12 @@ export const UserManagement = () => {
 
   return (
     <PageLayout
-      helpPanelHidden={true}
+      helpPanelHidden={false}
       helpPanelContent={
         <SimpleHelpPanelLayout
-          headerContent={t('header', { ns: 'help-admin-users-list' })}
-          bodyContent={t('content', { ns: 'help-admin-users-list' })}
-          footerContent={t('footer', { ns: 'help-admin-users-list' })}
+          headerContent={t('header', { ns: 'help-admin-users' })}
+          bodyContent={t('content', { ns: 'help-admin-users' })}
+          footerContent={t('footer', { ns: 'help-admin-users' })}
         />
       }
       header={t('users-list.header')}
