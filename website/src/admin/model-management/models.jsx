@@ -90,7 +90,7 @@ const AdminModels = () => {
 
   return (
     <PageLayout
-      helpPanelHidden={true}
+      helpPanelHidden={false}
       helpPanelContent={
         <SimpleHelpPanelLayout
           headerContent={t('header', { ns: 'help-admin-models' })}
