@@ -32,6 +32,12 @@ export default function useMutation() {
         itemType: t('notifications.item-type-user'),
         name: payload.username ?? '',
       };
+    } else if (lowerCaseMethod.includes('race')) {
+      notificationInfo = {
+        id: payload.raceId ?? '',
+        itemType: t('notifications.item-type-race'),
+        name: payload.raceId ?? '',
+      };
     } else {
       notificationInfo = {
         id: '',
@@ -54,8 +60,12 @@ export default function useMutation() {
       notificationHeader = t('notifications.deleting-item', { itemType, itemName });
     }
 
-    if (notificationHeader != null) {
-      console.debug('Add request - notification');
+    if (notificationHeader != null && notificationInfo.itemType !== 'unknown') {
+      console.debug(
+        'Add request - notification',
+        notificationInfo,
+        notificationInfo.itemType !== 'unknown'
+      );
       dispatch('ADD_NOTIFICATION', {
         header: notificationHeader,
         type: 'info',
@@ -101,7 +111,7 @@ export default function useMutation() {
         errorMessage,
       });
 
-    if (notificationHeader != null) {
+    if (notificationHeader != null && notificationInfo.itemType !== 'unknown') {
       console.debug('Add response - notification');
       dispatch('ADD_NOTIFICATION', {
         header: notificationHeader,
