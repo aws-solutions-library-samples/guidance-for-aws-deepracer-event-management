@@ -58,14 +58,20 @@ export const ColumnDefinitions = () => {
     {
       id: 'isValid',
       header: i18next.t('race-admin.is-valid'),
-      cell: (item) => (item.isValid ? 'Valid' : 'Not Valid'),
+      cell: (item) =>
+        item.isValid
+          ? i18next.t('timekeeper.lap-table.valid')
+          : i18next.t('timekeeper.lap-table.not-valid'),
       sortingField: 'isValid',
       width: 176,
     },
     {
       id: 'autTimeConnected',
       header: i18next.t('race-admin.aut-timer-connected'),
-      cell: (item) => (item.autTimeConnected ? 'Connected' : 'Not Connected'),
+      cell: (item) =>
+        item.autTimeConnected
+          ? i18next.t('timekeeper.race-page.automated-timer-connected')
+          : i18next.t('timekeeper.race-page.automated-timer-not-connected'),
       sortingField: 'autTimeConnected',
     },
   ];
@@ -143,7 +149,10 @@ export const EditableColumnDefinitions = () => {
     {
       id: 'isValid',
       header: i18next.t('race-admin.is-valid'),
-      cell: (item) => (item.isValid ? 'Valid' : 'Not Valid'),
+      cell: (item) =>
+        item.isValid
+          ? i18next.t('timekeeper.lap-table.valid')
+          : i18next.t('timekeeper.lap-table.not-valid'),
       sortingField: 'isValid',
       width: 220,
       editConfig: {
@@ -158,16 +167,16 @@ export const EditableColumnDefinitions = () => {
               expandToViewport={true}
               selectedOption={
                 [
-                  { label: 'Valid', value: true },
-                  { label: 'Not Valid', value: false },
+                  { label: i18next.t('timekeeper.lap-table.valid'), value: true },
+                  { label: i18next.t('timekeeper.lap-table.not-valid'), value: false },
                 ].find((option) => option.value === value) ?? null
               }
               onChange={(event) => {
                 setValue(event.detail.selectedOption.value ?? item.isValid);
               }}
               options={[
-                { label: 'Valid', value: true },
-                { label: 'Not Valid', value: false },
+                { label: i18next.t('timekeeper.lap-table.valid'), value: true },
+                { label: i18next.t('timekeeper.lap-table.not-valid'), value: false },
               ]}
             />
           );
@@ -177,7 +186,10 @@ export const EditableColumnDefinitions = () => {
     {
       id: 'autTimeConnected',
       header: i18next.t('race-admin.aut-timer-connected'),
-      cell: (item) => (item.autTimeConnected ? 'Connected' : 'Not Connected'),
+      cell: (item) =>
+        item.autTimeConnected
+          ? i18next.t('timekeeper.automated-timer-msg-connected')
+          : i18next.t('timekeeper.automated-timer-msg-not-connected'),
       sortingField: 'autTimeConnected',
     },
   ];
