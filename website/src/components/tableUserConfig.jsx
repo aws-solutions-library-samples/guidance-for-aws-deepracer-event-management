@@ -14,7 +14,7 @@ export const ColumnDefinitions = () => {
     },
     {
       id: 'Roles',
-      header: i18next.t('users.roles'),
+      header: i18next.t('users.role'),
       cell: (item) => item.Roles || '-',
       sortingField: 'Roles',
       width: 250,

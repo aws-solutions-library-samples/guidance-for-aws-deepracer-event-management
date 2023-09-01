@@ -348,6 +348,7 @@
 
   "users.breadcrumb": "Create user",
   "users-admin.breadcrumb": "Users",
+  "users-admin.change-role-button": "Change role",
   "users.description": "User creation",
   "users.header": "Create user",
   "users.information": "Users information",
@@ -365,7 +366,7 @@
   "users.racer-name-placeholder": "Username",
   "users.email": "Email",
   "users.email-placeholder": "Email",
-  "users.roles": "Roles",
+  "users.role": "Role",
   "users.status": "Status",
   "users.create-user": "Create user",
   "users.notifications.creating-user": "Creating user {{username}}...",

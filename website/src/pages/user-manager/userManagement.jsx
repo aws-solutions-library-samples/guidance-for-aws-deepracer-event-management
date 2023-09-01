@@ -115,7 +115,9 @@ export const UserManagement = () => {
             header={t('users.header-list')}
             actions={
               <>
-                <Button onClick={() => setChangeRoleModalVisible(true)}>Change Role</Button>
+                <Button onClick={() => setChangeRoleModalVisible(true)}>
+                  {t('users-admin.change-role-button')}
+                </Button>
               </>
             }
           />
