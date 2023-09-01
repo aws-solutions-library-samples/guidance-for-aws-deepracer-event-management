@@ -1,27 +1,12 @@
-import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Button, Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
+import { Button, SpaceBetween } from '@cloudscape-design/components';
 import { Auth } from 'aws-amplify';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
-import {
-  PropertyFilterI18nStrings,
-  TableEmptyState,
-  TableNoMatchState,
-} from '../../components/tableCommon';
-import {
-  DefaultPreferences,
-  MatchesCountText,
-  TableHeader,
-  TablePreferences,
-} from '../../components/tableConfig';
-import {
-  ColumnDefinitions,
-  FilteringProperties,
-  VisibleContentOptions,
-} from '../../components/tableUserConfig';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { PageTable } from '../../components/pageTable';
+import { TableHeader } from '../../components/tableConfig';
+import { ColumnConfiguration, FilteringProperties } from '../../components/tableUserConfig';
 import useMutation from '../../hooks/useMutation';
 import { useStore } from '../../store/store';
 import { ChangeRoleModal } from './changeRoleModal';
@@ -36,11 +21,6 @@ export const UserManagement = () => {
   const currentUser = Auth.user;
   const users = state.users.users;
   const isLoading = state.users.isLoading;
-
-  const [preferences, setPreferences] = useLocalStorage('DREM-user-table-preferences', {
-    ...DefaultPreferences,
-    visibleContent: ['Username', 'Roles', 'UserStatus', 'UserCreateDate'],
-  });
 
   // Role membership management
   const changeRoleHandler = (role) => {
@@ -59,36 +39,20 @@ export const UserManagement = () => {
   };
 
   // Table config
-  const columnDefinitions = ColumnDefinitions();
+  const columnConfiguration = ColumnConfiguration();
   const filteringProperties = FilteringProperties();
-  const visibleContentOptions = VisibleContentOptions();
 
-  const {
-    items,
-    actions,
-    filteredItemsCount,
-    collectionProps,
-    paginationProps,
-    propertyFilterProps,
-  } = useCollection(users, {
-    propertyFiltering: {
-      filteringProperties,
-      empty: <TableEmptyState resourceName="User" />,
-      noMatch: (
-        <TableNoMatchState
-          onClearFilter={() => {
-            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
-          }}
-          label={t('common.no-matches')}
-          description={t('common.we-cant-find-a-match')}
-          buttonLabel={t('button.clear-filters')}
-        />
-      ),
-    },
-    pagination: { pageSize: preferences.pageSize },
-    sorting: { defaultState: { sortingColumn: columnDefinitions[0], isDescending: false } },
-    selection: {},
-  });
+  const HeaderActionButtons = () => {
+    const disableChangeRoleButton = selectedItems.length === 0;
+    return (
+      <SpaceBetween direction="horizontal" size="xs">
+        <Button disabled={disableChangeRoleButton} onClick={() => setChangeRoleModalVisible(true)}>
+          {t('users-admin.change-role-button')}
+        </Button>
+      </SpaceBetween>
+    );
+  };
+
   return (
     <PageLayout
       helpPanelHidden={true}
@@ -106,66 +70,29 @@ export const UserManagement = () => {
         { text: t('users-admin.breadcrumb') },
       ]}
     >
-      <Table
-        {...collectionProps}
+      <PageTable
+        selectedItems={selectedItems}
+        setSelectedItems={setSelectedItems}
+        tableItems={users}
+        selectionType="multi"
+        columnConfiguration={columnConfiguration}
+        isItemDisabled={(item) => item.sub === currentUser.attributes.sub}
         header={
           <TableHeader
             nrSelectedItems={selectedItems.length}
             nrTotalItems={users.length}
             header={t('users.header-list')}
-            actions={
-              <>
-                <Button onClick={() => setChangeRoleModalVisible(true)}>
-                  {t('users-admin.change-role-button')}
-                </Button>
-              </>
-            }
+            actions={<HeaderActionButtons />}
           />
         }
-        isItemDisabled={(item) => item.sub === currentUser.attributes.sub}
-        columnDefinitions={columnDefinitions}
-        items={items}
-        onSelectionChange={({ detail }) => {
-          setSelectedItems(detail.selectedItems);
-        }}
-        selectedItems={selectedItems}
-        selectionType="multi"
-        stripedRows={preferences.stripedRows}
-        contentDensity={preferences.contentDensity}
-        wrapLines={preferences.wrapLines}
-        pagination={
-          <Pagination
-            {...paginationProps}
-            ariaLabels={{
-              nextPageLabel: t('table.next-page'),
-              previousPageLabel: t('table.previous-page'),
-              pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
-            }}
-          />
-        }
-        filter={
-          <PropertyFilter
-            {...propertyFilterProps}
-            i18nStrings={PropertyFilterI18nStrings('users')}
-            countText={MatchesCountText(filteredItemsCount)}
-            filteringAriaLabel={t('users.filter-groups')}
-            expandToViewport={true}
-          />
-        }
-        loading={isLoading}
+        itemsIsLoading={isLoading}
         loadingText={t('users.loading-groups')}
-        visibleColumns={preferences.visibleContent}
-        stickyHeader="true"
+        localStorageKey="users-table-preferences"
         trackBy="Username"
-        resizableColumns
-        preferences={
-          <TablePreferences
-            preferences={preferences}
-            setPreferences={setPreferences}
-            contentOptions={visibleContentOptions}
-          />
-        }
+        filteringProperties={filteringProperties}
+        filteringI18nStringsName="users"
       />
+
       <ChangeRoleModal
         onDismiss={() => setChangeRoleModalVisible(false)}
         visible={changeRoleModalVisible}

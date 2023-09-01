@@ -18,13 +18,7 @@ export const useRacesApi = (userHasAccess, eventId) => {
         console.debug('getRaces');
         const races = response.data.getRaces;
 
-        // Add in the username
-        const racesData = races.map((r) => ({
-          ...r,
-          username: r.userId,
-        }));
-
-        dispatch('ADD_RACES', racesData);
+        dispatch('ADD_RACES', races);
         dispatch('RACES_IS_LOADING', false);
       }
       queryApi();

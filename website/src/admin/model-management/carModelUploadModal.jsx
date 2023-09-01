@@ -1,9 +1,8 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as mutations from '../../graphql/mutations';
 import * as queries from '../../graphql/queries';
-// import * as subscriptions from '../graphql/subscriptions'
-import { useTranslation } from 'react-i18next';
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
@@ -25,7 +24,7 @@ import {
   TablePreferences,
 } from '../../components/tableConfig';
 
-import { ColumnsConfig, VisibleContentOptions } from '../../components/cars-table/carTableConfig';
+import { ColumnConfiguration } from '../../components/cars-table/carTableConfig';
 
 // https://overreacted.io/making-setinterval-declarative-with-react-hooks/
 function useInterval(callback, delay) {
@@ -237,8 +236,7 @@ export default (props) => {
     );
   }
 
-  const carColumnsConfig = ColumnsConfig();
-  const visibleContentOptions = VisibleContentOptions();
+  const columnConfiguration = ColumnConfiguration();
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
     useCollection(props.cars, {
@@ -258,7 +256,7 @@ export default (props) => {
           />
         ),
       },
-      sorting: { defaultState: { sortingColumn: carColumnsConfig[1] } },
+      sorting: { defaultState: { sortingColumn: columnConfiguration.columnDefinitions[1] } },
     });
 
   // default modal content
@@ -270,7 +268,7 @@ export default (props) => {
       }}
       selectedItems={selectedCars}
       selectionType="single"
-      columnDefinitions={carColumnsConfig}
+      columnDefinitions={columnConfiguration.columnDefinitions}
       items={items}
       loadingText={t('carmodelupload.loading-cars')}
       visibleColumns={preferences.visibleContent}
@@ -286,7 +284,7 @@ export default (props) => {
         <TablePreferences
           preferences={preferences}
           setPreferences={setPreferences}
-          contentOptions={visibleContentOptions}
+          contentOptions={columnConfiguration.visibleContentOptions}
         />
       }
     />
