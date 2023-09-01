@@ -5,13 +5,14 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
+import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 import {
     CodeFirstSchema,
+    Directive,
     GraphqlType,
     ObjectType,
     ResolvableField,
-    Directive,
 } from 'awscdk-appsync-utils';
 import { Construct } from 'constructs';
 
@@ -81,7 +82,7 @@ export class LabelPrinter extends Construct {
         );
 
         // Functions
-        const printLabelLambdaFunction = new lambdaPython.PythonFunction(
+        const printLabelLambdaFunction = new StandardLambdaPythonFunction(
             this,
             'print_label_function',
             {
@@ -90,7 +91,6 @@ export class LabelPrinter extends Construct {
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(1),
                 runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
                 memorySize: 256,
                 architecture: props.lambdaConfig.architecture,
                 bundling: {

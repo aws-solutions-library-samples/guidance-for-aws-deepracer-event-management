@@ -1,4 +1,3 @@
-import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import { DockerImage, Duration } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
@@ -15,6 +14,7 @@ import {
     ObjectType,
     ResolvableField,
 } from 'awscdk-appsync-utils';
+import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 import { Construct } from 'constructs';
 
@@ -50,30 +50,33 @@ export class UserManager extends Construct {
         super(scope, id);
 
         // delete users Function
-        const delete_user_function = new lambdaPython.PythonFunction(this, 'delete_user_function', {
-            entry: 'lib/lambdas/delete_user_function/',
-            description: 'Delete current user from cognito',
-            index: 'index.py',
-            handler: 'lambda_handler',
-            timeout: Duration.minutes(1),
-            runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
-            memorySize: 128,
-            architecture: props.lambdaConfig.architecture,
-            environment: {
-                user_pool_id: props.userPoolId,
-                POWERTOOLS_SERVICE_NAME: 'delete_user',
-                LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
-                eventbus_name: props.eventbus.eventBusName,
-            },
-            bundling: {
-                image: props.lambdaConfig.bundlingImage,
-            },
-            layers: [
-                props.lambdaConfig.layersConfig.helperFunctionsLayer,
-                props.lambdaConfig.layersConfig.powerToolsLayer,
-            ],
-        });
+        const delete_user_function = new StandardLambdaPythonFunction(
+            this,
+            'delete_user_function',
+            {
+                entry: 'lib/lambdas/delete_user_function/',
+                description: 'Delete current user from cognito',
+                index: 'index.py',
+                handler: 'lambda_handler',
+                timeout: Duration.minutes(1),
+                runtime: props.lambdaConfig.runtime,
+                memorySize: 128,
+                architecture: props.lambdaConfig.architecture,
+                environment: {
+                    user_pool_id: props.userPoolId,
+                    POWERTOOLS_SERVICE_NAME: 'delete_user',
+                    LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+                    eventbus_name: props.eventbus.eventBusName,
+                },
+                bundling: {
+                    image: props.lambdaConfig.bundlingImage,
+                },
+                layers: [
+                    props.lambdaConfig.layersConfig.helperFunctionsLayer,
+                    props.lambdaConfig.layersConfig.powerToolsLayer,
+                ],
+            }
+        );
         delete_user_function.addToRolePolicy(
             new iam.PolicyStatement({
                 effect: iam.Effect.ALLOW,
@@ -85,14 +88,13 @@ export class UserManager extends Construct {
 
         // API RESOURCES
         // List & create users Function
-        const users_handler = new lambdaPython.PythonFunction(this, 'users_handler', {
+        const users_handler = new StandardLambdaPythonFunction(this, 'users_handler', {
             entry: 'lib/lambdas/users_function/',
             description: 'Work with Cognito users',
             index: 'index.py',
             handler: 'lambda_handler',
             timeout: Duration.minutes(1),
             runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
             memorySize: 128,
             architecture: props.lambdaConfig.architecture,
             environment: {
@@ -361,7 +363,7 @@ export class UserManager extends Construct {
         // Eventbus Functions //
 
         // respond to new user event
-        const user_created_event_handler = new lambdaPython.PythonFunction(
+        const user_created_event_handler = new StandardLambdaPythonFunction(
             this,
             'user_created_event_handler',
             {
@@ -371,12 +373,12 @@ export class UserManager extends Construct {
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(1),
                 runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 architecture: props.lambdaConfig.architecture,
                 environment: {
                     graphqlUrl: props.appsyncApi.api.graphqlUrl,
                     user_pool_id: props.userPoolId,
+                    POWERTOOLS_SERVICE_NAME: 'users_function',
                 },
                 bundling: {
                     image: props.lambdaConfig.bundlingImage,

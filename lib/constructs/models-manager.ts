@@ -1,4 +1,3 @@
-import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import { DockerImage, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as apig from 'aws-cdk-lib/aws-apigateway';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
@@ -21,6 +20,7 @@ import {
     ResolvableField,
 } from 'awscdk-appsync-utils';
 import { ServerlessClamscan } from 'cdk-serverless-clamscan';
+import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 import { Construct } from 'constructs';
 
@@ -145,7 +145,7 @@ export class ModelsManager extends Construct {
             projectionType: dynamodb.ProjectionType.INCLUDE,
         });
 
-        const deleteInfectedFilesFunction = new lambdaPython.PythonFunction(
+        const deleteInfectedFilesFunction = new StandardLambdaPythonFunction(
             this,
             'deleteInfectedFilesFunction',
             {
@@ -154,7 +154,6 @@ export class ModelsManager extends Construct {
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(1),
                 runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
                 memorySize: 256,
                 architecture: props.lambdaConfig.architecture,
                 environment: {
@@ -191,7 +190,7 @@ export class ModelsManager extends Construct {
         });
 
         // Quarantine Models Function
-        const quarantinedModelsHandler = new lambdaPython.PythonFunction(
+        const quarantinedModelsHandler = new StandardLambdaPythonFunction(
             this,
             'quarantinedModelsHandler',
             {
@@ -200,7 +199,6 @@ export class ModelsManager extends Construct {
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(1),
                 runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 architecture: props.lambdaConfig.architecture,
                 environment: {
@@ -222,7 +220,7 @@ export class ModelsManager extends Construct {
         infectedBucket.grantRead(quarantinedModelsHandler, 'private/*');
 
         // upload_model_to_car_function
-        const uploadModelToCarFunctionLambda = new lambdaPython.PythonFunction(
+        const uploadModelToCarFunctionLambda = new StandardLambdaPythonFunction(
             this,
             'uploadModelToCarFunctionLambda',
             {
@@ -231,7 +229,6 @@ export class ModelsManager extends Construct {
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(1),
                 runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 architecture: props.lambdaConfig.architecture,
                 environment: {
@@ -257,7 +254,7 @@ export class ModelsManager extends Construct {
         );
 
         // upload_model_to_car_function
-        const uploadModelToCarStatusLambda = new lambdaPython.PythonFunction(
+        const uploadModelToCarStatusLambda = new StandardLambdaPythonFunction(
             this,
             'uploadModelToCarStatusLambda',
             {
@@ -266,7 +263,6 @@ export class ModelsManager extends Construct {
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(1),
                 runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 architecture: props.lambdaConfig.architecture,
                 environment: {
@@ -328,14 +324,13 @@ export class ModelsManager extends Construct {
         getModelsPolicy.attachToRole(props.adminGroupRole);
         getModelsPolicy.attachToRole(props.operatorGroupRole);
 
-        const modelsMd5Handler = new lambdaPython.PythonFunction(this, 'modelsMD5Function', {
+        const modelsMd5Handler = new StandardLambdaPythonFunction(this, 'modelsMD5Function', {
             entry: 'lib/lambdas/models_md5/',
             description: 'Check MD5 on model files',
             index: 'index.py',
             handler: 'lambda_handler',
             timeout: Duration.minutes(1),
             runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
             memorySize: 128,
             architecture: props.lambdaConfig.architecture,
             environment: {
@@ -409,14 +404,13 @@ export class ModelsManager extends Construct {
         // Permissions for s3 bucket read / write
         modelsBucket.grantReadWrite(modelsMd5Handler, 'private/*');
 
-        const modelsHandler = new lambdaPython.PythonFunction(this, 'modelsFunction', {
+        const modelsHandler = new StandardLambdaPythonFunction(this, 'modelsFunction', {
             entry: 'lib/lambdas/models_api/',
             description: 'Models resolver',
             index: 'index.py',
             handler: 'lambda_handler',
             timeout: Duration.minutes(1),
             runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
             memorySize: 128,
             architecture: props.lambdaConfig.architecture,
             environment: {
