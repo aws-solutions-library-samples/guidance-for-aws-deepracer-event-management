@@ -1,4 +1,3 @@
-import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import * as cdk from 'aws-cdk-lib';
 import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
@@ -8,6 +7,7 @@ import { EventBus } from 'aws-cdk-lib/aws-events';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 export interface IdpProps {
     distribution: cloudfront.IDistribution;
@@ -41,18 +41,18 @@ export class Idp extends Construct {
 
         const stack = cdk.Stack.of(this);
 
-        const pre_sign_up_lambda = new lambdaPython.PythonFunction(this, 'pre_sign_up_lambda', {
+        const pre_sign_up_lambda = new StandardLambdaPythonFunction(this, 'pre_sign_up_lambda', {
             entry: 'lib/lambdas/cognito_triggers/',
             description: 'Cognito pre sign up Lambda',
             index: 'index.py',
             handler: 'pre_sign_up_handler',
             timeout: Duration.minutes(1),
             runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
             memorySize: 128,
             architecture: props.lambdaConfig.architecture,
             environment: {
                 eventbus_name: props.eventbus.eventBusName,
+                POWERTOOLS_SERVICE_NAME: 'cognito_presignup_lambda',
             },
             bundling: {
                 image: props.lambdaConfig.bundlingImage,

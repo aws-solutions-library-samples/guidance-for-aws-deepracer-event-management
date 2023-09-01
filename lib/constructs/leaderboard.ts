@@ -1,4 +1,3 @@
-import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
@@ -16,6 +15,7 @@ import {
     ObjectType,
     ResolvableField,
 } from 'awscdk-appsync-utils';
+import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 import { Construct } from 'constructs';
 import { Cdn } from './cdn';
@@ -82,14 +82,13 @@ export class Leaderboard extends Construct {
 
         // BACKEND
         // Event bridge integration
-        const evbLcLambda = new lambdaPython.PythonFunction(this, 'evbLcLambda', {
+        const evbLcLambda = new StandardLambdaPythonFunction(this, 'evbLcLambda', {
             entry: 'lib/lambdas/leaderboard_config_evb/',
             description: 'Leaderboard handler',
             index: 'index.py',
             handler: 'lambda_handler',
             timeout: Duration.minutes(1),
             runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
             memorySize: 128,
             architecture: props.lambdaConfig.architecture,
             bundling: {
@@ -101,6 +100,7 @@ export class Leaderboard extends Construct {
             ],
             environment: {
                 DDB_TABLE: ddbTable.tableName,
+                POWERTOOLS_SERVICE_NAME: 'leaderboard_config_evb',
             },
         });
         ddbTable.grantReadWriteData(evbLcLambda);
@@ -113,14 +113,13 @@ export class Leaderboard extends Construct {
             eventBus: props.eventbus,
         }).addTarget(new LambdaFunction(evbLcLambda));
 
-        const evbLeLambda = new lambdaPython.PythonFunction(this, 'evbLeLambda', {
+        const evbLeLambda = new StandardLambdaPythonFunction(this, 'evbLeLambda', {
             entry: 'lib/lambdas/leaderboard_entry_evb/',
             description: 'Leaderboard handler',
             index: 'index.py',
             handler: 'lambda_handler',
             timeout: Duration.minutes(1),
             runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
             memorySize: 128,
             architecture: props.lambdaConfig.architecture,
             bundling: {
@@ -135,6 +134,7 @@ export class Leaderboard extends Construct {
                 DDB_TABLE: ddbTable.tableName,
                 USER_POOL_ID: props.userPoolId,
                 APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
+                POWERTOOLS_SERVICE_NAME: 'leaderboard_entry_evb',
             },
         });
         ddbTable.grantReadWriteData(evbLeLambda);
@@ -159,14 +159,13 @@ export class Leaderboard extends Construct {
         }).addTarget(new LambdaFunction(evbLeLambda));
 
         // API integration
-        const apiLambda = new lambdaPython.PythonFunction(this, 'apiLambda', {
+        const apiLambda = new StandardLambdaPythonFunction(this, 'apiLambda', {
             entry: 'lib/lambdas/leaderboard_api/',
             description: 'Leaderboard handler',
             index: 'index.py',
             handler: 'lambda_handler',
             timeout: Duration.minutes(1),
             runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
             memorySize: 128,
             architecture: props.lambdaConfig.architecture,
             bundling: {
@@ -179,6 +178,7 @@ export class Leaderboard extends Construct {
             environment: {
                 DDB_TABLE: ddbTable.tableName,
                 APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
+                POWERTOOLS_SERVICE_NAME: 'leaderboard_api',
             },
         });
         ddbTable.grantReadWriteData(apiLambda);

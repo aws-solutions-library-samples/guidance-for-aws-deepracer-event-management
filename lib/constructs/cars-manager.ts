@@ -1,4 +1,5 @@
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
+import * as cdk from 'aws-cdk-lib';
 import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
@@ -17,6 +18,8 @@ import {
     ObjectType,
     ResolvableField,
 } from 'awscdk-appsync-utils';
+import { NagSuppressions } from 'cdk-nag';
+import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 import { Construct } from 'constructs';
 
@@ -43,6 +46,7 @@ export class CarManager extends Construct {
 
     constructor(scope: Construct, id: string, props: CarManagerProps) {
         super(scope, id);
+        const stack = cdk.Stack.of(scope);
 
         const carStatusTable = new dynamodb.Table(this, 'CarsStatusTable', {
             partitionKey: {
@@ -68,7 +72,7 @@ export class CarManager extends Construct {
             },
         });
 
-        const carStatusUpdateHandler = new lambdaPython.PythonFunction(
+        const carStatusUpdateHandler = new StandardLambdaPythonFunction(
             this,
             'carStatusUpdateHandler',
             {
@@ -78,7 +82,6 @@ export class CarManager extends Construct {
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(1),
                 runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 architecture: props.lambdaConfig.architecture,
                 bundling: {
@@ -95,12 +98,44 @@ export class CarManager extends Construct {
 
         carStatusTable.grantReadWriteData(carStatusUpdateHandler);
 
-        carStatusUpdateHandler.addToRolePolicy(
-            new iam.PolicyStatement({
-                effect: iam.Effect.ALLOW,
-                actions: ['ssm:ListTagsForResource'],
-                resources: ['*'],
-            })
+        NagSuppressions.addResourceSuppressions(
+            carStatusUpdateHandler.role,
+            [
+                {
+                    id: 'AwsSolutions-IAM5',
+                    reason: 'Suppress AwsSolutions-IAM5 DynamoDB Wild Card Permission created by grantReadWriteData',
+                    appliesTo: [
+                        {
+                            // the following regex can't be used as most of this is deploy time info, not synth time
+                            // regex: `/^Resource::arn:aws:dynamodb:${stack.region}:${stack.account}:/table/(.*)/index/\\*$/g`,
+                            regex: '/^Resource::(.+)/index/\\*$/g',
+                        },
+                    ],
+                },
+            ],
+            true
+        );
+
+        const carStatusUpdateHandlerAdditionalRolePolicy =
+            carStatusUpdateHandler.addAdditionalRolePolicy(
+                'carStatusUpdateHandlerPolicy',
+                new iam.PolicyStatement({
+                    effect: iam.Effect.ALLOW,
+                    actions: ['ssm:ListTagsForResource'],
+                    resources: ['*'],
+                })
+            );
+
+        NagSuppressions.addResourceSuppressionsByPath(
+            stack,
+            carStatusUpdateHandlerAdditionalRolePolicy.resourcePath,
+            [
+                {
+                    id: 'AwsSolutions-IAM5',
+                    reason: 'ssm:ListTagsForResource allows lambda to read all the tags',
+                    appliesTo: ['Resource::*'],
+                },
+            ]
         );
 
         const status_update_job = new stepFunctionsTasks.LambdaInvoke(this, 'Update Status', {
@@ -176,7 +211,7 @@ export class CarManager extends Construct {
         );
 
         // car_activation method
-        const car_activation_handler = new lambdaPython.PythonFunction(
+        const car_activation_handler = new StandardLambdaPythonFunction(
             this,
             'car_activation_handler',
             {
@@ -186,7 +221,6 @@ export class CarManager extends Construct {
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(1),
                 runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 architecture: props.lambdaConfig.architecture,
                 bundling: {
@@ -211,7 +245,7 @@ export class CarManager extends Construct {
         );
 
         // car_activation_clean method - clean up unactivated and expired hybrid activations
-        const car_activation_clean_handler = new lambdaPython.PythonFunction(
+        const car_activation_clean_handler = new StandardLambdaPythonFunction(
             this,
             'car_activation_clean_handler',
             {
@@ -221,7 +255,6 @@ export class CarManager extends Construct {
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(2),
                 runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 architecture: props.lambdaConfig.architecture,
                 bundling: {
@@ -285,7 +318,7 @@ export class CarManager extends Construct {
         );
 
         // cars_function_handler
-        const cars_function_handler = new lambdaPython.PythonFunction(
+        const cars_function_handler = new StandardLambdaPythonFunction(
             this,
             'cars_function_handler',
             {
@@ -295,7 +328,6 @@ export class CarManager extends Construct {
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(5),
                 runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 architecture: props.lambdaConfig.architecture,
                 bundling: { image: props.lambdaConfig.bundlingImage },
@@ -451,14 +483,13 @@ export class CarManager extends Construct {
         // All Methods...
 
         // respond to Event Bridge user events
-        const car_event_handler = new lambdaPython.PythonFunction(this, 'cars_event_handler', {
+        const car_event_handler = new StandardLambdaPythonFunction(this, 'cars_event_handler', {
             entry: 'lib/lambdas/cars_function/',
             description: 'Work with Cognito users',
             index: 'eventbus_events.py',
             handler: 'lambda_handler',
             timeout: Duration.minutes(1),
             runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
             memorySize: 128,
             architecture: props.lambdaConfig.architecture,
             bundling: {
@@ -497,7 +528,7 @@ export class CarManager extends Construct {
         rule.addTarget(new awsEventsTargets.LambdaFunction(car_event_handler));
 
         // data fetching lambda for label printing
-        const labelPrinterDataFetchHandler = new lambdaPython.PythonFunction(
+        const labelPrinterDataFetchHandler = new StandardLambdaPythonFunction(
             this,
             'labelPrinterDataFetchHandler',
             {
@@ -507,7 +538,6 @@ export class CarManager extends Construct {
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(1),
                 runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 architecture: props.lambdaConfig.architecture,
                 bundling: {

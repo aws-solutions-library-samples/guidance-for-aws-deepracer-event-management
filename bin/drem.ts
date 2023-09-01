@@ -34,11 +34,11 @@ if (fs.existsSync(emailfileName)) {
 }
 
 const app = new App();
-// Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 
 if (app.node.tryGetContext('manual_deploy') === 'True') {
     console.info('Manual Deploy started....');
 
+    // Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
     const baseStack = new BaseStack(app, `drem-backend-${branchName}-base`, {
         email: email,
         env: env,
