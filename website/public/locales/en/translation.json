@@ -383,6 +383,7 @@
 
   "notifications.item-type-event": "Event",
   "notifications.item-type-user": "User",
+  "notifications.item-type-race": "Race",
   "notifications.creating-item": "Creating {{itemType}} {{itemName}}...",
   "notifications.create-item-success": "{{itemType}} {{itemName}} created",
   "notifications.create-item-error": "{{itemType} {{itemName}} could not be created, {{errorMessage}}",

@@ -89,7 +89,7 @@ export const VisibleContentOptions = () => {
         },
         {
           id: 'Roles',
-          label: i18next.t('users.roles'),
+          label: i18next.t('users.role'),
           alwaysVisible: true,
         },
         {
@@ -130,7 +130,7 @@ export const FilteringProperties = () => {
     },
     {
       key: 'Roles',
-      propertyLabel: i18next.t('users.roles'),
+      propertyLabel: i18next.t('users.role'),
       operators: [':', '!:', '=', '!='],
     },
     {

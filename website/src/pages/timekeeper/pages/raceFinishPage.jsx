@@ -20,58 +20,25 @@ import { Breadcrumbs } from '../support-functions/supportFunctions';
 export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction, onNext }) => {
   const { t } = useTranslation();
   const [buttonsIsDisabled, SetButtonsIsDisabled] = useState(false);
-  const [sendMutation, loading, errorMessage, data] = useMutation();
+  const [sendMutation, loading, errorMessage] = useMutation();
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const [, dispatch] = useStore();
-  const messageDisplayTime = 2500;
-  const notificationId = 'race_submission';
+  const messageDisplayTime = 4000;
+  const notificationId = '';
 
-  // Update submit message in modal depending on addRace mutation result
+  // Clear the notification is submit is successful and go back to racer selector page again
   useEffect(() => {
-    if (!loading && errorMessage) {
-      dispatch('ADD_NOTIFICATION', {
-        type: 'error',
-        content: t('timekeeper.end-session.error'),
-        id: notificationId,
-        dismissible: true,
-        onDismiss: (event) => {
-          dispatch('DISMISS_NOTIFICATION', notificationId);
-        },
-      });
-      setTimeout(() => {
-        SetButtonsIsDisabled(false);
-      }, messageDisplayTime);
-    } else if (!loading && data) {
-      dispatch('ADD_NOTIFICATION', {
-        type: 'success',
-        content: t('timekeeper.end-session.info'),
-        id: notificationId,
-        dismissible: true,
-        onDismiss: (event) => {
-          dispatch('DISMISS_NOTIFICATION', notificationId);
-        },
-      });
+    if (!loading && !errorMessage) {
       setTimeout(() => {
         dispatch('DISMISS_NOTIFICATION', notificationId);
         SetButtonsIsDisabled(false);
         onNext();
       }, messageDisplayTime);
     }
-  }, [data, errorMessage, loading]);
+  }, [errorMessage, loading]);
 
   const submitRaceHandler = async () => {
-    console.info(raceInfo);
     SetButtonsIsDisabled(true);
-    dispatch('ADD_NOTIFICATION', {
-      type: 'success',
-      loading: true,
-      content: t('timekeeper.end-session.submitting-race'),
-      id: notificationId,
-      dismissible: true,
-      onDismiss: () => {
-        dispatch('DISMISS_NOTIFICATION', notificationId);
-      },
-    });
     sendMutation('addRace', { ...raceInfo });
   };
 
