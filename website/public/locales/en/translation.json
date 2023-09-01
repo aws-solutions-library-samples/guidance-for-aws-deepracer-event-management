@@ -241,6 +241,7 @@
   "events.selector.track-type": "Track type: {{trackType}}",
 
   "race-admin.header": "Race management",
+  "race-admin.loading-resources": "Loading races",
   "race-admin.description": "",
   "race-admin.breadcrumb": "Race management",
   "race-admin.races-table-header": "Races",

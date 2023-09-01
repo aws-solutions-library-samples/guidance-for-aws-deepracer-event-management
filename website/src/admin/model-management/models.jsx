@@ -1,36 +1,18 @@
+import { Button, SpaceBetween } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
-import * as queries from '../../graphql/queries';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
-
-// import * as mutations from '../graphql/mutations';
-// import * as subscriptions from '../graphql/subscriptions'
-
-import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
-  Button,
-  Header,
-  Pagination,
-  PropertyFilter,
-  SpaceBetween,
-  Table,
-} from '@cloudscape-design/components';
+  ColumnConfiguration,
+  FilteringProperties,
+} from '../../components/tableModelsConfigOperator';
+import * as queries from '../../graphql/queries';
 import { formatAwsDateTime } from '../../support-functions/time';
 
 import { useTranslation } from 'react-i18next';
-import {
-  PropertyFilterI18nStrings,
-  TableEmptyState,
-  TableNoMatchState,
-} from '../../components/tableCommon';
-import {
-  AdminModelsColumnsConfig,
-  DefaultPreferences,
-  MatchesCountText,
-  TablePreferences,
-} from '../../components/tableConfig';
+import { PageTable } from '../../components/pageTable';
+import { TableHeader } from '../../components/tableConfig';
 import CarModelUploadModal from './carModelUploadModal';
 
 const AdminModels = () => {
@@ -40,7 +22,7 @@ const AdminModels = () => {
   const [cars, setCars] = useState([]);
   const [modelsIsLoading, setModelsIsLoading] = useState(true);
   const [carsIsLoading, setCarsIsLoading] = useState(true);
-  const [selectedModelsBtn, setSelectedModelsBtn] = useState(true);
+  const [selectedItems, setSelectedItems] = useState([]);
 
   async function getCarsOnline() {
     setCarsIsLoading(true);
@@ -83,91 +65,28 @@ const AdminModels = () => {
     };
   }, []);
 
-  const [preferences, setPreferences] = useLocalStorage('DREM-models-table-preferences', {
-    ...DefaultPreferences,
-    visibleContent: ['userName', 'modelName', 'modelDate'],
-  });
+  const columnConfiguration = ColumnConfiguration();
+  const filteringProperties = FilteringProperties();
 
-  const adminModelsColsConfig = AdminModelsColumnsConfig();
-
-  const filteringProperties = [
-    {
-      key: 'userName',
-      propertyLabel: t('models.user-name'),
-      operators: [':', '!:', '=', '!='],
-    },
-    {
-      key: 'modelName',
-      propertyLabel: t('models.model-name'),
-      operators: [':', '!:', '=', '!='],
-    },
-  ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
-
-  const visibleContentOptions = [
-    {
-      label: t('models.model-information'),
-      options: [
-        {
-          id: 'modelId',
-          label: t('models.model-id'),
-        },
-        {
-          id: 'userName',
-          label: t('models.user-name'),
-          editable: false,
-        },
-        {
-          id: 'modelName',
-          label: t('models.model-name'),
-          editable: false,
-        },
-        {
-          id: 'modelDate',
-          label: t('models.upload-date'),
-        },
-        {
-          id: 'modelMD5Hash',
-          label: t('models.md5-hash'),
-        },
-        {
-          id: 'modelMetadataMD5Hash',
-          label: t('models.md5-hash-metadata'),
-        },
-        {
-          id: 'modelS3Key',
-          label: t('models.model-s3-key'),
-        },
-      ],
-    },
-  ];
-
-  const {
-    items,
-    actions,
-    filteredItemsCount,
-    collectionProps,
-    propertyFilterProps,
-    paginationProps,
-  } = useCollection(allModels, {
-    propertyFiltering: {
-      filteringProperties,
-      empty: <TableEmptyState resourceName="Model" />,
-      noMatch: (
-        <TableNoMatchState
-          onClearFilter={() => {
-            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
+  const HeaderActionButtons = () => {
+    const uploadModelsToCarButtonDisabled = selectedItems.length === 0;
+    return (
+      <SpaceBetween direction="horizontal" size="xs">
+        <Button
+          onClick={() => {
+            setSelectedItems([]);
           }}
-          label={t('common.no-matches')}
-          description={t('common.we-cant-find-a-match')}
-          buttonLabel={t('button.clear-filters')}
-        />
-      ),
-    },
-    pagination: { pageSize: preferences.pageSize },
-    sorting: { defaultState: { sortingColumn: adminModelsColsConfig[3], isDescending: true } },
-    selection: {},
-  });
-  const [selectedItems, setSelectedItems] = useState([]);
+        >
+          {t('button.clear-selected')}
+        </Button>
+        <CarModelUploadModal
+          disabled={uploadModelsToCarButtonDisabled}
+          selectedModels={selectedItems}
+          cars={cars}
+        ></CarModelUploadModal>
+      </SpaceBetween>
+    );
+  };
 
   return (
     <PageLayout
@@ -188,79 +107,26 @@ const AdminModels = () => {
         { text: t('models.all-breadcrumb') },
       ]}
     >
-      <Table
-        {...collectionProps}
-        header={
-          <Header
-            counter={
-              selectedItems.length
-                ? `(${selectedItems.length}/${allModels.length})`
-                : `(${allModels.length})`
-            }
-            actions={
-              <SpaceBetween direction="horizontal" size="xs">
-                <Button
-                  onClick={() => {
-                    setSelectedItems([]);
-                    setSelectedModelsBtn(true);
-                  }}
-                >
-                  {t('button.clear-selected')}
-                </Button>
-                <CarModelUploadModal
-                  disabled={selectedModelsBtn}
-                  selectedModels={selectedItems}
-                  cars={cars}
-                ></CarModelUploadModal>
-              </SpaceBetween>
-            }
-          >
-            {t('models.all-header')}
-          </Header>
-        }
-        columnDefinitions={adminModelsColsConfig}
-        items={items}
-        stripedRows={preferences.stripedRows}
-        contentDensity={preferences.contentDensity}
-        wrapLines={preferences.wrapLines}
-        pagination={
-          <Pagination
-            {...paginationProps}
-            ariaLabels={{
-              nextPageLabel: t('table.next-page'),
-              previousPageLabel: t('table.previous-page'),
-              pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
-            }}
-          />
-        }
-        filter={
-          <PropertyFilter
-            {...propertyFilterProps}
-            i18nStrings={PropertyFilterI18nStrings('models')}
-            countText={MatchesCountText(filteredItemsCount)}
-            filteringAriaLabel={t('models.filter-groups')}
-            expandToViewport={true}
-          />
-        }
-        loading={modelsIsLoading || carsIsLoading}
-        loadingText={t('models.loading-models')}
-        visibleColumns={preferences.visibleContent}
+      <PageTable
         selectedItems={selectedItems}
+        setSelectedItems={setSelectedItems}
+        tableItems={allModels}
+        columnConfiguration={columnConfiguration}
         selectionType="multi"
-        stickyHeader="true"
-        trackBy={'key'}
-        onSelectionChange={({ detail: { selectedItems } }) => {
-          setSelectedItems(selectedItems);
-          selectedItems.length ? setSelectedModelsBtn(false) : setSelectedModelsBtn(true);
-        }}
-        resizableColumns
-        preferences={
-          <TablePreferences
-            preferences={preferences}
-            setPreferences={setPreferences}
-            contentOptions={visibleContentOptions}
+        header={
+          <TableHeader
+            nrSelectedItems={selectedItems.length}
+            nrTotalItems={allModels.length}
+            header={t('models.all-header')}
+            actions={<HeaderActionButtons />}
           />
         }
+        trackBy={'key'}
+        itemsIsLoading={modelsIsLoading || carsIsLoading}
+        loadingText={t('models.loading-models')}
+        localStorageKey="models-table-preferences"
+        filteringProperties={filteringProperties}
+        filteringI18nStringsName="models"
       />
     </PageLayout>
   );

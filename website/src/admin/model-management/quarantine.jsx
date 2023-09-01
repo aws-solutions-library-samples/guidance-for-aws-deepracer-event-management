@@ -1,30 +1,25 @@
-import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Header, Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 
 import { useTranslation } from 'react-i18next';
 import { PageLayout } from '../../components/pageLayout';
+import { PageTable } from '../../components/pageTable';
+
+import { TableHeader } from '../../components/tableConfig';
+
 import {
-  PropertyFilterI18nStrings,
-  TableEmptyState,
-  TableNoMatchState,
-} from '../../components/tableCommon';
-import {
-  AdminModelsColumnsConfig,
-  DefaultPreferences,
-  MatchesCountText,
-  TablePreferences,
-} from '../../components/tableConfig';
+  ColumnConfiguration,
+  FilteringProperties,
+} from '../../components/tableModelsConfigOperator';
 import * as queries from '../../graphql/queries';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { formatAwsDateTime } from '../../support-functions/time';
 
 const AdminQuarantine = () => {
   const { t } = useTranslation(['translation', 'help-admin-model-quarantine']);
 
   const [allItems, setItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   async function getQuarantinedModels() {
@@ -52,70 +47,8 @@ const AdminQuarantine = () => {
     };
   }, []);
 
-  const [preferences, setPreferences] = useLocalStorage('DREM-quarantine-table-preferences', {
-    ...DefaultPreferences,
-    visibleContent: ['userName', 'modelName', 'modelDate'],
-  });
-
-  const adminModelsColsConfig = AdminModelsColumnsConfig();
-
-  const filteringProperties = [
-    {
-      key: 'userName',
-      propertyLabel: t('models.user-name'),
-      operators: [':', '!:', '=', '!='],
-    },
-    {
-      key: 'modelName',
-      propertyLabel: t('models.model-name'),
-      operators: [':', '!:', '=', '!='],
-    },
-  ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
-
-  const visibleContentOptions = [
-    {
-      label: t('models.model-information'),
-      options: [
-        {
-          id: 'modelName',
-          label: t('models.model-name'),
-          editable: false,
-        },
-        {
-          id: 'modelDate',
-          label: t('models.upload-date'),
-        },
-      ],
-    },
-  ];
-
-  const {
-    items,
-    actions,
-    filteredItemsCount,
-    collectionProps,
-    propertyFilterProps,
-    paginationProps,
-  } = useCollection(allItems, {
-    propertyFiltering: {
-      filteringProperties,
-      empty: <TableEmptyState resourceName="Model" />,
-      noMatch: (
-        <TableNoMatchState
-          onClearFilter={() => {
-            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
-          }}
-          label={t('common.no-matches')}
-          description={t('common.we-cant-find-a-match')}
-          buttonLabel={t('button.clear-filters')}
-        />
-      ),
-    },
-    pagination: { pageSize: preferences.pageSize },
-    sorting: { defaultState: { sortingColumn: adminModelsColsConfig[3], isDescending: true } },
-    selection: {},
-  });
-  const { selectedItems } = collectionProps;
+  const columnConfiguration = ColumnConfiguration();
+  const filteringProperties = FilteringProperties();
 
   return (
     <PageLayout
@@ -136,53 +69,23 @@ const AdminQuarantine = () => {
         { text: t('quarantine.breadcrumb') },
       ]}
     >
-      <Table
-        {...collectionProps}
+      <PageTable
+        selectedItems={selectedItems}
+        setSelectedItems={setSelectedItems}
+        tableItems={allItems}
+        columnConfiguration={columnConfiguration}
         header={
-          <Header
-            counter={
-              selectedItems.length
-                ? `(${selectedItems.length}/${allItems.length})`
-                : `(${allItems.length})`
-            }
-          >
-            {t('quarantine.header')}
-          </Header>
-        }
-        columnDefinitions={adminModelsColsConfig}
-        items={items}
-        stripedRows={preferences.stripedRows}
-        contentDensity={preferences.contentDensity}
-        wrapLines={preferences.wrapLines}
-        pagination={
-          <Pagination
-            {...paginationProps}
-            ariaLabels={{
-              nextPageLabel: t('table.next-page'),
-              previousPageLabel: t('table.previous-page'),
-              pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
-            }}
+          <TableHeader
+            nrSelectedItems={selectedItems.length}
+            nrTotalItems={allItems.length}
+            header={t('quarantine.header')}
           />
         }
-        filter={
-          <PropertyFilter
-            {...propertyFilterProps}
-            i18nStrings={PropertyFilterI18nStrings('models')}
-            countText={MatchesCountText(filteredItemsCount)}
-            filteringAriaLabel={t('models.filter-groups')}
-            expandToViewport={true}
-          />
-        }
-        loading={isLoading}
+        itemsIsLoading={isLoading}
         loadingText={t('models.loading-models')}
-        visibleColumns={preferences.visibleContent}
-        preferences={
-          <TablePreferences
-            preferences={preferences}
-            setPreferences={setPreferences}
-            contentOptions={visibleContentOptions}
-          />
-        }
+        localStorageKey="quarantine-table-preferences"
+        filteringProperties={filteringProperties}
+        filteringI18nStringsName="models"
       />
     </PageLayout>
   );

@@ -1,21 +1,11 @@
-import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Header, PropertyFilter, SpaceBetween, Table } from '@cloudscape-design/components';
+import { SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
-import {
-  PropertyFilterI18nStrings,
-  TableEmptyState,
-  TableNoMatchState,
-} from '../../components/tableCommon';
-import {
-  DefaultPreferences,
-  MatchesCountText,
-  TablePagination,
-  TablePreferences,
-} from '../tableConfig';
+import { TableHeader } from '../tableConfig';
 
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store/store';
-import { ColumnsConfig, FilteringProperties, VisibleContentOptions } from './carTableConfig';
+import { PageTable } from '../pageTable';
+import { ColumnConfiguration, FilteringProperties } from './carTableConfig';
 const Actions = ({ children, t, setOnline, setIsLoading }) => {
   return (
     <SpaceBetween direction="horizontal" size="xs">
@@ -58,92 +48,30 @@ export const CarsTable = ({
     };
   }, [editFleetName]);
 
-  const [preferences, setPreferences] = useState({
-    ...DefaultPreferences,
-    visibleContent: ['carName', 'fleetName', 'carIp'],
-  });
-
-  const columnDefinitions = ColumnsConfig();
+  const columnConfiguration = ColumnConfiguration();
   const filteringProperties = FilteringProperties();
-  const visibleContentOptions = VisibleContentOptions();
-
-  const {
-    items,
-    actions,
-    filteredItemsCount,
-    collectionProps,
-    propertyFilterProps,
-    paginationProps,
-  } = useCollection(cars, {
-    propertyFiltering: {
-      filteringProperties,
-      empty: <TableEmptyState resourceName="Car" />,
-      noMatch: (
-        <TableNoMatchState
-          onClearFilter={() => {
-            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
-          }}
-          label={t('common.no-matches')}
-          description={t('common.we-cant-find-a-match')}
-          buttonLabel={t('button.clear-filters')}
-        />
-      ),
-    },
-    pagination: { pageSize: preferences.pageSize },
-    sorting: { defaultState: { sortingColumn: columnDefinitions[1] } },
-    selection: {},
-  });
 
   return (
-    <Table
-      {...collectionProps}
-      header={
-        <Header
-          counter={
-            selectedCarsInTable.length
-              ? `(${selectedCarsInTable.length}/${cars.length})`
-              : `(${cars.length})`
-          }
-          actions={<Actions t={t} setOnline={setOnline} />}
-        >
-          {t('cars.header')}
-        </Header>
-      }
-      columnDefinitions={columnDefinitions}
-      items={items}
-      pagination={<TablePagination paginationProps={paginationProps} />}
-      filter={
-        <PropertyFilter
-          {...propertyFilterProps}
-          onChange={({ detail }) => setQuery(detail)}
-          query={query}
-          i18nStrings={PropertyFilterI18nStrings('cars')}
-          countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel={t('cars.filter-cars')}
-          expandToViewport={true}
-        />
-      }
-      loading={isLoading}
-      loadingText={t('cars.loading')}
-      visibleColumns={preferences.visibleContent}
-      selectionType="multi"
-      stickyHeader="true"
-      trackBy="InstanceId"
+    <PageTable
       selectedItems={selectedCarsInTable}
-      onSelectionChange={({ detail: { selectedItems } }) => {
-        setSelectedCarsInTable(selectedItems);
-        selectedCarsInTable.length
-          ? setSelectedCarsBtnDisabled(false)
-          : setSelectedCarsBtnDisabled(true);
-      }}
-      resizableColumns
-      preferences={
-        <TablePreferences
-          contentOptions={visibleContentOptions}
-          preferences={preferences}
-          setPreferences={setPreferences}
+      setSelectedItems={setSelectedCarsInTable}
+      tableItems={cars}
+      selectionType="multi"
+      columnConfiguration={columnConfiguration}
+      header={
+        <TableHeader
+          nrSelectedItems={selectedCarsInTable.length}
+          nrTotalItems={cars.length}
+          header={t('cars.header')}
+          actions={<Actions t={t} setOnline={setOnline} />}
         />
       }
+      itemsIsLoading={isLoading}
+      loadingText={t('cars.loading')}
+      localStorageKey="cars-table-preferences"
+      trackBy="instanceId"
+      filteringProperties={filteringProperties}
+      filteringI18nStringsName={'cars'}
     />
   );
 };

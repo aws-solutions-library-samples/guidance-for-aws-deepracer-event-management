@@ -2,34 +2,40 @@ import { Input, Select } from '@cloudscape-design/components';
 import i18next from '../../../i18n';
 import { convertMsToString } from '../../../support-functions/time';
 
-export const VisibleContentOptions = () => {
-  return [
-    {
-      label: i18next.t('race-admin.information'),
-      options: [
-        {
-          id: 'lapId',
-          label: i18next.t('race-admin.lap-id'),
-        },
-        {
-          id: 'time',
-          label: i18next.t('race-admin.time'),
-        },
-        {
-          id: 'resets',
-          label: i18next.t('race-admin.resets'),
-        },
-        {
-          id: 'isValid',
-          label: i18next.t('race-admin.is-valid'),
-        },
-        {
-          id: 'autTimeConnected',
-          label: i18next.t('race-admin.aut-timer-connected'),
-        },
-      ],
-    },
-  ];
+export const ColumnConfiguration = (isEditable) => {
+  const columnDefinitions = isEditable ? EditableColumnDefinitions() : ColumnDefinitions();
+
+  return {
+    defaultVisibleColumns: [['lapId', 'time', 'resets', 'isValid']],
+    visibleContentOptions: [
+      {
+        label: i18next.t('race-admin.information'),
+        options: [
+          {
+            id: 'lapId',
+            label: i18next.t('race-admin.lap-id'),
+          },
+          {
+            id: 'time',
+            label: i18next.t('race-admin.time'),
+          },
+          {
+            id: 'resets',
+            label: i18next.t('race-admin.resets'),
+          },
+          {
+            id: 'isValid',
+            label: i18next.t('race-admin.is-valid'),
+          },
+          {
+            id: 'autTimeConnected',
+            label: i18next.t('race-admin.aut-timer-connected'),
+          },
+        ],
+      },
+    ],
+    columnDefinitions: columnDefinitions,
+  };
 };
 
 export const ColumnDefinitions = () => {
