@@ -83,15 +83,6 @@ export class ModelsManager extends Construct {
             })
         );
 
-        // Deploy Default Models
-        new s3Deployment.BucketDeployment(this, 'ModelsDeploy', {
-            sources: [s3Deployment.Source.asset('./lib/default_models')],
-            destinationBucket: modelsBucket,
-            destinationKeyPrefix: `private/${stack.region}:00000000-0000-0000-0000-000000000000/default/models/`,
-            retainOnDelete: false,
-            memoryLimit: 512,
-        });
-
         const infectedBucket = new s3.Bucket(this, 'infected_bucket', {
             encryption: s3.BucketEncryption.S3_MANAGED,
             serverAccessLogsBucket: props.logsBucket,
@@ -179,7 +170,7 @@ export class ModelsManager extends Construct {
         modelsTable.grantReadWriteData(deleteInfectedFilesFunction);
 
         // Add clam av scan to S3 uploads bucket
-        new ServerlessClamscan(this, 'ClamScan', {
+        const antiVirusScan = new ServerlessClamscan(this, 'ClamScan', {
             buckets: [modelsBucket],
             onResult: new lambdaDestinations.LambdaDestination(deleteInfectedFilesFunction),
             onError: new lambdaDestinations.LambdaDestination(deleteInfectedFilesFunction),
@@ -403,6 +394,18 @@ export class ModelsManager extends Construct {
 
         // Permissions for s3 bucket read / write
         modelsBucket.grantReadWrite(modelsMd5Handler, 'private/*');
+
+        /* Deploy Default DeepRacer models. FOr the models to be properly index this needs to run
+        after the antivirus deployment and lambda putting the models info into the models DDB table */
+        const defaultModelsDeployment = new s3Deployment.BucketDeployment(this, 'ModelsDeploy', {
+            sources: [s3Deployment.Source.asset('./lib/default_models')],
+            destinationBucket: modelsBucket,
+            destinationKeyPrefix: `private/${stack.region}:00000000-0000-0000-0000-000000000000/default/models/`,
+            retainOnDelete: false,
+            memoryLimit: 512,
+        });
+        defaultModelsDeployment.node.addDependency(antiVirusScan);
+        defaultModelsDeployment.node.addDependency(deleteInfectedFilesFunction);
 
         const modelsHandler = new StandardLambdaPythonFunction(this, 'modelsFunction', {
             entry: 'lib/lambdas/models_api/',
