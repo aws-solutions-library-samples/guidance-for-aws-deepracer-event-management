@@ -55,7 +55,6 @@ export const EventSelectorModal = ({ visible, onDismiss, onOk }) => {
   const [nextSelectedTrackInvalid, setNextSelectedTrackInvalid] = useState(true);
   const [trackSelectItems, setTrackSelectItems] = useState([]);
 
-  // TODO MOVE TO STORE / COMMON FILE
   const [state] = useStore();
   const events = state.events.events;
   const [users, , getUserNameFromId] = useUsers();

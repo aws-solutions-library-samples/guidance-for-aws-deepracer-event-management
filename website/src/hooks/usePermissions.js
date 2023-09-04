@@ -28,13 +28,12 @@ export const usePermissions = () => {
 const getPermissions = (groups) => {
   const defaultPermissions = {
     api: {
-      // API:s used in globally shared contexts, used to controll if they shall be invoked to fetch items or not
+      // API:s used in globally shared contexts, used to control if they shall be invoked to fetch items or not
       fleets: false,
       events: false,
       users: false,
       races: false,
       cars: false,
-      races: false,
     },
     sideNavItems: {
       registration: false,
@@ -94,7 +93,6 @@ const getPermissions = (groups) => {
       users: true,
       races: true,
       cars: true,
-      races: true,
     };
   } else if (groups.includes('registration')) {
     const apiPermissions = { ...permissions.api };

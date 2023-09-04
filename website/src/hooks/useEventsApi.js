@@ -16,7 +16,7 @@ export const useEventsApi = (selectedEvent, setSelectedEvent, userHasAccess = fa
           query: queries.getEvents,
         });
         const events = responseGetEvents.data.getEvents;
-        const eventsInNewFormat = events.filter((event) => event.raceConfig !== null); // TODO can be removed after testing
+        const eventsInNewFormat = events.filter((event) => event.raceConfig !== null);
         dispatch('ADD_EVENTS', eventsInNewFormat);
         dispatch('EVENTS_IS_LOADING', false);
       }

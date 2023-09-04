@@ -6,7 +6,7 @@ import { useWindowSize } from '../hooks/useWindowSize';
 import styles from './raceInfoFooter.module.css';
 import RaceTimer from './raceTimer';
 
-// import { useTranslation } from 'react-i18next'; // TODO translations missing
+// import { useTranslation } from 'react-i18next';
 
 const racesStatusesWithFooterVisible = [
   //'NO_RACER_SELECTED',

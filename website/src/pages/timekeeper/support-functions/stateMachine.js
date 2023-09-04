@@ -33,7 +33,7 @@ export const stateMachine = createMachine({
             CAPTURE_LAP: 'captureLap',
             CAPTURE_AUT_LAP: 'captureLap',
             DID_NOT_FINISH: {
-              actions: [assign({ dnf: true }), raise('CAPTURE_LAP')], // TODO raise with param, then param is not propogated to capturelap
+              actions: [assign({ dnf: true }), raise('CAPTURE_LAP')],
             },
           },
         },

@@ -58,13 +58,13 @@ local.run-overlays:		## Run the frontend application locally for development
 .PHONY: local.clean
 local.clean:		## Remove local packages and modules
 	pip freeze | grep -v "^-e" | xargs pip uninstall -y
-	rm package-lock.json
+	-rm package-lock.json
 	rm -rf node_modules
-	rm website/package-lock.json
+	-rm website/package-lock.json
 	rm -rf website/node_modules
-	rm website-leaderboard/package-lock.json
+	-rm website-leaderboard/package-lock.json
 	rm -rf website-leaderboard/node_modules
-	rm website-stream-overlays/package-lock.json
+	-rm website-stream-overlays/package-lock.json
 	rm -rf website-stream-overlays/node_modules
 
 .NOTPARALLEL:

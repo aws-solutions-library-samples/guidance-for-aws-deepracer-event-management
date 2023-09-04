@@ -74,7 +74,7 @@ function App() {
       // all code in this function is retrofitted from GoSquared (old) overlay system.
       // this whole function could use some TLC and modernization (old solution was just raw JS).
       // I literally pasted this in and modified slightly to make this work on the time schedule
-      // that @dasmtch needed for first summit of 2023.
+      // that @dasmthc needed for first summit of 2023.
       var data = message;
 
       data.paused = data.raceStatus === 'RACE_PAUSED';
