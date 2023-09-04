@@ -58,14 +58,6 @@ export function useFleetsApi(userHasAccess = false) {
         next: (fleet) => {
           const updatedFleet = fleet.value.data.onUpdatedFleet;
           dispatch('UPDATE_FLEET', updatedFleet);
-          // setFleets((prevState) => {
-          //   const indexOfUpdatedFleet = fleets.findIndex(
-          //     (fleet) => fleet.fleetId === updatedFleet.fleetId
-          //   );
-          //   const modifiedFleets = [...prevState];
-          //   modifiedFleets[indexOfUpdatedFleet] = updatedFleet;
-          //   return modifiedFleets;
-          // });
         },
         error: (error) => console.warn(error),
       });

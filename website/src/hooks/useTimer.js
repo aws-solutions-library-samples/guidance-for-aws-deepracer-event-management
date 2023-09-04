@@ -1,4 +1,3 @@
-// TODO add paramter for counting up or down
 import { useState } from 'react';
 import useInterval from './useInterval';
 

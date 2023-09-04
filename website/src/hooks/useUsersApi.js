@@ -77,7 +77,6 @@ export const useUsersApi = (userHasAccess = false) => {
     }
 
     return () => {
-      //   console.debug('onUserCreated subscription cleanup');
       if (subscription) {
         console.debug('deregister onUserCreated subscription');
         subscription.unsubscribe();
@@ -105,7 +104,6 @@ export const useUsersApi = (userHasAccess = false) => {
       });
     }
     return () => {
-      //   console.debug('onUserCreated subscription cleanup');
       if (subscription) {
         console.debug('deregister onUserCreated subscription');
         subscription.unsubscribe();
@@ -133,7 +131,6 @@ export const useUsersApi = (userHasAccess = false) => {
       });
     }
     return () => {
-      //   console.debug('onUserCreated subscription cleanup');
       if (subscription) {
         subscription.unsubscribe();
       }

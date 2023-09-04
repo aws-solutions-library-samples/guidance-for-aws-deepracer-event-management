@@ -19,8 +19,6 @@ export const Timekeeper = () => {
   const selectedTrack = useSelectedTrackContext();
 
   const [, dispatch] = useStore();
-  // console.info(selectedEvent);
-  // console.info(selectedTrack);
   // change event info and race config when a user select another event
   useEffect(() => {
     if (selectedEvent.eventId !== race.eventId) {
@@ -61,7 +59,7 @@ export const Timekeeper = () => {
             return o.time;
           })
         );
-        // Get object with the fastets time
+        // Get object with the fastest time
         const obj = validLaps.find((o) => {
           return o.time === res;
         });

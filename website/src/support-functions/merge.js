@@ -1,5 +1,4 @@
 // Helper functions
-// TODO solve deep merge of objects using standard lib like lodash to avoid copy right issues, code copied from stackoverflow
 function clone(obj, isStrictlySafe = false) {
   /* Clones an object. First attempt is safe. If it errors (e.g. from a circular reference),
           'isStrictlySafe' determines if error is thrown or an unsafe clone is returned. */
