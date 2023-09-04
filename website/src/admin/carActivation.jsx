@@ -130,7 +130,7 @@ const AdminActivation = (props) => {
         dremUrl +
         '/login.html && curl -O ' +
         dremUrl +
-        '/manual_update.sh && chmod +x ./manual_update.sh && sudo ./manual_update.sh -p ' +
+        '/car_activation.sh && chmod +x ./car_activation.sh && sudo ./car_activation.sh -p ' +
         password +
         ' -h ' +
         hostname +
@@ -365,8 +365,8 @@ const AdminActivation = (props) => {
         <Grid gridDefinition={[{ colspan: 4 }, { colspan: 4 }]}>
           <div></div>
           <div>
-            <Button href="/manual_update.sh" iconAlign="right" iconName="external">
-              manual_update.sh {t('car-activation.script-lower')}
+            <Button href="/car_activation.sh" iconAlign="right" iconName="external">
+              car_activation.sh {t('car-activation.script-lower')}
             </Button>
             <TextContent>
               <p>{t('car-activation.script-warning')}</p>
