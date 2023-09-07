@@ -1,8 +1,8 @@
 import hashlib
 import os
 import tarfile
-import tempfile
 from datetime import datetime
+from tempfile import TemporaryDirectory
 
 import boto3
 import http_response
@@ -22,9 +22,9 @@ def md5_file(file):
     try:
         with open(file, "rb") as file_to_md5:
             data = file_to_md5.read()
-            hashing_lib=hashlib.new('md5',usedforsecurity=False)
+            hashing_lib = hashlib.new("md5", usedforsecurity=False)
             hashing_lib.update(data)
-            hex=hashing_lib.hexdigest()
+            hex = hashing_lib.hexdigest()
             return hex
     except Exception as error:
         logger.exception(error)
@@ -46,59 +46,60 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
     model_filename_parts = model_filename.split(".")
     model_name = model_filename_parts[0]
 
-    tmpdir = tempfile.mkdtemp()
-    model_filename_full_path = os.path.join(tmpdir, model_filename)
-    model_name_full_path = os.path.join(tmpdir, model_name)
-    modelpb_path_name = os.path.join(model_name_full_path, "agent/model.pb")
-    modelmeta_path_name = os.path.join(model_name_full_path, "model_metadata.json")
+    with TemporaryDirectory() as tmpdir:
+        model_filename_full_path = os.path.join(tmpdir, model_filename)
+        model_name_full_path = os.path.join(tmpdir, model_name)
+        modelpb_path_name = os.path.join(model_name_full_path, "agent/model.pb")
+        modelmeta_path_name = os.path.join(model_name_full_path, "model_metadata.json")
 
-    # Get the MD5 of model elements and update the DB
-    try:
-        s3.download_file(bucket, model_key, model_filename_full_path)
-        tar = tarfile.open(model_filename_full_path)
-        tar.extractall(model_name_full_path)
-        tar.close()
+        # Get the MD5 of model elements and update the DB
+        try:
+            s3.download_file(bucket, model_key, model_filename_full_path)
+            tar = tarfile.open(model_filename_full_path)
+            tar.extractall(model_name_full_path)
+            tar.close()
 
-        # Get the MD5
-        model_md5 = md5_file(modelpb_path_name)
-        logger.debug(f"{modelpb_path_name} MD5 => {model_md5}")
+            # Get the MD5
+            model_md5 = md5_file(modelpb_path_name)
+            logger.debug(f"{modelpb_path_name} MD5 => {model_md5}")
 
-        model_metadata_md5 = md5_file(modelmeta_path_name)
-        logger.debug(f"{modelmeta_path_name} MD5 => {model_metadata_md5}")
+            model_metadata_md5 = md5_file(modelmeta_path_name)
+            logger.debug(f"{modelmeta_path_name} MD5 => {model_metadata_md5}")
 
-        # Get sensor, training algorithm and action space from model_metadata.jsom
-        with open(modelmeta_path_name) as json_file:
-            model_metadata_contents = json_file.read()
+            # Get sensor, training algorithm and action space from model_metadata.jsom
+            with open(modelmeta_path_name) as json_file:
+                model_metadata_contents = json_file.read()
 
-        logger.debug(f"model_metadata_content => {model_metadata_contents}")
+            logger.debug(f"model_metadata_content => {model_metadata_contents}")
 
-        model_metadata_json = json.loads(model_metadata_contents)
-        response = table.update_item(
-            Key={
-                "modelId": model_id,
-            },
-            UpdateExpression=(
-                "SET racerName = :racerName, racerIdentityId = :racerIdentityId,"
-                " md5Datetime = :md5Datetime, modelMD5 = :modelMD5, modelMetadataMD5 ="
-                " :modelMetadataMD5, sensor = :sensor, trainingAlgorithm ="
-                " :trainingAlgorithm, actionSpaceType = :actionSpaceType"
-            ),
-            ExpressionAttributeValues={
-                ":racerName": racer_name,
-                ":racerIdentityId": racer_identity_id,
-                ":md5Datetime": datetime.utcnow().isoformat() + "Z",
-                ":modelMD5": model_md5,
-                ":modelMetadataMD5": model_metadata_md5,
-                ":sensor": model_metadata_json["sensor"],
-                ":trainingAlgorithm": model_metadata_json["training_algorithm"],
-                ":actionSpaceType": model_metadata_json["action_space_type"],
-            },
-        )
-        logger.debug(response)
+            model_metadata_json = json.loads(model_metadata_contents)
+            response = table.update_item(
+                Key={
+                    "modelId": model_id,
+                },
+                UpdateExpression=(
+                    "SET racerName = :racerName, racerIdentityId = :racerIdentityId,"
+                    " md5Datetime = :md5Datetime, modelMD5 = :modelMD5,"
+                    " modelMetadataMD5 = :modelMetadataMD5, sensor = :sensor,"
+                    " trainingAlgorithm = :trainingAlgorithm, actionSpaceType ="
+                    " :actionSpaceType"
+                ),
+                ExpressionAttributeValues={
+                    ":racerName": racer_name,
+                    ":racerIdentityId": racer_identity_id,
+                    ":md5Datetime": datetime.utcnow().isoformat() + "Z",
+                    ":modelMD5": model_md5,
+                    ":modelMetadataMD5": model_metadata_md5,
+                    ":sensor": model_metadata_json["sensor"],
+                    ":trainingAlgorithm": model_metadata_json["training_algorithm"],
+                    ":actionSpaceType": model_metadata_json["action_space_type"],
+                },
+            )
+            logger.debug(response)
 
-        # Return the MD5 for now
-        return http_response.response(200)
+            # Return the MD5 for now
+            return http_response.response(200)
 
-    except Exception as error:
-        logger.exception(error)
-        return http_response.response(500, error)
+        except Exception as error:
+            logger.exception(error)
+            return http_response.response(500, error)
