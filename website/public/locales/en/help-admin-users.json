@@ -1,5 +1,5 @@
 {
   "header": "## Users",
-  "content": "On this page, you can view users registered with DREM and details about them including their **Role** and **Status**.\n\nUsers’ roles determine which actions they can perform in DREM. During an event, you may want to grant a different role to a user.  For example, a pit crew member who was initially given a **Commentator** role may need an **Admin** role to help with admin tasks. You can change a user’s role by selecting the user and choosing **Change role**.",
+  "content": "On this page, you can view users registered with DREM and details about them, including their **Role** and **Status**.\n\nUsers’ roles determine which actions they can perform in DREM. During an event, you may want to grant a different role to a user.  For example, a pit crew member who was initially given a **Commentator** role may need an **Admin** role to help with admin tasks. You can change a user’s role by selecting the user and choosing **Change role**.",
   "footer": ""
 }
