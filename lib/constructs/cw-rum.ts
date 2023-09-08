@@ -3,6 +3,7 @@ import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as rum from 'aws-cdk-lib/aws-rum';
 import * as customResources from 'aws-cdk-lib/custom-resources';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 
 export interface CwRumAppMonitorProps {
@@ -28,6 +29,17 @@ export class CwRumAppMonitor extends Construct {
             allowUnauthenticatedIdentities: true,
             allowClassicFlow: true,
         });
+
+        NagSuppressions.addResourceSuppressionsByPath(
+            stack,
+            `${scope.node.path}/${id}/CwRumIdentityPool`,
+            [
+                {
+                    id: 'AwsSolutions-COG7',
+                    reason: 'CloudWatch RUM requires an unauthenticated identity pool to operate.',
+                },
+            ]
+        );
 
         // RUM Cognito Identity Pool Unauthenitcated Role
         const rum_id_pool_unauth_user_role = new iam.Role(
