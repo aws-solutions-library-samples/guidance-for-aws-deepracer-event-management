@@ -12,6 +12,7 @@ import { IBucket } from 'aws-cdk-lib/aws-s3';
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { CodeFirstSchema, Directive, GraphqlType, InputType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
+import { NagSuppressions } from 'cdk-nag';
 import { ServerlessClamscan } from 'cdk-serverless-clamscan';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
@@ -293,7 +294,14 @@ export class ModelsManager extends Construct {
       layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
     });
 
-    const deadLetterQueue = new sqs.Queue(this, 'deadLetterQueue');
+    const deadLetterQueue = new sqs.Queue(this, 'deadLetterQueue', { enforceSSL: true });
+    NagSuppressions.addResourceSuppressionsByPath(stack, `${deadLetterQueue.node.path}/Resource`, [
+      {
+        id: 'AwsSolutions-SQS3',
+        reason: 'The SQS queue is used as a dead-letter queue (DLQ) for a DynamoEventSource',
+      },
+    ]);
+
     modelsMd5Handler.addEventSource(
       new lambdaEventSources.DynamoEventSource(modelsTable, {
         startingPosition: lambda.StartingPosition.TRIM_HORIZON,
