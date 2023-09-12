@@ -24,6 +24,7 @@ node_modules
 branch.txt
 email.txt
 s3_bucket.txt
+build.config
 drem.zip
 reports
 htmlcov
