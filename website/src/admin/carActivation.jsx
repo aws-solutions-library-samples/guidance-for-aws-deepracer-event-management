@@ -373,6 +373,10 @@ const AdminActivation = (props) => {
             </TextContent>
           </div>
         </Grid>
+
+        <TextContent>
+          <p>{t('car-activation.version-warning')}</p>
+        </TextContent>
       </SpaceBetween>
     </PageLayout>
   );

@@ -78,6 +78,7 @@
   "car-activation.wifi-config": "Optional Wi-Fi configuration for networks with hidden SSIDs",
   "car-activation.wifi-placeholder": "wifimagic",
   "car-activation.wifi": "WiFi Password",
+  "car-activation.version-warning": "DREM is designed for use with AWS DeepRacer cars running firmware version 20.04 and above. Earlier firmware versions are not supported.",
   "label-printer.printable-label-header": "Printable label",
   "label-printer.printable-label-alt-text": "Printable label",
   "label-printer.printable-label-copy-button": "Copy label URL",
