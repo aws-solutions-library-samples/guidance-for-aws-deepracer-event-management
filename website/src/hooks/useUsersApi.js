@@ -92,14 +92,16 @@ export const useUsersApi = (userHasAccess = false) => {
         next: (event) => {
           console.debug('onUserUpdated received', event);
           const user = event.value.data.onUserUpdated;
-          const enrichedUser = {
-            ...user,
-            Email: getUserEmail(user),
-            CountryCode: getUserCountryCode(user),
-            Roles: parseRoles(user),
-          };
+          if (user.Attributes != null) {
+            const enrichedUser = {
+              ...user,
+              Email: getUserEmail(user),
+              CountryCode: getUserCountryCode(user),
+              Roles: parseRoles(user),
+            };
 
-          dispatch('UPDATE_USER', enrichedUser);
+            dispatch('UPDATE_USER', enrichedUser);
+          } else console.info('a non valid user was received:', user);
         },
       });
     }
