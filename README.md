@@ -6,18 +6,17 @@
 
 ## Overview
 
-The AWS DeepRacer Event Manager (DREM) is used to run and manage all aspects of in-person events for AWS DeepRacer, an autonomous 1/18th scale race car designed to test reinforcement learning (RL) models by racing on a physical track. 
+The AWS DeepRacer Event Manager (DREM) is used to run and manage all aspects of in-person events for AWS DeepRacer, an autonomous 1/18th scale race car designed to test reinforcement learning (RL) models by racing on a physical track.
 
 DREM offers event organizers tools for managing users, models, cars and fleets, events, as well as time recording and leaderboards. Race participants also use DREM to upload their RL models.
 
 ### Architectural overview
 
 <p align="center">
-	<img src="./docs/DREM-aws-reference-architecture-overview.png"> 
+	<img src="./docs/images/DREM-aws-reference-architecture-overview.png"> 
 </p>
 
-
-**Note:** DREM is designed for use with AWS DeepRacer cars running firmware version 20.04 and above. Earlier firmware versions are not supported.  If you need to update your device, see [Update and restore your AWS DeepRacer device](https://docs.aws.amazon.com/deepracer/"latest/developerguide/deepracer-ubuntu-update.html)
+**Note:** DREM is designed for use with AWS DeepRacer cars running firmware version 20.04 and above. Earlier firmware versions are not supported. If you need to update your device, see [Update and restore your AWS DeepRacer device](https://docs.aws.amazon.com/deepracer/"latest/developerguide/deepracer-ubuntu-update.html)
 
 ## Deployment
 
@@ -41,6 +40,8 @@ Please note: It takes approximately an hour for all of the DREM resources to be 
 4. Create required build.config (if using Make)
 5. Bootstrap AWS CDK
 6. Install DREM
+7. Accessing DREM
+8. Setup Amazon Cognito to use Amazon SES for email sending (optional)
 
 ### Option 1. Deploy DREM for use at an event
 
@@ -67,7 +68,7 @@ npm install
 
 #### Step 4: Create the build config for Make
 
-Note. This step is only required if Make is used for the later steps. 
+Note. This step is only required if Make is used for the later steps.
 
 Copy and rename the example `build.config.example` file
 
@@ -97,7 +98,7 @@ make bootstrap
 ##### Manually
 
 ```sh
-cdk bootstrap -c email=<admin-email> -c account=1234567890 -c region=<optional> -c branch=<optional> 
+cdk bootstrap -c email=<admin-email> -c account=1234567890 -c region=<optional> -c branch=<optional>
 ```
 
 ### Step 6: Install DREM
@@ -129,25 +130,39 @@ aws s3 cp drem.zip s3://$(aws ssm get-parameter --name '/drem/S3RepoBucket' --ou
 Deploy
 
 ```sh
-npx cdk deploy -c email=<admin-email> -c account=1234567890 -c region=<optional> -c branch=<optional> 
+npx cdk deploy -c email=<admin-email> -c account=1234567890 -c region=<optional> -c branch=<optional>
 ```
 
 #### Step 7: Accessing DREM
 
-The deployment of DREM through the pipeline will take approximately 1 hour.  As part of the deployment, the email address provided will become the admin user for DREM.  An email with temporary credentials to access DREM as well as the a link will be sent to the email address provided. When logging in for first time, the user will be prompted to change the temporary password.
+The deployment of DREM through the pipeline will take approximately 1 hour. As part of the deployment, the email address provided will become the admin user for DREM. An email with temporary credentials to access DREM as well as the a link will be sent to the email address provided. When logging in for first time, the user will be prompted to change the temporary password.
+
+#### Step 8: Setup Amazon Cognito to use Amazon SES for email sending (optional)
+
+In the default configuration Amazon Cognito only supports 50 signups a day due to a hard limit on the number of signup emails it is allowed to send. To resolve this you must enable the [integration with Amazon SES](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-email.html).
+
+To manually enable this integration, you can follow these steps:
+
+1. `Purchase/Register` your domain in `Route 53 `
+   - you can use other DNS providers but those steps are not detailed here
+2. `Add the domain` to the verified identities in `Amazon SES`
+3. Take the SES account out of [sandbox mode](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html)
+4. Navigate to your `Amazon Cognito User Pool`
+5. Click `Edit` in `Messaging, Email`
+6. Switch the configuration to `Send email with Amazon SES` and complete the rest of the email configuration appropriately
+7. Click `Save changes`
 
 ### Option 2. Deploy DREM as a developer / contributor
-
 
 ### Development prequisities
 
 As per the deployment prerequisites with the following additional tools
 
-* [GIT](https://git-scm.com/)
-* [Visual Studio Code](https://code.visualstudio.com/)
-* Python3
+- [GIT](https://git-scm.com/)
+- [Visual Studio Code](https://code.visualstudio.com/)
+- Python3
 
-A number of plugins are recommended when contributing code to DREM. VSCode will prompt you to install these plugins when you open the source code for the first time. 
+A number of plugins are recommended when contributing code to DREM. VSCode will prompt you to install these plugins when you open the source code for the first time.
 
 We recommend that you use the Makefile based commands to simplify the steps required when developing code for DREM.
 
@@ -182,6 +197,7 @@ make local.run-leaderboard
 ```
 
 To run the DREM streaming overlays
+
 ```sh
 make local.run-overlays
 ```
@@ -201,7 +217,7 @@ make clean
 #### Manually
 
 ```sh
-npx cdk destroy -c email=<admin-email> -c account=1234567890 -c region=<optional> -c branch=<optional> 
+npx cdk destroy -c email=<admin-email> -c account=1234567890 -c region=<optional> -c branch=<optional>
 ```
 
 ### Step 2: Remove the infrastructure stack
@@ -220,12 +236,11 @@ aws cloudformation delete-stack --stack-name drem-backend-<branch-name>-infrastr
 
 #### Manual clean up
 
-Not all of the elements from the stack are able to be deleted in an automated manner and so once the initial attempt at deleting the stack has failed with `DELETE_FAILED` status you need to manually delete the stack using the console and retain the resources that can't be automatically delete.  Once the stack has been deleted the retained resources can be manually deleted
+Not all of the elements from the stack are able to be deleted in an automated manner and so once the initial attempt at deleting the stack has failed with `DELETE_FAILED` status you need to manually delete the stack using the console and retain the resources that can't be automatically delete. Once the stack has been deleted the retained resources can be manually deleted
 
 `ModelsManagerClamScanVirusDefsBucketPolicy*`
 
 (Known issue - we are looking to resolve this with an updated version of how we use ClamScanAV within DREM)
-
 
 ### Step 3: Remove the base stack
 
@@ -243,7 +258,7 @@ aws cloudformation delete-stack --stack-name drem-backend-<branch-name>-base
 
 #### Mannual clean up
 
-Not all of the elements from the stack are able to be deleted in an automated manner and so once the initial attempt at deleting the stack has failed with `DELETE_FAILED` status you need to manually delete the stack using the console and retain the resources that can't be automatically delete.  Once the stack has been deleted the retained resources can be manually deleted
+Not all of the elements from the stack are able to be deleted in an automated manner and so once the initial attempt at deleting the stack has failed with `DELETE_FAILED` status you need to manually delete the stack using the console and retain the resources that can't be automatically delete. Once the stack has been deleted the retained resources can be manually deleted
 
 `logsBucket*`
 
@@ -265,8 +280,8 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 
 This library is licensed under the MIT-0 License. See the [LICENSE](LICENSE.md) file.
 
-
 ---
+
 # DREM DEV (OLD NOTES)
 
 ## Translations
@@ -275,19 +290,19 @@ Are you creating a version of DREM in another language ?
 
 Translation files:
 
--   DREM language strings - [translation.json](./website/public/locales/en/translation.json)
--   DREM help panels - []()
--   DREM leaderboards - [translation.json](./website-leaderboard/public/locales/en/translation.json)
+- DREM language strings - [translation.json](./website/public/locales/en/translation.json)
+- DREM help panels - []()
+- DREM leaderboards - [translation.json](./website-leaderboard/public/locales/en/translation.json)
 
 ## Prerequisites
 
--   [Docker Desktop](https://www.docker.com/)
--   [Python](https://www.python.org/) (Tested with 3.9.10)
--   [AWS CDK](https://aws.amazon.com/cdk/) (Tested with 2.6.0)
+- [Docker Desktop](https://www.docker.com/)
+- [Python](https://www.python.org/) (Tested with 3.9.10)
+- [AWS CDK](https://aws.amazon.com/cdk/) (Tested with 2.6.0)
 
 ## Pipeline Deploy (via Gitlab)
 
--   Gitlab builds the zipfile and uploads it to the DREM Dev Account (dasmthc+deepracer@amazon.com)
+- Gitlab builds the zipfile and uploads it to the DREM Dev Account (dasmthc+deepracer@amazon.com)
 
 ### General Information:
 
@@ -296,8 +311,8 @@ A new file in the S3 Bucket then triggers the pipeline in that account. That pip
 
 ### Prerequisites
 
--   Have at least Maintainer Role in the Gitlab Project to make the Branch a `protected` Branch
--   Access to the DREM Dev Account (`dasmthc+deepracer@amazon.com`)
+- Have at least Maintainer Role in the Gitlab Project to make the Branch a `protected` Branch
+- Access to the DREM Dev Account (`dasmthc+deepracer@amazon.com`)
 
 ### Deploy
 
@@ -336,10 +351,10 @@ $ make pipeline.trigger
 
 ### Setup pre commit hooks
 
--   install dependencies `$ npm install `
--   install pre-commit hooks`$ pip install pre-commit && pre-commit install`
--   set `AWS_DEFAULT_REGION`
--   set `CDK_DEFAULT_ACCOUNT`
+- install dependencies `$ npm install `
+- install pre-commit hooks`$ pip install pre-commit && pre-commit install`
+- set `AWS_DEFAULT_REGION`
+- set `CDK_DEFAULT_ACCOUNT`
 
 The pre-commit hooks will only run towards changed files. You can manually run a pre-commit hook test without committing the files by running `bash .git/hooks/pre-commit`
 
