@@ -155,13 +155,13 @@ const AdminActivation = (props) => {
           footerContent={t('footer', { ns: 'help-admin-car-activation' })}
         />
       }
-      header={t('car-activation.header')}
-      description={t('car-activation.description')}
+      header={t('AdminActivation.car-activation.header')}
+      description={t('AdminActivation.car-activation.description')}
       breadcrumbs={[
         { text: t('home.breadcrumb'), href: '/' },
         { text: t('operator.breadcrumb'), href: '/admin/home' },
         { text: t('car-management.breadcrumb'), href: '/admin/home' },
-        { text: t('car-activation.breadcrumb') },
+        { text: t('AdminActivation.car-activation.breadcrumb') },
       ]}
     >
       <SpaceBetween direction="vertical" size="l">
@@ -175,14 +175,14 @@ const AdminActivation = (props) => {
                 }}
                 disabled={buttonDisabled}
               >
-                {t('car-activation.generate')}
+                {t('AdminActivation.car-activation.generate')}
               </Button>
             </SpaceBetween>
           }
         >
           <Container textAlign="center">
             <SpaceBetween direction="vertical" size="l">
-              <FormField label={t('car-activation.fleet')}>
+              <FormField label={t('AdminActivation.car-activation.fleet')}>
                 <ButtonDropdown
                   items={dropDownFleets}
                   onItemClick={({ detail }) => {
@@ -195,39 +195,45 @@ const AdminActivation = (props) => {
                   {dropDownSelectedItem.fleetName}
                 </ButtonDropdown>
               </FormField>
-              <FormField label={t('car-activation.hostname')} errorText={hostnameErrorMessage}>
+              <FormField
+                label={t('AdminActivation.car-activation.hostname')}
+                errorText={hostnameErrorMessage}
+              >
                 <Input
                   value={hostname}
-                  placeholder={t('car-activation.hostname-placeholder')}
+                  placeholder={t('AdminActivation.car-activation.hostname-placeholder')}
                   onChange={(fleet) => {
                     setHostname(fleet.detail.value);
                   }}
                 />
               </FormField>
-              <FormField label={t('car-activation.password')} errorText={passwordErrorMessage}>
+              <FormField
+                label={t('AdminActivation.car-activation.password')}
+                errorText={passwordErrorMessage}
+              >
                 <Input
                   value={password}
-                  placeholder={t('car-activation.password-placeholder')}
+                  placeholder={t('AdminActivation.car-activation.password-placeholder')}
                   onChange={(fleet) => {
                     setPassword(fleet.detail.value);
                   }}
                 />
               </FormField>
 
-              <ExpandableSection header={t('car-activation.wifi-config')}>
-                <FormField label={t('car-activation.ssid')}>
+              <ExpandableSection header={t('AdminActivation.car-activation.wifi-config')}>
+                <FormField label={t('AdminActivation.car-activation.ssid')}>
                   <Input
                     value={ssid}
-                    placeholder={t('car-activation.ssid-placeholder')}
+                    placeholder={t('AdminActivation.car-activation.ssid-placeholder')}
                     onChange={(fleet) => {
                       setSsid(fleet.detail.value);
                     }}
                   />
                 </FormField>
-                <FormField label={t('car-activation.wifi')}>
+                <FormField label={t('AdminActivation.car-activation.wifi')}>
                   <Input
                     value={wifiPass}
-                    placeholder={t('car-activation.wifi-placeholder')}
+                    placeholder={t('AdminActivation.car-activation.wifi-placeholder')}
                     onChange={(fleet) => {
                       setWifiPass(fleet.detail.value);
                     }}
@@ -240,7 +246,7 @@ const AdminActivation = (props) => {
 
         <Container>
           <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
-            <Header variant="h3">{t('car-activation.script')}</Header>
+            <Header variant="h3">{t('AdminActivation.car-activation.script')}</Header>
             <Container>
               <Box color="text-status-info" textAlign="center">
                 {loading}
@@ -254,7 +260,7 @@ const AdminActivation = (props) => {
               triggerType="custom"
               content={
                 <StatusIndicator type="success">
-                  {t('car-activation.copied-to-clipboard')}
+                  {t('AdminActivation.car-activation.copied-to-clipboard')}
                 </StatusIndicator>
               }
             >
@@ -264,7 +270,7 @@ const AdminActivation = (props) => {
                   navigator.clipboard.writeText(updateCommand);
                 }}
               >
-                {t('button.copy')}
+                {t('common.button.copy')}
               </Button>
             </Popover>
           </Grid>
@@ -285,7 +291,7 @@ const AdminActivation = (props) => {
                 triggerType="custom"
                 content={
                   <StatusIndicator type="success">
-                    {t('car-activation.copied-to-clipboard')}
+                    {t('AdminActivation.car-activation.copied-to-clipboard')}
                   </StatusIndicator>
                 }
               >
@@ -295,7 +301,7 @@ const AdminActivation = (props) => {
                     navigator.clipboard.writeText(activationCode);
                   }}
                 >
-                  {t('button.copy')}
+                  {t('common.button.copy')}
                 </Button>
               </Popover>
             </Grid>
@@ -315,7 +321,7 @@ const AdminActivation = (props) => {
                 triggerType="custom"
                 content={
                   <StatusIndicator type="success">
-                    {t('car-activation.copied-to-clipboard')}
+                    {t('AdminActivation.car-activation.copied-to-clipboard')}
                   </StatusIndicator>
                 }
               >
@@ -325,13 +331,13 @@ const AdminActivation = (props) => {
                     navigator.clipboard.writeText(activationId);
                   }}
                 >
-                  {t('button.copy')}
+                  {t('common.button.copy')}
                 </Button>
               </Popover>
             </Grid>
 
             <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
-              <Header variant="h3">{t('car-activation.ssm-only')}</Header>
+              <Header variant="h3">{t('AdminActivation.car-activation.ssm-only')}</Header>
               <Container>
                 <Box color="text-status-info" textAlign="center">
                   {loading}
@@ -345,7 +351,7 @@ const AdminActivation = (props) => {
                 triggerType="custom"
                 content={
                   <StatusIndicator type="success">
-                    {t('car-activation.copied-to-clipboard')}
+                    {t('AdminActivation.car-activation.copied-to-clipboard')}
                   </StatusIndicator>
                 }
               >
@@ -355,7 +361,7 @@ const AdminActivation = (props) => {
                     navigator.clipboard.writeText(ssmCommand);
                   }}
                 >
-                  {t('button.copy')}
+                  {t('common.button.copy')}
                 </Button>
               </Popover>
             </Grid>
@@ -366,16 +372,16 @@ const AdminActivation = (props) => {
           <div></div>
           <div>
             <Button href="/car_activation.sh" iconAlign="right" iconName="external">
-              car_activation.sh {t('car-activation.script-lower')}
+              car_activation.sh {t('AdminActivation.car-activation.script-lower')}
             </Button>
             <TextContent>
-              <p>{t('car-activation.script-warning')}</p>
+              <p>{t('AdminActivation.car-activation.script-warning')}</p>
             </TextContent>
           </div>
         </Grid>
 
         <TextContent>
-          <p>{t('car-activation.version-warning')}</p>
+          <p>{t('AdminActivation.car-activation.version-warning')}</p>
         </TextContent>
       </SpaceBetween>
     </PageLayout>
