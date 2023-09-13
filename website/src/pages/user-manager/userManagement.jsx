@@ -26,7 +26,6 @@ export const UserManagement = () => {
   const changeRoleHandler = (role) => {
     setSelectedItems((prevState) => {
       prevState.forEach((selectedUser) => {
-        if (role === 'racer') role = [];
         send('updateUser', {
           username: selectedUser.Username,
           roles: role,

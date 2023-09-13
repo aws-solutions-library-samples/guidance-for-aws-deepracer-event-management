@@ -3,13 +3,13 @@ import { initStore } from './store';
 const configureStore = () => {
   const actions = {
     ADD_USERS: (curState, users) => {
-      console.debug('ADD_USERS DISPATCH FUNCTION');
+      console.debug('ADD_USERS DISPATCH FUNCTION', users);
       const updatedUsers = { ...curState.users };
       updatedUsers.users = users;
       return { users: updatedUsers };
     },
     UPDATE_USER: (curState, user) => {
-      console.debug('UPDATE_USER DISPATCH FUNCTION');
+      console.debug('UPDATE_USER DISPATCH FUNCTION', user);
       const updatedUsers = { ...curState.users };
       const userIndex = curState.users.users.findIndex((u) => u.sub === user.sub);
       if (userIndex === -1) {
