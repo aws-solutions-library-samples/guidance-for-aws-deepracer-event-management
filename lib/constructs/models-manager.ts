@@ -420,7 +420,7 @@ export class ModelsManager extends Construct {
             architecture: props.lambdaConfig.architecture,
             environment: {
                 DDB_TABLE: modelsTable.tableName,
-                POWERTOOLS_SERVICE_NAME: 'models resolver',
+                POWERTOOLS_SERVICE_NAME: 'models_resolver',
                 LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
                 MODELS_S3_BUCKET: modelsBucket.bucketName,
             },
