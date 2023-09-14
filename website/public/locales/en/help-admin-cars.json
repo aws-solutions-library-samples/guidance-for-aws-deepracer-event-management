@@ -1,5 +1,5 @@
 {
   "header": "## Cars",
-  "content": "On this page, you can view cars that are online or offline and their details, such as **Host name**,  **Car IP**, and the name of the fleet to which they belong. You can also edit cars and download printable labels for cars. If you don’t have a printer, you can use painter’s tape to create labels with car details. Car labeling helps race operators to quickly identify and choose cars to which they will upload racers’ models. Labels should be securely attached to the undercarriage of each car.",
+  "content": "On this page, you can view cars that are online or offline and their details, such as **Host name**,  **Car IP**, and the name of the fleet to which they belong. You can also edit cars and download printable labels for cars. If you don’t have a printer, you can use painter’s tape to create labels with car details. Car labeling helps race operators to quickly identify and choose cars to which they upload racers’ models. Labels should be securely attached to the undercarriage of each car.",
   "footer": ""
 }
