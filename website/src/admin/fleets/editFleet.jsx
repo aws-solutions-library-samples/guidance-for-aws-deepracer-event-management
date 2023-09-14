@@ -19,6 +19,7 @@ export const EditFleet = () => {
   const [send, loading, errorMessage, data] = useMutation();
   const [createButtonIsDisabled, setCreateButtonIsDisabled] = useState(false);
   const [fleetConfig, setFleetConfig] = useState(fleet);
+  const [fleetQuery, setFleetQuery] = useState();
 
   useEffect(() => {
     if (!loading && data && !errorMessage) {
@@ -41,6 +42,7 @@ export const EditFleet = () => {
   useEffect(() => {
     if (selectedFleet) {
       setFleetConfig(selectedFleet);
+      setFleetQuery(selectedFleet.fleetName);
     }
   }, [selectedFleet]);
 
@@ -97,7 +99,7 @@ export const EditFleet = () => {
               onFormIsValid={formIsValidHandler}
               onFormIsInvalid={formIsInvalidHandler}
             />
-            <CarsPanel onChange={UpdateConfigHandler} {...fleetConfig} />
+            <CarsPanel onChange={UpdateConfigHandler} fleetQuery={fleetQuery} {...fleetConfig} />
           </SpaceBetween>
         </Form>
       </form>
