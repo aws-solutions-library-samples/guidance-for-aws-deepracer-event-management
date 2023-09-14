@@ -22,6 +22,7 @@ zip_repo:
     - apt-get -y install zip
     - echo $CI_COMMIT_REF_NAME > branch.txt
     - echo $EMAIL > email.txt
+    - echo "email=$EMAIL\nbranch=$CI_COMMIT_REF_NAME" > build.config
     - zip -r drem.zip . -x '*node_modules*' -x '*.git*' -x '*.venv*' -x '*cdk.out*'
   artifacts:
     paths:
