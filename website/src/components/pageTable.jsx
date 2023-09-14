@@ -26,6 +26,7 @@ export const PageTable = ({
   selectionType,
   columnConfiguration,
   stickyHeader = true,
+  query = {},
   ...props
 }) => {
   const { t } = useTranslation(['translation']);
@@ -88,6 +89,7 @@ export const PageTable = ({
           i18nStrings={PropertyFilterI18nStrings(filteringI18nStringsName)}
           countText={MatchesCountText(filteredItemsCount)}
           expandToViewport={true}
+          query={query}
         />
       }
       header={header}
