@@ -294,7 +294,10 @@ export class ModelsManager extends Construct {
       layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
     });
 
-    const deadLetterQueue = new sqs.Queue(this, 'deadLetterQueue', { enforceSSL: true });
+    const deadLetterQueue = new sqs.Queue(this, 'deadLetterQueue', {
+      enforceSSL: true,
+      encryption: sqs.QueueEncryption.SQS_MANAGED,
+    });
     NagSuppressions.addResourceSuppressionsByPath(stack, `${deadLetterQueue.node.path}/Resource`, [
       {
         id: 'AwsSolutions-SQS3',
