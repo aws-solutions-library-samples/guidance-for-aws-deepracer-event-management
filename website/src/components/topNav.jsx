@@ -36,7 +36,7 @@ import { usePermissions } from '../hooks/usePermissions';
 import { useRacesApi } from '../hooks/useRacesApi';
 import { useUsersApi } from '../hooks/useUsersApi';
 import { useWindowSize } from '../hooks/useWindowsSize';
-import { ModelMangement } from '../pages/model-management/modelManagement';
+import { ModelManagement } from '../pages/model-management/modelManagement';
 import { Timekeeper } from '../pages/timekeeper/timeKeeper';
 import { UserManagement } from '../pages/user-manager/userManagement';
 import {
@@ -63,7 +63,7 @@ const defaultRoutes = [
   <Route path="/" element={<Home />} />,
   <Route path="*" element={<Home />} />,
   <Route path="/user/profile" element={<ProfileHome />} />,
-  <Route path="/models/view" element={<ModelMangement />} />,
+  <Route path="/models/view" element={<ModelManagement />} />,
 ];
 
 const registrationRoutes = [<Route path="/registration/createuser" element={<CreateUser />} />];

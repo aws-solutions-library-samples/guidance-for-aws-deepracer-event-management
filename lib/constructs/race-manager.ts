@@ -1,4 +1,3 @@
-import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import { DockerImage, Duration } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
@@ -15,6 +14,7 @@ import {
     ObjectType,
     ResolvableField,
 } from 'awscdk-appsync-utils';
+import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 import { Construct } from 'constructs';
 
@@ -59,14 +59,13 @@ export class RaceManager extends Construct {
         });
 
         // BACKEND
-        const raceLambda = new lambdaPython.PythonFunction(this, 'raceLambda', {
+        const raceLambda = new StandardLambdaPythonFunction(this, 'raceLambda', {
             entry: 'lib/lambdas/race_api/',
             description: 'Race handler',
             index: 'index.py',
             handler: 'lambda_handler',
             timeout: Duration.minutes(1),
             runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
             memorySize: 128,
             architecture: props.lambdaConfig.architecture,
             bundling: {
@@ -80,6 +79,7 @@ export class RaceManager extends Construct {
                 DDB_TABLE: raceTable.tableName,
                 APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
                 EVENT_BUS_NAME: props.eventbus.eventBusName,
+                POWERTOOLS_SERVICE_NAME: 'race_handler',
             },
         });
         raceTable.grantReadWriteData(raceLambda);

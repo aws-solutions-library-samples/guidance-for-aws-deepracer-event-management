@@ -140,8 +140,8 @@ export const GetTrackTypeNameFromId = (id) => {
 export const RaceTypeConfig = () => {
   return [
     { label: i18next.t('events.race.ranking.best-lap-time'), value: 'BEST_LAP_TIME' },
-    //   { label: i18next.t('events.race.ranking.finish-x-laps'), value: 'FINISH_X_LAPS' }, // TODO: not yet implemented in Time keeper
-    //   { label: i18next.t('events.race.ranking.best-average-lap-time-x-lap'), value: 'BEST_AVERAGE_LAP_TIME_X_LAP' }, // TODO: not yet implemented in Time keeper
+    //   { label: i18next.t('events.race.ranking.finish-x-laps'), value: 'FINISH_X_LAPS' },
+    //   { label: i18next.t('events.race.ranking.best-average-lap-time-x-lap'), value: 'BEST_AVERAGE_LAP_TIME_X_LAP' },
   ];
 };
 

@@ -1,36 +1,25 @@
 .footerRoot {
-  padding-bottom: 2vmin;
-  padding-top: 1vmin;
   position: fixed;
   left: 0;
   bottom: 0;
   width: 100%;
-  height: 25vmin;
-  height: 25vmin;
+  height: fit-content;
   z-index: 4000;
 
-  background: linear-gradient(
-    120deg,
-    #7305a0 0%,
-    #2f0c67 80%,
-    #fff 80%,
-    #fff 85%,
-    transparent 85%,
-    transparent
-  );
+  background: linear-gradient(120deg, #7305a0 0%, #2f0c67 80%, #fff 80%, #fff 85%, transparent 85%, transparent);
   background-repeat: no-repeat;
   background-size: 130% 130%;
 
   animation-name: slide;
   animation-duration: 4s;
 
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  /*border-top: 1px solid rgba(255, 255, 255, 0.3);*/
   color: #fff;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
-  line-height: 1.2;
+  /*line-height: 1.2;*/
 }
 
 @keyframes slide {
@@ -42,21 +31,43 @@
   }
 }
 
-.footerName {
-  font-size: 5vmin;
-  font-weight: normal;
+.footerCountdown {
+  font-weight: 500;
+  color: #fff;
   animation: fadeInAnimation ease 3s;
   animation-iteration-count: 1;
   animation-fill-mode: forwards;
 }
 
-.footerCountdown {
+.footerTop {
+  background: linear-gradient(90deg, #551d8c 0%, #38176c 30%);
+  padding: 1vmin;
+}
+
+.footerBottom {
+  background: #000000;
+  background: linear-gradient(90deg, #491977 0%, #000000 30%);
+  /*background-repeat: no-repeat;*/
+  padding: 1vmin;
+}
+
+.tableRoot {
+  text-align: center;
+  width: 100%;
+  height: fit-content;
+}
+
+.footerItemText {
+  font-weight: 100;
+  font-size: 4vmin;
+  padding: 1vb;
+}
+
+.footerItemDigits {
   font-weight: 500;
-  font-size: 10vmin;
-  color: #fff;
-  animation: fadeInAnimation ease 3s;
-  animation-iteration-count: 1;
-  animation-fill-mode: forwards;
+  font-size: 5vmin;
+  font-style: italic;
+  /*padding: 2vb;*/
 }
 
 @keyframes fadeInAnimation {

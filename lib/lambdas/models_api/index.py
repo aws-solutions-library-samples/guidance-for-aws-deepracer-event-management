@@ -27,7 +27,7 @@ bucket = os.environ["MODELS_S3_BUCKET"]
 
 
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
-@tracer.capture_lambda_handler
+@tracer.capture_method(capture_response=False)
 def lambda_handler(event, context):
     return app.resolve(event, context)
 

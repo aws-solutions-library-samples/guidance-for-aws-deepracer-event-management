@@ -1,4 +1,3 @@
-import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import { DockerImage, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
@@ -15,6 +14,7 @@ import {
     ObjectType,
     ResolvableField,
 } from 'awscdk-appsync-utils';
+import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 import { Construct } from 'constructs';
 
@@ -62,7 +62,7 @@ export class EventsManager extends Construct {
             pointInTimeRecovery: true,
         });
 
-        const ddbstreamToEventBridgeFunction = new lambdaPython.PythonFunction(
+        const ddbstreamToEventBridgeFunction = new StandardLambdaPythonFunction(
             this,
             'ddbStreamToEvbFunction',
             {
@@ -72,7 +72,6 @@ export class EventsManager extends Construct {
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(1),
                 runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 bundling: { image: props.lambdaConfig.bundlingImage },
                 layers: [
@@ -95,14 +94,13 @@ export class EventsManager extends Construct {
             })
         );
 
-        const eventsFunction = new lambdaPython.PythonFunction(this, 'eventsFunction', {
+        const eventsFunction = new StandardLambdaPythonFunction(this, 'eventsFunction', {
             entry: 'lib/lambdas/events_api/',
             description: 'Events Resolver',
             index: 'index.py',
             handler: 'lambda_handler',
             timeout: Duration.minutes(1),
             runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
             memorySize: 128,
             bundling: { image: props.lambdaConfig.bundlingImage },
             layers: [

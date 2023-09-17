@@ -1,25 +1,13 @@
-import { useCollection } from '@cloudscape-design/collection-hooks';
-import { PropertyFilter, Table } from '@cloudscape-design/components';
+import { Button, SpaceBetween } from '@cloudscape-design/components';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { DeleteModal, ItemList } from '../../components/deleteModal';
 import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
+import { PageTable } from '../../components/pageTable';
 import { DrSplitPanel } from '../../components/split-panels/dr-split-panel';
-import {
-  PropertyFilterI18nStrings,
-  TableEmptyState,
-  TableNoMatchState,
-} from '../../components/tableCommon';
-import {
-  DefaultPreferences,
-  MatchesCountText,
-  TableHeader,
-  TablePagination,
-  TablePreferences,
-} from '../../components/tableConfig';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { TableHeader } from '../../components/tableConfig';
 import useMutation from '../../hooks/useMutation';
 import { useUsers } from '../../hooks/useUsers';
 import { useSelectedEventContext } from '../../store/contexts/storeProvider';
@@ -27,11 +15,7 @@ import { useStore } from '../../store/store';
 import { formatAwsDateTime } from '../../support-functions/time';
 import { LapsTable } from './components/lapsTable';
 import { MultiChoicePanelContent } from './components/multiChoicePanelContent';
-import {
-  ColumnDefinitions,
-  FilteringProperties,
-  VisibleContentOptions,
-} from './support-functions/raceTableConfig';
+import { ColumnConfiguration, FilteringProperties } from './support-functions/raceTableConfig';
 
 const RaceAdmin = () => {
   const { t } = useTranslation(['translation', 'help-admin-race-admin']);
@@ -42,12 +26,8 @@ const RaceAdmin = () => {
   const [state, dispatch] = useStore();
   const races = state.races.races;
   const isLoading = state.races.isLoading;
-  const [, , getUserNameFromId] = useUsers();
-
-  const [preferences, setPreferences] = useLocalStorage('DREM-races-table-preferences', {
-    ...DefaultPreferences,
-    visibleContent: ['createdAt', 'username', 'laps'],
-  });
+  const [users, usersIsLoading, getUserNameFromId] = useUsers();
+  const [enrichedRaces, setEnrichedRaces] = useState([]);
 
   const navigate = useNavigate();
   const editRaceHandler = () => {
@@ -56,7 +36,6 @@ const RaceAdmin = () => {
 
   async function deleteRaces() {
     const racesToDelete = SelectedRacesInTable.map((race) => {
-      console.info(race);
       return { userId: race.userId, raceId: race.raceId, trackId: race.trackId };
     });
     const deleteVariables = {
@@ -69,36 +48,19 @@ const RaceAdmin = () => {
   }
 
   // Table config
-  const columnDefinitions = ColumnDefinitions(getUserNameFromId);
+  const columnConfiguration = ColumnConfiguration();
   const filteringProperties = FilteringProperties();
-  const visibleContentOptions = VisibleContentOptions();
 
-  const {
-    items,
-    actions,
-    filteredItemsCount,
-    collectionProps,
-    propertyFilterProps,
-    paginationProps,
-  } = useCollection(races, {
-    propertyFiltering: {
-      filteringProperties,
-      empty: <TableEmptyState resourceName="Race" />,
-      noMatch: (
-        <TableNoMatchState
-          onClearFilter={() => {
-            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
-          }}
-          label={t('common.no-matches')}
-          description={t('common.we-cant-find-a-match')}
-          buttonLabel={t('button.clear-filters')}
-        />
-      ),
-    },
-    pagination: { pageSize: preferences.pageSize },
-    sorting: { defaultState: { sortingColumn: columnDefinitions[0], isDescending: true } },
-    selection: {},
-  });
+  useEffect(() => {
+    setEnrichedRaces(
+      races.map((race) => {
+        return {
+          ...race,
+          username: getUserNameFromId(race.userId),
+        };
+      })
+    );
+  }, [users, races, getUserNameFromId]);
 
   const selectPanelContent = useCallback((selectedItems) => {
     if (selectedItems.length === 0) {
@@ -133,53 +95,20 @@ const RaceAdmin = () => {
     };
   }, [SelectedRacesInTable, selectPanelContent]);
 
-  const raceTable = (
-    <Table
-      {...collectionProps}
-      onSelectionChange={({ detail }) => {
-        setSelectedRacesInTable(detail.selectedItems);
-      }}
-      selectedItems={SelectedRacesInTable}
-      selectionType="multi"
-      columnDefinitions={columnDefinitions}
-      items={items}
-      stripedRows={preferences.stripedRows}
-      contentDensity={preferences.contentDensity}
-      wrapLines={preferences.wrapLines}
-      loading={isLoading}
-      loadingText={t('events.loading')}
-      stickyHeader="true"
-      trackBy="raceId"
-      filter={
-        <PropertyFilter
-          {...propertyFilterProps}
-          i18nStrings={PropertyFilterI18nStrings('races')}
-          countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel={t('races.filter-groups')}
-          expandToViewport={true}
-        />
-      }
-      header={
-        <TableHeader
-          nrSelectedItems={SelectedRacesInTable.length}
-          nrTotalItems={races.length}
-          onEdit={editRaceHandler}
-          onDelete={() => setDeleteModalVisible(true)}
-          header={t('race-admin.races-table-header')}
-        />
-      }
-      pagination={<TablePagination paginationProps={paginationProps} />}
-      visibleColumns={preferences.visibleContent}
-      resizableColumns
-      preferences={
-        <TablePreferences
-          preferences={preferences}
-          setPreferences={setPreferences}
-          contentOptions={visibleContentOptions}
-        />
-      }
-    />
-  );
+  const HeaderActionButtons = () => {
+    const disableEditButton = SelectedRacesInTable.length === 0 || SelectedRacesInTable.length > 1;
+    const disableDeleteButton = SelectedRacesInTable.length === 0;
+    return (
+      <SpaceBetween direction="horizontal" size="xs">
+        <Button disabled={disableEditButton} onClick={editRaceHandler}>
+          {t('button.edit')}
+        </Button>
+        <Button disabled={disableDeleteButton} onClick={() => setDeleteModalVisible(true)}>
+          {t('button.delete')}
+        </Button>
+      </SpaceBetween>
+    );
+  };
 
   // JSX
   return (
@@ -201,7 +130,27 @@ const RaceAdmin = () => {
         { text: t('race-admin.breadcrumb') },
       ]}
     >
-      {raceTable}
+      <PageTable
+        selectedItems={SelectedRacesInTable}
+        setSelectedItems={setSelectedRacesInTable}
+        tableItems={enrichedRaces}
+        selectionType="multi"
+        columnConfiguration={columnConfiguration}
+        header={
+          <TableHeader
+            nrSelectedItems={SelectedRacesInTable.length}
+            nrTotalItems={races.length}
+            header={t('race-admin.races-table-header')}
+            actions={<HeaderActionButtons />}
+          />
+        }
+        itemsIsLoading={isLoading || usersIsLoading}
+        loadingText={t('race-admin.loading-resources')}
+        localStorageKey={'races-table-preferences'}
+        trackBy={'raceId'}
+        filteringProperties={filteringProperties}
+        filteringI18nStringsName={'races'}
+      />
 
       <DeleteModal
         header={t('race-admin.delete-races')}

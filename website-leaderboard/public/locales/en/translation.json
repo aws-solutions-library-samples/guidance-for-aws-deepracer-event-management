@@ -13,5 +13,8 @@
   "leaderboard.summary-footer.lap-completion-ratio": "LAP COMPLETION RATIO",
   "leaderboard.summary-footer.avg-laps-per-attempt": "AVG. LAPS PER ATTEMPT",
 
-  "leaderboard.race-info-footer.currently-racing": "Currently racing"
+  "leaderboard.race-info-footer.currently-racing": "Currently racing: ",
+  "leaderboard.race-info-footer.time-remaining": "Remaining:",
+  "leaderboard.race-info-footer.best-lap": "Best Lap:",
+  "leaderboard.race-info-footer.current-lap": "Current Lap:"
 }

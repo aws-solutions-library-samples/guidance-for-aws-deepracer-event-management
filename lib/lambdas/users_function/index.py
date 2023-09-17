@@ -181,10 +181,14 @@ def updateUser(username: str, roles: list):
     try:
         response = cognito_client.list_groups(UserPoolId=user_pool_id, Limit=60)
         all_groups = response["Groups"]
+
     except Exception as error:
         logger.exception(error)
         raise Exception("Could not get existing groups")
     finally:
+        __verify_group_to_assign_to_user_exist(roles, all_groups)
+
+        # update users group assignment
         for group in all_groups:
             group_name = group["GroupName"]
             if group["GroupName"] in roles:
@@ -192,6 +196,7 @@ def updateUser(username: str, roles: list):
             else:
                 __remove_user_from_group(username, group_name)
         user = __get_user(username)
+
     return {**user, "Roles": roles}
 
 
@@ -219,3 +224,15 @@ def __remove_user_from_group(username: str, group_name: str):
     except Exception as error:
         logger.exception(error)
         raise Exception(f"Could not remove user from group {group_name}")
+
+
+def __verify_group_to_assign_to_user_exist(roles, all_groups):
+    # verify that the group to assign the user to actually exists
+    all_group_names = []
+    for group in all_groups:
+        all_group_names.append(group["GroupName"])
+
+    for role in roles:
+        logger.info(f"role: {role}, all_group_names: {all_group_names}")
+        if role not in all_group_names:
+            raise Exception(f"Role does {role} not exist")

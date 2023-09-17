@@ -39,7 +39,7 @@ export const EditEvent = () => {
   }, [selectedEvent]);
 
   const onSaveEventHandler = async () => {
-    delete eventConfig.raceConfig.eventName; // TODO delete after finding out where this comes from, causing eventName casue issue updating events sometimes!!!
+    delete eventConfig.raceConfig.eventName;
     send('updateEvent', eventConfig);
   };
 

@@ -18,9 +18,7 @@ export const TableNoMatchState = (props) => (
 export const TableEmptyState = ({ resourceName }) => (
   <Box margin={{ vertical: 'xs' }} textAlign="center" color="inherit">
     <SpaceBetween size="xxs">
-      <div>
-        <b>No {resourceName.toLowerCase()}s</b>
-      </div>
+      <b>No {resourceName.toLowerCase()}</b>
     </SpaceBetween>
   </Box>
 );

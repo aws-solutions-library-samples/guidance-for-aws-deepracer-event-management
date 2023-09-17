@@ -10,8 +10,7 @@ import {
     ObjectType,
     ResolvableField,
 } from 'awscdk-appsync-utils';
-
-import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
+import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 import { Construct } from 'constructs';
 
@@ -50,14 +49,13 @@ export class FleetsManager extends Construct {
             pointInTimeRecovery: true,
         });
 
-        const fleets_handler = new lambdaPython.PythonFunction(this, 'fleetsFunction', {
+        const fleets_handler = new StandardLambdaPythonFunction(this, 'fleetsFunction', {
             entry: 'lib/lambdas/fleets_function/',
             description: 'Fleets Resolver',
             index: 'index.py',
             handler: 'lambda_handler',
             timeout: Duration.minutes(1),
             runtime: props.lambdaConfig.runtime,
-            tracing: lambda.Tracing.ACTIVE,
             memorySize: 128,
             architecture: props.lambdaConfig.architecture,
             bundling: {

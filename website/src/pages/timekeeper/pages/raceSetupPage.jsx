@@ -62,7 +62,7 @@ export const RaceSetupPage = ({ onNext }) => {
   }, [selectedEvent.eventId, selectedTrack.trackId]);
 
   useEffect(() => {
-    if (selectedEvent == null) return;
+    if (selectedEvent.eventId == null) return;
 
     const message = {
       eventId: selectedEvent.eventId,

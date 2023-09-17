@@ -1,5 +1,5 @@
 {
-  "header": "## Events",
-  "content": "On this page, you can create, edit and delete AWS DeepRacer events. When you create a new event, you add the following details:\n* **Ranking method** – You can choose between fastest lap and....(what is the other method?) for ranking participating racers.\n* **Track** – Choose the track you’ll be using for the event.\n* **Race time** – Race time is generally 2 or 3 minutes.\n* **Allowed resets per lap** – This is how many times a car can be replaced on the track after it has gone off track with all 4 wheels leaving the track.\n\n* **Sponsor** – If there is a sponsor for the event, you can enter the sponsor name.",
+  "header": "## Events administration",
+  "content": "On this page, you can create, edit, and delete AWS DeepRacer events. When you create a new event, you add the following details:\n* **Ranking method** – Choose a method for ranking participating racers. Currently, DREM offers **Best lap time**.\n* **Track** – Choose the track you’ll be using for the event.\n* **Race time** – Race time is generally 2 or 3 minutes.\n* **Allowed resets per lap** – This is how many times a car can be replaced on the track after it has gone off track with all 4 wheels leaving the track.\n\n* **Sponsor** – If there is a sponsor for the event, you enter the sponsor name.",
   "footer": ""
 }

@@ -1,37 +1,18 @@
-import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Header, PropertyFilter, SpaceBetween, Table } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
-import {
-  PropertyFilterI18nStrings,
-  TableEmptyState,
-  TableNoMatchState,
-} from '../../components/tableCommon';
-import {
-  DefaultPreferences,
-  MatchesCountText,
-  TablePagination,
-  TablePreferences,
-} from '../tableConfig';
+import { TableHeader } from '../tableConfig';
 
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store/store';
-import { ColumnsConfig, FilteringProperties, VisibleContentOptions } from './carTableConfig';
-const Actions = ({ children, t, setOnline, setIsLoading }) => {
-  return (
-    <SpaceBetween direction="horizontal" size="xs">
-      {children}
-    </SpaceBetween>
-  );
-};
+import { PageTable } from '../pageTable';
+import { ColumnConfiguration, FilteringProperties } from './carTableConfig';
 
 export const CarsTable = ({
   selectedCarsInTable = [],
   setSelectedCarsInTable,
-  editFleetName = '',
+  fleetQuery = '',
+  fleetName = '',
 }) => {
   const { t } = useTranslation();
-  const [selectedCarsBtnDisabled, setSelectedCarsBtnDisabled] = useState(true);
-  const [online, setOnline] = useState('Online');
 
   const [state] = useStore();
   const cars = state.cars.cars;
@@ -40,110 +21,41 @@ export const CarsTable = ({
   const [query, setQuery] = useState({ tokens: [], operation: 'and' });
 
   useEffect(() => {
-    // getCars();
-    return () => {
-      // Unmounting
-    };
-  }, [online]);
-
-  useEffect(() => {
-    if (editFleetName.length > 0) {
+    if (fleetQuery.length > 0) {
       setQuery({
-        tokens: [{ propertyKey: 'fleetName', value: editFleetName, operator: '=' }],
+        tokens: [{ propertyKey: 'fleetName', value: fleetQuery, operator: '=' }],
         operation: 'and',
       });
     }
     return () => {
       // Unmounting
     };
-  }, [editFleetName]);
+  }, [fleetQuery]);
 
-  const [preferences, setPreferences] = useState({
-    ...DefaultPreferences,
-    visibleContent: ['carName', 'fleetName', 'carIp'],
-  });
-
-  const columnDefinitions = ColumnsConfig();
+  const columnConfiguration = ColumnConfiguration();
   const filteringProperties = FilteringProperties();
-  const visibleContentOptions = VisibleContentOptions();
-
-  const {
-    items,
-    actions,
-    filteredItemsCount,
-    collectionProps,
-    propertyFilterProps,
-    paginationProps,
-  } = useCollection(cars, {
-    propertyFiltering: {
-      filteringProperties,
-      empty: <TableEmptyState resourceName="Car" />,
-      noMatch: (
-        <TableNoMatchState
-          onClearFilter={() => {
-            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
-          }}
-          label={t('common.no-matches')}
-          description={t('common.we-cant-find-a-match')}
-          buttonLabel={t('button.clear-filters')}
-        />
-      ),
-    },
-    pagination: { pageSize: preferences.pageSize },
-    sorting: { defaultState: { sortingColumn: columnDefinitions[1] } },
-    selection: {},
-  });
 
   return (
-    <Table
-      {...collectionProps}
-      header={
-        <Header
-          counter={
-            selectedCarsInTable.length
-              ? `(${selectedCarsInTable.length}/${cars.length})`
-              : `(${cars.length})`
-          }
-          actions={<Actions t={t} setOnline={setOnline} />}
-        >
-          {t('cars.header')}
-        </Header>
-      }
-      columnDefinitions={columnDefinitions}
-      items={items}
-      pagination={<TablePagination paginationProps={paginationProps} />}
-      filter={
-        <PropertyFilter
-          {...propertyFilterProps}
-          onChange={({ detail }) => setQuery(detail)}
-          query={query}
-          i18nStrings={PropertyFilterI18nStrings('cars')}
-          countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel={t('cars.filter-cars')}
-          expandToViewport={true}
-        />
-      }
-      loading={isLoading}
-      loadingText={t('cars.loading')}
-      visibleColumns={preferences.visibleContent}
-      selectionType="multi"
-      stickyHeader="true"
-      trackBy="InstanceId"
+    <PageTable
       selectedItems={selectedCarsInTable}
-      onSelectionChange={({ detail: { selectedItems } }) => {
-        setSelectedCarsInTable(selectedItems);
-        selectedCarsInTable.length
-          ? setSelectedCarsBtnDisabled(false)
-          : setSelectedCarsBtnDisabled(true);
-      }}
-      resizableColumns
-      preferences={
-        <TablePreferences
-          contentOptions={visibleContentOptions}
-          preferences={preferences}
-          setPreferences={setPreferences}
+      setSelectedItems={setSelectedCarsInTable}
+      tableItems={cars}
+      selectionType="multi"
+      columnConfiguration={columnConfiguration}
+      header={
+        <TableHeader
+          nrSelectedItems={selectedCarsInTable.length}
+          nrTotalItems={cars.length}
+          header={t('cars.header')}
         />
       }
+      itemsIsLoading={isLoading}
+      loadingText={t('cars.loading')}
+      localStorageKey="cars-table-preferences"
+      trackBy="instanceId"
+      filteringProperties={filteringProperties}
+      filteringI18nStringsName={'cars'}
+      query={query}
     />
   );
 };

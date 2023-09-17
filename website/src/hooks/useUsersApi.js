@@ -77,7 +77,35 @@ export const useUsersApi = (userHasAccess = false) => {
     }
 
     return () => {
-      //   console.debug('onUserCreated subscription cleanup');
+      if (subscription) {
+        console.debug('deregister onUserCreated subscription');
+        subscription.unsubscribe();
+      }
+    };
+  }, [dispatch, userHasAccess]);
+
+  // subscribe to user updates
+  useEffect(() => {
+    let subscription;
+    if (userHasAccess) {
+      subscription = API.graphql(graphqlOperation(onUserUpdated)).subscribe({
+        next: (event) => {
+          console.debug('onUserUpdated received', event);
+          const user = event.value.data.onUserUpdated;
+          if (user.Attributes != null) {
+            const enrichedUser = {
+              ...user,
+              Email: getUserEmail(user),
+              CountryCode: getUserCountryCode(user),
+              Roles: parseRoles(user),
+            };
+
+            dispatch('UPDATE_USER', enrichedUser);
+          } else console.info('a non valid user was received:', user);
+        },
+      });
+    }
+    return () => {
       if (subscription) {
         console.debug('deregister onUserCreated subscription');
         subscription.unsubscribe();
@@ -105,35 +133,6 @@ export const useUsersApi = (userHasAccess = false) => {
       });
     }
     return () => {
-      //   console.debug('onUserCreated subscription cleanup');
-      if (subscription) {
-        console.debug('deregister onUserCreated subscription');
-        subscription.unsubscribe();
-      }
-    };
-  }, [dispatch, userHasAccess]);
-
-  // subscribe to user updates
-  useEffect(() => {
-    let subscription;
-    if (userHasAccess) {
-      subscription = API.graphql(graphqlOperation(onUserUpdated)).subscribe({
-        next: (event) => {
-          console.debug('onUserUpdated received', event);
-          const user = event.value.data.onUserUpdated;
-          const enrichedUser = {
-            ...user,
-            Email: getUserEmail(user),
-            CountryCode: getUserCountryCode(user),
-            Roles: parseRoles(user),
-          };
-
-          dispatch('UPDATE_USER', enrichedUser);
-        },
-      });
-    }
-    return () => {
-      //   console.debug('onUserCreated subscription cleanup');
       if (subscription) {
         subscription.unsubscribe();
       }

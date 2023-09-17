@@ -132,13 +132,7 @@ const ProfileHome = (props) => {
         ]}
       >
         <ColumnLayout columns={2}>
-          <Container
-            header={
-              <Header variant="h2" description={t('user-profile.settings.header')}>
-                {t('user-profile.header.details')}
-              </Header>
-            }
-          >
+          <Container header={<Header variant="h2">{t('user-profile.header.details')}</Header>}>
             <SpaceBetween size="l">
               <ValueWithLabel label={t('user-profile.settings.name')}>{username}</ValueWithLabel>
             </SpaceBetween>

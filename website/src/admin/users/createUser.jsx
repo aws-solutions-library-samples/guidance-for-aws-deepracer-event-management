@@ -1,5 +1,6 @@
 import {
   Button,
+  Checkbox,
   Container,
   Form,
   FormField,
@@ -7,7 +8,6 @@ import {
   Input,
   Link,
   SpaceBetween,
-  Toggle,
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
@@ -184,7 +184,7 @@ export function CreateUser() {
                 errorText={tncChecked ? '' : t('users.terms-and-conditions-error')}
               >
                 <Grid gridDefinition={[{ colspan: 1 }, { colspan: 7 }]}>
-                  <Toggle
+                  <Checkbox
                     onChange={({ detail }) => setTncChecked(detail.checked)}
                     checked={tncChecked}
                   />

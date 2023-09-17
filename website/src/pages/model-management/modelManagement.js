@@ -5,12 +5,14 @@ import { useTranslation } from 'react-i18next';
 import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
 import { DeleteModelModal } from './components/deleteModelModal';
-import { ModelsTable } from './components/modelsTable';
 
+import { PageTable } from '../../components/pageTable';
+import { TableHeader } from '../../components/tableConfig';
+import { ColumnConfiguration, FilteringProperties } from '../../components/tableModelsConfigRacer';
 import { formatAwsDateTime } from '../../support-functions/time';
 import { ModelUpload } from './components/modelUpload';
 
-export const ModelMangement = () => {
+export const ModelManagement = () => {
   const { t } = useTranslation(['translation', 'help-model-management']);
 
   const [models, setModels] = useState([]);
@@ -69,6 +71,10 @@ export const ModelMangement = () => {
     });
   };
 
+  // Table config
+  const columnConfiguration = ColumnConfiguration();
+  const filteringProperties = FilteringProperties();
+
   const actionButtons = (
     <SpaceBetween direction="horizontal" size="xs">
       <ModelUpload addModel={addModelHandler} />
@@ -94,12 +100,26 @@ export const ModelMangement = () => {
       header={t('models.header')}
       breadcrumbs={[{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]}
     >
-      <ModelsTable
-        isLoading={isLoading}
-        models={models}
-        setSelectedModels={setSelectedModels}
-        selectedModels={selectedModels}
-        actionButtons={actionButtons}
+      <PageTable
+        selectedItems={selectedModels}
+        setSelectedItems={setSelectedModels}
+        tableItems={models}
+        selectionType="multi"
+        columnConfiguration={columnConfiguration}
+        trackBy="modelName"
+        header={
+          <TableHeader
+            nrSelectedItems={selectedModels.length}
+            nrTotalItems={models.length}
+            header={t('models.header')}
+            actions={actionButtons}
+          />
+        }
+        itemsIsLoading={isLoading}
+        loadingText={t('models.loading-models')}
+        localStorageKey="models-table-preferences"
+        filteringProperties={filteringProperties}
+        filteringI18nStringsName="models"
       />
     </PageLayout>
   );
