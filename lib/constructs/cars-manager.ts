@@ -263,6 +263,22 @@ export class CarManager extends Construct {
       car_activation_handler
     );
 
+    NagSuppressions.addResourceSuppressions(
+      car_activation_data_source,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Suppress wildcard that covers Lambda aliases in resource path',
+          appliesTo: [
+            {
+              regex: '/^Resource::(.+):\\*$/g',
+            },
+          ],
+        },
+      ],
+      true
+    );
+
     // Define API Schema
     const carActivationObjectType = new ObjectType('carActivation', {
       definition: {
@@ -328,6 +344,22 @@ export class CarManager extends Construct {
 
     // Define the data source for the API
     const cars_data_source = props.appsyncApi.api.addLambdaDataSource('cars_data_source', cars_function_handler);
+
+    NagSuppressions.addResourceSuppressions(
+      cars_data_source,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Suppress wildcard that covers Lambda aliases in resource path',
+          appliesTo: [
+            {
+              regex: '/^Resource::(.+):\\*$/g',
+            },
+          ],
+        },
+      ],
+      true
+    );
 
     // Define API Schema (returned data)
     const car_online_object_type = new ObjectType('carOnline', {
