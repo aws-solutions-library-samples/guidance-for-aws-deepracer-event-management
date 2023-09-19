@@ -30,7 +30,7 @@ import { Breadcrumbs } from '../support-functions/supportFunctions';
 import styles from './racePage.module.css';
 
 export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext }) => {
-  const { t } = useTranslation(['translation', 'help-admin-race-page']);
+  const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-page']);
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const [currentLap, SetCurrentLap] = useState(defaultLap);
   const lapsForOverlay = useRef([]);
@@ -264,13 +264,14 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
       helpPanelHidden={false}
       helpPanelContent={
         <SimpleHelpPanelLayout
-          headerContent={t('header', { ns: 'help-admin-race-page' })}
-          bodyContent={t('content', { ns: 'help-admin-race-page' })}
-          footerContent={t('footer', { ns: 'help-admin-race-page' })}
+          headerContent={t('header', { ns: 'help-admin-timekeeper-race-page' })}
+          bodyContent={t('content', { ns: 'help-admin-timekeeper-race-page' })}
+          footerContent={t('footer', { ns: 'help-admin-timekeeper-race-page' })}
         />
       }
       breadcrumbs={breadcrumbs}
       header={t('timekeeper.race-page.page-header')}
+      description={t('timekeeper.race-page.page-description')}
     >
       <SpaceBetween size="l" direction="vertical">
         <ColumnLayout columns={2}>

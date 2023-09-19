@@ -3,7 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../../store/store';
 
-export const RacerSelector = ({ onConfigUpdate, race, racerValidation, selectedEvent }) => {
+export const RacerSelector = ({
+  onConfigUpdate,
+  race,
+  racerValidation,
+  selectedEvent,
+  description,
+}) => {
   const { t } = useTranslation();
   const [userOptions, SetUserOptions] = useState([]);
 
@@ -31,7 +37,7 @@ export const RacerSelector = ({ onConfigUpdate, race, racerValidation, selectedE
 
   return (
     <>
-      <FormField label={t('timekeeper.racer-selector.select-racer')}>
+      <FormField label={t('timekeeper.racer-selector.select-racer')} description={description}>
         <Select
           selectedOption={GetRacerOptionFromId(race.userId)}
           onChange={({ detail }) =>

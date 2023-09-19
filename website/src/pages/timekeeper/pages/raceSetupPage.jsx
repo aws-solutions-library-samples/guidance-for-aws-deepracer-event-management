@@ -24,7 +24,7 @@ import { RacesDoneByUser } from '../components/racesDoneByUser';
 import { Breadcrumbs } from '../support-functions/supportFunctions';
 
 export const RaceSetupPage = ({ onNext }) => {
-  const { t } = useTranslation(['translation', 'help-admin-race-setup']);
+  const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-setup']);
   const [SendMutation] = useMutation();
   const selectedEvent = useSelectedEventContext();
   const selectedTrack = useSelectedTrackContext();
@@ -126,15 +126,13 @@ export const RaceSetupPage = ({ onNext }) => {
       helpPanelHidden={true}
       helpPanelContent={
         <SimpleHelpPanelLayout
-          headerContent={t('header', { ns: 'help-admin-race-setup' })}
-          bodyContent={t('content', { ns: 'help-admin-race-setup' })}
-          footerContent={t('footer', { ns: 'help-admin-race-setup' })}
+          headerContent={t('header', { ns: 'help-admin-timekeeper-race-setup' })}
+          bodyContent={t('content', { ns: 'help-admin-timekeeper-race-setup' })}
+          footerContent={t('footer', { ns: 'help-admin-timekeeper-race-setup' })}
         />
       }
       breadcrumbs={breadcrumbs}
-      header={`${t('timekeeper.race-setup-page.page-header')} ${selectedEvent.eventName} ${t(
-        'timekeeper.race-setup-page.racing-on-trackId'
-      )} ${selectedTrack.leaderBoardTitle} `}
+      header={t('timekeeper.race-setup-page.page-header')}
       description={t('timekeeper.race-setup-page.page-description')}
     >
       <EventSelectorModal
@@ -143,16 +141,29 @@ export const RaceSetupPage = ({ onNext }) => {
         onOk={() => setEventSelectModalVisible(false)}
       />
       <SpaceBetween direction="vertical" size="l">
-        <Container header={<Header>{t('timekeeper.racer-selector.racer-section-header')}</Header>}>
+        <Container
+          header={
+            <Header>
+              Race:{' '}
+              {`${selectedEvent.eventName} ${t('timekeeper.race-setup-page.racing-on-trackId')} ${
+                selectedTrack.leaderBoardTitle
+              } `}
+            </Header>
+          }
+        >
           <Grid gridDefinition={[{ colspan: 6 }, { colspan: 3 }, { colspan: 3 }, { colspan: 12 }]}>
             <RacerSelector
+              description={t('timekeeper.race-setup-page.racer-description')}
               race={race}
               onConfigUpdate={configUpdateHandler}
               racerValidation={racerValidation}
               selectedEvent={selectedEvent}
             />
             <RacesDoneByUser selecedEvent={selectedEvent} selecedUserId={race.userId} />
-            <FormField label={t('race-admin.raced-by-proxy')}>
+            <FormField
+              label={t('race-admin.raced-by-proxy')}
+              description={t('race-admin.raced-by-proxy-description')}
+            >
               <Toggle
                 checked={race.racedByProxy}
                 onChange={(value) => configUpdateHandler({ racedByProxy: value.detail.checked })}

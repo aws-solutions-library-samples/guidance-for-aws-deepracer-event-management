@@ -242,7 +242,10 @@ export default (props) => {
     useCollection(props.cars, {
       filtering: {
         empty: (
-          <EmptyState title={t('carmodelupload.no-cars')} subtitle={t('carmodelupload.online')} />
+          <EmptyState
+            title={t('carmodelupload.no-cars')}
+            subtitle={t('carmodelupload.no-cars-online')}
+          />
         ),
         noMatch: (
           <EmptyState
