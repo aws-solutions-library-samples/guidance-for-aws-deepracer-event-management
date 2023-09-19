@@ -111,7 +111,7 @@ export const ModelManagement = () => {
           <TableHeader
             nrSelectedItems={selectedModels.length}
             nrTotalItems={models.length}
-            header={t('models.header')}
+            header={t('models.table-header')}
             actions={actionButtons}
           />
         }

@@ -18,8 +18,8 @@ export const TrackTable = ({ eventId, tracks }) => {
               href={`${
                 awsconfig.Urls.leaderboardWebsite
               }/leaderboard/${eventId.toString()}/?qr=header&scroll=true&track=${track.trackId.toString()}`}
-              linkTextPrimary={t('events.leaderboard-link-same-tab')}
-              linkTextExternal={t('events.leaderboard-link-new-tab')}
+              linkTextPrimary={t('events.link-same-tab')}
+              linkTextExternal={t('events.link-new-tab')}
             />
           ),
           streamingOverlayLinks: (
@@ -27,8 +27,8 @@ export const TrackTable = ({ eventId, tracks }) => {
               href={`${
                 awsconfig.Urls.streamingOverlayWebsite
               }/${eventId.toString()}?trackId=${track.trackId.toString()}`}
-              linkTextPrimary={t('events.streaming-overlay-link-same-tab')}
-              linkTextExternal={t('events.streaming-overlay-link-new-tab')}
+              linkTextPrimary={t('events.link-same-tab')}
+              linkTextExternal={t('events.link-new-tab')}
             />
           ),
           streamingOverlayChromaLinks: (
@@ -36,8 +36,8 @@ export const TrackTable = ({ eventId, tracks }) => {
               href={`${
                 awsconfig.Urls.streamingOverlayWebsite
               }/${eventId.toString()}?trackId=${track.trackId.toString()}&chroma=1`}
-              linkTextPrimary={t('events.streaming-overlay-link-same-tab')}
-              linkTextExternal={t('events.streaming-overlay-link-new-tab')}
+              linkTextPrimary={t('events.link-same-tab')}
+              linkTextExternal={t('events.link-new-tab')}
             />
           ),
         };

@@ -9,15 +9,21 @@ import {
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
 import { AwsRum } from 'aws-rum-web';
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import './App.css';
 
 import { CountrySelector } from './components/countrySelector';
 import TopNav from './components/topNav';
 import awsconfig from './config.json';
+import i18next from './i18n';
 import { StoreProvider } from './store/contexts/storeProvider';
 import initDataStores from './store/initStore';
+
+import { translations } from '@aws-amplify/ui-react';
+import { I18n } from 'aws-amplify';
+import { useTranslation } from 'react-i18next';
+I18n.putVocabularies(translations);
 
 Amplify.configure(awsconfig);
 
@@ -42,6 +48,7 @@ const components = {
 
     return <img src="/logo-bw.png" alt="Logo" width={300} height={300} className="center" />;
   },
+
   SignUp: {
     FormFields() {
       const { validationErrors } = useAuthenticator();
@@ -59,7 +66,7 @@ const components = {
             hasError={!!validationErrors.acknowledgement}
             name="acknowledgement"
             value="yes"
-            label="I agree with the Terms & Conditions"
+            label={i18next.t('app.signup.acknowledgement-label')}
           />
         </>
       );
@@ -75,7 +82,7 @@ const components = {
           href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'}
           target="_blank"
         >
-          Terms and Conditions
+          {i18next.t('app.signup.terms-and-conditions')}
         </Link>
       </View>
     );
@@ -83,42 +90,59 @@ const components = {
 };
 
 export default function App() {
-  return (
-    <Authenticator
-      components={components}
-      services={{
-        async validateCustomSignUp(formData) {
-          const errors = {};
-          //regex user a-z0-9
-          const validUsername = new RegExp(
-            '^(?=.{2,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$'
-          );
+  const { t } = useTranslation();
+  // https://github.com/aws-amplify/amplify-ui/blob/main/packages/ui/src/i18n/dictionaries/authenticator/en.ts
+  I18n.putVocabularies({
+    en: {
+      'Sign In': t('app.signup.signin'),
+      'Create Account': t('app.signup.create-account'),
+      Username: t('app.signup.username'),
+      'Enter your Username': t('app.signup.enter-your-username'),
+      Password: t('app.signup.password'),
+      'Enter your Password': t('app.signup.enter-your-password'),
+      'Forgot password?': t('app.signup.forgot-your-password'),
+      'Please confirm your Password': t('app.signup.confirm-password'),
+      'Enter your Email': t('app.signup.enter-your-email'),
+    },
+  });
 
-          if (!validUsername.test(formData.username)) {
-            errors['username'] =
-              'Please enter a valid username. You are allowed A-Z, a-z and 0-9 (2 - 20 characters)';
-          }
-          if (!formData.acknowledgement) {
-            errors['acknowledgement'] = 'You must agree to the Terms & Conditions';
-          }
-          if (!formData['custom:countryCode']) {
-            errors['countryCode'] = 'You must pick a country';
-          }
-          return errors;
-        },
-      }}
-      hideSignUp={false}
-      signUpAttributes={['email']}
-    >
-      {({ signOut, user }) => (
-        <main>
-          <StoreProvider>
-            <Router>
-              <TopNav user={user.username} signout={signOut} />
-            </Router>
-          </StoreProvider>
-        </main>
-      )}
-    </Authenticator>
+  return (
+    <Suspense fallback="loading">
+      <Authenticator
+        components={components}
+        services={{
+          async validateCustomSignUp(formData) {
+            const errors = {};
+
+            const validUsername = new RegExp(
+              '^(?=.{2,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$'
+            );
+
+            if (!validUsername.test(formData.username)) {
+              errors['username'] = t('app.signup.username-error');
+            }
+            if (!formData.acknowledgement) {
+              errors['acknowledgement'] = t('app.signup.acknowledgement');
+            }
+            if (!formData['custom:countryCode']) {
+              errors['countryCode'] = t('app.signup.select-your-country');
+            }
+            return errors;
+          },
+        }}
+        hideSignUp={false}
+        signUpAttributes={['email']}
+      >
+        {({ signOut, user }) => (
+          <main>
+            <StoreProvider>
+              <Router>
+                <TopNav user={user.username} signout={signOut} />
+              </Router>
+            </StoreProvider>
+          </main>
+        )}
+      </Authenticator>
+    </Suspense>
   );
 }
