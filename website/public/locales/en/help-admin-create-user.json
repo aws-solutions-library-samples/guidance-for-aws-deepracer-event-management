@@ -1,5 +1,5 @@
 {
-  "header": "## Create racer",
+  "header": "## Add racer",
   "content": "On this page, you can create new racers for DREM. For each new racer, enter the following information:\n\n* **Username**\n* **Email**\n* **Country**",
   "footer": ""
 }

@@ -1,5 +1,5 @@
 {
-  "header": "## Models",
+  "header": "## Model management",
   "content": "On this page, you can upload your AWS DeepRacer models to DREM. Select **Upload model**, navigate to your saved model and select **Open**. When the upload is complete, your model appears in the **Models** list. ",
   "footer": ""
 }

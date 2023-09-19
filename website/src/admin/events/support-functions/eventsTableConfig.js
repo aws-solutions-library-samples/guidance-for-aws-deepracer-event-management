@@ -130,8 +130,8 @@ export const ColumnConfiguration = (getUserNameFromId, allCarFleets = undefined)
           (
             <EventLinksButtons
               href={`${awsconfig.Urls.leaderboardWebsite}/landing-page/${item.eventId.toString()}/`}
-              linkTextPrimary={i18next.t('events.landing-page-link-same-tab')}
-              linkTextExternal={i18next.t('events.landing-page-link-new-tab')}
+              linkTextPrimary={i18next.t('events.link-same-tab')}
+              linkTextExternal={i18next.t('events.link-new-tab')}
             />
           ) || '-',
       },

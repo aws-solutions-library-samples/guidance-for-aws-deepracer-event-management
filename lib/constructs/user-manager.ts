@@ -14,6 +14,7 @@ import {
   ObjectType,
   ResolvableField,
 } from 'awscdk-appsync-utils';
+import { NagSuppressions } from 'cdk-nag';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 import { Construct } from 'constructs';
@@ -118,9 +119,42 @@ export class UserManager extends Construct {
 
     // Define the data source for the API
     const users_data_source = props.appsyncApi.api.addLambdaDataSource('users_data_source', users_handler);
+
+    NagSuppressions.addResourceSuppressions(
+      users_data_source,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Suppress wildcard that covers Lambda aliases in resource path',
+          appliesTo: [
+            {
+              regex: '/^Resource::(.+):\\*$/g',
+            },
+          ],
+        },
+      ],
+      true
+    );
+
     const user_delete_data_source = props.appsyncApi.api.addLambdaDataSource(
       'user_delete_data_source',
       delete_user_function
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      user_delete_data_source,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Suppress wildcard that covers Lambda aliases in resource path',
+          appliesTo: [
+            {
+              regex: '/^Resource::(.+):\\*$/g',
+            },
+          ],
+        },
+      ],
+      true
     );
 
     // Define API Schema

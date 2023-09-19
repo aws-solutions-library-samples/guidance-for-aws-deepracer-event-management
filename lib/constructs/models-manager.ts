@@ -149,9 +149,81 @@ export class ModelsManager extends Construct {
     });
 
     // Bucket and DynamoDB permissions
-    modelsBucket.grantReadWrite(deleteInfectedFilesFunction, '*');
-    infectedBucket.grantReadWrite(deleteInfectedFilesFunction, '*');
-    modelsTable.grantReadWriteData(deleteInfectedFilesFunction);
+
+    const deleteInfectedFilesFunctionAdditionalRolePolicyS3 = deleteInfectedFilesFunction.addAdditionalRolePolicy(
+      'deleteInfectedFilesFunctionAdditionalRolePolicyS3',
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          's3:DeleteObject',
+          's3:DeleteObjectTagging',
+          's3:GetObject',
+          's3:ListBucket',
+          's3:PutObject',
+          's3:PutObjectTagging',
+        ],
+        resources: [
+          modelsBucket.bucketArn,
+          modelsBucket.arnForObjects('/*'),
+          infectedBucket.bucketArn,
+          infectedBucket.arnForObjects('/*'),
+        ],
+      })
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      stack,
+      deleteInfectedFilesFunctionAdditionalRolePolicyS3.resourcePath,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Allows deleteInfectedFilesFunction to delete infected files in s3',
+          appliesTo: [
+            {
+              regex: '/^Resource::(.+)/\\*$/g',
+            },
+          ],
+        },
+      ]
+    );
+
+    const deleteInfectedFilesFunctionAdditionalRolePolicyDDB = deleteInfectedFilesFunction.addAdditionalRolePolicy(
+      'deleteInfectedFilesFunctionAdditionalRolePolicyDDB',
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'dynamodb:BatchGetItem',
+          'dynamodb:BatchWriteItem',
+          'dynamodb:ConditionCheckItem',
+          'dynamodb:DeleteItem',
+          'dynamodb:DescribeTable',
+          'dynamodb:GetItem',
+          'dynamodb:GetRecords',
+          'dynamodb:GetShardIterator',
+          'dynamodb:PutItem',
+          'dynamodb:Query',
+          'dynamodb:Scan',
+          'dynamodb:UpdateItem',
+        ],
+        resources: [modelsTable.tableArn, `${modelsTable.tableArn}/index/*`],
+      })
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      stack,
+      deleteInfectedFilesFunctionAdditionalRolePolicyDDB.resourcePath,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Allows deleteInfectedFilesFunction to delete infected files (models) metadata stored in DynamoDB',
+          appliesTo: [
+            {
+              regex: '/^Resource::(.+)/index/\\*$/g',
+            },
+          ],
+        },
+      ]
+    );
 
     // Add clam av scan to S3 uploads bucket
     const antiVirusScan = new ServerlessClamscan(this, 'ClamScan', {
@@ -185,7 +257,26 @@ export class ModelsManager extends Construct {
     });
 
     // permissions for s3 bucket read
-    infectedBucket.grantRead(quarantinedModelsHandler, 'private/*');
+    const quarantinedModelsHandlerAdditionalRolePolicy = quarantinedModelsHandler.addAdditionalRolePolicy(
+      'quarantinedModelsHandlerAdditionalRolePolicy',
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['s3:ListBucket'],
+        resources: [infectedBucket.arnForObjects('private/*')],
+      })
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(stack, quarantinedModelsHandlerAdditionalRolePolicy.resourcePath, [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Allows lambda to list all the models in the quarantine S3 bucket only, and only in the private path.',
+        appliesTo: [
+          {
+            regex: '/^Resource::(.+)/private/\\*$/g',
+          },
+        ],
+      },
+    ]);
 
     // upload_model_to_car_function
     const uploadModelToCarFunctionLambda = new StandardLambdaPythonFunction(this, 'uploadModelToCarFunctionLambda', {
@@ -394,6 +485,22 @@ export class ModelsManager extends Construct {
     // Define the data source for the API
     const modelsDataSource = props.appsyncApi.api.addLambdaDataSource('ModelsDataSource', modelsHandler);
 
+    NagSuppressions.addResourceSuppressions(
+      modelsDataSource,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Suppress wildcard that covers Lambda aliases in resource path',
+          appliesTo: [
+            {
+              regex: '/^Resource::(.+):\\*$/g',
+            },
+          ],
+        },
+      ],
+      true
+    );
+
     // GraphQL API
     const modelObjectType = new ObjectType('Models', {
       definition: {
@@ -435,6 +542,22 @@ export class ModelsManager extends Construct {
     const quarantinedModelsDataSource = props.appsyncApi.api.addLambdaDataSource(
       'quarantinedModelsDataSource',
       quarantinedModelsHandler
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      quarantinedModelsDataSource,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Suppress wildcard that covers Lambda aliases in resource path',
+          appliesTo: [
+            {
+              regex: '/^Resource::(.+):\\*$/g',
+            },
+          ],
+        },
+      ],
+      true
     );
 
     props.appsyncApi.schema.addQuery(
@@ -542,9 +665,41 @@ export class ModelsManager extends Construct {
       uploadModelToCarStatusLambda
     );
 
+    NagSuppressions.addResourceSuppressions(
+      uploadModelToCarStatusDataSource,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Suppress wildcard that covers Lambda aliases in resource path',
+          appliesTo: [
+            {
+              regex: '/^Resource::(.+):\\*$/g',
+            },
+          ],
+        },
+      ],
+      true
+    );
+
     const uploadModelToCarDataSource = props.appsyncApi.api.addLambdaDataSource(
       'uploadModelToCarDataSource',
       uploadModelToCarFunctionLambda
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      uploadModelToCarDataSource,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Suppress wildcard that covers Lambda aliases in resource path',
+          appliesTo: [
+            {
+              regex: '/^Resource::(.+):\\*$/g',
+            },
+          ],
+        },
+      ],
+      true
     );
 
     props.appsyncApi.schema.addMutation(

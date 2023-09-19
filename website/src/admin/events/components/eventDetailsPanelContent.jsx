@@ -52,8 +52,8 @@ export const EventDetailsPanelContent = ({ event }) => {
           t('events.landing-page-link'),
           <EventLinksButtons
             href={`${awsconfig.Urls.leaderboardWebsite}/landing-page/${event.eventId.toString()}/`}
-            linkTextPrimary={t('events.landing-page-link-same-tab')}
-            linkTextExternal={t('events.landing-page-link-new-tab')}
+            linkTextPrimary={t('events.link-same-tab')}
+            linkTextExternal={t('events.link-new-tab')}
           />
         )}
       </ColumnLayout>

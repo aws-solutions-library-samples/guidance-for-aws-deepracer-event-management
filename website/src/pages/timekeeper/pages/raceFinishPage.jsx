@@ -18,7 +18,7 @@ import { LapTable } from '../components/lapTable';
 import { Breadcrumbs } from '../support-functions/supportFunctions';
 
 export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction, onNext }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-finish']);
   const [buttonsIsDisabled, SetButtonsIsDisabled] = useState(false);
   const [sendMutation, loading, errorMessage] = useMutation();
   const [warningModalVisible, setWarningModalVisible] = useState(false);
@@ -154,9 +154,9 @@ export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction,
       helpPanelHidden={true}
       helpPanelContent={
         <SimpleHelpPanelLayout
-          headerContent={t('header', { ns: 'help-admin-race-finish' })}
-          bodyContent={t('content', { ns: 'help-admin-race-finish' })}
-          footerContent={t('footer', { ns: 'help-admin-race-finish' })}
+          headerContent={t('header', { ns: 'help-admin-timekeeper-race-finish' })}
+          bodyContent={t('content', { ns: 'help-admin-timekeeper-race-finish' })}
+          footerContent={t('footer', { ns: 'help-admin-timekeeper-race-finish' })}
         />
       }
       breadcrumbs={breadcrumbs}

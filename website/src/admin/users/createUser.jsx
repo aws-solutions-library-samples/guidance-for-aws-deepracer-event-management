@@ -183,19 +183,17 @@ export function CreateUser() {
                 label={t('users.terms-and-conditions-title')}
                 errorText={tncChecked ? '' : t('users.terms-and-conditions-error')}
               >
-                <Grid gridDefinition={[{ colspan: 1 }, { colspan: 7 }]}>
-                  <Checkbox
-                    onChange={({ detail }) => setTncChecked(detail.checked)}
-                    checked={tncChecked}
-                  />
-
+                <Checkbox
+                  onChange={({ detail }) => setTncChecked(detail.checked)}
+                  checked={tncChecked}
+                >
                   <Link
                     href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'}
                     target="_blank"
                   >
                     {t('users.terms-and-conditions')}
                   </Link>
-                </Grid>
+                </Checkbox>
               </FormField>
             </SpaceBetween>
           </Container>
