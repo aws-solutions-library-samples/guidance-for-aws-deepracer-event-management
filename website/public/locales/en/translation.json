@@ -224,7 +224,7 @@
   "race-admin.time": "Time",
   "race-admin.resets": "Resets",
   "race-admin.is-valid": "Valid",
-  "race-admin.aut-timer-connected": "Aut timer connected",
+  "race-admin.aut-timer-connected": "Automatic timer",
   "race-admin.edit-race": "Edit Race",
   "race-admin.delete-laps": "Delete lap(s)",
   "race-admin.delete-races": "Delete race(s)",
