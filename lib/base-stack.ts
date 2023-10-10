@@ -15,6 +15,7 @@ import { Website } from './constructs/website';
 const WAF_IP_RATE_LIMIT = 1000; // number of allowed reuested per 5 minute per IP
 export interface BaseStackProps extends cdk.StackProps {
   email: string;
+  branchName: string;
 }
 
 export class BaseStack extends cdk.Stack {
@@ -110,7 +111,7 @@ export class BaseStack extends cdk.Stack {
     this.eventbridge = new Eventbridge(this, 'eventbridge');
     this.eventbridge.eventbus.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
-        sid: 'AllowAccountToPutEvents',
+        sid: 'AllowPutEvents-' + props.branchName,
         effect: cdk.aws_iam.Effect.ALLOW,
         principals: [new cdk.aws_iam.AccountRootPrincipal()],
         actions: ['events:PutEvents'],
@@ -183,6 +184,7 @@ export class BaseStack extends cdk.Stack {
     return {
       helperFunctionsLayer: helperFunctionsLambdaLayer,
       powerToolsLayer: powertoolsLambdaLayer,
+      appsyncHelpersLayer: appsyncHelpersLambdaLayer,
       powerToolsLogLevel: 'INFO',
     };
   };

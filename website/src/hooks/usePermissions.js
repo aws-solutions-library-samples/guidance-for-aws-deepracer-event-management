@@ -34,6 +34,7 @@ const getPermissions = (groups) => {
       users: false,
       races: false,
       cars: false,
+      allModels: false,
     },
     sideNavItems: {
       registration: false,
@@ -93,6 +94,7 @@ const getPermissions = (groups) => {
       users: true,
       races: true,
       cars: true,
+      allModels: true,
     };
   } else if (groups.includes('registration')) {
     const apiPermissions = { ...permissions.api };

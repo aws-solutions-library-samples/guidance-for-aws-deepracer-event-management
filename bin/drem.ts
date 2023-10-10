@@ -56,6 +56,7 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
   // Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
   const baseStack = new BaseStack(app, `drem-backend-${branchName}-base`, {
     email: mailAddress,
+    branchName: branchName,
     env: env,
   });
 
