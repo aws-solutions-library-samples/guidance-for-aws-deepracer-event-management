@@ -1,8 +1,9 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useRef, useState } from 'react';
+import * as mutations from '../../../graphql/mutations';
+import * as queries from '../../../graphql/queries';
+// import * as subscriptions from '../graphql/subscriptions'
 import { useTranslation } from 'react-i18next';
-import * as mutations from '../../graphql/mutations';
-import * as queries from '../../graphql/queries';
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
@@ -22,9 +23,10 @@ import {
   EmptyState,
   MatchesCountText,
   TablePreferences,
-} from '../../components/tableConfig';
+} from '../../../components/tableConfig';
 
-import { ColumnConfiguration } from '../../components/cars-table/carTableConfig';
+import { ColumnConfiguration } from '../../../components/cars-table/carTableConfig';
+import { useStore } from '../../../store/store';
 
 // https://overreacted.io/making-setinterval-declarative-with-react-hooks/
 function useInterval(callback, delay) {
@@ -64,7 +66,8 @@ const StatusModelContent = (props) => {
       variables: {
         entry: {
           carInstanceId: car.InstanceId,
-          modelKey: model.modelKey,
+          modelKey: model.fileMetaData.key,
+          username: model.username,
         },
       },
     });
@@ -95,9 +98,8 @@ const StatusModelContent = (props) => {
     });
     const ssmCommandStatus = api_response.data.getUploadModelToCarStatus.ssmCommandStatus;
 
-    const modelKeyPieces = model.key.split('/');
-    const modelUser = modelKeyPieces[modelKeyPieces.length - 3];
-    const modelName = modelKeyPieces[modelKeyPieces.length - 1];
+    const modelUser = model.username;
+    const modelName = model.modelname;
 
     const resultToAdd = {
       ModelName: modelUser + '-' + modelName,
@@ -175,7 +177,7 @@ const StatusModelContent = (props) => {
     {
       id: 'Status',
       header: t('carmodelupload.status'),
-      cell: (item) => item.Status || '-',
+      cell: (item) => t('carmodelupload.status.' + item.Status) || '-',
       sortingField: 'Status',
     },
   ];
@@ -202,7 +204,7 @@ const StatusModelContent = (props) => {
   );
 };
 
-export default (props) => {
+export const CarModelUploadModal = ({ modelsToUpload }) => {
   const { t } = useTranslation();
 
   const [visible, setVisible] = useState(false);
@@ -211,12 +213,14 @@ export default (props) => {
   const [modalContent, setModalContent] = useState(modalTable);
   const [selectedCars, setSelectedCars] = useState([]);
   const [checked, setChecked] = useState(true);
+  const [state] = useStore();
+  const cars = state.cars.cars.filter((car) => car.PingStatus === 'Online');
 
-  var models = [...props.selectedModels]; // clone models array
+  const columnConfiguration = ColumnConfiguration();
 
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
-    visibleContent: ['carName', 'eventName', 'carIp'],
+    visibleContent: columnConfiguration.defaultVisibleColumns,
   });
 
   // delete models from Cars
@@ -229,17 +233,15 @@ export default (props) => {
     });
     setModalContent(
       <StatusModelContent
-        selectedModels={models}
+        selectedModels={modelsToUpload}
         selectedCars={selectedCars}
-        modelsTotalCount={props.selectedModels.length}
+        modelsTotalCount={modelsToUpload.length}
       ></StatusModelContent>
     );
   }
 
-  const columnConfiguration = ColumnConfiguration();
-
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(props.cars, {
+    useCollection(cars, {
       filtering: {
         empty: (
           <EmptyState
@@ -249,8 +251,8 @@ export default (props) => {
         ),
         noMatch: (
           <EmptyState
-            title={t('carmodelupload.no-matches')}
-            subtitle={t('carmodelupload.we-cant-find-a-match')}
+            title={t('common.no-matches')}
+            subtitle={t('common.we-cant-find-a-match')}
             action={
               <Button onClick={() => actions.setFiltering('')}>
                 {t('carmodelupload.clear-filter')}
@@ -296,7 +298,7 @@ export default (props) => {
   return (
     <>
       <Button
-        disabled={props.disabled}
+        disabled={modelsToUpload.length === 0}
         variant="primary"
         onClick={() => {
           setVisible(true);
@@ -313,7 +315,7 @@ export default (props) => {
           setChecked(false);
         }}
         visible={visible}
-        closeAriaLabel="Close modal"
+        closeAriaLabel={t('carmodelupload.close-modal-ari-label')}
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
@@ -331,6 +333,7 @@ export default (props) => {
               </Button>
               <Button
                 variant="primary"
+                disabled={selectedCars.length === 0}
                 onClick={() => {
                   // uploadModelToCar();
                   setVisible(false);
@@ -341,9 +344,9 @@ export default (props) => {
                   } else {
                     setModalContent(
                       <StatusModelContent
-                        selectedModels={models}
+                        selectedModels={modelsToUpload}
                         selectedCars={selectedCars}
-                        modelsTotalCount={props.selectedModels.length}
+                        modelsTotalCount={modelsToUpload.length}
                       ></StatusModelContent>
                     );
                     setStatusModalVisible(true);
@@ -368,7 +371,7 @@ export default (props) => {
           setStatusModalVisible(false);
         }}
         visible={statusModalVisible}
-        closeAriaLabel="Close modal"
+        closeAriaLabel={t('carmodelupload.close-modal-ari-label')}
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
@@ -393,7 +396,7 @@ export default (props) => {
       <Modal
         onDismiss={() => setDeleteModalVisible(false)}
         visible={deleteModalVisible}
-        closeAriaLabel="Close modal"
+        closeAriaLabel={t('carmodelupload.close-modal-ari-label')}
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">

@@ -1,21 +1,26 @@
-import { DockerImage, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
+import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as apig from 'aws-cdk-lib/aws-apigateway';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
+import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as lambdaDestinations from 'aws-cdk-lib/aws-lambda-destinations';
-import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
-import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
-import * as sqs from 'aws-cdk-lib/aws-sqs';
-import { CodeFirstSchema, Directive, GraphqlType, InputType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
-import { NagSuppressions } from 'cdk-nag';
-import { ServerlessClamscan } from 'cdk-serverless-clamscan';
+import {
+  CodeFirstSchema,
+  Directive,
+  EnumType,
+  GraphqlType,
+  InputType,
+  ObjectType,
+  ResolvableField,
+} from 'awscdk-appsync-utils';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 
 export interface ModelsManagerProps {
@@ -25,7 +30,7 @@ export interface ModelsManagerProps {
   logsBucket: IBucket;
   appsyncApi: {
     schema: CodeFirstSchema;
-    api: appsync.IGraphqlApi;
+    api: appsync.GraphqlApi;
     noneDataSource: appsync.NoneDataSource;
   };
   lambdaConfig: {
@@ -35,29 +40,47 @@ export interface ModelsManagerProps {
     layersConfig: {
       powerToolsLogLevel: string;
       helperFunctionsLayer: lambda.ILayerVersion;
+      appsyncHelpersLayer: lambda.ILayerVersion;
       powerToolsLayer: lambda.ILayerVersion;
     };
   };
+  eventbus: EventBus;
 }
 
 export class ModelsManager extends Construct {
+  public readonly uploadBucket: s3.Bucket;
   public readonly modelsBucket: s3.Bucket;
-  public readonly infectedBucket: s3.Bucket;
   public readonly apiCarsUploadResource: apig.Resource;
 
   constructor(scope: Construct, id: string, props: ModelsManagerProps) {
     super(scope, id);
 
-    const stack = Stack.of(this);
+    // staging Bucket for all incoming models
+    const uploadBucket = new s3.Bucket(this, 'upload_bucket', {
+      encryption: s3.BucketEncryption.S3_MANAGED, // TODO change to KMS encryption CMK
+      serverAccessLogsBucket: props.logsBucket,
+      serverAccessLogsPrefix: 'access-logs/upload_bucket/',
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      enforceSSL: true,
+      autoDeleteObjects: true,
+      eventBridgeEnabled: true,
+      removalPolicy: RemovalPolicy.DESTROY,
+      lifecycleRules: [
+        { expiration: Duration.days(15), tagFilters: { lifecycle: 'true' } },
+        { abortIncompleteMultipartUploadAfter: Duration.days(1) },
+      ],
+    });
+    this.uploadBucket = uploadBucket;
 
     // Models S3 bucket
     const modelsBucket = new s3.Bucket(this, 'models_bucket', {
-      encryption: s3.BucketEncryption.S3_MANAGED,
+      encryption: s3.BucketEncryption.S3_MANAGED, // TODO change to KMS encryption CMK
       serverAccessLogsBucket: props.logsBucket,
       serverAccessLogsPrefix: 'access-logs/models_bucket/',
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
       autoDeleteObjects: true,
+      eventBridgeEnabled: true,
       removalPolicy: RemovalPolicy.DESTROY,
       lifecycleRules: [
         { expiration: Duration.days(15), tagFilters: { lifecycle: 'true' } },
@@ -66,43 +89,13 @@ export class ModelsManager extends Construct {
     });
     this.modelsBucket = modelsBucket;
 
-    modelsBucket.policy!.document.addStatements(
-      new iam.PolicyStatement({
-        sid: 'AllowSSLRequestsOnly',
-        effect: iam.Effect.DENY,
-        principals: [new iam.AnyPrincipal()],
-        actions: ['s3:*'],
-        resources: [modelsBucket.bucketArn, modelsBucket.bucketArn + '/*'],
-        conditions: { NumericLessThan: { 's3:TlsVersion': '1.2' } },
-      })
-    );
-
-    const infectedBucket = new s3.Bucket(this, 'infected_bucket', {
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      serverAccessLogsBucket: props.logsBucket,
-      serverAccessLogsPrefix: 'access-logs/infected_bucket/',
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      enforceSSL: true,
-      autoDeleteObjects: true,
-      removalPolicy: RemovalPolicy.DESTROY,
-      lifecycleRules: [{ expiration: Duration.days(1) }, { abortIncompleteMultipartUploadAfter: Duration.days(1) }],
-    });
-
-    this.infectedBucket = infectedBucket;
-    infectedBucket.policy!.document.addStatements(
-      new iam.PolicyStatement({
-        sid: 'AllowSSLRequestsOnly',
-        effect: iam.Effect.DENY,
-        principals: [new iam.AnyPrincipal()],
-        actions: ['s3:*'],
-        resources: [infectedBucket.bucketArn, infectedBucket.bucketArn + '/*'],
-        conditions: { NumericLessThan: { 's3:TlsVersion': '1.2' } },
-      })
-    );
-
     // Models table, used by deleteInfectedFilesFunction and also models_manager
-    const modelsTable = new dynamodb.Table(this, 'ModelsTable', {
+    const modelsTable = new dynamodb.Table(this, 'ModelsDataTableV2', {
       partitionKey: {
+        name: 'sub',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
         name: 'modelId',
         type: dynamodb.AttributeType.STRING,
       },
@@ -110,182 +103,27 @@ export class ModelsManager extends Construct {
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
       stream: dynamodb.StreamViewType.NEW_IMAGE,
       removalPolicy: RemovalPolicy.DESTROY,
-      pointInTimeRecovery: true,
     });
 
+    const OPERATOR_MODELS_GSI_NAME = 'operatorAvailableModelsIndexV2';
     modelsTable.addGlobalSecondaryIndex({
-      indexName: 'racerNameIndex',
+      indexName: OPERATOR_MODELS_GSI_NAME,
       partitionKey: {
-        name: 'racerName',
+        name: 'gsiAvailableForOperator',
         type: dynamodb.AttributeType.STRING,
       },
       sortKey: {
-        name: 'modelId',
-        type: dynamodb.AttributeType.STRING,
+        name: 'gsiUploadedTimestamp',
+        type: dynamodb.AttributeType.NUMBER,
       },
-      nonKeyAttributes: ['modelKey', 'modelFilename'],
-      projectionType: dynamodb.ProjectionType.INCLUDE,
+      projectionType: dynamodb.ProjectionType.ALL,
     });
-
-    const deleteInfectedFilesFunction = new StandardLambdaPythonFunction(this, 'deleteInfectedFilesFunction', {
-      entry: 'lib/lambdas/delete_infected_files_function/',
-      index: 'index.py',
-      handler: 'lambda_handler',
-      timeout: Duration.minutes(1),
-      runtime: props.lambdaConfig.runtime,
-      memorySize: 256,
-      architecture: props.lambdaConfig.architecture,
-      environment: {
-        DDB_TABLE: modelsTable.tableName,
-        MODELS_S3_BUCKET: modelsBucket.bucketName,
-        INFECTED_S3_BUCKET: infectedBucket.bucketName,
-        POWERTOOLS_SERVICE_NAME: 'delete_infected_files',
-        LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
-      },
-      bundling: {
-        image: props.lambdaConfig.bundlingImage,
-      },
-      layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
-    });
-
-    // Bucket and DynamoDB permissions
-
-    const deleteInfectedFilesFunctionAdditionalRolePolicyS3 = deleteInfectedFilesFunction.addAdditionalRolePolicy(
-      'deleteInfectedFilesFunctionAdditionalRolePolicyS3',
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          's3:DeleteObject',
-          's3:DeleteObjectTagging',
-          's3:GetObject',
-          's3:ListBucket',
-          's3:PutObject',
-          's3:PutObjectTagging',
-        ],
-        resources: [
-          modelsBucket.bucketArn,
-          modelsBucket.arnForObjects('/*'),
-          infectedBucket.bucketArn,
-          infectedBucket.arnForObjects('/*'),
-        ],
-      })
-    );
-
-    NagSuppressions.addResourceSuppressionsByPath(
-      stack,
-      deleteInfectedFilesFunctionAdditionalRolePolicyS3.resourcePath,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'Allows deleteInfectedFilesFunction to delete infected files in s3',
-          appliesTo: [
-            {
-              regex: '/^Resource::(.+)/\\*$/g',
-            },
-          ],
-        },
-      ]
-    );
-
-    const deleteInfectedFilesFunctionAdditionalRolePolicyDDB = deleteInfectedFilesFunction.addAdditionalRolePolicy(
-      'deleteInfectedFilesFunctionAdditionalRolePolicyDDB',
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          'dynamodb:BatchGetItem',
-          'dynamodb:BatchWriteItem',
-          'dynamodb:ConditionCheckItem',
-          'dynamodb:DeleteItem',
-          'dynamodb:DescribeTable',
-          'dynamodb:GetItem',
-          'dynamodb:GetRecords',
-          'dynamodb:GetShardIterator',
-          'dynamodb:PutItem',
-          'dynamodb:Query',
-          'dynamodb:Scan',
-          'dynamodb:UpdateItem',
-        ],
-        resources: [modelsTable.tableArn, `${modelsTable.tableArn}/index/*`],
-      })
-    );
-
-    NagSuppressions.addResourceSuppressionsByPath(
-      stack,
-      deleteInfectedFilesFunctionAdditionalRolePolicyDDB.resourcePath,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'Allows deleteInfectedFilesFunction to delete infected files (models) metadata stored in DynamoDB',
-          appliesTo: [
-            {
-              regex: '/^Resource::(.+)/index/\\*$/g',
-            },
-          ],
-        },
-      ]
-    );
-
-    // Add clam av scan to S3 uploads bucket
-    const antiVirusScan = new ServerlessClamscan(this, 'ClamScan', {
-      buckets: [modelsBucket],
-      onResult: new lambdaDestinations.LambdaDestination(deleteInfectedFilesFunction),
-      onError: new lambdaDestinations.LambdaDestination(deleteInfectedFilesFunction),
-      defsBucketAccessLogsConfig: {
-        logsBucket: props.logsBucket,
-        logsPrefix: 'access-logs/serverless-clam-scan/',
-      },
-    });
-
-    // Quarantine Models Function
-    const quarantinedModelsHandler = new StandardLambdaPythonFunction(this, 'quarantinedModelsHandler', {
-      entry: 'lib/lambdas/get_quarantined_models_function/',
-      index: 'index.py',
-      handler: 'lambda_handler',
-      timeout: Duration.minutes(1),
-      runtime: props.lambdaConfig.runtime,
-      memorySize: 128,
-      architecture: props.lambdaConfig.architecture,
-      environment: {
-        infected_bucket: infectedBucket.bucketName,
-        POWERTOOLS_SERVICE_NAME: 'get_quarantined_models',
-        LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
-      },
-      bundling: {
-        image: props.lambdaConfig.bundlingImage,
-      },
-      layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
-    });
-
-    // permissions for s3 bucket read
-    const quarantinedModelsHandlerAdditionalRolePolicy = quarantinedModelsHandler.addAdditionalRolePolicy(
-      'quarantinedModelsHandlerAdditionalRolePolicy',
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ['s3:ListBucket'],
-        resources: [infectedBucket.arnForObjects('private/*')],
-      })
-    );
-
-    NagSuppressions.addResourceSuppressionsByPath(stack, quarantinedModelsHandlerAdditionalRolePolicy.resourcePath, [
-      {
-        id: 'AwsSolutions-IAM5',
-        reason: 'Allows lambda to list all the models in the quarantine S3 bucket only, and only in the private path.',
-        appliesTo: [
-          {
-            regex: '/^Resource::(.+)/private/\\*$/g',
-          },
-        ],
-      },
-    ]);
 
     // upload_model_to_car_function
     const uploadModelToCarFunctionLambda = new StandardLambdaPythonFunction(this, 'uploadModelToCarFunctionLambda', {
       entry: 'lib/lambdas/upload_model_to_car_function/',
-      index: 'index.py',
-      handler: 'lambda_handler',
-      timeout: Duration.minutes(1),
+      description: 'prepares the SSM call for uploading a model to a car',
       runtime: props.lambdaConfig.runtime,
-      memorySize: 128,
       architecture: props.lambdaConfig.architecture,
       environment: {
         MODELS_S3_BUCKET: modelsBucket.bucketName,
@@ -308,11 +146,8 @@ export class ModelsManager extends Construct {
     // upload_model_to_car_function
     const uploadModelToCarStatusLambda = new StandardLambdaPythonFunction(this, 'uploadModelToCarStatusLambda', {
       entry: 'lib/lambdas/upload_model_to_car_status_function/',
-      index: 'index.py',
-      handler: 'lambda_handler',
-      timeout: Duration.minutes(1),
+      description: 'Returns the status uploading a model to a car',
       runtime: props.lambdaConfig.runtime,
-      memorySize: 128,
       architecture: props.lambdaConfig.architecture,
       environment: {
         POWERTOOLS_SERVICE_NAME: 'upload_model_to_car_status',
@@ -334,7 +169,7 @@ export class ModelsManager extends Construct {
     // permissions for s3 bucket read
     modelsBucket.grantRead(uploadModelToCarFunctionLambda, 'private/*');
 
-    modelsBucket.addCorsRule({
+    const corsRule = {
       allowedHeaders: ['*'],
       allowedMethods: [
         s3.HttpMethods.PUT,
@@ -350,7 +185,8 @@ export class ModelsManager extends Construct {
       ],
       exposedHeaders: ['x-amz-server-side-encryption', 'x-amz-request-id', 'x-amz-id-2', 'ETag'],
       maxAge: 3000,
-    });
+    };
+    uploadBucket.addCorsRule(corsRule);
 
     const getModelsPolicy = new iam.Policy(this, 'modelApiPolicy', {
       statements: [
@@ -364,52 +200,117 @@ export class ModelsManager extends Construct {
     getModelsPolicy.attachToRole(props.adminGroupRole);
     getModelsPolicy.attachToRole(props.operatorGroupRole);
 
-    const modelsMd5Handler = new StandardLambdaPythonFunction(this, 'modelsMD5Function', {
-      entry: 'lib/lambdas/models_md5/',
-      description: 'Check MD5 on model files',
-      index: 'index.py',
-      handler: 'lambda_handler',
-      timeout: Duration.minutes(1),
+    const modelsOnUploadHandler = new StandardLambdaPythonFunction(this, 'OnUploadFunction', {
+      entry: 'lib/lambdas/models_on_upload/',
+      description: 'creates initial DynamoDB entry for uploaded model',
       runtime: props.lambdaConfig.runtime,
-      memorySize: 128,
-      architecture: props.lambdaConfig.architecture,
+      memorySize: 256,
       environment: {
         DDB_TABLE: modelsTable.tableName,
-        MODELS_S3_BUCKET: modelsBucket.bucketName,
-        POWERTOOLS_SERVICE_NAME: 'md5_models',
+        POWERTOOLS_SERVICE_NAME: 'models_on_upload',
         LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+        APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
       },
       bundling: {
         image: props.lambdaConfig.bundlingImage,
       },
-      layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
+      layers: [
+        props.lambdaConfig.layersConfig.helperFunctionsLayer,
+        props.lambdaConfig.layersConfig.appsyncHelpersLayer,
+        props.lambdaConfig.layersConfig.powerToolsLayer,
+      ],
     });
 
-    const deadLetterQueue = new sqs.Queue(this, 'deadLetterQueue', {
-      enforceSSL: true,
-      encryption: sqs.QueueEncryption.SQS_MANAGED,
-    });
-    NagSuppressions.addResourceSuppressionsByPath(stack, `${deadLetterQueue.node.path}/Resource`, [
-      {
-        id: 'AwsSolutions-SQS3',
-        reason: 'The SQS queue is used as a dead-letter queue (DLQ) for a DynamoEventSource',
+    const uploadLambdaFctS3ObjectCreatedRule = new Rule(this, 'ModelsOnUploadFctS3ObjectCreated', {
+      description: 'Calls Lambda function for models uploaded to S3',
+      eventPattern: {
+        source: ['aws.s3'],
+        detailType: ['Object Created'],
+        detail: {
+          bucket: {
+            name: [uploadBucket.bucketName],
+          },
+        },
       },
-    ]);
+      targets: [new LambdaFunction(modelsOnUploadHandler)],
+    });
 
-    modelsMd5Handler.addEventSource(
-      new lambdaEventSources.DynamoEventSource(modelsTable, {
-        startingPosition: lambda.StartingPosition.TRIM_HORIZON,
-        batchSize: 1,
-        bisectBatchOnError: true,
-        onFailure: new lambdaEventSources.SqsDlq(deadLetterQueue),
-        retryAttempts: 5,
-        filters: [
-          lambda.FilterCriteria.filter({
-            eventName: lambda.FilterRule.isEqual('INSERT'),
-          }),
-        ],
-      })
-    );
+    props.appsyncApi.api.grantMutation(modelsOnUploadHandler, 'addModel');
+
+    const modelsMd5Handler = new StandardLambdaPythonFunction(this, 'ModelsMd5Function', {
+      entry: 'lib/lambdas/models_md5/',
+      description: 'calculates Model MD5 and extracts Model Metadata',
+      runtime: props.lambdaConfig.runtime,
+      memorySize: 256,
+      environment: {
+        DDB_TABLE: modelsTable.tableName,
+        POWERTOOLS_SERVICE_NAME: 'models_md5',
+        LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+        APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
+      },
+      bundling: {
+        image: props.lambdaConfig.bundlingImage,
+      },
+      layers: [
+        props.lambdaConfig.layersConfig.helperFunctionsLayer,
+        props.lambdaConfig.layersConfig.appsyncHelpersLayer,
+        props.lambdaConfig.layersConfig.powerToolsLayer,
+      ],
+    });
+
+    const md5LambdaFctS3ObjectCreatedRule = new Rule(this, 'MD5OnUploadFctS3ObjectCreated', {
+      description: 'Calls Lambda function for models moved to final folder',
+      eventPattern: {
+        source: ['aws.s3'],
+        detailType: ['Object Created'],
+        detail: {
+          bucket: {
+            name: [modelsBucket.bucketName],
+          },
+        },
+      },
+      targets: [new LambdaFunction(modelsMd5Handler)],
+    });
+
+    modelsBucket.grantRead(modelsMd5Handler, 'private/*');
+    props.appsyncApi.api.grantMutation(modelsMd5Handler, 'updateModel');
+
+    const modelsOnDeleteHandler = new StandardLambdaPythonFunction(this, 'OnDeleteHandler', {
+      entry: 'lib/lambdas/models_on_delete/',
+      description: 'Generates a deleteModel mutation to delete the model in the db as well as pushing update to FE',
+      runtime: props.lambdaConfig.runtime,
+      architecture: props.lambdaConfig.architecture,
+      environment: {
+        POWERTOOLS_SERVICE_NAME: 'models_on_delete',
+        LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+        APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
+      },
+      bundling: {
+        image: props.lambdaConfig.bundlingImage,
+      },
+      layers: [
+        props.lambdaConfig.layersConfig.helperFunctionsLayer,
+        props.lambdaConfig.layersConfig.appsyncHelpersLayer,
+        props.lambdaConfig.layersConfig.powerToolsLayer,
+      ],
+    });
+
+    const deleteLambdaFctS3ObjectDeleteRule = new Rule(this, 'DeleteLambdaFctS3ObjectDeleteRule', {
+      description: 'Calls Lambda function for models deleted from S3',
+      eventPattern: {
+        source: ['aws.s3'],
+        detailType: ['Object Deleted'],
+        detail: {
+          bucket: {
+            name: [modelsBucket.bucketName],
+          },
+        },
+      },
+      targets: [new LambdaFunction(modelsOnDeleteHandler)],
+    });
+
+    props.appsyncApi.api.grantMutation(modelsOnDeleteHandler, 'deleteModel');
+    modelsTable.grantReadWriteData(modelsOnDeleteHandler);
 
     // loged in user can only read/write their own bucket
     const ownModelsPolicy = new iam.Policy(this, 'userAccessToOwnModels', {
@@ -418,14 +319,14 @@ export class ModelsManager extends Construct {
           effect: iam.Effect.ALLOW,
           actions: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:PutObjectTagging'],
           resources: [
-            modelsBucket.bucketArn + '/private/${cognito-identity.amazonaws.com:sub}',
-            modelsBucket.bucketArn + '/private/${cognito-identity.amazonaws.com:sub}/*',
+            uploadBucket.bucketArn + '/private/${cognito-identity.amazonaws.com:sub}',
+            uploadBucket.bucketArn + '/private/${cognito-identity.amazonaws.com:sub}/*',
           ],
         }),
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: ['s3:ListBucket'],
-          resources: [modelsBucket.bucketArn],
+          resources: [uploadBucket.bucketArn],
           conditions: {
             StringLike: {
               's3:prefix': ['private/${cognito-identity.amazonaws.com:sub}/*'],
@@ -439,28 +340,14 @@ export class ModelsManager extends Construct {
     ownModelsPolicy.attachToRole(props.operatorGroupRole);
 
     // Permissions for DynamoDB read / write
-    modelsTable.grantReadWriteData(modelsMd5Handler);
-    // Permissions for DynamoDB stream read
-    modelsTable.grantStreamRead(modelsMd5Handler);
+    modelsTable.grantReadWriteData(modelsOnUploadHandler);
 
     // Permissions for s3 bucket read / write
-    modelsBucket.grantReadWrite(modelsMd5Handler, 'private/*');
+    modelsBucket.grantReadWrite(modelsOnUploadHandler, 'private/*');
 
-    /* Deploy Default DeepRacer models. FOr the models to be properly index this needs to run
-        after the antivirus deployment and lambda putting the models info into the models DDB table */
-    const defaultModelsDeployment = new s3Deployment.BucketDeployment(this, 'ModelsDeploy', {
-      sources: [s3Deployment.Source.asset('./lib/default_models')],
-      destinationBucket: modelsBucket,
-      destinationKeyPrefix: `private/${stack.region}:00000000-0000-0000-0000-000000000000/default/models/`,
-      retainOnDelete: false,
-      memoryLimit: 512,
-    });
-    defaultModelsDeployment.node.addDependency(antiVirusScan);
-    defaultModelsDeployment.node.addDependency(deleteInfectedFilesFunction);
-
-    const modelsHandler = new StandardLambdaPythonFunction(this, 'modelsFunction', {
+    const modelsHandler = new StandardLambdaPythonFunction(this, 'ApiFunction', {
       entry: 'lib/lambdas/models_api/',
-      description: 'Models resolver',
+      description: 'Models API resolver',
       index: 'index.py',
       handler: 'lambda_handler',
       timeout: Duration.minutes(1),
@@ -469,9 +356,11 @@ export class ModelsManager extends Construct {
       architecture: props.lambdaConfig.architecture,
       environment: {
         DDB_TABLE: modelsTable.tableName,
-        POWERTOOLS_SERVICE_NAME: 'models resolver',
+        OPERATOR_MODELS_GSI_NAME: OPERATOR_MODELS_GSI_NAME,
+        POWERTOOLS_SERVICE_NAME: 'models API resolver',
         LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
         MODELS_S3_BUCKET: modelsBucket.bucketName,
+        EVENT_BUS_NAME: props.eventbus.eventBusName,
       },
       bundling: {
         image: props.lambdaConfig.bundlingImage,
@@ -481,6 +370,7 @@ export class ModelsManager extends Construct {
 
     modelsTable.grantReadWriteData(modelsHandler);
     modelsBucket.grantRead(modelsHandler, 'private/*');
+    props.eventbus.grantPutEventsTo(modelsHandler);
 
     // Define the data source for the API
     const modelsDataSource = props.appsyncApi.api.addLambdaDataSource('ModelsDataSource', modelsHandler);
@@ -502,70 +392,91 @@ export class ModelsManager extends Construct {
     );
 
     // GraphQL API
-    const modelObjectType = new ObjectType('Models', {
+    const modelStatusEnum = new EnumType('ModelStatusEnum', {
+      definition: ['UPLOADED', 'NOT_VALID', 'QUARANTINED', 'AVAILABLE', 'DELETED'],
+    });
+    props.appsyncApi.schema.addType(modelStatusEnum);
+
+    const fileMetadataObjectType = new ObjectType('FileMetadata', {
       definition: {
-        modelId: GraphqlType.id(),
-        modelKey: GraphqlType.string(),
-        racerName: GraphqlType.string(),
-        racerIdentityId: GraphqlType.string(),
-        modelFilename: GraphqlType.string(),
+        key: GraphqlType.string(),
+        filename: GraphqlType.string(),
         uploadedDateTime: GraphqlType.awsDateTime(),
-        md5DateTime: GraphqlType.awsDateTime(),
-        modelMD5: GraphqlType.string(),
-        modelMetadataMD5: GraphqlType.string(),
       },
+      directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator')], // TODO anyone who is logged in should have access to this
+    });
+
+    props.appsyncApi.schema.addType(fileMetadataObjectType);
+
+    const fileMetadataInputType = new InputType('FileMetadataInput', {
+      definition: {
+        key: GraphqlType.string(),
+        filename: GraphqlType.string(),
+        uploadedDateTime: GraphqlType.awsDateTime(),
+      },
+    });
+
+    props.appsyncApi.schema.addType(fileMetadataInputType);
+
+    const modelMetadataObjectType = new ObjectType('ModelMetadata', {
+      definition: {
+        sensor: GraphqlType.string({ isList: true }),
+        actionSpaceType: GraphqlType.string(),
+        trainingAlgorithm: GraphqlType.string(),
+        metadataMd5: GraphqlType.string(),
+      },
+      directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator')], // TODO anyone who is logged in should have access to this
+    });
+
+    props.appsyncApi.schema.addType(modelMetadataObjectType);
+
+    const modelMetadataInputType = new InputType('ModelMetadataInput', {
+      definition: {
+        sensor: GraphqlType.string({ isList: true }),
+        actionSpaceType: GraphqlType.string(),
+        trainingAlgorithm: GraphqlType.string(),
+        metadataMd5: GraphqlType.string(),
+      },
+    });
+
+    props.appsyncApi.schema.addType(modelMetadataInputType);
+
+    const modelObjectType = new ObjectType('Model', {
+      definition: {
+        sub: GraphqlType.id({ isRequired: true }),
+        username: GraphqlType.string(),
+        modelId: GraphqlType.string({ isRequired: true }),
+        modelname: GraphqlType.string(),
+        fileMetaData: fileMetadataObjectType.attribute(),
+        modelMetaData: modelMetadataObjectType.attribute(),
+        modelMD5: GraphqlType.string(),
+        status: modelStatusEnum.attribute(),
+      },
+      directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator')], // TODO anyone who is logged in should have access to this
     });
 
     props.appsyncApi.schema.addType(modelObjectType);
 
+    const modelObjectPagination = new ObjectType('ModelPagination', {
+      definition: {
+        models: modelObjectType.attribute({ isList: true }),
+        nextToken: GraphqlType.string(),
+      },
+      directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator')], // TODO anyone who is logged in should have access to this
+    });
+
+    props.appsyncApi.schema.addType(modelObjectPagination);
+
     props.appsyncApi.schema.addQuery(
       'getAllModels',
       new ResolvableField({
-        returnType: modelObjectType.attribute({ isList: true }),
-        dataSource: modelsDataSource,
-        directives: [Directive.cognito('admin', 'operator')],
-      })
-    );
-
-    props.appsyncApi.schema.addQuery(
-      'getModelsForUser',
-      new ResolvableField({
         args: {
-          racerName: GraphqlType.string({ isRequired: true }),
+          limit: GraphqlType.int({ isRequired: false }),
+          nextToken: GraphqlType.string({ isRequired: false }),
         },
-        returnType: modelObjectType.attribute({ isList: true }),
+        returnType: modelObjectPagination.attribute(),
         dataSource: modelsDataSource,
-        directives: [Directive.cognito('admin', 'operator')],
-      })
-    );
-
-    const quarantinedModelsDataSource = props.appsyncApi.api.addLambdaDataSource(
-      'quarantinedModelsDataSource',
-      quarantinedModelsHandler
-    );
-
-    NagSuppressions.addResourceSuppressions(
-      quarantinedModelsDataSource,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'Suppress wildcard that covers Lambda aliases in resource path',
-          appliesTo: [
-            {
-              regex: '/^Resource::(.+):\\*$/g',
-            },
-          ],
-        },
-      ],
-      true
-    );
-
-    props.appsyncApi.schema.addQuery(
-      'getQuarantinedModels',
-      new ResolvableField({
-        returnType: modelObjectType.attribute({ isList: true }),
-        dataSource: quarantinedModelsDataSource,
-        directives: [Directive.cognito('admin', 'operator')],
+        directives: [Directive.cognito('admin', 'operator', 'racer')],
       })
     );
 
@@ -573,27 +484,63 @@ export class ModelsManager extends Construct {
       'addModel',
       new ResolvableField({
         args: {
-          modelKey: GraphqlType.string({ isRequired: true }),
-          racerName: GraphqlType.string({ isRequired: true }),
-          racerIdentityId: GraphqlType.string({ isRequired: true }),
+          sub: GraphqlType.id({ isRequired: true }),
+          username: GraphqlType.string({ isRequired: true }),
+          modelId: GraphqlType.id({ isRequired: true }),
+          modelname: GraphqlType.string(),
+          fileMetaData: fileMetadataInputType.attribute(),
+          modelMetaData: modelMetadataInputType.attribute(),
+          modelMD5: GraphqlType.string(),
+          status: modelStatusEnum.attribute({ isRequired: true }),
         },
         returnType: modelObjectType.attribute(),
         dataSource: modelsDataSource,
+        directives: [Directive.iam()],
       })
     );
+
+    // Allow users in operator or admin groups to subscribe to all model updates
+    // Allow users not in these groups to subscribe only to their own model updates
+    const subscriptionPermissions = `
+        #set($groups = $context.identity.claims.get("cognito:groups"))
+        #set($isOperator = false)
+
+        #foreach($group in $groups)
+            #if($group == "operator" || $group == "admin")
+                #set($isOperator = true)
+            #end
+        #end
+
+        #if($context.identity.sub == $context.args.sub)
+            {
+            "version": "2018-05-29",
+            "payload": $util.toJson($context.arguments.entry)
+        }
+        #elseif($isOperator == true)
+            {
+            "version": "2018-05-29",
+            "payload": $util.toJson($context.arguments.entry)
+        }
+        #else
+            $utils.unauthorized()
+        #end
+        `;
+
     props.appsyncApi.schema.addSubscription(
-      'addedModel',
+      'onAddedModel',
       new ResolvableField({
+        args: {
+          sub: GraphqlType.id(),
+        },
         returnType: modelObjectType.attribute(),
         dataSource: props.appsyncApi.noneDataSource,
-        requestMappingTemplate: appsync.MappingTemplate.fromString(
-          `{
-                        "version": "2017-02-28",
-                    "payload": $util.toJson($context.arguments.entry)
-                    }`
+        requestMappingTemplate: appsync.MappingTemplate.fromString(subscriptionPermissions),
+        responseMappingTemplate: appsync.MappingTemplate.fromString(
+          `
+            $util.toJson($context.result)
+            `
         ),
-        responseMappingTemplate: appsync.MappingTemplate.fromString('$util.toJson($context.result)'),
-        directives: [Directive.subscribe('addModel')],
+        directives: [Directive.subscribe('addModel')], // , Directive.cognito('admin')],
       })
     );
 
@@ -601,40 +548,67 @@ export class ModelsManager extends Construct {
       'updateModel',
       new ResolvableField({
         args: {
-          modelId: GraphqlType.string({ isRequired: true }),
-          modelKey: GraphqlType.string({ isRequired: true }),
-          modelFilename: GraphqlType.string(),
-          uploadedDateTime: GraphqlType.string(),
-          md5DateTime: GraphqlType.string(),
+          modelId: GraphqlType.id({ isRequired: true }),
+          sub: GraphqlType.id({ isRequired: true }),
+          username: GraphqlType.string(),
+          modelname: GraphqlType.string(),
+          fileMetaData: fileMetadataInputType.attribute(),
+          modelMetaData: modelMetadataInputType.attribute(),
           modelMD5: GraphqlType.string(),
-          modelMetadataMD5: GraphqlType.string(),
+          status: modelStatusEnum.attribute(),
         },
         returnType: modelObjectType.attribute(),
         dataSource: modelsDataSource,
+        directives: [Directive.iam()],
       })
     );
 
     props.appsyncApi.schema.addSubscription(
-      'updatedModel',
+      'onUpdatedModel',
       new ResolvableField({
+        args: {
+          sub: GraphqlType.id(),
+        },
         returnType: modelObjectType.attribute(),
         dataSource: props.appsyncApi.noneDataSource,
-        requestMappingTemplate: appsync.MappingTemplate.fromString(
-          `{
-                        "version": "2017-02-28",
-                        "payload": $util.toJson($context.arguments.entry)
-                    }`
-        ),
+        requestMappingTemplate: appsync.MappingTemplate.fromString(subscriptionPermissions),
         responseMappingTemplate: appsync.MappingTemplate.fromString('$util.toJson($context.result)'),
         directives: [Directive.subscribe('updateModel')],
       })
     );
 
+    props.appsyncApi.schema.addMutation(
+      'deleteModel',
+      new ResolvableField({
+        args: {
+          modelId: GraphqlType.id({ isRequired: true }),
+          sub: GraphqlType.id(),
+        },
+        returnType: modelObjectType.attribute(),
+        dataSource: modelsDataSource,
+        directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator')],
+      })
+    );
+
+    props.appsyncApi.schema.addSubscription(
+      'onDeletedModel',
+      new ResolvableField({
+        args: {
+          sub: GraphqlType.id(),
+        },
+        returnType: modelObjectType.attribute(),
+        dataSource: props.appsyncApi.noneDataSource,
+        requestMappingTemplate: appsync.MappingTemplate.fromString(subscriptionPermissions),
+        responseMappingTemplate: appsync.MappingTemplate.fromString('$util.toJson($context.result)'),
+        directives: [Directive.subscribe('deleteModel')],
+      })
+    );
     // GraphQL upload model to car
     const uploadModelToCarInputType = new InputType('UploadModelToCarInput', {
       definition: {
         carInstanceId: GraphqlType.string(),
         modelKey: GraphqlType.string(),
+        username: GraphqlType.string(),
       },
     });
 
@@ -643,7 +617,7 @@ export class ModelsManager extends Construct {
     const uploadModelToCarType = new ObjectType('UploadModelToCar', {
       definition: {
         carInstanceId: GraphqlType.string(),
-        modelKey: GraphqlType.string(),
+        modelId: GraphqlType.string(),
         ssmCommandId: GraphqlType.string(),
       },
     });
