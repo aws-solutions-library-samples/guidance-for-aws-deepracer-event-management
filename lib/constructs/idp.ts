@@ -6,6 +6,7 @@ import { CfnUserPoolUserToGroupAttachment } from 'aws-cdk-lib/aws-cognito';
 import { EventBus } from 'aws-cdk-lib/aws-events';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
@@ -52,6 +53,7 @@ export class Idp extends Construct {
       architecture: props.lambdaConfig.architecture,
       environment: {
         eventbus_name: props.eventbus.eventBusName,
+        default_user_group: 'racer',
         POWERTOOLS_SERVICE_NAME: 'cognito_presignup_lambda',
       },
       bundling: {
@@ -61,18 +63,15 @@ export class Idp extends Construct {
     });
     props.eventbus.grantPutEventsTo(pre_sign_up_lambda);
 
-    // assign confirmed users to the racers group by default
-    const post_confirmation_lambda = new StandardLambdaPythonFunction(this, 'post_confirmation_lambda', {
+    const pre_token_generation_lambda = new StandardLambdaPythonFunction(this, 'post_authentication_lambda', {
       entry: 'lib/lambdas/cognito_triggers/',
-      description: 'Cognito post confirmation trigger lambda',
-      index: 'index.py',
-      handler: 'post_confirmation_handler',
-      timeout: Duration.minutes(1),
+      description: 'Cognito pre token trigger lambda',
+      handler: 'pre_token_generation_handler',
       runtime: props.lambdaConfig.runtime,
-      memorySize: 128,
       architecture: props.lambdaConfig.architecture,
       environment: {
         eventbus_name: props.eventbus.eventBusName,
+        default_user_group: 'racer',
         POWERTOOLS_SERVICE_NAME: 'cognito_post_confirmation_lambda',
       },
       bundling: {
@@ -80,7 +79,6 @@ export class Idp extends Construct {
       },
       layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
     });
-    props.eventbus.grantPutEventsTo(post_confirmation_lambda);
 
     const userPool = new cognito.UserPool(this, 'UserPool', {
       userPoolName: stack.stackName,
@@ -120,10 +118,22 @@ export class Idp extends Construct {
         emailStyle: cognito.VerificationEmailStyle.CODE,
         smsMessage: 'Thanks for signing up to DREM. Your verification code is {####}',
       },
-      lambdaTriggers: { postConfirmation: post_confirmation_lambda, preSignUp: pre_sign_up_lambda },
+      lambdaTriggers: {
+        preSignUp: pre_sign_up_lambda,
+        preTokenGeneration: pre_token_generation_lambda,
+      },
     });
 
     this.userPool = userPool;
+
+    pre_token_generation_lambda.addAdditionalRolePolicy(
+      'updateUserPolicy',
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['cognito-idp:AdminAddUserToGroup'],
+        resources: [userPool.userPoolArn],
+      })
+    );
 
     //         NagSuppressions.add_resource_suppressions(
     //             self._userPool,
@@ -186,6 +196,20 @@ export class Idp extends Construct {
       ),
     });
     this.authenticatedUserRole = authUserRole;
+
+    const defaultUserPoolRoleParameter = `/${stack.stackName}/defaultUserRole`;
+    const defaultUserPoolRoleParameterSSM = new ssm.StringParameter(this, 'appsyncHelperLambdaLayerArn', {
+      stringValue: authUserRole.roleArn,
+      parameterName: defaultUserPoolRoleParameter,
+    });
+    pre_token_generation_lambda.addAdditionalRolePolicy(
+      'getSSMDefaultRoleARNPermission',
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['ssm:GetParameter'],
+        resources: [defaultUserPoolRoleParameterSSM.parameterArn],
+      })
+    );
 
     new cognito.CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleAttachment', {
       identityPoolId: identityPool.ref,
@@ -260,6 +284,8 @@ export class Idp extends Construct {
       ),
     });
     this.registrationGroupRole = registrationGroupRole;
+
+    pre_token_generation_lambda.addEnvironment('default_user_group_role_parameter', defaultUserPoolRoleParameter);
 
     //  Cognito User Group (Racers)
     new cognito.CfnUserPoolGroup(this, 'RacerGroup', {

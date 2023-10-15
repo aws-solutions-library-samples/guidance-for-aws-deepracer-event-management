@@ -6,7 +6,6 @@ import { useStore } from '../store/store';
 
 export const useRacesApi = (userHasAccess, eventId) => {
   const [, dispatch] = useStore();
-  console.debug('useRacesApi', userHasAccess, eventId);
   useEffect(() => {
     if (!eventId) {
       // used to display a message that an event need to be selected

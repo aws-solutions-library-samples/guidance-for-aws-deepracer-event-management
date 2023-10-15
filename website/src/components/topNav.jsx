@@ -1,10 +1,4 @@
-import {
-  AppLayout,
-  Badge,
-  Flashbar,
-  SideNavigation,
-  TopNavigation,
-} from '@cloudscape-design/components';
+import { AppLayout, Badge, Flashbar, SideNavigation, TopNavigation } from '@cloudscape-design/components';
 
 import React, { useEffect, useState } from 'react';
 
@@ -20,8 +14,6 @@ import { AdminFleets } from '../admin/fleets/adminFleets';
 import { CreateFleet } from '../admin/fleets/createFleet';
 import { EditFleet } from '../admin/fleets/editFleet';
 import { AdminHome } from '../admin/home';
-import { AdminModels } from '../admin/model-management/models';
-import { AdminQuarantine } from '../admin/model-management/quarantine';
 import { EditRace } from '../admin/race-admin/pages/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { ProfileHome } from '../admin/user-profile/profile';
@@ -32,6 +24,7 @@ import { useCarsApi } from '../hooks/useCarsApi';
 import { useEventsApi } from '../hooks/useEventsApi';
 import { useFleetsApi } from '../hooks/useFleetsApi';
 import useLink from '../hooks/useLink';
+import { useModelsApi } from '../hooks/useModelsApi';
 import { usePermissions } from '../hooks/usePermissions';
 import { useRacesApi } from '../hooks/useRacesApi';
 import { useUsersApi } from '../hooks/useUsersApi';
@@ -72,8 +65,6 @@ const commentatorRoutes = [<Route path="/commentator" element={<CommentatorRaceS
 
 const operatorRoutes = [
   <Route path="/admin/home" element={<AdminHome />} />,
-  <Route path="/admin/models" element={<AdminModels />} />,
-  <Route path="/admin/quarantine" element={<AdminQuarantine />} />,
   <Route path="/admin/cars" element={<AdminCars />} />,
   <Route path="/admin/events" element={<AdminEvents />} />,
   <Route path="/admin/events/create" element={<CreateEvent />} />,
@@ -85,6 +76,7 @@ const operatorRoutes = [
   <Route path="/admin/timekeeper" element={<Timekeeper />} />,
   <Route path="/admin/races" element={<RaceAdmin />} />,
   <Route path="/admin/races/edit" element={<EditRace />} />,
+  <Route path="/admin/models" element={<ModelManagement isOperatorView={true} onlyDisplayOwnModels={false} />} />,
 ];
 
 const adminRoutes = [<Route path="/admin/user-management" element={<UserManagement />} />];
@@ -125,6 +117,7 @@ export function TopNav(props) {
   useCarsApi(permissions.api.cars);
   useFleetsApi(permissions.api.fleets);
   useEventsApi(selectedEvent, setSelectedEvent, permissions.api.events);
+  useModelsApi(permissions.api.allModels);
 
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
 
@@ -172,16 +165,9 @@ export function TopNav(props) {
       href: '/operator',
       items: [
         {
-          type: 'expandable-link-group',
-          text: t('topnav.models'),
-          items: [
-            { type: 'link', text: t('topnav.all-models'), href: '/admin/models' },
-            {
-              type: 'link',
-              text: t('topnav.quarantined-models'),
-              href: '/admin/quarantine',
-            },
-          ],
+          type: 'link',
+          text: t('topnav.models-own'),
+          href: '/admin/models',
         },
         {
           type: 'expandable-link-group',
@@ -313,9 +299,7 @@ export function TopNav(props) {
       </div>
       <AppLayout
         stickyNotifications
-        notifications={
-          <Flashbar items={state.notifications} stackItems={state.notifications.length > 3} />
-        }
+        notifications={<Flashbar items={state.notifications} stackItems={state.notifications.length > 3} />}
         tools={state.helpPanel.content}
         toolsOpen={state.helpPanel.isOpen}
         toolsHide={state.helpPanel.isHidden}
@@ -324,11 +308,7 @@ export function TopNav(props) {
         ariaLabels={{ navigationClose: 'close' }}
         navigationOpen={state.sideNav.isOpen}
         navigation={
-          <SideNavigation
-            activeHref={window.location.pathname}
-            onFollow={handleFollow}
-            items={SideNavItems()}
-          />
+          <SideNavigation activeHref={window.location.pathname} onFollow={handleFollow} items={SideNavItems()} />
         }
         contentType="table"
         content={<MenuRoutes permissions={permissions} />}

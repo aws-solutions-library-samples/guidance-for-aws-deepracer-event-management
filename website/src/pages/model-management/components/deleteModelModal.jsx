@@ -1,12 +1,13 @@
 import { Box, Button, Modal, SpaceBetween } from '@cloudscape-design/components';
-import { Storage } from 'aws-amplify';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import useMutation from '../../../hooks/useMutation';
 import { useStore } from '../../../store/store';
 
-export const DeleteModelModal = ({ disabled, selectedModels, removeModel, variant }) => {
+export const DeleteModelModal = ({ disabled, selectedModels, onDelete, variant }) => {
   const { t } = useTranslation();
   const [, dispatch] = useStore();
+  const [send] = useMutation();
 
   const [visible, setVisible] = useState(false);
 
@@ -14,47 +15,9 @@ export const DeleteModelModal = ({ disabled, selectedModels, removeModel, varian
     setVisible(false);
     for (const i in selectedModels) {
       const model = selectedModels[i];
-      dispatch('ADD_NOTIFICATION', {
-        header: `Model ${model.modelName} is being deleted...`,
-        type: 'info',
-        loading: true,
-        dismissible: true,
-        dismissLabel: 'Dismiss message',
-        id: model.key,
-        onDismiss: () => {
-          dispatch('DISMISS_NOTIFICATION', model.key);
-        },
-      });
-
-      Storage.remove(model.key, { level: 'private' })
-        .then((response) => {
-          console.info(response);
-          dispatch('ADD_NOTIFICATION', {
-            header: `Model ${model.modelName} has been deleted`,
-            type: 'success',
-            dismissible: true,
-            dismissLabel: 'Dismiss message',
-            id: model.key,
-            onDismiss: () => {
-              dispatch('DISMISS_NOTIFICATION', model.key);
-            },
-          });
-
-          removeModel(model.key);
-        })
-        .catch((error) => {
-          console.info(error);
-          dispatch('ADD_NOTIFICATION', {
-            header: `Model ${model.modelName} could not be deleted`,
-            type: 'error',
-            dismissible: true,
-            dismissLabel: 'Dismiss message',
-            id: model.key,
-            onDismiss: () => {
-              dispatch('DISMISS_NOTIFICATION', model.key);
-            },
-          });
-        });
+      console.info('model', model);
+      send('deleteModel', { modelId: model.modelId, sub: model.sub, modelname: model.modelname });
+      onDelete();
     }
   };
 
@@ -73,7 +36,7 @@ export const DeleteModelModal = ({ disabled, selectedModels, removeModel, varian
       <Modal
         onDismiss={() => setVisible(false)}
         visible={visible}
-        closeAriaLabel="Close Modal"
+        closeAriaLabel={t('carmodelupload.close-modal-ari-label')}
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
@@ -97,7 +60,7 @@ const ItemsList = ({ items }) => {
   return (
     <ul>
       {items.map((item) => (
-        <li key={item.key}>{item.modelName}</li>
+        <li key={item.fileMetaData.key}>{item.fileMetaData.filename}</li>
       ))}
     </ul>
   );

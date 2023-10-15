@@ -184,6 +184,7 @@ export class BaseStack extends cdk.Stack {
     return {
       helperFunctionsLayer: helperFunctionsLambdaLayer,
       powerToolsLayer: powertoolsLambdaLayer,
+      appsyncHelpersLayer: appsyncHelpersLambdaLayer,
       powerToolsLogLevel: 'INFO',
     };
   };

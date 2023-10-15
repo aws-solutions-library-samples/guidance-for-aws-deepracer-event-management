@@ -8,6 +8,8 @@ with open("cfn.outputs") as json_file:
             appsyncEndpoint = key["OutputValue"]
         if key["OutputKey"].startswith("userPoolWebClientId"):
             userPoolWebClientId = key["OutputValue"]
+        if key["OutputKey"] == "uploadBucketName":
+            uploadBucketName = key["OutputValue"]
         if key["OutputKey"] == "modelsBucketName":
             modelsBucketName = key["OutputValue"]
         if key["OutputKey"] == "region":
@@ -39,6 +41,7 @@ with open("cfn.outputs") as json_file:
         "Storage": {
             "region": region,
             "bucket": modelsBucketName,
+            "uploadBucket": uploadBucketName,
             "identityPoolId": identityPoolId,
         },
         "API": {

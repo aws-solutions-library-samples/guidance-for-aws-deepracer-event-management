@@ -15,7 +15,6 @@ auth = AWS4Auth(access_id, secret_key, region, "appsync", session_token=session_
 
 
 def send_mutation(query, variables):
-    logger.info(variables)
     """Triggers a mutation on the Appsync API to trigger a subscription"""
 
     endpoint = os.environ.get("APPSYNC_URL", None)

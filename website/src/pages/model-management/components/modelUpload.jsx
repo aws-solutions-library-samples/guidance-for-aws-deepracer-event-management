@@ -2,11 +2,14 @@ import { Button, ProgressBar } from '@cloudscape-design/components';
 import { Auth, Storage } from 'aws-amplify';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useStore } from '../../../store/store';
-import { formatAwsDateTime } from '../../../support-functions/time';
 
-export function ModelUpload({ addModel }) {
+import { useStore } from '../../../store/store';
+
+import awsconfig from '../../../config.json';
+
+export function ModelUpload() {
   const { t } = useTranslation();
+  const [sub, setSub] = useState();
   const [username, setUsername] = useState();
   const [uploadFiles, setUploadFiles] = useState([]);
   const fileInputRef = useRef(null);
@@ -14,7 +17,10 @@ export function ModelUpload({ addModel }) {
 
   useEffect(() => {
     const getData = async () => {
-      Auth.currentAuthenticatedUser().then((user) => setUsername(user.username));
+      Auth.currentAuthenticatedUser().then((user) => {
+        setSub(user.attributes.sub);
+        setUsername(user.username);
+      });
     };
 
     getData();
@@ -30,13 +36,15 @@ export function ModelUpload({ addModel }) {
 
   useEffect(() => {
     const saveModel = async (file) => {
-      const s3path = username + '/models/' + file.name;
+      const s3path = `${sub}/${username}/models/${file.name}`;
+      //const s3path = `${sub}/${file.name}`;
 
       if (file.name.match(/^[a-zA-Z0-9-_]+\.tar\.gz$/)) {
         Storage.put(s3path, file, {
-          level: 'private',
+          bucket: awsconfig.Storage.uploadBucket,
           contentType: file.type,
-          tagging: 'lifecycle=true',
+          level: 'private',
+          tagging: `lifecycle=true`,
           progressCallback(progress) {
             dispatch('ADD_NOTIFICATION', {
               type: 'info',
@@ -56,7 +64,7 @@ export function ModelUpload({ addModel }) {
           },
         })
           .then((result) => {
-            console.debug(result);
+            console.debug('MODEL UPLOAD RESULT', result);
             dispatch('ADD_NOTIFICATION', {
               type: 'success',
               content: (
@@ -78,20 +86,15 @@ export function ModelUpload({ addModel }) {
                 dispatch('DISMISS_NOTIFICATION', file.name);
               },
             });
-            addModel({
-              key: s3path,
-              modelDate: formatAwsDateTime(new Date()),
-              modelName: file.name,
-            });
           })
           .catch((err) => {
-            console.debug(err);
+            console.info(err);
             dispatch('ADD_NOTIFICATION', {
               header: t('models.notifications.could-not-upload') + ' ' + file.name,
               type: 'error',
               content: t('common.error'),
               dismissible: true,
-              dismissLabel: 'Dismiss message',
+              dismissLabel: t('models.notifications.dismiss-message'),
               id: file.name,
               onDismiss: () => {
                 dispatch('DISMISS_NOTIFICATION', file.name);
@@ -104,7 +107,7 @@ export function ModelUpload({ addModel }) {
           type: 'error',
           content: file.name + ' ' + t('carmodelupload-modal.file-regex'),
           dismissible: true,
-          dismissLabel: 'Dismiss message',
+          dismissLabel: t('models.notifications.dismiss-message'),
           id: file.name,
           onDismiss: () => {
             dispatch('DISMISS_NOTIFICATION', file.name);

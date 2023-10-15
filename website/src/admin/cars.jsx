@@ -153,7 +153,7 @@ const AdminCars = () => {
         itemsIsLoading={isLoading}
         loadingText={t('cars.loading')}
         localStorageKey={'cars-table-preferences'}
-        trackBy={'eventId'}
+        trackBy={'InstanceId'}
         filteringProperties={filteringProperties}
         filteringI18nStringsName={'cars'}
       />
