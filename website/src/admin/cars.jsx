@@ -15,7 +15,6 @@ const AdminCars = () => {
   const { t } = useTranslation(['translation', 'help-admin-cars']);
   const [allItems, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCarsBtnDisabled, setSelectedCarsBtnDisabled] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
   const [online, setOnline] = useState('Online');
   const [onlineBool, setOnlineBool] = useState(true);
@@ -34,7 +33,6 @@ const AdminCars = () => {
       query: queries.carsOnline,
       variables: { online: thisOnlineBool },
     });
-    setSelectedCarsBtnDisabled(true);
     setSelectedItems([]);
     setIsLoading(false);
     setItems(response.data.carsOnline);
@@ -102,13 +100,13 @@ const AdminCars = () => {
           {online}
         </ButtonDropdown>
         <EditCarsModal
-          disabled={selectedCarsBtnDisabled}
+          disabled={selectedItems.length === 0}
           setRefresh={setRefresh}
           selectedItems={selectedItems}
           online={onlineBool}
           variant="primary"
         />
-        <Button variant="primary" onClick={getLabels} disabled={selectedCarsBtnDisabled}>
+        <Button variant="primary" onClick={getLabels} disabled={selectedItems.length === 0}>
           {selectedItems.length > 1
             ? t('label-printer.download-printable-labels')
             : t('label-printer.download-printable-label')}
@@ -140,7 +138,7 @@ const AdminCars = () => {
         selectedItems={selectedItems}
         setSelectedItems={setSelectedItems}
         tableItems={allItems}
-        selectionType="single"
+        selectionType="multi"
         columnConfiguration={columnConfiguration}
         header={
           <TableHeader

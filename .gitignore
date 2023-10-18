@@ -46,3 +46,7 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+# scratchpad notes
+scratch.txt
+

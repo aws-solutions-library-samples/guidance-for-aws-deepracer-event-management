@@ -1,5 +1,5 @@
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
-import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { DockerImage, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -33,6 +33,8 @@ export interface LabelPrinterProps {
 export class LabelPrinter extends Construct {
   constructor(scope: Construct, id: string, props: LabelPrinterProps) {
     super(scope, id);
+
+    const stack = Stack.of(this);
 
     // Labels S3 bucket
     const labels_bucket = new s3.Bucket(this, 'labelsBucket', {
@@ -101,7 +103,33 @@ export class LabelPrinter extends Construct {
     props.carStatusDataHandlerLambda.grantInvoke(printLabelLambdaFunction);
 
     // Bucket permissions
-    labels_bucket.grantReadWrite(printLabelLambdaFunction, '*');
+    const printLabelLambdaFunctionAdditionalRolePolicyS3 = printLabelLambdaFunction.addAdditionalRolePolicy(
+      'printLabelLambdaFunctionAdditionalRolePolicyS3',
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          's3:DeleteObject',
+          's3:DeleteObjectTagging',
+          's3:GetObject',
+          's3:ListBucket',
+          's3:PutObject',
+          's3:PutObjectTagging',
+        ],
+        resources: [labels_bucket.bucketArn, labels_bucket.arnForObjects('*')],
+      })
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(stack, printLabelLambdaFunctionAdditionalRolePolicyS3.resourcePath, [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Allows printLabelLambdaFunction to create and delete labels in dedicated s3 bucket',
+        appliesTo: [
+          {
+            regex: '/^Resource::(.+)/\\*$/g',
+          },
+        ],
+      },
+    ]);
 
     // AppSync Api
     const printableLabelDataSource = props.appsyncApi.api.addLambdaDataSource(
