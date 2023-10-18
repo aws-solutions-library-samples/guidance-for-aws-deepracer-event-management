@@ -544,6 +544,38 @@ export class CarManager extends Construct {
 
     this.carStatusDataHandlerLambda = labelPrinterDataFetchHandler;
 
-    carStatusTable.grantReadData(labelPrinterDataFetchHandler);
+    const labelPrinterDataFetchHandlerAdditionalRolePolicyDDB = labelPrinterDataFetchHandler.addAdditionalRolePolicy(
+      'labelPrinterDataFetchHandlerAdditionalRolePolicyDDB',
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'dynamodb:BatchGetItem',
+          'dynamodb:ConditionCheckItem',
+          'dynamodb:DescribeTable',
+          'dynamodb:GetItem',
+          'dynamodb:GetRecords',
+          'dynamodb:GetShardIterator',
+          'dynamodb:Query',
+          'dynamodb:Scan',
+        ],
+        resources: [carStatusTable.tableArn, `${carStatusTable.tableArn}/index/*`],
+      })
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      stack,
+      labelPrinterDataFetchHandlerAdditionalRolePolicyDDB.resourcePath,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Allows labelPrinterDataFetchHandler to read DynamoDB carStatusTable',
+          appliesTo: [
+            {
+              regex: '/^Resource::(.+)/index/\\*$/g',
+            },
+          ],
+        },
+      ]
+    );
   }
 }
