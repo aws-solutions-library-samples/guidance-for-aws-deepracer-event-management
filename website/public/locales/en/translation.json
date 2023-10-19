@@ -42,6 +42,7 @@
   "common.panel.split-panel-position-label": "Split panel position",
   "common.panel.split-panel-position-description": "Choose the default split panel position for the service.",
   "common.panel.split-panel-resize-label": "Resize split panel",
+  "filtering.filtering-aria-label": "filtering",
   "filtering.dismiss-aria-label": "dismiss",
   "filtering.clear-aria-label": "Clear",
   "filtering.placeholder": "Find {{resource}}",
