@@ -26,7 +26,7 @@ export const PageTable = ({
   selectionType,
   columnConfiguration,
   stickyHeader = true,
-  query = {},
+  query = { tokens: [], operation: 'and' },
   ...props
 }) => {
   const { t } = useTranslation(['translation']);
