@@ -16,7 +16,6 @@ client_ssm = boto3.client("ssm")
 @logger.inject_lambda_context
 @tracer.capture_lambda_handler
 def lambda_handler(event: dict, context: LambdaContext):
-
     result = {}
     try:
         instances = event["Instances"]["InstanceInformationList"]
@@ -30,7 +29,12 @@ def lambda_handler(event: dict, context: LambdaContext):
                 logger.debug(tags_response)
 
                 # list of tags that we copy from SSM to DynamoBD table
-                tag_keys_to_copy = ["fleetName", "fleetId", "base64carUiPassword"]
+                tag_keys_to_copy = [
+                    "fleetName",
+                    "fleetId",
+                    "base64carUiPassword",
+                    "Type",
+                ]
                 for tag in tags_response["TagList"]:
                     if tag["Key"] in tag_keys_to_copy:
                         instance[tag["Key"]] = tag["Value"]

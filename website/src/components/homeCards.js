@@ -34,9 +34,9 @@ const AdminHomeCards = () => {
       description: i18next.t('homeCards.adminHomeCards.fleets-description'),
     },
     {
-      name: i18next.t('homeCards.adminHomeCards.cars'),
-      link: '/admin/cars',
-      description: i18next.t('homeCards.adminHomeCards.cars-description'),
+      name: i18next.t('homeCards.adminHomeCards.devices'),
+      link: '/admin/devices',
+      description: i18next.t('homeCards.adminHomeCards.devices-description'),
     },
     {
       name: i18next.t('homeCards.adminHomeCards.car-activation'),

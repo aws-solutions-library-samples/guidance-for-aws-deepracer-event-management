@@ -2,14 +2,14 @@
 
 usage()
 {
-    echo -e -n "\nUsage, run as root: ./$0 -h HOSTNAME -p PASSWORD [ -c SSMCODE -i SSMID -r AWS_REGION ] [ -s SSID -w WIFI_PASSWORD]"
-    echo -e -n "\nIf no details are provided for SSM the agent is installed but not activated"
+    echo -e -n "\nUsage, run as root: $0 -h HOSTNAME -p PASSWORD [ -c SSMCODE -i SSMID -r AWS_REGION ] [ -s SSID -w WIFI_PASSWORD]"
+    echo -e -n "\nIf no details are provided for SSM the agent is installed but not activated\n\n"
     exit 0
 }
 
 # Check we have the privileges we need
 if [ `whoami` != root ]; then
-    echo -e -n "\nPlease run this script as root using 'su'\n"
+    echo -e -n "\nPlease run this script as root using 'sudo'\n"
     exit 0
 fi
 
@@ -18,10 +18,12 @@ varHost=NULL
 varPass=NULL
 ssmCode=NULL
 ssmId=NULL
+ssmRegion=NULL
 ssid=NULL
 wifiPass=NULL
 
-backupDir=/home/deepracer/backup
+# Create backup directory
+backupDir=${HOME}/backup
 if [ ! -d ${backupDir} ]; then
     mkdir ${backupDir}
 fi
@@ -296,3 +298,4 @@ systemctl restart deepracer-core
 service nginx restart
 
 echo -e -n "\nDone!"
+echo -e -n "\nCar ${varHost} should be visible in DREM in ~5 minutes"
