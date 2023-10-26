@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { PageLayout } from '../../components/pageLayout';
 import useMutation from '../../hooks/useMutation';
 import { merge } from '../../support-functions/merge';
-import { CarsPanel } from './carsPanel';
+import { DevicesPanel } from './devicesPanel';
 import { fleet } from './fleetDomain';
 import { GeneralInfoPanel } from './generalInfoPanel';
 import { Breadcrumbs } from './support-functions/supportFunctions';
@@ -19,7 +19,6 @@ export const EditFleet = () => {
   const [send, loading, errorMessage, data] = useMutation();
   const [createButtonIsDisabled, setCreateButtonIsDisabled] = useState(false);
   const [fleetConfig, setFleetConfig] = useState(fleet);
-  const [fleetQuery, setFleetQuery] = useState();
 
   useEffect(() => {
     if (!loading && data && !errorMessage) {
@@ -42,7 +41,6 @@ export const EditFleet = () => {
   useEffect(() => {
     if (selectedFleet) {
       setFleetConfig(selectedFleet);
-      setFleetQuery(selectedFleet.fleetName);
     }
   }, [selectedFleet]);
 
@@ -99,7 +97,7 @@ export const EditFleet = () => {
               onFormIsValid={formIsValidHandler}
               onFormIsInvalid={formIsInvalidHandler}
             />
-            <CarsPanel onChange={UpdateConfigHandler} fleetQuery={fleetQuery} {...fleetConfig} />
+            <DevicesPanel onChange={UpdateConfigHandler} {...fleetConfig} />
           </SpaceBetween>
         </Form>
       </form>

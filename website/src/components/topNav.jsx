@@ -1,12 +1,18 @@
-import { AppLayout, Badge, Flashbar, SideNavigation, TopNavigation } from '@cloudscape-design/components';
+import {
+  AppLayout,
+  Badge,
+  Flashbar,
+  SideNavigation,
+  TopNavigation,
+} from '@cloudscape-design/components';
 
 import React, { useEffect, useState } from 'react';
 
 import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { useTranslation } from 'react-i18next';
-import { AdminActivation } from '../admin/carActivation';
-import { AdminCars } from '../admin/cars';
+import { AdminCarActivation } from '../admin/carActivation';
+import { AdminDevices } from '../admin/devices';
 import { AdminEvents } from '../admin/events/adminEvents';
 import { CreateEvent } from '../admin/events/pages/createEvent';
 import { EditEvent } from '../admin/events/pages/editEvent';
@@ -16,6 +22,7 @@ import { EditFleet } from '../admin/fleets/editFleet';
 import { AdminHome } from '../admin/home';
 import { EditRace } from '../admin/race-admin/pages/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
+import { AdminTimerActivation } from '../admin/timerActivation';
 import { ProfileHome } from '../admin/user-profile/profile';
 import { CreateUser } from '../admin/users/createUser';
 import { CommentatorRaceStats } from '../commentator/race-stats';
@@ -65,18 +72,22 @@ const commentatorRoutes = [<Route path="/commentator" element={<CommentatorRaceS
 
 const operatorRoutes = [
   <Route path="/admin/home" element={<AdminHome />} />,
-  <Route path="/admin/cars" element={<AdminCars />} />,
+  <Route path="/admin/devices" element={<AdminDevices />} />,
   <Route path="/admin/events" element={<AdminEvents />} />,
   <Route path="/admin/events/create" element={<CreateEvent />} />,
   <Route path="/admin/events/edit" element={<EditEvent />} />,
   <Route path="/admin/fleets" element={<AdminFleets />} />,
   <Route path="/admin/fleets/create" element={<CreateFleet />} />,
   <Route path="/admin/fleets/edit" element={<EditFleet />} />,
-  <Route path="/admin/car_activation" element={<AdminActivation />} />,
+  <Route path="/admin/car_activation" element={<AdminCarActivation />} />,
+  <Route path="/admin/timer_activation" element={<AdminTimerActivation />} />,
   <Route path="/admin/timekeeper" element={<Timekeeper />} />,
   <Route path="/admin/races" element={<RaceAdmin />} />,
   <Route path="/admin/races/edit" element={<EditRace />} />,
-  <Route path="/admin/models" element={<ModelManagement isOperatorView={true} onlyDisplayOwnModels={false} />} />,
+  <Route
+    path="/admin/models"
+    element={<ModelManagement isOperatorView={true} onlyDisplayOwnModels={false} />}
+  />,
 ];
 
 const adminRoutes = [<Route path="/admin/user-management" element={<UserManagement />} />];
@@ -171,14 +182,20 @@ export function TopNav(props) {
         },
         {
           type: 'expandable-link-group',
-          text: t('topnav.car-management'),
+          text: t('topnav.device-management'),
           items: [
             { type: 'link', text: t('topnav.fleets'), href: '/admin/fleets' },
-            { type: 'link', text: t('topnav.cars'), href: '/admin/cars' },
+            { type: 'link', text: t('topnav.cars'), href: '/admin/devices' },
             {
               type: 'link',
               text: t('topnav.car-activation'),
               href: '/admin/car_activation',
+            },
+            {
+              type: 'link',
+              text: t('topnav.timer-activation'),
+              info: <Badge color="blue">Beta</Badge>,
+              href: '/admin/timer_activation',
             },
           ],
         },
@@ -299,7 +316,9 @@ export function TopNav(props) {
       </div>
       <AppLayout
         stickyNotifications
-        notifications={<Flashbar items={state.notifications} stackItems={state.notifications.length > 3} />}
+        notifications={
+          <Flashbar items={state.notifications} stackItems={state.notifications.length > 3} />
+        }
         tools={state.helpPanel.content}
         toolsOpen={state.helpPanel.isOpen}
         toolsHide={state.helpPanel.isHidden}
@@ -308,7 +327,11 @@ export function TopNav(props) {
         ariaLabels={{ navigationClose: 'close' }}
         navigationOpen={state.sideNav.isOpen}
         navigation={
-          <SideNavigation activeHref={window.location.pathname} onFollow={handleFollow} items={SideNavItems()} />
+          <SideNavigation
+            activeHref={window.location.pathname}
+            onFollow={handleFollow}
+            items={SideNavItems()}
+          />
         }
         contentType="table"
         content={<MenuRoutes permissions={permissions} />}

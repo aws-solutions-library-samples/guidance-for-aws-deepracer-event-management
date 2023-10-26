@@ -25,7 +25,7 @@ import {
   TablePreferences,
 } from '../../../components/tableConfig';
 
-import { ColumnConfiguration } from '../../../components/cars-table/carTableConfig';
+import { ColumnConfiguration } from '../../../components/devices-table/deviceTableConfig';
 import { useStore } from '../../../store/store';
 
 // https://overreacted.io/making-setinterval-declarative-with-react-hooks/

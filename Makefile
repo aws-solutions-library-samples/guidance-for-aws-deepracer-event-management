@@ -100,4 +100,8 @@ local.clean:		## Remove local packages and modules
 	-rm website-stream-overlays/package-lock.json
 	rm -rf website-stream-overlays/node_modules
 
+leaderboard.zip:
+	-rm website/public/leaderboard-timer.zip
+	zip -r website/public/leaderboard-timer.zip leaderboard-timer -x "*.git*" -x "*node_modules*" -x "*stl*" -x "*.DS_Store"
+
 .NOTPARALLEL:

@@ -89,7 +89,6 @@ export class FleetsManager extends Construct {
     );
 
     // Define API Schema
-
     const fleets_object_Type = new ObjectType('Fleet', {
       definition: {
         fleetName: GraphqlType.string(),

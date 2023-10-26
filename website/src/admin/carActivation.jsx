@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 // import { ListOfFleets } from '../components/listOfFleets';
 import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
 import * as mutations from '../graphql/mutations';
+import { Breadcrumbs } from './fleets/support-functions/supportFunctions';
 
 import {
   Box,
@@ -24,7 +25,7 @@ import {
 import { PageLayout } from '../components/pageLayout';
 import { useStore } from '../store/store';
 
-const AdminActivation = (props) => {
+const AdminCarActivation = (props) => {
   const { t } = useTranslation(['translation', 'help-admin-car-activation']);
 
   const [result, setResult] = useState('');
@@ -103,15 +104,16 @@ const AdminActivation = (props) => {
 
   async function getActivation() {
     const apiResponse = await API.graphql({
-      query: mutations.carActivation,
+      query: mutations.deviceActivation,
       variables: {
+        hostname: hostname,
+        deviceType: 'deepracer',
         fleetId: dropDownSelectedItem.fleetId,
         fleetName: dropDownSelectedItem.fleetName,
-        hostname: hostname,
-        carUiPassword: password,
+        deviceUiPassword: password,
       },
     });
-    const response = apiResponse['data']['carActivation'];
+    const response = apiResponse['data']['deviceActivation'];
     setResult(response);
     setActivationCode(response['activationCode']);
     setActivationId(response['activationId']);
@@ -145,6 +147,9 @@ const AdminActivation = (props) => {
     setLoading('');
   }
 
+  const breadcrumbs = Breadcrumbs();
+  breadcrumbs.push({ text: t('AdminActivation.car-activation.breadcrumb') });
+
   return (
     <PageLayout
       helpPanelHidden={false}
@@ -157,12 +162,7 @@ const AdminActivation = (props) => {
       }
       header={t('AdminActivation.car-activation.header')}
       description={t('AdminActivation.car-activation.description')}
-      breadcrumbs={[
-        { text: t('home.breadcrumb'), href: '/' },
-        { text: t('operator.breadcrumb'), href: '/admin/home' },
-        { text: t('car-management.breadcrumb'), href: '/admin/home' },
-        { text: t('AdminActivation.car-activation.breadcrumb') },
-      ]}
+      breadcrumbs={breadcrumbs}
     >
       <SpaceBetween direction="vertical" size="l">
         <Form
@@ -259,9 +259,7 @@ const AdminActivation = (props) => {
               size="small"
               triggerType="custom"
               content={
-                <StatusIndicator type="success">
-                  {t('AdminActivation.car-activation.copied-to-clipboard')}
-                </StatusIndicator>
+                <StatusIndicator type="success">{t('common.copied-to-clipboard')}</StatusIndicator>
               }
             >
               <Button
@@ -291,7 +289,7 @@ const AdminActivation = (props) => {
                 triggerType="custom"
                 content={
                   <StatusIndicator type="success">
-                    {t('AdminActivation.car-activation.copied-to-clipboard')}
+                    {t('common.copied-to-clipboard')}
                   </StatusIndicator>
                 }
               >
@@ -321,7 +319,7 @@ const AdminActivation = (props) => {
                 triggerType="custom"
                 content={
                   <StatusIndicator type="success">
-                    {t('AdminActivation.car-activation.copied-to-clipboard')}
+                    {t('common.copied-to-clipboard')}
                   </StatusIndicator>
                 }
               >
@@ -351,7 +349,7 @@ const AdminActivation = (props) => {
                 triggerType="custom"
                 content={
                   <StatusIndicator type="success">
-                    {t('AdminActivation.car-activation.copied-to-clipboard')}
+                    {t('common.copied-to-clipboard')}
                   </StatusIndicator>
                 }
               >
@@ -388,4 +386,4 @@ const AdminActivation = (props) => {
   );
 };
 
-export { AdminActivation };
+export { AdminCarActivation };

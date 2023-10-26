@@ -27,31 +27,23 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
   const [state] = useStore();
   const models = state.models.models;
   const isLoading = state.models.isLoading;
+  const [modelsDescriptionKey, setModelsDescriptionKey] = useState('');
 
   // based on onlyDisplayOwnModels select if only the users own models should be displayed or all available models
   const modelsToDisplay = onlyDisplayOwnModels
     ? models.filter((model) => model.sub === Auth.user.attributes.sub)
     : models;
-  // TODO why is not useEffect on models work??????
-  // useEffect(() => {
-  //   console.info('UPDATING OWN MODELS TRIGGERED', models);
-  //   if (onlyDisplayOwnModels) {
-  //     const usersOwnModels = models.filter((model) => model.sub === Auth.user.attributes.sub);
-  //     console.info('UPDATING OWN MODELS:', usersOwnModels);
-  //     setModelsToDisplay(usersOwnModels);
-  //   } else {
-  //     setModelsToDisplay(models);
-  //   }
-  // }, [models, onlyDisplayOwnModels]);
 
   // based on isOperatorView select if the operator view should be displayed or the racer view
   useEffect(() => {
     if (isOperatorView) {
       setColumnConfiguration(ColumnConfigurationOperator());
       setFilteringProperties(FilteringPropertiesOperator());
+      setModelsDescriptionKey('models.operator.description');
     } else {
       setColumnConfiguration(ColumnConfigurationRacer());
       setFilteringProperties(FilteringPropertiesRacer());
+      setModelsDescriptionKey('models.description');
     }
   }, [isOperatorView]);
 
@@ -88,6 +80,7 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
         />
       }
       header={t('models.header')}
+      description={t(modelsDescriptionKey)}
       breadcrumbs={[{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]}
     >
       <PageTable

@@ -1,0 +1,14 @@
+[Unit]
+Description=Deepracer Leaderboard Timer Service
+After=network.target
+
+[Service]
+WorkingDirectory=/home/deepracer/leaderboard-timer
+ExecStart=node /home/deepracer/leaderboard-timer/timer.js
+Restart=on-failure
+User=deepracer
+Environment=PATH=/usr/bin:/usr/local/bin
+Environment=PORT=8080
+
+[Install]
+WantedBy=multi-user.target
