@@ -20,7 +20,7 @@ import { Breadcrumbs } from '../support-functions/supportFunctions';
 export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction, onNext }) => {
   const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-finish']);
   const [buttonsIsDisabled, SetButtonsIsDisabled] = useState(false);
-  const [sendMutation, loading, errorMessage] = useMutation();
+  const [sendMutation, loading, errorMessage, data] = useMutation();
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const [, dispatch] = useStore();
   const messageDisplayTime = 4000;
@@ -28,7 +28,7 @@ export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction,
 
   // Clear the notification is submit is successful and go back to racer selector page again
   useEffect(() => {
-    if (!loading && !errorMessage) {
+    if (!loading && !errorMessage && data) {
       setTimeout(() => {
         dispatch('DISMISS_NOTIFICATION', notificationId);
         SetButtonsIsDisabled(false);

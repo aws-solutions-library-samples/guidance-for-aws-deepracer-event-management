@@ -17,7 +17,7 @@ export const useRacesApi = (userHasAccess, eventId) => {
         console.debug('getRaces');
         const races = response.data.getRaces;
 
-        dispatch('ADD_RACES', races);
+        dispatch('NEW_RACES', races);
         dispatch('RACES_IS_LOADING', false);
       }
       queryApi();
