@@ -60,7 +60,7 @@ const RaceAdmin = () => {
         };
       })
     );
-  }, [users, races, getUserNameFromId]);
+  }, [users, races, races.length, getUserNameFromId]);
 
   const selectPanelContent = useCallback((selectedItems) => {
     if (selectedItems.length === 0) {
