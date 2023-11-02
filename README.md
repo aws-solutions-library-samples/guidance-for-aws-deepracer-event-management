@@ -2,7 +2,7 @@
 	<img src="./website/public/logo-bw.png" width="300"> 
 </p>
 
-# Welcome to DeepRacer Event Manager (DREM)
+# Welcome to AWS DeepRacer Event Manager (DREM)
 
 ## Overview
 
