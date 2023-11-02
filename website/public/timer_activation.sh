@@ -71,8 +71,9 @@ elif [[ $rpiVersion == *"Model B"* ]]; then
     rpiArch=arm64
 
     # Needed for SSM-agent
+    sudo dpkg --add-architecture armhf
     sudo apt-get update
-    sudo apt-get upgrade -y libc6
+    sudo apt-get install -y libc6:armhf
 
     # Node
     curl -o node-${nodeVersion}-linux-${rpiArch}.tar.xz https://nodejs.org/dist/${nodeVersion}/node-${nodeVersion}-linux-${rpiArch}.tar.xz
