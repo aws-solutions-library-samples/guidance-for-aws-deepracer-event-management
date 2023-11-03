@@ -45,6 +45,7 @@ export const ColumnDefinitions = () => {
       header: i18next.t('race-admin.lap-id'),
       cell: (item) => item.lapId || '-',
       sortingField: 'lapId',
+      sortingComparator: (a, b) => (a.lapId > b.labId ? 1 : -1),
       width: 100,
     },
     {

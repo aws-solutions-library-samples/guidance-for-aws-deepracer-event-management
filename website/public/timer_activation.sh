@@ -69,7 +69,13 @@ if [[ $rpiVersion = *"Zero W"* ]]; then
     curl -o node-${nodeVersion}-linux-${rpiArch}.tar.xz https://unofficial-builds.nodejs.org/download/release/${nodeVersion}/node-${nodeVersion}-linux-${rpiArch}.tar.xz
 elif [[ $rpiVersion == *"Model B"* ]]; then
     rpiArch=arm64
+
+    # Needed for SSM-agent
+    sudo dpkg --add-architecture armhf
     sudo apt-get update
+    sudo apt-get install -y libc6:armhf
+
+    # Node
     curl -o node-${nodeVersion}-linux-${rpiArch}.tar.xz https://nodejs.org/dist/${nodeVersion}/node-${nodeVersion}-linux-${rpiArch}.tar.xz
 else
     echo "Not sure what kind of Pi this is.... sorry it didn't work out."
