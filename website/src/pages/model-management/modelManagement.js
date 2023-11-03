@@ -20,30 +20,58 @@ import { DeleteModelModal } from './components/deleteModelModal';
 import { ModelUpload } from './components/modelUpload';
 
 export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels = true }) => {
-  const { t } = useTranslation(['translation', 'help-model-management']);
+  const { t } = useTranslation([
+    'translation',
+    'help-model-management',
+    'help-admin-model-management',
+  ]);
   const [columnConfiguration, setColumnConfiguration] = useState(ColumnConfigurationRacer());
   const [filteringProperties, setFilteringProperties] = useState(FilteringPropertiesRacer());
   const [selectedModels, setSelectedModels] = useState([]);
   const [state] = useStore();
+  const [, dispatch] = useStore();
   const models = state.models.models;
   const isLoading = state.models.isLoading;
-  const [modelsDescriptionKey, setModelsDescriptionKey] = useState('');
 
   // based on onlyDisplayOwnModels select if only the users own models should be displayed or all available models
   const modelsToDisplay = onlyDisplayOwnModels
     ? models.filter((model) => model.sub === Auth.user.attributes.sub)
     : models;
 
+  const operatorHelpPanel = (
+    <SimpleHelpPanelLayout
+      headerContent={t('header', { ns: 'help-admin-model-management' })}
+      bodyContent={t('content', { ns: 'help-admin-model-management' })}
+      footerContent={t('footer', { ns: 'help-admin-model-management' })}
+    />
+  );
+
+  const helpPanel = (
+    <SimpleHelpPanelLayout
+      headerContent={t('header', { ns: 'help-model-management' })}
+      bodyContent={t('content', { ns: 'help-model-management' })}
+      footerContent={t('footer', { ns: 'help-model-management' })}
+    />
+  );
+
   // based on isOperatorView select if the operator view should be displayed or the racer view
   useEffect(() => {
     if (isOperatorView) {
       setColumnConfiguration(ColumnConfigurationOperator());
       setFilteringProperties(FilteringPropertiesOperator());
-      setModelsDescriptionKey('models.operator.description');
+      dispatch('UPDATE_HELP_PANEL', {
+        isHidden: false,
+        content: operatorHelpPanel,
+      });
+      dispatch('HELP_PANEL_IS_OPEN', false);
     } else {
       setColumnConfiguration(ColumnConfigurationRacer());
       setFilteringProperties(FilteringPropertiesRacer());
-      setModelsDescriptionKey('models.description');
+      dispatch('UPDATE_HELP_PANEL', {
+        isHidden: false,
+        content: helpPanel,
+      });
+      dispatch('HELP_PANEL_IS_OPEN', false);
     }
   }, [isOperatorView]);
 
@@ -72,15 +100,9 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
   return (
     <PageLayout
       helpPanelHidden={false}
-      helpPanelContent={
-        <SimpleHelpPanelLayout
-          headerContent={t('header', { ns: 'help-model-management' })}
-          bodyContent={t('content', { ns: 'help-model-management' })}
-          footerContent={t('footer', { ns: 'help-model-management' })}
-        />
-      }
+      helpPanelContent={isOperatorView ? operatorHelpPanel : helpPanel}
       header={t('models.header')}
-      description={t(modelsDescriptionKey)}
+      description={isOperatorView ? t('models.operator.description') : t('models.description')}
       breadcrumbs={[{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]}
     >
       <PageTable
