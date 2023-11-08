@@ -25,8 +25,8 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
     'help-model-management',
     'help-admin-model-management',
   ]);
-  const [columnConfiguration, setColumnConfiguration] = useState(ColumnConfigurationRacer());
-  const [filteringProperties, setFilteringProperties] = useState(FilteringPropertiesRacer());
+  const [columnConfiguration, setColumnConfiguration] = useState(ColumnConfigurationOperator());
+  const [filteringProperties, setFilteringProperties] = useState(FilteringPropertiesOperator());
   const [selectedModels, setSelectedModels] = useState([]);
   const [state] = useStore();
   const [, dispatch] = useStore();

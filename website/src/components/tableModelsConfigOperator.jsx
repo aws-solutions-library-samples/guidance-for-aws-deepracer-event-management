@@ -91,7 +91,7 @@ export const ColumnConfigurationOperator = () => {
         id: 'uploadedDateTime',
         header: i18next.t('models.upload-date'),
         cell: (item) => formatAwsDateTime(item.fileMetaData.uploadedDateTime) || '-',
-        sortingField: 'uploadedDateTime',
+        // sortingField: 'uploadedDateTime',
         width: 240,
         minWidth: 150,
       },
