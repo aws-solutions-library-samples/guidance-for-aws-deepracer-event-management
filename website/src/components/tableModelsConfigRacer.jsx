@@ -4,13 +4,13 @@ import { ModelUploadStatus } from './modelUploadStatus';
 
 export const ColumnConfigurationRacer = () => {
   return {
-    defaultVisibleColumns: ['modelName', 'status', 'uploadedDateTime'],
+    defaultVisibleColumns: ['modelname', 'status', 'uploadedDateTime'],
     visibleContentOptions: [
       {
         label: i18next.t('models.model-information'),
         options: [
           {
-            id: 'modelName',
+            id: 'modelname',
             label: i18next.t('models.model-name'),
           },
           {
@@ -38,10 +38,10 @@ export const ColumnConfigurationRacer = () => {
     ],
     columnDefinitions: [
       {
-        id: 'modelName',
+        id: 'modelname',
         header: i18next.t('models.model-name'),
         cell: (item) => item.modelname || '-',
-        sortingField: 'modelName',
+        sortingField: 'modelname',
         width: 200,
         minWidth: 150,
       },
@@ -57,7 +57,7 @@ export const ColumnConfigurationRacer = () => {
         id: 'uploadedDateTime',
         header: i18next.t('models.upload-date'),
         cell: (item) => formatAwsDateTime(item.fileMetaData.uploadedDateTime) || '-',
-        sortingField: 'uploadedDateTime',
+        //sortingField: 'uploadedDateTime',
         width: 240,
         minWidth: 150,
       },
@@ -90,7 +90,7 @@ export const ColumnConfigurationRacer = () => {
 export const FilteringPropertiesRacer = () => {
   return [
     {
-      key: 'modelName',
+      key: 'modelname',
       propertyLabel: i18next.t('models.model-name'),
       operators: [':', '!:', '=', '!='],
     },

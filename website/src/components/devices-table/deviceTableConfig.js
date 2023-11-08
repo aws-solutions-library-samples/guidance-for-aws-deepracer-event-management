@@ -4,18 +4,18 @@ import { formatAwsDateTime } from '../../support-functions/time';
 
 export const ColumnConfiguration = () => {
   return {
-    defaultVisibleColumns: ['carName', 'fleetName', 'carIp'],
+    defaultVisibleColumns: ['hostName', 'fleetName', 'carIp'],
     visibleContentOptions: [
       {
-        label: i18next.t('cars.car-information'),
+        label: i18next.t('devices.device-information'),
         options: [
           {
-            id: 'instanceId',
+            id: 'InstanceId',
             label: i18next.t('devices.instance'),
             editable: true,
           },
           {
-            id: 'carName',
+            id: 'ComputerName',
             label: i18next.t('devices.host-name'),
             editable: false,
           },
@@ -25,11 +25,16 @@ export const ColumnConfiguration = () => {
             editable: true,
           },
           {
-            id: 'carIp',
+            id: 'IpAddress',
             label: i18next.t('devices.car-ip'),
           },
           {
-            id: 'agentVersion',
+            id: 'Type',
+            label: i18next.t('devices.type'),
+            editable: true,
+          },
+          {
+            id: 'AgentVersion',
             label: i18next.t('devices.agent-version'),
           },
           {
@@ -49,18 +54,18 @@ export const ColumnConfiguration = () => {
     ],
     columnDefinitions: [
       {
-        id: 'instanceId',
+        id: 'InstanceId',
         header: i18next.t('devices.instance'),
         cell: (item) => item.InstanceId,
-        sortingField: 'key',
+        sortingField: 'InstanceId',
         width: 200,
         minWidth: 150,
       },
       {
-        id: 'carName',
+        id: 'ComputerName',
         header: i18next.t('devices.host-name'),
         cell: (item) => item.ComputerName || '-',
-        sortingField: 'carName',
+        sortingField: 'ComputerName',
         width: 200,
         minWidth: 150,
       },
@@ -73,24 +78,32 @@ export const ColumnConfiguration = () => {
         minWidth: 150,
       },
       {
-        id: 'carIp',
+        id: 'IpAddress',
         header: i18next.t('devices.car-ip'),
         cell: (item) => item.IpAddress || '-',
-        sortingField: 'carIp',
+        sortingField: 'IpAddress',
         width: 200,
         minWidth: 150,
       },
       {
-        id: 'agentVersion',
-        header: i18next.t('devices.agent-version'),
-        cell: (item) => item.AgentVersion || '-',
-        sortingField: 'agentVersion',
+        id: 'Type',
+        header: i18next.t('devices.type'),
+        cell: (item) => item.Type || '-',
+        sortingField: 'Type',
+        width: 200,
+        minWidth: 150,
       },
       {
-        id: 'registrationDate',
+        id: 'AgentVersion',
+        header: i18next.t('devices.agent-version'),
+        cell: (item) => item.AgentVersion || '-',
+        sortingField: 'AgentVersion',
+      },
+      {
+        id: 'RegistrationDate',
         header: i18next.t('devices.registration-date'),
         cell: (item) => formatAwsDateTime(item.RegistrationDate) || '-',
-        sortingField: 'registrationDate',
+        sortingField: 'RegistrationDate',
       },
       {
         id: 'lastPingDateTime',
@@ -111,7 +124,7 @@ export const ColumnConfiguration = () => {
 export const FilteringProperties = () => {
   return [
     {
-      key: 'ComputerName',
+      key: 'hostName',
       propertyLabel: i18next.t('devices.host-name'),
       operators: [':', '!:', '=', '!='],
     },
