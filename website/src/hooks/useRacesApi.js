@@ -26,7 +26,7 @@ export const useRacesApi = (userHasAccess, eventId) => {
     return () => {
       // Unmounting
     };
-  }, [eventId, userHasAccess]);
+  }, [dispatch, eventId, userHasAccess]);
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
@@ -46,7 +46,7 @@ export const useRacesApi = (userHasAccess, eventId) => {
     return () => {
       if (subscription) subscription.unsubscribe();
     };
-  }, [eventId, userHasAccess]);
+  }, [dispatch, eventId, userHasAccess]);
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
@@ -65,7 +65,7 @@ export const useRacesApi = (userHasAccess, eventId) => {
     return () => {
       if (subscription) subscription.unsubscribe();
     };
-  }, [eventId, userHasAccess]);
+  }, [dispatch, eventId, userHasAccess]);
 
   useEffect(() => {
     let subscription;
@@ -85,5 +85,5 @@ export const useRacesApi = (userHasAccess, eventId) => {
     return () => {
       if (subscription) subscription.unsubscribe();
     };
-  }, [eventId, userHasAccess]);
+  }, [dispatch, eventId, userHasAccess]);
 };
