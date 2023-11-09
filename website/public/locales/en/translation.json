@@ -129,7 +129,7 @@
   "carmodelupload-modal.file-regex": "does not match regex: ^[a-zA-Z0-9-_]+.tar.gz$",
   "carmodelupload.status.InProgress": "In Progress",
   "carmodelupload.status.Success": "Successful",
-  "cars.car-information": "Car information",
+  "devices.device-information": "Device information",
   "devices.agent-version": "Agent version",
   "devices.breadcrumb": "Devices",
   "devices.type": "Device type",
