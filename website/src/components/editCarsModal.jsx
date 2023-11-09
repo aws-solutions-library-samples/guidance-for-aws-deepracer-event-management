@@ -14,7 +14,7 @@ import {
   Modal,
   SpaceBetween,
 } from '@cloudscape-design/components';
-import { useFleetsContext } from '../store/storeProvider';
+import { useStore } from '../store/store';
 
 /* eslint import/no-anonymous-default-export: [2, {"allowArrowFunction": true}] */
 export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
@@ -34,8 +34,8 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
     text: t('fleets.edit-cars.select-color'),
   });
 
-  //const [isLoading, setIsLoading] = useState(true);
-  const [fleets] = useFleetsContext();
+  const [state] = useStore();
+  const fleets = state.fleets.fleets;
 
   // convert fleets data to dropdown format
   useEffect(() => {

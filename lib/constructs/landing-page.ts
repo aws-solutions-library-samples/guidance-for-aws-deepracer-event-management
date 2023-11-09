@@ -1,10 +1,10 @@
-import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 import {
     CodeFirstSchema,
@@ -55,6 +55,7 @@ export class LandingPageManager extends Construct {
             encryption: dynamodb.TableEncryption.AWS_MANAGED,
             removalPolicy: RemovalPolicy.DESTROY,
             stream: dynamodb.StreamViewType.NEW_IMAGE,
+            pointInTimeRecovery: true,
         });
 
         const landingPageConfigDataSourceDdb = props.appsyncApi.api.addDynamoDbDataSource(
@@ -64,7 +65,7 @@ export class LandingPageManager extends Construct {
         landingPageConfigsTable.grantReadData(landingPageConfigDataSourceDdb);
 
         // Update landingPageConfigsTable when events are added or modified
-        const copyLandingPageConfigLambda = new lambdaPython.PythonFunction(
+        const copyLandingPageConfigLambda = new StandardLambdaPythonFunction(
             this,
             'copyLandingPageConfig',
             {
@@ -75,7 +76,6 @@ export class LandingPageManager extends Construct {
                 handler: 'lambda_handler',
                 timeout: Duration.minutes(1),
                 runtime: props.lambdaConfig.runtime,
-                tracing: lambda.Tracing.ACTIVE,
                 memorySize: 128,
                 bundling: { image: props.lambdaConfig.bundlingImage },
                 layers: [

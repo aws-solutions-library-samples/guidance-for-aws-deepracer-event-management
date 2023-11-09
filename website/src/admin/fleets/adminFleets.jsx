@@ -1,7 +1,6 @@
-import { useCollection } from '@cloudscape-design/collection-hooks';
-import { Pagination, PropertyFilter, Table } from '@cloudscape-design/components';
+import { Button, SpaceBetween } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../../components/pageLayout';
@@ -9,60 +8,27 @@ import * as mutations from '../../graphql/mutations';
 
 import { DeleteModal, ItemList } from '../../components/deleteModal';
 import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
-import {
-  PropertyFilterI18nStrings,
-  TableEmptyState,
-  TableNoMatchState,
-} from '../../components/tableCommon';
-import {
-  DefaultPreferences,
-  MatchesCountText,
-  TableHeader,
-  TablePreferences,
-} from '../../components/tableConfig';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { useToolsOptionsDispatch } from '../../store/appLayoutProvider';
+import { TableHeader } from '../../components/tableConfig';
 
-import { useFleetsContext, useUsersContext } from '../../store/storeProvider';
-import { ColumnDefinitions, FilteringProperties, VisibleContentOptions } from './fleetsTableConfig';
+import { PageTable } from '../../components/pageTable';
+import { useUsers } from '../../hooks/useUsers';
+import { useStore } from '../../store/store';
+import { ColumnConfiguration, FilteringProperties } from './fleetsTableConfig';
 import { Breadcrumbs } from './support-functions/supportFunctions';
 
 const AdminFleets = () => {
   const { t } = useTranslation(['translation', 'help-admin-fleets']);
   const [selectedFleetsInTable, setSelectedFleetsInTable] = useState([]);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [, , getUserNameFromId] = useUsersContext();
 
-  const [fleets, isLoading] = useFleetsContext();
+  const [state] = useStore();
+  const fleets = state.fleets.fleets;
+  const isLoading = state.fleets.isLoading;
+  const [, , getUserNameFromId] = useUsers();
 
   const navigate = useNavigate();
-  const columnDefinitions = ColumnDefinitions(getUserNameFromId);
   const filteringProperties = FilteringProperties();
-  const visibleContentOptions = VisibleContentOptions();
-
-  // Help panel
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = false;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-fleets' })}
-            bodyContent={t('content', { ns: 'help-admin-fleets' })}
-            footerContent={t('footer', { ns: 'help-admin-fleets' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
+  const columnConfiguration = ColumnConfiguration(getUserNameFromId);
 
   // Edit Fleet
   const editFleetHandler = () => {
@@ -86,107 +52,63 @@ const AdminFleets = () => {
     setSelectedFleetsInTable([]);
   }
 
-  const [preferences, setPreferences] = useLocalStorage('DREM-fleets-table-preferences', {
-    ...DefaultPreferences,
-    visibleContent: ['fleetName', 'fleetId', 'createdAt'],
-  });
-
-  const {
-    items,
-    actions,
-    filteredItemsCount,
-    collectionProps,
-    propertyFilterProps,
-    paginationProps,
-  } = useCollection(fleets, {
-    propertyFiltering: {
-      filteringProperties,
-      empty: <TableEmptyState resourceName="Fleet" />,
-      noMatch: (
-        <TableNoMatchState
-          onClearFilter={() => {
-            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
-          }}
-          label={t('common.no-matches')}
-          description={t('common.we-cant-find-a-match')}
-          buttonLabel={t('button.clear-filters')}
-        />
-      ),
-    },
-    pagination: { pageSize: preferences.pageSize },
-    sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
-    selection: {},
-  });
-
-  const fleetsTable = (
-    <Table
-      {...collectionProps}
-      onSelectionChange={({ detail }) => {
-        setSelectedFleetsInTable(detail.selectedItems);
-      }}
-      selectedItems={selectedFleetsInTable}
-      selectionType="multi"
-      columnDefinitions={columnDefinitions}
-      items={items}
-      stripedRows={preferences.stripedRows}
-      contentDensity={preferences.contentDensity}
-      wrapLines={preferences.wrapLines}
-      loading={isLoading}
-      loadingText={t('fleets.loading')}
-      stickyHeader="true"
-      trackBy="fleetId"
-      filter={
-        <PropertyFilter
-          {...propertyFilterProps}
-          i18nStrings={PropertyFilterI18nStrings('fleets')}
-          countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel={t('fleets.filter-groups')}
-          expandToViewport={true}
-        />
-      }
-      header={
-        <TableHeader
-          nrSelectedItems={selectedFleetsInTable.length}
-          nrTotalItems={fleets.length}
-          onEdit={editFleetHandler}
-          onDelete={() => setDeleteModalVisible(true)}
-          onAdd={createFleetHandler}
-          header={t('fleets.table-header')}
-        />
-      }
-      pagination={
-        <Pagination
-          {...paginationProps}
-          ariaLabels={{
-            nextPageLabel: t('table.next-page'),
-            previousPageLabel: t('table.previous-page'),
-            pageLabel: (pageNumber) => `$(t{'table.go-to-page')} ${pageNumber}`,
-          }}
-        />
-      }
-      visibleColumns={preferences.visibleContent}
-      resizableColumns
-      preferences={
-        <TablePreferences
-          preferences={preferences}
-          setPreferences={setPreferences}
-          contentOptions={visibleContentOptions}
-        />
-      }
-    />
-  );
+  const HeaderActionButtons = () => {
+    const disableEditButton =
+      selectedFleetsInTable.length === 0 || selectedFleetsInTable.length > 1;
+    const disableDeleteButton = selectedFleetsInTable.length === 0;
+    return (
+      <SpaceBetween direction="horizontal" size="xs">
+        <Button disabled={disableEditButton} onClick={editFleetHandler}>
+          {t('button.edit')}
+        </Button>
+        <Button disabled={disableDeleteButton} onClick={() => setDeleteModalVisible(true)}>
+          {t('button.delete')}
+        </Button>
+        <Button variant="primary" onClick={createFleetHandler}>
+          {t('button.create')}
+        </Button>
+      </SpaceBetween>
+    );
+  };
 
   const breadcrumbs = Breadcrumbs();
   breadcrumbs.push({ text: t('fleets.breadcrumb') });
 
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={false}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-fleets' })}
+          bodyContent={t('content', { ns: 'help-admin-fleets' })}
+          footerContent={t('footer', { ns: 'help-admin-fleets' })}
+        />
+      }
       header={t('fleets.header')}
       description={t('fleets.description')}
       breadcrumbs={breadcrumbs}
     >
-      {fleetsTable}
+      <PageTable
+        selectedItems={selectedFleetsInTable}
+        setSelectedItems={setSelectedFleetsInTable}
+        tableItems={fleets}
+        selectionType="multi"
+        columnConfiguration={columnConfiguration}
+        header={
+          <TableHeader
+            nrSelectedItems={selectedFleetsInTable.length}
+            nrTotalItems={fleets.length}
+            header={t('fleets.table-header')}
+            actions={<HeaderActionButtons />}
+          />
+        }
+        itemsIsLoading={isLoading}
+        loadingText={t('fleets.loading')}
+        localStorageKey={'fleets-table-preferences'}
+        trackBy={'fleetId'}
+        filteringProperties={filteringProperties}
+        filteringI18nStringsName={'fleets'}
+      />
 
       <DeleteModal
         header={t('fleets.delete-fleet')}

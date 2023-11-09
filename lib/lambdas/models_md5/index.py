@@ -1,9 +1,10 @@
 import hashlib
 import os
 import tarfile
-from datetime import datetime
 from tempfile import TemporaryDirectory
+from urllib.parse import unquote_plus
 
+import appsync_helpers
 import boto3
 import dynamo_helpers
 import http_response
@@ -16,7 +17,6 @@ logger = Logger()
 s3 = boto3.client("s3")
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(os.environ["DDB_TABLE"])
-bucket = os.environ["MODELS_S3_BUCKET"]
 
 
 def md5_file(file):
@@ -35,28 +35,17 @@ def md5_file(file):
 def lambda_handler(event: dict, context: LambdaContext) -> str:
     logger.debug(json.dumps(event))
 
-    # Get the required data from the event json
-    model_id = event["Records"][0]["dynamodb"]["Keys"]["modelId"]["S"]
-    model_key = event["Records"][0]["dynamodb"]["NewImage"]["modelKey"]["S"]
+    bucket_info = event["detail"]
+
+    input_bucket = bucket_info["bucket"]["name"]
+    model_s3_key = unquote_plus(bucket_info["object"]["key"])
 
     # Slice n dice
-    model_key_parts = model_key.split("/")
+    model_key_parts = model_s3_key.split("/")
     racer_identity_id = model_key_parts[1]
-    racer_name = model_key_parts[2]
     model_filename = model_key_parts[-1]
     model_filename_parts = model_filename.split(".")
     model_name = model_filename_parts[0]
-
-    item = {
-        "racerName": racer_name,
-        "racerIdentityId": racer_identity_id,
-        "md5Datetime": datetime.utcnow().isoformat() + "Z",
-        "modelMD5": None,
-        "modelMetadataMD5": None,
-        "sensor": None,
-        "trainingAlgorithm": None,
-        "actionSpaceType": None,
-    }
 
     try:
         with TemporaryDirectory() as tmpdir:
@@ -68,26 +57,38 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
             )
 
             # Get the MD5 of model elements and update the DB
-            s3.download_file(bucket, model_key, model_filename_full_path)
+
+            s3.download_file(input_bucket, model_s3_key, model_filename_full_path)
             tar = tarfile.open(model_filename_full_path)
             tar.extractall(model_name_full_path)
             tar.close()
 
-            logger.info(os.listdir(model_name_full_path))
-            # Get the MD5
+            variables = {
+                "modelId": hashlib.sha256(model_s3_key.encode("utf-8")).hexdigest(),
+                "sub": racer_identity_id,
+                "modelMetaData": {
+                    "sensor": [],
+                    "actionSpaceType": None,
+                    "trainingAlgorithm": None,
+                    "metadataMd5": None,
+                },
+            }
+
+            # Get the model MD5
             try:
                 model_md5 = md5_file(modelpb_path_name)
                 logger.debug(f"{modelpb_path_name} MD5 => {model_md5}")
-                item["modelMD5"] = model_md5
+                variables["modelMD5"] = model_md5
             except Exception as error:
-                logger.warn(error)
+                logger.exception(error)
 
+            # Get the metadata Md5
             try:
                 model_metadata_md5 = md5_file(modelmeta_path_name)
                 logger.debug(f"{modelmeta_path_name} MD5 => {model_metadata_md5}")
-                item["modelMetadataMD5"] = model_metadata_md5
+                variables["modelMetaData"]["metadataMd5"] = model_metadata_md5
             except Exception as error:
-                logger.warn(error)
+                logger.exception(error)
 
             # Get sensor, training algorithm and action space from model_metadata.json
             try:
@@ -95,46 +96,54 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                     model_metadata_contents = json_file.read()
 
                 logger.debug(f"model_metadata_content => {model_metadata_contents}")
-
                 model_metadata_json = json.loads(model_metadata_contents)
-                try:
-                    item["sensor"] = model_metadata_json["sensor"]
-                except Exception as error:
-                    logger.warn(error)
-
-                try:
-                    item["trainingAlgorithm"] = model_metadata_json[
-                        "training_algorithm"
-                    ]
-                except Exception as error:
-                    logger.warn(error)
-
-                try:
-                    item["actionSpaceType"] = model_metadata_json["action_space_type"]
-                except Exception as error:
-                    logger.warn(error)
+                variables["modelMetaData"]["sensor"] = model_metadata_json.get(
+                    "sensor", "unknown"
+                )
+                variables["modelMetaData"]["actionSpaceType"] = model_metadata_json.get(
+                    "action_space_type", "unknown"
+                )
+                variables["modelMetaData"][
+                    "trainingAlgorithm"
+                ] = model_metadata_json.get("training_algorithm", "unknown")
             except Exception as error:
-                logger.warn(error)
+                logger.exception(error)
 
-            ddb_update_expressions = dynamo_helpers.generate_update_query(item)
-
-            response = table.update_item(
-                Key={
-                    "modelId": model_id,
-                },
-                UpdateExpression=ddb_update_expressions["UpdateExpression"],
-                ExpressionAttributeNames=ddb_update_expressions[
-                    "ExpressionAttributeNames"
-                ],
-                ExpressionAttributeValues=ddb_update_expressions[
-                    "ExpressionAttributeValues"
-                ],
-                ReturnValues="ALL_NEW",
-            )
-            logger.debug(response["Attributes"])
-
-            # Return the MD5 for now
-            return http_response.response(200)
+            query = """
+                mutation UpdateModel(
+                    $modelId: ID!
+                    $modelMD5: String
+                    $modelMetaData: ModelMetadataInput
+                    $sub: ID!
+                ) {
+                    updateModel(
+                    modelId: $modelId
+                    modelMD5: $modelMD5
+                    modelMetaData: $modelMetaData
+                    sub: $sub
+                    ) {
+                    fileMetaData {
+                        filename
+                        key
+                        uploadedDateTime
+                    }
+                    modelId
+                    modelMD5
+                    modelMetaData {
+                        actionSpaceType
+                        metadataMd5
+                        sensor
+                        trainingAlgorithm
+                    }
+                    modelname
+                    status
+                    sub
+                    username
+                    }
+                }
+            """
+            logger.info(variables)
+            appsync_helpers.send_mutation(query, variables)
 
     except Exception as error:
         logger.exception(error)

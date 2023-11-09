@@ -2,19 +2,25 @@ import { Button, ProgressBar } from '@cloudscape-design/components';
 import { Auth, Storage } from 'aws-amplify';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNotificationsDispatch } from '../../../store/appLayoutProvider';
-import { formatAwsDateTime } from '../../../support-functions/time';
 
-export function ModelUpload({ addModel }) {
-  const [addNotification, dismissNotification] = useNotificationsDispatch();
+import { useStore } from '../../../store/store';
+
+import awsconfig from '../../../config.json';
+
+export function ModelUpload() {
   const { t } = useTranslation();
+  const [sub, setSub] = useState();
   const [username, setUsername] = useState();
   const [uploadFiles, setUploadFiles] = useState([]);
   const fileInputRef = useRef(null);
+  const [, dispatch] = useStore();
 
   useEffect(() => {
     const getData = async () => {
-      Auth.currentAuthenticatedUser().then((user) => setUsername(user.username));
+      Auth.currentAuthenticatedUser().then((user) => {
+        setSub(user.attributes.sub);
+        setUsername(user.username);
+      });
     };
 
     getData();
@@ -30,15 +36,17 @@ export function ModelUpload({ addModel }) {
 
   useEffect(() => {
     const saveModel = async (file) => {
-      const s3path = username + '/models/' + file.name;
+      const s3path = `${sub}/${username}/models/${file.name}`;
+      //const s3path = `${sub}/${file.name}`;
 
       if (file.name.match(/^[a-zA-Z0-9-_]+\.tar\.gz$/)) {
         Storage.put(s3path, file, {
-          level: 'private',
+          bucket: awsconfig.Storage.uploadBucket,
           contentType: file.type,
-          tagging: 'lifecycle=true',
+          level: 'private',
+          tagging: `lifecycle=true`,
           progressCallback(progress) {
-            addNotification({
+            dispatch('ADD_NOTIFICATION', {
               type: 'info',
               content: (
                 <ProgressBar
@@ -50,14 +58,14 @@ export function ModelUpload({ addModel }) {
               id: file.name,
               dismissible: true,
               onDismiss: () => {
-                dismissNotification(file.name);
+                dispatch('DISMISS_NOTIFICATION', file.name);
               },
             });
           },
         })
           .then((result) => {
-            console.debug(result);
-            addNotification({
+            console.debug('MODEL UPLOAD RESULT', result);
+            dispatch('ADD_NOTIFICATION', {
               type: 'success',
               content: (
                 <ProgressBar
@@ -75,39 +83,34 @@ export function ModelUpload({ addModel }) {
               id: file.name,
               dismissible: true,
               onDismiss: () => {
-                dismissNotification(file.name);
+                dispatch('DISMISS_NOTIFICATION', file.name);
               },
-            });
-            addModel({
-              key: s3path,
-              modelDate: formatAwsDateTime(new Date()),
-              modelName: file.name,
             });
           })
           .catch((err) => {
-            console.debug(err);
-            addNotification({
+            console.info(err);
+            dispatch('ADD_NOTIFICATION', {
               header: t('models.notifications.could-not-upload') + ' ' + file.name,
               type: 'error',
               content: t('common.error'),
               dismissible: true,
-              dismissLabel: 'Dismiss message',
+              dismissLabel: t('models.notifications.dismiss-message'),
               id: file.name,
               onDismiss: () => {
-                dismissNotification(file.name);
+                dispatch('DISMISS_NOTIFICATION', file.name);
               },
             });
           });
       } else {
-        addNotification({
+        dispatch('ADD_NOTIFICATION', {
           header: t('models.notifications.could-not-upload') + ' ' + file.name,
           type: 'error',
           content: file.name + ' ' + t('carmodelupload-modal.file-regex'),
           dismissible: true,
-          dismissLabel: 'Dismiss message',
+          dismissLabel: t('models.notifications.dismiss-message'),
           id: file.name,
           onDismiss: () => {
-            dismissNotification(file.name);
+            dispatch('DISMISS_NOTIFICATION', file.name);
           },
         });
       }

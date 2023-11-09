@@ -1,14 +1,17 @@
 import {
   Box,
+  BreadcrumbGroup,
   Button,
   CollectionPreferences,
   Header,
+  Link,
   Pagination,
   SpaceBetween,
 } from '@cloudscape-design/components';
 
-import { default as React } from 'react';
+import { default as React, useEffect } from 'react';
 import i18next from '../i18n';
+import { useStore } from '../store/store';
 
 export function EmptyState({ title, subtitle, action }) {
   return (
@@ -71,92 +74,6 @@ export const ContentDensity = () => {
   };
 };
 
-export function UserModelsColumnsConfig() {
-  const rowHeaders = [
-    {
-      id: 'id',
-      header: 'id',
-      cell: (item) => item.id,
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'modelName',
-      header: i18next.t('models.model-name'),
-      cell: (item) => item.modelName || '-',
-      sortingField: 'modelName',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'modelDate',
-      header: i18next.t('models.upload-date'),
-      cell: (item) => item.modelDate || '-',
-      sortingField: 'modelDate',
-      width: 200,
-      minWidth: 150,
-    },
-  ];
-  return rowHeaders;
-}
-
-export function AdminModelsColumnsConfig() {
-  const rowHeaders = [
-    {
-      id: 'modelId',
-      header: i18next.t('models.model-id'),
-      cell: (item) => item.modelId,
-      width: 320,
-    },
-    {
-      id: 'userName',
-      header: i18next.t('models.user-name'),
-      cell: (item) => item.userName || '-',
-      sortingField: 'userName',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'modelName',
-      header: i18next.t('models.model-name'),
-      cell: (item) => item.modelName || '-',
-      sortingField: 'modelName',
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'modelDate',
-      header: i18next.t('models.upload-date'),
-      cell: (item) => item.modelDate || '-',
-      sortingField: 'modelDate',
-      width: 240,
-      minWidth: 150,
-    },
-    {
-      id: 'modelMD5Hash',
-      header: i18next.t('models.md5-hash'),
-      cell: (item) => item.modelMD5,
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'modelMetadataMD5Hash',
-      header: i18next.t('models.md5-hash-metadata'),
-      cell: (item) => item.modelMetadataMD5,
-      width: 200,
-      minWidth: 150,
-    },
-    {
-      id: 'modelS3Key',
-      header: i18next.t('models.model-s3-key'),
-      cell: (item) => item.modelKey,
-      width: 200,
-      minWidth: 150,
-    },
-  ];
-  return rowHeaders;
-}
-
 const ItemsCount = ({ nrSelectedItems, nrTotalItems }) => {
   if (nrSelectedItems > 0) {
     return `(${nrSelectedItems}/${nrTotalItems})`;
@@ -188,13 +105,64 @@ const HeaderActions = ({ onEdit, onDelete, onAdd, nrSelectedItems }) => {
   );
 };
 
-export const TableHeader = ({
-  onEdit,
-  onDelete,
-  onAdd,
+export const FullPageTableHeader = ({
   nrSelectedItems,
   nrTotalItems,
   header,
+  breadcrumbs,
+  actions = undefined,
+  helpPanelHidden = true,
+  helpPanelContent = undefined,
+}) => {
+  const [, dispatch] = useStore();
+
+  // Help panel
+  useEffect(() => {
+    dispatch('UPDATE_HELP_PANEL', {
+      //isOpen: true,
+      isHidden: helpPanelHidden,
+      content: helpPanelContent,
+    });
+
+    return () => {
+      dispatch('RESET_HELP_PANEL');
+    };
+  }, [dispatch, helpPanelHidden]);
+
+  return (
+    <>
+      <BreadcrumbGroup items={breadcrumbs} ariaLabel="Breadcrumbs" />
+      {helpPanelHidden ? (
+        <Header
+          actions={actions}
+          counter={<ItemsCount nrTotalItems={nrTotalItems} nrSelectedItems={nrSelectedItems} />}
+        >
+          {header}
+        </Header>
+      ) : (
+        <Header
+          info={
+            <Link variant="info" onFollow={() => dispatch('HELP_PANEL_IS_OPEN', true)}>
+              Info
+            </Link>
+          }
+          actions={actions}
+          counter={<ItemsCount nrTotalItems={nrTotalItems} nrSelectedItems={nrSelectedItems} />}
+        >
+          {header}
+        </Header>
+      )}
+    </>
+  );
+};
+
+export const TableHeader = ({
+  nrSelectedItems,
+  nrTotalItems,
+  header,
+  onEdit = undefined,
+  onDelete = undefined,
+  onAdd = undefined,
   actions = undefined,
 }) => {
   return (

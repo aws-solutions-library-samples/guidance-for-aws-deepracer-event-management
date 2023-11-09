@@ -3,12 +3,10 @@ import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EventLinksButtons } from '../../../components/eventLinksButtons';
 import awsconfig from '../../../config.json';
-import { useFleetsContext } from '../../../store/storeProvider';
 
 export const TrackTable = ({ eventId, tracks }) => {
   const { t } = useTranslation();
   const [tableItems, setTableItems] = React.useState([]);
-  const [, , getFleetNameFromId] = useFleetsContext();
 
   useEffect(() => {
     setTableItems(
@@ -20,8 +18,8 @@ export const TrackTable = ({ eventId, tracks }) => {
               href={`${
                 awsconfig.Urls.leaderboardWebsite
               }/leaderboard/${eventId.toString()}/?qr=header&scroll=true&track=${track.trackId.toString()}`}
-              linkTextPrimary={t('events.leaderboard-link-same-tab')}
-              linkTextExternal={t('events.leaderboard-link-new-tab')}
+              linkTextPrimary={t('events.link-same-tab')}
+              linkTextExternal={t('events.link-new-tab')}
             />
           ),
           streamingOverlayLinks: (
@@ -29,8 +27,8 @@ export const TrackTable = ({ eventId, tracks }) => {
               href={`${
                 awsconfig.Urls.streamingOverlayWebsite
               }/${eventId.toString()}?trackId=${track.trackId.toString()}`}
-              linkTextPrimary={t('events.streaming-overlay-link-same-tab')}
-              linkTextExternal={t('events.streaming-overlay-link-new-tab')}
+              linkTextPrimary={t('events.link-same-tab')}
+              linkTextExternal={t('events.link-new-tab')}
             />
           ),
           streamingOverlayChromaLinks: (
@@ -38,8 +36,8 @@ export const TrackTable = ({ eventId, tracks }) => {
               href={`${
                 awsconfig.Urls.streamingOverlayWebsite
               }/${eventId.toString()}?trackId=${track.trackId.toString()}&chroma=1`}
-              linkTextPrimary={t('events.streaming-overlay-link-same-tab')}
-              linkTextExternal={t('events.streaming-overlay-link-new-tab')}
+              linkTextPrimary={t('events.link-same-tab')}
+              linkTextExternal={t('events.link-new-tab')}
             />
           ),
         };
@@ -58,7 +56,7 @@ export const TrackTable = ({ eventId, tracks }) => {
     {
       id: 'fleetId',
       header: t('events.car-fleet'),
-      cell: (item) => getFleetNameFromId(item.fleetId) || '-',
+      cell: (item) => item.fleetId || '-',
     },
     {
       id: 'leaderBoardTitle',

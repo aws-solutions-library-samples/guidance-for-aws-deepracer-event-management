@@ -1,4 +1,3 @@
-// TODO add paramter for counting up or down
 import { useState } from 'react';
 import useInterval from './useInterval';
 
@@ -56,20 +55,20 @@ export default function useTimer(interval = 27, direction = Direction.Up) {
   );
 
   const handleStart = () => {
-    console.info('start lap timer');
+    console.debug('start lap timer');
     setIsRunning(true);
     setPrevTime(null);
     setTime(toTime(0));
   };
 
   const handlePause = () => {
-    console.info('Pause lap timer');
+    console.debug('Pause lap timer');
     // clearInterval(countRef.current);
     setIsRunning(false);
   };
 
   const handleReset = (startingTime = 0) => {
-    console.info('Reset lap time');
+    console.debug('Reset lap time');
     setPrevTime(null);
     setTimeInMilliseconds(startingTime);
     setTime(toTime(startingTime));

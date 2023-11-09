@@ -1,12 +1,11 @@
 import { API, graphqlOperation } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { onNewOverlayInfo } from '../graphql/subscriptions';
 import { useWindowSize } from '../hooks/useWindowSize';
 import styles from './raceInfoFooter.module.css';
-import RaceTimer from './raceTimer';
+import RaceOverlayInfo from './raceOverlayInfo';
 
-// import { useTranslation } from 'react-i18next'; // TODO translations missing
+// import { useTranslation } from 'react-i18next';
 
 const racesStatusesWithFooterVisible = [
   //'NO_RACER_SELECTED',
@@ -17,24 +16,17 @@ const racesStatusesWithFooterVisible = [
 ];
 
 const RaceInfoFooter = ({ eventId, trackId, visible }) => {
-  const { t } = useTranslation();
   const [raceInfo, SetRaceInfo] = useState({
     username: '',
     timeLeftInMs: null,
+    raceStatus: '',
+    laps: [],
+    currentLapTimeInMs: null,
   });
   const [isVisible, SetIsVisible] = useState(false);
-  const [timerIsRunning, SetTimerIsRunning] = useState(false);
 
   const windowSize = useWindowSize();
   const aspectRatio = windowSize.width / windowSize.height;
-
-  const ManageTimer = (raceStatus) => {
-    if (raceStatus === 'RACE_IN_PROGRESS') {
-      SetTimerIsRunning(true);
-    } else {
-      SetTimerIsRunning(false);
-    }
-  };
 
   useEffect(() => {
     const subscription = API.graphql(
@@ -47,6 +39,9 @@ const RaceInfoFooter = ({ eventId, trackId, visible }) => {
             return {
               username: raceInfo.username,
               timeLeftInMs: raceInfo.timeLeftInMs,
+              raceStatus: raceInfo.raceStatus,
+              laps: raceInfo.laps,
+              currentLapTimeInMs: raceInfo.currentLapTimeInMs,
             };
           });
           SetIsVisible(true);
@@ -54,7 +49,6 @@ const RaceInfoFooter = ({ eventId, trackId, visible }) => {
           SetRaceInfo();
           SetIsVisible(false);
         }
-        ManageTimer(raceInfo.raceStatus);
       },
       error: (error) => console.warn(error),
     });
@@ -80,14 +74,14 @@ const RaceInfoFooter = ({ eventId, trackId, visible }) => {
       {isVisible && visible && (
         <div className={styles.footerRoot}>
           <div>
-            <span className={styles.footerName}>
-              {t('leaderboard.race-info-footer.currently-racing')}:{' '}
-            </span>
-            <span className={styles.footerName}>{username}</span>
-          </div>
-          <div>
             <span className={styles.footerCountdown}>
-              <RaceTimer timerIsRunning={timerIsRunning} timeLeftInMs={raceInfo.timeLeftInMs} />
+              <RaceOverlayInfo
+                username={username}
+                raceStatus={raceInfo.raceStatus}
+                timeLeftInMs={raceInfo.timeLeftInMs}
+                laps={raceInfo.laps}
+                currentLapTimeInMs={raceInfo.currentLapTimeInMs}
+              />
             </span>
           </div>
         </div>

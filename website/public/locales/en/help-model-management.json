@@ -1,5 +1,5 @@
 {
-  "header": "## Models",
-  "content": "On this page, you can upload your AWS DeepRacer models to DREM. Select **Upload model**, navigate to your saved model and select **Open**. When the upload is complete, your model appears in the **Models** list. ",
+  "header": "## Model management",
+  "content": "On this page, you upload your AWS DeepRacer models to DREM. During upload, models are scanned automatically for viruses. Models with viruses are quarantined and can’t be deployed to AWS DeepRacer cars. Models are stored for 15 days.\n\nTo upload a model, select **Upload model**, navigate to your saved model and select **Open**. When the upload is complete, your model appears in the Models list. On event day, when it’s your turn to race, a pit crew member deploys your uploaded model to an AWS DeepRacer car for in-person racing.\n\nIf you upload a model, but it doesn’t appear in the Models list, it may have been quarantined or your browser may need to be refreshed.",
   "footer": ""
 }

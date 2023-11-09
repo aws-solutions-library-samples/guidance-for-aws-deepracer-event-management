@@ -1,0 +1,28 @@
+{
+    "version": "0",
+    "id": "f32dea5e-1410-f9c8-fbb7-14b5547d5968",
+    "detail-type": "Object Created",
+    "source": "aws.s3",
+    "account": "861525554226",
+    "time": "2023-08-24T20:00:01Z",
+    "region": "eu-west-1",
+    "resources": [
+        "arn:aws:s3:::drem-backend-marbuss-inf-modelsmanageruploadbucke-1x7p5inlx6yqg"
+    ],
+    "detail": {
+        "version": "0",
+        "bucket": {
+            "name": "drem-backend-marbuss-inf-modelsmanageruploadbucke-1x7p5inlx6yqg"
+        },
+        "object": {
+            "key": "private/eu-west-1:8ee57f8b-930e-4afb-945d-e6ba3e1899b1/admin/models/WayPoint-Test-3-model.tar.gz",
+            "size": 21799052,
+            "etag": "ec000ee83c1cc1117dbfe82c5ad8128e-5",
+            "sequencer": "0064E7B6BA2331A895"
+        },
+        "request-id": "PPFK6JJVMBFW4F6J",
+        "requester": "861525554226",
+        "source-ip-address": "54.240.197.234",
+        "reason": "CompleteMultipartUpload"
+    }
+}

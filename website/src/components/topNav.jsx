@@ -1,47 +1,51 @@
-import { AppLayout, Badge, SideNavigation, TopNavigation } from '@cloudscape-design/components';
+import {
+  AppLayout,
+  Badge,
+  Flashbar,
+  SideNavigation,
+  TopNavigation,
+} from '@cloudscape-design/components';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Route, Routes, useLocation } from 'react-router-dom';
 
 import { useTranslation } from 'react-i18next';
-import { AdminActivation } from '../admin/carActivation';
-import { AdminCars } from '../admin/cars';
+import { AdminCarActivation } from '../admin/carActivation';
+import { AdminDevices } from '../admin/devices';
 import { AdminEvents } from '../admin/events/adminEvents';
 import { CreateEvent } from '../admin/events/pages/createEvent';
 import { EditEvent } from '../admin/events/pages/editEvent';
 import { AdminFleets } from '../admin/fleets/adminFleets';
 import { CreateFleet } from '../admin/fleets/createFleet';
 import { EditFleet } from '../admin/fleets/editFleet';
-import { GroupMembersPage } from '../admin/groups/groupMembersPage';
-import { GroupsPage } from '../admin/groups/groupsPage';
 import { AdminHome } from '../admin/home';
-import { AdminModels } from '../admin/model-management/models';
-import { AdminQuarantine } from '../admin/model-management/quarantine';
 import { EditRace } from '../admin/race-admin/pages/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
+import { AdminTimerActivation } from '../admin/timerActivation';
 import { ProfileHome } from '../admin/user-profile/profile';
-// import { ToolsContent } from '../admin/users/common-components';
 import { CreateUser } from '../admin/users/createUser';
-import { UsersList } from '../admin/users/usersList';
 import { CommentatorRaceStats } from '../commentator/race-stats';
 import { Home } from '../home';
+import { useCarsApi } from '../hooks/useCarsApi';
+import { useEventsApi } from '../hooks/useEventsApi';
+import { useFleetsApi } from '../hooks/useFleetsApi';
 import useLink from '../hooks/useLink';
-import { ModelMangement } from '../pages/model-management/modelManagement';
+import { useModelsApi } from '../hooks/useModelsApi';
+import { usePermissions } from '../hooks/usePermissions';
+import { useRacesApi } from '../hooks/useRacesApi';
+import { useUsersApi } from '../hooks/useUsersApi';
+import { useWindowSize } from '../hooks/useWindowsSize';
+import { ModelManagement } from '../pages/model-management/modelManagement';
 import { Timekeeper } from '../pages/timekeeper/timeKeeper';
+import { UserManagement } from '../pages/user-manager/userManagement';
 import {
-  useNotifications,
-  useSideNavOptions,
-  useSideNavOptionsDispatch,
-  useSplitPanelOptions,
-  useSplitPanelOptionsDispatch,
-  useToolsOptions,
-  useToolsOptionsDispatch,
-} from '../store/appLayoutProvider';
-import { usePermissionsContext } from '../store/permissions/permissionsProvider';
-import { useSelectedEventContext, useSelectedTrackContext } from '../store/storeProvider';
+  useSelectedEventContext,
+  useSelectedEventDispatch,
+  useSelectedTrackContext,
+} from '../store/contexts/storeProvider';
+import { useStore } from '../store/store';
 import { EventSelectorModal } from './eventSelectorModal';
-
 function cwr(operation, payload) {
   // Instrument Routing to Record Page Views
   // https://github.com/aws-observability/aws-rum-web/blob/main/docs/cdn_react.md
@@ -59,7 +63,7 @@ const defaultRoutes = [
   <Route path="/" element={<Home />} />,
   <Route path="*" element={<Home />} />,
   <Route path="/user/profile" element={<ProfileHome />} />,
-  <Route path="/models/view" element={<ModelMangement />} />,
+  <Route path="/models/view" element={<ModelManagement />} />,
 ];
 
 const registrationRoutes = [<Route path="/registration/createuser" element={<CreateUser />} />];
@@ -68,26 +72,25 @@ const commentatorRoutes = [<Route path="/commentator" element={<CommentatorRaceS
 
 const operatorRoutes = [
   <Route path="/admin/home" element={<AdminHome />} />,
-  <Route path="/admin/models" element={<AdminModels />} />,
-  <Route path="/admin/quarantine" element={<AdminQuarantine />} />,
-  <Route path="/admin/cars" element={<AdminCars />} />,
+  <Route path="/admin/devices" element={<AdminDevices />} />,
   <Route path="/admin/events" element={<AdminEvents />} />,
   <Route path="/admin/events/create" element={<CreateEvent />} />,
   <Route path="/admin/events/edit" element={<EditEvent />} />,
   <Route path="/admin/fleets" element={<AdminFleets />} />,
   <Route path="/admin/fleets/create" element={<CreateFleet />} />,
   <Route path="/admin/fleets/edit" element={<EditFleet />} />,
-  <Route path="/admin/car_activation" element={<AdminActivation />} />,
+  <Route path="/admin/car_activation" element={<AdminCarActivation />} />,
+  <Route path="/admin/timer_activation" element={<AdminTimerActivation />} />,
   <Route path="/admin/timekeeper" element={<Timekeeper />} />,
   <Route path="/admin/races" element={<RaceAdmin />} />,
   <Route path="/admin/races/edit" element={<EditRace />} />,
+  <Route
+    path="/admin/models"
+    element={<ModelManagement isOperatorView={true} onlyDisplayOwnModels={false} />}
+  />,
 ];
 
-const adminRoutes = [
-  <Route path="/admin/users" element={<UsersList />} />,
-  <Route path="/admin/groups" element={<GroupsPage />} />,
-  <Route path="/admin/groups/:groupName" element={<GroupMembersPage />} />,
-];
+const adminRoutes = [<Route path="/admin/user-management" element={<UserManagement />} />];
 
 const MenuRoutes = ({ permissions }) => {
   usePageViews();
@@ -110,24 +113,29 @@ const MenuRoutes = ({ permissions }) => {
 
 export function TopNav(props) {
   const { t } = useTranslation();
-
-  const splitPanelOptions = useSplitPanelOptions();
-  const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
-  const notifications = useNotifications();
+  const windowSize = useWindowSize();
 
   const { handleFollow } = useLink();
 
   const selectedEvent = useSelectedEventContext();
+  const setSelectedEvent = useSelectedEventDispatch();
   const selectedTrack = useSelectedTrackContext();
-  const sideNavOptions = useSideNavOptions();
-  const sideNavOptionsDispatch = useSideNavOptionsDispatch();
+  const [state, dispatch] = useStore();
 
-  const permissions = usePermissionsContext();
+  const permissions = usePermissions();
+  useUsersApi(permissions.api.users);
+  useRacesApi(permissions.api.races, selectedEvent.eventId);
+  useCarsApi(permissions.api.cars);
+  useFleetsApi(permissions.api.fleets);
+  useEventsApi(selectedEvent, setSelectedEvent, permissions.api.events);
+  useModelsApi(permissions.api.allModels);
+
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
 
-  //const [toolsOpen, setToolsOpen] = useState(true);
-  const toolsOptions = useToolsOptions();
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
+  useEffect(() => {
+    if (windowSize.width < 900) dispatch('SIDE_NAV_IS_OPEN', false);
+    else if (windowSize.width >= 900) dispatch('SIDE_NAV_IS_OPEN', true);
+  }, [windowSize]);
 
   const defaultSideNavItems = [
     {
@@ -168,27 +176,26 @@ export function TopNav(props) {
       href: '/operator',
       items: [
         {
-          type: 'expandable-link-group',
-          text: t('topnav.models'),
-          items: [
-            { type: 'link', text: t('topnav.all-models'), href: '/admin/models' },
-            {
-              type: 'link',
-              text: t('topnav.quarantined-models'),
-              href: '/admin/quarantine',
-            },
-          ],
+          type: 'link',
+          text: t('topnav.models-own'),
+          href: '/admin/models',
         },
         {
           type: 'expandable-link-group',
-          text: t('topnav.car-management'),
+          text: t('topnav.device-management'),
           items: [
             { type: 'link', text: t('topnav.fleets'), href: '/admin/fleets' },
-            { type: 'link', text: t('topnav.cars'), href: '/admin/cars' },
+            { type: 'link', text: t('topnav.cars'), href: '/admin/devices' },
             {
               type: 'link',
               text: t('topnav.car-activation'),
               href: '/admin/car_activation',
+            },
+            {
+              type: 'link',
+              text: t('topnav.timer-activation'),
+              info: <Badge color="blue">Beta</Badge>,
+              href: '/admin/timer_activation',
             },
           ],
         },
@@ -222,10 +229,7 @@ export function TopNav(props) {
       type: 'section',
       text: t('topnav.admin'),
       href: '/admin',
-      items: [
-        { type: 'link', text: t('topnav.users'), href: '/admin/users' },
-        { type: 'link', text: t('topnav.groups'), href: '/admin/groups' },
-      ],
+      items: [{ type: 'link', text: t('topnav.users'), href: '/admin/user-management' }],
     },
   ];
 
@@ -312,16 +316,16 @@ export function TopNav(props) {
       </div>
       <AppLayout
         stickyNotifications
-        notifications={notifications}
-        tools={toolsOptions.content}
-        toolsOpen={toolsOptions.isOpen}
-        toolsHide={toolsOptions.isHidden}
-        onToolsChange={(item) =>
-          toolsOptionsDispatch({ type: 'UPDATE', value: { isOpen: item.detail.open } })
+        notifications={
+          <Flashbar items={state.notifications} stackItems={state.notifications.length > 3} />
         }
+        tools={state.helpPanel.content}
+        toolsOpen={state.helpPanel.isOpen}
+        toolsHide={state.helpPanel.isHidden}
+        onToolsChange={(item) => dispatch('HELP_PANEL_IS_OPEN', item.detail.open)}
         headerSelector="#h"
         ariaLabels={{ navigationClose: 'close' }}
-        navigationOpen={sideNavOptions.isOpen}
+        navigationOpen={state.sideNav.isOpen}
         navigation={
           <SideNavigation
             activeHref={window.location.pathname}
@@ -331,14 +335,10 @@ export function TopNav(props) {
         }
         contentType="table"
         content={<MenuRoutes permissions={permissions} />}
-        onNavigationChange={({ detail }) =>
-          sideNavOptionsDispatch({ type: 'SIDE_NAV_IS_OPEN', value: detail.open })
-        }
-        splitPanel={splitPanelOptions.content}
-        splitPanelOpen={splitPanelOptions.isOpen}
-        onSplitPanelToggle={(item) =>
-          splitPanelOptionsDispatch({ type: 'UPDATE', value: { isOpen: item.detail.open } })
-        }
+        onNavigationChange={({ detail }) => dispatch('SIDE_NAV_IS_OPEN', detail.open)}
+        splitPanel={state.splitPanel.content}
+        splitPanelOpen={state.splitPanel.isOpen}
+        onSplitPanelToggle={(item) => dispatch('SPLIT_PANEL_IS_OPEN', item.detail.open)}
       />
 
       <EventSelectorModal

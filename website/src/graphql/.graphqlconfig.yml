@@ -8,6 +8,7 @@ projects:
     extensions:
       amplify:
         codeGenTarget: javascript
+        typenameIntrospection: false
         generatedFileName: ''
         docsFilePath: .
         region: eu-west-1

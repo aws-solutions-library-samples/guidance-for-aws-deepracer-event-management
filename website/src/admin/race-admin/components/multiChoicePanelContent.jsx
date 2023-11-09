@@ -35,10 +35,18 @@ export const MultiChoicePanelContent = ({ races }) => {
       <FormField label={t('race-admin.multi-select.slowest-lap-time')}>
         {convertMsToString(metrics.slowestLap)}
       </FormField>
-      <FormField label={'Number of unique racers'}>{metrics.numberOfUniqueRacers}</FormField>
-      <FormField label={'Number of races'}>{metrics.numberOfRaces}</FormField>
-      <FormField label={'Most races by user'}>{metrics.mostNumberOfRacesByUser}</FormField>
-      <FormField label={'Avg no. of races by users'}>{metrics.avgRacesPerUser}</FormField>
+      <FormField label={t('race-admin.multi-select.unique-racer-count')}>
+        {metrics.numberOfUniqueRacers}
+      </FormField>
+      <FormField label={t('race-admin.multi-select.number-of-races')}>
+        {metrics.numberOfRaces}
+      </FormField>
+      <FormField label={t('race-admin.multi-select.most-races-by-user')}>
+        {metrics.mostNumberOfRacesByUser}
+      </FormField>
+      <FormField label={t('race-admin.multi-select.avg-no-of-races-by-users')}>
+        {metrics.avgRacesPerUser}
+      </FormField>
     </ColumnLayout>
   );
 };

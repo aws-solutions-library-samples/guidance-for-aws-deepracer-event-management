@@ -24,6 +24,7 @@ node_modules
 branch.txt
 email.txt
 s3_bucket.txt
+build.config
 drem.zip
 reports
 htmlcov
@@ -45,3 +46,7 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+# scratchpad notes
+scratch.txt
+

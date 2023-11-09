@@ -13,112 +13,50 @@ import { useTranslation } from 'react-i18next';
 import { SimpleHelpPanelLayout } from '../../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../../components/pageLayout';
 import useMutation from '../../../hooks/useMutation';
-import {
-  useNotificationsDispatch,
-  useToolsOptionsDispatch,
-} from '../../../store/appLayoutProvider';
+import { useStore } from '../../../store/store';
 import { LapTable } from '../components/lapTable';
 import { Breadcrumbs } from '../support-functions/supportFunctions';
 
 export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction, onNext }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-finish']);
   const [buttonsIsDisabled, SetButtonsIsDisabled] = useState(false);
   const [sendMutation, loading, errorMessage, data] = useMutation();
   const [warningModalVisible, setWarningModalVisible] = useState(false);
-  const [addNotification, dismissNotification] = useNotificationsDispatch();
+  const [, dispatch] = useStore();
+  const messageDisplayTime = 4000;
+  const notificationId = '';
 
-  const messageDisplayTime = 2500;
-  const notificationId = 'race_submition';
-
-  // Help panel
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = true;
+  // Clear the notification is submit is successful and go back to racer selector page again
   useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-race-finish' })}
-            bodyContent={t('content', { ns: 'help-admin-race-finish' })}
-            footerContent={t('footer', { ns: 'help-admin-race-finish' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
-
-  // Update submit message in modal depending on addRace mutation result
-  useEffect(() => {
-    console.info(data);
-    if (!loading && errorMessage) {
-      addNotification({
-        type: 'error',
-        content: t('timekeeper.end-session.error'),
-        id: notificationId,
-        dismissible: true,
-        onDismiss: (event) => {
-          dismissNotification(notificationId);
-        },
-      });
+    if (!loading && !errorMessage && data) {
       setTimeout(() => {
-        SetButtonsIsDisabled(false);
-      }, messageDisplayTime);
-    } else if (!loading && data) {
-      addNotification({
-        type: 'success',
-        content: t('timekeeper.end-session.info'),
-        id: notificationId,
-        dismissible: true,
-        onDismiss: (event) => {
-          dismissNotification(notificationId);
-        },
-      });
-      setTimeout(() => {
-        dismissNotification(notificationId);
+        dispatch('DISMISS_NOTIFICATION', notificationId);
         SetButtonsIsDisabled(false);
         onNext();
       }, messageDisplayTime);
     }
-  }, [data, errorMessage, loading]);
+  }, [errorMessage, loading]);
 
   const submitRaceHandler = async () => {
-    console.info(raceInfo);
     SetButtonsIsDisabled(true);
-    addNotification({
-      type: 'success',
-      loading: true,
-      content: t('timekeeper.end-session.submitting-race'),
-      id: notificationId,
-      dismissible: true,
-      onDismiss: () => {
-        dismissNotification(notificationId);
-      },
-    });
     sendMutation('addRace', { ...raceInfo });
   };
 
   const discardRaceHandler = () => {
     SetButtonsIsDisabled(true);
     setWarningModalVisible(false);
-    addNotification({
+    dispatch('ADD_NOTIFICATION', {
       type: 'warning',
       content: t('timekeeper.end-session.race-discarded'),
-      id: 'race_submition',
+      id: notificationId,
       dismissible: true,
       onDismiss: () => {
-        dismissNotification(notificationId);
+        dispatch('DISMISS_NOTIFICATION', notificationId);
       },
     });
     setTimeout(() => {
       SetButtonsIsDisabled(false);
-      dismissNotification(notificationId);
+      dispatch('DISMISS_NOTIFICATION', notificationId);
       onNext();
     }, messageDisplayTime);
   };
@@ -213,7 +151,14 @@ export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction,
   const breadcrumbs = Breadcrumbs();
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={true}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-timekeeper-race-finish' })}
+          bodyContent={t('content', { ns: 'help-admin-timekeeper-race-finish' })}
+          footerContent={t('footer', { ns: 'help-admin-timekeeper-race-finish' })}
+        />
+      }
       breadcrumbs={breadcrumbs}
       header={t('timekeeper.end-session.page-header')}
       description={t('timekeeper.end-session.page-description')}

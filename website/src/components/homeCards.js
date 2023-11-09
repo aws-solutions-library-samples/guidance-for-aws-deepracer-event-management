@@ -3,9 +3,9 @@ import i18next from '../i18n';
 const HomeCards = () => {
   const cards = [
     {
-      name: i18next.t('home.models'),
+      name: i18next.t('homeCards.homeCards.models'),
       link: '/models/view',
-      description: i18next.t('home.models-description'),
+      description: i18next.t('homeCards.homeCards.models-description'),
     },
   ];
   return cards;
@@ -14,39 +14,44 @@ const HomeCards = () => {
 const AdminHomeCards = () => {
   const cards = [
     {
-      name: i18next.t('home.all-models'),
+      name: i18next.t('homeCards.adminHomeCards.registration'),
+      link: '/registration/createuser',
+      description: i18next.t('homeCards.adminHomeCards.registration-description'),
+    },
+    {
+      name: i18next.t('homeCards.adminHomeCards.all-models'),
       link: '/admin/models',
-      description: i18next.t('home.all-models-description'),
+      description: i18next.t('homeCards.adminHomeCards.all-models-description'),
     },
     {
-      name: i18next.t('home.quarantined'),
+      name: i18next.t('homeCards.adminHomeCards.quarantined'),
       link: '/admin/quarantine',
-      description: i18next.t('home.quarantined-description'),
+      description: i18next.t('homeCards.adminHomeCards.quarantined-description'),
     },
     {
-      name: i18next.t('home.fleets'),
+      name: i18next.t('homeCards.adminHomeCards.fleets'),
       link: '/admin/fleets',
-      description: i18next.t('home.fleets-description'),
+      description: i18next.t('homeCards.adminHomeCards.fleets-description'),
     },
     {
-      name: i18next.t('home.cars'),
-      link: '/admin/cars',
-      description: i18next.t('home.cars-description'),
+      name: i18next.t('homeCards.adminHomeCards.devices'),
+      link: '/admin/devices',
+      description: i18next.t('homeCards.adminHomeCards.devices-description'),
     },
     {
-      name: i18next.t('home.car-activation'),
+      name: i18next.t('homeCards.adminHomeCards.car-activation'),
       link: '/admin/car_activation',
-      description: i18next.t('home.car-activation-description'),
+      description: i18next.t('homeCards.adminHomeCards.car-activation-description'),
     },
     {
-      name: i18next.t('home.events'),
+      name: i18next.t('homeCards.adminHomeCards.events'),
       link: '/admin/events',
-      description: i18next.t('home.events-description'),
+      description: i18next.t('homeCards.adminHomeCards.events-description'),
     },
     {
-      name: i18next.t('home.time-keeper'),
+      name: i18next.t('homeCards.adminHomeCards.time-keeper'),
       link: '/admin/timekeeper',
-      description: i18next.t('home.time-keeper-description'),
+      description: i18next.t('homeCards.adminHomeCards.time-keeper-description'),
     },
   ];
   return cards;

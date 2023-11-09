@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { PageLayout } from '../../components/pageLayout';
 import useMutation from '../../hooks/useMutation';
 import { merge } from '../../support-functions/merge';
-import { CarsPanel } from './carsPanel';
+import { DevicesPanel } from './devicesPanel';
 import { fleet } from './fleetDomain';
 import { GeneralInfoPanel } from './generalInfoPanel';
 import { Breadcrumbs } from './support-functions/supportFunctions';
@@ -97,7 +97,7 @@ export const EditFleet = () => {
               onFormIsValid={formIsValidHandler}
               onFormIsInvalid={formIsInvalidHandler}
             />
-            <CarsPanel onChange={UpdateConfigHandler} {...fleetConfig} />
+            <DevicesPanel onChange={UpdateConfigHandler} {...fleetConfig} />
           </SpaceBetween>
         </Form>
       </form>

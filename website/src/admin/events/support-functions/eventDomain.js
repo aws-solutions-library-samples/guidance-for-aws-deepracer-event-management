@@ -7,7 +7,7 @@ export const event = {
   typeOfEvent: undefined,
   raceConfig: {
     rankingMethod: 'BEST_LAP_TIME',
-    raceTimeInMin: '3',
+    raceTimeInMin: '2',
     maxRunsPerRacer: '3',
     numberOfResetsPerLap: '9999',
     trackType: 'REINVENT_2018',

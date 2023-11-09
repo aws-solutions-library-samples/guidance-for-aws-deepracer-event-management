@@ -1,5 +1,5 @@
 {
-  "header": "## Fleets administration",
-  "content": "On this page, you can create, edit and delete fleets of cars. To create a fleet, select the **Create** button, provide a name for the new fleet and add cars to it.",
+  "header": "## Fleets",
+  "content": "On this page, you can create, edit and delete fleets of cars. To create a fleet, select **Create,** provide a name for the new fleet, and add cars to it.",
   "footer": ""
 }

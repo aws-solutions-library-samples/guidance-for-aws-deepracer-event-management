@@ -3,29 +3,56 @@ import { useCallback, useState } from 'react';
 
 import { useTranslation } from 'react-i18next';
 import * as mutations from '../graphql/mutations';
-import { useNotificationsDispatch } from '../store/appLayoutProvider';
+import { useStore } from '../store/store';
 
 export default function useMutation() {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState();
   const [errorMessage, setErrorMessage] = useState('');
-  const [addNotification, dismissNotification] = useNotificationsDispatch();
+  const [, dispatch] = useStore();
 
-  const generateRequestNotification = useCallback((method, payload) => {
-    const lowerCaseMethod = method.toLowerCase();
-    let notificationInfo = {
-      id: '',
-      itemType: '',
-      action: '',
-      name: '',
-    };
-    if (lowerCaseMethod.includes('event')) {
-      notificationInfo = {
-        id: payload.eventName ?? '',
-        itemType: t('notifications.item-type-event'),
-        name: payload.eventName ?? '',
+  const generateRequestNotification = useCallback(
+    (method, payload) => {
+      const lowerCaseMethod = method.toLowerCase();
+      let notificationInfo = {
+        id: '',
+        itemType: '',
+        action: '',
+        name: '',
       };
+      if (lowerCaseMethod.includes('event')) {
+        notificationInfo = {
+          id: payload.eventName ?? '',
+          itemType: t('notifications.item-type-event'),
+          name: payload.eventName ?? '',
+        };
+      } else if (lowerCaseMethod.includes('user')) {
+        notificationInfo = {
+          id: payload.username ?? '',
+          itemType: t('notifications.item-type-user'),
+          name: payload.username ?? '',
+        };
+      } else if (lowerCaseMethod.includes('race')) {
+        notificationInfo = {
+          id: payload.raceId ?? '',
+          itemType: t('notifications.item-type-race'),
+          name: payload.raceId ?? '',
+        };
+      } else if (lowerCaseMethod.includes('model')) {
+        console.info('NOTIFICATION', payload);
+        notificationInfo = {
+          id: payload.modelId ?? '',
+          itemType: t('notifications.item-type-model'),
+          name: payload.modelname ?? '',
+        };
+      } else {
+        notificationInfo = {
+          id: 'common',
+          itemType: 'unknown',
+          name: '',
+        };
+      }
 
       let notificationHeader;
       const itemType = notificationInfo.itemType;
@@ -41,9 +68,13 @@ export default function useMutation() {
         notificationHeader = t('notifications.deleting-item', { itemType, itemName });
       }
 
-      if (notificationHeader != null) {
-        console.info('Add request - notification');
-        addNotification({
+      if (notificationHeader != null && notificationInfo.itemType !== 'unknown') {
+        console.debug(
+          'Add request - notification',
+          notificationInfo,
+          notificationInfo.itemType !== 'unknown'
+        );
+        dispatch('ADD_NOTIFICATION', {
           header: notificationHeader,
           type: 'info',
           loading: true,
@@ -51,58 +82,62 @@ export default function useMutation() {
           dismissLabel: 'Dismiss message',
           id: notificationInfo.id,
           onDismiss: () => {
-            dismissNotification(notificationInfo.id);
+            dispatch('DISMISS_NOTIFICATION', notificationInfo.id);
           },
         });
       }
-    }
 
-    return notificationInfo;
-  }, []);
+      return notificationInfo;
+    },
+    [dispatch]
+  );
 
-  const generateResponseNotification = useCallback((notificationInfo, status, errorMessage) => {
-    let notificationHeader;
-    const itemType = notificationInfo.itemType;
-    const itemName = notificationInfo.name;
-    if (notificationInfo.action === 'add' && status === 'success')
-      notificationHeader = t('notifications.create-item-success', { itemType, itemName });
-    else if (notificationInfo.action === 'add' && status === 'error')
-      notificationHeader = t('notifications.create-item-error', {
-        itemType,
-        itemName,
-        errorMessage,
-      });
-    else if (notificationInfo.action === 'update' && status === 'success')
-      notificationHeader = t('notifications.update-item-success', { itemType, itemName });
-    else if (notificationInfo.action === 'update' && status === 'error')
-      notificationHeader = t('notifications.update-item-error', {
-        itemType,
-        itemName,
-        errorMessage,
-      });
-    else if (notificationInfo.action === 'delete' && status === 'success')
-      notificationHeader = t('notifications.delete-item-success', { itemType, itemName });
-    else if (notificationInfo.action === 'delete' && status === 'error')
-      notificationHeader = t('notifications.delete-item-error', {
-        itemType,
-        itemName,
-        errorMessage,
-      });
+  const generateResponseNotification = useCallback(
+    (notificationInfo, status, errorMessage) => {
+      let notificationHeader;
+      const itemType = notificationInfo.itemType;
+      const itemName = notificationInfo.name;
+      if (notificationInfo.action === 'add' && status === 'success')
+        notificationHeader = t('notifications.create-item-success', { itemType, itemName });
+      else if (notificationInfo.action === 'add' && status === 'error')
+        notificationHeader = t('notifications.create-item-error', {
+          itemType,
+          itemName,
+          errorMessage,
+        });
+      else if (notificationInfo.action === 'update' && status === 'success')
+        notificationHeader = t('notifications.update-item-success', { itemType, itemName });
+      else if (notificationInfo.action === 'update' && status === 'error')
+        notificationHeader = t('notifications.update-item-error', {
+          itemType,
+          itemName,
+          errorMessage,
+        });
+      else if (notificationInfo.action === 'delete' && status === 'success')
+        notificationHeader = t('notifications.delete-item-success', { itemType, itemName });
+      else if (notificationInfo.action === 'delete' && status === 'error')
+        notificationHeader = t('notifications.delete-item-error', {
+          itemType,
+          itemName,
+          errorMessage,
+        });
 
-    if (notificationHeader != null) {
-      console.info('Add response - notification');
-      addNotification({
-        header: notificationHeader,
-        type: status,
-        dismissible: true,
-        dismissLabel: 'Dismiss message',
-        id: notificationInfo.id,
-        onDismiss: () => {
-          dismissNotification(notificationInfo.id);
-        },
-      });
-    }
-  }, []);
+      if (notificationHeader != null && notificationInfo.itemType !== 'unknown') {
+        console.debug('Add response - notification');
+        dispatch('ADD_NOTIFICATION', {
+          header: notificationHeader,
+          type: status,
+          dismissible: true,
+          dismissLabel: 'Dismiss message',
+          id: notificationInfo.id,
+          onDismiss: () => {
+            dispatch('DISMISS_NOTIFICATION', notificationInfo.id);
+          },
+        });
+      }
+    },
+    [dispatch]
+  );
 
   const send = useCallback(
     async (method, payload) => {

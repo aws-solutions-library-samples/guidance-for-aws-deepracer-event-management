@@ -7,7 +7,7 @@ import Container from '@cloudscape-design/components/container';
 import Header from '@cloudscape-design/components/header';
 import { getRaces } from '../graphql/queries';
 import { onNewOverlayInfo } from '../graphql/subscriptions';
-import { useSelectedEventContext, useSelectedTrackContext } from '../store/storeProvider';
+import { useSelectedEventContext, useSelectedTrackContext } from '../store/contexts/storeProvider';
 
 import { SpaceBetween } from '@cloudscape-design/components';
 import { RaceTimeAsString } from '../components/raceTimeAsString';

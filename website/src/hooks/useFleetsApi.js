@@ -1,19 +1,19 @@
 import { API, graphqlOperation } from 'aws-amplify';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import * as queries from '../graphql/queries';
 import { onAddedFleet, onDeletedFleets, onUpdatedFleet } from '../graphql/subscriptions';
+import { useStore } from '../store/store';
 
 export function useFleetsApi(userHasAccess = false) {
-  const [fleets, setFleets] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, dispatch] = useStore();
 
   // initial data load
   useEffect(() => {
     if (userHasAccess) {
       // Get Fleets
-      console.info('GET FLEETS');
+      console.debug('GET FLEETS');
       async function getAllFleets() {
-        setIsLoading(true);
+        dispatch('FLEETS_IS_LOADING', true);
         const response = await API.graphql({
           query: queries.getAllFleets,
         });
@@ -22,8 +22,8 @@ export function useFleetsApi(userHasAccess = false) {
           const updatedCarIds = fleet.carIds ? fleet.carIds : [];
           return { ...fleet, carIds: updatedCarIds };
         });
-        setFleets(fleets);
-        setIsLoading(false);
+        dispatch('ADD_FLEETS', fleets);
+        dispatch('FLEETS_IS_LOADING', false);
       }
       getAllFleets();
     }
@@ -38,8 +38,7 @@ export function useFleetsApi(userHasAccess = false) {
     if (userHasAccess) {
       subscription = API.graphql(graphqlOperation(onAddedFleet)).subscribe({
         next: (fleet) => {
-          // console.debug(fleet);
-          setFleets([...fleets, fleet.value.data.onAddedFleet]);
+          dispatch('UPDATE_FLEET', fleet.value.data.onAddedFleet);
         },
         error: (error) => console.warn(error),
       });
@@ -49,7 +48,7 @@ export function useFleetsApi(userHasAccess = false) {
         subscription.unsubscribe();
       }
     };
-  }, [fleets, userHasAccess]);
+  }, [userHasAccess]);
 
   // subscribe to updated fleets and update local array
   useEffect(() => {
@@ -58,15 +57,7 @@ export function useFleetsApi(userHasAccess = false) {
       subscription = API.graphql(graphqlOperation(onUpdatedFleet)).subscribe({
         next: (fleet) => {
           const updatedFleet = fleet.value.data.onUpdatedFleet;
-
-          setFleets((prevState) => {
-            const indexOfUpdatedFleet = fleets.findIndex(
-              (fleet) => fleet.fleetId === updatedFleet.fleetId
-            );
-            const modifiedFleets = [...prevState];
-            modifiedFleets[indexOfUpdatedFleet] = updatedFleet;
-            return modifiedFleets;
-          });
+          dispatch('UPDATE_FLEET', updatedFleet);
         },
         error: (error) => console.warn(error),
       });
@@ -76,7 +67,7 @@ export function useFleetsApi(userHasAccess = false) {
         subscription.unsubscribe();
       }
     };
-  }, [fleets, userHasAccess]);
+  }, [userHasAccess]);
 
   // subscribe to delete data changes and delete them from local array
   useEffect(() => {
@@ -85,33 +76,12 @@ export function useFleetsApi(userHasAccess = false) {
       const subscribe = () => {
         return API.graphql(graphqlOperation(onDeletedFleets)).subscribe({
           next: (fleet) => {
-            console.info('DELETED FLEET: start: ' + JSON.stringify(fleet.value.data));
+            console.debug('DELETED FLEET: start: ' + JSON.stringify(fleet.value.data));
             const fleetIdsToDelete = fleet.value.data.onDeletedFleets.map((fleet) => fleet.fleetId);
-
-            setFleets((prevState) => {
-              const indexes = [];
-              fleetIdsToDelete.map((fleetId) => {
-                const index = fleets.findIndex((fleet) => fleet.fleetId === fleetId);
-                if (index > -1) {
-                  indexes.push(index);
-                }
-              });
-
-              // To make sure fleets with highest index are deleted first
-              indexes.sort().reverse();
-
-              if (indexes) {
-                const updatedState = [...prevState];
-                indexes.map((index) => updatedState.splice(index, 1));
-                console.info('DELETED FLEET: ' + JSON.stringify(indexes));
-                return updatedState;
-              }
-              return prevState;
-            });
+            dispatch('DELETE_FLEETS', fleetIdsToDelete);
           },
           error: (error) => {
             console.warn(error);
-            // subscribe();
           },
         });
       };
@@ -123,7 +93,5 @@ export function useFleetsApi(userHasAccess = false) {
         subscription.unsubscribe();
       }
     };
-  }, [fleets, userHasAccess]);
-
-  return [fleets, isLoading];
+  }, [userHasAccess]);
 }

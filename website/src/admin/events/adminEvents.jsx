@@ -1,38 +1,19 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useCollection } from '@cloudscape-design/collection-hooks';
-import { PropertyFilter, Table } from '@cloudscape-design/components';
+import { Button, SpaceBetween } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
 import { DeleteModal, ItemList } from '../../components/deleteModal';
 import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
+import { PageTable } from '../../components/pageTable';
 import { DrSplitPanel } from '../../components/split-panels/dr-split-panel';
-import {
-  PropertyFilterI18nStrings,
-  TableEmptyState,
-  TableNoMatchState,
-} from '../../components/tableCommon';
-import {
-  DefaultPreferences,
-  MatchesCountText,
-  TableHeader,
-  TablePagination,
-  TablePreferences,
-} from '../../components/tableConfig';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { TableHeader } from '../../components/tableConfig';
 import useMutation from '../../hooks/useMutation';
-import {
-  useSplitPanelOptionsDispatch,
-  useToolsOptionsDispatch,
-} from '../../store/appLayoutProvider';
-import { useEventsContext, useFleetsContext, useUsersContext } from '../../store/storeProvider';
+import { useUsers } from '../../hooks/useUsers';
+import { useStore } from '../../store/store';
 import { EventDetailsPanelContent } from './components/eventDetailsPanelContent';
-import {
-  ColumnDefinitions,
-  FilteringProperties,
-  VisibleContentOptions,
-} from './support-functions/eventsTableConfig';
+import { ColumnConfiguration, FilteringProperties } from './support-functions/eventsTableConfig';
 
 const AdminEvents = () => {
   const { t } = useTranslation(['translation', 'help-admin-events']);
@@ -40,45 +21,17 @@ const AdminEvents = () => {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [send] = useMutation();
 
-  const [preferences, setPreferences] = useLocalStorage('DREM-events-table-preferences', {
-    ...DefaultPreferences,
-    visibleContent: ['eventName', 'eventDate', 'createdAt'],
-  });
+  const [state, dispatch] = useStore();
+  const fleets = state.fleets.fleets;
+  const events = state.events.events;
+  const eventIsLoading = state.events.isLoading;
+  const [, , getUserNameFromId] = useUsers();
 
-  const [, , getUserNameFromId] = useUsersContext();
-  const [events, eventIsLoading] = useEventsContext();
-  const [fleets] = useFleetsContext();
-
-  const splitPanelOptionsDispatch = useSplitPanelOptionsDispatch();
   const navigate = useNavigate();
 
   const editEventHandler = () => {
     navigate('/admin/events/edit', { state: SelectedEventsInTable[0] });
   };
-
-  // Help panel
-  const toolsOptionsDispatch = useToolsOptionsDispatch();
-  const helpPanelHidden = true;
-  useEffect(() => {
-    toolsOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        //isOpen: true,
-        isHidden: helpPanelHidden,
-        content: (
-          <SimpleHelpPanelLayout
-            headerContent={t('header', { ns: 'help-admin-events' })}
-            bodyContent={t('content', { ns: 'help-admin-events' })}
-            footerContent={t('footer', { ns: 'help-admin-events' })}
-          />
-        ),
-      },
-    });
-
-    return () => {
-      toolsOptionsDispatch({ type: 'RESET' });
-    };
-  }, [toolsOptionsDispatch]);
 
   // Add Event
   const addEventHandler = () => {
@@ -93,36 +46,8 @@ const AdminEvents = () => {
   }
 
   // Table config
-  const columnDefinitions = ColumnDefinitions(getUserNameFromId, fleets);
+  const columnConfiguration = ColumnConfiguration(getUserNameFromId, fleets);
   const filteringProperties = FilteringProperties();
-  const visibleContentOptions = VisibleContentOptions();
-
-  const {
-    items,
-    actions,
-    filteredItemsCount,
-    collectionProps,
-    propertyFilterProps,
-    paginationProps,
-  } = useCollection(events, {
-    propertyFiltering: {
-      filteringProperties,
-      empty: <TableEmptyState resourceName="Event" />,
-      noMatch: (
-        <TableNoMatchState
-          onClearFilter={() => {
-            actions.setPropertyFiltering({ tokens: [], operation: 'and' });
-          }}
-          label={t('common.no-matches')}
-          description={t('common.we-cant-find-a-match')}
-          buttonLabel={t('button.clear-filters')}
-        />
-      ),
-    },
-    pagination: { pageSize: preferences.pageSize },
-    sorting: { defaultState: { sortingColumn: columnDefinitions[0] } },
-    selection: {},
-  });
 
   const selectPanelContent = useCallback((selectedItems) => {
     if (selectedItems.length === 0) {
@@ -142,72 +67,46 @@ const AdminEvents = () => {
 
   useEffect(() => {
     console.debug('show split panel');
-    splitPanelOptionsDispatch({
-      type: 'UPDATE',
-      value: {
-        isOpen: true,
-        content: selectPanelContent(SelectedEventsInTable),
-      },
+    dispatch('UPDATE_SPLIT_PANEL', {
+      isOpen: true,
+      content: selectPanelContent(SelectedEventsInTable),
     });
 
     return () => {
-      splitPanelOptionsDispatch({ type: 'RESET' });
+      dispatch('RESET_SPLIT_PANEL');
     };
-  }, [SelectedEventsInTable, splitPanelOptionsDispatch, selectPanelContent]);
+  }, [SelectedEventsInTable, selectPanelContent]);
 
-  const eventsTable = (
-    <Table
-      {...collectionProps}
-      onSelectionChange={({ detail }) => {
-        setSelectedEventsInTable(detail.selectedItems);
-      }}
-      selectedItems={SelectedEventsInTable}
-      selectionType="single"
-      columnDefinitions={columnDefinitions}
-      items={items}
-      stripedRows={preferences.stripedRows}
-      contentDensity={preferences.contentDensity}
-      wrapLines={preferences.wrapLines}
-      loading={eventIsLoading}
-      loadingText={t('events.loading')}
-      stickyHeader="true"
-      trackBy="eventId"
-      filter={
-        <PropertyFilter
-          {...propertyFilterProps}
-          i18nStrings={PropertyFilterI18nStrings('events')}
-          countText={MatchesCountText(filteredItemsCount)}
-          filteringAriaLabel={t('cars.filter-groups')}
-          expandToViewport={true}
-        />
-      }
-      header={
-        <TableHeader
-          nrSelectedItems={SelectedEventsInTable.length}
-          nrTotalItems={events.length}
-          onEdit={editEventHandler}
-          onDelete={() => setDeleteModalVisible(true)}
-          onAdd={addEventHandler}
-          header={t('events.events-table')}
-        />
-      }
-      pagination={<TablePagination paginationProps={paginationProps} />}
-      visibleColumns={preferences.visibleContent}
-      resizableColumns
-      preferences={
-        <TablePreferences
-          preferences={preferences}
-          setPreferences={setPreferences}
-          contentOptions={visibleContentOptions}
-        />
-      }
-    />
-  );
+  const HeaderActionButtons = () => {
+    const disableEditButton =
+      SelectedEventsInTable.length === 0 || SelectedEventsInTable.length > 1;
+    const disableDeleteButton = SelectedEventsInTable.length === 0;
+    return (
+      <SpaceBetween direction="horizontal" size="xs">
+        <Button disabled={disableEditButton} onClick={editEventHandler}>
+          {t('button.edit')}
+        </Button>
+        <Button disabled={disableDeleteButton} onClick={() => setDeleteModalVisible(true)}>
+          {t('button.delete')}
+        </Button>
+        <Button variant="primary" onClick={addEventHandler}>
+          {t('button.create')}
+        </Button>
+      </SpaceBetween>
+    );
+  };
 
   // JSX
   return (
     <PageLayout
-      helpPanelHidden={helpPanelHidden}
+      helpPanelHidden={false}
+      helpPanelContent={
+        <SimpleHelpPanelLayout
+          headerContent={t('header', { ns: 'help-admin-events' })}
+          bodyContent={t('content', { ns: 'help-admin-events' })}
+          footerContent={t('footer', { ns: 'help-admin-events' })}
+        />
+      }
       header={t('events.header')}
       description={t('events.description')}
       breadcrumbs={[
@@ -217,7 +116,27 @@ const AdminEvents = () => {
         { text: t('events.breadcrumb') },
       ]}
     >
-      {eventsTable}
+      <PageTable
+        selectedItems={SelectedEventsInTable}
+        setSelectedItems={setSelectedEventsInTable}
+        tableItems={events}
+        selectionType="single"
+        columnConfiguration={columnConfiguration}
+        header={
+          <TableHeader
+            nrSelectedItems={SelectedEventsInTable.length}
+            nrTotalItems={events.length}
+            header={t('events.events-table')}
+            actions={<HeaderActionButtons />}
+          />
+        }
+        itemsIsLoading={eventIsLoading}
+        loadingText={t('events.loading')}
+        localStorageKey={'events-table-preferences'}
+        trackBy={'eventId'}
+        filteringProperties={filteringProperties}
+        filteringI18nStringsName={'events'}
+      />
 
       <DeleteModal
         header={t('events.delete-event')}
