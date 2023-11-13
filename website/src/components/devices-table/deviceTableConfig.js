@@ -4,7 +4,7 @@ import { formatAwsDateTime } from '../../support-functions/time';
 
 export const ColumnConfiguration = () => {
   return {
-    defaultVisibleColumns: ['hostName', 'fleetName', 'carIp'],
+    defaultVisibleColumns: ['ComputerName', 'fleetName', 'IpAddress'],
     visibleContentOptions: [
       {
         label: i18next.t('devices.device-information'),
@@ -124,7 +124,7 @@ export const ColumnConfiguration = () => {
 export const FilteringProperties = () => {
   return [
     {
-      key: 'hostName',
+      key: 'ComputerName',
       propertyLabel: i18next.t('devices.host-name'),
       operators: [':', '!:', '=', '!='],
     },
