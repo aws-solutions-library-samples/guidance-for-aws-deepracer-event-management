@@ -33,6 +33,9 @@ clean: pipeline.clean s3.clean
 
 ## Dev related tragets
 
+pipeline.synth: 	## Synth the CDK pipeline, eu-west-1 (test pipeline compiles)
+	npx cdk synth -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region)
+
 pipeline.deploy: 	## Deploy the CDK pipeline, eu-west-1
 	npx cdk deploy -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region)
 
