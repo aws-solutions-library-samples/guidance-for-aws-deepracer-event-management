@@ -3,6 +3,7 @@ export const defaultRace = {
   userId: null,
   username: null,
   laps: [],
+  averageLaps: [],
   trackId: 1,
   racedByProxy: false,
 };

@@ -10,6 +10,7 @@ import {
   GetRaceResetsNameFromId,
   GetRankingNameFromId,
   GetTrackTypeNameFromId,
+  RaceTypeEnum,
 } from '../support-functions/raceConfig';
 import { TrackTable } from './trackTable';
 
@@ -17,6 +18,13 @@ export const EventDetailsPanelContent = ({ event }) => {
   const { t } = useTranslation();
 
   const [, , getUserNameFromId] = useUsers();
+
+  console.debug('=== EVENT ===');
+  console.debug(event.raceConfig.rankingMethod);
+  let raceFormat = 'fastest';
+  if (event.raceConfig.rankingMethod === RaceTypeEnum.BEST_AVERAGE_LAP_TIME_X_LAP) {
+    raceFormat = 'average';
+  }
 
   const attributeField = (header, value) => {
     return (
@@ -60,7 +68,7 @@ export const EventDetailsPanelContent = ({ event }) => {
 
       <br />
 
-      <TrackTable eventId={event.eventId} tracks={event.tracks} />
+      <TrackTable eventId={event.eventId} tracks={event.tracks} raceFormat={raceFormat} />
     </>
   );
 };

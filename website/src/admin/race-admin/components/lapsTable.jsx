@@ -5,13 +5,35 @@ import { useTranslation } from 'react-i18next';
 import { EmptyState } from '../../../components/tableConfig';
 import { ColumnConfiguration } from '../support-functions/lapsTableConfig';
 
-const LapsTable = ({ race, tableSettings, onSelectionChange, selectedLaps, isEditable }) => {
+const LapsTable = ({
+  race,
+  averageLapInformation,
+  tableSettings,
+  onSelectionChange,
+  selectedLaps,
+  isEditable,
+}) => {
   const { t } = useTranslation();
   const [laps, setLaps] = useState([]);
 
   useEffect(() => {
     if (!race) return;
-    setLaps(race.laps);
+
+    const items = race.laps.map((lap) => {
+      const averageLapInformation = race.averageLaps;
+
+      let averageLap;
+      if (averageLapInformation) {
+        averageLap = averageLapInformation.find((avg) => '' + avg.endLapId === lap.lapId);
+      }
+
+      return {
+        ...lap,
+        avgTime: averageLap ? averageLap.avgTime : undefined,
+      };
+    });
+
+    setLaps(items);
   }, [race]);
 
   // Table config
