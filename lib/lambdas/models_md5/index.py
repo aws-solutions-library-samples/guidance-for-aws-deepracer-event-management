@@ -6,6 +6,7 @@ from urllib.parse import unquote_plus
 
 import appsync_helpers
 import boto3
+import dynamo_helpers
 import http_response
 import simplejson as json
 from aws_lambda_powertools import Logger
