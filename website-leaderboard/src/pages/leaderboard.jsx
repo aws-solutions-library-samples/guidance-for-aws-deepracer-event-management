@@ -93,7 +93,6 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled }
       newEntry.consistency = newEntry.overallRank;
     }
     console.debug(newEntry);
-    console.debug(newEntry);
 
     //calculate gap to fastest
     if (overallRank === 0) {
