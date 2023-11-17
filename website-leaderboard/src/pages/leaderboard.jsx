@@ -259,7 +259,13 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled }
       {leaderboardEntries.length > 0 && (
         <div className={styles.pageRoot}>
           <div className={styles.leaderboardRoot}>
-            <Header headerText={leaderboardConfig.leaderBoardTitle} eventId={eventId} qrCodeVisible={showQrCode} />
+            <Header
+              headerText={leaderboardConfig.leaderBoardTitle}
+              eventId={eventId}
+              trackId={trackId}
+              raceFormat={raceFormat}
+              qrCodeVisible={showQrCode}
+            />
             <LeaderboardTable
               leaderboardEntries={leaderboardEntries}
               scrollEnabled={scrollEnabled}
@@ -269,6 +275,8 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled }
           <FollowFooter
             visible
             eventId={eventId}
+            trackId={trackId}
+            raceFormat={raceFormat}
             text={leaderboardConfig.leaderBoardFooter}
             qrCodeVisible={showQrCode}
           />

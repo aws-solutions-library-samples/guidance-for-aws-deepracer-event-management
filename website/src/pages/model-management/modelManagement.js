@@ -1,4 +1,4 @@
-import { SpaceBetween } from '@cloudscape-design/components';
+import { Button, SpaceBetween } from '@cloudscape-design/components';
 import { Auth } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +28,7 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
   const [columnConfiguration, setColumnConfiguration] = useState(ColumnConfigurationOperator());
   const [filteringProperties, setFilteringProperties] = useState(FilteringPropertiesOperator());
   const [selectedModels, setSelectedModels] = useState([]);
+  const [breadcrumbs, setBreadcrumbs] = useState([]);
   const [state] = useStore();
   const [, dispatch] = useStore();
   const models = state.models.models;
@@ -59,6 +60,11 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
     if (isOperatorView) {
       setColumnConfiguration(ColumnConfigurationOperator());
       setFilteringProperties(FilteringPropertiesOperator());
+      setBreadcrumbs([
+        { text: t('home.breadcrumb'), href: '/' },
+        { text: t('admin.breadcrumb'), href: '/home/admin' },
+        { text: t('users-admin.breadcrumb') },
+      ]);
       dispatch('UPDATE_HELP_PANEL', {
         isHidden: false,
         content: operatorHelpPanel,
@@ -67,6 +73,7 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
     } else {
       setColumnConfiguration(ColumnConfigurationRacer());
       setFilteringProperties(FilteringPropertiesRacer());
+      setBreadcrumbs([{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]);
       dispatch('UPDATE_HELP_PANEL', {
         isHidden: false,
         content: helpPanel,
@@ -79,8 +86,15 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
     setSelectedModels([]);
   };
 
+  const clearSelectedModelsHandler = () => {
+    setSelectedModels([]);
+  };
+
   const operatorActionButtons = (
     <SpaceBetween direction="horizontal" size="xs">
+      <Button disabled={selectedModels.length === 0} onClick={clearSelectedModelsHandler}>
+        {t('button.clear-selected')}
+      </Button>
       <CarModelUploadModal modelsToUpload={selectedModels} uploadDisabled={selectedModels === 0} />
     </SpaceBetween>
   );
@@ -103,7 +117,7 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
       helpPanelContent={isOperatorView ? operatorHelpPanel : helpPanel}
       header={t('models.header')}
       description={isOperatorView ? t('models.operator.description') : t('models.description')}
-      breadcrumbs={[{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]}
+      breadcrumbs={breadcrumbs}
     >
       <PageTable
         selectedItems={selectedModels}

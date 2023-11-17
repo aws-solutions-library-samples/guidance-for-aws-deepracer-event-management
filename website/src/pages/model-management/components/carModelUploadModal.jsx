@@ -20,7 +20,7 @@ import {
   StatusIndicator,
   Table,
   TextFilter,
-  Toggle
+  Toggle,
 } from '@cloudscape-design/components';
 
 import {
@@ -204,7 +204,8 @@ const StatusModelContent = (props) => {
         header={
           <ProgressBar
             value={
-              ((props.modelsTotalCount - props.selectedModels.length) / props.modelsTotalCount) * 100
+              ((props.modelsTotalCount - props.selectedModels.length) / props.modelsTotalCount) *
+              100
             }
           />
         }
@@ -232,8 +233,6 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
   const cars = state.cars.cars.filter((car) => car.PingStatus === 'Online');
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
 
-  
-
   const columnConfiguration = ColumnConfiguration();
 
   const [preferences, setPreferences] = useState({
@@ -243,7 +242,7 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
 
   // on mount
   useEffect(() => {
-    setModernToggleLabel(t('carmodelupload.modern'))
+    setModernToggleLabel(t('carmodelupload.modern'));
   }, [t]);
 
   // Show event selector modal if no event has been selected, timekeeper must have an event selected to work
@@ -295,7 +294,7 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
         setSelectedCars(detail.selectedItems);
       }}
       selectedItems={selectedCars}
-      selectionType='single'
+      selectionType="single"
       // selectionType={modernToggleSelectionType}
       columnDefinitions={columnConfiguration.columnDefinitions}
       items={items}
@@ -327,10 +326,10 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
     const [progress, setProgress] = useState(0);
 
     useEffect(() => {
-      var currentProgress = 0
-      if (jobs.length > 0){
+      var currentProgress = 0;
+      if (jobs.length > 0) {
         const jobsSuccess = jobs.filter((job) => job.status === 'Success');
-        currentProgress = ((jobsSuccess.length) / jobs.length) * 100;
+        currentProgress = (jobsSuccess.length / jobs.length) * 100;
       }
       setProgress(currentProgress);
     }, [jobs, event]);
@@ -338,7 +337,7 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
     useEffect(() => {
       const getData = async () => {
         var thisJobIds = [];
-        await cars.forEach(async(car) => { 
+        await cars.forEach(async (car) => {
           var variables = {
             carInstanceId: car.InstanceId,
             carName: car.ComputerName,
@@ -353,47 +352,54 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
                 username: modelToUpload.username,
               };
             }),
-          }
+          };
           console.debug('variables', variables);
-    
+
           var response = await API.graphql({
             query: mutations.startUploadToCar,
             variables: variables,
           });
-          console.debug('startUploadToCar',response.data.startUploadToCar.jobId);
+          console.debug('startUploadToCar', response.data.startUploadToCar.jobId);
           //if (Array.isArray(localJobIds)) {
-            
-            //console.log('jobIds2', thisJobIds)
-            thisJobIds.push(response.data.startUploadToCar.jobId);
-            //console.log('jobIds3', thisJobIds)
-            setJobIds(thisJobIds)
-          //} 
-        }, [])
-      }
+
+          //console.log('jobIds2', thisJobIds)
+          thisJobIds.push(response.data.startUploadToCar.jobId);
+          //console.log('jobIds3', thisJobIds)
+          setJobIds(thisJobIds);
+          //}
+        }, []);
+      };
       getData();
     }, [cars, event]);
-    
+
     useEffect(() => {
       var subscriptions = [];
-      jobIds.forEach((jobId)=>{
+      jobIds.forEach((jobId) => {
         const filter = {
-          jobId: jobId
-        }
+          jobId: jobId,
+        };
         //console.log('subscriptionFilter-1', filter);
-          const subscription = API.graphql(graphqlOperation(onUploadsToCarCreated, filter)).subscribe({
-          next: (event) => {
-            //console.log('onUploadsToCarCreated-event', event)
-            console.debug('onUploadsToCarCreated event received', event.value.data.onUploadsToCarCreated);
-            event.value.data.onUploadsToCarCreated.status = 'Created';
-            event.value.data.onUploadsToCarCreated.statusIndicator = <StatusIndicator type="info">{t('carmodelupload.status.created')}</StatusIndicator>;
-            setJobs(jobs.concat(event.value.data.onUploadsToCarCreated));
-          },
-        });
+        const subscription = API.graphql(graphqlOperation(onUploadsToCarCreated, filter)).subscribe(
+          {
+            next: (event) => {
+              //console.log('onUploadsToCarCreated-event', event)
+              console.debug(
+                'onUploadsToCarCreated event received',
+                event.value.data.onUploadsToCarCreated
+              );
+              event.value.data.onUploadsToCarCreated.status = 'Created';
+              event.value.data.onUploadsToCarCreated.statusIndicator = (
+                <StatusIndicator type="info">{t('carmodelupload.status.created')}</StatusIndicator>
+              );
+              setJobs(jobs.concat(event.value.data.onUploadsToCarCreated));
+            },
+          }
+        );
         subscriptions.push(subscription);
-      },subscriptions);
-  
+      }, subscriptions);
+
       return () => {
-        subscriptions.forEach(subscription => {
+        subscriptions.forEach((subscription) => {
           if (subscription) subscription.unsubscribe();
         });
       };
@@ -402,53 +408,77 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
     // monitor for updated jobs matching our JobIds
     useEffect(() => {
       var subscriptions = [];
-      jobIds.forEach((jobId)=>{
+      jobIds.forEach((jobId) => {
         const filter = {
-          jobId: jobId
-        }
+          jobId: jobId,
+        };
         //console.log('subscriptionFilter-2', filter);
-          const subscription = API.graphql(graphqlOperation(onUploadsToCarUpdated, filter)).subscribe({
-          next: (event) => {
-            //console.log('onUploadsToCarUpdated-event', event)
-            var updatedData = event.value.data.onUploadsToCarUpdated;
-            console.debug('onUploadsToCarUpdated event received', updatedData);
-            let newJobs = [...jobs];
-            var currentData = newJobs.find(value => value.modelKey === updatedData.modelKey);
-            if (currentData === undefined) {
-              currentData={};
-              newJobs.push(currentData);
-              currentData.modelKey = updatedData.modelKey;
-            }
+        const subscription = API.graphql(graphqlOperation(onUploadsToCarUpdated, filter)).subscribe(
+          {
+            next: (event) => {
+              //console.log('onUploadsToCarUpdated-event', event)
+              var updatedData = event.value.data.onUploadsToCarUpdated;
+              console.debug('onUploadsToCarUpdated event received', updatedData);
+              let newJobs = [...jobs];
+              var currentData = newJobs.find((value) => value.modelKey === updatedData.modelKey);
+              if (currentData === undefined) {
+                currentData = {};
+                newJobs.push(currentData);
+                currentData.modelKey = updatedData.modelKey;
+              }
 
-            if (updatedData.status === 'Created') {
-              currentData.status = updatedData.status
-              currentData.statusIndicator = <StatusIndicator type="info">{t('carmodelupload.status.created')}</StatusIndicator>
-            } else if (updatedData.status === 'Started') {
-              currentData.status = updatedData.status
-              currentData.statusIndicator = <StatusIndicator type="pending">{t('carmodelupload.status.started')}</StatusIndicator>
-            } else if (updatedData.status === 'InProgress') {
-              currentData.status = updatedData.status
-              currentData.statusIndicator = <StatusIndicator type="loading">{t('carmodelupload.status.inprogress')}</StatusIndicator>
-            } else if (updatedData.status === 'Success') {
-              currentData.status = updatedData.status
-              currentData.statusIndicator = <StatusIndicator type="success">{t('carmodelupload.status.success')}</StatusIndicator>
-            } else if (updatedData.status === 'Failed') {
-              currentData.status = updatedData.status
-              currentData.statusIndicator = <StatusIndicator type="error">{t('carmodelupload.status.error')}</StatusIndicator>
-            } else {
-              currentData.status = updatedData.status
-              currentData.statusIndicator = updatedData.status;
-            }
-            if (updatedData.uploadStartTime){currentData.uploadStartTime = updatedData.uploadStartTime;}
-            if (updatedData.endTime){currentData.endTime = updatedData.endTime;}
-            setJobs(newJobs);
-          },
-        });
+              if (updatedData.status === 'Created') {
+                currentData.status = updatedData.status;
+                currentData.statusIndicator = (
+                  <StatusIndicator type="info">
+                    {t('carmodelupload.status.created')}
+                  </StatusIndicator>
+                );
+              } else if (updatedData.status === 'Started') {
+                currentData.status = updatedData.status;
+                currentData.statusIndicator = (
+                  <StatusIndicator type="pending">
+                    {t('carmodelupload.status.started')}
+                  </StatusIndicator>
+                );
+              } else if (updatedData.status === 'InProgress') {
+                currentData.status = updatedData.status;
+                currentData.statusIndicator = (
+                  <StatusIndicator type="loading">
+                    {t('carmodelupload.status.inprogress')}
+                  </StatusIndicator>
+                );
+              } else if (updatedData.status === 'Success') {
+                currentData.status = updatedData.status;
+                currentData.statusIndicator = (
+                  <StatusIndicator type="success">
+                    {t('carmodelupload.status.success')}
+                  </StatusIndicator>
+                );
+              } else if (updatedData.status === 'Failed') {
+                currentData.status = updatedData.status;
+                currentData.statusIndicator = (
+                  <StatusIndicator type="error">{t('carmodelupload.status.error')}</StatusIndicator>
+                );
+              } else {
+                currentData.status = updatedData.status;
+                currentData.statusIndicator = updatedData.status;
+              }
+              if (updatedData.uploadStartTime) {
+                currentData.uploadStartTime = updatedData.uploadStartTime;
+              }
+              if (updatedData.endTime) {
+                currentData.endTime = updatedData.endTime;
+              }
+              setJobs(newJobs);
+            },
+          }
+        );
         subscriptions.push(subscription);
-      },subscriptions);
-  
+      }, subscriptions);
+
       return () => {
-        subscriptions.forEach(subscription => {
+        subscriptions.forEach((subscription) => {
           if (subscription) subscription.unsubscribe();
         });
       };
@@ -466,7 +496,7 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
       {
         id: 'modelKey',
         header: t('carmodelupload.modelname'),
-        cell: (item) => item.modelKey.split("/")[(item.modelKey.split("/").length -1)] || '-',
+        cell: (item) => item.modelKey.split('/')[item.modelKey.split('/').length - 1] || '-',
         sortingField: 'modelKey',
         width: 200,
         minWidth: 200,
@@ -507,23 +537,21 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
 
     return (
       <div>
-          <Badge color="blue">{modernToggleLabel}</Badge>
-          <Table
-            columnDefinitions={columnDefinitionsModern}
-            items={jobs}
-            loadingText={t('carmodelupload.loading')}
-            sortingDisabled
-            empty={
-              <Alert visible={true} dismissAriaLabel="Close alert" header="Starting">
-                {t('carmodelupload.please-wait')}
-              </Alert>
-            }
-            header={
-              <ProgressBar value={progress} />
-            }
-          />
-        </div>
-    )
+        <Badge color="blue">{modernToggleLabel}</Badge>
+        <Table
+          columnDefinitions={columnDefinitionsModern}
+          items={jobs}
+          loadingText={t('carmodelupload.loading')}
+          sortingDisabled
+          empty={
+            <Alert visible={true} dismissAriaLabel="Close alert" header="Starting">
+              {t('carmodelupload.please-wait')}
+            </Alert>
+          }
+          header={<ProgressBar value={progress} />}
+        />
+      </div>
+    );
   }
 
   return (
@@ -555,74 +583,78 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
         closeAriaLabel={t('carmodelupload.close-modal-ari-label')}
         footer={
           <div>
-
-          <Box float="left">
-            <Toggle
-              onChange={({ detail }) => {
-                setModernToggle(detail.checked)
-                if (detail.checked){
-                  setModernToggleLabel(t('carmodelupload.modern'))
-                  setModernToggleSelectionType('multi')
-                } else {
-                  setModernToggleLabel(t('carmodelupload.legacy'))
-                  setModernToggleSelectionType('single')
-                }
-              }}
-              checked={modernToggle}
-            >
-              <Badge color="blue">{modernToggleLabel}</Badge>
-            </Toggle>
-          </Box>
-
-          <Box float="right">
-            <SpaceBetween direction="horizontal" size="xs">
-              <Checkbox onChange={({ detail }) => setChecked(detail.checked)} checked={checked}>
-                {t('carmodelupload.clear')}
-              </Checkbox>
-              <Button
-                variant="link"
-                onClick={() => {
-                  setVisible(false);
-                  setChecked(false);
-                }}
-              >
-                {t('button.cancel')}
-              </Button>
-              <Button
-                variant="primary"
-                disabled={selectedCars.length === 0}
-                onClick={() => {
-                  setVisible(false);
-
-                  if (modernToggle) {
-                    if (checked) {
-                      setDeleteModalVisibleModern(true);
-                      setChecked(false);
-                    } else {
-                      setStatusModalVisible(true);
-                      setModalContent(<UploadModelToCarModern cars={selectedCars} event={selectedEvent}></UploadModelToCarModern>)
-                    }
+            <Box float="left">
+              <Toggle
+                onChange={({ detail }) => {
+                  setModernToggle(detail.checked);
+                  if (detail.checked) {
+                    setModernToggleLabel(t('carmodelupload.modern'));
+                    setModernToggleSelectionType('multi');
                   } else {
-                    if (checked) {
-                      setDeleteModalVisible(true);
-                      setChecked(false);
-                    } else {
-                      setModalContent(
-                        <StatusModelContent
-                          selectedModels={modelsToUpload}
-                          selectedCars={selectedCars}
-                          modelsTotalCount={modelsToUpload.length}
-                        ></StatusModelContent>
-                      );
-                      setStatusModalVisible(true);
-                    }
+                    setModernToggleLabel(t('carmodelupload.legacy'));
+                    setModernToggleSelectionType('single');
                   }
                 }}
+                checked={modernToggle}
               >
-                {t('button.ok')}
-              </Button>
-            </SpaceBetween>
-          </Box>
+                <Badge color="blue">{modernToggleLabel}</Badge>
+              </Toggle>
+            </Box>
+
+            <Box float="right">
+              <SpaceBetween direction="horizontal" size="xs">
+                <Checkbox onChange={({ detail }) => setChecked(detail.checked)} checked={checked}>
+                  {t('carmodelupload.clear')}
+                </Checkbox>
+                <Button
+                  variant="link"
+                  onClick={() => {
+                    setVisible(false);
+                    setChecked(false);
+                  }}
+                >
+                  {t('button.cancel')}
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={selectedCars.length === 0}
+                  onClick={() => {
+                    setVisible(false);
+
+                    if (modernToggle) {
+                      if (checked) {
+                        setDeleteModalVisibleModern(true);
+                        setChecked(false);
+                      } else {
+                        setStatusModalVisible(true);
+                        setModalContent(
+                          <UploadModelToCarModern
+                            cars={selectedCars}
+                            event={selectedEvent}
+                          ></UploadModelToCarModern>
+                        );
+                      }
+                    } else {
+                      if (checked) {
+                        setDeleteModalVisible(true);
+                        setChecked(false);
+                      } else {
+                        setModalContent(
+                          <StatusModelContent
+                            selectedModels={modelsToUpload}
+                            selectedCars={selectedCars}
+                            modelsTotalCount={modelsToUpload.length}
+                          ></StatusModelContent>
+                        );
+                        setStatusModalVisible(true);
+                      }
+                    }
+                  }}
+                >
+                  {t('button.ok')}
+                </Button>
+              </SpaceBetween>
+            </Box>
           </div>
         }
         header={t('carmodelupload.header')}
@@ -727,7 +759,12 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
                   carDeleteAllModels();
                   setDeleteModalVisibleModern(false);
                   setStatusModalVisible(true);
-                  setModalContent(<UploadModelToCarModern cars={selectedCars} event={selectedEvent}></UploadModelToCarModern>)
+                  setModalContent(
+                    <UploadModelToCarModern
+                      cars={selectedCars}
+                      event={selectedEvent}
+                    ></UploadModelToCarModern>
+                  );
                 }}
               >
                 {t('carmodelupload.header-delete-upload')}
