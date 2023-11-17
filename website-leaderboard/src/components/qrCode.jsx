@@ -3,9 +3,9 @@ import styles from './qrCode.module.css';
 // using large 1024px logo because we load it as part of leaderboard already
 import Logo from '../assets/logo1024.png';
 
-const QrCode = ({ eventId }) => {
+const QrCode = ({ eventId, trackId, raceFormat }) => {
   function createLandingPageHref() {
-    const href = `${window.location.origin}/landing-page/${eventId.toString()}`;
+    const href = `${window.location.origin}/landing-page/${eventId.toString()}/?scroll=false&track=${trackId}&format=${raceFormat}`; // 
     console.debug(href);
     return href;
   }
