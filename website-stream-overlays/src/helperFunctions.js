@@ -1,14 +1,7 @@
 import * as d3 from 'd3';
 
-export function SetLocalizedLowerThirdsLabels(
-  racerLabel,
-  remainingLabel,
-  fastestLabel,
-  previousLabel
-) {
-  const racerAndLapInfoObj = d3.select(
-    document.getElementById('lower-third-racer-and-lap-info').contentDocument
-  );
+export function SetLocalizedLowerThirdsLabels(racerLabel, remainingLabel, fastestLabel, previousLabel) {
+  const racerAndLapInfoObj = d3.select(document.getElementById('lower-third-racer-and-lap-info').contentDocument);
 
   racerAndLapInfoObj.select('#RACER-LABEL').text(racerLabel);
   racerAndLapInfoObj.select('#REMAINING-LABEL').text(remainingLabel);
@@ -39,9 +32,7 @@ export function SetEventName(eventName) {
   leaderboardObj.select('#LeaderboardUpperLeftTitleText').text(eventName);
 
   // Event Name on Lower Third.
-  const racerAndLapInfoObj = d3.select(
-    document.getElementById('lower-third-racer-and-lap-info').contentDocument
-  );
+  const racerAndLapInfoObj = d3.select(document.getElementById('lower-third-racer-and-lap-info').contentDocument);
   racerAndLapInfoObj.select('#EVENT-NAME-TEXT').text(eventName);
 }
 
@@ -73,60 +64,62 @@ export function SetFourthPlaceRacerNameAndTime(racerName, racerTime) {
   racerAndLapInfoObj.select('#FOURTH-PLACE-LAP-TIME-TEXT').text(racerTime);
 }
 
-export function UpdateLeaderboard(leaderboardData) {
+const GetFormattedLapTimeForRaceFormat = (leaderboardDataEntry, raceFormat, isMilliseconds) => {
+  if (raceFormat === 'average') {
+    return leaderboardDataEntry.fastestAverageLap
+      ? GetFormattedLapTime(leaderboardDataEntry.fastestAverageLap.avgTime, isMilliseconds)
+      : 'DNF';
+  } else {
+    return GetFormattedLapTime(leaderboardDataEntry.fastestLapTime, true);
+  }
+};
+
+export function UpdateLeaderboard(leaderboardData, raceFormat) {
   SetFirstPlaceRacerNameAndTime('', '');
   SetSecondPlaceRacerNameAndTime('', '');
   SetThirdPlaceRacerNameAndTime('', '');
   SetFourthPlaceRacerNameAndTime('', '');
 
   if (leaderboardData.length > 0) {
-    SetFirstPlaceRacerNameAndTime(
+    const GetFormattedLapTime = SetFirstPlaceRacerNameAndTime(
       leaderboardData[0].username,
-      GetFormattedLapTime(leaderboardData[0].fastestLapTime, true)
+      GetFormattedLapTimeForRaceFormat(leaderboardData[0], raceFormat, true)
     );
   }
   if (leaderboardData.length > 1) {
     SetSecondPlaceRacerNameAndTime(
       leaderboardData[1].username,
-      GetFormattedLapTime(leaderboardData[1].fastestLapTime, true)
+      GetFormattedLapTimeForRaceFormat(leaderboardData[1], raceFormat, true)
     );
   }
   if (leaderboardData.length > 2) {
     SetThirdPlaceRacerNameAndTime(
       leaderboardData[2].username,
-      GetFormattedLapTime(leaderboardData[2].fastestLapTime, true)
+      GetFormattedLapTimeForRaceFormat(leaderboardData[2], raceFormat, true)
     );
   }
   if (leaderboardData.length > 3) {
     SetFourthPlaceRacerNameAndTime(
       leaderboardData[3].username,
-      GetFormattedLapTime(leaderboardData[3].fastestLapTime, true)
+      GetFormattedLapTimeForRaceFormat(leaderboardData[3], raceFormat, true)
     );
   }
 }
 
 export function SetRacerInfoName(racerName) {
-  const racerAndLapInfoObj = d3.select(
-    document.getElementById('lower-third-racer-and-lap-info').contentDocument
-  );
+  const racerAndLapInfoObj = d3.select(document.getElementById('lower-third-racer-and-lap-info').contentDocument);
   racerAndLapInfoObj.select('#RACER-NAME-TEXT').text(racerName);
 }
 export function SetRacerInfoFastestLap(bestTime) {
-  const racerAndLapInfoObj = d3.select(
-    document.getElementById('lower-third-racer-and-lap-info').contentDocument
-  );
+  const racerAndLapInfoObj = d3.select(document.getElementById('lower-third-racer-and-lap-info').contentDocument);
   racerAndLapInfoObj.select('#FASTEST-LAP-TIME-TEXT').text(bestTime);
 }
 export function SetRacerInfoLastLap(lastTime) {
-  const racerAndLapInfoObj = d3.select(
-    document.getElementById('lower-third-racer-and-lap-info').contentDocument
-  );
+  const racerAndLapInfoObj = d3.select(document.getElementById('lower-third-racer-and-lap-info').contentDocument);
   racerAndLapInfoObj.select('#PREVIOUS-LAP-TIME-TEXT').text(lastTime);
 }
 export function SetRacerInfoTotalTime(totalTimeRemaining) {
-  const racerAndLapInfoObj = d3.select(
-    document.getElementById('lower-third-racer-and-lap-info').contentDocument
-  );
+  const racerAndLapInfoObj = d3.select(document.getElementById('lower-third-racer-and-lap-info').contentDocument);
   racerAndLapInfoObj.select('#TOTAL-TIME-REMAINING-TEXT').text(totalTimeRemaining);
 }
 
@@ -155,10 +148,19 @@ export function getLeaderboardData(entries) {
   return leaderboardTempData;
 }
 
-export function GetLeaderboardDataSorted(entries) {
-  entries.sort(function (a, b) {
-    return a.fastestLapTime > b.fastestLapTime ? 1 : b.fastestLapTime > a.fastestLapTime ? -1 : 0;
-  });
+export function GetLeaderboardDataSorted(entries, raceFormat) {
+  if (raceFormat === 'average') {
+    entries.sort(function (a, b) {
+      if (!a.fastestAverageLap && !b.fastestAverageLap) return 0;
+      if (!a.fastestAverageLap) return 1;
+      if (!b.fastestAverageLap) return -1;
+      return a.fastestAverageLap.avgTime - b.fastestAverageLap.avgTime;
+    });
+  } else {
+    entries.sort(function (a, b) {
+      return a.fastestLapTime > b.fastestLapTime ? 1 : b.fastestLapTime > a.fastestLapTime ? -1 : 0;
+    });
+  }
 
   return entries;
 }

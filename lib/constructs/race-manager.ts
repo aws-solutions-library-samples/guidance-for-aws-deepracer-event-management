@@ -137,6 +137,27 @@ export class RaceManager extends Construct {
     props.appsyncApi.schema.addType(lapObjectType);
     props.appsyncApi.schema.addType(lapInputObjectType);
 
+    const averageLapObjectType = new ObjectType('AverageLap', {
+      definition: {
+        startLapId: GraphqlType.int(),
+        endLapId: GraphqlType.int(),
+        avgTime: GraphqlType.float(),
+      },
+      directives: [Directive.cognito('admin', 'operator', 'commentator')],
+    });
+
+    const averageLapInputObjectType = new InputType('AverageLapInput', {
+      definition: {
+        startLapId: GraphqlType.int(),
+        endLapId: GraphqlType.int(),
+        avgTime: GraphqlType.float(),
+      },
+      directives: [Directive.cognito('admin', 'operator', 'commentator')],
+    });
+
+    props.appsyncApi.schema.addType(averageLapObjectType);
+    props.appsyncApi.schema.addType(averageLapInputObjectType);
+
     const raceObjectType = new ObjectType('Race', {
       definition: {
         eventId: GraphqlType.id({ isRequired: true }),
@@ -146,6 +167,7 @@ export class RaceManager extends Construct {
         raceId: GraphqlType.id({ isRequired: true }),
         createdAt: GraphqlType.awsDateTime(),
         laps: lapObjectType.attribute({ isList: true }),
+        averageLaps: averageLapObjectType.attribute({ isList: true }),
       },
       directives: [Directive.cognito('admin', 'operator', 'commentator')],
     });
@@ -182,6 +204,7 @@ export class RaceManager extends Construct {
           userId: GraphqlType.id({ isRequired: true }),
           racedByProxy: GraphqlType.boolean({ isRequired: true }),
           laps: lapInputObjectType.attribute({ isRequiredList: true }),
+          averageLaps: averageLapInputObjectType.attribute({ isList: true }),
         },
         returnType: raceObjectType.attribute(),
         dataSource: raceDataSource,
@@ -219,6 +242,7 @@ export class RaceManager extends Construct {
           userId: GraphqlType.id({ isRequired: true }),
           racedByProxy: GraphqlType.boolean({ isRequired: true }),
           laps: lapInputObjectType.attribute({ isRequiredList: true }),
+          averageLaps: averageLapInputObjectType.attribute({ isRequiredList: true }),
         },
         returnType: raceObjectType.attribute(),
         dataSource: raceDataSource,
@@ -307,6 +331,7 @@ export class RaceManager extends Construct {
         username: GraphqlType.string(),
         userId: GraphqlType.string(),
         laps: lapObjectType.attribute({ isList: true }),
+        averageLaps: averageLapObjectType.attribute({ isList: true }),
         timeLeftInMs: GraphqlType.float(),
         currentLapTimeInMs: GraphqlType.float(),
         raceStatus: raceStatusEnum.attribute({ isRequired: true }),
@@ -326,6 +351,7 @@ export class RaceManager extends Construct {
           username: GraphqlType.string(),
           userId: GraphqlType.string(),
           laps: lapInputObjectType.attribute({ isList: true }),
+          averageLaps: averageLapInputObjectType.attribute({ isList: true }),
           timeLeftInMs: GraphqlType.float(),
           currentLapTimeInMs: GraphqlType.float(),
           raceStatus: raceStatusEnum.attribute({ isRequired: true }),
