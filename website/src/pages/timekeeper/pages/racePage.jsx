@@ -14,28 +14,39 @@ import { useTranslation } from 'react-i18next';
 import {
   GetRaceResetsNameFromId,
   GetRaceTypeNameFromId,
+  RaceTypeEnum,
 } from '../../../admin/events/support-functions/raceConfig';
 import { SimpleHelpPanelLayout } from '../../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../../components/pageLayout';
 import useCounter from '../../../hooks/useCounter';
 import { usePublishOverlay } from '../../../hooks/usePublishOverlay';
 import useWebsocket from '../../../hooks/useWebsocket';
+import { FastestAverageLapTable } from '../components/fastesAverageLapTable';
 import { LapTable } from '../components/lapTable';
 import LapTimer from '../components/lapTimer';
 import RaceTimer from '../components/raceTimer';
+import { getAverageWindows } from '../support-functions/averageClaculations';
 import { defaultLap } from '../support-functions/raceDomain';
 import { stateMachine } from '../support-functions/stateMachine';
 import { Breadcrumbs } from '../support-functions/supportFunctions';
 
 import styles from './racePage.module.css';
 
-export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext }) => {
+export const RacePage = ({
+  raceInfo,
+  setRaceInfo,
+  fastestLap,
+  fastestAverageLap,
+  raceConfig,
+  onNext,
+}) => {
   const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-page']);
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const [currentLap, SetCurrentLap] = useState(defaultLap);
   const lapsForOverlay = useRef([]);
+  const averageLapTimeInformationForOverlay = useRef([]);
   const [startButtonText, setStartButtonText] = useState(t('timekeeper.start-race'));
-  const raceType = GetRaceTypeNameFromId(raceConfig.rankingMethod);
+  const raceType = GetRaceTypeNameFromId(raceConfig.rankingMethod, raceConfig.averageLapsWindow);
   const allowedNrResets = GetRaceResetsNameFromId(raceConfig.numberOfResetsPerLap);
   const [btnDNF, setBtnDNF] = useState(true);
   const [btnCarReset, setBtnCarReset] = useState(true);
@@ -44,6 +55,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
   const [btnUndoFalseFinish, setBtnUndoFalseFinish] = useState(true);
   const [btnEndRace, setBtnEndRace] = useState(false);
   const [btnStartRace, setBtnStartRace] = useState(false);
+  // const [lapInformation, setLapInformation] = useState([]);
 
   const [
     carResetCounter,
@@ -106,9 +118,13 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
           autTimerConnected: autTimerIsConnected,
         };
 
-        setRaceInfo({ laps: [...raceInfo.laps, currentLapStats] });
+        const laps = [...raceInfo.laps, currentLapStats];
+        const averageLapInformation = getAverageWindows(laps, raceConfig.averageLapsWindow);
 
+        setRaceInfo({ laps: laps, averageLaps: averageLapInformation });
         lapsForOverlay.current.push(currentLapStats);
+
+        averageLapTimeInformationForOverlay.current = averageLapInformation;
 
         // reset lap
         SetCurrentLap(defaultLap);
@@ -124,6 +140,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
             username: raceInfo.username,
             userId: raceInfo.userId,
             laps: lapsForOverlay.current,
+            averageLaps: averageLapTimeInformationForOverlay.current,
             timeLeftInMs: raceConfig.raceTimeInMin * 60 * 1000, // racetime in MS
             currentLapTimeInMs: 0,
             raceStatus: 'READY_TO_START',
@@ -139,6 +156,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
             username: raceInfo.username,
             userId: raceInfo.userId,
             laps: lapsForOverlay.current,
+            averageLaps: averageLapTimeInformationForOverlay.current,
             timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
             currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
             raceStatus: 'RACE_IN_PROGRESS',
@@ -154,6 +172,7 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
             username: raceInfo.username,
             userId: raceInfo.userId,
             laps: lapsForOverlay.current,
+            averageLaps: averageLapTimeInformationForOverlay.current,
             timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
             currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
             raceStatus: 'RACE_PAUSED',
@@ -179,8 +198,10 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
     updatedLap.isValid = !updatedLap.isValid;
     lapsCopy[id] = updatedLap;
 
+    const averageLapInformation = getAverageWindows(lapsCopy, raceConfig.averageLapsWindow);
+    averageLapTimeInformationForOverlay.current = averageLapInformation;
     lapsForOverlay.current = lapsCopy;
-    setRaceInfo({ laps: lapsCopy });
+    setRaceInfo({ laps: lapsCopy, averageLaps: averageLapInformation });
   };
 
   const undoFalseFinishHandler = () => {
@@ -259,6 +280,11 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
 
   // JSX
   const breadcrumbs = Breadcrumbs();
+  let fastestAverageLapInformation = <></>;
+  if (raceConfig.rankingMethod === RaceTypeEnum.BEST_AVERAGE_LAP_TIME_X_LAP) {
+    fastestAverageLapInformation = <FastestAverageLapTable fastestAverageLap={fastestAverageLap} />;
+  }
+
   return (
     <PageLayout
       helpPanelHidden={false}
@@ -392,11 +418,13 @@ export const RacePage = ({ raceInfo, setRaceInfo, fastestLap, raceConfig, onNext
                     laps={fastestLap}
                     onAction={actionHandler}
                   />
-
+                  {fastestAverageLapInformation}
                   <LapTable
                     variant="embedded"
                     header={t('timekeeper.recorded-laps')}
                     laps={raceInfo.laps}
+                    averageLapInformation={raceInfo.averageLaps}
+                    rankingMethod={raceConfig.rankingMethod}
                     onAction={actionHandler}
                   />
                 </SpaceBetween>

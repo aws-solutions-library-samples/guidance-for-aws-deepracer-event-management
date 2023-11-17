@@ -40,6 +40,11 @@ function App() {
     trackId = "1";
   }
 
+  let raceFormat = searchParams.get("format")?.toString();
+  if (typeof raceFormat === "undefined" || raceFormat !== 'average') {
+    raceFormat = "fastest";
+  };
+
   const startTimer = () => {
     if (!timerState || isPaused) {
       return;
@@ -66,6 +71,38 @@ function App() {
     timerState = false;
     currentTotalTimer = "03:00.0";
     currentTotalTimerMS = 180000;
+  }
+
+  const getFastestLap = (laps: any[]) => {
+    return laps.filter(item => item.isValid)
+      .sort((a, b) => {
+        if (a.time < b.time) {
+          return -1;
+        }
+        if (a.time > b.time) {
+          return 1;
+        }
+        return 0;
+      })[0].time;
+  }
+
+  interface AvgLap {avgTime: number, startLapId: number, endLapId: number}
+
+  const getFastestAvgLap = (avgLaps: AvgLap[]): AvgLap  => {
+    return avgLaps.sort((a, b) => {
+      if (a.avgTime < b.avgTime) {
+        return -1;
+      }
+      if (a.avgTime > b.avgTime) {
+        return 1;
+      }
+      return 0;
+    })[0]
+  }
+
+  const updateLeaderboard = (leaderboardEntries: any[]) => {
+    const leaderboardData = (helpers as any).GetLeaderboardDataSorted(leaderboardEntries, raceFormat);
+    helpers.UpdateLeaderboard(leaderboardData, raceFormat);
   }
 
   function onMessageReceived(message: any) {
@@ -96,7 +133,11 @@ function App() {
           setTimeout(() => {
             (transitions as any).LowerThirdRacerAndLapInfoIn();
             lowerThirdStateIN = true;
-            helpers.SetLocalizedLowerThirdsLabels(t('lower-thirds.racer-name'), t('lower-thirds.time-remaining'), t('lower-thirds.fastest-lap'), t('lower-thirds.previous-lap'));
+
+            // TODO: Change fastest-lap to fastest AVG when AVG Race (Issue with spacing)
+            const fastestLabel = raceFormat === 'average' ? t('lower-thirds.fastest-avg-lap') : t('lower-thirds.fastest-lap')
+
+            helpers.SetLocalizedLowerThirdsLabels(t('lower-thirds.racer-name'), t('lower-thirds.time-remaining'), fastestLabel, t('lower-thirds.previous-lap'));
           }, 2000);
         }
 
@@ -157,48 +198,41 @@ function App() {
         currentTotalTimerMS = timeLeft;
 
         if (data.laps) {
-          // console.debug(`Found Laps:`);
+          var fastestLap
+          if(raceFormat === 'average') {
+            if(data.averageLaps && data.averageLaps.length > 0) {
+              fastestLap = getFastestAvgLap(data.averageLaps).avgTime;
+            }
+          } else {
+            fastestLap = getFastestLap(data.laps);
+          }
+
+          if (fastestLap) {
+            // console.debug('Fastest Lap: ' + (helpers as any).GetFormattedLapTime(fastestLap.time));
+            (helpers as any).SetRacerInfoFastestLap((helpers as any).GetFormattedLapTime(fastestLap))
+          }
+
           // console.debug(data.laps);
-          if (data.laps) {
-            var fastestLap = (data.laps as any[])
-              .filter(item => item.isValid)
-              .sort((a, b) => {
-                if (a.time < b.time) {
-                  return -1;
-                }
-                if (a.time > b.time) {
-                  return 1;
-                }
-                return 0;
-              })[0];
 
-            if (fastestLap) {
-              // console.debug('Fastest Lap: ' + (helpers as any).GetFormattedLapTime(fastestLap.time));
-              (helpers as any).SetRacerInfoFastestLap((helpers as any).GetFormattedLapTime(fastestLap.time))
-            }
+          var laps = (data.laps as any[]).filter(obj => {
+            return obj.isValid
+          });
 
-            // console.debug(data.laps);
+          var lastLap = laps
+            .filter(item => item.isValid)
+            .sort((a, b) => {
+              if (a.lapId > b.lapId) {
+                return -1;
+              }
+              if (a.lapId < b.lapId) {
+                return 1;
+              }
+              return 0;
+            })[0];
 
-            var laps = (data.laps as any[]).filter(obj => {
-              return obj.isValid
-            });
-
-            var lastLap = laps
-              .filter(item => item.isValid)
-              .sort((a, b) => {
-                if (a.lapId > b.lapId) {
-                  return -1;
-                }
-                if (a.lapId < b.lapId) {
-                  return 1;
-                }
-                return 0;
-              })[0];
-
-            if (lastLap) {
-              // console.debug('Last Lap: ' + (helpers as any).GetFormattedLapTime(lastLap.time));
-              (helpers as any).SetRacerInfoLastLap((helpers as any).GetFormattedLapTime(lastLap.time));
-            }
+          if (lastLap) {
+            // console.debug('Last Lap: ' + (helpers as any).GetFormattedLapTime(lastLap.time));
+            (helpers as any).SetRacerInfoLastLap((helpers as any).GetFormattedLapTime(lastLap.time));
           }
         }
       }
@@ -303,10 +337,10 @@ function App() {
 
     // once leaderboard data has been obtained, set all leaderboard positions in SVGs.
     apiGetLeaderboardState.then((response) => {
-      const leaderboardData = (helpers as any).GetLeaderboardDataSorted(response.data.getLeaderboard.entries);
+      
       const leaderboardConfig = response.data.getLeaderboard.config;
+      updateLeaderboard(response.data.getLeaderboard.entries);
 
-      (helpers as any).UpdateLeaderboard(leaderboardData);
       (helpers as any).SetEventName(leaderboardConfig.leaderBoardTitle.toUpperCase());
 
       // check if lower thirds is showing, if not, then show leaderboard.
@@ -348,8 +382,7 @@ function App() {
 
         // once leaderboard data is set, update the leaderboard SVG.
         apiResponse.then((response) => {
-          const leaderboardData = (helpers as any).GetLeaderboardDataSorted(response.data.getLeaderboard.entries);
-          (helpers as any).UpdateLeaderboard(leaderboardData);
+          updateLeaderboard(response.data.getLeaderboard.entries)
         });
       },
       error: (error: any) => console.error(error),
