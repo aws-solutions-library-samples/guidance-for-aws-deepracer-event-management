@@ -28,10 +28,14 @@ const LeaderboardWrapper = () => {
     scroll = /true/i.test(scroll);
   }
 
+  let raceFormat = queryParams.get('format');
+  if (raceFormat == null) raceFormat = 'fastest';
+
   console.debug('eventId: ' + eventId);
   console.debug('language: ' + language);
   console.debug('trackId: ' + trackId);
   console.debug('scroll: ' + scroll);
+  console.debug('raceFormat: ' + raceFormat);
 
   useEffect(() => {
     i18n.changeLanguage(language);
@@ -41,6 +45,7 @@ const LeaderboardWrapper = () => {
     <Leaderboard
       eventId={eventId}
       trackId={trackId}
+      raceFormat={raceFormat}
       language={language}
       showQrCode={showQRcode}
       scrollEnabled={scroll}

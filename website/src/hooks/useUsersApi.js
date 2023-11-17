@@ -38,7 +38,6 @@ export const useUsersApi = (userHasAccess = false) => {
           query: queries.listUsers,
         });
         const tempUsers = response.data.listUsers;
-        console.debug('LIST USERS reply', tempUsers);
         const users = tempUsers.map((u) => ({
           ...u,
           Email: getUserEmail(u),

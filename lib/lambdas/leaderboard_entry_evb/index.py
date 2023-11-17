@@ -109,11 +109,13 @@ def __add_to_leaderboard(variables):
             $numberOfInvalidLaps: Int!
             $eventId: ID!
             $fastestLapTime: Float!
+            $fastestAverageLap: LeaderboardAverageLapInput
             $lapCompletionRatio: Float!
             $trackId: ID!
             $username: String!
             $racedByProxy: Boolean!
             $countryCode: String!
+            $mostConcecutiveLaps: Int!
         ) {
             addLeaderboardEntry(
                 avgLapTime: $avgLapTime
@@ -122,16 +124,23 @@ def __add_to_leaderboard(variables):
                 numberOfInvalidLaps: $numberOfInvalidLaps
                 eventId: $eventId
                 fastestLapTime: $fastestLapTime
+                fastestAverageLap: $fastestAverageLap
                 lapCompletionRatio: $lapCompletionRatio
                 trackId: $trackId
                 username: $username
                 racedByProxy: $racedByProxy
                 countryCode: $countryCode
+                mostConcecutiveLaps: $mostConcecutiveLaps
             ) {
             avgLapTime
             avgLapsPerAttempt
             eventId
             fastestLapTime
+            fastestAverageLap {
+                startLapId
+                endLapId
+                avgTime
+            }
             lapCompletionRatio
             numberOfInvalidLaps
             numberOfValidLaps
@@ -139,6 +148,7 @@ def __add_to_leaderboard(variables):
             username
             racedByProxy
             countryCode
+            mostConcecutiveLaps
             }
         }
         """
@@ -156,6 +166,7 @@ def __update_entry_on_leaderboard(variables):
             $numberOfInvalidLaps: Int!
             $eventId: ID!
             $fastestLapTime: Float!
+            $fastestAverageLap: LeaderboardAverageLapInput
             $lapCompletionRatio: Float!
             $trackId: ID!
             $username: String!
@@ -169,6 +180,7 @@ def __update_entry_on_leaderboard(variables):
                 numberOfInvalidLaps: $numberOfInvalidLaps
                 eventId: $eventId
                 fastestLapTime: $fastestLapTime
+                fastestAverageLap: $fastestAverageLap
                 lapCompletionRatio: $lapCompletionRatio
                 trackId: $trackId
                 username: $username
@@ -179,6 +191,11 @@ def __update_entry_on_leaderboard(variables):
             avgLapsPerAttempt
             eventId
             fastestLapTime
+            fastestAverageLap {
+                startLapId
+                endLapId
+                avgTime
+            }
             lapCompletionRatio
             numberOfInvalidLaps
             numberOfValidLaps

@@ -22,6 +22,7 @@ import { StandardLambdaPythonFunction } from './standard-lambda-python-function'
 
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
+import { CarUploadStepFunction } from './models-manager-car-upload-step-function';
 
 export interface ModelsManagerProps {
   adminGroupRole: IRole;
@@ -466,6 +467,8 @@ export class ModelsManager extends Construct {
     });
 
     props.appsyncApi.schema.addType(modelObjectPagination);
+
+    const carUploadStepFunction = new CarUploadStepFunction(this, 'CarUploadStepFunction', modelsBucket, props);
 
     props.appsyncApi.schema.addQuery(
       'getAllModels',

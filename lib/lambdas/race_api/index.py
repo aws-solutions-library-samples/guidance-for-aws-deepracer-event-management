@@ -4,6 +4,7 @@ import json
 import os
 import uuid
 from datetime import datetime
+from functools import reduce
 from statistics import mean
 
 import boto3
@@ -124,7 +125,8 @@ def deleteRaces(eventId, racesToDelete):
 
 
 @app.resolver(type_name="Mutation", field_name="addRace")
-def addRace(eventId, userId, laps, racedByProxy, trackId=1):
+def addRace(eventId, userId, laps, racedByProxy, averageLaps, trackId=1):
+    logger.info(averageLaps)
     raceId = str(uuid.uuid4())
     created_at = datetime.utcnow().isoformat() + "Z"
     race_info = {
@@ -138,7 +140,11 @@ def addRace(eventId, userId, laps, racedByProxy, trackId=1):
     logger.info(laps)
     if laps:
         __store_race(
-            {**race_info, "laps": dynamo_helpers.replace_floats_with_decimal(laps)}
+            {
+                **race_info,
+                "laps": dynamo_helpers.replace_floats_with_decimal(laps),
+                "averageLaps": dynamo_helpers.replace_floats_with_decimal(averageLaps),
+            }
         )
 
         race_summary = __calculate_race_summary(eventId, trackId, userId)
@@ -234,18 +240,50 @@ def __calculate_race_summary(event_id, track_id, user_id) -> dict:
     total_number_of_laps = len(valid_laps) + len(invalid_laps)
     avg_laps_per_attempt = total_number_of_laps / len(stored_races)
     valid_lap_times = __get_valid_lap_times(valid_laps)
+    average_lap = __get_fastest_average_lap(stored_races)
+    mostConcecutiveLaps = __get_most_concecutive_laps(stored_races)
 
     summary = {
         "numberOfValidLaps": len(valid_laps),
         "numberOfInvalidLaps": len(invalid_laps),
         "fastestLapTime": min(valid_lap_times),
+        "fastestAverageLap": average_lap,
         "avgLapTime": mean(valid_lap_times),
         "lapCompletionRatio": round(float(len(valid_laps) / total_number_of_laps), 1)
         * 100,  # percentage
         "avgLapsPerAttempt": round(avg_laps_per_attempt, 1),
+        "mostConcecutiveLaps": mostConcecutiveLaps,
     }
     logger.info(summary)
     return summary
+
+
+def __get_most_concecutive_laps(races: list) -> int:
+    most_concecutive_laps_over_all_races = []
+    for race in races:
+        most_concecutive_laps_of_race = 0
+        for lap in race["laps"]:
+            if bool(lap["isValid"]):
+                most_concecutive_laps_of_race += 1
+            else:
+                most_concecutive_laps_over_all_races.append(
+                    most_concecutive_laps_of_race
+                )
+                most_concecutive_laps_of_race = 0
+        most_concecutive_laps_over_all_races.append(most_concecutive_laps_of_race)
+
+    return max(most_concecutive_laps_over_all_races)
+
+
+def __get_fastest_average_lap(races: list) -> {}:
+    avg_times = []
+    for race in races:
+        for avgLap in race["averageLaps"]:
+            avg_times.append(avgLap)
+    result = None
+    if len(avg_times) > 0:
+        result = reduce(lambda x, y: x if x["avgTime"] < y["avgTime"] else y, avg_times)
+    return result
 
 
 def __get_laps_by_validity(races: list) -> tuple[list, list]:

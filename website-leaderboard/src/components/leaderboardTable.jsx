@@ -9,7 +9,7 @@ import { scrollTo } from '../utils';
 import { Flag } from './flag';
 import styles from './leaderboardTable.module.css';
 
-const LeaderboardTable = ({ leaderboardEntries, scrollEnabled }) => {
+const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest }) => {
   const { t } = useTranslation();
   const [leaderboardListItems, SetLeaderboardListItems] = useState(<div></div>);
   const entriesRef = useRef(null);
@@ -34,8 +34,14 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled }) => {
       } else {
         if (aspectRatio > 1.2 && username.length > 30) {
           username = username.substr(0, 30) + '...';
-        } else if (aspectRatio < 1.2 && username.length > 20)
-          username = username.substr(0, 20) + '...';
+        } else if (aspectRatio < 1.2 && username.length > 20) username = username.substr(0, 20) + '...';
+      }
+
+      let timeValue = t('leaderboard.DNF');
+      if (fastest) {
+        timeValue = convertMsToString(entry.fastestLapTime);
+      } else if (entry.fastestAverageLap) {
+        timeValue = convertMsToString(entry.fastestAverageLap.avgTime);
       }
 
       return (
@@ -67,7 +73,7 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled }) => {
             {username}
             {entry.racedByProxy ? '*' : ''}
           </div>
-          <div className={styles.liTime}>{convertMsToString(entry.fastestLapTime)}</div>
+          <div className={styles.liTime}>{timeValue}</div>
         </div>
       );
     });
@@ -99,7 +105,7 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled }) => {
       <div className={styles.titles}>
         <div className={styles.positionTitle}>{t('leaderboard.position')}</div>
         <div className={styles.racerTitle}>{t('leaderboard.racer')}</div>
-        <div className={styles.timeTitle}>{t('leaderboard.time')}</div>
+        <div className={styles.timeTitle}>{t(fastest ? 'leaderboard.time' : 'leaderboard.average')}</div>
       </div>
       <div ref={entriesRef} className={styles.entries}>
         <div id="entries" className={styles.entry}>

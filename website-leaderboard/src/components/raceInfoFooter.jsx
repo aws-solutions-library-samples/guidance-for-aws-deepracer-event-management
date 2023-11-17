@@ -15,7 +15,7 @@ const racesStatusesWithFooterVisible = [
   //'RACE_FINSIHED',
 ];
 
-const RaceInfoFooter = ({ eventId, trackId, visible }) => {
+const RaceInfoFooter = ({ eventId, trackId, visible, raceFormat }) => {
   const [raceInfo, SetRaceInfo] = useState({
     username: '',
     timeLeftInMs: null,
@@ -42,6 +42,7 @@ const RaceInfoFooter = ({ eventId, trackId, visible }) => {
               raceStatus: raceInfo.raceStatus,
               laps: raceInfo.laps,
               currentLapTimeInMs: raceInfo.currentLapTimeInMs,
+              averageLaps: raceInfo.averageLaps,
             };
           });
           SetIsVisible(true);
@@ -80,7 +81,9 @@ const RaceInfoFooter = ({ eventId, trackId, visible }) => {
                 raceStatus={raceInfo.raceStatus}
                 timeLeftInMs={raceInfo.timeLeftInMs}
                 laps={raceInfo.laps}
+                averageLaps={raceInfo.averageLaps}
                 currentLapTimeInMs={raceInfo.currentLapTimeInMs}
+                raceFormat={raceFormat}
               />
             </span>
           </div>
