@@ -132,7 +132,15 @@ export class EventsManager extends Construct {
 
     // Define API Schema
     const trackTypeMethodEnum = new EnumType('TrackType', {
-      definition: ['REINVENT_2018', 'REINVENT_2019', 'SUMMIT_SPEEDWAY', 'ATOZ_SPEEDWAY', 'OTHER'],
+      definition: [
+        'REINVENT_2018',
+        'REINVENT_2019',
+        'REINVENT_2022',
+        'REINVENT_2023',
+        'SUMMIT_SPEEDWAY',
+        'ATOZ_SPEEDWAY',
+        'OTHER',
+      ],
     });
     props.appsyncApi.schema.addType(trackTypeMethodEnum);
 
