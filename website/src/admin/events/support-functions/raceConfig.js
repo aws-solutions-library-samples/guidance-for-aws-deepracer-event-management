@@ -110,10 +110,12 @@ export const GetLapsOptionFromId = (id) => {
 // TRACK OPTIONS METHODS
 export const TrackTypeConfig = () => {
   return [
-    { label: i18next.t('events.tracks.atoz-speedway'), value: 'ATOZ_SPEEDWAY' },
     { label: i18next.t('events.tracks.reinvent-2018'), value: 'REINVENT_2018' },
     { label: i18next.t('events.tracks.reinvent-2019'), value: 'REINVENT_2019' },
-    { label: i18next.t('events.tracks.reinvent-2022'), value: 'SUMMIT_SPEEDWAY' },
+    { label: i18next.t('events.tracks.reinvent-2022'), value: 'REINVENT_2022' },
+    { label: i18next.t('events.tracks.reinvent-2023'), value: 'REINVENT_2023' },
+    { label: i18next.t('events.tracks.atoz-speedway'), value: 'ATOZ_SPEEDWAY' },
+    { label: i18next.t('events.tracks.summit-2022'), value: 'SUMMIT_SPEEDWAY' },
     { label: i18next.t('events.tracks.other'), value: 'OTHER' },
   ];
 };
@@ -136,12 +138,20 @@ export const GetTrackTypeNameFromId = (id) => {
   return undefined;
 };
 
+export const RaceTypeEnum = {
+  BEST_AVERAGE_LAP_TIME_X_LAP: 'BEST_AVERAGE_LAP_TIME_X_LAP',
+  BEST_LAP_TIME: 'BEST_LAP_TIME',
+};
+
 // RACE TYPE OPTIONS METHODS
 export const RaceTypeConfig = () => {
   return [
-    { label: i18next.t('events.race.ranking.best-lap-time'), value: 'BEST_LAP_TIME' },
+    { label: i18next.t('events.race.ranking.best-lap-time'), value: RaceTypeEnum.BEST_LAP_TIME },
     //   { label: i18next.t('events.race.ranking.finish-x-laps'), value: 'FINISH_X_LAPS' },
-    //   { label: i18next.t('events.race.ranking.best-average-lap-time-x-lap'), value: 'BEST_AVERAGE_LAP_TIME_X_LAP' },
+    {
+      label: i18next.t('events.race.ranking.best-average-lap-time-x-lap'),
+      value: RaceTypeEnum.BEST_AVERAGE_LAP_TIME_X_LAP,
+    },
   ];
 };
 
@@ -160,13 +170,35 @@ export const GetRankingNameFromId = (id) => {
   return option.label;
 };
 
-export const GetRaceTypeNameFromId = (id) => {
+export const GetRaceTypeNameFromId = (id, averageLapsWindowSize) => {
   if (id == null) return;
 
   const raceTypeConfig = RaceTypeConfig();
   const item = raceTypeConfig.find((item) => item.value.toString() === id.toString());
   if (item && item.label) {
-    return item.label;
+    let returnValue = item.label;
+    returnValue = returnValue.replace('X', averageLapsWindowSize);
+
+    if (averageLapsWindowSize) {
+    }
+    return returnValue;
   }
   return undefined;
+};
+
+export const AverageLapWindowConfig = () => {
+  return [
+    { label: '3', value: '3' },
+    { label: '4', value: '4' },
+    { label: '5', value: '5' },
+    { label: '6', value: '6' },
+    { label: '7', value: '7' },
+  ];
+};
+
+export const GetAverageLapWindowFromId = (id) => {
+  if (id == null) return;
+
+  const averageLapsWindowOptions = AverageLapWindowConfig();
+  return averageLapsWindowOptions.find((option) => option.value.toString() === id.toString());
 };

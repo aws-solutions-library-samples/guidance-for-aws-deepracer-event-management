@@ -11,5 +11,7 @@
   "leaderboard.summary-footer.avg-lap-time": "Ø RUNDENZEIT",
   "leaderboard.summary-footer.lap-completion-ratio": "RUNDEN-ABSCHLUSSQUOTE",
   "leaderboard.summary-footer.avg-laps-per-attempt": "Ø RUNDEN PRO VERSUCH",
-  "leaderboard.race-info-footer.currently-racing": "Aktuell auf der Strecke"
+  "leaderboard.race-info-footer.currently-racing": "Aktuell auf der Strecke",
+  "leaderboard.DNF": "DNF",
+  "leaderboard.average": "Durchschnitt"
 }

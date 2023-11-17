@@ -8,6 +8,7 @@ import { useStore } from '../../store/store';
 import { RaceFinishPage } from './pages/raceFinishPage';
 import { RacePage } from './pages/racePage';
 import { RaceSetupPage } from './pages/raceSetupPage';
+import { getAverageWindows } from './support-functions/averageClaculations';
 import { defaultRace } from './support-functions/raceDomain';
 
 export const Timekeeper = () => {
@@ -15,6 +16,7 @@ export const Timekeeper = () => {
   const [raceConfig, setRaceConfig] = useLocalStorage('DREM-timekeeper-race-config', {});
   const [race, setRace] = useLocalStorage('DREM-timekeeper-current-race', defaultRace);
   const [fastestLap, SetFastestLap] = useState([]);
+  const [fastestAverageLap, setFastestAverageLap] = useState([]);
   const selectedEvent = useSelectedEventContext();
   const selectedTrack = useSelectedTrackContext();
 
@@ -44,7 +46,7 @@ export const Timekeeper = () => {
     dispatch('SIDE_NAV_IS_OPEN', false);
   }, [dispatch]);
 
-  // Find the fastest lap
+  // Find the fastest lap and fastest average window
   useEffect(() => {
     if (race.laps && race.laps.length) {
       // Get all valid laps
@@ -69,6 +71,16 @@ export const Timekeeper = () => {
       }
     } else {
       SetFastestLap([]);
+    }
+
+    race.averageLaps = getAverageWindows(race.laps, raceConfig.averageLapsWindow);
+    if (race.averageLaps.length > 0) {
+      const fastestAvgLap = race.averageLaps.reduce((acc, currentValue) => {
+        return acc.avgTime > currentValue.avgTime ? currentValue : acc;
+      });
+      setFastestAverageLap([fastestAvgLap]);
+    } else {
+      setFastestAverageLap([]);
     }
   }, [race.laps]);
 
@@ -95,6 +107,7 @@ export const Timekeeper = () => {
   };
 
   const raceInfoHandler = (event) => {
+    console.info('Race Info Handler');
     console.info(event);
     setRace({ ...race, ...event });
   };
@@ -103,6 +116,7 @@ export const Timekeeper = () => {
     setRace(defaultRace);
     setRaceConfig({});
     SetFastestLap([]);
+    setFastestAverageLap([]);
 
     setActiveStepIndex(0);
   };
@@ -119,6 +133,7 @@ export const Timekeeper = () => {
             raceInfo={race}
             setRaceInfo={raceInfoHandler}
             fastestLap={fastestLap}
+            fastestAverageLap={fastestAverageLap}
             raceConfig={raceConfig}
             onNext={raceIsDoneHandler}
           />
@@ -130,6 +145,8 @@ export const Timekeeper = () => {
             eventName={raceConfig.eventName}
             raceInfo={race}
             fastestLap={fastestLap}
+            fastestAverageLap={fastestAverageLap}
+            raceConfig={raceConfig}
             onAction={actionHandler}
             onNext={resetRacehandler}
           />

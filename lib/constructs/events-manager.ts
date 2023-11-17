@@ -132,12 +132,20 @@ export class EventsManager extends Construct {
 
     // Define API Schema
     const trackTypeMethodEnum = new EnumType('TrackType', {
-      definition: ['REINVENT_2018', 'REINVENT_2019', 'SUMMIT_SPEEDWAY', 'ATOZ_SPEEDWAY', 'OTHER'],
+      definition: [
+        'REINVENT_2018',
+        'REINVENT_2019',
+        'REINVENT_2022',
+        'REINVENT_2023',
+        'SUMMIT_SPEEDWAY',
+        'ATOZ_SPEEDWAY',
+        'OTHER',
+      ],
     });
     props.appsyncApi.schema.addType(trackTypeMethodEnum);
 
     const raceRankingMethodEnum = new EnumType('RankingMethod', {
-      definition: ['BEST_LAP_TIME'],
+      definition: ['BEST_LAP_TIME', 'BEST_AVERAGE_LAP_TIME_X_LAP'],
     });
     props.appsyncApi.schema.addType(raceRankingMethodEnum);
 
@@ -148,6 +156,7 @@ export class EventsManager extends Construct {
         trackType: trackTypeMethodEnum.attribute(),
         rankingMethod: raceRankingMethodEnum.attribute(),
         maxRunsPerRacer: GraphqlType.string(),
+        averageLapsWindow: GraphqlType.int(),
       },
       directives: [Directive.cognito('admin', 'commentator', 'operator')],
     });
@@ -160,6 +169,7 @@ export class EventsManager extends Construct {
         trackType: trackTypeMethodEnum.attribute(),
         rankingMethod: raceRankingMethodEnum.attribute(),
         maxRunsPerRacer: GraphqlType.string(),
+        averageLapsWindow: GraphqlType.int(),
       },
       directives: [Directive.cognito('admin', 'operator')],
     });

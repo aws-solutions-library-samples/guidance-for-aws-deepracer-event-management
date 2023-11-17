@@ -1,4 +1,4 @@
-import { SpaceBetween } from '@cloudscape-design/components';
+import { Button, SpaceBetween } from '@cloudscape-design/components';
 import { Auth } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -79,8 +79,15 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
     setSelectedModels([]);
   };
 
+  const clearSelectedModelsHandler = () => {
+    setSelectedModels([]);
+  };
+
   const operatorActionButtons = (
     <SpaceBetween direction="horizontal" size="xs">
+      <Button disabled={selectedModels.length === 0} onClick={clearSelectedModelsHandler}>
+        {t('button.clear-selected')}
+      </Button>
       <CarModelUploadModal modelsToUpload={selectedModels} uploadDisabled={selectedModels === 0} />
     </SpaceBetween>
   );

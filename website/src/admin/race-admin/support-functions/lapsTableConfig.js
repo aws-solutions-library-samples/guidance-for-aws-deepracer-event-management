@@ -20,6 +20,10 @@ export const ColumnConfiguration = (isEditable) => {
             label: i18next.t('race-admin.time'),
           },
           {
+            id: 'avgTime',
+            label: i18next.t('race-admin.avg-time'),
+          },
+          {
             id: 'resets',
             label: i18next.t('race-admin.resets'),
           },
@@ -53,6 +57,13 @@ export const ColumnDefinitions = () => {
       header: i18next.t('race-admin.time'),
       cell: (item) => convertMsToString(item.time) || '-',
       sortingField: 'time',
+      width: 200,
+    },
+    {
+      id: 'avgTime',
+      header: i18next.t('race-admin.avg-time'),
+      cell: (item) => (item.avgTime ? convertMsToString(item.avgTime) : '-'),
+      sortingField: 'avgTime',
       width: 200,
     },
     {
@@ -122,6 +133,13 @@ export const EditableColumnDefinitions = () => {
           return regExpression;
         },
       },
+    },
+    {
+      id: 'avgTime',
+      header: i18next.t('race-admin.avg-time'),
+      cell: (item) => (item.avgTime ? convertMsToString(item.avgTime) : '-'),
+      sortingField: 'avgTime',
+      width: 200,
     },
     {
       id: 'resets',
