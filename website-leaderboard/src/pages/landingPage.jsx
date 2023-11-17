@@ -3,7 +3,7 @@ import Box from '@cloudscape-design/components/box';
 import Cards from '@cloudscape-design/components/cards';
 import * as React from 'react';
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import Logo from '../assets/logo512.png';
 import awsconfig from '../config.json';
 import styles from './landingPage.module.css';
@@ -11,19 +11,22 @@ import styles from './landingPage.module.css';
 export function LandingPage() {
   const urlParams = useParams();
   const eventId = urlParams.eventId;
-  console.debug(eventId);
+  
+  const [searchParams, setSearchParams] = useSearchParams(); 
+  var trackId = searchParams.get("track");
+  const raceFormat = searchParams.get("format");
+  
+  console.debug('eventId', eventId);
+  console.debug('track', trackId);
+  console.debug('format', raceFormat);
 
-  // let language = queryParams.get('lang');
-  // if (language === null) language = 'en';
-  //
-  // let trackId = queryParams.get('track');
-  // if (trackId === null) trackId = 1;
+  if (trackId === null) {trackId = '1';}
 
   const defaultPageItems = [
     {
       linkName: 'Follow the race live!',
       linkDescription: 'View the DeepRacer Leaderboard live.',
-      linkHref: `${window.location.origin}/leaderboard/${eventId}`,
+      linkHref: `${window.location.origin}/leaderboard/${eventId}/?scroll=false&track=${trackId}&format=${raceFormat}`,
     },
     {
       linkName: 'About DeepRacer',
