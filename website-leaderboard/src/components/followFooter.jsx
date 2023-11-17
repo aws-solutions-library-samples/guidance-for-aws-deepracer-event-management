@@ -5,6 +5,8 @@ import { QrCode } from './qrCode';
 const FollowFooter = ({
   visible,
   eventId,
+  trackId,
+  raceFormat,
   text = 'Follow the race: #AWSDeepRacer',
   qrCodeVisible = '',
 }) => {
@@ -15,7 +17,7 @@ const FollowFooter = ({
           <div>{text}</div>
           <div className={styles.qrCodeDiv}>
             {' '}
-            {qrCodeVisible === 'footer' && <QrCode eventId={eventId} />}{' '}
+            {qrCodeVisible === 'footer' && <QrCode eventId={eventId} trackId={trackId} raceFormat={raceFormat} />}{' '}
           </div>
         </div>
       )}
