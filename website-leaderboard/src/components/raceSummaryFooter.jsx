@@ -69,7 +69,9 @@ const RaceSummaryFooter = (params) => {
       <div>
         <div className={styles.footerSmallHeader}>{t('leaderboard.summary-footer.avg.fastest-laps')}</div>
         <div className={styles.footerNormalText}>
-          {fastestAverageLap.startLapId + 1} - {fastestAverageLap.endLapId + 1}
+          {fastestAverageLap
+            ? fastestAverageLap.startLapId + 1 - (fastestAverageLap.endLapId + 1)
+            : t('leaderboard.DNF')}
         </div>
       </div>
     );
