@@ -28,6 +28,7 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
   const [columnConfiguration, setColumnConfiguration] = useState(ColumnConfigurationOperator());
   const [filteringProperties, setFilteringProperties] = useState(FilteringPropertiesOperator());
   const [selectedModels, setSelectedModels] = useState([]);
+  const [breadcrumbs, setBreadcrumbs] = useState([]);
   const [state] = useStore();
   const [, dispatch] = useStore();
   const models = state.models.models;
@@ -59,6 +60,11 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
     if (isOperatorView) {
       setColumnConfiguration(ColumnConfigurationOperator());
       setFilteringProperties(FilteringPropertiesOperator());
+      setBreadcrumbs([
+        { text: t('home.breadcrumb'), href: '/' },
+        { text: t('admin.breadcrumb'), href: '/home/admin' },
+        { text: t('users-admin.breadcrumb') },
+      ]);
       dispatch('UPDATE_HELP_PANEL', {
         isHidden: false,
         content: operatorHelpPanel,
@@ -67,6 +73,7 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
     } else {
       setColumnConfiguration(ColumnConfigurationRacer());
       setFilteringProperties(FilteringPropertiesRacer());
+      setBreadcrumbs([{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]);
       dispatch('UPDATE_HELP_PANEL', {
         isHidden: false,
         content: helpPanel,
@@ -110,7 +117,7 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
       helpPanelContent={isOperatorView ? operatorHelpPanel : helpPanel}
       header={t('models.header')}
       description={isOperatorView ? t('models.operator.description') : t('models.description')}
-      breadcrumbs={[{ text: t('home.breadcrumb'), href: '/' }, { text: t('models.breadcrumb') }]}
+      breadcrumbs={breadcrumbs}
     >
       <PageTable
         selectedItems={selectedModels}
