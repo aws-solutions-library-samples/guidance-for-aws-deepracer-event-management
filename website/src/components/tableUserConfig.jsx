@@ -1,3 +1,4 @@
+import { Checkbox, FormField } from '@cloudscape-design/components';
 import i18next from '../i18n';
 import { formatAwsDateTime } from '../support-functions/time';
 import { Flag } from './flag';
@@ -133,7 +134,42 @@ export const FilteringProperties = () => {
     {
       key: 'Roles',
       propertyLabel: i18next.t('users.role'),
-      operators: [':', '!:', '=', '!='],
+      operators: [
+        {
+          operator: '=',
+          form: ({ value, onChange }) => {
+            const userRoles = [
+              { value: 'admin', label: i18next.t('users.role.administrator') },
+              { value: 'operator', label: i18next.t('users.role.operator') },
+              { value: 'commentator', label: i18next.t('users.role.commentator') },
+              { value: 'registration', label: i18next.t('users.role.registration') },
+              { value: 'racer', label: i18next.t('users.role.racer') },
+            ];
+            return (
+              <FormField>
+                {userRoles.map((option, i) => (
+                  <Checkbox
+                    key={i}
+                    checked={(value || []).includes(option.value)}
+                    onChange={(event) => {
+                      const newValue = [...(value || [])];
+                      if (event.detail.checked) {
+                        newValue.push(option.value);
+                      } else {
+                        newValue.splice(newValue.indexOf(option.value), 1);
+                      }
+                      onChange(newValue);
+                    }}
+                  >
+                    {option.label}
+                  </Checkbox>
+                ))}
+              </FormField>
+            );
+          },
+          format: (values) => (values || []).join(', '),
+        },
+      ],
     },
     {
       key: 'Email',
