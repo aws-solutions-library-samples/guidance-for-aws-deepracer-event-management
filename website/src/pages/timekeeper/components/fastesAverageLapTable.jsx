@@ -1,15 +1,23 @@
 import { Header, Table } from '@cloudscape-design/components';
-import React, { useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { convertMsToString } from '../../../support-functions/time';
 
 const FastestAverageLapTable = (props) => {
   const { t } = useTranslation();
-  const lap = useRef([]);
+  const [lapsJsx, SetLapsJsx] = useState([]);
 
   const { fastestAverageLap } = props;
 
-  lap.current = fastestAverageLap;
+  //lap.current = [...fastestAverageLap];
+
+  useEffect(() => {
+    if (fastestAverageLap && fastestAverageLap.length > 0) {
+      SetLapsJsx([...fastestAverageLap]);
+    } else {
+      SetLapsJsx([]);
+    }
+  }, [fastestAverageLap]);
 
   return (
     <Table
@@ -20,23 +28,22 @@ const FastestAverageLapTable = (props) => {
           id: 'fromLap',
           header: t('timekeeper.avg-lap-table.from-lap'),
           cell: (item) => item.startLapId + 1 || '',
-          sortingField: 'fromLap',
           width: '100px',
         },
         {
           id: 'toLap',
           header: t('timekeeper.avg-lap-table.to-lap'),
           cell: (item) => item.endLapId + 1 || '',
-          sortingField: 'toLap',
+          width: '100px',
         },
         {
           id: 'average',
           header: t('timekeeper.avg-lap-table.average'),
           cell: (item) => convertMsToString(item.avgTime) || 0,
-          sortingField: 'average',
+          width: '100px',
         },
       ]}
-      items={lap.current}
+      items={lapsJsx}
       loadingText={t('timekeeper.avg-lap-table.loading-resources')}
       sortingDisabled
       stripedRows

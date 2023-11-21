@@ -102,6 +102,12 @@ const getPermissions = (groups) => {
       ...apiPermissions,
       users: true,
     };
+  } else if (groups.includes('commentator')) {
+    const apiPermissions = { ...permissions.api };
+    permissions.api = {
+      ...apiPermissions,
+      events: true,
+    };
   }
 
   return permissions;

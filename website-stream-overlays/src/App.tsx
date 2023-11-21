@@ -360,7 +360,9 @@ function App() {
         if (raceInfo.eventName) {
           (helpers as any).SetEventName(raceInfo.eventName);
         }
-        onMessageReceived(raceInfo);
+        if(raceInfo.raceStatus !== 'RACE_SUBMITTED') {
+          onMessageReceived(raceInfo);
+        }
       },
       error: (error: any) => console.error(error),
     });
