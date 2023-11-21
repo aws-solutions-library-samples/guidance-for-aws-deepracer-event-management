@@ -49,6 +49,18 @@ export const RaceFinishPage = ({
   const submitRaceHandler = async () => {
     SetButtonsIsDisabled(true);
     console.log(raceInfo);
+
+    sendMutation('updateOverlayInfo', {
+      eventId: raceInfo.eventId,
+      eventName: raceConfig.eventName,
+      trackId: raceInfo.trackId,
+      username: raceInfo.username,
+      userId: raceInfo.userId,
+      laps: raceInfo.laps,
+      averageLaps: raceInfo.averageLaps,
+      timeLeftInMs: 0,
+      raceStatus: 'RACE_SUBMITTED',
+    });
     sendMutation('addRace', { ...raceInfo });
   };
 

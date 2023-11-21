@@ -25,7 +25,7 @@ import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { AdminTimerActivation } from '../admin/timerActivation';
 import { ProfileHome } from '../admin/user-profile/profile';
 import { CreateUser } from '../admin/users/createUser';
-import { CommentatorRaceStats } from '../commentator/race-stats';
+import { CommentatorStats } from '../commentator/commentator-stats';
 import { Home } from '../home';
 import { useCarsApi } from '../hooks/useCarsApi';
 import { useEventsApi } from '../hooks/useEventsApi';
@@ -68,7 +68,7 @@ const defaultRoutes = [
 
 const registrationRoutes = [<Route path="/registration/createuser" element={<CreateUser />} />];
 
-const commentatorRoutes = [<Route path="/commentator" element={<CommentatorRaceStats />} />];
+const commentatorRoutes = [<Route path="/commentator" element={<CommentatorStats />} />];
 
 const operatorRoutes = [
   <Route path="/admin/home" element={<AdminHome />} />,
