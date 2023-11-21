@@ -278,7 +278,7 @@ export class CarUploadStepFunction extends Construct {
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ['dynamodb:Query', 'dynamodb:PutItem', 'dynamodb:UpdateItem'],
-        resources: [uploadJobsTable.tableArn],
+        resources: [uploadJobsTable.tableArn, uploadJobsTable.tableArn + '/index/eventId'],
       })
     );
 
@@ -361,6 +361,7 @@ export class CarUploadStepFunction extends Construct {
       new ResolvableField({
         args: {
           jobId: GraphqlType.id(),
+          eventId: GraphqlType.id(),
         },
         returnType: uploadToCarJobType.attribute({ isList: true }),
         dataSource: uploadToCarDataSource,

@@ -162,7 +162,11 @@ def addRace(eventId, userId, laps, racedByProxy, averageLaps, trackId=1):
         __put_evb_events([evbEvent])
 
     logger.info(race_info)
-    return {**race_info, "laps": laps}  # TODO make proper error handling
+    return {
+        **race_info,
+        "laps": laps,
+        "averageLaps": averageLaps,
+    }  # TODO make proper error handling
 
 
 @app.resolver(type_name="Mutation", field_name="updateRace")
