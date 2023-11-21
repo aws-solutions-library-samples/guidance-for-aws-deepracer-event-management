@@ -40,8 +40,10 @@ const RaceGraph = ({
         Math.min(slowestTime, fastestAvg) - 500,
         Math.max(fastestTime, fastestAvg) + 500,
       ]);
+    }
 
-      const lapsCopy = [...allLaps];
+    const lapsCopy = [...allLaps];
+    if (fastestRaceAvgLap?.avgTime) {
       var avgWindowLaps = [];
 
       if (fastestRaceAvgLap) {
@@ -53,7 +55,9 @@ const RaceGraph = ({
       setGreenLaps(lapsCopy.filter((lap) => lap.isValid));
       setRedLaps(lapsCopy.filter((lap) => !lap.isValid));
     } else {
-      setGreenLaps(allLaps);
+      setGreenLaps(lapsCopy.filter((lap) => lap.isValid));
+      setRedLaps(lapsCopy.filter((lap) => !lap.isValid));
+      setNeutralLaps([]);
     }
   };
 
