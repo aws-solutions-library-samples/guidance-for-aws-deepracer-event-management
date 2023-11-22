@@ -63,7 +63,7 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
       setBreadcrumbs([
         { text: t('home.breadcrumb'), href: '/' },
         { text: t('admin.breadcrumb'), href: '/home/admin' },
-        { text: t('users-admin.breadcrumb') },
+        { text: t('models.breadcrumb') },
       ]);
       dispatch('UPDATE_HELP_PANEL', {
         isHidden: false,
