@@ -597,6 +597,7 @@
   "commentator.race.status.RACE_PAUSED": "Race Paused",
   "commentator.race.status.RACE_FINSIHED": "Race Finished",
   "commentator.race.status.RACE_SUBMITTED": "Race Finished",
+  "commentator.race.status.undefined": "Not Running",
   "user-profile.header.details": "Account details",
   "user-profile.description": "Update your user settings and password.",
   "user-profile.settings.name": "Name",
