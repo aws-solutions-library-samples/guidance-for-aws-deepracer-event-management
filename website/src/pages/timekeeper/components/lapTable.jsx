@@ -8,7 +8,7 @@ const LapTable = (props) => {
   const { t } = useTranslation();
   const [lapsJsx, SetLapsJsx] = useState([]);
 
-  const { laps, onAction, averageLapInformation, rankingMethod } = props;
+  const { laps, onAction, averageLapInformation, rankingMethod, readonly = false } = props;
 
   const columnDefinitions = [
     {
@@ -49,21 +49,27 @@ const LapTable = (props) => {
   }
 
   useEffect(() => {
-    if (laps.length) {
+    if (laps && laps.length) {
       const items = laps.map((lap) => {
         if (lap.isValid) {
         }
 
         let averageLap;
         if (averageLapInformation) {
-          averageLap = averageLapInformation.find((avg) => avg.endLapId === lap.lapId);
+          averageLap = averageLapInformation.find(
+            (avg) => Number(avg.endLapId) === Number(lap.lapId)
+          );
         }
         return {
           ...lap,
-          lapId: lap.lapId + 1,
+          lapId: Number(lap.lapId) + 1,
           time: convertMsToString(lap.time),
           average: averageLap ? convertMsToString(averageLap.avgTime) : undefined,
-          valid: (
+          valid: readonly ? (
+            <StatusIndicator type={lap.isValid ? 'success' : 'error'}>
+              {lap.isValid ? t('timekeeper.lap-table.valid') : t('timekeeper.lap-table.not-valid')}
+            </StatusIndicator>
+          ) : (
             <>
               <Button onClick={() => onAction(lap.lapId)}>
                 <StatusIndicator type={lap.isValid ? 'success' : 'error'}>

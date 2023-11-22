@@ -63,12 +63,12 @@ def startUploadToCar(
 
 @app.resolver(type_name="Query", field_name="listUploadsToCar")
 @tracer.capture_method
-def listUploadsToCar(jobId, eventId):
-    if jobId is not None:
-        logger.info(jobId)
+def listUploadsToCar(jobId="0", eventId="0"):
+    if jobId != "0" and jobId is not None:
+        logger.info("jobId" + jobId)
         response = ddbTable.query(KeyConditionExpression=Key("jobId").eq(jobId))
-    elif eventId is not None:
-        logger.info(eventId)
+    elif eventId != "0" and eventId is not None:
+        logger.info("eventId" + eventId)
         response = ddbTable.query(
             IndexName="eventId", KeyConditionExpression=Key("eventId").eq(eventId)
         )

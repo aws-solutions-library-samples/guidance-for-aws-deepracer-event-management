@@ -27,7 +27,7 @@ import {
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
-  TablePreferences
+  TablePreferences,
 } from '../../../components/tableConfig';
 
 import { ColumnConfiguration } from '../../../components/devices-table/deviceTableConfig';
@@ -378,11 +378,9 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
         const filter = {
           jobId: jobId,
         };
-        //console.log('subscriptionFilter-1', filter);
         const subscription = API.graphql(graphqlOperation(onUploadsToCarCreated, filter)).subscribe(
           {
             next: (event) => {
-              //console.log('onUploadsToCarCreated-event', event)
               console.debug(
                 'onUploadsToCarCreated event received',
                 event.value.data.onUploadsToCarCreated
@@ -412,11 +410,9 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
         const filter = {
           jobId: jobId,
         };
-        //console.log('subscriptionFilter-2', filter);
         const subscription = API.graphql(graphqlOperation(onUploadsToCarUpdated, filter)).subscribe(
           {
             next: (event) => {
-              //console.log('onUploadsToCarUpdated-event', event)
               var updatedData = event.value.data.onUploadsToCarUpdated;
               console.debug('onUploadsToCarUpdated event received', updatedData);
               let newJobs = [...jobs];
@@ -455,6 +451,15 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
                     {t('carmodelupload.status.success')}
                   </StatusIndicator>
                 );
+                // enrich upload duration
+                console.log(currentData);
+                const uploadStartDateTime = Date.parse(currentData.uploadStartTime);
+                console.log(uploadStartDateTime);
+                const endDateTime = Date.parse(updatedData.endTime);
+                console.log(endDateTime);
+                const duration = (endDateTime - uploadStartDateTime) / 1000;
+                currentData.duration = duration;
+                console.log(duration);
               } else if (updatedData.status === 'Failed') {
                 currentData.status = updatedData.status;
                 currentData.statusIndicator = (
@@ -532,6 +537,14 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
         sortingField: 'endTime',
         width: 180,
         minWidth: 180,
+      },
+      {
+        id: 'duration',
+        header: t('carmodelupload.duration'),
+        cell: (item) => item.duration || '-',
+        sortingField: 'duration',
+        width: 150,
+        minWidth: 150,
       },
     ];
 

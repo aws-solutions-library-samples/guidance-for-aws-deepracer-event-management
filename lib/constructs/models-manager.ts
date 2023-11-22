@@ -453,7 +453,7 @@ export class ModelsManager extends Construct {
         modelMD5: GraphqlType.string(),
         status: modelStatusEnum.attribute(),
       },
-      directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator')], // TODO anyone who is logged in should have access to this
+      directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator', 'commentator')], // TODO anyone who is logged in should have access to this
     });
 
     props.appsyncApi.schema.addType(modelObjectType);
@@ -463,7 +463,7 @@ export class ModelsManager extends Construct {
         models: modelObjectType.attribute({ isList: true }),
         nextToken: GraphqlType.string(),
       },
-      directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator')], // TODO anyone who is logged in should have access to this
+      directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator', 'commentator')], // TODO anyone who is logged in should have access to this
     });
 
     props.appsyncApi.schema.addType(modelObjectPagination);
@@ -479,7 +479,7 @@ export class ModelsManager extends Construct {
         },
         returnType: modelObjectPagination.attribute(),
         dataSource: modelsDataSource,
-        directives: [Directive.cognito('admin', 'operator', 'racer')],
+        directives: [Directive.cognito('admin', 'operator', 'racer', 'commentator')],
       })
     );
 

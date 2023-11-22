@@ -24,11 +24,6 @@ const AdminHomeCards = () => {
       description: i18next.t('homeCards.adminHomeCards.all-models-description'),
     },
     {
-      name: i18next.t('homeCards.adminHomeCards.quarantined'),
-      link: '/admin/quarantine',
-      description: i18next.t('homeCards.adminHomeCards.quarantined-description'),
-    },
-    {
       name: i18next.t('homeCards.adminHomeCards.fleets'),
       link: '/admin/fleets',
       description: i18next.t('homeCards.adminHomeCards.fleets-description'),
@@ -42,6 +37,11 @@ const AdminHomeCards = () => {
       name: i18next.t('homeCards.adminHomeCards.car-activation'),
       link: '/admin/car_activation',
       description: i18next.t('homeCards.adminHomeCards.car-activation-description'),
+    },
+    {
+      name: i18next.t('homeCards.adminHomeCards.timer-activation'),
+      link: '/admin/timer_activation',
+      description: i18next.t('homeCards.adminHomeCards.timer-activation-description'),
     },
     {
       name: i18next.t('homeCards.adminHomeCards.events'),

@@ -23,9 +23,10 @@ import { AdminHome } from '../admin/home';
 import { EditRace } from '../admin/race-admin/pages/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { AdminTimerActivation } from '../admin/timerActivation';
+import { UploadToCarStatus } from '../admin/uploadToCarStatus';
 import { ProfileHome } from '../admin/user-profile/profile';
 import { CreateUser } from '../admin/users/createUser';
-import { CommentatorRaceStats } from '../commentator/race-stats';
+import { CommentatorStats } from '../commentator/commentator-stats';
 import { Home } from '../home';
 import { useCarsApi } from '../hooks/useCarsApi';
 import { useEventsApi } from '../hooks/useEventsApi';
@@ -68,7 +69,7 @@ const defaultRoutes = [
 
 const registrationRoutes = [<Route path="/registration/createuser" element={<CreateUser />} />];
 
-const commentatorRoutes = [<Route path="/commentator" element={<CommentatorRaceStats />} />];
+const commentatorRoutes = [<Route path="/commentator" element={<CommentatorStats />} />];
 
 const operatorRoutes = [
   <Route path="/admin/home" element={<AdminHome />} />,
@@ -84,6 +85,7 @@ const operatorRoutes = [
   <Route path="/admin/timekeeper" element={<Timekeeper />} />,
   <Route path="/admin/races" element={<RaceAdmin />} />,
   <Route path="/admin/races/edit" element={<EditRace />} />,
+  <Route path="/admin/upload_to_car_status" element={<UploadToCarStatus />} />,
   <Route
     path="/admin/models"
     element={<ModelManagement isOperatorView={true} onlyDisplayOwnModels={false} />}
@@ -176,9 +178,21 @@ export function TopNav(props) {
       href: '/operator',
       items: [
         {
-          type: 'link',
-          text: t('topnav.models-own'),
-          href: '/admin/models',
+          type: 'expandable-link-group',
+          text: t('topnav.models-management'),
+          items: [
+            {
+              type: 'link',
+              text: t('topnav.models'),
+              href: '/admin/models',
+            },
+            {
+              type: 'link',
+              text: t('topnav.upload-to-car-status'),
+              info: <Badge color="blue">{t('topnav.beta')}</Badge>,
+              href: '/admin/upload_to_car_status',
+            },
+          ],
         },
         {
           type: 'expandable-link-group',

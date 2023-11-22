@@ -318,7 +318,14 @@ export class RaceManager extends Construct {
 
     // OVERLAY METHODS
     const raceStatusEnum = new EnumType('RaceStatusEnum', {
-      definition: ['NO_RACER_SELECTED', 'READY_TO_START', 'RACE_IN_PROGRESS', 'RACE_PAUSED', 'RACE_FINSIHED'],
+      definition: [
+        'NO_RACER_SELECTED',
+        'READY_TO_START',
+        'RACE_IN_PROGRESS',
+        'RACE_PAUSED',
+        'RACE_FINSIHED',
+        'RACE_SUBMITTED',
+      ],
     });
     props.appsyncApi.schema.addType(raceStatusEnum);
 
