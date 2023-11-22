@@ -169,7 +169,7 @@ export const RaceFinishPage = ({
   const breadcrumbs = Breadcrumbs();
   return (
     <PageLayout
-      helpPanelHidden={false}
+      helpPanelHidden={true}
       helpPanelContent={
         <SimpleHelpPanelLayout
           headerContent={t('header', { ns: 'help-admin-timekeeper-race-finish' })}
