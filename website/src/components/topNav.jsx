@@ -178,9 +178,21 @@ export function TopNav(props) {
       href: '/operator',
       items: [
         {
-          type: 'link',
-          text: t('topnav.models-own'),
-          href: '/admin/models',
+          type: 'expandable-link-group',
+          text: t('topnav.models-management'),
+          items: [
+            {
+              type: 'link',
+              text: t('topnav.models'),
+              href: '/admin/models',
+            },
+            {
+              type: 'link',
+              text: t('topnav.upload-to-car-status'),
+              info: <Badge color="blue">{t('topnav.beta')}</Badge>,
+              href: '/admin/upload_to_car_status',
+            },
+          ],
         },
         {
           type: 'expandable-link-group',
@@ -232,18 +244,6 @@ export function TopNav(props) {
       text: t('topnav.admin'),
       href: '/admin',
       items: [{ type: 'link', text: t('topnav.users'), href: '/admin/user-management' }],
-    },
-    {
-      type: 'expandable-link-group',
-      text: <Badge color="blue">{t('topnav.beta')}</Badge>,
-      items: [
-        {
-          type: 'link',
-          text: t('topnav.upload-to-car-status'),
-          info: <Badge color="blue">{t('topnav.beta')}</Badge>,
-          href: '/admin/upload_to_car_status',
-        },
-      ],
     },
   ];
 

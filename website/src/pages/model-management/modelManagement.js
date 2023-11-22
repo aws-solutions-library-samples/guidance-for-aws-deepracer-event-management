@@ -62,8 +62,9 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
       setFilteringProperties(FilteringPropertiesOperator());
       setBreadcrumbs([
         { text: t('home.breadcrumb'), href: '/' },
-        { text: t('admin.breadcrumb'), href: '/home/admin' },
-        { text: t('models.breadcrumb') },
+        { text: t('operator.breadcrumb'), href: '/admin/home' },
+        { text: t('models.breadcrumb'), href: '/admin/home' },
+        { text: t('models.models.breadcrumb') },
       ]);
       dispatch('UPDATE_HELP_PANEL', {
         isHidden: false,
