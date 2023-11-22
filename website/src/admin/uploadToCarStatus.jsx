@@ -316,6 +316,7 @@ const UploadToCarStatus = () => {
   const breadcrumbs = [
     { text: t('home.breadcrumb'), href: '/' },
     { text: t('operator.breadcrumb'), href: '/admin/home' },
+    { text: t('models.breadcrumb'), href: '/admin/home' },
     { text: t('upload-to-car-status.breadcrumb') }
   ]
 
