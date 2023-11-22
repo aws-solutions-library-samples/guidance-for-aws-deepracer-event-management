@@ -40,10 +40,15 @@ function App() {
     trackId = "1";
   }
 
+  let showLeaderboard = searchParams.get("showLeaderboard")?.toString();
+  if (typeof showLeaderboard === "undefined") {
+    showLeaderboard = "1";
+  }
+
   let raceFormat = searchParams.get("format")?.toString();
-  if (typeof raceFormat === "undefined" || raceFormat !== 'average') {
+  if (typeof raceFormat === "undefined") {
     raceFormat = "fastest";
-  };
+  }
 
   const startTimer = () => {
     if (!timerState || isPaused) {
@@ -106,12 +111,8 @@ function App() {
   }
 
   function onMessageReceived(message: any) {
-    try {
 
-      // all code in this function is retrofitted from GoSquared (old) overlay system.
-      // this whole function could use some TLC and modernization (old solution was just raw JS).
-      // I literally pasted this in and modified slightly to make this work on the time schedule
-      // that @dasmthc needed for first summit of 2023.
+    try {
       var data = message;
 
       data.paused = data.raceStatus === 'RACE_PAUSED';
@@ -175,7 +176,7 @@ function App() {
             }, 2000);
           }
 
-          if (!leaderBoardStateIN) {
+          if (!leaderBoardStateIN && showLeaderboard === '1') {
             // console.debug('Setting TimeOut to fade Leaderboard in!');
             helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
             setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
@@ -258,7 +259,7 @@ function App() {
           }, 2000);
         }
 
-        if (!leaderBoardStateIN) {
+        if (!leaderBoardStateIN && showLeaderboard === '1') {
           // console.debug('Setting TimeOut to fade Leaderboard in!');
           helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
           setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
@@ -344,7 +345,7 @@ function App() {
       (helpers as any).SetEventName(leaderboardConfig.leaderBoardTitle.toUpperCase());
 
       // check if lower thirds is showing, if not, then show leaderboard.
-      if (!lowerThirdStateIN) {
+      if (!lowerThirdStateIN && showLeaderboard === '1') {
         // console.debug('Setting TimeOut to fade Leaderboard in!');
         helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
         setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
@@ -390,12 +391,38 @@ function App() {
       error: (error: any) => console.error(error),
     });
 
+    // subscribe to "onDeleteLeaderboardEntry" to make sure leaderboard is updated when an entry is removed.
+    const deleteLeaderboardSubscription = (API.graphql<GraphQLSubscription<any>>(
+      graphqlOperation(subscriptions.onDeleteLeaderboardEntry, { eventId: eventId, trackId: trackId })) as any
+    ).subscribe({
+      next: ({ provider, value }: any) => {
+
+        const apiResponse = API.graphql({
+          query: queries.getLeaderboard,
+          variables: {
+            eventId: eventId,
+            trackId: trackId,
+          },
+        }) as Promise<GraphQLResult<any>>
+
+        // once leaderboard data is set, update the leaderboard SVG.
+        apiResponse.then((response) => {
+          const leaderboardData = (helpers as any).GetLeaderboardDataSorted(response.data.getLeaderboard.entries);
+          (helpers as any).UpdateLeaderboard(leaderboardData);
+        });
+      },
+      error: (error: any) => console.error(error),
+    });
+
     return () => {
       if (overlaySubscription) {
         overlaySubscription.unsubscribe();
       }
       if (leaderboardSubscription) {
         leaderboardSubscription.unsubscribe();
+      }
+      if (deleteLeaderboardSubscription) {
+        deleteLeaderboardSubscription.unsubscribe();
       }
     };
   }, [i18n, desiredLanguage]);
@@ -404,7 +431,7 @@ function App() {
     <div className="App">
       <ChromaBG />
       <div id="racerAndInfo">
-        <object type="image/svg+xml" data="assets/svg/RacerAndLapInfo-Localized.svg" id="lower-third-racer-and-lap-info">Lower Thirds SVG</object>
+        <object type="image/svg+xml" data={ raceFormat === "fastest" ? "assets/svg/RacerAndLapInfo-Localized.svg" : "assets/svg/RacerAndLapInfo-BestAvg.svg" }id="lower-third-racer-and-lap-info">Lower Thirds SVG</object>
       </div>
 
       <div id="track-overlay-frame">
