@@ -27,7 +27,7 @@ import {
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
-  TablePreferences,
+  TablePreferences
 } from '../../../components/tableConfig';
 
 import { ColumnConfiguration } from '../../../components/devices-table/deviceTableConfig';
