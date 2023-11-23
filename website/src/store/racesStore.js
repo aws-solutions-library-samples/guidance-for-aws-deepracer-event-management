@@ -2,6 +2,19 @@ import { initStore } from './store';
 
 const configureStore = () => {
   const actions = {
+    NEW_RACES: (curState, racesToAdd) => {
+      var updatedRaces = { ...curState.races };
+      updatedRaces.races = [];
+      racesToAdd.forEach((raceToAdd) => {
+        const raceIndex = curState.races.races.findIndex((r) => r.raceId === raceToAdd.raceId);
+        if (raceIndex === -1) {
+          updatedRaces.races.push(raceToAdd);
+        } else {
+          updatedRaces.races[raceIndex] = raceToAdd;
+        }
+      });
+      return { races: updatedRaces };
+    },
     ADD_RACES: (curState, racesToAdd) => {
       const updatedRaces = { ...curState.races };
       racesToAdd.forEach((raceToAdd) => {

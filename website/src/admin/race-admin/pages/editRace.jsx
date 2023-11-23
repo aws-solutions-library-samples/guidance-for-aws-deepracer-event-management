@@ -6,6 +6,7 @@ import { DeleteModal, ItemList } from '../../../components/deleteModal';
 import { PageLayout } from '../../../components/pageLayout';
 import { TableHeader } from '../../../components/tableConfig';
 import useMutation from '../../../hooks/useMutation';
+import { getAverageWindows } from '../../../pages/timekeeper/support-functions/averageClaculations';
 import {
   useSelectedEventContext,
   useSelectedTrackContext,
@@ -47,7 +48,15 @@ export const EditRace = () => {
       send('deleteRaces', config);
     } else {
       const payload = { ...raceConfig };
-      payload.laps.map((lap) => delete lap.timeHr); // Strip timeHr filed form laps, only used in FE
+      payload.laps.map((lap) => {
+        delete lap.timeHr;
+        delete lap.avgTime;
+      }); // Strip timeHr filed form laps, only used in FE
+      payload.averageLaps = getAverageWindows(
+        payload.laps,
+        selectedEvent.raceConfig.averageLapsWindow
+      );
+      console.log(payload);
       send('updateRace', payload);
     }
   };

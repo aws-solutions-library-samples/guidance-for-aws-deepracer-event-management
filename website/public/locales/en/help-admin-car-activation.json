@@ -1,5 +1,5 @@
 {
   "header": "## Car activation",
-  "content": "On this page, you register a car for use in a  race and ensure that it is connected to Wi-Fi and is discoverable by DREM. To activate a car, select the fleet to which it belongs. Enter the **Hostname** and **Password** and optional Wi-Fi credentials for the car.",
+  "content": "On this page, you register a car for use in a race and ensure that it is connected to Wi-Fi and is discoverable by DREM. To activate a car, select the fleet to which it belongs. Enter the **Hostname** and **Password** and optional Wi-Fi credentials for the car.",
   "footer": ""
 }

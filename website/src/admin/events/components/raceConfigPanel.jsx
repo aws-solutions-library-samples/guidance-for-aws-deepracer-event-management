@@ -9,6 +9,8 @@ import {
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  AverageLapWindowConfig,
+  GetAverageLapWindowFromId,
   GetMaxRunsPerRacerOptionFromId,
   GetRaceTimeOptionFromId,
   GetRankingOptionFromId,
@@ -17,6 +19,7 @@ import {
   MaxRunsPerRacerConfig,
   RaceTimeConfig,
   RaceTypeConfig,
+  RaceTypeEnum,
   ResetConfig,
   TrackTypeConfig,
 } from '../support-functions/raceConfig';
@@ -46,6 +49,9 @@ const DefaultRacingFooter = ({
   numberOfResetsPerLap,
   maxRunsPerRacer,
   maxRunsPerRacerOptions,
+  averageLapsWindowConfig,
+  averageLapsWindow,
+  rankingMehtod,
   raceTimeInMin,
   onChange,
   raceTimeOptions,
@@ -90,6 +96,19 @@ const DefaultRacingFooter = ({
           filteringType="auto"
         />
       </FormField>
+      <FormField
+        label={t('events.race.average-time-window-label')}
+        description={t('events.race.average-time-window-description')}
+      >
+        <Select
+          selectedOption={GetAverageLapWindowFromId(averageLapsWindow)}
+          onChange={({ detail }) => onChange({ averageLapsWindow: detail.selectedOption.value })}
+          options={averageLapsWindowConfig}
+          selectedAriaLabel="Selected"
+          filteringType="auto"
+          disabled={rankingMehtod !== RaceTypeEnum.BEST_AVERAGE_LAP_TIME_X_LAP}
+        />
+      </FormField>
     </SpaceBetween>
   );
 };
@@ -98,12 +117,15 @@ export const RaceConfigPanel = ({ raceConfig, onChange }) => {
   const raceTimeOptions = RaceTimeConfig();
   const raceRankingOptions = RaceTypeConfig();
   const maxRunsPerRacerOptions = MaxRunsPerRacerConfig();
+  const averageLapWindowConfig = AverageLapWindowConfig();
+  //const
   const resetOptions = ResetConfig();
   const trackOptions = TrackTypeConfig();
   const { t } = useTranslation();
   const UpdateConfig = useCallback(
     (attr) => {
       const updatePayload = { raceConfig: { ...raceConfig, ...attr } };
+      console.log(raceConfig);
       onChange(updatePayload);
     },
     [raceConfig, onChange]
@@ -113,10 +135,13 @@ export const RaceConfigPanel = ({ raceConfig, onChange }) => {
       numberOfResetsPerLap={raceConfig.numberOfResetsPerLap}
       raceTimeInMin={raceConfig.raceTimeInMin}
       maxRunsPerRacer={raceConfig.maxRunsPerRacer}
+      rankingMehtod={raceConfig.rankingMethod}
+      averageLapsWindow={raceConfig.averageLapsWindow}
       onChange={UpdateConfig}
       resetOptions={resetOptions}
       raceTimeOptions={raceTimeOptions}
       maxRunsPerRacerOptions={maxRunsPerRacerOptions}
+      averageLapsWindowConfig={averageLapWindowConfig}
     />
   );
 
@@ -127,10 +152,13 @@ export const RaceConfigPanel = ({ raceConfig, onChange }) => {
         numberOfResetsPerLap={raceConfig.numberOfResetsPerLap}
         raceTimeInMin={raceConfig.raceTimeInMin}
         maxRunsPerRacer={raceConfig.maxRunsPerRacer}
+        rankingMehtod={raceConfig.rankingMethod}
+        averageLapsWindow={raceConfig.averageLapsWindow}
         onChange={UpdateConfig}
         resetOptions={resetOptions}
         raceTimeOptions={raceTimeOptions}
         maxRunsPerRacerOptions={maxRunsPerRacerOptions}
+        averageLapsWindowConfig={averageLapWindowConfig}
       />
     );
     // }

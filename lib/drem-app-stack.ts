@@ -15,6 +15,7 @@ import { CodeFirstSchema } from 'awscdk-appsync-utils';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { CarManager } from './constructs/cars-manager';
+import { ClamscanServerless } from './constructs/clamscan-serverless';
 import { CwRumAppMonitor } from './constructs/cw-rum';
 import { EventsManager } from './constructs/events-manager';
 import { FleetsManager } from './constructs/fleets-manager';
@@ -22,6 +23,7 @@ import { LabelPrinter } from './constructs/label-printer';
 import { LandingPageManager } from './constructs/landing-page';
 import { Leaderboard } from './constructs/leaderboard';
 import { ModelsManager } from './constructs/models-manager';
+import { ModelsManagerDefaultModelsDeployment } from './constructs/models-manager-default-models';
 import { RaceManager } from './constructs/race-manager';
 import { StreamingOverlay } from './constructs/streaming-overlay';
 import { SystemsManager } from './constructs/systems-manager';
@@ -86,7 +88,24 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       appsyncApi: appsyncResources,
       lambdaConfig: lambdaConfig,
       logsBucket: props.logsBucket,
+      eventbus: props.eventbus,
     });
+
+    const clamscan = new ClamscanServerless(this, 'ClamscanServerless', {
+      logsBucket: props.logsBucket,
+      uploadBucket: modelsManager.uploadBucket,
+      scannedBucked: modelsManager.modelsBucket,
+      account: this.account,
+      lambdaConfig: lambdaConfig,
+      eventbus: props.eventbus,
+      appsyncApi: appsyncResources,
+    });
+
+    const defaultModelsDeployment = new ModelsManagerDefaultModelsDeployment(this, 'DefaultModelsDeployment', {
+      uploadBucket: modelsManager.uploadBucket,
+      modelsBucket: modelsManager.modelsBucket,
+    });
+    defaultModelsDeployment.node.addDependency(clamscan);
 
     const carManager = new CarManager(this, 'CarManager', {
       appsyncApi: appsyncResources,
@@ -206,12 +225,13 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     this.streamingOverlaySourceBucketName = new cdk.CfnOutput(this, 'streamingOverlaySourceBucketName', {
       value: streamingOverlay.websiteBucket.bucketName,
     });
-    new cdk.CfnOutput(this, 'modelsBucketName', {
-      value: modelsManager.modelsBucket.bucketName,
+
+    new cdk.CfnOutput(this, 'uploadBucketName', {
+      value: modelsManager.uploadBucket.bucketName,
     });
 
-    new cdk.CfnOutput(this, 'infectedBucketName', {
-      value: modelsManager.infectedBucket.bucketName,
+    new cdk.CfnOutput(this, 'modelsBucketName', {
+      value: modelsManager.modelsBucket.bucketName,
     });
 
     new cdk.CfnOutput(this, 'region', { value: stack.region });

@@ -195,6 +195,25 @@ export class Leaderboard extends Construct {
     ddbTable.grantReadWriteData(leaderboardDataSourceDdb);
 
     // API Schema
+    const averageLapObjectType = new ObjectType('LeaderboardAverageLap', {
+      definition: {
+        startLapId: GraphqlType.int(),
+        endLapId: GraphqlType.int(),
+        avgTime: GraphqlType.float(),
+      },
+      directives: [Directive.apiKey(), Directive.iam(), Directive.cognito('admin', 'operator', 'commentator')],
+    });
+    props.appsyncApi.schema.addType(averageLapObjectType);
+
+    const averageLapInputType = new InputType('LeaderboardAverageLapInput', {
+      definition: {
+        startLapId: GraphqlType.int(),
+        endLapId: GraphqlType.int(),
+        avgTime: GraphqlType.float(),
+      },
+    });
+    props.appsyncApi.schema.addType(averageLapInputType);
+
     const leaderboardEntryObjectType = new ObjectType('LeaderBoardEntry', {
       definition: {
         eventId: GraphqlType.id(),
@@ -204,13 +223,31 @@ export class Leaderboard extends Construct {
         numberOfValidLaps: GraphqlType.int(),
         numberOfInvalidLaps: GraphqlType.int(),
         fastestLapTime: GraphqlType.float(),
+        fastestAverageLap: averageLapObjectType.attribute(),
         avgLapTime: GraphqlType.float(),
         lapCompletionRatio: GraphqlType.float(),
         avgLapsPerAttempt: GraphqlType.float(),
         countryCode: GraphqlType.string(),
+        mostConcecutiveLaps: GraphqlType.int(),
       },
       directives: [Directive.apiKey(), Directive.iam(), Directive.cognito('admin', 'operator', 'commentator')],
     });
+
+    const leaderboardEntryArgs = {
+      eventId: GraphqlType.id({ isRequired: true }),
+      trackId: GraphqlType.id({ isRequired: true }),
+      username: GraphqlType.string({ isRequired: true }),
+      racedByProxy: GraphqlType.boolean({ isRequired: true }),
+      numberOfValidLaps: GraphqlType.int(),
+      numberOfInvalidLaps: GraphqlType.int(),
+      fastestLapTime: GraphqlType.float(),
+      fastestAverageLap: averageLapInputType.attribute(),
+      avgLapTime: GraphqlType.float(),
+      lapCompletionRatio: GraphqlType.float(),
+      avgLapsPerAttempt: GraphqlType.float(),
+      countryCode: GraphqlType.string(),
+      mostConcecutiveLaps: GraphqlType.int(),
+    };
 
     props.appsyncApi.schema.addType(leaderboardEntryObjectType);
 
@@ -284,19 +321,7 @@ export class Leaderboard extends Construct {
     props.appsyncApi.schema.addMutation(
       'addLeaderboardEntry',
       new ResolvableField({
-        args: {
-          eventId: GraphqlType.id({ isRequired: true }),
-          trackId: GraphqlType.id({ isRequired: true }),
-          username: GraphqlType.string({ isRequired: true }),
-          racedByProxy: GraphqlType.boolean({ isRequired: true }),
-          numberOfValidLaps: GraphqlType.int(),
-          numberOfInvalidLaps: GraphqlType.int(),
-          fastestLapTime: GraphqlType.float(),
-          avgLapTime: GraphqlType.float(),
-          lapCompletionRatio: GraphqlType.float(),
-          avgLapsPerAttempt: GraphqlType.float(),
-          countryCode: GraphqlType.string(),
-        },
+        args: leaderboardEntryArgs,
         returnType: leaderboardEntryObjectType.attribute(),
         dataSource: noneDataSource,
         requestMappingTemplate: appsync.MappingTemplate.fromString(
@@ -337,19 +362,7 @@ export class Leaderboard extends Construct {
     props.appsyncApi.schema.addMutation(
       'updateLeaderboardEntry',
       new ResolvableField({
-        args: {
-          eventId: GraphqlType.id({ isRequired: true }),
-          trackId: GraphqlType.id({ isRequired: true }),
-          username: GraphqlType.string({ isRequired: true }),
-          racedByProxy: GraphqlType.boolean({ isRequired: true }),
-          numberOfValidLaps: GraphqlType.int(),
-          numberOfInvalidLaps: GraphqlType.int(),
-          fastestLapTime: GraphqlType.float(),
-          avgLapTime: GraphqlType.float(),
-          lapCompletionRatio: GraphqlType.float(),
-          avgLapsPerAttempt: GraphqlType.float(),
-          countryCode: GraphqlType.string(),
-        },
+        args: leaderboardEntryArgs,
         returnType: leaderboardEntryObjectType.attribute(),
         dataSource: noneDataSource,
         requestMappingTemplate: appsync.MappingTemplate.fromString(

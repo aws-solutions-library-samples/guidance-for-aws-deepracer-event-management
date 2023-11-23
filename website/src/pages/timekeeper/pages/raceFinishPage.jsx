@@ -9,18 +9,27 @@ import {
 } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
+import { RaceTypeEnum } from '../../../admin/events/support-functions/raceConfig';
 import { SimpleHelpPanelLayout } from '../../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../../components/pageLayout';
 import useMutation from '../../../hooks/useMutation';
 import { useStore } from '../../../store/store';
+import { FastestAverageLapTable } from '../components/fastesAverageLapTable';
 import { LapTable } from '../components/lapTable';
 import { Breadcrumbs } from '../support-functions/supportFunctions';
 
-export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction, onNext }) => {
+export const RaceFinishPage = ({
+  eventName,
+  raceInfo,
+  fastestLap = [],
+  fastestAverageLap = [],
+  raceConfig,
+  onAction,
+  onNext,
+}) => {
   const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-finish']);
   const [buttonsIsDisabled, SetButtonsIsDisabled] = useState(false);
-  const [sendMutation, loading, errorMessage] = useMutation();
+  const [sendMutation, loading, errorMessage, data] = useMutation();
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const [, dispatch] = useStore();
   const messageDisplayTime = 4000;
@@ -28,7 +37,7 @@ export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction,
 
   // Clear the notification is submit is successful and go back to racer selector page again
   useEffect(() => {
-    if (!loading && !errorMessage) {
+    if (!loading && !errorMessage && data) {
       setTimeout(() => {
         dispatch('DISMISS_NOTIFICATION', notificationId);
         SetButtonsIsDisabled(false);
@@ -39,6 +48,19 @@ export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction,
 
   const submitRaceHandler = async () => {
     SetButtonsIsDisabled(true);
+    console.log(raceInfo);
+
+    sendMutation('updateOverlayInfo', {
+      eventId: raceInfo.eventId,
+      eventName: raceConfig.eventName,
+      trackId: raceInfo.trackId,
+      username: raceInfo.username,
+      userId: raceInfo.userId,
+      laps: raceInfo.laps,
+      averageLaps: raceInfo.averageLaps,
+      timeLeftInMs: 0,
+      raceStatus: 'RACE_SUBMITTED',
+    });
     sendMutation('addRace', { ...raceInfo });
   };
 
@@ -84,6 +106,11 @@ export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction,
     </Container>
   );
 
+  let fastestAverageLapInformation = <></>;
+  if (raceConfig.rankingMethod === RaceTypeEnum.BEST_AVERAGE_LAP_TIME_X_LAP) {
+    fastestAverageLapInformation = <FastestAverageLapTable fastestAverageLap={fastestAverageLap} />;
+  }
+
   const lapsPanel = (
     <Container header={<Header>{t('timekeeper.end-session.laps-panel-header')}</Header>}>
       <SpaceBetween size="m" direction="vertical">
@@ -93,11 +120,14 @@ export const RaceFinishPage = ({ eventName, raceInfo, fastestLap = [], onAction,
           laps={fastestLap}
           onAction={onAction}
         />
+        {fastestAverageLapInformation}
         <hr></hr>
         <LapTable
           header={t('timekeeper.recorded-laps')}
           variant="embedded"
           laps={raceInfo.laps}
+          averageLapInformation={raceInfo.averageLaps}
+          rankingMethod={raceConfig.rankingMethod}
           onAction={onAction}
         />
       </SpaceBetween>

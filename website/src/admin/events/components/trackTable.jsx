@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { EventLinksButtons } from '../../../components/eventLinksButtons';
 import awsconfig from '../../../config.json';
 
-export const TrackTable = ({ eventId, tracks }) => {
+export const TrackTable = ({ eventId, tracks, raceFormat }) => {
   const { t } = useTranslation();
   const [tableItems, setTableItems] = React.useState([]);
 
@@ -17,7 +17,7 @@ export const TrackTable = ({ eventId, tracks }) => {
             <EventLinksButtons
               href={`${
                 awsconfig.Urls.leaderboardWebsite
-              }/leaderboard/${eventId.toString()}/?qr=header&scroll=true&track=${track.trackId.toString()}`}
+              }/leaderboard/${eventId.toString()}/?qr=header&scroll=true&track=${track.trackId.toString()}&format=${raceFormat}`}
               linkTextPrimary={t('events.link-same-tab')}
               linkTextExternal={t('events.link-new-tab')}
             />
@@ -26,7 +26,7 @@ export const TrackTable = ({ eventId, tracks }) => {
             <EventLinksButtons
               href={`${
                 awsconfig.Urls.streamingOverlayWebsite
-              }/${eventId.toString()}?trackId=${track.trackId.toString()}`}
+              }/${eventId.toString()}?trackId=${track.trackId.toString()}&format=${raceFormat}`}
               linkTextPrimary={t('events.link-same-tab')}
               linkTextExternal={t('events.link-new-tab')}
             />
@@ -35,7 +35,7 @@ export const TrackTable = ({ eventId, tracks }) => {
             <EventLinksButtons
               href={`${
                 awsconfig.Urls.streamingOverlayWebsite
-              }/${eventId.toString()}?trackId=${track.trackId.toString()}&chroma=1`}
+              }/${eventId.toString()}?trackId=${track.trackId.toString()}&chroma=1&format=${raceFormat}`}
               linkTextPrimary={t('events.link-same-tab')}
               linkTextExternal={t('events.link-new-tab')}
             />
@@ -43,7 +43,7 @@ export const TrackTable = ({ eventId, tracks }) => {
         };
       })
     );
-  }, [tracks, eventId, t]);
+  }, [tracks, eventId, t, raceFormat]);
 
   const columnsConfig = [
     {

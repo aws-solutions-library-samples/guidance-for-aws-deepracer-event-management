@@ -175,7 +175,7 @@ export class CarManager extends Construct {
       ],
     });
 
-    // Define role used by lib/lambdas/car_activation_function/index.py
+    // Define role used by lib/lambdas/device_activation_function/index.py
     const smmRunCommandRole = new iam.Role(this, 'RoleAmazonEC2RunCommandRoleForManagedInstances', {
       assumedBy: new ServicePrincipal('ssm.amazonaws.com'),
       description: 'EC2 role for SSM',
@@ -193,10 +193,10 @@ export class CarManager extends Construct {
       ],
     });
 
-    // car_activation method
-    const car_activation_handler = new StandardLambdaPythonFunction(this, 'car_activation_handler', {
-      entry: 'lib/lambdas/car_activation_function/',
-      description: 'Car Activation',
+    // device_activation method
+    const device_activation_handler = new StandardLambdaPythonFunction(this, 'device_activation_handler', {
+      entry: 'lib/lambdas/device_activation_function/',
+      description: 'Device Activation',
       index: 'index.py',
       handler: 'lambda_handler',
       timeout: Duration.minutes(1),
@@ -209,13 +209,13 @@ export class CarManager extends Construct {
       layers: [props.lambdaConfig.layersConfig.powerToolsLayer],
 
       environment: {
-        POWERTOOLS_SERVICE_NAME: 'car_activation',
+        POWERTOOLS_SERVICE_NAME: 'device_activation',
         LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
         HYBRID_ACTIVATION_IAM_ROLE_NAME: smmRunCommandRole.roleName,
       },
     });
 
-    car_activation_handler.addToRolePolicy(
+    device_activation_handler.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ['iam:PassRole', 'ssm:AddTagsToResource', 'ssm:CreateActivation'],
@@ -223,10 +223,10 @@ export class CarManager extends Construct {
       })
     );
 
-    // car_activation_clean method - clean up unactivated and expired hybrid activations
-    const car_activation_clean_handler = new StandardLambdaPythonFunction(this, 'car_activation_clean_handler', {
-      entry: 'lib/lambdas/car_activation_clean/',
-      description: 'Car Activation clean up unused activations',
+    // device_activation_clean method - clean up unactivated and expired hybrid activations
+    const device_activation_clean_handler = new StandardLambdaPythonFunction(this, 'device_activation_clean_handler', {
+      entry: 'lib/lambdas/device_activation_clean/',
+      description: 'Device Activation clean up unused activations',
       index: 'index.py',
       handler: 'lambda_handler',
       timeout: Duration.minutes(2),
@@ -239,17 +239,17 @@ export class CarManager extends Construct {
       layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
 
       environment: {
-        POWERTOOLS_SERVICE_NAME: 'car_activation_clean',
+        POWERTOOLS_SERVICE_NAME: 'device_activation_clean',
         LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
       },
     });
 
-    new awsEvents.Rule(this, 'car_activation_clean_handler_cron', {
+    new awsEvents.Rule(this, 'device_activation_clean_handler_cron', {
       schedule: awsEvents.Schedule.cron({ minute: '0', hour: '1' }),
-      targets: [new awsEventsTargets.LambdaFunction(car_activation_clean_handler)],
+      targets: [new awsEventsTargets.LambdaFunction(device_activation_clean_handler)],
     });
 
-    car_activation_clean_handler.addToRolePolicy(
+    device_activation_clean_handler.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ['ssm:DeleteActivation', 'ssm:DescribeActivations'],
@@ -258,13 +258,13 @@ export class CarManager extends Construct {
     );
 
     // Define the data source for the API
-    const car_activation_data_source = props.appsyncApi.api.addLambdaDataSource(
-      'car_activation_data_source',
-      car_activation_handler
+    const device_activation_data_source = props.appsyncApi.api.addLambdaDataSource(
+      'device_activation_data_source',
+      device_activation_handler
     );
 
     NagSuppressions.addResourceSuppressions(
-      car_activation_data_source,
+      device_activation_data_source,
       [
         {
           id: 'AwsSolutions-IAM5',
@@ -280,7 +280,7 @@ export class CarManager extends Construct {
     );
 
     // Define API Schema
-    const carActivationObjectType = new ObjectType('carActivation', {
+    const deviceActivationObjectType = new ObjectType('deviceActivation', {
       definition: {
         region: GraphqlType.string(),
         activationCode: GraphqlType.id(),
@@ -288,20 +288,21 @@ export class CarManager extends Construct {
       },
     });
 
-    props.appsyncApi.schema.addType(carActivationObjectType);
+    props.appsyncApi.schema.addType(deviceActivationObjectType);
 
     // Event methods
     props.appsyncApi.schema.addMutation(
-      'carActivation',
+      'deviceActivation',
       new ResolvableField({
         args: {
           hostname: GraphqlType.string({ isRequired: true }),
-          fleetId: GraphqlType.id({ isRequired: true }),
+          deviceType: GraphqlType.string({ isRequired: true }),
           fleetName: GraphqlType.string({ isRequired: true }),
-          carUiPassword: GraphqlType.string({ isRequired: true }),
+          fleetId: GraphqlType.id({ isRequired: true }),
+          deviceUiPassword: GraphqlType.string({ isRequired: true }),
         },
-        returnType: carActivationObjectType.attribute(),
-        dataSource: car_activation_data_source,
+        returnType: deviceActivationObjectType.attribute(),
+        dataSource: device_activation_data_source,
       })
     );
 
@@ -383,6 +384,7 @@ export class CarManager extends Construct {
         // "SourceType": GraphqlType.string(),
         fleetId: GraphqlType.id(),
         fleetName: GraphqlType.string(),
+        Type: GraphqlType.string(),
       },
       directives: [Directive.cognito('admin', 'operator')],
     });
@@ -544,6 +546,38 @@ export class CarManager extends Construct {
 
     this.carStatusDataHandlerLambda = labelPrinterDataFetchHandler;
 
-    carStatusTable.grantReadData(labelPrinterDataFetchHandler);
+    const labelPrinterDataFetchHandlerAdditionalRolePolicyDDB = labelPrinterDataFetchHandler.addAdditionalRolePolicy(
+      'labelPrinterDataFetchHandlerAdditionalRolePolicyDDB',
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'dynamodb:BatchGetItem',
+          'dynamodb:ConditionCheckItem',
+          'dynamodb:DescribeTable',
+          'dynamodb:GetItem',
+          'dynamodb:GetRecords',
+          'dynamodb:GetShardIterator',
+          'dynamodb:Query',
+          'dynamodb:Scan',
+        ],
+        resources: [carStatusTable.tableArn, `${carStatusTable.tableArn}/index/*`],
+      })
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      stack,
+      labelPrinterDataFetchHandlerAdditionalRolePolicyDDB.resourcePath,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Allows labelPrinterDataFetchHandler to read DynamoDB carStatusTable',
+          appliesTo: [
+            {
+              regex: '/^Resource::(.+)/index/\\*$/g',
+            },
+          ],
+        },
+      ]
+    );
   }
 }

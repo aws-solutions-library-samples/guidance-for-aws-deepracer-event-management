@@ -5,11 +5,14 @@ const configureStore = () => {
     ADD_CARS: (curState, carsToAdd) => {
       console.debug('ADD_CARS DISPATCH FUNCTION');
       const updatedCars = { ...curState.cars };
-      for (const carToAdd in carsToAdd) {
+      carsToAdd.forEach((carToAdd) => {
         const index = updatedCars.cars.findIndex((car) => car.instanceId === carToAdd.instanceId);
-        if (index > -1) updatedCars.cars[index] = carToAdd;
-        else updatedCars.cars.push(carToAdd);
-      }
+        if (index > -1) {
+          updatedCars.cars.splice(index, 0, carToAdd);
+        } else {
+          updatedCars.cars.push(carToAdd);
+        }
+      });
       updatedCars.cars.sort().reverse();
       return { cars: updatedCars };
     },

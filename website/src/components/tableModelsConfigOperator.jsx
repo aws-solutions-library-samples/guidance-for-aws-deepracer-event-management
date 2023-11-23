@@ -1,8 +1,10 @@
 import i18next from '../i18n';
+import { formatAwsDateTime } from '../support-functions/time';
+import { ModelUploadStatus } from './modelUploadStatus';
 
-export const ColumnConfiguration = () => {
+export const ColumnConfigurationOperator = () => {
   return {
-    defaultVisibleColumns: ['userName', 'modelName', 'modelDate'],
+    defaultVisibleColumns: ['username', 'modelname', 'status', 'uploadedDateTime'],
     visibleContentOptions: [
       {
         label: i18next.t('models.model-information'),
@@ -12,17 +14,19 @@ export const ColumnConfiguration = () => {
             label: i18next.t('models.model-id'),
           },
           {
-            id: 'userName',
+            id: 'username',
             label: i18next.t('models.user-name'),
-            editable: false,
           },
           {
-            id: 'modelName',
+            id: 'modelname',
             label: i18next.t('models.model-name'),
-            editable: false,
           },
           {
-            id: 'modelDate',
+            id: 'status',
+            label: i18next.t('models.status'),
+          },
+          {
+            id: 'uploadedDateTime',
             label: i18next.t('models.upload-date'),
           },
           {
@@ -34,9 +38,21 @@ export const ColumnConfiguration = () => {
             label: i18next.t('models.md5-hash-metadata'),
           },
           {
-            id: 'modelS3Key',
-            label: i18next.t('models.model-s3-key'),
+            id: 'sensor',
+            label: i18next.t('models.sensor'),
           },
+          {
+            id: 'actionSpaceType',
+            label: i18next.t('models.action-space-type'),
+          },
+          {
+            id: 'trainingAlgorithm',
+            label: i18next.t('models.training-algorithm'),
+          },
+          // {
+          //   id: 'modelS3Key',
+          //   label: i18next.t('models.model-s3-key'),
+          // },
         ],
       },
     ],
@@ -48,47 +64,76 @@ export const ColumnConfiguration = () => {
         width: 320,
       },
       {
-        id: 'userName',
+        id: 'username',
         header: i18next.t('models.user-name'),
-        cell: (item) => item.userName || '-',
-        sortingField: 'userName',
+        cell: (item) => item.username || '-',
+        sortingField: 'username',
         width: 200,
         minWidth: 150,
       },
       {
-        id: 'modelName',
+        id: 'modelname',
         header: i18next.t('models.model-name'),
-        cell: (item) => item.modelName || '-',
-        sortingField: 'modelName',
+        cell: (item) => item.modelname || '-',
+        sortingField: 'modelname',
         width: 200,
         minWidth: 150,
       },
       {
-        id: 'modelDate',
+        id: 'status',
+        header: i18next.t('models.status'),
+        cell: (item) => <ModelUploadStatus status={item.status} />,
+        sortingField: 'status',
+        width: 200,
+        minWidth: 150,
+      },
+      {
+        id: 'uploadedDateTime',
         header: i18next.t('models.upload-date'),
-        cell: (item) => item.modelDate || '-',
-        sortingField: 'modelDate',
+        cell: (item) => formatAwsDateTime(item.fileMetaData.uploadedDateTime) || '-',
+        // sortingField: 'uploadedDateTime',
         width: 240,
         minWidth: 150,
       },
       {
         id: 'modelMD5Hash',
         header: i18next.t('models.md5-hash'),
-        cell: (item) => item.modelMD5,
+        cell: (item) => item.modelMD5 || '-',
         width: 200,
         minWidth: 150,
       },
       {
         id: 'modelMetadataMD5Hash',
         header: i18next.t('models.md5-hash-metadata'),
-        cell: (item) => item.modelMetadataMD5,
+        cell: (item) => item.modelMetaData.metadataMd5 || '-',
+        width: 200,
+        minWidth: 150,
+      },
+      // {
+      //   id: 'modelS3Key',
+      //   header: i18next.t('models.model-s3-key'),
+      //   cell: (item) => item.modelKey || '-',
+      //   width: 200,
+      //   minWidth: 150,
+      // },
+      {
+        id: 'sensor',
+        header: i18next.t('models.sensor'),
+        cell: (item) => item.modelMetaData.sensor.join(',') || '-',
         width: 200,
         minWidth: 150,
       },
       {
-        id: 'modelS3Key',
-        header: i18next.t('models.model-s3-key'),
-        cell: (item) => item.modelKey,
+        id: 'actionSpaceType',
+        header: i18next.t('models.action-space-type'),
+        cell: (item) => item.modelMetaData.actionSpaceType || '-',
+        width: 200,
+        minWidth: 150,
+      },
+      {
+        id: 'trainingAlgorithm',
+        header: i18next.t('models.training-algorithm'),
+        cell: (item) => item.modelMetaData.trainingAlgorithm || '-',
         width: 200,
         minWidth: 150,
       },
@@ -96,16 +141,21 @@ export const ColumnConfiguration = () => {
   };
 };
 
-export const FilteringProperties = () => {
+export const FilteringPropertiesOperator = () => {
   return [
     {
-      key: 'userName',
+      key: 'username',
       propertyLabel: i18next.t('models.user-name'),
       operators: [':', '!:', '=', '!='],
     },
     {
-      key: 'modelName',
+      key: 'modelname',
       propertyLabel: i18next.t('models.model-name'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'status',
+      propertyLabel: i18next.t('models.status'),
       operators: [':', '!:', '=', '!='],
     },
   ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));

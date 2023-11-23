@@ -1,0 +1,14 @@
+{
+  "name": "summit-timer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "timer.js",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "http": "0.0.1-security",
+    "http-proxy": "^1.18.1",
+    "rpi-gpio": "^2.1.7",
+    "ws": "^8.5.0"
+  }
+}

@@ -1,4 +1,5 @@
 import i18next from '../../../i18n';
+import { RaceTypeEnum } from './raceConfig';
 
 export const event = {
   eventDate: undefined,
@@ -6,11 +7,12 @@ export const event = {
   fleetId: undefined,
   typeOfEvent: undefined,
   raceConfig: {
-    rankingMethod: 'BEST_LAP_TIME',
+    rankingMethod: RaceTypeEnum.BEST_LAP_TIME,
     raceTimeInMin: '2',
     maxRunsPerRacer: '3',
     numberOfResetsPerLap: '9999',
     trackType: 'REINVENT_2018',
+    averageLapsWindow: '3',
   },
   sponsor: undefined,
   landingPageConfig: {

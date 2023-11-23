@@ -26,7 +26,7 @@ export const PageTable = ({
   selectionType,
   columnConfiguration,
   stickyHeader = true,
-  query = {},
+  query = { tokens: [], operation: 'and' },
   ...props
 }) => {
   const { t } = useTranslation(['translation']);
@@ -35,6 +35,18 @@ export const PageTable = ({
     ...DefaultPreferences,
     visibleContent: columnConfiguration.defaultVisibleColumns,
   });
+
+  // check to see if defaultSortingColumn is configured, if not set it to column 0
+  if(typeof columnConfiguration.defaultSortingColumn == "undefined") {
+    console.log("defaultSortingColumn", "undefined");
+    columnConfiguration.defaultSortingColumn = columnConfiguration.columnDefinitions[0]
+  }
+
+  // check to see if defaultSortingIsDescending is configured, if not set it to false
+  if(typeof columnConfiguration.defaultSortingIsDescending == "undefined") {
+    console.log("defaultSortingIsDescending", "undefined");
+    columnConfiguration.defaultSortingIsDescending = false
+  }
 
   const {
     items,
@@ -61,7 +73,10 @@ export const PageTable = ({
         }
       : undefined,
     pagination: { pageSize: preferences.pageSize },
-    sorting: { defaultState: { sortingColumn: columnConfiguration.columnDefinitions[0] } },
+    sorting: { defaultState: { 
+      sortingColumn: columnConfiguration.defaultSortingColumn,
+      isDescending: columnConfiguration.defaultSortingIsDescending
+    } },
     selection: {},
   });
 
@@ -89,7 +104,6 @@ export const PageTable = ({
           i18nStrings={PropertyFilterI18nStrings(filteringI18nStringsName)}
           countText={MatchesCountText(filteredItemsCount)}
           expandToViewport={true}
-          query={query}
         />
       }
       header={header}

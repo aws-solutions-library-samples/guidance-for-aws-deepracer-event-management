@@ -63,6 +63,7 @@ export const UserManagement = () => {
         />
       }
       header={t('users-list.header')}
+      description={t('users-list.description')}
       breadcrumbs={[
         { text: t('home.breadcrumb'), href: '/' },
         { text: t('admin.breadcrumb'), href: '/home/admin' },

@@ -7,14 +7,10 @@ import { LeaderboardTable } from '../components/leaderboardTable';
 import { RaceInfoFooter } from '../components/raceInfoFooter';
 import { RaceSummaryFooter } from '../components/raceSummaryFooter';
 import { getLeaderboard } from '../graphql/queries';
-import {
-  onDeleteLeaderboardEntry,
-  onNewLeaderboardEntry,
-  onUpdateLeaderboardEntry,
-} from '../graphql/subscriptions';
+import { onDeleteLeaderboardEntry, onNewLeaderboardEntry, onUpdateLeaderboardEntry } from '../graphql/subscriptions';
 import styles from './leaderboard.module.css';
 
-const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
+const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled }) => {
   const [leaderboardEntries, SetleaderboardEntries] = useState([]);
   const [leaderboardConfig, setLeaderboardConfig] = useState({
     headerText: '',
@@ -31,6 +27,8 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
     consistency: undefined,
     gapToFastest: undefined,
     fastestTime: undefined,
+    fastestAverageLap: undefined,
+    mostConcecutiveLaps: undefined,
     avgLapTime: undefined,
     lapCompletionRation: undefined,
     avgLapsPerAttempt: undefined,
@@ -94,13 +92,19 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
     } else {
       newEntry.consistency = newEntry.overallRank;
     }
-    console.debug(newEntry.consistency);
+    console.debug(newEntry);
 
     //calculate gap to fastest
     if (overallRank === 0) {
       newEntry.gapToFastest = 0;
     } else {
-      newEntry.gapToFastest = newEntry.fastestLapTime - allEntries[0].fastestLapTime;
+      if (raceFormat === 'fastest') {
+        newEntry.gapToFastest = newEntry.fastestLapTime - allEntries[0].fastestLapTime;
+      } else if (newEntry.fastestAverageLap) {
+        newEntry.gapToFastest = newEntry.fastestAverageLap.avgTime - allEntries[0].fastestAverageLap.avgTime;
+      } else {
+        newEntry.gapToFastest = null;
+      }
     }
     //console.debug(newEntry);
     SetRaceSummaryData(newEntry);
@@ -114,6 +118,7 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
   const updateLeaderboardEntries = (newLeaderboardEntry) => {
     SetleaderboardEntries((prevState) => {
       console.debug(newLeaderboardEntry);
+      console.debug(prevState);
       const usernameToUpdate = newLeaderboardEntry.username;
       let newState = [...prevState];
 
@@ -125,8 +130,6 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
         if (trackId === 'combined') {
           // for combined leaderboard, only update  the entry when new entry has faster lap time
           // this might be done in the backend in the future
-          console.debug(oldEntry.fastestLapTime);
-          console.debug(newLeaderboardEntry.fastestLapTime);
           newState[oldEntryIndex] = newLeaderboardEntry;
 
           if (
@@ -145,7 +148,18 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
       }
 
       // sort list according to fastestLapTime, ascending order
-      const sortedLeaderboard = newState.sort((a, b) => a.fastestLapTime - b.fastestLapTime);
+      const fastestSortFunction = (a, b) => a.fastestLapTime - b.fastestLapTime;
+      const fastestAverageSortFunction = (a, b) => {
+        if (!a.fastestAverageLap && !b.fastestAverageLap) return 0;
+        if (!a.fastestAverageLap) return 1;
+        if (!b.fastestAverageLap) return -1;
+        return a.fastestAverageLap.avgTime - b.fastestAverageLap.avgTime;
+      };
+
+      const sortedLeaderboard = newState.sort(
+        raceFormat === 'fastest' ? fastestSortFunction : fastestAverageSortFunction
+      );
+
       const oldPosition = oldEntryIndex + 1; // +1 due to that list index start from 0 and leaderboard on 1
       calcRaceSummary(newLeaderboardEntry, oldPosition, sortedLeaderboard);
       return sortedLeaderboard;
@@ -155,9 +169,7 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
   useEffect(() => {
     if (eventId) {
       const getLeaderboardData = async () => {
-        const response = await API.graphql(
-          graphqlOperation(getLeaderboard, { eventId: eventId, trackId: trackId })
-        );
+        const response = await API.graphql(graphqlOperation(getLeaderboard, { eventId: eventId, trackId: trackId }));
         const leaderboard = response.data.getLeaderboard;
         response.data.getLeaderboard.entries.forEach((entry) => updateLeaderboardEntries(entry));
         setLeaderboardConfig(leaderboard.config);
@@ -250,23 +262,33 @@ const Leaderboard = ({ eventId, trackId, showQrCode, scrollEnabled }) => {
             <Header
               headerText={leaderboardConfig.leaderBoardTitle}
               eventId={eventId}
+              trackId={trackId}
+              raceFormat={raceFormat}
               qrCodeVisible={showQrCode}
             />
             <LeaderboardTable
               leaderboardEntries={leaderboardEntries}
               scrollEnabled={scrollEnabled}
+              fastest={raceFormat === 'fastest'}
             />
           </div>
           <FollowFooter
             visible
             eventId={eventId}
+            trackId={trackId}
+            raceFormat={raceFormat}
             text={leaderboardConfig.leaderBoardFooter}
             qrCodeVisible={showQrCode}
           />
         </div>
       )}
-      <RaceInfoFooter visible={!racSummaryFooterIsVisible} eventId={eventId} trackId={trackId} />
-      <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} />
+      <RaceInfoFooter
+        visible={!racSummaryFooterIsVisible}
+        eventId={eventId}
+        trackId={trackId}
+        raceFormat={raceFormat}
+      />
+      <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} raceFormat={raceFormat} />
     </>
   );
 };

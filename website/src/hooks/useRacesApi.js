@@ -6,7 +6,6 @@ import { useStore } from '../store/store';
 
 export const useRacesApi = (userHasAccess, eventId) => {
   const [, dispatch] = useStore();
-  console.debug('useRacesApi', userHasAccess, eventId);
   useEffect(() => {
     if (!eventId) {
       // used to display a message that an event need to be selected
@@ -18,7 +17,7 @@ export const useRacesApi = (userHasAccess, eventId) => {
         console.debug('getRaces');
         const races = response.data.getRaces;
 
-        dispatch('ADD_RACES', races);
+        dispatch('NEW_RACES', races);
         dispatch('RACES_IS_LOADING', false);
       }
       queryApi();
@@ -27,7 +26,7 @@ export const useRacesApi = (userHasAccess, eventId) => {
     return () => {
       // Unmounting
     };
-  }, [eventId, userHasAccess]);
+  }, [dispatch, eventId, userHasAccess]);
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
@@ -47,7 +46,7 @@ export const useRacesApi = (userHasAccess, eventId) => {
     return () => {
       if (subscription) subscription.unsubscribe();
     };
-  }, [eventId, userHasAccess]);
+  }, [dispatch, eventId, userHasAccess]);
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
@@ -66,7 +65,7 @@ export const useRacesApi = (userHasAccess, eventId) => {
     return () => {
       if (subscription) subscription.unsubscribe();
     };
-  }, [eventId, userHasAccess]);
+  }, [dispatch, eventId, userHasAccess]);
 
   useEffect(() => {
     let subscription;
@@ -86,5 +85,5 @@ export const useRacesApi = (userHasAccess, eventId) => {
     return () => {
       if (subscription) subscription.unsubscribe();
     };
-  }, [eventId, userHasAccess]);
+  }, [dispatch, eventId, userHasAccess]);
 };

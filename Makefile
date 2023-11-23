@@ -33,6 +33,9 @@ clean: pipeline.clean s3.clean
 
 ## Dev related tragets
 
+pipeline.synth: 	## Synth the CDK pipeline, eu-west-1 (test pipeline compiles)
+	npx cdk synth -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region)
+
 pipeline.deploy: 	## Deploy the CDK pipeline, eu-west-1
 	npx cdk deploy -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region)
 
@@ -66,7 +69,7 @@ local.install:		## Install Python and Javascript dependencies + Generate Config 
 
 local.config:		## Setup local config based on branch
 	echo "{}" > ${dremSrcPath}/config.json
-	branch=`cat branch.txt` && aws cloudformation describe-stacks --stack-name drem-backend-$$branch-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
+	aws cloudformation describe-stacks --stack-name drem-backend-$(branch)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
 	python3 scripts/generate_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --api-id $$appsyncId --format SDL ./$(dremSrcPath)/graphql/schema.graphql
 	pushd $(dremSrcPath)/graphql/ && amplify codegen; popd
@@ -99,5 +102,9 @@ local.clean:		## Remove local packages and modules
 	rm -rf website-leaderboard/node_modules
 	-rm website-stream-overlays/package-lock.json
 	rm -rf website-stream-overlays/node_modules
+
+leaderboard.zip:
+	-rm website/public/leaderboard-timer.zip
+	zip -r website/public/leaderboard-timer.zip leaderboard-timer -x "*.git*" -x "*node_modules*" -x "*stl*" -x "*.DS_Store"
 
 .NOTPARALLEL:

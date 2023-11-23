@@ -28,11 +28,12 @@ def uploadModelToCar(entry: Dict[str, str]):
     try:
         carInstanceId = entry["carInstanceId"]
         modelKey = entry["modelKey"]
+        username = entry.get("username", "default")
 
         logger.info(carInstanceId)
         logger.info(modelKey)
 
-        username = re.sub("[^0-9a-zA-Z-]+", "", modelKey.split("/")[-3])
+        username = re.sub("[^0-9a-zA-Z-]+", "", username)
         filename = re.sub("[^0-9a-zA-Z-_.]+", "", modelKey.split("/")[-1])
         foldername = "{}-{}".format(username, filename.split(".")[0])
 

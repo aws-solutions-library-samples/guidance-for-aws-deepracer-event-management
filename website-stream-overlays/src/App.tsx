@@ -40,6 +40,16 @@ function App() {
     trackId = "1";
   }
 
+  let showLeaderboard = searchParams.get("showLeaderboard")?.toString();
+  if (typeof showLeaderboard === "undefined") {
+    showLeaderboard = "1";
+  }
+
+  let raceFormat = searchParams.get("format")?.toString();
+  if (typeof raceFormat === "undefined") {
+    raceFormat = "fastest";
+  }
+
   const startTimer = () => {
     if (!timerState || isPaused) {
       return;
@@ -68,13 +78,41 @@ function App() {
     currentTotalTimerMS = 180000;
   }
 
-  function onMessageReceived(message: any) {
-    try {
+  const getFastestLap = (laps: any[]) => {
+    return laps.filter(item => item.isValid)
+      .sort((a, b) => {
+        if (a.time < b.time) {
+          return -1;
+        }
+        if (a.time > b.time) {
+          return 1;
+        }
+        return 0;
+      })[0].time;
+  }
 
-      // all code in this function is retrofitted from GoSquared (old) overlay system.
-      // this whole function could use some TLC and modernization (old solution was just raw JS).
-      // I literally pasted this in and modified slightly to make this work on the time schedule
-      // that @dasmthc needed for first summit of 2023.
+  interface AvgLap {avgTime: number, startLapId: number, endLapId: number}
+
+  const getFastestAvgLap = (avgLaps: AvgLap[]): AvgLap  => {
+    return avgLaps.sort((a, b) => {
+      if (a.avgTime < b.avgTime) {
+        return -1;
+      }
+      if (a.avgTime > b.avgTime) {
+        return 1;
+      }
+      return 0;
+    })[0]
+  }
+
+  const updateLeaderboard = (leaderboardEntries: any[]) => {
+    const leaderboardData = (helpers as any).GetLeaderboardDataSorted(leaderboardEntries, raceFormat);
+    helpers.UpdateLeaderboard(leaderboardData, raceFormat);
+  }
+
+  function onMessageReceived(message: any) {
+
+    try {
       var data = message;
 
       data.paused = data.raceStatus === 'RACE_PAUSED';
@@ -96,7 +134,11 @@ function App() {
           setTimeout(() => {
             (transitions as any).LowerThirdRacerAndLapInfoIn();
             lowerThirdStateIN = true;
-            helpers.SetLocalizedLowerThirdsLabels(t('lower-thirds.racer-name'), t('lower-thirds.time-remaining'), t('lower-thirds.fastest-lap'), t('lower-thirds.previous-lap'));
+
+            // TODO: Change fastest-lap to fastest AVG when AVG Race (Issue with spacing)
+            const fastestLabel = raceFormat === 'average' ? t('lower-thirds.fastest-avg-lap') : t('lower-thirds.fastest-lap')
+
+            helpers.SetLocalizedLowerThirdsLabels(t('lower-thirds.racer-name'), t('lower-thirds.time-remaining'), fastestLabel, t('lower-thirds.previous-lap'));
           }, 2000);
         }
 
@@ -134,7 +176,7 @@ function App() {
             }, 2000);
           }
 
-          if (!leaderBoardStateIN) {
+          if (!leaderBoardStateIN && showLeaderboard === '1') {
             // console.debug('Setting TimeOut to fade Leaderboard in!');
             helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
             setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
@@ -157,48 +199,41 @@ function App() {
         currentTotalTimerMS = timeLeft;
 
         if (data.laps) {
-          // console.debug(`Found Laps:`);
+          var fastestLap
+          if(raceFormat === 'average') {
+            if(data.averageLaps && data.averageLaps.length > 0) {
+              fastestLap = getFastestAvgLap(data.averageLaps).avgTime;
+            }
+          } else {
+            fastestLap = getFastestLap(data.laps);
+          }
+
+          if (fastestLap) {
+            // console.debug('Fastest Lap: ' + (helpers as any).GetFormattedLapTime(fastestLap.time));
+            (helpers as any).SetRacerInfoFastestLap((helpers as any).GetFormattedLapTime(fastestLap))
+          }
+
           // console.debug(data.laps);
-          if (data.laps) {
-            var fastestLap = (data.laps as any[])
-              .filter(item => item.isValid)
-              .sort((a, b) => {
-                if (a.time < b.time) {
-                  return -1;
-                }
-                if (a.time > b.time) {
-                  return 1;
-                }
-                return 0;
-              })[0];
 
-            if (fastestLap) {
-              // console.debug('Fastest Lap: ' + (helpers as any).GetFormattedLapTime(fastestLap.time));
-              (helpers as any).SetRacerInfoFastestLap((helpers as any).GetFormattedLapTime(fastestLap.time))
-            }
+          var laps = (data.laps as any[]).filter(obj => {
+            return obj.isValid
+          });
 
-            // console.debug(data.laps);
+          var lastLap = laps
+            .filter(item => item.isValid)
+            .sort((a, b) => {
+              if (a.lapId > b.lapId) {
+                return -1;
+              }
+              if (a.lapId < b.lapId) {
+                return 1;
+              }
+              return 0;
+            })[0];
 
-            var laps = (data.laps as any[]).filter(obj => {
-              return obj.isValid
-            });
-
-            var lastLap = laps
-              .filter(item => item.isValid)
-              .sort((a, b) => {
-                if (a.lapId > b.lapId) {
-                  return -1;
-                }
-                if (a.lapId < b.lapId) {
-                  return 1;
-                }
-                return 0;
-              })[0];
-
-            if (lastLap) {
-              // console.debug('Last Lap: ' + (helpers as any).GetFormattedLapTime(lastLap.time));
-              (helpers as any).SetRacerInfoLastLap((helpers as any).GetFormattedLapTime(lastLap.time));
-            }
+          if (lastLap) {
+            // console.debug('Last Lap: ' + (helpers as any).GetFormattedLapTime(lastLap.time));
+            (helpers as any).SetRacerInfoLastLap((helpers as any).GetFormattedLapTime(lastLap.time));
           }
         }
       }
@@ -224,7 +259,7 @@ function App() {
           }, 2000);
         }
 
-        if (!leaderBoardStateIN) {
+        if (!leaderBoardStateIN && showLeaderboard === '1') {
           // console.debug('Setting TimeOut to fade Leaderboard in!');
           helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
           setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
@@ -303,14 +338,14 @@ function App() {
 
     // once leaderboard data has been obtained, set all leaderboard positions in SVGs.
     apiGetLeaderboardState.then((response) => {
-      const leaderboardData = (helpers as any).GetLeaderboardDataSorted(response.data.getLeaderboard.entries);
+      
       const leaderboardConfig = response.data.getLeaderboard.config;
+      updateLeaderboard(response.data.getLeaderboard.entries);
 
-      (helpers as any).UpdateLeaderboard(leaderboardData);
       (helpers as any).SetEventName(leaderboardConfig.leaderBoardTitle.toUpperCase());
 
       // check if lower thirds is showing, if not, then show leaderboard.
-      if (!lowerThirdStateIN) {
+      if (!lowerThirdStateIN && showLeaderboard === '1') {
         // console.debug('Setting TimeOut to fade Leaderboard in!');
         helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
         setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
@@ -326,7 +361,9 @@ function App() {
         if (raceInfo.eventName) {
           (helpers as any).SetEventName(raceInfo.eventName);
         }
-        onMessageReceived(raceInfo);
+        if(raceInfo.raceStatus !== 'RACE_SUBMITTED') {
+          onMessageReceived(raceInfo);
+        }
       },
       error: (error: any) => console.error(error),
     });
@@ -338,6 +375,28 @@ function App() {
       next: ({ provider, value }: any) => {
 
         // when a new race is submitted, fetch latest leaderboard data
+        const apiResponse = API.graphql({
+          query: queries.getLeaderboard,
+          variables: {
+            eventId: eventId,
+            trackId: trackId,
+          },
+        }) as Promise<GraphQLResult<any>>
+
+        // once leaderboard data is set, update the leaderboard SVG.
+        apiResponse.then((response) => {
+          updateLeaderboard(response.data.getLeaderboard.entries)
+        });
+      },
+      error: (error: any) => console.error(error),
+    });
+
+    // subscribe to "onDeleteLeaderboardEntry" to make sure leaderboard is updated when an entry is removed.
+    const deleteLeaderboardSubscription = (API.graphql<GraphQLSubscription<any>>(
+      graphqlOperation(subscriptions.onDeleteLeaderboardEntry, { eventId: eventId, trackId: trackId })) as any
+    ).subscribe({
+      next: ({ provider, value }: any) => {
+
         const apiResponse = API.graphql({
           query: queries.getLeaderboard,
           variables: {
@@ -362,6 +421,9 @@ function App() {
       if (leaderboardSubscription) {
         leaderboardSubscription.unsubscribe();
       }
+      if (deleteLeaderboardSubscription) {
+        deleteLeaderboardSubscription.unsubscribe();
+      }
     };
   }, [i18n, desiredLanguage]);
 
@@ -369,7 +431,7 @@ function App() {
     <div className="App">
       <ChromaBG />
       <div id="racerAndInfo">
-        <object type="image/svg+xml" data="assets/svg/RacerAndLapInfo-Localized.svg" id="lower-third-racer-and-lap-info">Lower Thirds SVG</object>
+        <object type="image/svg+xml" data={ raceFormat === "fastest" ? "assets/svg/RacerAndLapInfo-Localized.svg" : "assets/svg/RacerAndLapInfo-BestAvg.svg" }id="lower-third-racer-and-lap-info">Lower Thirds SVG</object>
       </div>
 
       <div id="track-overlay-frame">

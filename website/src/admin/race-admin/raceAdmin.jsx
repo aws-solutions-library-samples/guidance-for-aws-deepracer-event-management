@@ -1,5 +1,5 @@
 import { Button, SpaceBetween } from '@cloudscape-design/components';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { DeleteModal, ItemList } from '../../components/deleteModal';
@@ -26,8 +26,7 @@ const RaceAdmin = () => {
   const [state, dispatch] = useStore();
   const races = state.races.races;
   const isLoading = state.races.isLoading;
-  const [users, usersIsLoading, getUserNameFromId] = useUsers();
-  const [enrichedRaces, setEnrichedRaces] = useState([]);
+  const [, usersIsLoading, getUserNameFromId] = useUsers();
 
   const navigate = useNavigate();
   const editRaceHandler = () => {
@@ -51,40 +50,37 @@ const RaceAdmin = () => {
   const columnConfiguration = ColumnConfiguration();
   const filteringProperties = FilteringProperties();
 
-  useEffect(() => {
-    setEnrichedRaces(
-      races.map((race) => {
-        return {
-          ...race,
-          username: getUserNameFromId(race.userId),
-        };
-      })
-    );
-  }, [users, races, getUserNameFromId]);
-
-  const selectPanelContent = useCallback((selectedItems) => {
-    if (selectedItems.length === 0) {
-      return (
-        <DrSplitPanel header="0 races selected" noSelectedItems={selectedItems.length}>
-          {t('race-admin.select-a-race')}
-        </DrSplitPanel>
-      );
-    } else if (selectedItems.length === 1) {
-      return (
-        <DrSplitPanel header="Laps">
-          <LapsTable race={selectedItems[0]} tableSettings={{ variant: 'embedded' }} />
-        </DrSplitPanel>
-      );
-    } else if (selectedItems.length > 1) {
-      return (
-        <DrSplitPanel header={`${selectedItems.length} races selected`}>
-          <MultiChoicePanelContent races={selectedItems} />
-        </DrSplitPanel>
-      );
-    }
-  }, []);
+  // add user names to all races
+  const enrichedRaces = races.map((race) => {
+    return {
+      ...race,
+      username: getUserNameFromId(race.userId),
+    };
+  });
 
   useEffect(() => {
+    const selectPanelContent = (selectedItems) => {
+      if (selectedItems.length === 0) {
+        return (
+          <DrSplitPanel header="0 races selected" noSelectedItems={selectedItems.length}>
+            {t('race-admin.select-a-race')}
+          </DrSplitPanel>
+        );
+      } else if (selectedItems.length === 1) {
+        return (
+          <DrSplitPanel header="Laps">
+            <LapsTable race={selectedItems[0]} tableSettings={{ variant: 'embedded' }} />
+          </DrSplitPanel>
+        );
+      } else if (selectedItems.length > 1) {
+        return (
+          <DrSplitPanel header={`${selectedItems.length} races selected`}>
+            <MultiChoicePanelContent races={selectedItems} />
+          </DrSplitPanel>
+        );
+      }
+    };
+
     dispatch('UPDATE_SPLIT_PANEL', {
       isOpen: true,
       content: selectPanelContent(SelectedRacesInTable),
@@ -93,7 +89,7 @@ const RaceAdmin = () => {
     return () => {
       dispatch('RESET_SPLIT_PANEL');
     };
-  }, [SelectedRacesInTable, selectPanelContent]);
+  }, [SelectedRacesInTable, dispatch, t]);
 
   const HeaderActionButtons = () => {
     const disableEditButton = SelectedRacesInTable.length === 0 || SelectedRacesInTable.length > 1;
