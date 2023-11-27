@@ -1,9 +1,9 @@
 import datetime
-import json
 import os
 
 import boto3
 import dynamo_helpers
+import simplejson as json
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import AppSyncResolver
 from aws_lambda_powertools.logging import correlation_paths
