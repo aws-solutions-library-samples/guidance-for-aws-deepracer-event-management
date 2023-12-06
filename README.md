@@ -135,7 +135,7 @@ npx cdk deploy -c email=<admin-email> -c account=1234567890 -c region=<optional>
 
 #### Step 7: Accessing DREM
 
-The deployment of DREM through the pipeline will take approximately 1 hour. You can monitor the progress of the deployment by accessing the AWS Account you are deploying DREM into and going into AWS CodePipeline and reviewing the pipeline. As part of the deployment, the email address provided will become the admin user for DREM. An email with temporary credentials to access DREM as well as the a link will be sent to the email address provided. When logging in for first time, the user will be prompted to change the temporary password.
+The deployment of DREM through the pipeline will take approximately 1 hour. You can monitor the progress of the deployment by accessing the AWS Account you are deploying DREM into and going into AWS CodePipeline and reviewing the pipeline. As part of the deployment, the email address provided will become the admin user for DREM. An email with temporary credentials to access DREM as well as the a link will be sent to the email address provided. **Note:** The link won't work until the codepipeline has fully finished. When logging in for first time, the username is `admin` and the user will be prompted to change the temporary password.
 
 #### Step 8: Setup Amazon Cognito to use Amazon SES for email sending (optional)
 
