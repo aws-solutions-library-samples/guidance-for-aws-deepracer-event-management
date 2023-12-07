@@ -30,7 +30,7 @@ The deployment requires the following tools:
 - [Node.js](https://nodejs.org) version 18.x
 - (Optional) Make buildtool. We provide a Makefile with all required targets for easy use. We recommend installing Make.
 
-**Note:** If you experience cross platform emulation issues with Docker then `docker run --privileged --rm tonistiigi/binfmt --install all` is can help resolve some issues.
+**Note:** If you experience cross platform emulation issues with Docker then `docker run --privileged --rm tonistiigi/binfmt --install all` can help resolve some issues.
 
 ### Deployment overview
 
