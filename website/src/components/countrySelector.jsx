@@ -2,8 +2,10 @@ import { SelectField } from '@aws-amplify/ui-react';
 import { FormField, Select } from '@cloudscape-design/components';
 import { getNames, registerLocale } from 'i18n-iso-countries';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function CountrySelector(props) {
+  const { t } = useTranslation();
   const [countryOptions, setCountryOptions] = useState();
 
   // Populate country options for select dropdown
@@ -42,7 +44,7 @@ export function CountrySelector(props) {
     return (
       <SelectField
         name="custom:countryCode"
-        placeholder="Select country..."
+        placeholder={t('users.country-select')}
         descriptiveText={props.description}
       >
         {countryOptionsAmplify}
@@ -59,7 +61,7 @@ export function CountrySelector(props) {
           options={countryOptions}
           selectedAriaLabel="Selected"
           filteringType="auto"
-          placeholder="Country"
+          placeholder={t('users.country-placeholder')}
         />
       </FormField>
     );
