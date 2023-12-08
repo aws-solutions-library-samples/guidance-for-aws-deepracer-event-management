@@ -250,7 +250,7 @@ def __calculate_race_summary(event_id, track_id, user_id) -> dict:
     summary = {
         "numberOfValidLaps": len(valid_laps),
         "numberOfInvalidLaps": len(invalid_laps),
-        "fastestLapTime": min(valid_lap_times),
+        "fastestLapTime": min(valid_lap_times) if valid_lap_times else None,
         "fastestAverageLap": average_lap,
         "avgLapTime": mean(valid_lap_times),
         "lapCompletionRatio": round(float(len(valid_laps) / total_number_of_laps), 1)

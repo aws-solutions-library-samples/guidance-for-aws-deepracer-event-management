@@ -30,6 +30,8 @@ The deployment requires the following tools:
 - [Node.js](https://nodejs.org) version 18.x
 - (Optional) Make buildtool. We provide a Makefile with all required targets for easy use. We recommend installing Make.
 
+**Note:** If you experience cross platform emulation issues with Docker then `docker run --privileged --rm tonistiigi/binfmt --install all` can help resolve some issues.
+
 ### Deployment overview
 
 Please note: It takes approximately an hour for all of the DREM resources to be deployed.
@@ -135,7 +137,7 @@ npx cdk deploy -c email=<admin-email> -c account=1234567890 -c region=<optional>
 
 #### Step 7: Accessing DREM
 
-The deployment of DREM through the pipeline will take approximately 1 hour. You can monitor the progress of the deployment by accessing the AWS Account you are deploying DREM into and going into AWS CodePipeline and reviewing the pipeline. As part of the deployment, the email address provided will become the admin user for DREM. An email with temporary credentials to access DREM as well as the a link will be sent to the email address provided. When logging in for first time, the user will be prompted to change the temporary password.
+The deployment of DREM through the pipeline will take approximately 1 hour. You can monitor the progress of the deployment by accessing the AWS Account you are deploying DREM into and going into AWS CodePipeline and reviewing the pipeline. As part of the deployment, the email address provided will become the admin user for DREM. An email with temporary credentials to access DREM as well as the a link will be sent to the email address provided. **Note:** The link won't work until the codepipeline has fully finished. When logging in for first time, the username is `admin` and the user will be prompted to change the temporary password.
 
 #### Step 8: Setup Amazon Cognito to use Amazon SES for email sending (optional)
 
