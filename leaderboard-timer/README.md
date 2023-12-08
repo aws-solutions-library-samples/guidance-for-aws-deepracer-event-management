@@ -78,25 +78,14 @@ Once the SD card has been written, eject it from your computer, insert into the 
 
 ### DeepRacer Timer Service
 
-Copy the zip file `deepracer-timer.zip` from this repo to the Raspberry Pi and unzip
+Go to `Device Management -> Timer activation` in DREM, select a fleet and enter a hostname for the RPi and click `Generate`
 
-    scp deepracer-leaderboard-timer.zip deepracer@<RPI IP>:~/
-    ssh deepracer@<RPI IP>
-    unzip deepracer-leaderboard-timer.zip
-    cd deepracer-leaderboard-timer
+Clicking on the `Copy` button copies the activation script to your clipboard, SSH into your RPi and run the command, this will download the timer script from DREM, update your RPi with the required dependencies and install the timer service, finally the device will have AWS SSM agent installed.
 
-Run `pi-update.sh` to update everything on the Raspberry Pi and install Node
-
-    sudo ./pi-update.sh
-
-Should update all packages and install node, tested and working on (PRs welcome for fixes):
+This process has been tested on:
 
 - Pi Zero W
 - Pi 4
-
-Next up run `servce-setup.sh` to install timer as a service
-
-    sudo ./service-setup.sh
 
 If you get an error with the service you can check the status of it using
 
@@ -116,11 +105,11 @@ If for whatever reason you are unable to use the service the timer code can be r
 
 ## Pressure sensor positioning
 
-The pressue sensors work best when they are positioned at the back of the start / finish line and not the front (so the car has crossed the majoirity of the start / finish line before touching the sensors) and when positioning a car to start a race, it can be placed 50cm from the start / finish line.
+The pressure sensors work best when they are positioned at the back of the start / finish line and not the front (so the car has crossed the majority of the start / finish line before touching the sensors) and when positioning a car to start a race, it can be placed 50cm from the start / finish line.
 
 ## Calibration
 
-The Youmile sound sensor boards have one screw (easier to use) for calibration whereas the WaveShare sound sensor boards have two screws for claibrcalibrationation, turn the screws to increase/decrease the trigger sensitivity.
+The Youmile sound sensor boards have one screw (easier to use) for calibration whereas the WaveShare sound sensor boards have two screws for calibration, turn the screws to increase/decrease the pressure strip sensitivity.
 
 ![Sound Sensor calibration](./docs/images/sound_sensor_calibration.jpg)
 
@@ -139,9 +128,9 @@ The Youmile sound sensor boards have one screw (easier to use) for calibration w
 
 ## Ready to Race ?
 
-When using the automatic timer, select the racer and have the timer on the `READY TO GO?` screen, when the car crosses the start / finish line for the first time the clock will start ticking down and the lap timer will start. This is also the case if for whatever reason a race is paused, once the car crosses the line again the clock resumes.
+When using the automatic timer, select the racer and have the timer on the `Start race?` screen, when the car crosses the start / finish line for the first time the clock will start ticking down and the lap timer will start. This is also the case if for whatever reason a race is paused, once the car crosses the line again the clock resumes.
 
-![READY TO GO?](./docs/images/timer.png)
+![Start race](./docs/images/timer.png)
 
 ## Sensor Holder
 
@@ -154,14 +143,10 @@ There is an `.stl` file to print out the sensor box choose the right `.stl` file
 
 ## Developers
 
-When updating the code please create a new `deepracer-leaderboard-timer.zip` file to make this easier to setup - Thank you.
+When updating the code please create a new `leaderboard-timer.zip` file to make this easier to setup - Thank you.
 
 From the parent directory:
 
 ```
-zip -r deepracer-leaderboard-timer.zip deepracer-leaderboard-timer -x "*.git*" -x "*node_modules*" -x "*stl*" -x "*.DS_Store"
+zip -r website/public/leaderboard-timer.zip leaderboard-timer -x "*.git*" -x "*node_modules*" -x "*stl*" -x "*.DS_Store"
 ```
-
-## TODO
-
-- Better documentation
