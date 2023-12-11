@@ -14,7 +14,7 @@ endif
 dremSrcPath := website/src
 leaderboardSrcPath := website-leaderboard/src
 overlaysSrcPath := website-stream-overlays/src
-dremBucket := $$(aws ssm get-parameter --name '/drem/S3RepoBucket' --output text --query 'Parameter.Value' --region $(REGION)| cut -d ':' -f 6)
+dremBucket := $$(aws ssm get-parameter --name '/drem/S3RepoBucket' --output text --query 'Parameter.Value' --region $(region) | cut -d ':' -f 6)
 
 ## ----------------------------------------------------------------------------
 .PHONY: help
