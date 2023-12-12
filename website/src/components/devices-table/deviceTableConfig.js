@@ -1,13 +1,45 @@
-import { Checkbox, FormField } from '@cloudscape-design/components';
+import { Checkbox, FormField, Link } from '@cloudscape-design/components';
+import { useTranslation } from 'react-i18next';
 import i18next from '../../i18n';
 import { formatAwsDateTime } from '../../support-functions/time';
+
+export const DeviceLink = ({ type, IP, pingStatus }) => {
+  const { t } = useTranslation();
+  if (pingStatus === 'Online')
+    if (type === 'timer')
+      return (
+        <Link external href={`http://${IP}:8080/`}>
+          {t('devices.device-links.timer')}
+        </Link>
+      );
+    else if (type === 'deepracer')
+      return (
+        <>
+          <div>
+            <Link external href={`https://${IP}/`}>
+              {t('devices.device-links.car')}
+            </Link>
+          </div>
+
+          <div>
+            <Link
+              external
+              href={`https://${IP}/route?topic=/camera_pkg/display_mjpeg&width=480&height=360`}
+            >
+              {t('devices.device-links.camera')}
+            </Link>
+          </div>
+        </>
+      );
+    else return '-';
+};
 
 export const ColumnConfiguration = () => {
   return {
     defaultVisibleColumns: ['carName', 'fleetName', 'carIp'],
     visibleContentOptions: [
       {
-        label: i18next.t('cars.car-information'),
+        label: i18next.t('devices.device-information'),
         options: [
           {
             id: 'instanceId',
@@ -27,6 +59,14 @@ export const ColumnConfiguration = () => {
           {
             id: 'carIp',
             label: i18next.t('devices.car-ip'),
+          },
+          {
+            id: 'deviceLinks',
+            label: 'Access device',
+          },
+          {
+            id: 'deviceType',
+            label: i18next.t('devices.type'),
           },
           {
             id: 'agentVersion',
@@ -79,6 +119,22 @@ export const ColumnConfiguration = () => {
         sortingField: 'carIp',
         width: 200,
         minWidth: 150,
+      },
+      {
+        id: 'deviceLinks',
+        header: i18next.t('devices.device-links'),
+        cell: (item) => (
+          <DeviceLink type={item.Type} IP={item.IpAddress} pingStatus={item.PingStatus} />
+        ),
+        sortingField: 'deviceLinks',
+        width: 200,
+        minWidth: 150,
+      },
+      {
+        id: 'deviceType',
+        header: i18next.t('devices.type'),
+        cell: (item) => item.Type || '-',
+        sortingField: 'deviceType',
       },
       {
         id: 'agentVersion',
