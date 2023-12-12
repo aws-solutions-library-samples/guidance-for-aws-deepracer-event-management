@@ -1,0 +1,29 @@
+version: "3"
+name: drem
+services:
+  app:
+    build: .
+    command: make local.run
+    restart: always
+    ports:
+      - 3000:3000
+    volumes:
+      - ./:/deepracer-event-manager
+
+  leaderboard:
+    build: .
+    command: make local.run-leaderboard
+    restart: always
+    ports:
+      - 3001:3001
+    volumes:
+      - ./:/deepracer-event-manager
+
+  overlays:
+    build: .
+    command: make local.run-overlays
+    restart: always
+    ports:
+      - 3002:3002
+    volumes:
+      - ./:/deepracer-event-manager

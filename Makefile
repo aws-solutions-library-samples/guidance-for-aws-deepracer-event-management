@@ -61,7 +61,7 @@ manual.deploy:  				## Deploy via cdk
 manual.deploy.hotswap: 				## Deploy via cdk --hotswap
 	npx cdk deploy --c manual_deploy=True -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(REGION) --all --hotswap
 
-local.install:					## Install Python and Javascript dependencies + Generate Config from deployed backend
+local.install:					## Install Javascript dependencies
 	npm install
 	npm install --prefix website
 	npm install --prefix website-leaderboard
@@ -97,19 +97,17 @@ local.run-leaderboard:				## Run the frontend leaderboard application locally fo
 local.run-overlays:				## Run the frontend overlays application locally for development
 	PORT=3002 npm start --prefix website-stream-overlays
 
-local.docker.run: local.docker.clean		## Run DREM in docker for development
-	docker build --tag=deepracer-build-env:latest .
-	docker run --privileged -p 3000-3002:3000-3002 -d --mount type=bind,source=$(shell pwd),target=/deepracer-event-manager --name deepracer-build deepracer-build-env:latest
-	docker exec -it deepracer-build /bin/bash
+local.docker.up: 				## Run DREM using docker for development
+	docker compose up -d
 
-local.docker.start:				## Run DREM in docker once built
-	docker start deepracer-build
+local.docker.logs:				## View the DREM docker logs
+	docker compose logs -f
 
-local.docker.stop:				## Stop DREM docker instance
-	docker stop deepracer-build
+local.docker.down:				## Stop DREM docker instance
+	docker compose down
 
-local.docker.clean:				## Remove deepracer-build docker container
-	-docker rm deepracer-build
+local.docker.clean:				## Remove DREM docker container and volumes (destructive)
+	docker compose rm app -f -v
 
 local.clean:					## Remove local packages and modules
 	-rm package-lock.json
