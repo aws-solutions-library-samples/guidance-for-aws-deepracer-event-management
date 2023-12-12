@@ -108,6 +108,8 @@ local.docker.down:				## Stop DREM docker instance
 
 local.docker.clean:				## Remove DREM docker container and volumes (destructive)
 	docker compose rm app -f -v
+	docker compose rm leaderboard -f -v
+	docker compose rm overlays -f -v
 
 local.clean:					## Remove local packages and modules
 	-rm package-lock.json
