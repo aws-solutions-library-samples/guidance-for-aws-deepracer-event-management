@@ -16,9 +16,6 @@ RUN apk update && apk add --update --no-cache \
     zip
 RUN apk --no-cache add --virtual builds-deps build-base python3
 
-# # Install AWSCLI
-# RUN pip install --upgrade awscli
-
 # Update NPM
 RUN npm update -g
 RUN npm fund
