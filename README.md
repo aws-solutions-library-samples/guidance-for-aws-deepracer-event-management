@@ -20,15 +20,50 @@ DREM offers event organizers tools for managing users, models, cars and fleets, 
 
 ## Deployment
 
+##### <span style="color:orange"> \* Optional: If you want to use a container that has everything you need to get started.</span>
+
+With docker running on your machine, use the following commands to build and start the container. (or run `make local.docker.run`)
+
+```sh
+docker build --tag=deepracer-build-env:latest .
+docker run --privileged -p 3000-3002:3000-3002 -d --mount type=bind,source=$(pwd),target=/deepracer-event-manager --name deepracer-build deepracer-build-env:latestdeepracer-build deepracer-build-env:latest
+docker exec -it deepracer-build /bin/bash
+```
+
+Once in the container, check to make sure you see the files from the git repo.
+
+```sh
+ls -la
+```
+
+**Note:** Before running `make local.run` in the container to start DREM you will need to install the dependencies (`make local.install`) and config (`make local.config`) both commands should be run outside of the container on the host machine.
+
 ### Deployment prerequisites
 
 The deployment requires the following tools:
 
-- [AWS CLI](https://aws.amazon.com/cli)
-- [AWS CDK](https://aws.amazon.com/cdk/) with Typescript support (Tested with 2.6.0)
 - [Docker](https://www.docker.com/) with ARM build support
-- [Node.js](https://nodejs.org) version 18.x
-- (Optional) Make buildtool. We provide a Makefile with all required targets for easy use. We recommend installing Make.
+- [AWS CLI](https://aws.amazon.com/cli) <span style="color:orange">\*</span>
+- [AWS CDK](https://aws.amazon.com/cdk/) with Typescript support (Tested with 2.6.0) <span style="color:orange">\*</span>
+- [Node.js](https://nodejs.org) version 18.x <span style="color:orange">\*</span>
+- (Optional) [Make](https://www.gnu.org/software/make/) buildtool. We provide a Makefile with all required targets for easy use. We recommend installing Make. <span style="color:orange">\*</span>
+
+<span style="color:orange">\* Included if you use docker the container above</span>
+
+### Supported regions
+
+The deployment is currently supported in theses regions:
+
+    US East (N. Virginia)
+    US East (Ohio)
+    US West (Oregon)
+    Europe (Frankfurt)
+    Europe (Stockholm)
+    Europe (Ireland)
+    Europe (London)
+    Asia Pacific (Tokyo)
+    Asia Pacific (Singapore)
+    Asia Pacific (Sydney)
 
 **Note:** If you experience cross platform emulation issues with Docker then `docker run --privileged --rm tonistiigi/binfmt --install all` can help resolve some issues.
 
@@ -49,17 +84,38 @@ Please note: It takes approximately an hour for all of the DREM resources to be 
 
 If you are deploying DREM for use to support your AWS DeepRacer event(s)
 
-#### Step 1: Create S3 bucket and enable versioning
+#### Step 1: Setup environment and create S3 bucket and enable versioning
 
 ```sh
-aws s3 mb s3://<your-resource-bucket-name>
-aws s3api put-bucket-versioning --bucket <your-resource-bucket-name> --versioning-configuration Status=Enabled
+#Bucket used to put deep racer event manager assets
+export BUCKET=<your-resource-bucket-name>
+#Region where you wish to deploy
+export REGION=<your-region>
+#Your e-mail
+export EMAIL=<your-email>
+
+#Optional if you have AWS CLI configured with you credentials already.
+export AWS_ACCESS_KEY_ID=<key>
+export AWS_SECRET_ACCESS_KEY=<secret>
+export AWS_SESSION_TOKEN=<token>
+
+#Setting variables we can do automatically.
+export BRANCH=$(git symbolic-ref --short HEAD)
+export ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+
+```
+
+```sh
+#Bucket creation
+aws s3 mb s3://$BUCKET --region $REGION
+#Versioning activation on the bucket
+aws s3api put-bucket-versioning --bucket $BUCKET --versioning-configuration Status=Enabled
 ```
 
 #### Step 2: Create a Parameter Store key
 
 ```sh
-aws ssm put-parameter --name /drem/S3RepoBucket --value arn:aws:s3:::<your-resource-bucket-name> --type String
+aws ssm put-parameter --name /drem/S3RepoBucket --value arn:aws:s3:::$BUCKET --type String --region $REGION
 ```
 
 #### Step 3: Install build dependencies
@@ -72,19 +128,13 @@ npm install
 
 Note. This step is only required if Make is used for the later steps.
 
-Copy and rename the example `build.config.example` file
+Build your `build.config` file
 
 ```sh
-cp build.config.example build.config
-```
-
-And update as appropriate with your details
-
-```sh
-email=<Admin email>
-account_id=<Account id>
-region=<optional to define the install region. Default: eu-west-1>
-branch=<optional is used to install more than one DREM in the same account. Default: main>
+echo "region=$REGION" >> build.config
+echo "email=$EMAIL" >> build.config
+echo "account_id=$ACCOUNT" >> build.config
+echo "branch=$BRANCH" >> build.config
 ```
 
 #### Step 5: Bootstrap AWS CDK
@@ -100,7 +150,7 @@ make bootstrap
 ##### Manually
 
 ```sh
-cdk bootstrap -c email=<admin-email> -c account=1234567890 -c region=<optional> -c branch=<optional>
+cdk bootstrap -c email=$EMAIL -c account=$ACCOUNT -c region=$REGION -c branch=$BRANCH
 ```
 
 ### Step 6: Install DREM
@@ -126,7 +176,7 @@ zip -r drem.zip . -x ./.venv/\* ./.git/\* ./website/build/\* ./website/node_modu
 Copy `drem.zip` to the S3 bucket created earlier using the key in parameter store for the bucket name subsituting `<branch>` for the branch name (usually `main`)
 
 ```sh
-aws s3 cp drem.zip s3://$(aws ssm get-parameter --name '/drem/S3RepoBucket' --output text --query 'Parameter.Value' | cut -d ':' -f 6)/<branch>/)
+aws s3 cp drem.zip s3://$(aws ssm get-parameter --name '/drem/S3RepoBucket' --output text --query 'Parameter.Value' --region $REGION| cut -d ':' -f 6)/<branch>/)
 ```
 
 Deploy
@@ -219,7 +269,7 @@ make clean
 #### Manually
 
 ```sh
-npx cdk destroy -c email=<admin-email> -c account=1234567890 -c region=<optional> -c branch=<optional>
+npx cdk destroy -c email=$EMAIL -c account=$ACCOUNT -c region=$REGION -c branch=$BRANCH
 ```
 
 ### Step 2: Remove the infrastructure stack
@@ -233,7 +283,7 @@ make drem.clean-infrastructure
 #### Manually
 
 ```sh
-aws cloudformation delete-stack --stack-name drem-backend-<branch-name>-infrastructure
+aws cloudformation delete-stack --stack-name drem-backend-$BRANCH-infrastructure --REGION $REGION
 ```
 
 #### Manual clean up
@@ -271,7 +321,7 @@ Using the console remove the S3 bucket created in step 1 of deploying DREM.
 ### Step 5: Remove SSM parameter
 
 ```sh
-aws ssm delete-parameter --name /drem/S3RepoBucket
+aws ssm delete-parameter --name /drem/S3RepoBucket --region $REGION
 ```
 
 ## Sample models
