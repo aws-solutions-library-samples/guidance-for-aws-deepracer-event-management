@@ -1,18 +1,6 @@
-import { StatusIndicator } from '@cloudscape-design/components';
+import { ModelUploadStatus } from '../../../components/modelUploadStatus';
 import i18next from '../../../i18n';
 import { formatAwsDateTime } from '../../../support-functions/time';
-
-export const ModelStatus = ({ status }) => {
-  if (status === 'UPLOADED')
-    return <StatusIndicator type="pending">Virus scan ongoing</StatusIndicator>;
-  else if (status === 'AVAILABLE')
-    return <StatusIndicator type="success">Available</StatusIndicator>;
-  else if (status === 'QUARANTINED')
-    return <StatusIndicator type="warning">Virus detected</StatusIndicator>;
-  else if (status === 'NOT_VALID')
-    return <StatusIndicator type="error">Not a valid model file</StatusIndicator>;
-  else return '-';
-};
 
 export const VisibleContentOptions = () => {
   return [
@@ -81,7 +69,7 @@ export function ColumnsConfig() {
     {
       id: 'status',
       header: i18next.t('models.status'),
-      cell: (item) => <ModelStatus status={item.status} />,
+      cell: (item) => <ModelUploadStatus status={item.status} />,
       sortingField: 'status',
       width: 200,
       minWidth: 150,
