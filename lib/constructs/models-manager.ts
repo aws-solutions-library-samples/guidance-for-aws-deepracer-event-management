@@ -394,7 +394,7 @@ export class ModelsManager extends Construct {
 
     // GraphQL API
     const modelStatusEnum = new EnumType('ModelStatusEnum', {
-      definition: ['UPLOADED', 'NOT_VALID', 'QUARANTINED', 'AVAILABLE', 'DELETED'],
+      definition: ['UPLOADED', 'NOT_VALID', 'QUARANTINED', 'AVAILABLE', 'DELETED', 'OPTIMIZED'],
     });
     props.appsyncApi.schema.addType(modelStatusEnum);
 

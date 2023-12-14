@@ -21,12 +21,10 @@ ADD requirements_tf.txt /opt/intel/openvino_"${build_id}"/deployment_tools/model
 RUN /opt/intel/openvino_"${build_id}"/deployment_tools/model_optimizer/install_prerequisites/install_prerequisites.sh tf && \
     ln --symbolic /opt/intel/openvino_"${build_id}"/ /opt/intel/openvino
 
-RUN pip3 install -U aws_lambda_powertools jmespath awslambdaric
+RUN pip3 install -U aws_lambda_powertools jmespath awslambdaric requests_aws4auth boto3
 RUN curl -Lo /usr/local/bin/aws-lambda-rie https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie && chmod +x /usr/local/bin/aws-lambda-rie
 
-ADD constants.py /
-ADD model_metadata_file_utils.py /
-ADD model_optimizer_lambda.py / 
+ADD *.py /
 ADD entrypoint.sh /
 
 ENTRYPOINT ["./entrypoint.sh", "-m", "awslambdaric"]

@@ -19,7 +19,6 @@
 import os
 from enum import Enum
 
-
 # Static variables
 # Path where the Intel OpenVino is installed.
 INTEL_PATH = os.environ["INTEL_CVSDK_DIR"] + "/deployment_tools/model_optimizer/"
@@ -32,8 +31,9 @@ MAX_OPTIMIZER_RETRY_COUNT = 1
 
 class SensorInputTypes(Enum):
     """Enum listing the sensors input types supported; as we add sensors we should add
-       inputs. This is also important for networks with more than one input.
+    inputs. This is also important for networks with more than one input.
     """
+
     OBSERVATION = 1
     LIDAR = 2
     SECTOR_LIDAR = 3
@@ -53,9 +53,10 @@ class SensorInputTypes(Enum):
         """
         return input_key.upper() in cls.__members__
 
+
 class TrainingAlgorithms(Enum):
-    """Enum listing the training algorithms supported.
-    """
+    """Enum listing the training algorithms supported."""
+
     CLIPPED_PPO = 1
     SAC = 2
 
@@ -71,22 +72,33 @@ class TrainingAlgorithms(Enum):
         """
         return training_algorithm.upper() in cls.__members__
 
+
 # Mapping between the training algorithm and input head network names.
 INPUT_HEAD_NAME_MAPPING = {
     TrainingAlgorithms.CLIPPED_PPO: "main",
-    TrainingAlgorithms.SAC: "policy"
+    TrainingAlgorithms.SAC: "policy",
 }
 
 
 # Mapping between input names formats in the network for each input head.
 # This will be used during model optimizer and model inference.
 NETWORK_INPUT_FORMAT_MAPPING = {
-    SensorInputTypes.OBSERVATION: "main_level/agent/{}/online/network_0/observation/observation",
+    SensorInputTypes.OBSERVATION: (
+        "main_level/agent/{}/online/network_0/observation/observation"
+    ),
     SensorInputTypes.LIDAR: "main_level/agent/{}/online/network_0/LIDAR/LIDAR",
-    SensorInputTypes.SECTOR_LIDAR: "main_level/agent/{}/online/network_0/SECTOR_LIDAR/SECTOR_LIDAR",
-    SensorInputTypes.LEFT_CAMERA: "main_level/agent/{}/online/network_0/LEFT_CAMERA/LEFT_CAMERA",
-    SensorInputTypes.FRONT_FACING_CAMERA: "main_level/agent/{}/online/network_0/FRONT_FACING_CAMERA/FRONT_FACING_CAMERA",
-    SensorInputTypes.STEREO_CAMERAS: "main_level/agent/{}/online/network_0/STEREO_CAMERAS/STEREO_CAMERAS"
+    SensorInputTypes.SECTOR_LIDAR: (
+        "main_level/agent/{}/online/network_0/SECTOR_LIDAR/SECTOR_LIDAR"
+    ),
+    SensorInputTypes.LEFT_CAMERA: (
+        "main_level/agent/{}/online/network_0/LEFT_CAMERA/LEFT_CAMERA"
+    ),
+    SensorInputTypes.FRONT_FACING_CAMERA: (
+        "main_level/agent/{}/online/network_0/FRONT_FACING_CAMERA/FRONT_FACING_CAMERA"
+    ),
+    SensorInputTypes.STEREO_CAMERAS: (
+        "main_level/agent/{}/online/network_0/STEREO_CAMERAS/STEREO_CAMERAS"
+    ),
 }
 
 
@@ -95,7 +107,7 @@ INPUT_CHANNEL_SIZE_MAPPING = {
     SensorInputTypes.OBSERVATION: 1,
     SensorInputTypes.LEFT_CAMERA: 1,
     SensorInputTypes.FRONT_FACING_CAMERA: 1,
-    SensorInputTypes.STEREO_CAMERAS: 2
+    SensorInputTypes.STEREO_CAMERAS: 2,
 }
 
 
@@ -107,20 +119,20 @@ INPUT_SHAPE_FORMAT_MAPPING = {
     SensorInputTypes.SECTOR_LIDAR: "[{},{}]",
     SensorInputTypes.LEFT_CAMERA: "[{},{},{},{}]",
     SensorInputTypes.FRONT_FACING_CAMERA: "[{},{},{},{}]",
-    SensorInputTypes.STEREO_CAMERAS: "[{},{},{},{}]"
+    SensorInputTypes.STEREO_CAMERAS: "[{},{},{},{}]",
 }
 
 
 class MultiHeadInputKeys(object):
-    """Class to store keys required to enable multi head inputs.
-    """
+    """Class to store keys required to enable multi head inputs."""
+
     INPUT_HEADS = "--input-names"
     INPUT_CHANNELS = "--input-channels"
 
 
 class MOKeys(object):
-    """Class that statically stores Intel"s model optimizer cli flags. Order doesnot matter.
-    """
+    """Class that statically stores Intel"s model optimizer cli flags. Order doesnot matter."""
+
     MODEL_PATH = "--input_model"
     MODEL_NAME = "--model_name"
     DATA_TYPE = "--data_type"
@@ -135,8 +147,9 @@ class MOKeys(object):
 
 class APIFlags(object):
     """Class for storing API flags, get_list method order must match the APIDefaults
-       get list method.
+    get list method.
     """
+
     MODELS_DIR = "--models-dir"
     OUT_DIR = "--output-dir"
     IMG_FORMAT = "--img-format"
@@ -158,17 +171,29 @@ class APIFlags(object):
         Returns:
             list: List of class variable values.
         """
-        return [APIFlags.MODELS_DIR, APIFlags.OUT_DIR, APIFlags.IMG_FORMAT, APIFlags.IMG_CHANNEL,
-                APIFlags.PRECISION, APIFlags.FUSE, APIFlags.SCALE, APIFlags.INPUT,
-                APIFlags.OUTPUT, APIFlags.MEAN_VAL, APIFlags.EXT]
+        return [
+            APIFlags.MODELS_DIR,
+            APIFlags.OUT_DIR,
+            APIFlags.IMG_FORMAT,
+            APIFlags.IMG_CHANNEL,
+            APIFlags.PRECISION,
+            APIFlags.FUSE,
+            APIFlags.SCALE,
+            APIFlags.INPUT,
+            APIFlags.OUTPUT,
+            APIFlags.MEAN_VAL,
+            APIFlags.EXT,
+        ]
 
 
 class APIDefaults(object):
     """Class for storing API default values, get_list method order must match the APIFlags
-       get list method.
+    get list method.
     """
-    MODELS_DIR = "/models"
-    OUT_DIR = "/models"
+
+    MODELS_DIR = "/tmp/models"
+    OUT_DIR = "/tmp/models"
+    TMP_DIR = "/tmp/zip"
     IMG_FORMAT = "BGR"
     IMG_CHANNEL = 3
     PRECISION = "FP16"
@@ -188,14 +213,24 @@ class APIDefaults(object):
         Returns:
             list: List of class variable values.
         """
-        return [APIDefaults.MODELS_DIR, APIDefaults.OUT_DIR, APIDefaults.IMG_FORMAT,
-                APIDefaults.IMG_CHANNEL, APIDefaults.PRECISION, APIDefaults.FUSE,
-                APIDefaults.SCALE, APIDefaults.INPUT, APIDefaults.OUTPUT,
-                APIDefaults.MEAN_VAL, APIDefaults.EXT]
+        return [
+            APIDefaults.MODELS_DIR,
+            APIDefaults.OUT_DIR,
+            APIDefaults.IMG_FORMAT,
+            APIDefaults.IMG_CHANNEL,
+            APIDefaults.PRECISION,
+            APIDefaults.FUSE,
+            APIDefaults.SCALE,
+            APIDefaults.INPUT,
+            APIDefaults.OUTPUT,
+            APIDefaults.MEAN_VAL,
+            APIDefaults.EXT,
+        ]
 
-class ModelMetadataKeys():
-    """Class with keys in the model metadata.json
-    """
+
+class ModelMetadataKeys:
+    """Class with keys in the model metadata.json"""
+
     SENSOR = "sensor"
     LIDAR_CONFIG = "lidar_config"
     TRAINING_ALGORITHM = "training_algorithm"

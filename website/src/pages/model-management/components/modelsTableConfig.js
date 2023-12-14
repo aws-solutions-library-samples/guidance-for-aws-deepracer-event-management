@@ -9,6 +9,8 @@ export const ModelStatus = ({ status }) => {
     return <StatusIndicator type="success">Available</StatusIndicator>;
   else if (status === 'QUARANTINED')
     return <StatusIndicator type="warning">Virus detected</StatusIndicator>;
+  else if (status === 'OPTIMIZED')
+    return <StatusIndicator type="warning">Available and Optimized</StatusIndicator>;
   else if (status === 'NOT_VALID')
     return <StatusIndicator type="error">Not a valid model file</StatusIndicator>;
   else return '-';

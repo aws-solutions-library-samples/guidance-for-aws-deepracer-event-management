@@ -22,6 +22,7 @@ import { FleetsManager } from './constructs/fleets-manager';
 import { LabelPrinter } from './constructs/label-printer';
 import { LandingPageManager } from './constructs/landing-page';
 import { Leaderboard } from './constructs/leaderboard';
+import { ModelOptimizer } from './constructs/model-optimizer';
 import { ModelsManager } from './constructs/models-manager';
 import { ModelsManagerDefaultModelsDeployment } from './constructs/models-manager-default-models';
 import { RaceManager } from './constructs/race-manager';
@@ -101,11 +102,21 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       appsyncApi: appsyncResources,
     });
 
+    const modelOptimizer = new ModelOptimizer(this, 'ModelOptimizer', {
+      logsBucket: props.logsBucket,
+      modelsBucket: modelsManager.modelsBucket,
+      account: this.account,
+      eventbus: props.eventbus,
+      appsyncApi: appsyncResources,
+      clamScanPost: clamscan.postLambda,
+    });
+
     const defaultModelsDeployment = new ModelsManagerDefaultModelsDeployment(this, 'DefaultModelsDeployment', {
       uploadBucket: modelsManager.uploadBucket,
       modelsBucket: modelsManager.modelsBucket,
     });
     defaultModelsDeployment.node.addDependency(clamscan);
+    defaultModelsDeployment.node.addDependency(modelOptimizer);
 
     const carManager = new CarManager(this, 'CarManager', {
       appsyncApi: appsyncResources,
