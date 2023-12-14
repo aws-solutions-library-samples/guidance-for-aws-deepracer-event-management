@@ -83,6 +83,7 @@ export class ModelsManager extends Construct {
       autoDeleteObjects: true,
       eventBridgeEnabled: true,
       removalPolicy: RemovalPolicy.DESTROY,
+      versioned: true,
       lifecycleRules: [
         { expiration: Duration.days(15), tagFilters: { lifecycle: 'true' } },
         { abortIncompleteMultipartUploadAfter: Duration.days(1) },

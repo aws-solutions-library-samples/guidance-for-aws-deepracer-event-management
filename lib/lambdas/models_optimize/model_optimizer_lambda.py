@@ -39,6 +39,7 @@ import boto3
 import constants
 import file_utils
 from aws_lambda_powertools import Logger
+from botocore.exceptions import ClientError
 from model_optimizer import ModelOptimizer
 
 logger = Logger()
@@ -56,10 +57,12 @@ def lambda_handler(event, context):
     payload = event["detail"]["responsePayload"]
 
     model_key = payload["target_key"]
+    model_id = hashlib.sha256(model_key.encode("utf-8")).hexdigest()
     src_bucket = payload["target_bucket"]
     status = payload["status"]
 
     model_key_parts = model_key.split("/")
+    model_sub = model_key_parts[1]
     model_filename = model_key_parts[-1]
 
     model_name = model_filename.split(".")[0]
@@ -79,13 +82,31 @@ def lambda_handler(event, context):
         if not os.path.isdir(model_target_dir):
             os.makedirs(model_target_dir)
 
-        file_utils.extract_archive(model_target_file, model_target_dir)
+        logger.info(f"Extracting into {model_target_file}")
+        file_utils.extract_archive(model_target_file, model_target_dir, clean=True)
 
         mo = ModelOptimizer(logger)
         error_code, error_msg, artifact_path = mo.optimize(model_name)
 
         if error_code == 0:
             logger.info(f"Optimized model to file {artifact_path}")
+
+            archive_file = file_utils.compress_archive(
+                model_target_dir, constants.APIDefaults.TMP_DIR
+            )
+
+            if archive_file is None:
+                logger.error("Compressing model to archive fail.")
+                return
+
+            try:
+                client_s3.upload_file(archive_file, src_bucket, model_key)
+                logger.info(
+                    f"Uploading {archive_file} to s3://{src_bucket}/{model_key}"
+                )
+            except ClientError as e:
+                logger.error(f"Error in uploading {archive_file}", e)
+                return
 
             query = """
                     mutation UpdateModel(
@@ -118,8 +139,11 @@ def lambda_handler(event, context):
                         }
                     }
                     """
+
+            appsync_helpers.send_mutation(
+                query,
+                {"modelId": model_id, "sub": model_sub, "status": "OPTIMIZED"},
+            )
+
         else:
             logger.error(f"Optimizing model failed with code {error_code}")
-        #    appsync_helpers.send_mutation(
-        #        query, {"modelId": "1234", "sub": sub, "status": "OPTIMIZED"}
-        #    )
