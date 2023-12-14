@@ -446,6 +446,7 @@
   "model.upload.status.available": "Available",
   "model.upload.status.quarantined": "Virus detected",
   "model.upload.status.not-valid": "Not a valid model file",
+  "model.upload.status.optimized": "Available and optimized",
   "quarantine.breadcrumb": "Quarantined models",
   "quarantine.header": "Quarantined models",
   "quarantine.list-of-all-models": "Quarantined models are defective or may contain malicious content.",
