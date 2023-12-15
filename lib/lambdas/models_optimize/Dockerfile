@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2022 Intel Corporation
+# Derived from Dockerfile provided by Intel on https://github.com/openvinotoolkit/docker_ci/tree/master/dockerfiles
 # SPDX-License-Identifier: Apache-2.0
 FROM ubuntu:20.04
 
