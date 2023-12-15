@@ -22,16 +22,16 @@ RUN npm install -g aws-cdk
 #Install Amplify
 RUN npm install -g @aws-amplify/cli
 
-# Install dependencies
+# NPM install
 WORKDIR /app
-
-COPY ./package*.json /app/
-COPY ./website/package*.json /app/website/
-COPY ./website-leaderboard/package*.json /app/website-leaderboard/
-COPY ./website-stream-overlays/package*.json /app/website-stream-overlays/
+COPY ./website/package*.json /app/
 
 RUN npm install
 
+COPY ./website /app
+
 USER node
 
-EXPOSE 3000-3002
+ENV PORT=3000
+
+CMD ["npm", "start"]

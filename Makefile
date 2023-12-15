@@ -31,7 +31,7 @@ bootstrap: 					## Bootstraps the CDK environment
 .PHONY: clean
 clean: pipeline.clean s3.clean
 
-## Dev related tragets
+## Dev related targets
 
 pipeline.synth: 				## Synth the CDK pipeline
 	npx cdk synth -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(REGION)
@@ -81,6 +81,12 @@ local.config:					## Setup local config based on branch
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(REGION) --api-id $$appsyncId --format SDL $(overlaysSrcPath)/graphql/schema.graphql
 	cd $(overlaysSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
+
+local.install:					## Install Javascript dependencies
+	npm install
+
+local.docker.build:				## Build DREM docker services
+	docker compose build --no-cache app leaderboard overlays
 
 local.docker.up: 				## Run DREM using docker for development
 	docker compose up -d

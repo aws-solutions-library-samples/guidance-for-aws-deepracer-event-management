@@ -1,29 +1,77 @@
-version: "3"
+version: '3'
 name: drem
+
 services:
+  #   website:
+  #     build:
+  #       context: .
+  #       dockerfile: Dockerfile.website
+  #     environment:
+  #       - PORT=3000
+  #     networks:
+  #       - drem
+  #     restart: unless-stopped
+  #     ports:
+  #       - 3000:3000
+  #     volumes:
+  #       - ./website:/app
+  #       - /app/node_modules
+
+  #   leaderboard:
+  #     build:
+  #       context: .
+  #       dockerfile: Dockerfile.leaderboard
+  #     environment:
+  #       - PORT=3001
+  #     networks:
+  #       - drem
+  #     restart: unless-stopped
+  #     ports:
+  #       - 3001:3000
+  #     volumes:
+  #       - ./website-leaderboard:/app
+  #       - /app/node_modules
+
+  #   overlay:
+  #     build:
+  #       context: .
+  #       dockerfile: Dockerfile.overlay
+  #     environment:
+  #       - PORT=3002
+  #     networks:
+  #       - drem
+  #     restart: unless-stopped
+  #     ports:
+  #       - 3002:3000
+  #     volumes:
+  #       - ./website-stream-overlays:/app
+  #       - /app/node_modules
+
   app:
-    build: .
-    command: make local.run
-    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      #   - BUCKET=${BUCKET}
+      - REGION=${REGION}
+    #   - EMAIL=${EMAIL}
+    #   - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+    #   - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    #   - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+    #   - BRANCH=$(git symbolic-ref --short HEAD)
+    #   - ACCOUNT=${aws sts get-caller-identity --query Account --output text}
+    networks:
+      - drem
+    restart: unless-stopped
     ports:
-      - 3000:3000
+      - 3000-3002:3000-3002
     volumes:
-      - ./:/deepracer-event-manager
+      - .:/app
+      - /app/node_modules/
+      - /app/website/node_modules/
+      - /app/website-leaderboard/node_modules/
+      - /app/website-stream-overlays/node_modules/
 
-  leaderboard:
-    build: .
-    command: make local.run-leaderboard
-    restart: always
-    ports:
-      - 3001:3001
-    volumes:
-      - ./:/deepracer-event-manager
-
-  overlays:
-    build: .
-    command: make local.run-overlays
-    restart: always
-    ports:
-      - 3002:3002
-    volumes:
-      - ./:/deepracer-event-manager
+networks:
+  drem:
+    driver: bridge
