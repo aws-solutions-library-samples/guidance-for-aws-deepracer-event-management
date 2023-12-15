@@ -32,6 +32,4 @@ COPY ./website-stream-overlays/package*.json /app/website-stream-overlays/
 
 RUN npm install
 
-USER node
-
 EXPOSE 3000-3002
