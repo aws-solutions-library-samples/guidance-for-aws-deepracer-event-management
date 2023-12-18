@@ -20,23 +20,47 @@ DREM offers event organizers tools for managing users, models, cars and fleets, 
 
 ## Deployment
 
-##### <span style="color:orange"> \* Optional: If you want to use a container that has everything you need to get started.</span>
+### Docker compose (WIP)
 
-With docker running on your machine, use the following commands to build and start the container. (or run `make local.docker.run`)
-
-```sh
-docker build --tag=deepracer-build-env:latest .
-docker run --privileged -p 3000-3002:3000-3002 -d --mount type=bind,source=$(pwd),target=/deepracer-event-manager --name deepracer-build deepracer-build-env:latestdeepracer-build deepracer-build-env:latest
-docker exec -it deepracer-build /bin/bash
-```
-
-Once in the container, check to make sure you see the files from the git repo.
+With docker running on your machine, use the following commands to build and start the containers.
 
 ```sh
-ls -la
+docker compose up -d
 ```
 
-**Note:** Before running `make local.run` in the container to start DREM you will need to install the dependencies (`make local.install`) and config (`make local.config`) both commands should be run outside of the container on the host machine.
+Builds the containers if they aren't already built and runs them in 'detached' mode, to access the logs as the containers are running
+
+```sh
+docker compose logs -f
+```
+
+To stop the containers
+
+```sh
+docker compose down
+```
+
+To rebuild a container
+
+```sh
+docker compose build --no-cache <container name>
+```
+
+To restart a container
+
+```sh
+docker compose restart <container name>
+```
+
+To access the shell on a running container
+
+```sh
+docker compose run <container name> /bin/sh
+```
+
+TODO:
+- Add in service container for deployment and configuration
+- Update documentation
 
 ### Deployment prerequisites
 
@@ -48,7 +72,7 @@ The deployment requires the following tools:
 - [Node.js](https://nodejs.org) version 18.x <span style="color:orange">\*</span>
 - (Optional) [Make](https://www.gnu.org/software/make/) buildtool. We provide a Makefile with all required targets for easy use. We recommend installing Make. <span style="color:orange">\*</span>
 
-<span style="color:orange">\* Included if you use docker the container above</span>
+<span style="color:orange">\* Included if you use docker compose</span>
 
 ### Supported regions
 
@@ -64,8 +88,6 @@ The deployment is currently supported in theses regions:
     Asia Pacific (Tokyo)
     Asia Pacific (Singapore)
     Asia Pacific (Sydney)
-
-**Note:** If you experience cross platform emulation issues with Docker then `docker run --privileged --rm tonistiigi/binfmt --install all` can help resolve some issues.
 
 ### Deployment overview
 
