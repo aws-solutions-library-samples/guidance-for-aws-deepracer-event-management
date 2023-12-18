@@ -86,7 +86,7 @@ local.install:					## Install Javascript dependencies
 	npm install
 
 local.docker.build:				## Build DREM docker services
-	docker compose build --no-cache app leaderboard overlays
+	docker compose build --no-cache website leaderboard overlays
 
 local.docker.up: 				## Run DREM using docker for development
 	docker compose up -d
@@ -98,7 +98,7 @@ local.docker.down:				## Stop DREM docker instance
 	docker compose down
 
 local.docker.clean:				## Remove DREM docker container and volumes (destructive)
-	docker compose rm app -f -v
+	docker compose rm website -f -v
 	docker compose rm leaderboard -f -v
 	docker compose rm overlays -f -v
 
