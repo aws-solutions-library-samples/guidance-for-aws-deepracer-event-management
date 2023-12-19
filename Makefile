@@ -14,7 +14,7 @@ endif
 dremSrcPath := website/src
 leaderboardSrcPath := website-leaderboard/src
 overlaysSrcPath := website-stream-overlays/src
-dremBucket := $$(aws ssm get-parameter --name '/drem/S3RepoBucket' --output text --query 'Parameter.Value' --region $(REGION)| cut -d ':' -f 6)
+dremBucket := $$(aws ssm get-parameter --name '/drem/S3RepoBucket' --output text --query 'Parameter.Value' --region $(region)| cut -d ':' -f 6)
 
 ## ----------------------------------------------------------------------------
 .PHONY: help
@@ -26,7 +26,7 @@ install: pipeline.trigger pipeline.deploy	## Uploads the artifact and build the 
 
 .PHONY: bootstrap
 bootstrap: 					## Bootstraps the CDK environment
-	cdk bootstrap -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(REGION)
+	cdk bootstrap -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region)
 
 .PHONY: clean
 clean: pipeline.clean s3.clean
@@ -34,19 +34,19 @@ clean: pipeline.clean s3.clean
 ## Dev related targets
 
 pipeline.synth: 				## Synth the CDK pipeline
-	npx cdk synth -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(REGION)
+	npx cdk synth -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region)
 
 pipeline.deploy: 				## Deploy the CDK pipeline
-	npx cdk deploy -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(REGION)
+	npx cdk deploy -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region)
 
 pipeline.clean: 				## Destroys the CDK pipeline
-	npx cdk destroy -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(REGION)
+	npx cdk destroy -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region)
 
 drem.clean-infrastructure:			## Delete DREM application
-	aws cloudformation delete-stack --stack-name drem-backend-$(branch)-infrastructure --region $(REGION)
+	aws cloudformation delete-stack --stack-name drem-backend-$(branch)-infrastructure --region $(region)
 
 drem.clean-base:			## Delete DREM application
-	aws cloudformation delete-stack --stack-name drem-backend-$(branch)-base --region $(REGION)
+	aws cloudformation delete-stack --stack-name drem-backend-$(branch)-base --region $(region)
 
 pipeline.trigger: 				## Creates the zipfile and uploads it to S3 to trigger the pipeline
 	@echo "Packaging build artifact"
@@ -56,29 +56,29 @@ pipeline.trigger: 				## Creates the zipfile and uploads it to S3 to trigger the
 	aws s3 cp drem.zip s3://$(dremBucket)/$(branch)/
 
 manual.deploy:  				## Deploy via cdk
-	npx cdk deploy --c manual_deploy=True -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(REGION) --all
+	npx cdk deploy --c manual_deploy=True -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) --all
 
 manual.deploy.hotswap: 				## Deploy via cdk --hotswap
-	npx cdk deploy --c manual_deploy=True -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(REGION) --all --hotswap
+	npx cdk deploy --c manual_deploy=True -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) --all --hotswap
 
 local.config:					## Setup local config based on branch
 	echo "{}" > ${dremSrcPath}/config.json
-	aws cloudformation describe-stacks --region $(REGION) --stack-name drem-backend-$(branch)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
+	aws cloudformation describe-stacks --region $(region) --stack-name drem-backend-$(branch)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
 	python3 scripts/generate_amplify_config_cfn.py
-	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(REGION) --api-id $$appsyncId --format SDL ./$(dremSrcPath)/graphql/schema.graphql
+	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL ./$(dremSrcPath)/graphql/schema.graphql
 	current_dir=$(pwd)
 	cd $(dremSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
 	echo "{}" > $(leaderboardSrcPath)/config.json
 	python3 scripts/generate_leaderboard_amplify_config_cfn.py
-	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(REGION) --api-id $$appsyncId --format SDL $(leaderboardSrcPath)/graphql/schema.graphql
+	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL $(leaderboardSrcPath)/graphql/schema.graphql
 	cd $(leaderboardSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
 	echo "{}" > $(overlaysSrcPath)/config.json
 	python3 scripts/generate_stream_overlays_amplify_config_cfn.py
-	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(REGION) --api-id $$appsyncId --format SDL $(overlaysSrcPath)/graphql/schema.graphql
+	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL $(overlaysSrcPath)/graphql/schema.graphql
 	cd $(overlaysSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
