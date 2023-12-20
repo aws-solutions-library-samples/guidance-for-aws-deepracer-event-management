@@ -20,48 +20,6 @@ DREM offers event organizers tools for managing users, models, cars and fleets, 
 
 ## Deployment
 
-### Docker compose (WIP)
-
-With docker running on your machine, use the following commands to build and start the containers.
-
-```sh
-docker compose up -d
-```
-
-Builds the containers if they aren't already built and runs them in 'detached' mode, to access the logs as the containers are running
-
-```sh
-docker compose logs -f
-```
-
-To stop the containers
-
-```sh
-docker compose down
-```
-
-To rebuild a container
-
-```sh
-docker compose build --no-cache <container name>
-```
-
-To restart a container
-
-```sh
-docker compose restart <container name>
-```
-
-To access the shell on a running container
-
-```sh
-docker compose run <container name> /bin/sh
-```
-
-TODO:
-- Add in service container for deployment and configuration
-- Update documentation
-
 ### Deployment prerequisites
 
 The deployment requires the following tools:
@@ -228,7 +186,7 @@ To manually enable this integration, you can follow these steps:
 
 ### Option 2. Deploy DREM as a developer / contributor
 
-### Development prequisities
+### Development prerequisites
 
 As per the deployment prerequisites with the following additional tools
 
@@ -240,15 +198,19 @@ A number of plugins are recommended when contributing code to DREM. VSCode will 
 
 We recommend that you use the Makefile based commands to simplify the steps required when developing code for DREM.
 
-If you plan to help develop DREM and contribute code, the inital deployment of DREM is the same as above. Once DREM has deployed, to make the deployed DREM stack available for local development, run the following commands:
+If you plan to help develop DREM and contribute code, the initial deployment of DREM is the same as above. Once DREM has deployed, to make the deployed DREM stack available for local development, run the following commands, alternatively the stack can be run using docker compose to create containers for each of the three react applications that make up DREM:
 
-#### Install local dependancies
+### Local development
+
+Running all resources and installing all dependencies on the local machine
+
+#### Install local dependencies
 
 ```sh
 make local.install
 ```
 
-#### Configure the local development enviroment
+#### Configure the local development environment
 
 **Note:** You will need to have your local development environment setup to access AWS
 
@@ -276,9 +238,55 @@ To run the DREM streaming overlays
 make local.run-overlays
 ```
 
+### Docker compose based local development
+
+Using docker compose to build and run containers for each of the react applications that make up DREM.
+
+With docker running on your machine, use the following commands to build and start the containers. Builds the containers if they aren't already built and runs them in 'detached' mode
+
+```sh
+docker compose up -d
+```
+
+To access the logs as the containers are running
+
+```sh
+docker compose logs -f
+```
+
+To stop the containers
+
+```sh
+docker compose down
+```
+
+To rebuild a container
+
+```sh
+docker compose build --no-cache <container name>
+```
+
+To restart a container
+
+```sh
+docker compose restart <container name>
+```
+
+To run a command in a new container instance
+
+```sh
+docker compose run <container name> /bin/sh
+```
+
+To execute a command in a running container
+
+```sh
+docker compose run <container name> <command>
+```
+
 ### Cleanup
 
-When you have finshed using DREM for your event, the application can be removed using either Makefile based commands or manually.
+When you have finished using DREM for your event, the application can be removed using either Makefile based commands or manually.
 
 ### Step 1: Remove the pipeline
 
@@ -330,7 +338,7 @@ make drem.clean-base
 aws cloudformation delete-stack --stack-name drem-backend-<branch-name>-base
 ```
 
-#### Mannual clean up
+#### Manual clean up
 
 Not all of the elements from the stack are able to be deleted in an automated manner and so once the initial attempt at deleting the stack has failed with `DELETE_FAILED` status you need to manually delete the stack using the console and retain the resources that can't be automatically delete. Once the stack has been deleted the retained resources can be manually deleted
 
