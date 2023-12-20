@@ -61,6 +61,9 @@ manual.deploy:  				## Deploy via cdk
 manual.deploy.hotswap: 				## Deploy via cdk --hotswap
 	npx cdk deploy --c manual_deploy=True -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) --all --hotswap
 
+local.install:					## Install Javascript dependencies
+	npm install
+
 local.config:					## Setup local config based on branch
 	echo "{}" > ${dremSrcPath}/config.json
 	aws cloudformation describe-stacks --region $(region) --stack-name drem-backend-$(branch)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
@@ -82,8 +85,24 @@ local.config:					## Setup local config based on branch
 	cd $(overlaysSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
-local.install:					## Install Javascript dependencies
-	npm install
+local.run:					## Run the frontend application locally for development
+	PORT=3000 npm start --prefix website
+
+local.clean:					## Remove local packages and modules
+	-rm package-lock.json
+	rm -rf node_modules
+	-rm website/package-lock.json
+	rm -rf website/node_modules
+	-rm website-leaderboard/package-lock.json
+	rm -rf website-leaderboard/node_modules
+	-rm website-stream-overlays/package-lock.json
+	rm -rf website-stream-overlays/node_modules
+
+local.run-leaderboard:				## Run the frontend leaderboard application locally for development
+	PORT=3001 npm start --prefix website-leaderboard
+
+local.run-overlays:				## Run the frontend overlays application locally for development
+	PORT=3002 npm start --prefix website-stream-overlays
 
 local.docker.build:				## Build DREM docker services
 	docker compose build --no-cache website leaderboard overlays
