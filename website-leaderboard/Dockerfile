@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM public.ecr.aws/docker/library/node:18-alpine
 
 # Install packages
 RUN apk update && apk add --update --no-cache \
@@ -9,7 +9,6 @@ RUN apk update && apk add --update --no-cache \
     openssh \
     py-cryptography \
     py3-pip \
-    python3 \
     wget \
     zip
 RUN apk --no-cache add --virtual builds-deps build-base python3
