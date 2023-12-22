@@ -606,6 +606,7 @@
   "commentator.race.status.RACE_FINSIHED": "Race finished",
   "commentator.race.status.RACE_SUBMITTED": "Race finished",
   "commentator.race.status.undefined": "Not running",
+  "user-profile.header": "Account details",
   "user-profile.header.details": "Account details",
   "user-profile.description": "Update your user settings and password.",
   "user-profile.settings.name": "Name",
