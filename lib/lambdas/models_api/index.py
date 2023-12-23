@@ -90,6 +90,7 @@ def get_models(limit: int = 200, nextToken: dict = None):
             Attr("status").eq("UPLOADED")
             | Attr("status").eq("AVAILABLE")
             | Attr("status").eq("NOT_VALID")
+            | Attr("status").eq("OPTIMIZED")
         )
         query_settings["KeyConditionExpression"] = Key("sub").eq(sub)
         response = ddbTable.query(**query_settings)

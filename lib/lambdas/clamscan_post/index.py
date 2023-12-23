@@ -50,12 +50,6 @@ def lambda_handler(event, context):
     model_key = f"private/{sub}/{model_filename}"
     model_id = hashlib.sha256(model_key.encode("utf-8")).hexdigest()
 
-    model_status = "AVAILABLE"
-    if status == "CLEAN":
-        copy_file(src_bucket, key, DESTINATION_BUCKET, model_key)
-
-    client_s3.delete_object(Bucket=src_bucket, Key=key)
-
     query = """
       mutation UpdateModel(
         $modelId: ID!
@@ -88,6 +82,30 @@ def lambda_handler(event, context):
       }
       """
 
-    appsync_helpers.send_mutation(
-        query, {"modelId": model_id, "sub": sub, "status": model_status}
-    )
+    summary = {
+        "source": "serverless-clamscan-upload",
+        "input_bucket": src_bucket,
+        "input_key": key,
+        "input_status": status,
+    }
+
+    if status == "CLEAN":
+        model_status = "AVAILABLE"
+        copy_file(src_bucket, key, DESTINATION_BUCKET, model_key)
+
+        appsync_helpers.send_mutation(
+            query, {"modelId": model_id, "sub": sub, "status": model_status}
+        )
+
+        summary["status"] = model_status
+        summary["target_bucket"] = DESTINATION_BUCKET
+        summary["target_key"] = model_key
+
+    else:
+        model_status = status
+
+    client_s3.delete_object(Bucket=src_bucket, Key=key)
+
+    logger.info(summary)
+
+    return summary

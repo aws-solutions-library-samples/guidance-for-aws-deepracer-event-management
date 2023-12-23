@@ -12,5 +12,7 @@ export const ModelUploadStatus = ({ status }) => {
     return <StatusIndicator type="warning">{t('model.upload.status.quarantined')}</StatusIndicator>;
   else if (status === 'NOT_VALID')
     return <StatusIndicator type="error">{t('model.upload.status.not-valid')}</StatusIndicator>;
+  else if (status === 'OPTIMIZED')
+    return <StatusIndicator type="success">{t('model.upload.status.optimized')}</StatusIndicator>;    
   else return '-';
 };
