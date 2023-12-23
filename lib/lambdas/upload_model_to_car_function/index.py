@@ -68,8 +68,8 @@ def uploadModelToCar(entry: Dict[str, str]):
                         filename, foldername
                     ),
                     "rm /tmp/{0}".format(filename),
-                    "mv /opt/aws/deepracer/artifacts/{0}/agent/model.pb"
-                    " /opt/aws/deepracer/artifacts/{0}/model.pb".format(foldername),
+                    "mv /opt/aws/deepracer/artifacts/{0}/agent/model.*"
+                    " /opt/aws/deepracer/artifacts/{0}/".format(foldername),
                     "md5sum /opt/aws/deepracer/artifacts/{0}/model.pb | awk '{{ print"
                     " $1 }}' > /opt/aws/deepracer/artifacts/{0}/checksum.txt".format(
                         foldername

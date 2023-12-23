@@ -38,6 +38,8 @@ interface ClamscanServerlessProps {
 }
 
 export class ClamscanServerless extends Construct {
+  public readonly postLambda: lambda.Function;
+
   constructor(scope: Construct, id: string, props: ClamscanServerlessProps) {
     super(scope, id);
 
@@ -108,6 +110,7 @@ export class ClamscanServerless extends Construct {
       bundling: {
         image: props.lambdaConfig.bundlingImage,
       },
+      onSuccess: new EventBridgeDestination(props.eventbus),
       environment: {
         POWERTOOLS_SERVICE_NAME: 'clamscanPostFunction',
         DESTINATION_BUCKET: props.scannedBucked.bucketName,
@@ -118,6 +121,8 @@ export class ClamscanServerless extends Construct {
       layers: [props.lambdaConfig.layersConfig.powerToolsLayer, props.lambdaConfig.layersConfig.appsyncHelpersLayer],
     });
     props.appsyncApi.api.grantMutation(postLambda, 'updateModel');
+
+    this.postLambda = postLambda;
 
     // trigger lambda to run on s3 upload
     const uploadRule = new Rule(this, 'ModelUploadRule', {

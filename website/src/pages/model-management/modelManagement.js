@@ -137,7 +137,7 @@ export const ModelManagement = ({ isOperatorView = false, onlyDisplayOwnModels =
           />
         }
         itemsIsLoading={isLoading}
-        isItemDisabled={(item) => item.status !== 'AVAILABLE'}
+        isItemDisabled={(item) => !['AVAILABLE', 'OPTIMIZED'].includes(item.status)}
         loadingText={t('models.loading-models')}
         localStorageKey="models-table-preferences"
         filteringProperties={filteringProperties}

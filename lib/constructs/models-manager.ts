@@ -83,6 +83,7 @@ export class ModelsManager extends Construct {
       autoDeleteObjects: true,
       eventBridgeEnabled: true,
       removalPolicy: RemovalPolicy.DESTROY,
+      versioned: true,
       lifecycleRules: [
         { expiration: Duration.days(15), tagFilters: { lifecycle: 'true' } },
         { abortIncompleteMultipartUploadAfter: Duration.days(1) },
@@ -394,7 +395,7 @@ export class ModelsManager extends Construct {
 
     // GraphQL API
     const modelStatusEnum = new EnumType('ModelStatusEnum', {
-      definition: ['UPLOADED', 'NOT_VALID', 'QUARANTINED', 'AVAILABLE', 'DELETED'],
+      definition: ['UPLOADED', 'NOT_VALID', 'QUARANTINED', 'AVAILABLE', 'DELETED', 'OPTIMIZED'],
     });
     props.appsyncApi.schema.addType(modelStatusEnum);
 
