@@ -146,7 +146,7 @@ class ModelOptimizer:
                 "--img-format": constants.APIDefaults.IMG_FORMAT,
             }
             error_code, artifact_path = self.optimize_tf_model(
-                "{}/agent/model".format(model_name),
+                "{}/model".format(model_name),
                 model_metadata_sensors,
                 training_algorithm,
                 160,
