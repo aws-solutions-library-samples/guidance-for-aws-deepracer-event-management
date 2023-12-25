@@ -96,8 +96,16 @@ def lambda_handler(event, context):
                         filename, foldername
                     ),
                     "rm /tmp/{0}".format(filename),
+                    "mv /opt/aws/deepracer/artifacts/{0}/agent/model.bin"
+                    " /opt/aws/deepracer/artifacts/{0}/model.bin".format(foldername),
+                    "mv /opt/aws/deepracer/artifacts/{0}/agent/model.mapping"
+                    " /opt/aws/deepracer/artifacts/{0}/model.mapping".format(
+                        foldername
+                    ),
                     "mv /opt/aws/deepracer/artifacts/{0}/agent/model.pb"
                     " /opt/aws/deepracer/artifacts/{0}/model.pb".format(foldername),
+                    "mv /opt/aws/deepracer/artifacts/{0}/agent/model.xml"
+                    " /opt/aws/deepracer/artifacts/{0}/model.xml".format(foldername),
                     "md5sum /opt/aws/deepracer/artifacts/{0}/model.pb | awk '{{ print"
                     " $1 }}' > /opt/aws/deepracer/artifacts/{0}/checksum.txt".format(
                         foldername
