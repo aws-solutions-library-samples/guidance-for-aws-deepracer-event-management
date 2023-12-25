@@ -11,6 +11,8 @@ services:
     restart: unless-stopped
     ports:
       - 3000:3000
+    environment:
+      - WDS_SOCKET_PORT=3000
     volumes:
       - ./website:/app
       - /app/node_modules
@@ -24,6 +26,8 @@ services:
     restart: unless-stopped
     ports:
       - 3001:3000
+    environment:
+      - WDS_SOCKET_PORT=3001
     volumes:
       - ./website-leaderboard:/app
       - /app/node_modules
@@ -37,6 +41,8 @@ services:
     restart: unless-stopped
     ports:
       - 3002:3000
+    environment:
+      - WDS_SOCKET_PORT=3002
     volumes:
       - ./website-stream-overlays:/app
       - /app/node_modules
