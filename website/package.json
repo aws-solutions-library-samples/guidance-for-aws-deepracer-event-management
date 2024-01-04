@@ -83,6 +83,7 @@
     "prettier": "^3.0.3"
   },
   "overrides": {
-    "@svgr/webpack": "$@svgr/webpack"
+    "@svgr/webpack": "$@svgr/webpack",
+    "react-refresh": "^0.14.0"
   }
 }

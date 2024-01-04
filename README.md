@@ -20,24 +20,6 @@ DREM offers event organizers tools for managing users, models, cars and fleets, 
 
 ## Deployment
 
-##### <span style="color:orange"> \* Optional: If you want to use a container that has everything you need to get started.</span>
-
-With docker running on your machine, use the following commands to build and start the container. (or run `make local.docker.run`)
-
-```sh
-docker build --tag=deepracer-build-env:latest .
-docker run --privileged -p 3000-3002:3000-3002 -d --mount type=bind,source=$(pwd),target=/deepracer-event-manager --name deepracer-build deepracer-build-env:latestdeepracer-build deepracer-build-env:latest
-docker exec -it deepracer-build /bin/bash
-```
-
-Once in the container, check to make sure you see the files from the git repo.
-
-```sh
-ls -la
-```
-
-**Note:** Before running `make local.run` in the container to start DREM you will need to install the dependencies (`make local.install`) and config (`make local.config`) both commands should be run outside of the container on the host machine.
-
 ### Deployment prerequisites
 
 The deployment requires the following tools:
@@ -48,7 +30,7 @@ The deployment requires the following tools:
 - [Node.js](https://nodejs.org) version 18.x <span style="color:orange">\*</span>
 - (Optional) [Make](https://www.gnu.org/software/make/) buildtool. We provide a Makefile with all required targets for easy use. We recommend installing Make. <span style="color:orange">\*</span>
 
-<span style="color:orange">\* Included if you use docker the container above</span>
+<span style="color:orange">\* Included if you use docker compose</span>
 
 ### Supported regions
 
@@ -65,13 +47,11 @@ The deployment is currently supported in theses regions:
     Asia Pacific (Singapore)
     Asia Pacific (Sydney)
 
-**Note:** If you experience cross platform emulation issues with Docker then `docker run --privileged --rm tonistiigi/binfmt --install all` can help resolve some issues.
-
 ### Deployment overview
 
 Please note: It takes approximately an hour for all of the DREM resources to be deployed.
 
-1. Create an S3 bucket to act as the source for the codepipeline **_The bucket must have versioning enabled_**
+1. Create an S3 bucket to act as the source for the codepipeline **_The bucket must have versioning enabled_** e.g. drem-pipeline-zip-123456789012-eu-west-1 (replace 123456789012 with your account ID to ensure the name is unique)
 2. Create a Parameter Store key called '/drem/S3RepoBucket' with a string value of the S3 Bucket ARN for the codepipeline source, for example, `arn:aws:s3:::drem-pipeline-zip-123456789012-eu-west-1`
 3. Install build dependencies
 4. Create required build.config (if using Make)
@@ -86,29 +66,31 @@ If you are deploying DREM for use to support your AWS DeepRacer event(s)
 
 #### Step 1: Setup environment and create S3 bucket and enable versioning
 
+In your terminal of command line, enter the following commands:
+
 ```sh
-#Bucket used to put deep racer event manager assets
-export BUCKET=<your-resource-bucket-name>
-#Region where you wish to deploy
+# Bucket used to put deep racer event manager assets
+export BUCKET=<your-source-bucket-name>
+# Region where you wish to deploy
 export REGION=<your-region>
-#Your e-mail
+# Your e-mail
 export EMAIL=<your-email>
 
-#Optional if you have AWS CLI configured with you credentials already.
+# Optional (if you have AWS CLI configured with you credentials already)
 export AWS_ACCESS_KEY_ID=<key>
 export AWS_SECRET_ACCESS_KEY=<secret>
 export AWS_SESSION_TOKEN=<token>
 
-#Setting variables we can do automatically.
+# Setting variables we can do automatically.
 export BRANCH=$(git symbolic-ref --short HEAD)
 export ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 
 ```
 
 ```sh
-#Bucket creation
+# Bucket creation
 aws s3 mb s3://$BUCKET --region $REGION
-#Versioning activation on the bucket
+# Versioning activation on the bucket
 aws s3api put-bucket-versioning --bucket $BUCKET --versioning-configuration Status=Enabled
 ```
 
@@ -206,7 +188,7 @@ To manually enable this integration, you can follow these steps:
 
 ### Option 2. Deploy DREM as a developer / contributor
 
-### Development prequisities
+### Development prerequisites
 
 As per the deployment prerequisites with the following additional tools
 
@@ -218,17 +200,21 @@ A number of plugins are recommended when contributing code to DREM. VSCode will 
 
 We recommend that you use the Makefile based commands to simplify the steps required when developing code for DREM.
 
-If you plan to help develop DREM and contribute code, the inital deployment of DREM is the same as above. Once DREM has deployed, to make the deployed DREM stack available for local development, run the following commands:
+If you plan to help develop DREM and contribute code, the initial deployment of DREM is the same as above. Once DREM has deployed, to make the deployed DREM stack available for local development, run the following commands, alternatively the stack can be run using docker compose to create containers for each of the three react applications that make up DREM:
 
-#### Install local dependancies
+### Local development
+
+Running all resources and installing all dependencies on the local machine
+
+#### Install local dependencies
 
 ```sh
 make local.install
 ```
 
-#### Configure the local development enviroment
+#### Configure the local development environment
 
-**Note:** You will need to have your local development environment setup to access AWS
+**Note:** You will need to have your local development environment setup/authenticated with AWS
 
 ```sh
 make local.config
@@ -254,9 +240,65 @@ To run the DREM streaming overlays
 make local.run-overlays
 ```
 
+### Docker compose based local development
+
+Using docker compose to build and run containers for each of the react applications that make up DREM.
+
+#### Configure the local development environment
+
+**Note:** You will need to have your local development environment setup/authenticated with AWS
+
+```sh
+make local.config.docker
+```
+
+#### Start Docker
+
+With docker running on your machine, use the following commands to build and start the containers. Builds the containers if they aren't already built and runs them in 'detached' mode
+
+```sh
+docker compose up -d
+```
+
+To access the logs as the containers are running
+
+```sh
+docker compose logs -f
+```
+
+To stop the containers
+
+```sh
+docker compose down
+```
+
+To rebuild a container
+
+```sh
+docker compose build --no-cache <container name>
+```
+
+To restart a container
+
+```sh
+docker compose restart <container name>
+```
+
+To run a command in a new container instance
+
+```sh
+docker compose run <container name> /bin/sh
+```
+
+To execute a command in a running container
+
+```sh
+docker compose run <container name> <command>
+```
+
 ### Cleanup
 
-When you have finshed using DREM for your event, the application can be removed using either Makefile based commands or manually.
+When you have finished using DREM for your event, the application can be removed using either Makefile based commands or manually.
 
 ### Step 1: Remove the pipeline
 
@@ -308,7 +350,7 @@ make drem.clean-base
 aws cloudformation delete-stack --stack-name drem-backend-<branch-name>-base
 ```
 
-#### Mannual clean up
+#### Manual clean up
 
 Not all of the elements from the stack are able to be deleted in an automated manner and so once the initial attempt at deleting the stack has failed with `DELETE_FAILED` status you need to manually delete the stack using the console and retain the resources that can't be automatically delete. Once the stack has been deleted the retained resources can be manually deleted
 

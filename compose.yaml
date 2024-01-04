@@ -1,0 +1,62 @@
+version: '3'
+name: drem
+
+services:
+  website:
+    build:
+      context: ./website
+      dockerfile: Dockerfile
+    networks:
+      - drem
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    environment:
+      - WDS_SOCKET_PORT=3000
+    volumes:
+      - ./website:/app
+      - /app/node_modules
+
+  leaderboard:
+    build:
+      context: ./website-leaderboard
+      dockerfile: Dockerfile
+    networks:
+      - drem
+    restart: unless-stopped
+    ports:
+      - 3001:3000
+    environment:
+      - WDS_SOCKET_PORT=3001
+    volumes:
+      - ./website-leaderboard:/app
+      - /app/node_modules
+
+  overlays:
+    build:
+      context: ./website-stream-overlays
+      dockerfile: Dockerfile
+    networks:
+      - drem
+    restart: unless-stopped
+    ports:
+      - 3002:3000
+    environment:
+      - WDS_SOCKET_PORT=3002
+    volumes:
+      - ./website-stream-overlays:/app
+      - /app/node_modules
+
+#     environment:
+#       - BUCKET=${BUCKET}
+#       - REGION=${REGION}
+#       - EMAIL=${EMAIL}
+#       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+#       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+#       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+#       - BRANCH=$(git symbolic-ref --short HEAD)
+#       - ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+
+networks:
+  drem:
+    driver: bridge
