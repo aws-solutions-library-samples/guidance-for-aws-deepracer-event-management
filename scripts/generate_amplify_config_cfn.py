@@ -1,4 +1,16 @@
+import argparse
 import json
+
+# command line arguments
+parser = argparse.ArgumentParser(
+    description="Command line arguments",
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+)
+parser.add_argument(
+    "-d", "--docker", action="store_true", help="docker development mode"
+)
+args = parser.parse_args()
+command_line_config = vars(args)
 
 with open("cfn.outputs") as json_file:
     data = json.load(json_file)
@@ -30,6 +42,10 @@ with open("cfn.outputs") as json_file:
             cwRumAppMonitorId = key["OutputValue"]
         if key["OutputKey"] == "cwRumAppMonitorConfig":
             cwRumAppMonitorConfig = key["OutputValue"]
+
+    if command_line_config["docker"] == True:
+        leaderboardWebsite = "http://localhost:3001"
+        streamingOverlayWebsite = "http://localhost:3002"
 
     output_data = {
         "Auth": {

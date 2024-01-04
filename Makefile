@@ -85,6 +85,27 @@ local.config:					## Setup local config based on branch
 	cd $(overlaysSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
+local.config.docker:					## Setup local config based on branch
+	echo "{}" > ${dremSrcPath}/config.json
+	aws cloudformation describe-stacks --region $(region) --stack-name drem-backend-$(branch)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
+	python3 scripts/generate_amplify_config_cfn.py --docker
+	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL ./$(dremSrcPath)/graphql/schema.graphql
+	current_dir=$(pwd)
+	cd $(dremSrcPath)/graphql/ && amplify codegen
+	cd $(current_dir)
+
+	echo "{}" > $(leaderboardSrcPath)/config.json
+	python3 scripts/generate_leaderboard_amplify_config_cfn.py
+	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL $(leaderboardSrcPath)/graphql/schema.graphql
+	cd $(leaderboardSrcPath)/graphql/ && amplify codegen
+	cd $(current_dir)
+
+	echo "{}" > $(overlaysSrcPath)/config.json
+	python3 scripts/generate_stream_overlays_amplify_config_cfn.py
+	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL $(overlaysSrcPath)/graphql/schema.graphql
+	cd $(overlaysSrcPath)/graphql/ && amplify codegen
+	cd $(current_dir)
+
 local.run:					## Run the frontend application locally for development
 	PORT=3000 npm start --prefix website
 

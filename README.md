@@ -51,7 +51,7 @@ The deployment is currently supported in theses regions:
 
 Please note: It takes approximately an hour for all of the DREM resources to be deployed.
 
-1. Create an S3 bucket to act as the source for the codepipeline **_The bucket must have versioning enabled_**
+1. Create an S3 bucket to act as the source for the codepipeline **_The bucket must have versioning enabled_** e.g. drem-pipeline-zip-123456789012-eu-west-1 (replace 123456789012 with your account ID to ensure the name is unique)
 2. Create a Parameter Store key called '/drem/S3RepoBucket' with a string value of the S3 Bucket ARN for the codepipeline source, for example, `arn:aws:s3:::drem-pipeline-zip-123456789012-eu-west-1`
 3. Install build dependencies
 4. Create required build.config (if using Make)
@@ -66,29 +66,31 @@ If you are deploying DREM for use to support your AWS DeepRacer event(s)
 
 #### Step 1: Setup environment and create S3 bucket and enable versioning
 
+In your terminal of command line, enter the following commands:
+
 ```sh
-#Bucket used to put deep racer event manager assets
-export BUCKET=<your-resource-bucket-name>
-#Region where you wish to deploy
+# Bucket used to put deep racer event manager assets
+export BUCKET=<your-source-bucket-name>
+# Region where you wish to deploy
 export REGION=<your-region>
-#Your e-mail
+# Your e-mail
 export EMAIL=<your-email>
 
-#Optional if you have AWS CLI configured with you credentials already.
+# Optional (if you have AWS CLI configured with you credentials already)
 export AWS_ACCESS_KEY_ID=<key>
 export AWS_SECRET_ACCESS_KEY=<secret>
 export AWS_SESSION_TOKEN=<token>
 
-#Setting variables we can do automatically.
+# Setting variables we can do automatically.
 export BRANCH=$(git symbolic-ref --short HEAD)
 export ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 
 ```
 
 ```sh
-#Bucket creation
+# Bucket creation
 aws s3 mb s3://$BUCKET --region $REGION
-#Versioning activation on the bucket
+# Versioning activation on the bucket
 aws s3api put-bucket-versioning --bucket $BUCKET --versioning-configuration Status=Enabled
 ```
 
@@ -212,7 +214,7 @@ make local.install
 
 #### Configure the local development environment
 
-**Note:** You will need to have your local development environment setup to access AWS
+**Note:** You will need to have your local development environment setup/authenticated with AWS
 
 ```sh
 make local.config
@@ -241,6 +243,16 @@ make local.run-overlays
 ### Docker compose based local development
 
 Using docker compose to build and run containers for each of the react applications that make up DREM.
+
+#### Configure the local development environment
+
+**Note:** You will need to have your local development environment setup/authenticated with AWS
+
+```sh
+make local.config.docker
+```
+
+#### Start Docker
 
 With docker running on your machine, use the following commands to build and start the containers. Builds the containers if they aren't already built and runs them in 'detached' mode
 
