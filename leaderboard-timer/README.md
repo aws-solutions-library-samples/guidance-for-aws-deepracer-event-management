@@ -1,12 +1,14 @@
 # DeepRacer Timer
 
-The DeepRacer timer is an automated timing solution which is used togheter with the leaderboard & timekeeper system used during DeepRacer events.
+The DeepRacer timer is an automated timing solution which is used together with the leaderboard & timekeeper system used during DeepRacer events.
 
 ## Hardware Requirements
 
+**NOTE:** At this time the Raspberry Pi 5 is not supported for automated timing due to changes in the way the GPIO is connected.  Please review this [issue](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/14) for updates.
+
 ### Required
 
-- Rasberry Pi 4 / Zero W (known to work)
+- Raspberry Pi 4 / Zero W (known to work)
 - 2x Sound Sensors [Variant 1 - Youmile (preferred)](https://www.amazon.co.uk/Youmile-Sensitivity-Microphone-Detection-Arduino/dp/B07Q1BYDS7/ref=sr_1_1_sspa?crid=YZ2AA2SUOG67&keywords=sound+sensor&qid=1655970264&sprefix=sound+sensor%2Caps%2C84&sr=8-1-spons&psc=1&smid=A3BN2T8LLIRB5S&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUExMU5PTFY5WTlKTk8wJmVuY3J5cHRlZElkPUEwODEwNzkzM1ZCVU42MDdJQTdVUSZlbmNyeXB0ZWRBZElkPUEwNzMzMTg2MzNISEdLSjhINDRHNCZ3aWRnZXROYW1lPXNwX2F0ZiZhY3Rpb249Y2xpY2tSZWRpcmVjdCZkb05vdExvZ0NsaWNrPXRydWU=) / [Variant 2 - WaveShare](https://www.waveshare.com/sound-sensor.htm)
 - 2x [Pressure sensor](https://www.amazon.co.uk/gp/product/B07PM5PTPQ)
 - 2X 1.5m, two core flat wire between sound sensor and pressure sensors
@@ -21,11 +23,13 @@ The DeepRacer timer is an automated timing solution which is used togheter with 
 
 ## Hardware Setup
 
-### Preassure sensors
+For the timer you can build your own sensors or purchase timing boards from [Digital Racing Kings](https://digitalracingkings.com/)
 
-- Solder a 1.5 m, two core wire to each preassure sensor. Isolate each solder with a heat shrink tube
+### pressure sensors
+
+- Solder a 1.5 m, two core wire to each pressure sensor. Isolate each solder with a heat shrink tube
 - Attach a two pin female connector to the other end of the wire
-  ![Assembled preassure sensor](./docs/images/preassure_sensor_assembled.jpg)
+  ![Assembled pressure sensor](./docs/images/pressure_sensor_assembled.jpg)
 
 ### Ambient sound sensors
 
@@ -113,14 +117,14 @@ The Youmile sound sensor boards have one screw (easier to use) for calibration w
 
 ![Sound Sensor calibration](./docs/images/sound_sensor_calibration.jpg)
 
-- If laps are triggered but nothing has touched the preassure sensors.Turn the screw(s) slowly until there is only one led lit.
+- If laps are triggered but nothing has touched the pressure sensors.Turn the screw(s) slowly until there is only one led lit.
 
 - If no laps are triggered. Turn the screw(s) so that both leds are lit and then slowly back until there is only one led lit.
 
 ## Verify that the timer works
 
 - Go to `http://<RPI IP>:8080/admin/` using a private window in Chrome or Firefox
-- Log in using timerkeeper credentials
+- Log in using timekeeper credentials
 - Select the event you are running from the list of events you have access to
 - Use `Registration` and add a racer, click on the DeepRacer logo (top right) to go back to the event timer home page
 - Use `Timekeeper` select the racer you just added and test
