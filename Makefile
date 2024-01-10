@@ -22,11 +22,12 @@ help:						## Show this help.
 	@sed -ne '/@sed/!s/## //p' $(MAKEFILE_LIST)
 
 .PHONY: install
-install: pipeline.trigger pipeline.deploy	## Uploads the artifact and build the deploy pipeline
+install: pipeline.deploy	## Uploads the artifact and build the deploy pipeline
+#install: pipeline.trigger pipeline.deploy	## Uploads the artifact and build the deploy pipeline
 
 .PHONY: bootstrap
 bootstrap: 					## Bootstraps the CDK environment
-	cdk bootstrap -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region)
+	cdk bootstrap -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
 
 .PHONY: clean
 clean: pipeline.clean s3.clean
@@ -34,19 +35,19 @@ clean: pipeline.clean s3.clean
 ## Dev related targets
 
 pipeline.synth: 				## Synth the CDK pipeline
-	npx cdk synth -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region)
+	npx cdk synth -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
 
 pipeline.deploy: 				## Deploy the CDK pipeline
-	npx cdk deploy -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region)
+	npx cdk deploy -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
 
 pipeline.clean: 				## Destroys the CDK pipeline
-	npx cdk destroy -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region)
+	npx cdk destroy -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
 
 drem.clean-infrastructure:			## Delete DREM application
-	aws cloudformation delete-stack --stack-name drem-backend-$(branch)-infrastructure --region $(region)
+	aws cloudformation delete-stack --stack-name drem-backend-$(branch)-infrastructure --region $(region) -c source_branch=$(source_branch)
 
 drem.clean-base:			## Delete DREM application
-	aws cloudformation delete-stack --stack-name drem-backend-$(branch)-base --region $(region)
+	aws cloudformation delete-stack --stack-name drem-backend-$(branch)-base --region $(region) -c source_branch=$(source_branch)
 
 pipeline.trigger: 				## Creates the zipfile and uploads it to S3 to trigger the pipeline
 	@echo "Packaging build artifact"
@@ -56,10 +57,10 @@ pipeline.trigger: 				## Creates the zipfile and uploads it to S3 to trigger the
 	aws s3 cp drem.zip s3://$(dremBucket)/$(branch)/
 
 manual.deploy:  				## Deploy via cdk
-	npx cdk deploy --c manual_deploy=True -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) --all
+	npx cdk deploy --c manual_deploy=True -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) --all
 
 manual.deploy.hotswap: 				## Deploy via cdk --hotswap
-	npx cdk deploy --c manual_deploy=True -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) --all --hotswap
+	npx cdk deploy --c manual_deploy=True -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) --all --hotswap
 
 local.install:					## Install Javascript dependencies
 	npm install

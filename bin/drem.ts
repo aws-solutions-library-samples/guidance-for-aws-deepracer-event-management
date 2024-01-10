@@ -50,6 +50,14 @@ if (branchName) {
   console.info('Branch Name not provided, using default: ' + branchName);
 }
 
+let sourceBranchName = app.node.tryGetContext('source_branch');
+if (sourceBranchName) {
+  console.info('Use provided Source_Branch Name: ' + sourceBranchName);
+} else {
+  sourceBranchName = 'main';
+  console.info('Branch Name not provided, using default: ' + sourceBranchName);
+}
+
 if (app.node.tryGetContext('manual_deploy') === 'True') {
   console.info('Manual Deploy started....');
 
@@ -83,6 +91,7 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
   console.info('Pipeline deploy started...');
   new CdkPipelineStack(app, `drem-pipeline-${branchName}`, {
     branchName: branchName,
+    sourceBranchName: sourceBranchName,
     email: mailAddress,
     env: env,
   });

@@ -1,10 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Environment, Stage } from 'aws-cdk-lib';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
-import * as codePipelineActions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as pipelines from 'aws-cdk-lib/pipelines';
 import { Construct } from 'constructs';
 import { BaseStack } from './base-stack';
@@ -66,6 +63,7 @@ class InfrastructurePipelineStage extends Stage {
 }
 export interface CdkPipelineStackProps extends cdk.StackProps {
   branchName: string;
+  sourceBranchName: string;
   email: string;
   env: Environment;
 }
@@ -77,13 +75,13 @@ export class CdkPipelineStack extends cdk.Stack {
     // setup for pseudo parameters
     const stack = cdk.Stack.of(this);
 
-    const s3_repo_bucket_parameter_store = ssm.StringParameter.fromStringParameterAttributes(
-      this,
-      'S3RepoBucketValue',
-      { parameterName: '/drem/S3RepoBucket' }
-    );
+    // const s3_repo_bucket_parameter_store = ssm.StringParameter.fromStringParameterAttributes(
+    //   this,
+    //   'S3RepoBucketValue',
+    //   { parameterName: '/drem/S3RepoBucket' }
+    // );
 
-    const s3_repo_bucket = s3.Bucket.fromBucketArn(this, 'S3RepoBucket', s3_repo_bucket_parameter_store.stringValue);
+    // const s3_repo_bucket = s3.Bucket.fromBucketArn(this, 'S3RepoBucket', s3_repo_bucket_parameter_store.stringValue);
 
     const pipeline = new pipelines.CodePipeline(this, 'Pipeline', {
       dockerEnabledForSynth: true,
@@ -92,9 +90,17 @@ export class CdkPipelineStack extends cdk.Stack {
         buildEnvironment: {
           buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
         },
-        input: pipelines.CodePipelineSource.s3(s3_repo_bucket, props.branchName + '/drem.zip', {
-          trigger: codePipelineActions.S3Trigger.EVENTS,
-        }),
+        // input: pipelines.CodePipelineSource.s3(s3_repo_bucket, props.branchName + '/drem.zip', {
+        //   trigger: codePipelineActions.S3Trigger.EVENTS,
+        // }),
+        input: pipelines.CodePipelineSource.gitHub(
+          'StevenAskwith/guidance-for-aws-deepracer-event-management',
+          props.sourceBranchName,
+          {
+            authentication: cdk.SecretValue.secretsManager('drem/github-token'),
+            trigger: cdk.aws_codepipeline_actions.GitHubTrigger.POLL,
+          }
+        ),
         commands: [
           // Node update
           `n ${NODE_VERSION}`,
