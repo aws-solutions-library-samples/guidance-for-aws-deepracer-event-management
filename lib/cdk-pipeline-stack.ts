@@ -75,14 +75,6 @@ export class CdkPipelineStack extends cdk.Stack {
     // setup for pseudo parameters
     const stack = cdk.Stack.of(this);
 
-    // const s3_repo_bucket_parameter_store = ssm.StringParameter.fromStringParameterAttributes(
-    //   this,
-    //   'S3RepoBucketValue',
-    //   { parameterName: '/drem/S3RepoBucket' }
-    // );
-
-    // const s3_repo_bucket = s3.Bucket.fromBucketArn(this, 'S3RepoBucket', s3_repo_bucket_parameter_store.stringValue);
-
     const pipeline = new pipelines.CodePipeline(this, 'Pipeline', {
       dockerEnabledForSynth: true,
       publishAssetsInParallel: false,

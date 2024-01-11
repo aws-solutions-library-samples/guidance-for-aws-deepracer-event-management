@@ -42,9 +42,9 @@ if (mailAddress) {
   process.exit(-1);
 }
 
-let labelName = app.node.tryGetContext('branch');
+let labelName = app.node.tryGetContext('label');
 if (labelName) {
-  console.info('Use provided Branch Name: ' + labelName);
+  console.info('Use provided Label Name: ' + labelName);
 } else {
   labelName = 'main';
   console.info('Label Name not provided, using default: ' + labelName);

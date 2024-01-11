@@ -18,7 +18,6 @@ endif
 dremSrcPath := website/src
 leaderboardSrcPath := website-leaderboard/src
 overlaysSrcPath := website-stream-overlays/src
-dremBucket := $$(aws ssm get-parameter --name '/drem/S3RepoBucket' --output text --query 'Parameter.Value' --region $(region)| cut -d ':' -f 6)
 
 ## ----------------------------------------------------------------------------
 .PHONY: help
@@ -27,7 +26,6 @@ help:						## Show this help.
 
 .PHONY: install
 install: pipeline.deploy	## Uploads the artifact and build the deploy pipeline
-#install: pipeline.trigger pipeline.deploy	## Uploads the artifact and build the deploy pipeline
 
 .PHONY: bootstrap
 bootstrap: 					## Bootstraps the CDK environment
@@ -52,13 +50,6 @@ drem.clean-infrastructure:			## Delete DREM application
 
 drem.clean-base:			## Delete DREM application
 	aws cloudformation delete-stack --stack-name drem-backend-$(label)-base --region $(region) -c source_branch=$(source_branch)
-
-pipeline.trigger: 				## Creates the zipfile and uploads it to S3 to trigger the pipeline
-	@echo "Packaging build artifact"
-	-rm drem.zip
-	zip -r drem.zip . -x ./.venv/\* ./.git/\* ./website/build/\* ./website/node_modules/\* ./node_modules/\* ./cdk.out/\* ./website-leaderboard/build/\* ./website-leaderboard/node_modules/\* ./website-stream-overlays/build/\* ./website-stream-overlays/node_modules/\*
-	@echo "upload artifact to S3 bucket"
-	aws s3 cp drem.zip s3://$(dremBucket)/$(label)/
 
 manual.deploy:  				## Deploy via cdk
 	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) --all
