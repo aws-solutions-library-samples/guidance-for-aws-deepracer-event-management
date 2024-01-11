@@ -96,7 +96,7 @@ export class CdkPipelineStack extends cdk.Stack {
           'node --version',
 
           'npm install',
-          `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c branch=${props.labelName} -c account=${props.env.account} -c region=${props.env.region}`,
+          `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c label=${props.labelName} -c account=${props.env.account} -c region=${props.env.region} -c source_branch=${props.sourceBranchName}`,
         ],
         // partialBuildSpec: codebuild.BuildSpec.fromObject(
         //     {

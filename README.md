@@ -92,7 +92,7 @@ export AWS_SESSION_TOKEN=<token>
 
 Follow the instructions on [GitHub Docs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic) to create a personal access token (Classic).
 
-When creating the token select public_repo for the selected scope.
+When creating the token select `public_repo` for the selected scope.
 
 #### Step 3: Store Token in Secrets Manager
 
@@ -153,11 +153,11 @@ This command creates a CodePipeline pipeline, this pipeline coordinates the buil
 make install
 ```
 
-#### Step 8: Accessing DREM
+### Step 8: Accessing DREM
 
 The deployment of DREM through the pipeline will take approximately 1 hour. You can monitor the progress of the deployment by accessing the AWS Account you are deploying DREM into and going into AWS CodePipeline and reviewing the pipeline. As part of the deployment, the email address provided will become the admin user for DREM. An email with temporary credentials to access DREM as well as the a link will be sent to the email address provided. **Note:** The link won't work until the codepipeline has fully finished. When logging in for first time, the username is `admin` and the user will be prompted to change the temporary password.
 
-#### Step 9: Setup Amazon Cognito to use Amazon SES for email sending (optional)
+### Step 9: Setup Amazon Cognito to use Amazon SES for email sending (optional)
 
 In the default configuration Amazon Cognito only supports 50 signups a day due to a hard limit on the number of signup emails it is allowed to send. To resolve this you must enable the [integration with Amazon SES](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-email.html).
 
