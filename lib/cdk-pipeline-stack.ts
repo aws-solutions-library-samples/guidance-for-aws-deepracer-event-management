@@ -13,7 +13,7 @@ const CDK_VERSION = '2.110.0'; // other possible options: latest
 const AMPLIFY_VERSION = '12.8.2';
 
 export interface InfrastructurePipelineStageProps extends cdk.StackProps {
-  branchName: string;
+  labelName: string;
   email: string;
   env: Environment;
 }
@@ -31,7 +31,7 @@ class InfrastructurePipelineStage extends Stage {
   constructor(scope: Construct, id: string, props: InfrastructurePipelineStageProps) {
     super(scope, id, props);
 
-    const baseStack = new BaseStack(this, 'base', { email: props.email, branchName: props.branchName });
+    const baseStack = new BaseStack(this, 'base', { email: props.email, labelName: props.labelName });
     const stack = new DeepracerEventManagerStack(this, 'infrastructure', {
       baseStackName: baseStack.stackName,
       cloudfrontDistribution: baseStack.cloudfrontDistribution,
@@ -62,7 +62,7 @@ class InfrastructurePipelineStage extends Stage {
   }
 }
 export interface CdkPipelineStackProps extends cdk.StackProps {
-  branchName: string;
+  labelName: string;
   sourceBranchName: string;
   email: string;
   env: Environment;
@@ -90,9 +90,6 @@ export class CdkPipelineStack extends cdk.Stack {
         buildEnvironment: {
           buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
         },
-        // input: pipelines.CodePipelineSource.s3(s3_repo_bucket, props.branchName + '/drem.zip', {
-        //   trigger: codePipelineActions.S3Trigger.EVENTS,
-        // }),
         input: pipelines.CodePipelineSource.gitHub(
           'StevenAskwith/guidance-for-aws-deepracer-event-management',
           props.sourceBranchName,
@@ -107,7 +104,7 @@ export class CdkPipelineStack extends cdk.Stack {
           'node --version',
 
           'npm install',
-          `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c branch=${props.branchName} -c account=${props.env.account} -c region=${props.env.region}`,
+          `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c branch=${props.labelName} -c account=${props.env.account} -c region=${props.env.region}`,
         ],
         // partialBuildSpec: codebuild.BuildSpec.fromObject(
         //     {
@@ -137,7 +134,7 @@ export class CdkPipelineStack extends cdk.Stack {
     // Dev Stage
     const env = { account: stack.account, region: stack.region };
 
-    const infrastructure = new InfrastructurePipelineStage(this, `drem-backend-${props.branchName}`, { ...props });
+    const infrastructure = new InfrastructurePipelineStage(this, `drem-backend-${props.labelName}`, { ...props });
 
     const infrastructure_stage = pipeline.addStage(infrastructure);
 
@@ -177,7 +174,7 @@ export class CdkPipelineStack extends cdk.Stack {
           "echo 'Starting to deploy the DREM website'",
           'echo website bucket= $sourceBucketName',
           'aws cloudformation describe-stacks --stack-name ' +
-            `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
+            `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
           'python scripts/generate_amplify_config_cfn.py',
           'appsyncId=`cat appsyncId.txt` && aws appsync' +
             ' get-introspection-schema --api-id $appsyncId --format SDL' +
@@ -215,7 +212,7 @@ export class CdkPipelineStack extends cdk.Stack {
           "echo 'Starting to deploy the Leaderboard website'",
           'echo website bucket= $leaderboardSourceBucketName',
           'aws cloudformation describe-stacks --stack-name ' +
-            `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
+            `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
           'python scripts/generate_amplify_config_cfn.py',
           'python scripts/generate_leaderboard_amplify_config_cfn.py',
           'appsyncId=`cat appsyncId.txt` && aws appsync' +
@@ -253,7 +250,7 @@ export class CdkPipelineStack extends cdk.Stack {
           "echo 'Starting to deploy the Streaming overlay website'",
           'echo website bucket= $streamingOverlaySourceBucketName',
           'aws cloudformation describe-stacks --stack-name ' +
-            `drem-backend-${props.branchName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
+            `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
           'python scripts/generate_amplify_config_cfn.py',
           'python scripts/generate_stream_overlays_amplify_config_cfn.py',
           'appsyncId=`cat appsyncId.txt` && aws appsync' +

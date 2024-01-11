@@ -6,8 +6,12 @@
 ## CONFIG
 include build.config
 
-ifndef branch
-override branch = main
+ifndef label
+override label = main
+endif
+
+ifndef source_branch
+override source_branch = main
 endif
 
 ## CONSTANTS
@@ -27,7 +31,7 @@ install: pipeline.deploy	## Uploads the artifact and build the deploy pipeline
 
 .PHONY: bootstrap
 bootstrap: 					## Bootstraps the CDK environment
-	cdk bootstrap -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
+	cdk bootstrap -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
 
 .PHONY: clean
 clean: pipeline.clean s3.clean
@@ -35,39 +39,39 @@ clean: pipeline.clean s3.clean
 ## Dev related targets
 
 pipeline.synth: 				## Synth the CDK pipeline
-	npx cdk synth -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
+	npx cdk synth -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
 
 pipeline.deploy: 				## Deploy the CDK pipeline
-	npx cdk deploy -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
+	npx cdk deploy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
 
 pipeline.clean: 				## Destroys the CDK pipeline
-	npx cdk destroy -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
+	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
 
 drem.clean-infrastructure:			## Delete DREM application
-	aws cloudformation delete-stack --stack-name drem-backend-$(branch)-infrastructure --region $(region) -c source_branch=$(source_branch)
+	aws cloudformation delete-stack --stack-name drem-backend-$(label)-infrastructure --region $(region) -c source_branch=$(source_branch)
 
 drem.clean-base:			## Delete DREM application
-	aws cloudformation delete-stack --stack-name drem-backend-$(branch)-base --region $(region) -c source_branch=$(source_branch)
+	aws cloudformation delete-stack --stack-name drem-backend-$(label)-base --region $(region) -c source_branch=$(source_branch)
 
 pipeline.trigger: 				## Creates the zipfile and uploads it to S3 to trigger the pipeline
 	@echo "Packaging build artifact"
 	-rm drem.zip
 	zip -r drem.zip . -x ./.venv/\* ./.git/\* ./website/build/\* ./website/node_modules/\* ./node_modules/\* ./cdk.out/\* ./website-leaderboard/build/\* ./website-leaderboard/node_modules/\* ./website-stream-overlays/build/\* ./website-stream-overlays/node_modules/\*
 	@echo "upload artifact to S3 bucket"
-	aws s3 cp drem.zip s3://$(dremBucket)/$(branch)/
+	aws s3 cp drem.zip s3://$(dremBucket)/$(label)/
 
 manual.deploy:  				## Deploy via cdk
-	npx cdk deploy --c manual_deploy=True -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) --all
+	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) --all
 
 manual.deploy.hotswap: 				## Deploy via cdk --hotswap
-	npx cdk deploy --c manual_deploy=True -c email=$(email) -c branch=$(branch) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) --all --hotswap
+	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) --all --hotswap
 
 local.install:					## Install Javascript dependencies
 	npm install
 
 local.config:					## Setup local config based on branch
 	echo "{}" > ${dremSrcPath}/config.json
-	aws cloudformation describe-stacks --region $(region) --stack-name drem-backend-$(branch)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
+	aws cloudformation describe-stacks --region $(region) --stack-name drem-backend-$(label)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
 	python3 scripts/generate_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL ./$(dremSrcPath)/graphql/schema.graphql
 	current_dir=$(pwd)
@@ -88,7 +92,7 @@ local.config:					## Setup local config based on branch
 
 local.config.docker:					## Setup local config based on branch
 	echo "{}" > ${dremSrcPath}/config.json
-	aws cloudformation describe-stacks --region $(region) --stack-name drem-backend-$(branch)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
+	aws cloudformation describe-stacks --region $(region) --stack-name drem-backend-$(label)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
 	python3 scripts/generate_amplify_config_cfn.py --docker
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL ./$(dremSrcPath)/graphql/schema.graphql
 	current_dir=$(pwd)

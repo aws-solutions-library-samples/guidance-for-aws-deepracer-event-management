@@ -42,12 +42,12 @@ if (mailAddress) {
   process.exit(-1);
 }
 
-let branchName = app.node.tryGetContext('branch');
-if (branchName) {
-  console.info('Use provided Branch Name: ' + branchName);
+let labelName = app.node.tryGetContext('branch');
+if (labelName) {
+  console.info('Use provided Branch Name: ' + labelName);
 } else {
-  branchName = 'main';
-  console.info('Branch Name not provided, using default: ' + branchName);
+  labelName = 'main';
+  console.info('Label Name not provided, using default: ' + labelName);
 }
 
 let sourceBranchName = app.node.tryGetContext('source_branch');
@@ -62,13 +62,13 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
   console.info('Manual Deploy started....');
 
   // Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
-  const baseStack = new BaseStack(app, `drem-backend-${branchName}-base`, {
+  const baseStack = new BaseStack(app, `drem-backend-${labelName}-base`, {
     email: mailAddress,
-    branchName: branchName,
+    labelName: labelName,
     env: env,
   });
 
-  new DeepracerEventManagerStack(app, `drem-backend-${branchName}-infrastructure`, {
+  new DeepracerEventManagerStack(app, `drem-backend-${labelName}-infrastructure`, {
     baseStackName: baseStack.stackName,
     cloudfrontDistribution: baseStack.cloudfrontDistribution,
     tacCloudfrontDistribution: baseStack.tacCloudfrontDistribution,
@@ -89,8 +89,8 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
   });
 } else {
   console.info('Pipeline deploy started...');
-  new CdkPipelineStack(app, `drem-pipeline-${branchName}`, {
-    branchName: branchName,
+  new CdkPipelineStack(app, `drem-pipeline-${labelName}`, {
+    labelName: labelName,
     sourceBranchName: sourceBranchName,
     email: mailAddress,
     env: env,
