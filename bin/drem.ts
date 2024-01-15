@@ -99,7 +99,7 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
   console.info('Pipeline deploy started...');
   new CdkPipelineStack(app, `drem-pipeline-${labelName}`, {
     labelName: labelName,
-    sourceRepo: sourceBranchName,
+    sourceRepo: sourceRepo,
     sourceBranchName: sourceBranchName,
     email: mailAddress,
     env: env,
