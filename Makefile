@@ -33,7 +33,7 @@ install: pipeline.deploy	## Uploads the artifact and build the deploy pipeline
 
 .PHONY: bootstrap
 bootstrap: 					## Bootstraps the CDK environment
-	cdk bootstrap -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
+	cdk bootstrap -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
 
 .PHONY: clean
 clean: pipeline.clean s3.clean
@@ -41,25 +41,25 @@ clean: pipeline.clean s3.clean
 ## Dev related targets
 
 pipeline.synth: 				## Synth the CDK pipeline
-	npx cdk synth -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
+	npx cdk synth -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
 
 pipeline.deploy: 				## Deploy the CDK pipeline
 	npx cdk deploy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
 
 pipeline.clean: 				## Destroys the CDK pipeline
-	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
+	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
 
 drem.clean-infrastructure:			## Delete DREM application
-	aws cloudformation delete-stack --stack-name drem-backend-$(label)-infrastructure --region $(region) -c source_branch=$(source_branch)
+	aws cloudformation delete-stack --stack-name drem-backend-$(label)-infrastructure --region $(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
 
 drem.clean-base:			## Delete DREM application
-	aws cloudformation delete-stack --stack-name drem-backend-$(label)-base --region $(region) -c source_branch=$(source_branch)
+	aws cloudformation delete-stack --stack-name drem-backend-$(label)-base --region $(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
 
 manual.deploy:  				## Deploy via cdk
-	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) --all
+	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) --all
 
 manual.deploy.hotswap: 				## Deploy via cdk --hotswap
-	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) --all --hotswap
+	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) --all --hotswap
 
 local.install:					## Install Javascript dependencies
 	npm install
