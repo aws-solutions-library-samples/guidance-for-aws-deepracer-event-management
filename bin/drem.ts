@@ -50,12 +50,20 @@ if (labelName) {
   console.info('Label Name not provided, using default: ' + labelName);
 }
 
+let sourceRepo = app.node.tryGetContext('source_repo');
+if (sourceRepo) {
+  console.info('Use provided source_repo Name: ' + sourceRepo);
+} else {
+  sourceRepo = 'aws-solutions-library-samples/guidance-for-aws-deepracer-event-management';
+  console.info('source_repo Name not provided, using default: ' + sourceRepo);
+}
+
 let sourceBranchName = app.node.tryGetContext('source_branch');
 if (sourceBranchName) {
-  console.info('Use provided Source_Branch Name: ' + sourceBranchName);
+  console.info('Use provided source_branch Name: ' + sourceBranchName);
 } else {
   sourceBranchName = 'main';
-  console.info('Branch Name not provided, using default: ' + sourceBranchName);
+  console.info('source_branch Name not provided, using default: ' + sourceBranchName);
 }
 
 if (app.node.tryGetContext('manual_deploy') === 'True') {
@@ -91,6 +99,7 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
   console.info('Pipeline deploy started...');
   new CdkPipelineStack(app, `drem-pipeline-${labelName}`, {
     labelName: labelName,
+    sourceRepo: sourceBranchName,
     sourceBranchName: sourceBranchName,
     email: mailAddress,
     env: env,

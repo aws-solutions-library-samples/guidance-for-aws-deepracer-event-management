@@ -10,8 +10,12 @@ ifndef label
 override label = main
 endif
 
+ifndef source_repo
+override source_repo = aws-solutions-library-samples/guidance-for-aws-deepracer-event-management
+endif
+
 ifndef source_branch
-override source_branch = main
+override source_branch = release/stable
 endif
 
 ## CONSTANTS
@@ -40,7 +44,7 @@ pipeline.synth: 				## Synth the CDK pipeline
 	npx cdk synth -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
 
 pipeline.deploy: 				## Deploy the CDK pipeline
-	npx cdk deploy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)
+	npx cdk deploy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
 
 pipeline.clean: 				## Destroys the CDK pipeline
 	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch)

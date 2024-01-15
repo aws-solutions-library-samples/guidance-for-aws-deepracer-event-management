@@ -63,6 +63,7 @@ class InfrastructurePipelineStage extends Stage {
 }
 export interface CdkPipelineStackProps extends cdk.StackProps {
   labelName: string;
+  sourceRepo: string;
   sourceBranchName: string;
   email: string;
   env: Environment;
@@ -82,14 +83,10 @@ export class CdkPipelineStack extends cdk.Stack {
         buildEnvironment: {
           buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
         },
-        input: pipelines.CodePipelineSource.gitHub(
-          'StevenAskwith/guidance-for-aws-deepracer-event-management',
-          props.sourceBranchName,
-          {
-            authentication: cdk.SecretValue.secretsManager('drem/github-token'),
-            trigger: cdk.aws_codepipeline_actions.GitHubTrigger.POLL,
-          }
-        ),
+        input: pipelines.CodePipelineSource.gitHub(props.sourceRepo, props.sourceBranchName, {
+          authentication: cdk.SecretValue.secretsManager('drem/github-token'),
+          trigger: cdk.aws_codepipeline_actions.GitHubTrigger.POLL,
+        }),
         commands: [
           // Node update
           `n ${NODE_VERSION}`,

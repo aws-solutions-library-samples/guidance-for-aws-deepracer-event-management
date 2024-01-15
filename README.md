@@ -74,7 +74,8 @@ In your terminal of command line, enter the following commands:
 export REGION=<your-region>
 # Your e-mail
 export EMAIL=<your-email>
-# Version to deploy
+# Version to deploy, release/stable is the default, but you can pin to a version e.g. release/2.6
+# Release list is available https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/releases
 export SOURCE_BRANCH=release/stable
 # If you are not using the default label 'main', change this to match your environment
 export LABEL=main
@@ -145,7 +146,7 @@ make bootstrap
 cdk bootstrap -c email=$EMAIL -c account=$ACCOUNT -c region=$REGION -c source_branch=$SOURCE_BRANCH -c label=$LABEL
 ```
 
-### Step 7: Install DREM
+#### Step 7: Install DREM
 
 This command creates a CodePipeline pipeline, this pipeline coordinates the build and deployment of all required DREM services.
 
@@ -153,11 +154,11 @@ This command creates a CodePipeline pipeline, this pipeline coordinates the buil
 make install
 ```
 
-### Step 8: Accessing DREM
+#### Step 8: Accessing DREM
 
 The deployment of DREM through the pipeline will take approximately 1 hour. You can monitor the progress of the deployment by accessing the AWS Account you are deploying DREM into and going into AWS CodePipeline and reviewing the pipeline. As part of the deployment, the email address provided will become the admin user for DREM. An email with temporary credentials to access DREM as well as the a link will be sent to the email address provided. **Note:** The link won't work until the codepipeline has fully finished. When logging in for first time, the username is `admin` and the user will be prompted to change the temporary password.
 
-### Step 9: Setup Amazon Cognito to use Amazon SES for email sending (optional)
+#### Step 9: Setup Amazon Cognito to use Amazon SES for email sending (optional)
 
 In the default configuration Amazon Cognito only supports 50 signups a day due to a hard limit on the number of signup emails it is allowed to send. To resolve this you must enable the [integration with Amazon SES](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-email.html).
 
@@ -174,7 +175,37 @@ To manually enable this integration, you can follow these steps:
 
 ### Option 2. Deploy DREM as a developer / contributor
 
-### Development prerequisites
+#### Prerequisites
+
+Complete all steps in [Option 1. Deploy DREM for use at an event](#option-1-deploy-drem-for-use-at-an-event)
+
+#### Fork the DREM Repo
+
+Make sure you have a GitHub account setup, then make a [fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) of the [DREM repo](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management). Forking can be done by logging into GitHub and then clicking "Fork" on the top right of the DREM repo home page.
+
+#### Update build.config
+
+Edit the build.config you created earlier add the following line, substituting the name of your repo:
+
+```sh
+source_repo=<you-github-username>/guidance-for-aws-deepracer-event-management
+```
+
+and edit the source_branch to match a branch in your fork, probably `main` to start with
+
+```sh
+source_branch=main
+```
+
+#### Deploy the updated pipeline
+
+This command deploys the updated CodePipeline pipeline, pointing at your new fork and branch.
+
+```sh
+make install
+```
+
+#### Development prerequisites
 
 As per the deployment prerequisites with the following additional tools
 
@@ -188,7 +219,7 @@ We recommend that you use the Makefile based commands to simplify the steps requ
 
 If you plan to help develop DREM and contribute code, the initial deployment of DREM is the same as above. Once DREM has deployed, to make the deployed DREM stack available for local development, run the following commands, alternatively the stack can be run using docker compose to create containers for each of the three react applications that make up DREM:
 
-### Local development
+### Local frontend development
 
 Running all resources and installing all dependencies on the local machine
 
@@ -281,6 +312,10 @@ To execute a command in a running container
 ```sh
 docker compose run <container name> <command>
 ```
+
+#### Backend deployment
+
+To deploy changes to your backend (Cognito, Lambda, DynamoDB, etc.), make the updates to CDK and then commit the changes to your fork and branch that you have pointed the pipeline at and the pipeline will automatically detect and deploy the changes.
 
 ### Cleanup
 
