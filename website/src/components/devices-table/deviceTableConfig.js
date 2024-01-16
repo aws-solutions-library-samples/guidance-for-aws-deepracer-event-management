@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import i18next from '../../i18n';
 import { formatAwsDateTime } from '../../support-functions/time';
 
-export const DeviceLink = ({ type, IP, pingStatus }) => {
+export const DeviceLink = ({ type, IP, deviceUiPassword, pingStatus }) => {
   const { t } = useTranslation();
   if (pingStatus === 'Online')
     if (type === 'timer')
@@ -16,7 +16,7 @@ export const DeviceLink = ({ type, IP, pingStatus }) => {
       return (
         <>
           <div>
-            <Link external href={`https://${IP}/`}>
+            <Link external href={`https://${IP}/?epwd=${atob(deviceUiPassword)}`}>
               {t('devices.device-links.car')}
             </Link>
           </div>
@@ -124,7 +124,7 @@ export const ColumnConfiguration = () => {
         id: 'deviceLinks',
         header: i18next.t('devices.device-links'),
         cell: (item) => (
-          <DeviceLink type={item.Type} IP={item.IpAddress} pingStatus={item.PingStatus} />
+          <DeviceLink type={item.Type} IP={item.IpAddress} deviceUiPassword={item.DeviceUiPassword} pingStatus={item.PingStatus} />
         ),
         sortingField: 'deviceLinks',
         width: 200,
