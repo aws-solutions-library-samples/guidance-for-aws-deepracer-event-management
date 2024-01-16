@@ -32,7 +32,7 @@ def lambda_handler(event: dict, context: LambdaContext):
                 tag_keys_to_copy = [
                     "fleetName",
                     "fleetId",
-                    "base64carUiPassword",
+                    "DeviceUiPassword",
                     "Type",
                 ]
                 for tag in tags_response["TagList"]:

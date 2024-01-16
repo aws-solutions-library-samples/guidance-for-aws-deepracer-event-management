@@ -16,7 +16,6 @@ DDB_TABLE_NAME = os.environ["DDB_TABLE"]
 DDB_PING_STATE_INDEX_NAME = os.environ["DDB_PING_STATE_INDEX"]
 dynamodb = boto3.resource("dynamodb")
 client_dynamodb = boto3.client("dynamodb")
-ddbTable = dynamodb.Table(DDB_TABLE_NAME)
 paginator_dynamodb = client_dynamodb.get_paginator("query")
 client_ssm = boto3.client("ssm")
 
@@ -160,14 +159,14 @@ def carSetTaillightColor(resourceIds: List[str], selectedColor: str):
                 f" {color['red_pwm']}, blue: {color['blue_pwm']}, green:"
                 f" {color['green_pwm']}}}\""
             )
-            
+
             callRosService(instance_id, rosCommand)
-        
+
         return {"result": "success"}
     except Exception as error:
         logger.exception(error)
         return error
-    
+
 
 @app.resolver(type_name="Mutation", field_name="carEmergencyStop")
 def carEmergencyStop(resourceIds: List[str]):
@@ -175,35 +174,36 @@ def carEmergencyStop(resourceIds: List[str]):
         logger.info(resourceIds)
 
         for instance_id in resourceIds:
-            rosCommand = 'ros2 service call /ctrl_pkg/enable_state deepracer_interfaces_pkg/srv/EnableStateSrv "{is_active: false}"'
+            rosCommand = (
+                "ros2 service call /ctrl_pkg/enable_state"
+                ' deepracer_interfaces_pkg/srv/EnableStateSrv "{is_active: false}"'
+            )
             callRosService(instance_id, rosCommand)
 
         return {"result": "success"}
     except Exception as error:
         logger.exception(error)
         return error
-    
+
 
 def callRosService(instaneId: str, rosCommand: str):
     finalCommand = [
-                "#!/bin/bash",
-                'export HOME="/home/deepracer"',
-                "source /opt/ros/foxy/setup.bash",
-                "source /opt/intel/openvino_2021/bin/setupvars.sh",
-                "source /opt/aws/deepracer/lib/local_setup.bash",
-                rosCommand,
-            ]
+        "#!/bin/bash",
+        'export HOME="/home/deepracer"',
+        "source /opt/ros/foxy/setup.bash",
+        "source /opt/intel/openvino_2021/bin/setupvars.sh",
+        "source /opt/aws/deepracer/lib/local_setup.bash",
+        rosCommand,
+    ]
 
     client_ssm.send_command(
         InstanceIds=[instaneId],
         DocumentName="AWS-RunShellScript",
-        Parameters={
-            "commands": finalCommand
-        },
+        Parameters={"commands": finalCommand},
     )
 
 
-@app.resolver(type_name="Mutation", field_name="carRestartService")    
+@app.resolver(type_name="Mutation", field_name="carRestartService")
 def carRestartService(resourceIds: List[str]):
     try:
         logger.info(resourceIds)
@@ -216,10 +216,11 @@ def carRestartService(resourceIds: List[str]):
                     "commands": [
                         "#!/bin/bash",
                         'export HOME="/home/deepracer"',
-                        'systemctl restart deepracer-core',
+                        "systemctl restart deepracer-core",
                     ]
-                })
-        
+                },
+            )
+
         return {"result": "success"}
     except Exception as error:
         logger.exception(error)
