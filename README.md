@@ -183,12 +183,24 @@ Complete all steps in [Option 1. Deploy DREM for use at an event](#option-1-depl
 
 Make sure you have a GitHub account setup, then make a [fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) of the [DREM repo](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management). Forking can be done by logging into GitHub and then clicking "Fork" on the top right of the DREM repo home page.
 
+Check the git URL for your local repo
+
+```sh
+git remote get-url origin
+```
+
+Switch the repo to your fork
+
+```sh
+git remote set-url origin <your-github-username>/guidance-for-aws-deepracer-event-management
+```
+
 #### Update build.config
 
 Edit the build.config you created earlier add the following line, substituting the name of your repo:
 
 ```sh
-source_repo=<you-github-username>/guidance-for-aws-deepracer-event-management
+source_repo=<your-github-username>/guidance-for-aws-deepracer-event-management
 ```
 
 and edit the source_branch to match a branch in your fork, probably `main` to start with
