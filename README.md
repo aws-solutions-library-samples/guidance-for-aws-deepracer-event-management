@@ -173,7 +173,7 @@ To manually enable this integration, you can follow these steps:
 6. Switch the configuration to `Send email with Amazon SES` and complete the rest of the email configuration appropriately
 7. Click `Save changes`
 
-### Option 2. Deploy DREM as a developer / contributor
+### Option 2. Deploy DREM as a developer / contributor
 
 #### Prerequisites
 
@@ -321,29 +321,29 @@ To deploy changes to your backend (Cognito, Lambda, DynamoDB, etc.), make the up
 
 When you have finished using DREM for your event, the application can be removed using either Makefile based commands or manually.
 
-### Step 1: Remove the pipeline
+#### Step 1: Remove the pipeline
 
-#### Using make
+##### Using make
 
 ```sh
 make clean
 ```
 
-#### Manually
+##### Manually
 
 ```sh
 npx cdk destroy -c email=$EMAIL -c account=$ACCOUNT -c region=$REGION -c branch=$BRANCH
 ```
 
-### Step 2: Remove the infrastructure stack
+#### Step 2: Remove the infrastructure stack
 
-#### Using make
+##### Using make
 
 ```sh
 make drem.clean-infrastructure
 ```
 
-#### Manually
+##### Manually
 
 ```sh
 aws cloudformation delete-stack --stack-name drem-backend-$BRANCH-infrastructure --REGION $REGION
