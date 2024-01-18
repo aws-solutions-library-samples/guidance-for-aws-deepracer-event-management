@@ -208,7 +208,6 @@ export function TopNav(props) {
             {
               type: 'link',
               text: t('topnav.timer-activation'),
-              info: <Badge color="blue">Beta</Badge>,
               href: '/admin/timer_activation',
             },
           ],
