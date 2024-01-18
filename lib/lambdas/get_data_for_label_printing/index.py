@@ -29,7 +29,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         response_item = ddb_response["Item"]
 
         decoded_password = base64.b64decode(
-            response_item.get("base64carUiPassword", "").encode("utf-8")
+            response_item.get("DeviceUiPassword", "").encode("utf-8")
         ).decode("utf-8")
 
         label_info = {

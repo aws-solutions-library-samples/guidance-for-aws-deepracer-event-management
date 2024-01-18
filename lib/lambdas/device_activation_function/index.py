@@ -33,7 +33,7 @@ def deviceActivation(
         now = datetime.now()
         datestr = now.strftime("%Y-%m-%d-%H:%M")
 
-        base64deviceUiPassword = base64.b64encode(
+        encodedDeviceUiPassword = base64.b64encode(
             deviceUiPassword.encode("utf-8")
         ).decode(
             "utf-8"
@@ -49,7 +49,7 @@ def deviceActivation(
                 {"Key": "Type", "Value": deviceType},
                 {"Key": "fleetName", "Value": fleetName},
                 {"Key": "fleetId", "Value": fleetId},
-                {"Key": "base64deviceUiPassword", "Value": base64deviceUiPassword},
+                {"Key": "DeviceUiPassword", "Value": encodedDeviceUiPassword},
             ],
         )
 
