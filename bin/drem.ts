@@ -42,25 +42,41 @@ if (mailAddress) {
   process.exit(-1);
 }
 
-let branchName = app.node.tryGetContext('branch');
-if (branchName) {
-  console.info('Use provided Branch Name: ' + branchName);
+let labelName = app.node.tryGetContext('label');
+if (labelName) {
+  console.info('Use provided Label Name: ' + labelName);
 } else {
-  branchName = 'main';
-  console.info('Branch Name not provided, using default: ' + branchName);
+  labelName = 'main';
+  console.info('Label Name not provided, using default: ' + labelName);
+}
+
+let sourceRepo = app.node.tryGetContext('source_repo');
+if (sourceRepo) {
+  console.info('Use provided source_repo Name: ' + sourceRepo);
+} else {
+  sourceRepo = 'aws-solutions-library-samples/guidance-for-aws-deepracer-event-management';
+  console.info('source_repo Name not provided, using default: ' + sourceRepo);
+}
+
+let sourceBranchName = app.node.tryGetContext('source_branch');
+if (sourceBranchName) {
+  console.info('Use provided source_branch Name: ' + sourceBranchName);
+} else {
+  sourceBranchName = 'main';
+  console.info('source_branch Name not provided, using default: ' + sourceBranchName);
 }
 
 if (app.node.tryGetContext('manual_deploy') === 'True') {
   console.info('Manual Deploy started....');
 
   // Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
-  const baseStack = new BaseStack(app, `drem-backend-${branchName}-base`, {
+  const baseStack = new BaseStack(app, `drem-backend-${labelName}-base`, {
     email: mailAddress,
-    branchName: branchName,
+    labelName: labelName,
     env: env,
   });
 
-  new DeepracerEventManagerStack(app, `drem-backend-${branchName}-infrastructure`, {
+  new DeepracerEventManagerStack(app, `drem-backend-${labelName}-infrastructure`, {
     baseStackName: baseStack.stackName,
     cloudfrontDistribution: baseStack.cloudfrontDistribution,
     tacCloudfrontDistribution: baseStack.tacCloudfrontDistribution,
@@ -81,8 +97,10 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
   });
 } else {
   console.info('Pipeline deploy started...');
-  new CdkPipelineStack(app, `drem-pipeline-${branchName}`, {
-    branchName: branchName,
+  new CdkPipelineStack(app, `drem-pipeline-${labelName}`, {
+    labelName: labelName,
+    sourceRepo: sourceRepo,
+    sourceBranchName: sourceBranchName,
     email: mailAddress,
     env: env,
   });

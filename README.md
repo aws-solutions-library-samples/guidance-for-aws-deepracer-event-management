@@ -51,62 +51,72 @@ The deployment is currently supported in theses regions:
 
 Please note: It takes approximately an hour for all of the DREM resources to be deployed.
 
-1. Create an S3 bucket to act as the source for the codepipeline **_The bucket must have versioning enabled_** e.g. drem-pipeline-zip-123456789012-eu-west-1 (replace 123456789012 with your account ID to ensure the name is unique)
-2. Create a Parameter Store key called '/drem/S3RepoBucket' with a string value of the S3 Bucket ARN for the codepipeline source, for example, `arn:aws:s3:::drem-pipeline-zip-123456789012-eu-west-1`
-3. Install build dependencies
-4. Create required build.config (if using Make)
-5. Bootstrap AWS CDK
-6. Install DREM
-7. Accessing DREM
-8. Setup Amazon Cognito to use Amazon SES for email sending (optional)
+1. [Setup environment](#step-1-setup-environment)
+2. [Create a GitHub personal access token](#step-2-create-a-github-personal-access-token)
+3. [Store Token in Secrets Manager](#step-3-store-token-in-secrets-manager)
+4. [Install build dependencies](#step-4-install-build-dependencies)
+5. [Create required build.config (if using Make)](#step-5-create-the-build-config-for-make)
+6. [Bootstrap AWS CDK](#step-6-bootstrap-aws-cdk)
+7. [Install DREM](#step-7-install-drem)
+8. [Accessing DREM](#step-8-accessing-drem)
+9. [Setup Amazon Cognito to use Amazon SES for email sending (optional)](#step-9-setup-amazon-cognito-to-use-amazon-ses-for-email-sending-optional)
 
 ### Option 1. Deploy DREM for use at an event
 
 If you are deploying DREM for use to support your AWS DeepRacer event(s)
 
-#### Step 1: Setup environment and create S3 bucket and enable versioning
+#### Step 1: Setup environment
 
 In your terminal of command line, enter the following commands:
 
 ```sh
-# Bucket used to put deep racer event manager assets
-export BUCKET=<your-source-bucket-name>
 # Region where you wish to deploy
 export REGION=<your-region>
 # Your e-mail
 export EMAIL=<your-email>
+# Version to deploy, release/stable is the default, but you can pin to a version e.g. release/2.6
+# Release list is available https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/releases
+export SOURCE_BRANCH=release/stable
+# If you are not using the default label 'main', change this to match your environment
+export LABEL=main
+
+# Setting variables we can do programmatically.
+export ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
 
 # Optional (if you have AWS CLI configured with you credentials already)
 export AWS_ACCESS_KEY_ID=<key>
 export AWS_SECRET_ACCESS_KEY=<secret>
 export AWS_SESSION_TOKEN=<token>
-
-# Setting variables we can do automatically.
-export BRANCH=$(git symbolic-ref --short HEAD)
-export ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
-
 ```
 
-```sh
-# Bucket creation
-aws s3 mb s3://$BUCKET --region $REGION
-# Versioning activation on the bucket
-aws s3api put-bucket-versioning --bucket $BUCKET --versioning-configuration Status=Enabled
-```
+#### Step 2: Create a GitHub personal access token
 
-#### Step 2: Create a Parameter Store key
+Follow the instructions on [GitHub Docs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic) to create a personal access token (Classic).
 
-```sh
-aws ssm put-parameter --name /drem/S3RepoBucket --value arn:aws:s3:::$BUCKET --type String --region $REGION
-```
+When creating the token select `public_repo` for the selected scope.
 
-#### Step 3: Install build dependencies
+#### Step 3: Store Token in Secrets Manager
+
+Store the personal access token in Secrets Manager.
+
+1. In the AWS Management Console, navigate to Secrets Manager
+2. Click Store a new secret
+3. On the Choose secret type step select Other type of secret
+4. Select the Plaintext tab
+5. Completely remove the example text and paste your secret with no formatting no leading or trailing spaces
+6. Select the aws/secretsmanager encryption key
+7. Click Next
+8. On the Configure secret step set the Secret name to `drem/github-token`
+9. On the Configure rotation step click Next
+10. On the Review step click Store
+
+#### Step 4: Install build dependencies
 
 ```sh
 npm install
 ```
 
-#### Step 4: Create the build config for Make
+#### Step 5: Create the build config for Make
 
 Note. This step is only required if Make is used for the later steps.
 
@@ -116,10 +126,11 @@ Build your `build.config` file
 echo "region=$REGION" >> build.config
 echo "email=$EMAIL" >> build.config
 echo "account_id=$ACCOUNT" >> build.config
-echo "branch=$BRANCH" >> build.config
+echo "label=$LABEL" >> build.config
+echo "source_branch=$SOURCE_BRANCH" >> build.config
 ```
 
-#### Step 5: Bootstrap AWS CDK
+#### Step 6: Bootstrap AWS CDK
 
 In this step, you bootstrap the CDK. Two options are listed below.
 
@@ -132,46 +143,22 @@ make bootstrap
 ##### Manually
 
 ```sh
-cdk bootstrap -c email=$EMAIL -c account=$ACCOUNT -c region=$REGION -c branch=$BRANCH
+cdk bootstrap -c email=$EMAIL -c account=$ACCOUNT -c region=$REGION -c source_branch=$SOURCE_BRANCH -c label=$LABEL
 ```
 
-### Step 6: Install DREM
+#### Step 7: Install DREM
 
-This command uploads all required files into the specified S3 bucket and then creates a CodePipeline pipeline. This pipeline coordinates the build and deployment of all required DREM services.
-
-##### Using make
-
-Deploy
+This command creates a CodePipeline pipeline, this pipeline coordinates the build and deployment of all required DREM services.
 
 ```sh
 make install
 ```
 
-##### Manually
-
-Create a zip of DREM
-
-```sh
-zip -r drem.zip . -x ./.venv/\* ./.git/\* ./website/build/\* ./website/node_modules/\* ./node_modules/\* ./cdk.out/\* ./website-leaderboard/build/\* ./website-leaderboard/node_modules/\* ./website-stream-overlays/build/\* ./website-stream-overlays/node_modules/\*
-```
-
-Copy `drem.zip` to the S3 bucket created earlier using the key in parameter store for the bucket name subsituting `<branch>` for the branch name (usually `main`)
-
-```sh
-aws s3 cp drem.zip s3://$(aws ssm get-parameter --name '/drem/S3RepoBucket' --output text --query 'Parameter.Value' --region $REGION| cut -d ':' -f 6)/<branch>/)
-```
-
-Deploy
-
-```sh
-npx cdk deploy -c email=<admin-email> -c account=1234567890 -c region=<optional> -c branch=<optional>
-```
-
-#### Step 7: Accessing DREM
+#### Step 8: Accessing DREM
 
 The deployment of DREM through the pipeline will take approximately 1 hour. You can monitor the progress of the deployment by accessing the AWS Account you are deploying DREM into and going into AWS CodePipeline and reviewing the pipeline. As part of the deployment, the email address provided will become the admin user for DREM. An email with temporary credentials to access DREM as well as the a link will be sent to the email address provided. **Note:** The link won't work until the codepipeline has fully finished. When logging in for first time, the username is `admin` and the user will be prompted to change the temporary password.
 
-#### Step 8: Setup Amazon Cognito to use Amazon SES for email sending (optional)
+#### Step 9: Setup Amazon Cognito to use Amazon SES for email sending (optional)
 
 In the default configuration Amazon Cognito only supports 50 signups a day due to a hard limit on the number of signup emails it is allowed to send. To resolve this you must enable the [integration with Amazon SES](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-email.html).
 
@@ -186,9 +173,51 @@ To manually enable this integration, you can follow these steps:
 6. Switch the configuration to `Send email with Amazon SES` and complete the rest of the email configuration appropriately
 7. Click `Save changes`
 
-### Option 2. Deploy DREM as a developer / contributor
+### Option 2. Deploy DREM as a developer / contributor
 
-### Development prerequisites
+#### Prerequisites
+
+Complete all steps in [Option 1. Deploy DREM for use at an event](#option-1-deploy-drem-for-use-at-an-event)
+
+#### Fork the DREM Repo
+
+Make sure you have a GitHub account setup, then make a [fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) of the [DREM repo](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management). Forking can be done by logging into GitHub and then clicking "Fork" on the top right of the DREM repo home page.
+
+Check the git URL for your local repo
+
+```sh
+git remote get-url origin
+```
+
+Switch the repo to your fork
+
+```sh
+git remote set-url origin <your-github-username>/guidance-for-aws-deepracer-event-management
+```
+
+#### Update build.config
+
+Edit the build.config you created earlier add the following line, substituting the name of your repo:
+
+```sh
+source_repo=<your-github-username>/guidance-for-aws-deepracer-event-management
+```
+
+and edit the source_branch to match a branch in your fork, probably `main` to start with
+
+```sh
+source_branch=main
+```
+
+#### Deploy the updated pipeline
+
+This command deploys the updated CodePipeline pipeline, pointing at your new fork and branch.
+
+```sh
+make install
+```
+
+#### Development prerequisites
 
 As per the deployment prerequisites with the following additional tools
 
@@ -202,7 +231,7 @@ We recommend that you use the Makefile based commands to simplify the steps requ
 
 If you plan to help develop DREM and contribute code, the initial deployment of DREM is the same as above. Once DREM has deployed, to make the deployed DREM stack available for local development, run the following commands, alternatively the stack can be run using docker compose to create containers for each of the three react applications that make up DREM:
 
-### Local development
+### Local frontend development
 
 Running all resources and installing all dependencies on the local machine
 
@@ -296,33 +325,37 @@ To execute a command in a running container
 docker compose run <container name> <command>
 ```
 
+#### Backend deployment
+
+To deploy changes to your backend (Cognito, Lambda, DynamoDB, etc.), make the updates to CDK and then commit the changes to your fork and branch that you have pointed the pipeline at and the pipeline will automatically detect and deploy the changes.
+
 ### Cleanup
 
 When you have finished using DREM for your event, the application can be removed using either Makefile based commands or manually.
 
-### Step 1: Remove the pipeline
+#### Step 1: Remove the pipeline
 
-#### Using make
+##### Using make
 
 ```sh
 make clean
 ```
 
-#### Manually
+##### Manually
 
 ```sh
 npx cdk destroy -c email=$EMAIL -c account=$ACCOUNT -c region=$REGION -c branch=$BRANCH
 ```
 
-### Step 2: Remove the infrastructure stack
+#### Step 2: Remove the infrastructure stack
 
-#### Using make
+##### Using make
 
 ```sh
 make drem.clean-infrastructure
 ```
 
-#### Manually
+##### Manually
 
 ```sh
 aws cloudformation delete-stack --stack-name drem-backend-$BRANCH-infrastructure --REGION $REGION
