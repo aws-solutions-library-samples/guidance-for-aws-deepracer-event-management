@@ -3,7 +3,7 @@ import { formatAwsDateTime } from '../support-functions/time';
 import { ModelUploadStatus } from './modelUploadStatus';
 
 export const ColumnConfigurationOperator = () => {
-  return {
+  var returnObject = {
     defaultVisibleColumns: ['username', 'modelname', 'status', 'uploadedDateTime'],
     visibleContentOptions: [
       {
@@ -91,7 +91,7 @@ export const ColumnConfigurationOperator = () => {
         id: 'uploadedDateTime',
         header: i18next.t('models.upload-date'),
         cell: (item) => formatAwsDateTime(item.fileMetaData.uploadedDateTime) || '-',
-        // sortingField: 'uploadedDateTime',
+        sortingField: 'uploadedDateTime',
         width: 240,
         minWidth: 150,
       },
@@ -139,6 +139,10 @@ export const ColumnConfigurationOperator = () => {
       },
     ],
   };
+  returnObject.defaultSortingColumn = returnObject.columnDefinitions[4];  // uploadedDateTime
+  returnObject.defaultSortingIsDescending = true;
+
+  return returnObject;
 };
 
 export const FilteringPropertiesOperator = () => {

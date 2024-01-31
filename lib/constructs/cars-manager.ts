@@ -385,6 +385,7 @@ export class CarManager extends Construct {
         fleetId: GraphqlType.id(),
         fleetName: GraphqlType.string(),
         Type: GraphqlType.string(),
+        DeviceUiPassword: GraphqlType.string(),
       },
       directives: [Directive.cognito('admin', 'operator')],
     });
