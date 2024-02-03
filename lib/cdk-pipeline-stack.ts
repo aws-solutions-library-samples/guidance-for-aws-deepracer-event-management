@@ -125,7 +125,9 @@ export class CdkPipelineStack extends cdk.Stack {
 
     const infrastructure = new InfrastructurePipelineStage(this, `drem-backend-${props.labelName}`, { ...props });
 
-    const infrastructure_stage = pipeline.addStage(infrastructure);
+    const infrastructure_stage = pipeline.addStage(infrastructure, {
+      pre: [new pipelines.ManualApprovalStep('DeployDREM')],
+    });
 
     const rolePolicyStatementsForWebsiteDeployStages = [
       new iam.PolicyStatement({
