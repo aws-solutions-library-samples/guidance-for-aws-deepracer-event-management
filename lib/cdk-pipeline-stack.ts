@@ -1,7 +1,10 @@
 import * as cdk from 'aws-cdk-lib';
 import { Environment, Stage } from 'aws-cdk-lib';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
+import * as notifications from 'aws-cdk-lib/aws-codestarnotifications';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as pipelines from 'aws-cdk-lib/pipelines';
 import { Construct } from 'constructs';
 import { BaseStack } from './base-stack';
@@ -125,7 +128,9 @@ export class CdkPipelineStack extends cdk.Stack {
 
     const infrastructure = new InfrastructurePipelineStage(this, `drem-backend-${props.labelName}`, { ...props });
 
-    const infrastructure_stage = pipeline.addStage(infrastructure);
+    const infrastructure_stage = pipeline.addStage(infrastructure, {
+      pre: [new pipelines.ManualApprovalStep('DeployDREM')],
+    });
 
     const rolePolicyStatementsForWebsiteDeployStages = [
       new iam.PolicyStatement({
@@ -284,5 +289,19 @@ export class CdkPipelineStack extends cdk.Stack {
         rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
       })
     );
+
+    pipeline.buildPipeline();
+    const topic = new sns.Topic(this, 'PipelineTopic');
+    topic.addSubscription(new subs.EmailSubscription(props.email));
+    const rule = new notifications.NotificationRule(this, 'NotificationRule', {
+      source: pipeline.pipeline,
+      events: [
+        'codepipeline-pipeline-pipeline-execution-started',
+        'codepipeline-pipeline-pipeline-execution-failed',
+        'codepipeline-pipeline-pipeline-execution-succeeded',
+        'codepipeline-pipeline-manual-approval-needed',
+      ],
+      targets: [topic],
+    });
   }
 }
