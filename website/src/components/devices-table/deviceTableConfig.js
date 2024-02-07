@@ -124,7 +124,12 @@ export const ColumnConfiguration = () => {
         id: 'deviceLinks',
         header: i18next.t('devices.device-links'),
         cell: (item) => (
-          <DeviceLink type={item.Type} IP={item.IpAddress} deviceUiPassword={item.DeviceUiPassword} pingStatus={item.PingStatus} />
+          <DeviceLink
+            type={item.Type}
+            IP={item.IpAddress}
+            deviceUiPassword={item.DeviceUiPassword}
+            pingStatus={item.PingStatus}
+          />
         ),
         sortingField: 'deviceLinks',
         width: 200,
