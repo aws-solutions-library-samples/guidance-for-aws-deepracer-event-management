@@ -156,7 +156,7 @@ export const ColumnConfiguration = () => {
       {
         id: 'lastPingDateTime',
         header: i18next.t('devices.last-ping-time'),
-        cell: (item) => formatAwsDateTime(item.lastPingDateTime) || '-',
+        cell: (item) => formatAwsDateTime(item.LastPingDateTime) || '-',
         sortingField: 'lastPingDateTime',
       },
       {
