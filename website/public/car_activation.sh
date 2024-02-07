@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 usage()
 {
@@ -147,12 +147,16 @@ echo -e -n "\nUpdating car...\n"
 # Update ROS cert
 curl https://repo.ros2.org/repos.key | apt-key add -
 
+# Get latest key from OpenVINO
+curl -o GPG-PUB-KEY-INTEL-SW-PRODUCTS https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS
+
 # Update Ubuntu - removed for now as it takes so long
 # echo -e -n "\nUpdating Ubuntu packages\n"
 # apt-get update
 # apt-get upgrade -y -o Dpkg::Options::="--force-overwrite"
 
-# Update DeepRacer
+# Update DeepRacer packages
 echo -e -n "\nUpdate DeepRacer packages\n"
 apt-get update
 apt-get install -y aws-deepracer-* -o Dpkg::Options::="--force-overwrite"
