@@ -42,83 +42,25 @@ if [ $OPTIND -eq 1 ]; then
     USAGE
 fi
 
-# Check the operating system version and architecture
-# Possible OS versions
-# Ubuntu 16.04 (unsupported), 20.04, 22.04
 
-# Possible hardware
-# amd64 (Intel ATOM - AWS DeepRacer)
-# arm64 (Raspberry 4)
-
-# Check version
-DEVICE=dr     # [dr, rpi]
-ARCH=amd64   # [amd64, arm64]
-
-. /etc/lsb-release
-if [ $DISTRIB_RELEASE = "16.04" ]; then
-    echo -e -n "\nUbuntu 16.04 detected\n"
-    echo -e -n "\nPlease update your car to at least 20.04 -> https://docs.aws.amazon.com/deepracer/latest/developerguide/deepracer-ubuntu-update.html\n"
-    exit 1
-
-elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
-    echo -e -n "\nUbuntu 20.04 or 22.04 detected\n"
-
-    # Set some paths
-    bundlePath=/opt/aws/deepracer/lib/device_console/static
-    systemPath=/opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg
-    templatesPath=/opt/aws/deepracer/lib/device_console/templates
-    webserverPath=/opt/aws/deepracer/lib/webserver_pkg/lib/python3.8/site-packages/webserver_pkg
-
-    # Create backup directory
-    backupDir=${HOME}/backup
-    if [ ! -d ${backupDir} ]; then
-        mkdir ${backupDir}
-    fi
-
-    # What are we running on
-    hw=$(tr -d '\0' </proc/device-tree/model)
-    if [[ $hw == *"Raspberry Pi 4"* ]]; then
-        DEVICE=rpi
-        ARCH=arm64
-    fi
-
-    # All cars
-    if [ $varHost != NULL ]; then
-        SET_HOSTNAME
-        SET_PASSWORD
-        SSM_ACTIVATION
-    fi
-
-    # AWS DeepRacer only
-    if [ $DEVICE = "dr" ]; then
-        DISABLE_IPV6
-        CREATE_WIFI_SERVICE
-        DR_CAR_UPDATE
-        DISABLE_DR_UPDATE
-        DR_CAR_TWEAKS
-    fi
-
-    if [ $DEVICE = "rpi" ]; then
-        CAR_TWEAKS
-    fi
-
-else
-    echo -e -n "\nSorry, not sure what we're running here, terminating.\n"
-    exit 1
-fi
-
+# Disable IPV6 networking
 DISABLE_IPV6() {
+    echo -e -n "\nDISABLE_IPV6\n"
+
     # Disable IPV6 on all interfaces
-    echo -e -n "\nDisable IPV6\n"
+    echo -e -n "\n- Disable IPV6"
     cp /etc/sysctl.conf ${backupDir}/sysctl.conf.bak
     printf "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
 }
 
+# Optionally create a WiFi connection service
 CREATE_WIFI_SERVICE()
 {
+    echo -e -n "\nCREATE_WIFI_SERVICE\n"
+
     # Sort out the Wifi (if we have SSID + Password)
     if [ ${ssid} != NULL ] && [ ${wifiPass} != NULL ]; then
-        echo -e -n "\nAdding WiFi as a service: ${ssid}\n"
+        echo -e -n "\n- Adding WiFi as a service: ${ssid}"
 
         mkdir /etc/deepracer-wifi
         cat > /etc/deepracer-wifi/start-wifi.sh << EOF
@@ -180,18 +122,24 @@ EOF
     fi
 }
 
+# Set the device and car console password
 SET_PASSWORD()
 {
+    echo -e -n "\nSET_PASSWORD\n"
+
     # Update the DeepRacer console password
-    echo -e -n "\n\nUpdating password to: $varPass \n"
-    tempPass=$(echo -n $varPass | sha224sum)
-    IFS=' ' read -ra encryptedPass <<< $tempPass
+    echo -e -n "\n- Updating password to: ${varPass}"
+    tempPass=$(echo -n ${varPass} | sha224sum)
+    IFS=' ' read -ra encryptedPass <<< ${tempPass}
     cp /opt/aws/deepracer/password.txt ${backupDir}/password.txt.bak
     sudo printf "${encryptedPass[0]}" > /opt/aws/deepracer/password.txt
 }
 
+# Update original AWS DeepRacer car software
 DR_CAR_UPDATE()
 {
+    echo -e -n "\nDR_CAR_UPDATE\n"
+
     echo -e -n "\nUpdating DeepRacer car software...\n"
 
     # Update ROS cert
@@ -216,13 +164,16 @@ DR_CAR_UPDATE()
     apt -y autoremove
 }
 
+# Set the device hostname
 SET_HOSTNAME()
 {
+    echo -e -n "\nSET_HOSTNAME\n"
+
     # If changing hostname need to change the flag in network_config.py
-    # /opt/aws/deepracer/lib/deepracer_systems_pkg/lib/python3.8/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py
+    # ${systemPath}/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py
     # SET_HOSTNAME_TO_CHASSIS_SERIAL_NUMBER = False
 
-    echo -e -n "\nSet hostname: ${varHost}\n"
+    echo -e -n "\n- Set hostname: ${varHost}"
     oldHost=$HOSTNAME
     hostnamectl set-hostname ${varHost}
     cp /etc/hosts ${backupDir}/hosts.bak
@@ -234,23 +185,28 @@ SET_HOSTNAME()
     cat ${backupDir}/network_config.py.bak | sed -e "s/SET_HOSTNAME_TO_CHASSIS_SERIAL_NUMBER = True/SET_HOSTNAME_TO_CHASSIS_SERIAL_NUMBER = False/" > ${systemPath}/network_monitor_module/network_config.py
 }
 
+# Disable software_update
 DISABLE_DR_UPDATE()
 {
-    # Disable software_update
-    echo -e -n "\nDisable software update\n"
+    echo -e -n "\nDISABLE_DR_UPDATE\n"
+
+    echo -e -n "\n- Disable software update"
     cp ${systemPath}/software_update_module/software_update_config.py ${backupDir}/software_update_config.py.bak
     rm ${systemPath}/software_update_module/software_update_config.py
     cat ${backupDir}/software_update_config.py.bak | sed -e "s/ENABLE_PERIODIC_SOFTWARE_UPDATE = True/ENABLE_PERIODIC_SOFTWARE_UPDATE = False/" > ${systemPath}/software_update_module/software_update_config.py
 }
 
+# Install and optionally activate AWS SSM agent
 SSM_ACTIVATION()
 {
+    echo -e -n "\nSSM_ACTIVATION\n"
+
     # Install SSM Agent - https://github.com/aws/amazon-ssm-agent
     # DeepRacer -> https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_amd64/amazon-ssm-agent.deb
     # RPi 64 -> https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_arm64/amazon-ssm-agent.deb
     # RPi 32 -> https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_arm/amazon-ssm-agent.deb
 
-    echo -e -n "\nInstall SSM\n"
+    echo -e -n "\n- Install SSM"
     mkdir /tmp/ssm
     curl https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_${ARCH}/amazon-ssm-agent.deb -o /tmp/ssm/amazon-ssm-agent.deb
     dpkg -i /tmp/ssm/amazon-ssm-agent.deb
@@ -258,42 +214,43 @@ SSM_ACTIVATION()
 
     # Enable, Configure and Start SSM if we have the right info
     if [ ${ssmCode} != NULL ]; then
-        echo -e -n "\nActivate SSM\n"
+        echo -e -n "\n- Activate SSM"
         systemctl enable amazon-ssm-agent
         service amazon-ssm-agent stop
         amazon-ssm-agent -register -code "${ssmCode}" -id "${ssmId}" -region "${ssmRegion}"
         service amazon-ssm-agent start
 
-        echo -e -n "\nCar ${varHost} should be visible in DREM in ~5 minutes"
+        echo -e -n "\nCar ${varHost} should be visible in DREM in ~5 minutes\n"
     fi
 }
 
+# Tweaks that only apply to the AWS DeepRacer car
 DR_CAR_TWEAKS()
 {
-    # Tweaks that only apply to the AWS DeepRacer car
+    echo -e -n "\nDR_CAR_TWEAKS\n"
 
     # Disable system suspend
-    echo -e -n "\nDisable system suspend\n"
+    echo -e -n "\n- Disable system suspend"
     systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
 
     # Increase time before the console locks (helpful when troubleshooting) - 30 minutes
-    echo -e -n "\nIncrease console time out\n"
+    echo -e -n "\n- Increase console time out"
     gsettings set org.gnome.desktop.session idle-delay 1800
 
     # Disable network power saving
-    echo -e -n "\nDisable network power saving"
+    echo -e -n "\n- Disable network power saving"
     echo -e '#!/bin/sh\n/usr/sbin/iw dev mlan0 set power_save off\n' > /etc/network/if-up.d/disable_power_saving
     chmod 755 /etc/network/if-up.d/disable_power_saving
 
     # Enable SSH
-    echo -e -n "\nEnable SSH\n"
+    echo -e -n "\n- Enable SSH"
     service ssh start
     ufw allow ssh
 
     # Disable Gnome and other services
     # - to enable gnome - systemctl set-default graphical
     # - to start gnome -  systemctl start gdm3
-    echo -e -n "\nDisable unused services\n"
+    echo -e -n "\n- Disable unused services"
     systemctl set-default multi-user
     systemctl stop bluetooth
     systemctl stop cups-browsed
@@ -340,31 +297,106 @@ DR_CAR_TWEAKS()
 
 CAR_TWEAKS()
 {
+    echo -e -n "\nCAR_TWEAKS\n"
     # Disable video stream by default
-    echo -e -n "\nDisable video stream\n"
-    cp $bundlePath/bundle.js ${backupDir}/bundle.js.bak
-    rm $bundlePath/bundle.js
-    cat ${backupDir}/bundle.js.bak | sed -e "s/isVideoPlaying\: true/isVideoPlaying\: false/" > $bundlePath/bundle.js
+    echo -e -n "\n- Disable video stream"
+    cp ${bundlePath}/bundle.js ${backupDir}/bundle.js.bak
+    rm ${bundlePath}/bundle.js
+    cat ${backupDir}/bundle.js.bak | sed -e "s/isVideoPlaying\: true/isVideoPlaying\: false/" > ${bundlePath}/bundle.js
 
     # Allow multiple logins on the console
-    echo -e -n "\nEnable multiple logins to the console\n"
+    echo -e -n "\n- Enable multiple logins to the console"
     cp /etc/nginx/sites-enabled/default ${backupDir}/default.bak
     rm /etc/nginx/sites-enabled/default
     cat ${backupDir}/default.bak | sed -e "s/auth_request \/auth;/#auth_request \/auth;/" > /etc/nginx/sites-enabled/default
 
     # Change the cookie duration
-    echo -e -n "\nUpdate the cookie duration\n"
-    cp $webserverPath/login.py ${backupDir}/login.py.bak
-    rm $webserverPath/login.py
+    echo -e -n "\n- Update the cookie duration"
+    cp ${webserverPath}/login.py ${backupDir}/login.py.bak
+    rm ${webserverPath}/login.py
     cat ${backupDir}/login.py.bak | sed -e "s/datetime.timedelta(hours=1)/datetime.timedelta(hours=12)/" > $webserverPath/login.py
 
     # Replace the login page
-    echo -e -n "\nReplace the login.html page\n"
-    cp $templatesPath/login.html ${backupDir}/login.html.bak
-    rm $templatesPath/login.html
-    mv login.html $templatesPath/login.html
-
+    echo -e -n "\n- Replace the login.html page"
+    cp ${templatesPath}/login.html ${backupDir}/login.html.bak
+    rm ${templatesPath}/login.html
+    mv login.html ${templatesPath}/login.html
 }
+
+# Check the operating system version and architecture
+# Possible OS versions
+# Ubuntu 16.04 (unsupported), 20.04, 22.04
+
+# Possible hardware
+# amd64 (Intel ATOM - AWS DeepRacer)
+# arm64 (Raspberry 4)
+
+# Check version
+DEVICE=dr       # [dr, rpi]
+ARCH=amd64      # [amd64, arm64]
+
+. /etc/lsb-release
+if [ $DISTRIB_RELEASE = "16.04" ]; then
+    echo -e -n "\n- Ubuntu 16.04 detected"
+    echo -e -n "\nPlease update your car to at least 20.04 -> https://docs.aws.amazon.com/deepracer/latest/developerguide/deepracer-ubuntu-update.html\n"
+    exit 1
+
+elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
+    echo -e -n "\n- Ubuntu 20.04 or 22.04 detected"
+
+    pythonPath=python3.8
+    if [ $DISTRIB_RELEASE = "22.04" ]; then
+        pythonPath=python3.10
+    fi
+    echo -e -n "\n pythonPath = ${pythonPath}\n"
+    # Set some paths
+    bundlePath=/opt/aws/deepracer/lib/device_console/static
+    systemPath=/opt/aws/deepracer/lib/deepracer_systems_pkg/lib/${pythonPath}/site-packages/deepracer_systems_pkg
+    templatesPath=/opt/aws/deepracer/lib/device_console/templates
+    webserverPath=/opt/aws/deepracer/lib/webserver_pkg/lib/${pythonPath}/site-packages/webserver_pkg
+
+    # Create backup directory
+    backupDir=${HOME}/backup
+    if [ ! -d ${backupDir} ]; then
+        echo -e -n "\n- Creating backup directory: ${backupDir}"
+        mkdir ${backupDir}
+    fi
+
+    # What are we running on?
+    hw=$(tr -d '\0' </proc/device-tree/model)
+    if [[ $hw == *"Raspberry Pi 4"* ]]; then
+        echo -e -n "\n- Raspberry Pi"
+        DEVICE=rpi
+        ARCH=arm64
+    fi
+
+    # All cars
+    if [ $varHost != NULL ]; then
+        SET_HOSTNAME
+    fi
+    SET_PASSWORD
+    SSM_ACTIVATION
+
+    # AWS DeepRacer only
+    if [ $DEVICE = "dr" ]; then
+        DISABLE_IPV6
+        CREATE_WIFI_SERVICE
+        DR_CAR_UPDATE
+        DISABLE_DR_UPDATE
+        DR_CAR_TWEAKS
+    fi
+
+    # Raspberry Pi only
+    # if [ $DEVICE = "rpi" ]; then
+    # fi
+
+    # All cars
+    CAR_TWEAKS
+
+else
+    echo -e -n "\nSorry, not sure what we're running here, terminating.\n"
+    exit 1
+fi
 
 # Restart services
 echo -e -n "\nRestarting services\n"
