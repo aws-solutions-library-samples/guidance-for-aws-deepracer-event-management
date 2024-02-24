@@ -11,7 +11,6 @@ import {
   Button,
   ButtonDropdown,
   Container,
-  ExpandableSection,
   Form,
   FormField,
   Grid,
@@ -218,97 +217,33 @@ const AdminTimerActivation = (props) => {
             </Popover>
           </Grid>
 
-          <ExpandableSection header="Advanced">
-            <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
-              <Header variant="h3">Code</Header>
-              <Container>
-                <Box color="text-status-info" textAlign="center">
-                  {loading}
-                  <code>{activationCode}</code>
-                </Box>
-              </Container>
-              <Popover
-                dismissButton={false}
-                position="right"
-                size="small"
-                triggerType="custom"
-                content={
-                  <StatusIndicator type="success">
-                    {t('common.copied-to-clipboard')}
-                  </StatusIndicator>
-                }
+          <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
+            <Header variant="h3">{t('timer-activation.ssm-only')}</Header>
+            <Container>
+              <Box color="text-status-info" textAlign="center">
+                {loading}
+                <code>{ssmCommand}</code>
+              </Box>
+            </Container>
+            <Popover
+              dismissButton={false}
+              position="right"
+              size="small"
+              triggerType="custom"
+              content={
+                <StatusIndicator type="success">{t('common.copied-to-clipboard')}</StatusIndicator>
+              }
+            >
+              <Button
+                iconName="copy"
+                onClick={() => {
+                  navigator.clipboard.writeText(ssmCommand);
+                }}
               >
-                <Button
-                  iconName="copy"
-                  onClick={() => {
-                    navigator.clipboard.writeText(activationCode);
-                  }}
-                >
-                  {t('common.button.copy')}
-                </Button>
-              </Popover>
-            </Grid>
-
-            <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
-              <Header variant="h3">Id</Header>
-              <Container>
-                <Box color="text-status-info" textAlign="center">
-                  {loading}
-                  <code>{activationId}</code>
-                </Box>
-              </Container>
-              <Popover
-                dismissButton={false}
-                position="right"
-                size="small"
-                triggerType="custom"
-                content={
-                  <StatusIndicator type="success">
-                    {t('common.copied-to-clipboard')}
-                  </StatusIndicator>
-                }
-              >
-                <Button
-                  iconName="copy"
-                  onClick={() => {
-                    navigator.clipboard.writeText(activationId);
-                  }}
-                >
-                  {t('common.button.copy')}
-                </Button>
-              </Popover>
-            </Grid>
-
-            <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
-              <Header variant="h3">{t('timer-activation.ssm-only')}</Header>
-              <Container>
-                <Box color="text-status-info" textAlign="center">
-                  {loading}
-                  <code>{ssmCommand}</code>
-                </Box>
-              </Container>
-              <Popover
-                dismissButton={false}
-                position="right"
-                size="small"
-                triggerType="custom"
-                content={
-                  <StatusIndicator type="success">
-                    {t('common.copied-to-clipboard')}
-                  </StatusIndicator>
-                }
-              >
-                <Button
-                  iconName="copy"
-                  onClick={() => {
-                    navigator.clipboard.writeText(ssmCommand);
-                  }}
-                >
-                  {t('common.button.copy')}
-                </Button>
-              </Popover>
-            </Grid>
-          </ExpandableSection>
+                {t('common.button.copy')}
+              </Button>
+            </Popover>
+          </Grid>
         </Container>
 
         <Grid gridDefinition={[{ colspan: 4 }, { colspan: 4 }]}>
