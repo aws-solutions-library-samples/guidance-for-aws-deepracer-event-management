@@ -356,7 +356,8 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
     webserverPath=/opt/aws/deepracer/lib/webserver_pkg/lib/${pythonPath}/site-packages/webserver_pkg
 
     # Create backup directory
-    backupDir=${HOME}/backup
+    homeDir=$(eval echo ~${SUDO_USER})
+    backupDir=${homeDir}/backup
     if [ ! -d ${backupDir} ]; then
         echo -e -n "\n- Creating backup directory: ${backupDir}"
         mkdir ${backupDir}
