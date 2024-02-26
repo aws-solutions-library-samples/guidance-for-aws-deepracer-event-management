@@ -60,7 +60,7 @@ CREATE_WIFI_SERVICE()
 
     # Sort out the Wifi (if we have SSID + Password)
     if [ ${ssid} != NULL ] && [ ${wifiPass} != NULL ]; then
-        echo -e -n "\n- Adding WiFi as a service: ${ssid}"
+        echo -e -n "\n- Adding WiFi as a service: ${ssid} \n"
 
         mkdir /etc/deepracer-wifi
         cat > /etc/deepracer-wifi/start-wifi.sh << EOF
@@ -140,7 +140,7 @@ DR_CAR_UPDATE()
 {
     echo -e -n "\n\nDR_CAR_UPDATE\n"
 
-    echo -e -n "\n- Updating DeepRacer car software..."
+    echo -e -n "\n- Updating DeepRacer car software...\n"
 
     # Update ROS cert
     curl https://repo.ros2.org/repos.key | apt-key add -
@@ -206,7 +206,7 @@ SSM_ACTIVATION()
     # RPi 64 -> https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_arm64/amazon-ssm-agent.deb
     # RPi 32 -> https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_arm/amazon-ssm-agent.deb
 
-    echo -e -n "\n- Install SSM"
+    echo -e -n "\n- Install SSM\n"
     mkdir /tmp/ssm
     curl https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_${ARCH}/amazon-ssm-agent.deb -o /tmp/ssm/amazon-ssm-agent.deb
     dpkg -i /tmp/ssm/amazon-ssm-agent.deb
