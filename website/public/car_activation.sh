@@ -45,7 +45,7 @@ fi
 
 # Disable IPV6 networking
 DISABLE_IPV6() {
-    echo -e -n "\nDISABLE_IPV6\n"
+    echo -e -n "\n\nDISABLE_IPV6\n"
 
     # Disable IPV6 on all interfaces
     echo -e -n "\n- Disable IPV6"
@@ -56,7 +56,7 @@ DISABLE_IPV6() {
 # Optionally create a WiFi connection service
 CREATE_WIFI_SERVICE()
 {
-    echo -e -n "\nCREATE_WIFI_SERVICE\n"
+    echo -e -n "\n\nCREATE_WIFI_SERVICE\n"
 
     # Sort out the Wifi (if we have SSID + Password)
     if [ ${ssid} != NULL ] && [ ${wifiPass} != NULL ]; then
@@ -125,7 +125,7 @@ EOF
 # Set the device and car console password
 SET_PASSWORD()
 {
-    echo -e -n "\nSET_PASSWORD\n"
+    echo -e -n "\n\nSET_PASSWORD\n"
 
     # Update the DeepRacer console password
     echo -e -n "\n- Updating password to: ${varPass}"
@@ -138,9 +138,9 @@ SET_PASSWORD()
 # Update original AWS DeepRacer car software
 DR_CAR_UPDATE()
 {
-    echo -e -n "\nDR_CAR_UPDATE\n"
+    echo -e -n "\n\nDR_CAR_UPDATE\n"
 
-    echo -e -n "\nUpdating DeepRacer car software...\n"
+    echo -e -n "\n- Updating DeepRacer car software..."
 
     # Update ROS cert
     curl https://repo.ros2.org/repos.key | apt-key add -
@@ -150,24 +150,24 @@ DR_CAR_UPDATE()
     sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS
 
     # Update Ubuntu - removed for now as it takes so long from the standard 20.04 build
-    # echo -e -n "\nUpdating Ubuntu packages\n"
+    # echo -e -n "\n- Updating Ubuntu packages"
     # apt-get update
     # apt-get upgrade -y -o Dpkg::Options::="--force-overwrite"
 
     # Update DeepRacer packages
-    echo -e -n "\nUpdate DeepRacer packages\n"
+    echo -e -n "\n- Update DeepRacer packages"
     apt-get update
     apt-get install -y aws-deepracer-* -o Dpkg::Options::="--force-overwrite"
 
     # Remove redundant packages
-    echo -e -n "\nRemove redundant packages\n"
+    echo -e -n "\n- Remove redundant packages"
     apt -y autoremove
 }
 
 # Set the device hostname
 SET_HOSTNAME()
 {
-    echo -e -n "\nSET_HOSTNAME\n"
+    echo -e -n "\n\nSET_HOSTNAME\n"
 
     # If changing hostname need to change the flag in network_config.py
     # ${systemPath}/site-packages/deepracer_systems_pkg/network_monitor_module/network_config.py
@@ -188,7 +188,7 @@ SET_HOSTNAME()
 # Disable software_update
 DISABLE_DR_UPDATE()
 {
-    echo -e -n "\nDISABLE_DR_UPDATE\n"
+    echo -e -n "\n\nDISABLE_DR_UPDATE\n"
 
     echo -e -n "\n- Disable software update"
     cp ${systemPath}/software_update_module/software_update_config.py ${backupDir}/software_update_config.py.bak
@@ -199,7 +199,7 @@ DISABLE_DR_UPDATE()
 # Install and optionally activate AWS SSM agent
 SSM_ACTIVATION()
 {
-    echo -e -n "\nSSM_ACTIVATION\n"
+    echo -e -n "\n\nSSM_ACTIVATION\n"
 
     # Install SSM Agent - https://github.com/aws/amazon-ssm-agent
     # DeepRacer -> https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_amd64/amazon-ssm-agent.deb
@@ -220,14 +220,14 @@ SSM_ACTIVATION()
         amazon-ssm-agent -register -code "${ssmCode}" -id "${ssmId}" -region "${ssmRegion}"
         service amazon-ssm-agent start
 
-        echo -e -n "\nCar ${varHost} should be visible in DREM in ~5 minutes\n"
+        echo -e -n "\n- Car ${varHost} should be visible in DREM in ~5 minutes"
     fi
 }
 
 # Tweaks that only apply to the AWS DeepRacer car
 DR_CAR_TWEAKS()
 {
-    echo -e -n "\nDR_CAR_TWEAKS\n"
+    echo -e -n "\n\nDR_CAR_TWEAKS\n"
 
     # Disable system suspend
     echo -e -n "\n- Disable system suspend"
@@ -297,7 +297,7 @@ DR_CAR_TWEAKS()
 
 CAR_TWEAKS()
 {
-    echo -e -n "\nCAR_TWEAKS\n"
+    echo -e -n "\n\nCAR_TWEAKS\n"
     # Disable video stream by default
     echo -e -n "\n- Disable video stream"
     cp ${bundlePath}/bundle.js ${backupDir}/bundle.js.bak
@@ -348,7 +348,7 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
     if [ $DISTRIB_RELEASE = "22.04" ]; then
         pythonPath=python3.10
     fi
-    echo -e -n "\n pythonPath = ${pythonPath}\n"
+
     # Set some paths
     bundlePath=/opt/aws/deepracer/lib/device_console/static
     systemPath=/opt/aws/deepracer/lib/deepracer_systems_pkg/lib/${pythonPath}/site-packages/deepracer_systems_pkg
@@ -400,8 +400,8 @@ else
 fi
 
 # Restart services
-echo -e -n "\nRestarting services\n"
+echo -e -n "\n- Restarting services\n"
 systemctl restart deepracer-core
 service nginx restart
 
-echo -e -n "\nDone!"
+echo -e -n "\nDone!\n\n"
