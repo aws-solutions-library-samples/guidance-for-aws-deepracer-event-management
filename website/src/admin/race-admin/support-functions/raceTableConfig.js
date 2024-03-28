@@ -97,5 +97,10 @@ export const FilteringProperties = () => {
       propertyLabel: i18next.t('race-admin.username'),
       operators: [':', '!:', '=', '!='],
     },
+    {
+      key: 'trackId',
+      propertyLabel: i18next.t('race-admin.track-id'),
+      operators: [':', '!:', '=', '!='],
+    },
   ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
 };
