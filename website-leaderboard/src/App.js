@@ -14,7 +14,7 @@ try {
   const config = JSON.parse(awsconfig.Rum.leaderboard.config);
   const APPLICATION_ID = awsconfig.Rum.leaderboard.id;
   const APPLICATION_VERSION = '1.0.0';
-  const APPLICATION_REGION = 'eu-west-1';
+  const APPLICATION_REGION = awsconfig.Auth.region;
 
   /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "awsRum" }]*/
   awsRum = new AwsRum(APPLICATION_ID, APPLICATION_VERSION, APPLICATION_REGION, config);
