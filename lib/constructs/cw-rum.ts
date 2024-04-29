@@ -132,7 +132,7 @@ export class CwRumAppMonitor extends Construct {
                 sessionSampleRate: ${sessionSampleRate},
                 guestRoleArn: "${rum_id_pool_unauth_user_role.roleArn}",
                 identityPoolId: "${rum_identity_pool.ref}",
-                endpoint: "https://dataplane.rum.eu-west-1.amazonaws.com",
+                endpoint: "https://dataplane.rum.${stack.region}.amazonaws.com",
                 telemetries: [${telemetries}],
                 allowCookies: ${allowCookies},
                 enableXRay: ${enableXray}
@@ -148,7 +148,7 @@ export class CwRumAppMonitor extends Construct {
             "sessionSampleRate": ${sessionSampleRate},
             "guestRoleArn": "${rum_id_pool_unauth_user_role.roleArn}",
             "identityPoolId": "${rum_identity_pool.ref}",
-            "endpoint": "https://dataplane.rum.eu-west-1.amazonaws.com",
+            "endpoint": "https://dataplane.rum.${stack.region}.amazonaws.com",
             "telemetries": [${telemetries}],
             "allowCookies": ${allowCookies},
             "enableXRay": ${enableXray}
