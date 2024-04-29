@@ -17,12 +17,14 @@ export interface CwRumAppMonitorProps {
 export class CwRumAppMonitor extends Construct {
     public readonly script: string;
     public readonly id: string;
+    public readonly region: string;
     public readonly config: string;
 
     constructor(scope: Construct, id: string, props: CwRumAppMonitorProps) {
         super(scope, id);
 
         const stack = Stack.of(this);
+        this.region = stack.region;
 
         // RUM Cognito Identity Pool
         const rum_identity_pool = new cognito.CfnIdentityPool(this, 'CwRumIdentityPool', {

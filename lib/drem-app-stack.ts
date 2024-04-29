@@ -255,12 +255,20 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       value: cwRumAppMonitor.id,
     });
 
+    new cdk.CfnOutput(this, 'cwRumAppMonitorRegion', {
+      value: cwRumAppMonitor.region,
+    });
+
     new cdk.CfnOutput(this, 'cwRumAppMonitorConfig', {
       value: cwRumAppMonitor.config,
     });
 
     new cdk.CfnOutput(this, 'cwRumLeaderboardAppMonitorId', {
       value: cwRumLeaderboardAppMonitor.id,
+    });
+
+    new cdk.CfnOutput(this, 'cwRumLeaderboardAppMonitorRegion', {
+      value: cwRumLeaderboardAppMonitor.region,
     });
 
     new cdk.CfnOutput(this, 'cwRumLeaderboardAppMonitorConfig', {
