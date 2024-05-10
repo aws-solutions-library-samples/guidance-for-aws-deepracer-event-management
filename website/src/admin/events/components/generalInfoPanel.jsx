@@ -103,7 +103,7 @@ export const EventInfoPanel = ({
         <FormField label={t('events.event-date')} description={t('events.event-date-description')}>
           <DatePicker
             onChange={({ detail }) => onChange({ eventDate: detail.value })}
-            value={eventDate ?? eventDate | undefined}
+            value={eventDate ?? eventDate | ''}
             openCalendarAriaLabel={(selectedDate) =>
               t('events.event-date-choose') +
               (selectedDate ? `, ` + t('events.event-date-selected') + ` ${selectedDate}` : '')
