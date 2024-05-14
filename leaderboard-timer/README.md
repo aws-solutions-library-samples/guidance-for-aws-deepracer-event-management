@@ -2,9 +2,13 @@
 
 The DeepRacer timer is an automated timing solution which is used together with the leaderboard & timekeeper system used during DeepRacer events.
 
+### Important
+
+Please note that the most recent release of Raspberry Pi OS "Bookworm" is currently not supported due to changes in the way the GPIO is handled, please use "Bullseye" (Legacy) for the RPi operating system.
+
 ## Hardware Requirements
 
-**NOTE:** At this time the Raspberry Pi 5 is not supported for automated timing due to changes in the way the GPIO is connected.  Please review this [issue](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/14) for updates.
+**NOTE:** At this time the Raspberry Pi 5 is not supported for automated timing due to changes in the way the GPIO is connected. Please review this [issue](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/14) for updates.
 
 ### Required
 

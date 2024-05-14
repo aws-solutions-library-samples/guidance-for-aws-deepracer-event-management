@@ -18,6 +18,12 @@ DREM offers event organizers tools for managing users, models, cars and fleets, 
 
 **Note:** DREM is designed for use with AWS DeepRacer cars running firmware version 20.04 and above. Earlier firmware versions are not supported. If you need to update your device, see [Update and restore your AWS DeepRacer device](https://docs.aws.amazon.com/deepracer/"latest/developerguide/deepracer-ubuntu-update.html)
 
+## Automated timer
+
+Instructions for the automated timer can be found [here](./leaderboard-timer/README.md)
+
+Please note that the most recent release of Raspberry Pi OS "Bookworm" is currently not supported, please use "Bullseye" (Legacy) for the RPi operating system.
+
 ## Deployment
 
 ### Deployment prerequisites
