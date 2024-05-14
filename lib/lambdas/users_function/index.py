@@ -50,6 +50,7 @@ def __get_users() -> list:
         PaginationConfig={
             "PageSize": 60,
         },
+        Filter='status = "Enabled"'
     )
 
     users = []
