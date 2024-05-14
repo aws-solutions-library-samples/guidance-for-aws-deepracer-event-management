@@ -17,12 +17,14 @@ export interface CwRumAppMonitorProps {
 export class CwRumAppMonitor extends Construct {
     public readonly script: string;
     public readonly id: string;
+    public readonly region: string;
     public readonly config: string;
 
     constructor(scope: Construct, id: string, props: CwRumAppMonitorProps) {
         super(scope, id);
 
         const stack = Stack.of(this);
+        this.region = stack.region;
 
         // RUM Cognito Identity Pool
         const rum_identity_pool = new cognito.CfnIdentityPool(this, 'CwRumIdentityPool', {
@@ -132,7 +134,7 @@ export class CwRumAppMonitor extends Construct {
                 sessionSampleRate: ${sessionSampleRate},
                 guestRoleArn: "${rum_id_pool_unauth_user_role.roleArn}",
                 identityPoolId: "${rum_identity_pool.ref}",
-                endpoint: "https://dataplane.rum.eu-west-1.amazonaws.com",
+                endpoint: "https://dataplane.rum.${stack.region}.amazonaws.com",
                 telemetries: [${telemetries}],
                 allowCookies: ${allowCookies},
                 enableXRay: ${enableXray}
@@ -148,7 +150,7 @@ export class CwRumAppMonitor extends Construct {
             "sessionSampleRate": ${sessionSampleRate},
             "guestRoleArn": "${rum_id_pool_unauth_user_role.roleArn}",
             "identityPoolId": "${rum_identity_pool.ref}",
-            "endpoint": "https://dataplane.rum.eu-west-1.amazonaws.com",
+            "endpoint": "https://dataplane.rum.${stack.region}.amazonaws.com",
             "telemetries": [${telemetries}],
             "allowCookies": ${allowCookies},
             "enableXRay": ${enableXray}

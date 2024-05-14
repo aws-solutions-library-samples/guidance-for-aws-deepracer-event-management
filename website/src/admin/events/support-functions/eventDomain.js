@@ -2,7 +2,7 @@ import i18next from '../../../i18n';
 import { RaceTypeEnum } from './raceConfig';
 
 export const event = {
-  eventDate: undefined,
+  eventDate: '',
   countryCode: undefined,
   fleetId: undefined,
   typeOfEvent: undefined,
