@@ -85,7 +85,7 @@ export class CdkPipelineStack extends cdk.Stack {
       synth: new pipelines.CodeBuildStep('SynthAndDeployBackend', {
         buildEnvironment: {
           buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
-          computeType: codebuild.ComputeType.LARGE,
+          computeType: codebuild.ComputeType.X2_LARGE,
         },
         input: pipelines.CodePipelineSource.gitHub(props.sourceRepo, props.sourceBranchName, {
           authentication: cdk.SecretValue.secretsManager('drem/github-token'),
