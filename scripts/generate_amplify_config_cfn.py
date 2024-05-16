@@ -40,6 +40,8 @@ with open("cfn.outputs") as json_file:
             streamingOverlayWebsite = key["OutputValue"]
         if key["OutputKey"] == "cwRumAppMonitorId":
             cwRumAppMonitorId = key["OutputValue"]
+        if key["OutputKey"] == "cwRumAppMonitorRegion":
+            cwRumAppMonitorRegion = key["OutputValue"]
         if key["OutputKey"] == "cwRumAppMonitorConfig":
             cwRumAppMonitorConfig = key["OutputValue"]
 
@@ -73,6 +75,7 @@ with open("cfn.outputs") as json_file:
         "Rum": {
             "drem": {
                 "id": cwRumAppMonitorId,
+                "region": cwRumAppMonitorRegion,
                 "config": cwRumAppMonitorConfig,
             },
         },

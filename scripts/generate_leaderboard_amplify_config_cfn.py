@@ -16,6 +16,8 @@ with open("cfn.outputs") as json_file:
             DremWebsite = key["OutputValue"]
         if key["OutputKey"] == "cwRumLeaderboardAppMonitorId":
             cwRumLeaderboardAppMonitorId = key["OutputValue"]
+        if key["OutputKey"] == "cwRumLeaderboardAppMonitorRegion":
+            cwRumLeaderboardAppMonitorRegion = key["OutputValue"]            
         if key["OutputKey"] == "cwRumLeaderboardAppMonitorConfig":
             cwRumLeaderboardAppMonitorConfig = key["OutputValue"]
 
@@ -32,6 +34,7 @@ with open("cfn.outputs") as json_file:
         "Rum": {
             "leaderboard": {
                 "id": cwRumLeaderboardAppMonitorId,
+                "region": cwRumLeaderboardAppMonitorRegion,
                 "config": cwRumLeaderboardAppMonitorConfig,
             },
         },

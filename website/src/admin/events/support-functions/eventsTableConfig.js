@@ -9,7 +9,7 @@ import {
   GetTrackTypeNameFromId,
 } from './raceConfig';
 export const ColumnConfiguration = (getUserNameFromId, allCarFleets = undefined) => {
-  return {
+  var returnObject = {
     defaultVisibleColumns: ['eventName', 'eventDate', 'createdAt'],
     visibleContentOptions: [
       {
@@ -137,6 +137,10 @@ export const ColumnConfiguration = (getUserNameFromId, allCarFleets = undefined)
       },
     ],
   };
+  returnObject.defaultSortingColumn = returnObject.columnDefinitions[1];  // eventDate
+  returnObject.defaultSortingIsDescending = true;
+
+  return returnObject;
 };
 
 export const FilteringProperties = () => {

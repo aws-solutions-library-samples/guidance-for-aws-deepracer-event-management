@@ -40832,12 +40832,12 @@ IvL9MX/SFyAiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIi8o7x/wNpGqa3cMsZiQAAAABJRU5ErkJg
 gg==" transform="matrix(0.1514 0 0 0.1514 0 5.9513)">
 	</image>
 </g>
-<text font-family="'AmazonEmber-Heavy'" font-size="25.4626px" id="EVENT_x5F_NAME" transform="matrix(0.9458 0 0 1 274.6509 96.9823)"><tspan x="0" y="0" font-family="'AmazonEmber-Heavy'" font-size="25.4626px" letter-spacing="2.11">AWS </tspan><tspan x="75.93" y="0" font-family="'AmazonEmber-Heavy'" font-size="24px" letter-spacing="2.11">re:Invent 2022</tspan></text>
-<text transform="matrix(1 0 0 1 301.0049 214.9676)" fill="#FFFFFF" font-family="'AmazonEmber-Regular'" font-size="30px">REMAINING</text>
-<text id="TOTAL_x5F_TIME_x5F_REMAINING" transform="matrix(1 0 0 1 472.7593 215.6987)" fill="#FFFFFF" font-family="'AmazonEmber-Heavy'" font-size="36px">03:00:00</text>
-<text transform="matrix(1 0 0 1 669.8824 215.7646)" fill="#FFFFFF" font-family="'AmazonEmber-Regular'" font-size="30px">FASTEST</text>
-<text id="FASTEST_x5F_LAP_x5F_TIME" transform="matrix(1 0 0 1 797.6369 218.4957)" fill="#FFFFFF" font-family="'AmazonEmber-Heavy'" font-size="36px">00:00</text>
-<text transform="matrix(1 0 0 1 946.7456 214.2365)" fill="#FFFFFF" font-family="'AmazonEmber-Regular'" font-size="30px">PREVIOUS</text>
-<text id="PREVIOUS_x5F_LAP_x5F_TIME" transform="matrix(1 0 0 1 1097.5001 216.9676)" fill="#FFFFFF" font-family="'AmazonEmber-Heavy'" font-size="36px">00:00</text>
-<text id="RACER_x5F_NAME" transform="matrix(1 0 0 1 466.692 171.8873)" fill="#FFFFFF" font-family="'AmazonEmber-HeavyItalic'" font-size="39.642px">POLISH THUNDER</text>
+<text font-family="'AmazonEmber-Heavy'" font-size="25.4626px" id="EVENT_x5F_NAME" transform="matrix(0.9458 0 0 1 274.6509 96.9823)"><tspan x="0" y="0" font-family="AmazonEmber-Heavy" font-size="25.4626px" letter-spacing="2.11">AWS </tspan><tspan x="75.93" y="0" font-family="'AmazonEmber-Heavy'" font-size="24px" letter-spacing="2.11">re:Invent 2022</tspan></text>
+<text transform="matrix(1 0 0 1 301.0049 214.9676)" fill="#FFFFFF" font-family="AmazonEmber-Regular" font-size="30px">REMAINING</text>
+<text id="TOTAL_x5F_TIME_x5F_REMAINING" transform="matrix(1 0 0 1 472.7593 215.6987)" fill="#FFFFFF" font-family="AmazonEmber-Heavy" font-size="36px">03:00:00</text>
+<text transform="matrix(1 0 0 1 669.8824 215.7646)" fill="#FFFFFF" font-family="AmazonEmber-Regular" font-size="30px">FASTEST</text>
+<text id="FASTEST_x5F_LAP_x5F_TIME" transform="matrix(1 0 0 1 797.6369 218.4957)" fill="#FFFFFF" font-family="AmazonEmber-Heavy" font-size="36px">00:00</text>
+<text transform="matrix(1 0 0 1 946.7456 214.2365)" fill="#FFFFFF" font-family="AmazonEmber-Regular" font-size="30px">PREVIOUS</text>
+<text id="PREVIOUS_x5F_LAP_x5F_TIME" transform="matrix(1 0 0 1 1097.5001 216.9676)" fill="#FFFFFF" font-family="AmazonEmber-Heavy" font-size="36px">00:00</text>
+<text id="RACER_x5F_NAME" transform="matrix(1 0 0 1 466.692 171.8873)" fill="#FFFFFF" font-family="AmazonEmber-HeavyItalic" font-size="39.642px">POLISH THUNDER</text>
 </svg>

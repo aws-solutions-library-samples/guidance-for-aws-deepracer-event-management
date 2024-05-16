@@ -190,9 +190,12 @@ export class CarUploadStepFunction extends Construct {
 
     const mapToSsmChoice = new stepFunctions.Choice(this, 'mapToSsmChoice');
     const condition1 = stepFunctions.Condition.stringEquals('$.status.status', 'InProgress');
+    const condition2 = stepFunctions.Condition.stringEquals('$.status.status', 'Pending');
     const finish = new stepFunctions.Pass(this, 'Finish');
 
-    const mapToSsmChoiceDefinition = mapToSsmChoice.when(condition1, mapToSsmWait).otherwise(finish);
+    const mapToSsmChoiceDefinition = mapToSsmChoice
+      .when(stepFunctions.Condition.or(condition1, condition2), mapToSsmWait)
+      .otherwise(finish);
 
     // mapToSsm definition
     mapToSsm.iterator(invokeWithSsm.next(mapToSsmWait).next(statusWithSsm).next(mapToSsmChoiceDefinition));

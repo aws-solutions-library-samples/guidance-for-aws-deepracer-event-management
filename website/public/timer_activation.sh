@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 usage()
 {
@@ -26,6 +26,7 @@ timerPath=leaderboard-timer
 homeDir=$(eval echo ~${SUDO_USER})
 backupDir=${homeDir}/backup
 if [ ! -d ${backupDir} ]; then
+    echo -e -n "\n- Creating backup directory: ${backupDir}"
     mkdir ${backupDir}
 fi
 
@@ -49,7 +50,7 @@ fi
 
 # Update hostname
 if [ $varHost != NULL ]; then
-    echo -e -n "\nSet hostname: ${varHost}\n"
+    echo -e -n "\n- Set hostname: ${varHost}\n"
     oldHost=$HOSTNAME
     hostnamectl set-hostname ${varHost}
     cp /etc/hosts ${backupDir}/hosts.bak
@@ -58,7 +59,7 @@ if [ $varHost != NULL ]; then
 fi
 
 # Install Node
-echo -e -n "\nInstall Node\n"
+echo -e -n "\n- Install Node\n"
 rpiVersion=$(tr -d '\0' </proc/device-tree/model)
 nodeVersion=v18.18.0
 
@@ -66,9 +67,11 @@ nodeVersion=v18.18.0
 if [[ $rpiVersion = *"Zero W"* ]]; then
     # Releases -> https://unofficial-builds.nodejs.org/download/release/
     rpiArch=armv6l
+    ARCH=arm
     curl -o node-${nodeVersion}-linux-${rpiArch}.tar.xz https://unofficial-builds.nodejs.org/download/release/${nodeVersion}/node-${nodeVersion}-linux-${rpiArch}.tar.xz
 elif [[ $rpiVersion == *"Model B"* ]]; then
     rpiArch=arm64
+    ARCH=arm64
 
     # Needed for SSM-agent
     sudo dpkg --add-architecture armhf
@@ -91,16 +94,20 @@ sudo cp -rf * /usr/local
 cd ..
 rm -rf node-${nodeVersion}-linux-${rpiArch}.tar.xz node-${nodeVersion}-linux-${rpiArch}
 
-# Install ssm-agent -> https://snapcraft.io/install/amazon-ssm-agent/ubuntu
-echo -e -n "\nInstall SSM\n"
+# Install SSM Agent - https://github.com/aws/amazon-ssm-agent
+# DeepRacer -> https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_amd64/amazon-ssm-agent.deb
+# RPi 64 -> https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_arm64/amazon-ssm-agent.deb
+# RPi 32 -> https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_arm/amazon-ssm-agent.deb
+
+echo -e -n "\n- Install SSM\n"
 mkdir /tmp/ssm
-sudo curl https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_arm/amazon-ssm-agent.deb -o /tmp/ssm/amazon-ssm-agent.deb
+curl https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/debian_${ARCH}/amazon-ssm-agent.deb -o /tmp/ssm/amazon-ssm-agent.deb
 dpkg -i /tmp/ssm/amazon-ssm-agent.deb
 rm -rf /tmp/ssm
 
 # Enable, Configure and Start SSM if we have the right info
 if [ ${ssmCode} != NULL ]; then
-    echo -e -n "\nActivate SSM\n"
+    echo -e -n "\n- Activate SSM\n"
     systemctl enable amazon-ssm-agent
     service amazon-ssm-agent stop
     amazon-ssm-agent -register -code "${ssmCode}" -id "${ssmId}" -region "${ssmRegion}"
@@ -112,24 +119,24 @@ unzip ${timerPath}.zip
 cd ${timerPath}
 
 # Install dependencies
-echo -e -n "\nInstalling timer dependencies\n"
+echo -e -n "\n- Installing timer dependencies\n"
 npm install
 
 # Update deepracer-timer.service with the correct $homeDir
 # Using s!search!replace! for sed as there are '/' in the variables
-echo -e -n "\nUpdate the path in the service-definition file\n"
+echo -e -n "\n- Update the path in the service-definition file\n"
 cp ${homeDir}/${timerPath}/service-definition/deepracer-timer.service ${backupDir}/deepracer-timer.service.bak
 rm ${homeDir}/${timerPath}/service-definition/deepracer-timer.service
 cat ${backupDir}/deepracer-timer.service.bak | sed -e "s!/home/deepracer!${homeDir}!" -e "s!User=deepracer!User=${SUDO_USER}!" > ${homeDir}/${timerPath}/service-definition/deepracer-timer.service
 
 # Update the DREM URL
-echo -e -n "\nUpdate the DREM URL in timer.js\n"
+echo -e -n "\n- Update the DREM URL in timer.js\n"
 cp ${homeDir}/${timerPath}/timer.js ${backupDir}/timer.js.bak
 rm ${homeDir}/${timerPath}/timer.js
 cat ${backupDir}/timer.js.bak | sed -e "s!dremURL!${dremURL}!" > ${homeDir}/${timerPath}/timer.js
 
 # Setup timer as a service
-echo -e -n "\nInstall and activate timer service\n"
+echo -e -n "\n- Install and activate timer service\n"
 sudo cp ${homeDir}/${timerPath}/service-definition/deepracer-timer.service /etc/systemd/system/deepracer-timer.service
 
 sudo systemctl daemon-reload
