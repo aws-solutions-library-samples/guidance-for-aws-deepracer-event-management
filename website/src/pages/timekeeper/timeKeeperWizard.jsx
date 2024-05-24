@@ -12,7 +12,7 @@ import { useStore } from '../../store/store';
 import { CarSelector } from './components/carSelector';
 import { ModelSelector } from './components/modelSelector';
 import { UploadModelToCar } from './components/uploadModelsToCar';
-import { RaceSetupPage } from './pages/raceSetupPage';
+import { RaceSetupPage } from './pages/raceSetupPageLite';
 import { getAverageWindows } from './support-functions/averageClaculations';
 import { defaultRace } from './support-functions/raceDomain';
 
@@ -68,7 +68,7 @@ export const TimekeeperWizard = () => {
   }, []);
 
   useEffect(() => {
-    dispatch('SIDE_NAV_IS_OPEN', false);
+    dispatch('SIDE_NAV_IS_OPEN', true);
   }, [dispatch]);
 
   // Find the fastest lap and fastest average window
@@ -227,6 +227,8 @@ export const TimekeeperWizard = () => {
     }}
     onCancel={() => {
       console.log("Reset Wizard")
+      setActiveStepIndex(0);
+      setRace(defaultRace);
     }}
     activeStepIndex={activeStepIndex}
     isLoadingNextStep={false}
