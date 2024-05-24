@@ -189,6 +189,7 @@
   "devices.registration-date": "Registration date",
   "devices.filter-deepracer": "DeepRacer car",
   "devices.filter-timer": "Timer",
+  "devices.cars": "Cars",
   "events.events-information": "Event information",
   "event-provider.please-select-an-event": "Select an event",
   "events.create-event": "Create event",

@@ -9,6 +9,7 @@ import {
   useSelectedTrackContext,
 } from '../../store/contexts/storeProvider';
 import { useStore } from '../../store/store';
+import { CarSelector } from './components/carSelector';
 import { ModelSelector } from './components/modelSelector';
 import { RaceSetupPage } from './pages/raceSetupPage';
 import { getAverageWindows } from './support-functions/averageClaculations';
@@ -25,6 +26,7 @@ export const TimekeeperWizard = () => {
   const selectedTrack = useSelectedTrackContext();
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
   const [selectedModels, setSelectedModels] = useState([]);
+  const [selectedCars, setSelectedCars] = useState([]);
 
   useEffect(() => {
     console.log(selectedModels)
@@ -250,7 +252,11 @@ export const TimekeeperWizard = () => {
       {
         title: t("timekeeper.wizard.select-car"),
         content: (
-          <p>Select car</p>
+          <CarSelector query={{
+            tokens: [{ propertyKey: 'fleetName', value: selectedTrack.fleetId, operator: '=' }],
+            operation: 'and',
+          }}
+          selectedCars={selectedCars} setSelectedCars={setSelectedCars}/>
         ),
         isOptional: false,
       },
