@@ -3,13 +3,13 @@ import { useTranslation } from 'react-i18next';
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import {
-    Button
+  Button
 } from '@cloudscape-design/components';
 
 import { PageTable } from '../../../components/pageTable';
 import {
-    EmptyState,
-    TableHeader
+  EmptyState,
+  TableHeader
 } from '../../../components/tableConfig';
 
 
@@ -26,12 +26,17 @@ export const CarSelector = ({
 
   const [state] = useStore();
   const cars = state.cars.cars.filter((car) => car.PingStatus === 'Online');
+  const enrichedCars = cars.map(car => {
+    car['key'] = car['InstanceId'];
+    console.log('car:', car);
+    return car
+ })
 
   const columnConfiguration = ColumnConfiguration();
   const filteringProperties = FilteringProperties();
 
   const { items, actions, filteredItemsCount, collectionProps, filterProps, paginationProps } =
-    useCollection(cars, {
+    useCollection(enrichedCars, {
       filtering: {
         empty: (
           <EmptyState

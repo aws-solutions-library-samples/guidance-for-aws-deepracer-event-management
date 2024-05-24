@@ -11,6 +11,7 @@ import {
 import { useStore } from '../../store/store';
 import { CarSelector } from './components/carSelector';
 import { ModelSelector } from './components/modelSelector';
+import { UploadModelToCar } from './components/uploadModelsToCar';
 import { RaceSetupPage } from './pages/raceSetupPage';
 import { getAverageWindows } from './support-functions/averageClaculations';
 import { defaultRace } from './support-functions/raceDomain';
@@ -220,7 +221,9 @@ export const TimekeeperWizard = () => {
     }}
     onNavigate={({ detail }) => handleOnNavigate(detail)}
     onSubmit={({ detail }) => {
-      console.log("Start Race")
+      console.log("Start Race");
+      setActiveStepIndex(0);
+      setRace(defaultRace);
     }}
     onCancel={() => {
       console.log("Reset Wizard")
@@ -263,7 +266,7 @@ export const TimekeeperWizard = () => {
       {
         title: t("timekeeper.wizard.upload-progress"),
         content: (
-          <p>Upload progress</p>
+          <UploadModelToCar cars={selectedCars} event={selectedEvent} modelsToUpload={selectedModels}/>
         ),
         isOptional: false,
       },
