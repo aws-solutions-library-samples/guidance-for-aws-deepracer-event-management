@@ -84,7 +84,7 @@ const operatorRoutes = [
   <Route path="/admin/car_activation" element={<AdminCarActivation />} />,
   <Route path="/admin/timer_activation" element={<AdminTimerActivation />} />,
   <Route path="/admin/timekeeper" element={<Timekeeper />} />,
-  <Route path="/admin/upload" element={<TimekeeperWizard />} />,
+  <Route path="/admin/timekeeper-wizard" element={<TimekeeperWizard />} />,
   <Route path="/admin/races" element={<RaceAdmin />} />,
   <Route path="/admin/races/edit" element={<EditRace />} />,
   <Route path="/admin/upload_to_car_status" element={<UploadToCarStatus />} />,
@@ -238,7 +238,7 @@ export function TopNav(props) {
         {
           type: 'link',
           text: t('topnav.time-keeper-wizard'),
-          href: '/admin/upload',
+          href: '/admin/timekeeper-wizard',
         },
       ],
     },
