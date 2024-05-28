@@ -546,6 +546,8 @@
       "select-car": "Select car",
       "upload-progress": "Upload progress",
       "select-racer-error": "Select Racer",
+      "no-models-selected-error": "Select at least one model or skip",
+      "no-car-selected-error": "Select a car or skip",
       "timekeeper": "Timekeeper",
       "submit-race": "Submit race"
     }

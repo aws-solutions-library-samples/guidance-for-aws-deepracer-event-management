@@ -23,6 +23,7 @@ import { defaultRace } from './support-functions/raceDomain';
 export const TimekeeperWizard = () => {
   const { t } = useTranslation();
   const [activeStepIndex, setActiveStepIndex] = useLocalStorage('DREM-timekeeper-state', 0);
+  const [previousStepIndex, setPreviousStepIndex] = useLocalStorage('DREM-timekeeper-state', 0);
   const [raceConfig, setRaceConfig] = useLocalStorage('DREM-timekeeper-race-config', {});
   const [race, setRace] = useLocalStorage('DREM-timekeeper-current-race', defaultRace);
   const [fastestLap, SetFastestLap] = useState([]);
@@ -33,15 +34,17 @@ export const TimekeeperWizard = () => {
   const [selectedModels, setSelectedModels] = useState([]);
   const [selectedCars, setSelectedCars] = useState([]);
   const [errorText, setErrorText] = useState('');
-  const [nextButtonText, setNextButtonText] = useState(t("button.next"));
   const [isLoadingNextStep, setIsLoadingNextStep] = useState(false);
   const [sendMutation, loading, errorMessage, data] = useMutation();
   const messageDisplayTime = 4000;
   const notificationId = '';
 
+  // check if active index is timekeeper and set isLoading to true if it is
   useEffect(() => {
-    console.log(selectedModels)
-  },[selectedModels])
+    if (activeStepIndex === 4) {
+      setIsLoadingNextStep(true);
+    }
+  },[activeStepIndex])
 
   useEffect(() => {
     console.log(race.username)
@@ -72,6 +75,7 @@ export const TimekeeperWizard = () => {
   useEffect(() => {
     return () => {
       setRaceConfig({});
+      setPreviousStepIndex(0);
       setActiveStepIndex(0);
       setRace(defaultRace);
     };
@@ -120,16 +124,6 @@ export const TimekeeperWizard = () => {
     console.info(race);
   }, [race.laps]);
 
-  useEffect(() => {
-    if(activeStepIndex === 1 && selectedModels.length === 0){
-      console.log("skip")
-      setNextButtonText(t("button.skip"))
-    } else {
-      console.log("next")
-      setNextButtonText(t("button.next"))
-    }
-  },[activeStepIndex,selectedModels])
-
   // handlers functions
   const actionHandler = (id) => {
     console.debug('alter lap status for lap id: ' + id);
@@ -140,31 +134,9 @@ export const TimekeeperWizard = () => {
     setRace({ ...race, laps: lapsCopy });
   };
 
-  // var raceDetails = {
-  //   race: race,
-  //   config: selectedEvent.raceConfig,
-  // };
-  // raceDetails.config['eventName'] = selectedEvent.eventName;
-  // raceDetails.race['eventId'] = selectedEvent.eventId;
-  // raceDetails.race['laps'] = [];
-
-  // useEffect(() => {
-  //   console.info(raceDetails);
-  //   setRace({ ...race, ...raceDetails.race });
-  //   setRaceConfig({ ...raceConfig, ...raceDetails.config });
-  //   // setActiveStepIndex(1);
-  // }, [raceDetails]);
-
-  // var raceSetupHandler = (event) => {
-  //   console.info(event);
-  //   setRace({ ...race, ...event.race });
-  //   setRaceConfig({ ...raceConfig, ...event.config });
-
-  //   setActiveStepIndex(1);
-  // };
-
   const raceIsDoneHandler = () => {
     setIsLoadingNextStep(false)
+    setPreviousStepIndex(5);
     setActiveStepIndex(5);
   };
 
@@ -181,20 +153,28 @@ export const TimekeeperWizard = () => {
     setFastestAverageLap([]);
     setErrorText(t(""));
 
+    setPreviousStepIndex(0);
     setActiveStepIndex(0);
   };
 
   async function handleOnNavigate(detail) {
     console.log("handleOnNavigate", detail);
-    if (detail.requestedStepIndex === 1 && race.username === null) {
-      console.log("race", race);
+    if (activeStepIndex === 0 && race.username === null) {
+      // console.log("race", race);
       setErrorText(t("timekeeper.wizard.select-racer-error"));
-    } else if (detail.requestedStepIndex === 2 && selectedModels.length === 0) {
-      console.log("skip");
-      setActiveStepIndex(4)
-      setIsLoadingNextStep(true)
+    } else if (activeStepIndex === 1 && selectedModels.length === 0 && detail.reason === "next") {
+      setErrorText(t("timekeeper.wizard.no-models-selected-error"));
+    } else if (activeStepIndex === 2 && selectedCars.length === 0 && detail.reason === "next") {
+      setErrorText(t("timekeeper.wizard.no-car-selected-error"));
+    } else if (detail.reason === "previous") {
+      console.log("previous");
+      setIsLoadingNextStep(false)
+      setPreviousStepIndex(previousStepIndex - 1)
+      setActiveStepIndex(previousStepIndex)
+      setErrorText(t(""));
     } else {
       setIsLoadingNextStep(false)
+      setPreviousStepIndex(activeStepIndex);
       setActiveStepIndex(detail.requestedStepIndex)
       setErrorText(t(""));
     }
@@ -261,7 +241,7 @@ export const TimekeeperWizard = () => {
           navigationAriaLabel: t("common.steps"),
           cancelButton: t("button.cancel"),
           previousButton: t("button.previous"),
-          nextButton: nextButtonText,
+          nextButton: t("button.next"),
           submitButton: t("button.submit-race"),
           optional: t("button.optional"),
         }}
@@ -276,7 +256,7 @@ export const TimekeeperWizard = () => {
         }}
         activeStepIndex={activeStepIndex}
         isLoadingNextStep={isLoadingNextStep}
-        allowSkipTo={false}
+        allowSkipTo={true}
         steps={[
           {
             title: t("timekeeper.wizard.select-racer"),
@@ -314,7 +294,7 @@ export const TimekeeperWizard = () => {
             content: (
               <UploadModelToCar cars={selectedCars} event={selectedEvent} modelsToUpload={selectedModels}/>
             ),
-            isOptional: false,
+            isOptional: true,
           },
           {
             title: t("timekeeper.wizard.timekeeper"),
