@@ -82,7 +82,7 @@ export const TimekeeperWizard = () => {
   }, []);
 
   useEffect(() => {
-    dispatch('SIDE_NAV_IS_OPEN', true);
+    dispatch('SIDE_NAV_IS_OPEN', false);
   }, [dispatch]);
 
   // Find the fastest lap and fastest average window
