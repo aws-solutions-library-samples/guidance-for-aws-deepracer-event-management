@@ -1,10 +1,18 @@
 import {
+  Box,
+  Button,
   Form,
+  Modal,
+  SpaceBetween,
   Wizard
 } from '@cloudscape-design/components';
+import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import * as mutations from '../../graphql/mutations';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+// import * as queries from '../../graphql/queries';
+// import * as subscriptions from '../../graphql/subscriptions'
 import useMutation from '../../hooks/useMutation';
 import {
   useSelectedEventContext,
@@ -22,8 +30,8 @@ import { defaultRace } from './support-functions/raceDomain';
 
 export const TimekeeperWizard = () => {
   const { t } = useTranslation();
-  const [activeStepIndex, setActiveStepIndex] = useLocalStorage('DREM-timekeeper-state', 0);
-  const [previousStepIndex, setPreviousStepIndex] = useLocalStorage('DREM-timekeeper-state', 0);
+  const [activeStepIndex, setActiveStepIndex] = useLocalStorage('DREM-timekeeper-activeStepIndex', 0);
+  const [previousStepIndex, setPreviousStepIndex] = useLocalStorage('DREM-timekeeper-previousStepIndex', 0);
   const [raceConfig, setRaceConfig] = useLocalStorage('DREM-timekeeper-race-config', {});
   const [race, setRace] = useLocalStorage('DREM-timekeeper-current-race', defaultRace);
   const [fastestLap, SetFastestLap] = useState([]);
@@ -32,12 +40,24 @@ export const TimekeeperWizard = () => {
   const selectedTrack = useSelectedTrackContext();
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
   const [selectedModels, setSelectedModels] = useState([]);
+  const [clearModelsOnCarToggle, setClearModelsOnCarToggle] = useLocalStorage('DREM-timekeeper-clearModelsOnCarToggle', true);
   const [selectedCars, setSelectedCars] = useState([]);
   const [errorText, setErrorText] = useState('');
   const [isLoadingNextStep, setIsLoadingNextStep] = useState(false);
   const [sendMutation, loading, errorMessage, data] = useMutation();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const messageDisplayTime = 4000;
   const notificationId = '';
+
+  // delete models from Cars
+  async function carDeleteAllModels() {
+    const InstanceIds = selectedCars.map((i) => i.InstanceId);
+
+    const response = await API.graphql({
+      query: mutations.carDeleteAllModels,
+      variables: { resourceIds: InstanceIds },
+    });
+  }
 
   // check if active index is timekeeper and set isLoading to true if it is
   useEffect(() => {
@@ -77,12 +97,13 @@ export const TimekeeperWizard = () => {
       setRaceConfig({});
       setPreviousStepIndex(0);
       setActiveStepIndex(0);
+      setIsModalOpen(false);
       setRace(defaultRace);
     };
   }, []);
 
   useEffect(() => {
-    dispatch('SIDE_NAV_IS_OPEN', true);
+    dispatch('SIDE_NAV_IS_OPEN', false);
   }, [dispatch]);
 
   // Find the fastest lap and fastest average window
@@ -151,10 +172,12 @@ export const TimekeeperWizard = () => {
     setRaceConfig({});
     SetFastestLap([]);
     setFastestAverageLap([]);
-    setErrorText(t(""));
+    setErrorText("");
 
     setPreviousStepIndex(0);
     setActiveStepIndex(0);
+    setIsModalOpen(false);
+    setIsLoadingNextStep(false);
   };
 
   async function handleOnNavigate(detail) {
@@ -162,21 +185,24 @@ export const TimekeeperWizard = () => {
     if (activeStepIndex === 0 && race.username === null) {
       // console.log("race", race);
       setErrorText(t("timekeeper.wizard.select-racer-error"));
-    } else if (activeStepIndex === 1 && selectedModels.length === 0 && detail.reason === "next") {
-      setErrorText(t("timekeeper.wizard.no-models-selected-error"));
-    } else if (activeStepIndex === 2 && selectedCars.length === 0 && detail.reason === "next") {
+    } else if (activeStepIndex === 1 && selectedCars.length === 0 && detail.reason === "next") {
       setErrorText(t("timekeeper.wizard.no-car-selected-error"));
-    } else if (detail.reason === "previous") {
+    } else if (activeStepIndex === 2 && selectedModels.length === 0 && detail.reason === "next") {
+      setErrorText(t("timekeeper.wizard.no-models-selected-error"));
+    } else if (activeStepIndex === 2 && selectedModels.length > 0 && detail.reason === "next" && clearModelsOnCarToggle) {
+      setIsModalOpen(true);
+    }
+    else if (detail.reason === "previous") {
       console.log("previous");
       setIsLoadingNextStep(false)
       setPreviousStepIndex(previousStepIndex - 1)
       setActiveStepIndex(previousStepIndex)
-      setErrorText(t(""));
+      setErrorText("");
     } else {
       setIsLoadingNextStep(false)
       setPreviousStepIndex(activeStepIndex);
       setActiveStepIndex(detail.requestedStepIndex)
-      setErrorText(t(""));
+      setErrorText("");
     }
   }
 
@@ -231,6 +257,45 @@ export const TimekeeperWizard = () => {
   // const pageToDisplay = stateMachine(activeStepIndex);
   // JSX
   return <>
+    <Modal
+      onDismiss={() => {
+        setIsModalOpen(false);
+      }}
+      visible={isModalOpen}
+      closeAriaLabel={t('carmodelupload.close-modal-ari-label')}
+      footer={
+        <Box float="right">
+          <SpaceBetween direction="horizontal" size="xs">
+            <Button
+              variant="link"
+              onClick={() => {
+                setIsModalOpen(false);
+              }}
+            >
+              {t('button.cancel')}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                carDeleteAllModels();
+                setIsModalOpen(false);
+                setPreviousStepIndex(2);
+                setActiveStepIndex(3);
+                setErrorText("");
+              }}
+            >
+              {t('carmodelupload.header-delete-upload')}
+            </Button>
+          </SpaceBetween>
+        </Box>
+      }
+      header={t('carmodelupload.header-delete')}
+    >
+      {t('carmodelupload.header-delete-confirm')}: <br></br>{' '}
+      {selectedCars.map((selectedCars) => {
+        return selectedCars.ComputerName + ' ';
+      })}
+    </Modal>
     <Form errorText={errorText}>
       <Wizard
           i18nStrings={{
@@ -266,6 +331,17 @@ export const TimekeeperWizard = () => {
             isOptional: false,
           },
           {
+            title: t("timekeeper.wizard.select-car"),
+            content: (
+              <CarSelector query={{
+                tokens: [{ propertyKey: 'fleetName', value: selectedTrack.fleetId, operator: '=' }],
+                operation: 'and',
+              }}
+              selectedCars={selectedCars} setSelectedCars={setSelectedCars}/>
+            ),
+            isOptional: true,
+          },
+          {
             title: t("timekeeper.wizard.select-models"),
             content: (
               <ModelSelector query={{
@@ -274,18 +350,9 @@ export const TimekeeperWizard = () => {
               }}
               selectedModels={selectedModels}
               setSelectedModels={setSelectedModels}
+              clearModelsOnCarToggle={clearModelsOnCarToggle}
+              setClearModelsOnCarToggle={setClearModelsOnCarToggle}
               />
-            ),
-            isOptional: true,
-          },
-          {
-            title: t("timekeeper.wizard.select-car"),
-            content: (
-              <CarSelector query={{
-                tokens: [{ propertyKey: 'fleetName', value: selectedTrack.fleetId, operator: '=' }],
-                operation: 'and',
-              }}
-              selectedCars={selectedCars} setSelectedCars={setSelectedCars}/>
             ),
             isOptional: true,
           },

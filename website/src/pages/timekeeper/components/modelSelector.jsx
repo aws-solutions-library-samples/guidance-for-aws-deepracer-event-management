@@ -1,3 +1,4 @@
+import { Box, SpaceBetween, Toggle } from '@cloudscape-design/components';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageTable } from '../../../components/pageTable';
@@ -11,7 +12,9 @@ import { useStore } from '../../../store/store';
 export const ModelSelector = ({
   query = { tokens: [], operation: 'and' },
   selectedModels,
-  setSelectedModels
+  setSelectedModels,
+  clearModelsOnCarToggle,
+  setClearModelsOnCarToggle
 }) => {
   const { t } = useTranslation([
     'translation',
@@ -33,6 +36,21 @@ export const ModelSelector = ({
     />
   );
 
+  let tabeleFooterContent = (
+    <SpaceBetween direction='vertical'>
+      <Box float='right'>
+        <Toggle
+          onChange={({ detail }) => {
+            setClearModelsOnCarToggle(detail.checked);
+          }}
+          checked={clearModelsOnCarToggle}
+        >
+          {t('carmodelupload.clear')}
+        </Toggle>
+      </Box>
+    </SpaceBetween>
+  );
+
   const content = (
     <PageTable
       selectedItems={selectedModels}
@@ -43,6 +61,7 @@ export const ModelSelector = ({
       trackBy="modelId"
       sortingColumn="uploadedDateTime"
       header={tabeleHeaderContent}
+      footer={tabeleFooterContent}
       itemsIsLoading={isLoading}
       isItemDisabled={(item) => !['AVAILABLE', 'OPTIMIZED'].includes(item.status)}
       loadingText={t('models.loading-models')}
