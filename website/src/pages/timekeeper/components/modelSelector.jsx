@@ -1,5 +1,5 @@
 import { Box, SpaceBetween, Toggle } from '@cloudscape-design/components';
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageTable } from '../../../components/pageTable';
 import { TableHeader } from '../../../components/tableConfig';
@@ -21,8 +21,8 @@ export const ModelSelector = ({
     'help-model-management',
     'help-admin-model-management',
   ]);
-  const [columnConfiguration, setColumnConfiguration] = useState(ColumnConfigurationOperator());
-  const [filteringProperties, setFilteringProperties] = useState(FilteringPropertiesOperator());
+  const columnConfiguration = ColumnConfigurationOperator();
+  const filteringProperties = FilteringPropertiesOperator();
   // const [selectedModels, setSelectedModels] = useState([]);
   const [state] = useStore();
   const models = state.models.models;

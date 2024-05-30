@@ -79,10 +79,10 @@ export const CarSelector = ({
     header={tabeleHeaderContent}
     itemsIsLoading={false}
     //isItemDisabled={(item) => !['AVAILABLE', 'OPTIMIZED'].includes(item.status)}
-    loadingText={t('models.loading-models')}
-    localStorageKey="models-table-preferences"
+    loadingText={t('cars.loading-models')}
+    localStorageKey="cars-table-preferences"
     filteringProperties={filteringProperties}
-    filteringI18nStringsName="models"
+    filteringI18nStringsName="cars"
     query={query}
   />
   );

@@ -16,7 +16,12 @@ dayjs.extend(relativeTime);
  * @return {string} string representation YYYY-MM-DD HH:mm:ss (z)
  */
 export const formatAwsDateTime = (dateTime) => {
-  return dayjs(dateTime).format('YYYY-MM-DD HH:mm:ss (z)');
+  const result = dayjs(dateTime).format('YYYY-MM-DD HH:mm:ss (z)');
+  if (result === 'Invalid Date') {
+    return;
+  } else {
+    return result;
+  }
 };
 
 /**
