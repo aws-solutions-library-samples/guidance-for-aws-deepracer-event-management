@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import * as mutations from '../../../graphql/mutations';
 // import * as subscriptions from '../graphql/subscriptions'
 import { useTranslation } from 'react-i18next';
+import { formatAwsDateTime } from '../../../support-functions/time';
 
 import {
   Alert,
@@ -216,7 +217,7 @@ export function UploadModelToCar(props) {
     {
       id: 'startTime',
       header: t('carmodelupload.startTime'),
-      cell: (item) => item.startTime || '-',
+      cell: (item) => formatAwsDateTime(item.startTime) || '-',
       sortingField: 'startTime',
       width: 180,
       minWidth: 180,
@@ -224,7 +225,7 @@ export function UploadModelToCar(props) {
     {
       id: 'uploadStartTime',
       header: t('carmodelupload.uploadStartTime'),
-      cell: (item) => item.uploadStartTime || '-',
+      cell: (item) => formatAwsDateTime(item.uploadStartTime) || '-',
       sortingField: 'uploadStartTime',
       width: 180,
       minWidth: 180,
@@ -232,7 +233,7 @@ export function UploadModelToCar(props) {
     {
       id: 'endTime',
       header: t('carmodelupload.endTime'),
-      cell: (item) => item.endTime || '-',
+      cell: (item) => formatAwsDateTime(item.endTime) || '-',
       sortingField: 'endTime',
       width: 180,
       minWidth: 180,

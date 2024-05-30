@@ -1,6 +1,6 @@
 //import i18next from '../i18n';
-//import { formatAwsDateTime } from '../support-functions/time';
 import { useTranslation } from 'react-i18next';
+import { formatAwsDateTime } from '../support-functions/time';
 
 export const ColumnConfiguration = () => {
   const { t } = useTranslation();
@@ -12,6 +12,7 @@ export const ColumnConfiguration = () => {
       'startTime',
       'uploadStartTime',
       'endTime',
+      'duration',
     ],
     visibleContentOptions: [
       {
@@ -83,7 +84,7 @@ export const ColumnConfiguration = () => {
       {
         id: 'startTime',
         header: t('carmodelupload.startTime'),
-        cell: (item) => item.startTime || '-',
+        cell: (item) => formatAwsDateTime(item.startTime) || '-',
         sortingField: 'startTime',
         width: 220,
         minWidth: 220,
@@ -91,7 +92,7 @@ export const ColumnConfiguration = () => {
       {
         id: 'uploadStartTime',
         header: t('carmodelupload.uploadStartTime'),
-        cell: (item) => item.uploadStartTime || '-',
+        cell: (item) => formatAwsDateTime(item.uploadStartTime) || '-',
         sortingField: 'uploadStartTime',
         width: 220,
         minWidth: 220,
@@ -99,7 +100,7 @@ export const ColumnConfiguration = () => {
       {
         id: 'endTime',
         header: t('carmodelupload.endTime'),
-        cell: (item) => item.endTime || '-',
+        cell: (item) => formatAwsDateTime(item.endTime) || '-',
         sortingField: 'endTime',
         width: 220,
         minWidth: 220,
