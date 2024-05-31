@@ -486,6 +486,7 @@
     "car-reset": "Car reset",
     "current-lap": "Current lap",
     "current-racer": "Racer name",
+    "current-car": "Car name",
     "dnf": "Did not finish",
     "end-race": "End race",
     "race-setup-page.page-header": "Timekeeper: Select racer",

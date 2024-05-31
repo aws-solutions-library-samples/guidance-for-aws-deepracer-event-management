@@ -37,6 +37,7 @@ export const RacePage = ({
   fastestAverageLap,
   raceConfig,
   onNext,
+  selectedCar,
 }) => {
   const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-page']);
   const [warningModalVisible, setWarningModalVisible] = useState(false);
@@ -53,6 +54,7 @@ export const RacePage = ({
   const [btnUndoFalseFinish, setBtnUndoFalseFinish] = useState(true);
   const [btnEndRace, setBtnEndRace] = useState(false);
   const [btnStartRace, setBtnStartRace] = useState(false);
+  const [currentCar, setCurrentCar] = useState(selectedCar || {carName: ""})
   // const [lapInformation, setLapInformation] = useState([]);
 
   const [
@@ -110,7 +112,7 @@ export const RacePage = ({
           resets: carResetCounter,
           lapId: lapId,
           modelId: raceInfo.currentModelId,
-          carId: raceInfo.currentCarId,
+          carName: currentCar.ComputerName,
           time: lapTimerRef.current.getCurrentTimeInMs(),
           isValid: isLapValid,
           autTimerConnected: autTimerIsConnected,
@@ -289,9 +291,18 @@ export const RacePage = ({
         <ColumnLayout columns={2}>
           <Container>
             <SpaceBetween size="xs" direction="vertical">
-              <Header variant="h5">{t('timekeeper.current-racer')}:</Header>
-              <Header variant="h3">{raceInfo.username}</Header>
-
+              <Grid
+                gridDefinition={[{ colspan: 6 }, { colspan: 6 }, { colspan: 6 }, { colspan: 6 }]}
+              >
+                <span>
+                  <Header variant="h5">{t('timekeeper.current-racer')}:</Header>
+                  <Header variant="h3">{raceInfo.username}</Header>
+                </span>
+                <span>
+                  <Header variant="h5">{t('timekeeper.current-car')}:</Header>
+                  <Header variant="h3">{currentCar.ComputerName}</Header>
+                </span>
+              </Grid>
               <Grid
                 gridDefinition={[{ colspan: 6 }, { colspan: 6 }, { colspan: 6 }, { colspan: 6 }]}
               >

@@ -1,5 +1,6 @@
 import {
   Box,
+  BreadcrumbGroup,
   Button,
   Form,
   Modal,
@@ -254,7 +255,12 @@ export const TimekeeperWizard = () => {
     }, messageDisplayTime);
   };
 
-  // const pageToDisplay = stateMachine(activeStepIndex);
+  const breadcrumbs = [
+    { text: t('home.breadcrumb'), href: '/' },
+    { text: t('operator.breadcrumb'), href: '/admin/home' },
+    { text: t('topnav.time-keeper-wizard'), href: '/admin/timekeeper-wizard' },
+  ]
+
   // JSX
   return <>
     <Modal
@@ -296,6 +302,7 @@ export const TimekeeperWizard = () => {
         return selectedCars.ComputerName + ' ';
       })}
     </Modal>
+    <BreadcrumbGroup items={breadcrumbs} ariaLabel="Breadcrumbs" />
     <Form errorText={errorText}>
       <Wizard
           i18nStrings={{
@@ -373,6 +380,7 @@ export const TimekeeperWizard = () => {
                 fastestAverageLap={fastestAverageLap}
                 raceConfig={raceConfig}
                 onNext={raceIsDoneHandler}
+                selectedCar={selectedCars[0]}
               />
             ),
             isOptional: false,
