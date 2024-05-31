@@ -80,6 +80,23 @@ export class Idp extends Construct {
       layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
     });
 
+    const custom_message_lambda = new StandardLambdaPythonFunction(this, 'custom_message_lambda', {
+      entry: 'lib/lambdas/cognito_triggers/',
+      description: 'Cognito custom_message trigger lambda',
+      handler: 'custom_message_handler',
+      runtime: props.lambdaConfig.runtime,
+      architecture: props.lambdaConfig.architecture,
+      environment: {
+        eventbus_name: props.eventbus.eventBusName,
+        default_user_group: 'racer',
+        POWERTOOLS_SERVICE_NAME: 'cognito_custom_message_lambda',
+      },
+      bundling: {
+        image: props.lambdaConfig.bundlingImage,
+      },
+      layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
+    });
+
     const userPool = new cognito.UserPool(this, 'UserPool', {
       userPoolName: stack.stackName,
       standardAttributes: {
@@ -121,6 +138,7 @@ export class Idp extends Construct {
       lambdaTriggers: {
         preSignUp: pre_sign_up_lambda,
         preTokenGeneration: pre_token_generation_lambda,
+        customMessage: custom_message_lambda,
       },
     });
 
