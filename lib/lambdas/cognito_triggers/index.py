@@ -86,16 +86,3 @@ def pre_sign_up_handler(event: dict, context: LambdaContext) -> str:
     except Exception as error:
         logger.exception(error)
         return http_response.response(500, error)
-    
-    
-@logger.inject_lambda_context
-def custom_message_handler(event: dict, context: LambdaContext) -> str:
-    try:
-        if event["triggerSource"] == "CustomMessage_SignUp":
-            logger.info("CustomMessage_SignUp")
-            logger.info(event)
-        return event
-
-    except Exception as error:
-        logger.exception(error)
-        return http_response.response(500, error)
