@@ -238,6 +238,7 @@ export function TopNav(props) {
         {
           type: 'link',
           text: t('topnav.time-keeper-wizard'),
+          info: <Badge color="blue">{t('topnav.beta')}</Badge>,
           href: '/admin/timekeeper-wizard',
         },
       ],
