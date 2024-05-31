@@ -6,6 +6,7 @@ import {
   Grid,
   Header,
   Modal,
+  Select,
   SpaceBetween,
 } from '@cloudscape-design/components';
 import { useMachine } from '@xstate/react';
@@ -19,6 +20,7 @@ import {
 import useCounter from '../../../hooks/useCounter';
 import { usePublishOverlay } from '../../../hooks/usePublishOverlay';
 import useWebsocket from '../../../hooks/useWebsocket';
+import { useStore } from '../../../store/store';
 import { FastestAverageLapTable } from '../components/fastesAverageLapTable';
 import { LapTable } from '../components/lapTable';
 import LapTimer from '../components/lapTimer';
@@ -40,6 +42,11 @@ export const RacePage = ({
   selectedCar,
 }) => {
   const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-page']);
+  const [state] = useStore();
+  const defaultCar = {
+    ComputerName: "Default"
+  };
+  const cars = [defaultCar].concat(state.cars.cars.filter((car) => car.PingStatus === 'Online'));
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const [currentLap, SetCurrentLap] = useState(defaultLap);
   const lapsForOverlay = useRef([]);
@@ -54,7 +61,7 @@ export const RacePage = ({
   const [btnUndoFalseFinish, setBtnUndoFalseFinish] = useState(true);
   const [btnEndRace, setBtnEndRace] = useState(false);
   const [btnStartRace, setBtnStartRace] = useState(false);
-  const [currentCar, setCurrentCar] = useState(selectedCar || {carName: ""})
+  const [currentCar, setCurrentCar] = useState(selectedCar || defaultCar)
   // const [lapInformation, setLapInformation] = useState([]);
 
   const [
@@ -300,7 +307,15 @@ export const RacePage = ({
                 </span>
                 <span>
                   <Header variant="h5">{t('timekeeper.current-car')}:</Header>
-                  <Header variant="h3">{currentCar.ComputerName}</Header>
+                  <Select
+                    selectedOption={{ label: currentCar.ComputerName, value: currentCar.Computername }}
+                    onChange={({ detail }) => {
+                      setCurrentCar(detail.selectedOption.value)
+                    }}
+                    options={cars.map(car => {
+                        return { label: car['ComputerName'], value: car }
+                    })}
+                  />
                 </span>
               </Grid>
               <Grid
