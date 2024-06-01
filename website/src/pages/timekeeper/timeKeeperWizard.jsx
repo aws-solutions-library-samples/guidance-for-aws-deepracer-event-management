@@ -68,7 +68,7 @@ export const TimekeeperWizard = () => {
   },[activeStepIndex])
 
   useEffect(() => {
-    console.log(race.username)
+    console.log("username:", race.username)
     setSelectedModels([])
   },[race.username])
 
@@ -107,6 +107,13 @@ export const TimekeeperWizard = () => {
     dispatch('SIDE_NAV_IS_OPEN', false);
   }, [dispatch]);
 
+  // Ensures Laps are cleared when wizard is reset.
+  useEffect(() => {
+    if (race.username === null){
+      race.laps = [];
+    }
+  }, [race.username])
+
   // Find the fastest lap and fastest average window
   useEffect(() => {
     if (race.laps && race.laps.length) {
@@ -143,7 +150,7 @@ export const TimekeeperWizard = () => {
     } else {
       setFastestAverageLap([]);
     }
-    console.info(race);
+    console.info("Find the fastest lap and fastest average window:", race);
   }, [race.laps]);
 
   // handlers functions
@@ -169,6 +176,7 @@ export const TimekeeperWizard = () => {
   };
 
   const resetRacehandler = () => {
+    console.info('Reset Race Handler');
     setRace(defaultRace);
     setRaceConfig({});
     SetFastestLap([]);
@@ -220,7 +228,7 @@ export const TimekeeperWizard = () => {
 
   const submitRaceHandler = async () => {
     //SetButtonsIsDisabled(true);
-    console.log(race);
+    console.log("race:", race);
 
     sendMutation('updateOverlayInfo', {
       eventId: race.eventId,
@@ -323,7 +331,7 @@ export const TimekeeperWizard = () => {
           submitRaceHandler();
         }}
         onCancel={() => {
-          console.log("Reset Wizard")
+          // console.log("Reset Wizard")
           resetRacehandler();
         }}
         activeStepIndex={activeStepIndex}

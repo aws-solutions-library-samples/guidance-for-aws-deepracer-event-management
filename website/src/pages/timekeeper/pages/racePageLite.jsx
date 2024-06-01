@@ -78,7 +78,7 @@ export const RacePage = ({
   //populate the laps on page refresh, without this laps array in the overlay is empty
   useEffect(() => {
     lapsForOverlay.current = raceInfo.laps;
-  }, []);
+  }, [raceInfo.laps]);
 
   const [, send] = useMachine(stateMachine, {
     actions: {
