@@ -35,6 +35,10 @@ export const ColumnConfiguration = (isEditable) => {
             id: 'autTimeConnected',
             label: i18next.t('race-admin.aut-timer-connected'),
           },
+          {
+            id: 'car',
+            label: i18next.t('race-admin.car'),
+          },
         ],
       },
     ],
@@ -82,6 +86,13 @@ export const ColumnDefinitions = () => {
           : i18next.t('timekeeper.lap-table.not-valid'),
       sortingField: 'isValid',
       width: 176,
+    },
+    {
+      id: 'car',
+      header: i18next.t('race-admin.car'),
+      cell: (item) => item.carName || '-',
+      sortingField: 'car',
+      width: 150,
     },
     {
       id: 'autTimeConnected',

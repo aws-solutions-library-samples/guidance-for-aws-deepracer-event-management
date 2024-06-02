@@ -26,7 +26,7 @@ import { LapTable } from '../components/lapTable';
 import LapTimer from '../components/lapTimer';
 import RaceTimer from '../components/raceTimer';
 import { getAverageWindows } from '../support-functions/averageClaculations';
-import { defaultLap } from '../support-functions/raceDomain';
+import { defaultCar, defaultLap } from '../support-functions/raceDomain';
 import { stateMachine } from '../support-functions/stateMachine';
 import { Breadcrumbs } from '../support-functions/supportFunctions';
 
@@ -43,9 +43,6 @@ export const RacePage = ({
 }) => {
   const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-page']);
   const [state] = useStore();
-  const defaultCar = {
-    ComputerName: "Default"
-  };
   const cars = [defaultCar].concat(state.cars.cars.filter((car) => car.PingStatus === 'Online'));
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const [currentLap, SetCurrentLap] = useState(defaultLap);

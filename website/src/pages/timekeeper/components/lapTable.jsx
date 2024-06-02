@@ -42,6 +42,11 @@ const LapTable = (props) => {
       cell: (item) => item.valid || '',
       width: '200px',
     },
+    {
+      id: 'car',
+      header: t('timekeeper.lap-table.lap-car'),
+      cell: (item) => item.carName || '',
+    },
   ];
 
   if (rankingMethod !== RaceTypeEnum.BEST_AVERAGE_LAP_TIME_X_LAP) {

@@ -6,7 +6,8 @@ import {
   Grid,
   Header,
   Modal,
-  SpaceBetween,
+  Select,
+  SpaceBetween
 } from '@cloudscape-design/components';
 import { useMachine } from '@xstate/react';
 import React, { useEffect, useRef, useState } from 'react';
@@ -21,12 +22,13 @@ import { PageLayout } from '../../../components/pageLayout';
 import useCounter from '../../../hooks/useCounter';
 import { usePublishOverlay } from '../../../hooks/usePublishOverlay';
 import useWebsocket from '../../../hooks/useWebsocket';
+import { useStore } from '../../../store/store';
 import { FastestAverageLapTable } from '../components/fastesAverageLapTable';
 import { LapTable } from '../components/lapTable';
 import LapTimer from '../components/lapTimer';
 import RaceTimer from '../components/raceTimer';
 import { getAverageWindows } from '../support-functions/averageClaculations';
-import { defaultLap } from '../support-functions/raceDomain';
+import { defaultCar, defaultLap } from '../support-functions/raceDomain';
 import { stateMachine } from '../support-functions/stateMachine';
 import { Breadcrumbs } from '../support-functions/supportFunctions';
 
@@ -41,6 +43,8 @@ export const RacePage = ({
   onNext,
 }) => {
   const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-page']);
+  const [state] = useStore();
+  const cars = [defaultCar].concat(state.cars.cars.filter((car) => car.PingStatus === 'Online'));
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const [currentLap, SetCurrentLap] = useState(defaultLap);
   const lapsForOverlay = useRef([]);
@@ -55,6 +59,7 @@ export const RacePage = ({
   const [btnUndoFalseFinish, setBtnUndoFalseFinish] = useState(true);
   const [btnEndRace, setBtnEndRace] = useState(false);
   const [btnStartRace, setBtnStartRace] = useState(false);
+  const [currentCar, setCurrentCar] = useState(defaultCar)
   // const [lapInformation, setLapInformation] = useState([]);
 
   const [
@@ -112,7 +117,7 @@ export const RacePage = ({
           resets: carResetCounter,
           lapId: lapId,
           modelId: raceInfo.currentModelId,
-          carId: raceInfo.currentCarId,
+          carName: currentCar.ComputerName,
           time: lapTimerRef.current.getCurrentTimeInMs(),
           isValid: isLapValid,
           autTimerConnected: autTimerIsConnected,
@@ -303,9 +308,26 @@ export const RacePage = ({
         <ColumnLayout columns={2}>
           <Container>
             <SpaceBetween size="xs" direction="vertical">
-              <Header variant="h5">{t('timekeeper.current-racer')}:</Header>
-              <Header variant="h3">{raceInfo.username}</Header>
-
+              <Grid
+                gridDefinition={[{ colspan: 6 }, { colspan: 6 }, { colspan: 6 }, { colspan: 6 }]}
+              >
+                <span>
+                  <Header variant="h5">{t('timekeeper.current-racer')}:</Header>
+                  <Header variant="h3">{raceInfo.username}</Header>
+                </span>
+                <span>
+                  <Header variant="h5">{t('timekeeper.current-car')}:</Header>
+                  <Select
+                    selectedOption={{ label: currentCar.ComputerName, value: currentCar.Computername }}
+                    onChange={({ detail }) => {
+                      setCurrentCar(detail.selectedOption.value)
+                    }}
+                    options={cars.map(car => {
+                        return { label: car['ComputerName'], value: car }
+                    })}
+                  />
+                </span>
+              </Grid>
               <Grid
                 gridDefinition={[{ colspan: 6 }, { colspan: 6 }, { colspan: 6 }, { colspan: 6 }]}
               >
