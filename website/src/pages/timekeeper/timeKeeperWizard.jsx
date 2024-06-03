@@ -10,7 +10,7 @@ import {
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { EventSelectorModal } from '../../components/eventSelectorModal';
+import WithEventSelected from '../../components/WithEventSelected';
 import * as mutations from '../../graphql/mutations';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 // import * as queries from '../../graphql/queries';
@@ -30,7 +30,7 @@ import { RaceSetupPage } from './pages/raceSetupPageLite';
 import { getAverageWindows } from './support-functions/averageClaculations';
 import { defaultRace } from './support-functions/raceDomain';
 
-export const TimekeeperWizard = () => {
+const LocalTimekeeperWizard = () => {
   const { t } = useTranslation();
   const [activeStepIndex, setActiveStepIndex] = useLocalStorage('DREM-timekeeper-activeStepIndex', 0);
   const [previousStepIndex, setPreviousStepIndex] = useLocalStorage('DREM-timekeeper-previousStepIndex', 0);
@@ -40,7 +40,6 @@ export const TimekeeperWizard = () => {
   const [fastestAverageLap, setFastestAverageLap] = useState([]);
   const selectedEvent = useSelectedEventContext();
   const selectedTrack = useSelectedTrackContext();
-  const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
   const [selectedModels, setSelectedModels] = useState([]);
   const [clearModelsOnCarToggle, setClearModelsOnCarToggle] = useLocalStorage('DREM-timekeeper-clearModelsOnCarToggle', true);
   const [selectedCars, setSelectedCars] = useState([]);
@@ -72,13 +71,6 @@ export const TimekeeperWizard = () => {
     console.log("username:", race.username)
     setSelectedModels([])
   },[race.username])
-
-  // Show event selector modal if no event has been selected, timekeeper must have an event selected to work
-  useEffect(() => {
-    if (selectedEvent.eventId == null) {
-      setEventSelectModalVisible(true);
-    }
-  }, [selectedEvent]);
 
   const [, dispatch] = useStore();
   // change event info and race config when a user select another event
@@ -272,11 +264,6 @@ export const TimekeeperWizard = () => {
 
   // JSX
   return <>
-    <EventSelectorModal
-      visible={eventSelectModalVisible}
-      onDismiss={() => setEventSelectModalVisible(false)}
-      onOk={() => setEventSelectModalVisible(false)}
-    />
     <Modal
       onDismiss={() => {
         setIsModalOpen(false);
@@ -421,3 +408,5 @@ export const TimekeeperWizard = () => {
     </Form>
   </>;
 };
+
+export const TimekeeperWizard = WithEventSelected(LocalTimekeeperWizard)
