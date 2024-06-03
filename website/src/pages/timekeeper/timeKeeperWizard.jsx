@@ -49,6 +49,7 @@ const LocalTimekeeperWizard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const messageDisplayTime = 4000;
   const notificationId = '';
+  const [warningModalVisible, setWarningModalVisible] = useState(false);
 
   // delete models from Cars
   async function carDeleteAllModels() {
@@ -182,6 +183,10 @@ const LocalTimekeeperWizard = () => {
     setIsLoadingNextStep(false);
   };
 
+  const confirmResetRacehandler = () => {
+    setWarningModalVisible(true);
+  };
+
   async function handleOnNavigate(detail) {
     console.log("handleOnNavigate", detail);
     if (activeStepIndex === 0 && race.username === null) {
@@ -239,7 +244,7 @@ const LocalTimekeeperWizard = () => {
 
   const discardRaceHandler = () => {
     //SetButtonsIsDisabled(true);
-    //setWarningModalVisible(false);
+    setWarningModalVisible(false);
     dispatch('ADD_NOTIFICATION', {
       type: 'warning',
       content: t('timekeeper.end-session.race-discarded'),
@@ -303,6 +308,32 @@ const LocalTimekeeperWizard = () => {
         return selectedCars.ComputerName + ' ';
       })}
     </Modal>
+
+    <Modal
+      onDismiss={() => setWarningModalVisible(false)}
+      visible={warningModalVisible}
+      closeAriaLabel="Warning"
+      footer={
+        <Box float="right">
+          <SpaceBetween direction="horizontal" size="xs">
+            <Button
+              variant="secondary"
+              disabled={false} 
+              onClick={() => setWarningModalVisible(false)}
+            >
+              {t('button.cancel')}
+            </Button>
+            <Button variant="primary" disabled={false} onClick={discardRaceHandler}>
+              {t('timekeeper.end-session.discard-race')}
+            </Button>
+          </SpaceBetween>
+        </Box>
+      }
+      header="Warning!"
+    >
+      {t('timekeeper.end-session.warning-message')}
+    </Modal>
+
     <BreadcrumbGroup items={breadcrumbs} ariaLabel="Breadcrumbs" />
     <Form errorText={errorText}>
       <Wizard
@@ -325,7 +356,7 @@ const LocalTimekeeperWizard = () => {
         }}
         onCancel={() => {
           // console.log("Reset Wizard")
-          resetRacehandler();
+          confirmResetRacehandler();
         }}
         activeStepIndex={activeStepIndex}
         isLoadingNextStep={isLoadingNextStep}
