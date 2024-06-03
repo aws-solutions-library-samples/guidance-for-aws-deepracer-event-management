@@ -10,6 +10,7 @@ import {
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { EventSelectorModal } from '../../components/eventSelectorModal';
 import * as mutations from '../../graphql/mutations';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 // import * as queries from '../../graphql/queries';
@@ -271,6 +272,11 @@ export const TimekeeperWizard = () => {
 
   // JSX
   return <>
+    <EventSelectorModal
+      visible={eventSelectModalVisible}
+      onDismiss={() => setEventSelectModalVisible(false)}
+      onOk={() => setEventSelectModalVisible(false)}
+    />
     <Modal
       onDismiss={() => {
         setIsModalOpen(false);
