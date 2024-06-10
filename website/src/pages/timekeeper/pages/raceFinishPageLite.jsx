@@ -12,7 +12,6 @@ import { useTranslation } from 'react-i18next';
 import { RaceTypeEnum } from '../../../admin/events/support-functions/raceConfig';
 import { FastestAverageLapTable } from '../components/fastesAverageLapTable';
 import { LapTable } from '../components/lapTable';
-import { Breadcrumbs } from '../support-functions/supportFunctions';
 
 export const RaceFinishPage = ({
   eventName,
@@ -27,59 +26,7 @@ export const RaceFinishPage = ({
 }) => {
   const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-finish']);
   const [buttonsIsDisabled, SetButtonsIsDisabled] = useState(false);
-  //const [sendMutation, loading, errorMessage, data] = useMutation();
   const [warningModalVisible, setWarningModalVisible] = useState(false);
-  //const [, dispatch] = useStore();
-  //const messageDisplayTime = 4000;
-  //const notificationId = '';
-
-  // // Clear the notification is submit is successful and go back to racer selector page again
-  // useEffect(() => {
-  //   if (!loading && !errorMessage && data) {
-  //     setTimeout(() => {
-  //       dispatch('DISMISS_NOTIFICATION', notificationId);
-  //       SetButtonsIsDisabled(false);
-  //       onNext();
-  //     }, messageDisplayTime);
-  //   }
-  // }, [errorMessage, loading]);
-
-  // const submitRaceHandler = async () => {
-  //   SetButtonsIsDisabled(true);
-  //   console.log(raceInfo);
-
-  //   sendMutation('updateOverlayInfo', {
-  //     eventId: raceInfo.eventId,
-  //     eventName: raceConfig.eventName,
-  //     trackId: raceInfo.trackId,
-  //     username: raceInfo.username,
-  //     userId: raceInfo.userId,
-  //     laps: raceInfo.laps,
-  //     averageLaps: raceInfo.averageLaps,
-  //     timeLeftInMs: 0,
-  //     raceStatus: 'RACE_SUBMITTED',
-  //   });
-  //   sendMutation('addRace', { ...raceInfo });
-  // };
-
-  // const discardRaceHandler = () => {
-  //   SetButtonsIsDisabled(true);
-  //   setWarningModalVisible(false);
-  //   dispatch('ADD_NOTIFICATION', {
-  //     type: 'warning',
-  //     content: t('timekeeper.end-session.race-discarded'),
-  //     id: notificationId,
-  //     dismissible: true,
-  //     onDismiss: () => {
-  //       dispatch('DISMISS_NOTIFICATION', notificationId);
-  //     },
-  //   });
-  //   setTimeout(() => {
-  //     SetButtonsIsDisabled(false);
-  //     dispatch('DISMISS_NOTIFICATION', notificationId);
-  //     onNext();
-  //   }, messageDisplayTime);
-  // };
 
   const raceInfoPanel = (
     <Container header={<Header>{t('timekeeper.end-session.race-info')}</Header>}>
@@ -132,23 +79,6 @@ export const RaceFinishPage = ({
     </Container>
   );
 
-  // const actionButtons = (
-  //   <Box float="right">
-  //     <SpaceBetween direction="horizontal" size="xs">
-  //       <Button
-  //         variant="link"
-  //         disabled={buttonsIsDisabled}
-  //         onClick={() => setWarningModalVisible(true)}
-  //       >
-  //         {t('timekeeper.end-session.discard-race')}
-  //       </Button>
-  //       <Button variant="primary" disabled={buttonsIsDisabled} onClick={submitRaceHandler}>
-  //         {t('timekeeper.end-session.submit-race')}
-  //       </Button>
-  //     </SpaceBetween>
-  //   </Box>
-  // );
-
   const warningModal = (
     <Modal
       onDismiss={() => setWarningModalVisible(false)}
@@ -176,13 +106,11 @@ export const RaceFinishPage = ({
     </Modal>
   );
 
-  const breadcrumbs = Breadcrumbs();
   return (
     <>
       <Grid gridDefinition={[{ colspan: 5 }, { colspan: 7 }, { colspan: 12 }]}>
         {raceInfoPanel}
         {lapsPanel}
-        {/* {actionButtons} */}
       </Grid>
 
       {warningModal}

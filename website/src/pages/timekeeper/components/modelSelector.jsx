@@ -23,7 +23,6 @@ export const ModelSelector = ({
   ]);
   const columnConfiguration = ColumnConfigurationOperator();
   const filteringProperties = FilteringPropertiesOperator();
-  // const [selectedModels, setSelectedModels] = useState([]);
   const [state] = useStore();
   const models = state.models.models;
   const isLoading = state.models.isLoading;

@@ -28,7 +28,6 @@ import RaceTimer from '../components/raceTimer';
 import { getAverageWindows } from '../support-functions/averageClaculations';
 import { defaultCar, defaultLap } from '../support-functions/raceDomain';
 import { stateMachine } from '../support-functions/stateMachine';
-import { Breadcrumbs } from '../support-functions/supportFunctions';
 
 import styles from './racePage.module.css';
 
@@ -59,7 +58,6 @@ export const RacePage = ({
   const [btnEndRace, setBtnEndRace] = useState(false);
   const [btnStartRace, setBtnStartRace] = useState(false);
   const [currentCar, setCurrentCar] = useState(selectedCar || defaultCar)
-  // const [lapInformation, setLapInformation] = useState([]);
 
   const [
     carResetCounter,
@@ -283,7 +281,6 @@ export const RacePage = ({
   );
 
   // JSX
-  const breadcrumbs = Breadcrumbs();
   let fastestAverageLapInformation = <></>;
   if (raceConfig.rankingMethod === RaceTypeEnum.BEST_AVERAGE_LAP_TIME_X_LAP) {
     fastestAverageLapInformation = <FastestAverageLapTable fastestAverageLap={fastestAverageLap} />;

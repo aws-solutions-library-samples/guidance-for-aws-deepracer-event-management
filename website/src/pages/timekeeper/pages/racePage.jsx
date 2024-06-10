@@ -60,7 +60,6 @@ export const RacePage = ({
   const [btnEndRace, setBtnEndRace] = useState(false);
   const [btnStartRace, setBtnStartRace] = useState(false);
   const [currentCar, setCurrentCar] = useState(defaultCar)
-  // const [lapInformation, setLapInformation] = useState([]);
 
   const [
     carResetCounter,
@@ -73,7 +72,7 @@ export const RacePage = ({
   const raceTimerRef = useRef();
   const [PublishOverlay] = usePublishOverlay();
 
-  //populate the laps on page refresh, without this laps array in the overlay is empty
+  // populate the laps on page refresh, without this laps array in the overlay is empty
   useEffect(() => {
     lapsForOverlay.current = raceInfo.laps;
   }, []);

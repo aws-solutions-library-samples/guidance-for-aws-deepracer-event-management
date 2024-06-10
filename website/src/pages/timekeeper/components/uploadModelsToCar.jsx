@@ -1,8 +1,7 @@
 import { API, graphqlOperation } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
-import * as mutations from '../../../graphql/mutations';
-// import * as subscriptions from '../graphql/subscriptions'
 import { useTranslation } from 'react-i18next';
+import * as mutations from '../../../graphql/mutations';
 import { formatAwsDateTime } from '../../../support-functions/time';
 
 import {
@@ -60,13 +59,8 @@ export function UploadModelToCar(props) {
           variables: variables,
         });
         console.debug('startUploadToCar', response.data.startUploadToCar.jobId);
-        //if (Array.isArray(localJobIds)) {
-
-        //console.log('jobIds2', thisJobIds)
         thisJobIds.push(response.data.startUploadToCar.jobId);
-        //console.log('jobIds3', thisJobIds)
         setJobIds(thisJobIds);
-        //}
       }, []);
     };
     getData();
