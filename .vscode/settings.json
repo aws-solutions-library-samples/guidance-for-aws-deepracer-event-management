@@ -3,14 +3,14 @@
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": true
+      "source.fixAll.eslint": "explicit"
     }
   },
   "[typescript]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": true
+      "source.fixAll.eslint": "explicit"
     }
   },
   "eslint.validate": ["javascript"],
@@ -34,15 +34,7 @@
     "editor.defaultFormatter": "ms-python.black-formatter"
   },
   "typescript.tsdk": "node_modules/typescript/lib",
-  "cSpell.words": [
-    "awsconfig",
-    "deepracer",
-    "DREM",
-    "hyperparameter",
-    "hyperparameters",
-    "leaderboard",
-    "Silverstone"
-  ],
+  "cSpell.words": ["awsconfig", "deepracer", "DREM", "hyperparameter", "hyperparameters", "leaderboard", "Silverstone"],
   "[javascript][typescript]": {
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": "explicit"

@@ -194,6 +194,7 @@ const StatusModelContent = (props) => {
       <Table
         columnDefinitions={columnDefinitions}
         items={results}
+        variant="embedded"
         loadingText={t('carmodelupload.loading')}
         sortingDisabled
         empty={
@@ -295,6 +296,7 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
       }}
       selectedItems={selectedCars}
       selectionType="single"
+      variant="embedded"
       // selectionType={modernToggleSelectionType}
       columnDefinitions={columnConfiguration.columnDefinitions}
       items={items}
@@ -556,6 +558,7 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
           items={jobs}
           loadingText={t('carmodelupload.loading')}
           sortingDisabled
+          variant="embedded"
           empty={
             <Alert visible={true} dismissAriaLabel="Close alert" header="Starting">
               {t('carmodelupload.please-wait')}

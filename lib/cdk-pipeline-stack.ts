@@ -304,5 +304,6 @@ export class CdkPipelineStack extends cdk.Stack {
       ],
       targets: [topic],
     });
+    rule.node.addDependency(topic.node.findChild('Policy'));
   }
 }

@@ -14,4 +14,9 @@ export const defaultLap = {
   resets: 0,
   isValid: false,
   autTimerConnected: false,
+  carName: '',
+};
+
+export const defaultCar = {
+  ComputerName: 'Default',
 };

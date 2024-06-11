@@ -23,7 +23,6 @@ default_user_group_role = None
 
 @logger.inject_lambda_context
 def pre_token_generation_handler(event: dict, context: LambdaContext) -> str:
-    logger.debug(event)
 
     global default_user_group_role
     if default_user_group_role is None:
@@ -52,8 +51,6 @@ def pre_token_generation_handler(event: dict, context: LambdaContext) -> str:
                 "preferredRole": default_user_group_role["Parameter"]["Value"],
             }
         }
-
-    logger.debug(event)
     return event
 
 
@@ -78,9 +75,6 @@ def pre_sign_up_handler(event: dict, context: LambdaContext) -> str:
                 },
             ]
         )
-        logger.info(response)
-
-        logger.info(event)
         return event
 
     except Exception as error:
