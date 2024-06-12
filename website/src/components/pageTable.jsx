@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { PropertyFilter, Table } from '@cloudscape-design/components';
@@ -80,6 +80,14 @@ export const PageTable = ({
     selection: {},
   });
 
+  useEffect(() => {
+    actions.setPropertyFiltering(query);
+
+    return () => {
+      // Unmounting
+    };
+  }, []);
+
   return (
     <Table
       {...props}
@@ -101,6 +109,10 @@ export const PageTable = ({
       filter={
         <PropertyFilter
           {...propertyFilterProps}
+          onChange={({ detail }) => {
+            actions.setPropertyFiltering(detail);
+          }}
+          // query={thisQuery}
           i18nStrings={PropertyFilterI18nStrings(filteringI18nStringsName)}
           countText={MatchesCountText(filteredItemsCount)}
           expandToViewport={true}

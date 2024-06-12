@@ -50,7 +50,7 @@ def __get_users() -> list:
         PaginationConfig={
             "PageSize": 60,
         },
-        Filter='status = "Enabled"'
+        Filter='status = "Enabled"',
     )
 
     users = []
@@ -77,21 +77,21 @@ def __get_group_memberships() -> dict[str, list[dict[str, str]]]:
     )
     groups = list_groups_response["Groups"]
 
-    # Get users belonging to each of the avilable groups
+    # Get users belonging to each of the available groups
     group_memberships = []
     for group in groups:
         group_name = group["GroupName"]
-        paginator = cognito_client.get_paginator("list_users_in_group")
-        response_iterator = paginator.paginate(
-            UserPoolId=user_pool_id,
-            GroupName=group_name,
-            PaginationConfig={
-                "PageSize": 60,
-            },
-        )
+        #  paginator = cognito_client.get_paginator("list_users_in_group")
+        #  response_iterator = paginator.paginate(
+        #      UserPoolId=user_pool_id,
+        #      GroupName=group_name,
+        #      PaginationConfig={
+        #          "PageSize": 60,
+        #      },
+        #  )
         users = []
-        for r in response_iterator:
-            users.append(r["Users"])
+        #  for r in response_iterator:
+        #      users.append(r["Users"])
 
         members_in_group = [item for sublist in users for item in sublist]
         group_memberships.append({"GroupName": group_name, "Members": members_in_group})
@@ -99,7 +99,7 @@ def __get_group_memberships() -> dict[str, list[dict[str, str]]]:
 
 
 def __add_roles_to_users(users, group_memberships):
-    # TODO make this more efficeint by grouping users by username
+    # TODO make this more efficient by grouping users by username
 
     for user in users:
         user_name = user["Username"]

@@ -114,6 +114,7 @@ export class RaceManager extends Construct {
         // crashes: GraphqlType.int(),
         isValid: GraphqlType.boolean(),
         autTimerConnected: GraphqlType.boolean(),
+        carName: GraphqlType.string(),
       },
       directives: [Directive.cognito('admin', 'operator', 'commentator')],
     });
@@ -130,6 +131,7 @@ export class RaceManager extends Construct {
         // crashes: GraphqlType.int(),
         isValid: GraphqlType.boolean(),
         autTimerConnected: GraphqlType.boolean(),
+        carName: GraphqlType.string(),
       },
       directives: [Directive.cognito('admin', 'operator')],
     });
