@@ -1,10 +1,11 @@
 import BarChart from '@cloudscape-design/components/bar-chart';
 import Box from '@cloudscape-design/components/box';
 import {
+  colorChartsGreen400,
   colorChartsPaletteCategorical25,
+  colorChartsPurple600,
   colorChartsStatusCritical,
-  colorChartsStatusNeutral,
-  colorChartsStatusPositive,
+  colorChartsYellow300
 } from '@cloudscape-design/design-tokens';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -23,14 +24,17 @@ const RaceGraph = ({
   const [yDomain, setYDomain] = useState([0, 15000]);
   const [xDomain, SetXDomain] = useState([]);
   const [redLaps, setRedLaps] = useState([]);
+  const [yellowLaps, setYellowLaps] = useState([]);
   const [greenLaps, setGreenLaps] = useState([]);
-  const [neutralLaps, setNeutralLaps] = useState([]);
+  const [purpleLaps, setPurpleLaps] = useState([]);
   const [threshold, setThreshold] = useState(0);
   const [thresholdLabel, setThresholdLabel] = useState(t('commentator.race.graph.fastestLap'));
   const [fastestLabel, setFastestLabel] = useState(t('commentator.race.graph.fastestRaceLap'));
+  const [fastestOfEventLabel, setFastestOfEventLabel] = useState(t('commentator.race.graph.fastestOfEventRaceLap'));
 
   const prepareGraphForAvgFormat = (slowestTime, fastestTime, allLaps) => {
     setFastestLabel(t('commentator.race.graph.fastestAvgWindow'));
+    setFastestOfEventLabel(t('commentator.race.graph.fastestOfEventAvgWindow'));
     setThresholdLabel(t('commentator.race.graph.fastestAvgLap'));
     if (fastestEventAvgLap?.avgTime) {
       const fastestAvg = fastestEventAvgLap?.avgTime;
@@ -51,18 +55,31 @@ const RaceGraph = ({
         avgWindowLaps = lapsCopy.splice(fastestRaceAvgLap.startLapId, count);
       }
 
-      setNeutralLaps(avgWindowLaps);
-      setGreenLaps(lapsCopy.filter((lap) => lap.isValid));
+      console.log("fastestEventAvgLap:", fastestEventAvgLap?.avgTime);
+      console.log("fastestRaceAvgLap:", fastestRaceAvgLap?.avgTime);
+
+      //  Decide if the fastest avgLap is Green (Fastest of Race) or Purple (Fastest of Event)
+      if (fastestRaceAvgLap?.avgTime < fastestEventAvgLap?.avgTime) {
+        setGreenLaps([]);
+        setPurpleLaps(avgWindowLaps);
+      } else {
+        setGreenLaps(avgWindowLaps);
+        setPurpleLaps([]);
+      }
+      
+      setYellowLaps(lapsCopy.filter((lap) => lap.isValid));
       setRedLaps(lapsCopy.filter((lap) => !lap.isValid));
     } else {
-      setGreenLaps(lapsCopy.filter((lap) => lap.isValid));
+      setYellowLaps(lapsCopy.filter((lap) => lap.isValid));
       setRedLaps(lapsCopy.filter((lap) => !lap.isValid));
-      setNeutralLaps([]);
+      setGreenLaps([]);
+      setPurpleLaps([]);
     }
   };
 
   const prepareGraph = (fastestTime, slowestTime, allLaps) => {
     setFastestLabel(t('commentator.race.graph.fastestRaceLap'));
+    setFastestOfEventLabel(t('commentator.race.graph.fastestOfEventRaceLap'));
     if (fastestEventLapTime) {
       setYDomain([
         Math.min(fastestTime, fastestEventLapTime) - 500,
@@ -77,11 +94,23 @@ const RaceGraph = ({
 
     console.log(allLaps);
     const fastest = allLaps.findIndex((lap) => lap.isValid);
-    console.log(fastest);
+    console.log("fastest:", allLaps[fastest].time);
+    console.log("fastestEventLapTime:", fastestEventLapTime);
 
-    setGreenLaps(allLaps.filter((lap, index) => lap.isValid && index !== fastest));
+    setYellowLaps(allLaps.filter((lap, index) => lap.isValid && index !== fastest));
     setRedLaps(allLaps.filter((lap) => !lap.isValid));
-    setNeutralLaps(allLaps.filter((lap, index) => lap.isValid && index === fastest));
+
+    //  Decide if the fastest lap is Green (Fastest of Race) or Purple (Fastest of Event)
+    if (allLaps[fastest].time < fastestEventLapTime) {
+      console.log("purple:", allLaps[fastest].time);
+      setPurpleLaps(allLaps.filter((lap, index) => lap.isValid && index === fastest));
+      setGreenLaps([]);
+    }
+    else {
+      console.log("Green:", allLaps[fastest].time);
+      setPurpleLaps([]);
+      setGreenLaps(allLaps.filter((lap, index) => lap.isValid && index === fastest));
+    }    
   };
 
   useEffect(() => {
@@ -116,8 +145,8 @@ const RaceGraph = ({
       SetXDomain([]);
 
       setRedLaps([]);
-      setGreenLaps([]);
-      setNeutralLaps([]);
+      setYellowLaps([]);
+      setPurpleLaps([]);
     }
   }, [laps, fastestEventLapTime, fastestRaceAvgLap, raceFormat]);
 
@@ -134,16 +163,23 @@ const RaceGraph = ({
           },
           {
             type: 'bar',
-            color: colorChartsStatusPositive,
+            color: colorChartsYellow300,
             title: t('commentator.race.graph.validLaps'),
+            data: yellowLaps,
+            valueFormatter: (e) => convertMsToString(e, true),
+          },
+          {
+            type: 'bar',
+            color: colorChartsGreen400,
+            title: fastestLabel,
             data: greenLaps,
             valueFormatter: (e) => convertMsToString(e, true),
           },
           {
             type: 'bar',
-            color: colorChartsStatusNeutral,
-            title: fastestLabel,
-            data: neutralLaps,
+            color: colorChartsPurple600,
+            title: fastestOfEventLabel,
+            data: purpleLaps,
             valueFormatter: (e) => convertMsToString(e, true),
           },
           {
