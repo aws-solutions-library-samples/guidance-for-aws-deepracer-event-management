@@ -346,11 +346,12 @@ index 1b6c315..6db49ac 100644
          # Construct the cli command
          for flag, value in dict(common_params, **platform_parms).items():
 EOF
-} 
-
+ 
     # Prevent double click on the range buttons to zoom in
     echo -e -n "\n- Fix range button zoom issue"
+    cp ${staticsPath}/bundle.css ${backupDir}/bundle.css.bak
     sed -i 's/.range-btn-minus button,.range-btn-plus button{background-color:#aab7b8!important;border-radius:4px!important;border:1px solid #879596!important}/.range-btn-minus button,.range-btn-plus button{background-color:#aab7b8!important;border-radius:4px!important;border:1px solid #879596!important;touch-action: manipulation;user-select: none;}/' ${staticsPath}/bundle.css
+}
 
 # Check the operating system version and architecture
 # Possible OS versions
