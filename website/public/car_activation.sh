@@ -321,7 +321,36 @@ CAR_TWEAKS()
     cp ${templatesPath}/login.html ${backupDir}/login.html.bak
     rm ${templatesPath}/login.html
     mv login.html ${templatesPath}/login.html
-}
+
+    # Enable use of model optimizer cache
+    echo -e -n "\n- Enable model optimizer cache"
+    patch -p1 -d ${modelOptimizerPath} << 'EOF'
+diff --git a/model_optimizer_pkg/model_optimizer_pkg/model_optimizer_node.py b/model_optimizer_pkg/model_optimizer_pkg/model_optimizer_node.py
+index 1b6c315..6db49ac 100644
+--- a/model_optimizer_pkg/model_optimizer_pkg/model_optimizer_node.py
++++ b/model_optimizer_pkg/model_optimizer_pkg/model_optimizer_node.py
+@@ -240,6 +240,15 @@ class ModelOptimizerNode(Node):
+         """
+         if not os.path.isfile(common_params[constants.MOKeys.MODEL_PATH]):
+             raise Exception(f"Model file {common_params[constants.MOKeys.MODEL_PATH]} not found")
++
++        # Check if model exists
++        if os.path.isfile(os.path.join(common_params[constants.MOKeys.OUT_DIR],
++                                   f"{common_params[constants.MOKeys.MODEL_NAME]}.bin")):
++            self.get_logger().info(f"Cached model: {common_params[constants.MOKeys.MODEL_NAME]}.xml")
++            return 0, os.path.join(common_params[constants.MOKeys.OUT_DIR],
++                                   f"{common_params[constants.MOKeys.MODEL_NAME]}.xml")
++
++
+         cmd = f"{constants.PYTHON_BIN} {constants.INTEL_PATH}{mo_path}"
+         # Construct the cli command
+         for flag, value in dict(common_params, **platform_parms).items():
+EOF
+} 
+
+    # Prevent double click on the range buttons to zoom in
+    echo -e -n "\n- Fix range button zoom issue"
+    sed -i 's/.range-btn-minus button,.range-btn-plus button{background-color:#aab7b8!important;border-radius:4px!important;border:1px solid #879596!important}/.range-btn-minus button,.range-btn-plus button{background-color:#aab7b8!important;border-radius:4px!important;border:1px solid #879596!important;touch-action: manipulation;user-select: none;}/' ${staticsPath}/bundle.css
 
 # Check the operating system version and architecture
 # Possible OS versions
@@ -353,7 +382,9 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
     bundlePath=/opt/aws/deepracer/lib/device_console/static
     systemPath=/opt/aws/deepracer/lib/deepracer_systems_pkg/lib/${pythonPath}/site-packages/deepracer_systems_pkg
     templatesPath=/opt/aws/deepracer/lib/device_console/templates
+    staticsPath=opt/aws/deepracer/lib/device_console/static
     webserverPath=/opt/aws/deepracer/lib/webserver_pkg/lib/${pythonPath}/site-packages/webserver_pkg
+    modelOptimizerPath=/opt/aws/deepracer/lib/model_optimizer_pkg/lib/${pythonPath}/site-packages/model_optimizer_pkg
 
     # Create backup directory
     homeDir=$(eval echo ~${SUDO_USER})
