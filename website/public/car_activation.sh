@@ -324,7 +324,7 @@ CAR_TWEAKS()
 
     # Enable use of model optimizer cache
     echo -e -n "\n- Enable model optimizer cache"
-    patch -p1 -d ${modelOptimizerPath} << 'EOF'
+    patch -p3 -d ${modelOptimizerPath} << 'EOF'
 diff --git a/model_optimizer_pkg/model_optimizer_pkg/model_optimizer_node.py b/model_optimizer_pkg/model_optimizer_pkg/model_optimizer_node.py
 index 1b6c315..6db49ac 100644
 --- a/model_optimizer_pkg/model_optimizer_pkg/model_optimizer_node.py
@@ -349,8 +349,8 @@ EOF
  
     # Prevent double click on the range buttons to zoom in
     echo -e -n "\n- Fix range button zoom issue"
-    cp ${staticsPath}/bundle.css ${backupDir}/bundle.css.bak
-    sed -i 's/.range-btn-minus button,.range-btn-plus button{background-color:#aab7b8!important;border-radius:4px!important;border:1px solid #879596!important}/.range-btn-minus button,.range-btn-plus button{background-color:#aab7b8!important;border-radius:4px!important;border:1px solid #879596!important;touch-action: manipulation;user-select: none;}/' ${staticsPath}/bundle.css
+    cp ${staticPath}/bundle.css ${backupDir}/bundle.css.bak
+    sed -i 's/.range-btn-minus button,.range-btn-plus button{background-color:#aab7b8!important;border-radius:4px!important;border:1px solid #879596!important}/.range-btn-minus button,.range-btn-plus button{background-color:#aab7b8!important;border-radius:4px!important;border:1px solid #879596!important;touch-action: manipulation;user-select: none;}/' ${staticPath}/bundle.css
 }
 
 # Check the operating system version and architecture
@@ -383,7 +383,7 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
     bundlePath=/opt/aws/deepracer/lib/device_console/static
     systemPath=/opt/aws/deepracer/lib/deepracer_systems_pkg/lib/${pythonPath}/site-packages/deepracer_systems_pkg
     templatesPath=/opt/aws/deepracer/lib/device_console/templates
-    staticsPath=opt/aws/deepracer/lib/device_console/static
+    staticPath=/opt/aws/deepracer/lib/device_console/static
     webserverPath=/opt/aws/deepracer/lib/webserver_pkg/lib/${pythonPath}/site-packages/webserver_pkg
     modelOptimizerPath=/opt/aws/deepracer/lib/model_optimizer_pkg/lib/${pythonPath}/site-packages/model_optimizer_pkg
 
