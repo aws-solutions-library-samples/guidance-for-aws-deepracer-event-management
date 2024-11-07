@@ -437,3 +437,4 @@ systemctl restart deepracer-core
 service nginx restart
 
 echo -e -n "\nDone!\n\n"
+
