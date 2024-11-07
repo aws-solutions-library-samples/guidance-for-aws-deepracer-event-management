@@ -1,8 +1,8 @@
 {
   "leaderboard.position": "Position",
   "leaderboard.racer": "Racer",
-  "leaderboard.time": "Time",
-  "leaderboard.average": "Average Time",
+  "leaderboard.time": "Fastest Lap Time",
+  "leaderboard.average": "Average Lap Time",
   "leaderboard.flag": "Flag",
   "leaderboard.DNF": "DNF",
   "leaderboard.summary-footer.finsiher": "NEW FINISHER",

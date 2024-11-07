@@ -7,6 +7,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import { Construct } from 'constructs';
+import * as os from 'os';
 import { Cdn } from './constructs/cdn';
 import { Eventbridge } from './constructs/eventbridge';
 import { Idp } from './constructs/idp';
@@ -96,7 +97,10 @@ export class BaseStack extends cdk.Stack {
     // Common Config
     const lambda_architecture = awsLambda.Architecture.ARM_64;
     const lambda_runtime = awsLambda.Runtime.PYTHON_3_11;
-    const lambda_bundling_image = DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.11:latest-arm64');
+    var lambda_bundling_image = DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.11:latest');
+    if (os.arch() === 'arm64') {
+      lambda_bundling_image = DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.11:latest-arm64');
+    }
 
     // Layers
     const lambdaLayers = this.lambdaLayers(stack, lambda_architecture, lambda_runtime, lambda_bundling_image);

@@ -24,12 +24,6 @@ Instructions for the automated timer can be found [here](./leaderboard-timer/REA
 
 Please note that the most recent release of Raspberry Pi OS "Bookworm" is currently not supported, please use "Bullseye" (Legacy) for the RPi operating system.
 
-## Automated timer
-
-Instructions for the automated timer can be found [here](./leaderboard-timer/README.md)
-
-Please note that the most recent release of Raspberry Pi OS "Bookworm" is currently not supported, please use "Bullseye" (Legacy) for the RPi operating system.
-
 ## Deployment
 
 ### Deployment prerequisites
