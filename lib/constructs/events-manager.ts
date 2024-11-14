@@ -137,6 +137,7 @@ export class EventsManager extends Construct {
         'REINVENT_2019',
         'REINVENT_2022',
         'REINVENT_2023',
+        'FOREVER_RACEWAY',
         'SUMMIT_SPEEDWAY',
         'ATOZ_SPEEDWAY',
         'OTHER',
