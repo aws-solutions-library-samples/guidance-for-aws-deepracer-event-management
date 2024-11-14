@@ -211,6 +211,7 @@ export class CarUploadStepFunction extends Construct {
     this.stepFunction = new stepFunctions.StateMachine(this, 'CarStatusUpdater', {
       definition: definition,
       tracingEnabled: true,
+      timeout: Duration.minutes(10),
       /*logs: {
         destination: car_status_update_SM_log_group,
         level: stepFunctions.LogLevel.ALL,
