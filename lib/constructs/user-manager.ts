@@ -237,7 +237,7 @@ export class UserManager extends Construct {
       new ResolvableField({
         returnType: user_object.attribute({ isList: true }),
         dataSource: users_data_source,
-        directives: [Directive.cognito('admin', 'registration', 'operator')],
+        directives: [Directive.iam(), Directive.cognito('admin', 'registration', 'operator')],
       })
     );
 

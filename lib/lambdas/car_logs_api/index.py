@@ -13,16 +13,14 @@ tracer = Tracer()
 logger = Logger()
 app = AppSyncResolver()
 
-MODELS_DDB_TABLE_NAME = os.environ["DDB_TABLE"]
-OPERATOR_MODELS_GSI_NAME = os.environ["OPERATOR_MODELS_GSI_NAME"]
+CAR_LOGS_ASSETS_DDB_TABLE_NAME = os.environ["DDB_TABLE"]
+OPERATOR_ASSETS_GSI_NAME = os.environ["OPERATOR_ASSETS_GSI_NAME"]
 dynamodb = boto3.resource("dynamodb")
-ddbTable = dynamodb.Table(MODELS_DDB_TABLE_NAME)
+ddbTable = dynamodb.Table(CAR_LOGS_ASSETS_DDB_TABLE_NAME)
 
-EVENT_BUS_NAME = os.environ["EVENT_BUS_NAME"]
 cloudwatch_events = boto3.client("events")
 
 client_s3 = boto3.client("s3")
-bucket = os.environ["MODELS_S3_BUCKET"]
 
 identity = {}
 
@@ -44,8 +42,8 @@ def lambda_handler(event, context):
     return app.resolve(event, context)
 
 
-@app.resolver(type_name="Query", field_name="getAllModels")
-def get_models(user_sub: str = None, limit: int = 200, nextToken: dict = None):
+@app.resolver(type_name="Query", field_name="getAllCarLogsAssets")
+def get_assets(user_sub: str = None, limit: int = 200, nextToken: dict = None):
     global identity
     try:
         if "claims" in identity and "cognito:username" in identity["claims"]:
@@ -70,9 +68,9 @@ def get_models(user_sub: str = None, limit: int = 200, nextToken: dict = None):
         except Exception as error:
             logger.warn(f"nextToken is not proper JSON, {error}")
 
-        # Get all models if the user is an operator or admin
+        # Get all assets if the user is an operator or admin
         if __isUserOperatorOrAdmin(identity):
-            query_settings["IndexName"] = OPERATOR_MODELS_GSI_NAME
+            query_settings["IndexName"] = OPERATOR_ASSETS_GSI_NAME
             logger.info(query_settings)
             response = ddbTable.scan(**query_settings)
             logger.info(response)
@@ -80,35 +78,32 @@ def get_models(user_sub: str = None, limit: int = 200, nextToken: dict = None):
 
             sorted_table_items = sorted(
                 table_items,
-                key=lambda d: d["fileMetaData"]["uploadedDateTime"],
+                key=lambda d: d["gsiUploadedTimestamp"],
                 reverse=True,
             )
             nextToken = None
             if "LastEvaluatedKey" in response:
                 nextToken = json.dumps(response["LastEvaluatedKey"])
-            item = {"models": sorted_table_items, "nextToken": nextToken}
+            item = {"assets": sorted_table_items, "nextToken": nextToken}
             logger.info(item)
             return item
 
-        # Get only the users own models since user is not a privileged user
-        query_settings["FilterExpression"] = (
-            Attr("status").eq("UPLOADED")
-            | Attr("status").eq("AVAILABLE")
-            | Attr("status").eq("NOT_VALID")
-            | Attr("status").eq("OPTIMIZED")
-        )
+        # Get only the users own assets since user is not a privileged user
+        query_settings["FilterExpression"] = Attr("type").eq("BAG_SQLITE") | Attr(
+            "type"
+        ).eq("VIDEO")
         query_settings["KeyConditionExpression"] = Key("sub").eq(sub)
         response = ddbTable.query(**query_settings)
 
         logger.info(response)
-        models = response["Items"]
+        assets = response["Items"]
 
         # Check if all items has been returned or if they where paginated
         nextToken = None
         if "LastEvaluatedKey" in response:
             nextToken = json.dumps(response["LastEvaluatedKey"])
 
-        item = {"models": models, "nextToken": nextToken}
+        item = {"assets": assets, "nextToken": nextToken}
         logger.info(item)
         return item
     except Exception as error:
@@ -116,17 +111,15 @@ def get_models(user_sub: str = None, limit: int = 200, nextToken: dict = None):
         raise error
 
 
-@app.resolver(type_name="Mutation", field_name="addModel")
-def add_model(**args):
-    # the S3 key is always unique, but a file with the same name might be
-    # uploaded again by the user.
-    # therefor the function is using ddb update item and not put_item
+@app.resolver(type_name="Mutation", field_name="addCarLogsAsset")
+def add_asset(**args):
+
     item = {**args}
 
     del item["sub"]
-    del item["modelId"]
+    del item["assetId"]
 
-    # Make the model available for operators via the operatorAvailableModelsIndex GSI
+    # Make the assets available for operators via the operatorAssetsIndexV2 GSI
     item["gsiAvailableForOperator"] = "yes"
     item["gsiUploadedTimestamp"] = int(datetime.datetime.utcnow().timestamp() * 1000)
 
@@ -135,7 +128,7 @@ def add_model(**args):
     logger.info(item)
 
     response = ddbTable.update_item(
-        Key={"sub": args["sub"], "modelId": args["modelId"]},
+        Key={"sub": args["sub"], "assetId": args["assetId"]},
         UpdateExpression=ddb_update_expressions["UpdateExpression"],
         ExpressionAttributeNames=ddb_update_expressions["ExpressionAttributeNames"],
         ExpressionAttributeValues=ddb_update_expressions["ExpressionAttributeValues"],
@@ -145,46 +138,38 @@ def add_model(**args):
 
     return_obj = {
         **item,
-        "modelId": args["modelId"],
+        "assetId": args["assetId"],
         "sub": args["sub"],
     }
-    evbEvent = {
-        "Detail": json.dumps(return_obj),
-        "DetailType": "modelAdded",
-        "Source": "models-manager",
-        "EventBusName": EVENT_BUS_NAME,
-    }
 
-    logger.info(__put_evb_events(evbEvent))
-
-    logger.info(f"addModel item: {return_obj}")
+    logger.info(f"addCarLogsAsset item: {return_obj}")
     return return_obj
 
 
-@app.resolver(type_name="Mutation", field_name="deleteModel")
-def delete_model(modelId: str, sub: str):
-    logger.info(f"Delete Model: modelId={modelId}")
+@app.resolver(type_name="Mutation", field_name="deleteCarLogsAsset")
+def delete_asset(assetId: str, sub: str):
+    logger.info(f"Delete Asset: assetID={assetId}")
     global identity
 
-    # only allow the user to delete their own models
+    # only allow the user to delete their own assets
     logger.info(f"Identity: {identity}, sub={sub}")
 
     identitySub = identity.get("sub")
 
     if identitySub == sub or identitySub is None:
         ddb_update_expressions = dynamo_helpers.generate_update_query(
-            {"status": "DELETED", "fileMetaData": {}}
+            {"type": "NONE", "assetMetaData": {}}
         )
 
-        # Clean up the operatorAvailableModelsIndex GSI attributes to
-        # remove deleted models from the operator view
+        # Clean up the operatorAssetsIndexV2 GSI attributes to
+        # remove deleted assets from the operator view
         ddb_update_expressions["UpdateExpression"] = (
             ddb_update_expressions["UpdateExpression"]
             + " REMOVE gsiAvailableForOperator, gsiUploadedTimestamp"
         )
 
         response = ddbTable.update_item(
-            Key={"sub": sub, "modelId": modelId},
+            Key={"sub": sub, "assetId": assetId},
             UpdateExpression=ddb_update_expressions["UpdateExpression"],
             ExpressionAttributeNames=ddb_update_expressions["ExpressionAttributeNames"],
             ExpressionAttributeValues=ddb_update_expressions[
@@ -194,44 +179,6 @@ def delete_model(modelId: str, sub: str):
         )
         logger.info(response)
 
-        # evbEvent = {
-        #     "Detail": json.dumps({"modelId": modelId}),
-        #     "DetailType": "modelDeleted",
-        #     "Source": "models-manager",
-        #     "EventBusName": EVENT_BUS_NAME,
-        # }
-
-        # logger.info(__put_evb_events(evbEvent))
-
         return response["Attributes"]
     else:
-        return {"error": "User not authorized to delete this model"}
-
-
-@app.resolver(type_name="Mutation", field_name="updateModel")
-def update_model(modelId, sub, **args):
-    ddb_update_expressions = dynamo_helpers.generate_update_query({**args})
-
-    response = ddbTable.update_item(
-        Key={"sub": sub, "modelId": modelId},
-        UpdateExpression=ddb_update_expressions["UpdateExpression"],
-        ExpressionAttributeNames=ddb_update_expressions["ExpressionAttributeNames"],
-        ExpressionAttributeValues=ddb_update_expressions["ExpressionAttributeValues"],
-        ReturnValues="ALL_NEW",
-    )
-    logger.info(response)
-
-    evbEvent = {
-        "Detail": json.dumps({**args, "modelId": modelId}),
-        "DetailType": "modelUpdated",
-        "Source": "models-manager",
-        "EventBusName": EVENT_BUS_NAME,
-    }
-
-    logger.info(__put_evb_events(evbEvent))
-
-    return response["Attributes"]
-
-
-def __put_evb_events(evbEvent):
-    return cloudwatch_events.put_events(Entries=[evbEvent])
+        return {"error": "User not authorized to delete this asset"}

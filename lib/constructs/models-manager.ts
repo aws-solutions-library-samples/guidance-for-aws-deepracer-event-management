@@ -475,12 +475,13 @@ export class ModelsManager extends Construct {
       'getAllModels',
       new ResolvableField({
         args: {
+          user_sub: GraphqlType.string({ isRequired: false }),
           limit: GraphqlType.int({ isRequired: false }),
           nextToken: GraphqlType.string({ isRequired: false }),
         },
         returnType: modelObjectPagination.attribute(),
         dataSource: modelsDataSource,
-        directives: [Directive.cognito('admin', 'operator', 'racer', 'commentator')],
+        directives: [Directive.iam(), Directive.cognito('admin', 'operator', 'racer', 'commentator')],
       })
     );
 

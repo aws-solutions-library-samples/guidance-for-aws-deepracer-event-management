@@ -1,0 +1,38 @@
+{
+  "bags": [
+    {
+      "model": {
+        "id": "c4e9016402e1848028f9dc577cbbbc519442d24b8fc23906fc5cc8d284669c20",
+        "name": "2024-Reinvent-D-3-3N",
+        "key": "private/4364b8f2-a081-7090-8808-f87e457ed4d4/2024-Reinvent-D-3-3N.tar.gz",
+        "filename": "2024-Reinvent-D-3-3N.tar.gz"
+      },
+      "username": "Duckworth",
+      "sub": "4364b8f2-a081-7090-8808-f87e457ed4d4",
+      "bag_key": "private/4364b8f2-a081-7090-8808-f87e457ed4d4/logs/Duckworth-2024-Reinvent-D-3-3N-20241124-211100"
+    },
+    {
+      "model": {
+        "id": "adcb2ccea12ac3ee0d1a4f666aa6387c771a18bc4908547379b7821e8c58be5d",
+        "name": "2024-Reinvent-F-2-4",
+        "key": "private/4364b8f2-a081-7090-8808-f87e457ed4d4/2024-Reinvent-F-2-4.tar.gz",
+        "filename": "2024-Reinvent-F-2-4.tar.gz"
+      },
+      "username": "Duckworth",
+      "sub": "4364b8f2-a081-7090-8808-f87e457ed4d4",
+      "bag_key": "private/4364b8f2-a081-7090-8808-f87e457ed4d4/logs/Duckworth-2024-Reinvent-F-2-4-20241124-204027"
+    },
+    {
+      "model": {
+        "id": "c4e9016402e1848028f9dc577cbbbc519442d24b8fc23906fc5cc8d284669c20",
+        "name": "2024-Reinvent-D-3-3N",
+        "key": "private/4364b8f2-a081-7090-8808-f87e457ed4d4/2024-Reinvent-D-3-3N.tar.gz",
+        "filename": "2024-Reinvent-D-3-3N.tar.gz"
+      },
+      "username": "Duckworth",
+      "sub": "4364b8f2-a081-7090-8808-f87e457ed4d4",
+      "bag_key": "private/4364b8f2-a081-7090-8808-f87e457ed4d4/logs/Duckworth-2024-Reinvent-D-3-3N-20241124-210938"
+    }
+  ],
+  "car-name": "amss-9q9c"
+}
