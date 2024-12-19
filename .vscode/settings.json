@@ -39,5 +39,14 @@
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": "explicit"
     }
+  },
+  "python.analysis.extraPaths": [
+    "./lib/lambda_layers/helper_functions"
+  ],
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/*/**": true,
+    "**/cdk.out/**": true
   }
 }
