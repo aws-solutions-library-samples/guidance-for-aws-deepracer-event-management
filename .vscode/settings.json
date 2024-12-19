@@ -41,7 +41,8 @@
     }
   },
   "python.analysis.extraPaths": [
-    "./lib/lambda_layers/helper_functions"
+    "./lib/lambda_layers/helper_functions",
+    "./lib/lambda_layers/appsync_helpers"
   ],
   "files.watcherExclude": {
     "**/.git/objects/**": true,
