@@ -85,6 +85,9 @@
   },
   "overrides": {
     "@svgr/webpack": "$@svgr/webpack",
+    "react-scripts": {
+      "typescript": "^5"
+    },    
     "react-refresh": "^0.14.0"
   }
 }
