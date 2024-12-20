@@ -13,7 +13,6 @@ import { StandardLambdaDockerImageFuncion } from './standard-lambda-docker-image
 interface VideoProcessorProps {
   sourceBucket: s3.IBucket;
   destinationBucket: s3.IBucket;
-  account: string;
   appsyncApi?: {
     api: appsync.GraphqlApi;
     noneDataSource: appsync.NoneDataSource;
@@ -32,6 +31,8 @@ export class VideoProcessor extends Construct {
     // Create shared Lambda Docker image
     const sharedLambdaCode = lambda.DockerImageCode.fromImageAsset('lib/lambdas/video_processor', {
       platform: Platform.LINUX_AMD64,
+      file: 'Dockerfile',
+      cmd: ['app.handler'],
     });
 
     // Create Lambda functions with shared code but different environment variables
@@ -143,8 +144,10 @@ export class VideoProcessor extends Construct {
     // Create trigger Lambda
     const triggerFunction = new StandardLambdaDockerImageFuncion(this, 'TriggerFunction', {
       description: 'Trigger video processing workflow',
-      code: lambda.DockerImageCode.fromImageAsset('lib/lambdas/video_processor/trigger', {
+      code: lambda.DockerImageCode.fromImageAsset('lib/lambdas/video_processor', {
         platform: Platform.LINUX_AMD64,
+        file: 'Dockerfile',
+        cmd: ['trigger.handler'],
       }),
       architecture: lambda.Architecture.X86_64,
       timeout: Duration.minutes(1),

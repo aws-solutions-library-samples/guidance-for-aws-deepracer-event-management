@@ -1,9 +1,19 @@
 FROM ros:humble-ros-base
 
-# Container Dependency Setup
+# Install Python and AWS Lambda Runtime Interface Client
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create Lambda runtime directory structure
+RUN mkdir -p /var/runtime /var/task /var/task/src /var/task/.tmp/matplotlib
+
+# Install AWS Lambda Runtime Interface Client
+RUN pip3 install --no-cache-dir awslambdaric
+
+# Install additional dependencies
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     libboost-all-dev \
-    python3-pip \
     ros-humble-image-transport \
     ros-humble-compressed-image-transport \
     ros-humble-cv-bridge \
@@ -14,9 +24,9 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     ffmpeg \
     libx264-dev \
     curl && \
-	apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install tensorflow and visualization
+# Install Python packages
 RUN pip3 install -U --no-cache-dir 'tensorflow-cpu<2.17' \
                                python-resize-image \
                                'deepracer-utils>=1.0.3' \
@@ -26,16 +36,22 @@ RUN pip3 install -U --no-cache-dir 'tensorflow-cpu<2.17' \
                                python-dateutil \
                                tqdm
 
-RUN mkdir -p /workspace/analysis /workspace/src /workspace/logs /workspace/models /workspace/.tmp/matplotlib && chmod o+rw /workspace/.tmp/matplotlib
-ENV MPLCONFIGDIR=/workspace/.tmp/matplotlib
+# Set up workspace
+RUN mkdir -p /workspace/analysis /workspace/src /workspace/logs /workspace/models /workspace/.tmp/matplotlib && \
+    chmod o+rw /workspace/.tmp/matplotlib
+ENV MPLCONFIGDIR=/var/task/.tmp/matplotlib
 
-RUN cd /workspace/src && \
+RUN cd /var/task/src && \
     git clone -b logging https://github.com/larsll/deepracer-viz && \
     git clone -b compressed-image https://github.com/larsll/aws-deepracer-interfaces-pkg && \
-    bash -c 'cd /workspace && source /opt/ros/humble/setup.bash && colcon build --merge-install && rm -rf build && rm -rf log ' 
+    bash -c 'cd /var/task && source /opt/ros/humble/setup.bash && colcon build --merge-install && rm -rf build && rm -rf log && rm -rf src'
 
 # Copy function code
-COPY app.py ${LAMBDA_TASK_ROOT}
+COPY app.py /var/task/
 
-# Set the CMD to your handler
-CMD [ "app.lambda_handler" ]
+# Set up entry point for Lambda
+COPY entry.sh /
+RUN chmod +x /entry.sh
+
+ENTRYPOINT ["/entry.sh"]
+CMD ["app.lambda_handler"]
