@@ -37,8 +37,6 @@ RUN pip3 install -U --no-cache-dir 'tensorflow-cpu<2.17' \
                                tqdm
 
 # Set up workspace
-RUN mkdir -p /workspace/analysis /workspace/src /workspace/logs /workspace/models /workspace/.tmp/matplotlib && \
-    chmod o+rw /workspace/.tmp/matplotlib
 ENV MPLCONFIGDIR=/var/task/.tmp/matplotlib
 
 RUN cd /var/task/src && \
