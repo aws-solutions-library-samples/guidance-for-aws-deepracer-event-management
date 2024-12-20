@@ -45,7 +45,7 @@ RUN cd /var/task/src && \
     bash -c 'cd /var/task && source /opt/ros/humble/setup.bash && colcon build --merge-install && rm -rf build && rm -rf log && rm -rf src'
 
 # Copy function code
-COPY app.py /var/task/
+COPY *.py /var/task/
 
 # Set up entry point for Lambda
 COPY entry.sh /

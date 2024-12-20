@@ -22,11 +22,11 @@ import { FleetsManager } from './constructs/fleets-manager';
 import { LabelPrinter } from './constructs/label-printer';
 import { LandingPageManager } from './constructs/landing-page';
 import { Leaderboard } from './constructs/leaderboard';
+import { LogsManager } from './constructs/logs-manager';
 import { ModelOptimizer } from './constructs/model-optimizer';
 import { ModelsManager } from './constructs/models-manager';
 import { ModelsManagerDefaultModelsDeployment } from './constructs/models-manager-default-models';
 import { RaceManager } from './constructs/race-manager';
-import { VideoProcessor } from './constructs/run-video-creator';
 import { StreamingOverlay } from './constructs/streaming-overlay';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
@@ -112,22 +112,25 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       clamScanPost: clamscan.postLambda,
     });
 
-    const videoProcessor = new VideoProcessor(this, 'VideoProcessor', {
-      sourceBucket: modelsManager.modelsBucket,
-      destinationBucket: modelsManager.modelsBucket,
-      appsyncApi: appsyncResources,
-    }); /// TODO: Define the buckets
-
     const defaultModelsDeployment = new ModelsManagerDefaultModelsDeployment(this, 'DefaultModelsDeployment', {
       uploadBucket: modelsManager.uploadBucket,
       modelsBucket: modelsManager.modelsBucket,
     });
     defaultModelsDeployment.node.addDependency(clamscan);
     defaultModelsDeployment.node.addDependency(modelOptimizer);
-    defaultModelsDeployment.node.addDependency(videoProcessor); /// TODO add this elsewhere
 
     const carManager = new CarManager(this, 'CarManager', {
       appsyncApi: appsyncResources,
+      lambdaConfig: lambdaConfig,
+      eventbus: props.eventbus,
+    });
+
+    new LogsManager(this, 'LogsManager', {
+      adminGroupRole: props.adminGroupRole,
+      operatorGroupRole: props.operatorGroupRole,
+      authenticatedUserRole: props.authenticatedUserRole,
+      appsyncApi: appsyncResources,
+      logsBucket: props.logsBucket,
       lambdaConfig: lambdaConfig,
       eventbus: props.eventbus,
     });
