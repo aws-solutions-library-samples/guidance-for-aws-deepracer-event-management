@@ -1,22 +1,75 @@
+[project]
+name = "guidance-for-aws-deepracer-event-management"
+version = "1.0.0"
+description = "AWS DeepRacer Event Management Solution"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "AWS Solutions Library" }
+]
+dependencies = [
+    "aws_lambda_powertools",
+    "boto3",
+    "requests_aws4auth",
+    "requests",
+    "http_response",
+    "simplejson",
+    "matplotlib",
+    "opencv-python",
+    "tqdm",
+    "psutil",
+    "pandas"
+]
+
+[project.optional-dependencies]
+dev = [
+    "aws-cdk-lib>=2.0.0",
+    "constructs>=10.0.0",
+    "aws-cdk.aws-lambda-python-alpha",
+    "pytest",
+    "pytest-cov"
+]
+
+[tool.setuptools]
+packages = ["lib"]
+
 [tool.pytest.ini_options]
-addopts = "--cov --cov-report html --junitxml=reports/unittest-report.xml"
-testpaths = [
-    "tests"
-]
-pythonpath = [
-    ".",
-    "./backend/lambdas/helper_functions_layer/http_response"
-]
-
-
-[tool.coverage.run]
-source = ["backend/lambdas"]
-
-
-[tool.isort]
-profile = "black"
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "-ra -q"
 
 [tool.black]
 line-length = 88
+target-version = ['py38']
 include = '\.pyi?$'
 experimental_string_processing = true
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+check_untyped_defs = true
+
+[tool.coverage.run]
+source = ["lib"]
+omit = ["tests/*", "**/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+"pragma: no cover",
+"def __repr__",
+"if __name__ == .__main__.:",
+"raise NotImplementedError",
+"if TYPE_CHECKING:"
+]
+
+[project.urls]
+Homepage = "https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management"
+Documentation = "https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/blob/main/README.md"
+Repository = "https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management.git"
