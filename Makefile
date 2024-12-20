@@ -109,8 +109,8 @@ local.config.docker:					## Setup local config based on branch
 local.config.python:		## Setup a Python .venv
 	python3 -m venv --prompt drem .venv
 	source .venv/bin/activate
-	pip3 install aws_lambda_powertools boto3 requests_aws4auth requests http_response simplejson
-
+	pip install -e .[dev]
+	
 local.run:					## Run the frontend application locally for development
 	PORT=3000 npm start --prefix website
 
