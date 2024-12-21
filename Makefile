@@ -50,10 +50,10 @@ pipeline.clean: 				## Destroys the CDK pipeline
 	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
 
 drem.clean-infrastructure:			## Delete DREM application
-	aws cloudformation delete-stack --stack-name drem-backend-$(label)-infrastructure --region $(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
+	aws cloudformation delete-stack --stack-name drem-backend-$(label)-infrastructure --region $(region)
 
 drem.clean-base:			## Delete DREM application
-	aws cloudformation delete-stack --stack-name drem-backend-$(label)-base --region $(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
+	aws cloudformation delete-stack --stack-name drem-backend-$(label)-base --region $(region)
 
 manual.deploy:  				## Deploy via cdk
 	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) --all
