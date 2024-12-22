@@ -9,7 +9,7 @@ import { scrollTo } from '../utils';
 import { Flag } from './flag';
 import styles from './leaderboardTable.module.css';
 
-const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest }) => {
+const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag }) => {
   const { t } = useTranslation();
   const [leaderboardListItems, SetLeaderboardListItems] = useState(<div></div>);
   const entriesRef = useRef(null);
@@ -67,9 +67,13 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest }) => {
               ![0, 1, 2].includes(index) && styles.liRacer
             )}
           >
-            <span className={styles.racerCountryFlag}>
-              <Flag countryCode={entry.countryCode} />
-            </span>
+            {showFlag ? (
+              <span className={styles.racerCountryFlag}>
+                <Flag countryCode={entry.countryCode} />
+              </span>
+            ) : (
+              ''
+            )}
             {username}
             {entry.racedByProxy ? '*' : ''}
           </div>
