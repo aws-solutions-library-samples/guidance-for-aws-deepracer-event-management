@@ -126,9 +126,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     });
 
     new LogsManager(this, 'LogsManager', {
-      adminGroupRole: props.adminGroupRole,
-      operatorGroupRole: props.operatorGroupRole,
-      authenticatedUserRole: props.authenticatedUserRole,
       appsyncApi: appsyncResources,
       logsBucket: props.logsBucket,
       lambdaConfig: lambdaConfig,

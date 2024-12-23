@@ -8,9 +8,6 @@ RUN apt-get update && apt-get install -y \
 # Create Lambda runtime directory structure
 RUN mkdir -p /var/runtime /var/task /var/task/src /var/task/.tmp/matplotlib
 
-# Install AWS Lambda Runtime Interface Client
-RUN pip3 install --no-cache-dir awslambdaric
-
 # Install additional dependencies
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     libboost-all-dev \
