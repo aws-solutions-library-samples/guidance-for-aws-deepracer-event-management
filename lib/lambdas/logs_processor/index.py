@@ -1,4 +1,8 @@
 import hashlib
+import boto3
+import tarfile
+import os
+import io
 
 import appsync_helpers
 import simplejson as json
@@ -7,6 +11,7 @@ from aws_lambda_powertools.utilities.data_classes.appsync import scalar_types_ut
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
 logger = Logger()
+s3_client = boto3.client("s3")
 
 
 @logger.inject_lambda_context
@@ -14,78 +19,64 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
     logger.debug(json.dumps(event))
 
     # Get the required data from the event json
-    model_key_cleaned = (event["detail"]["object"]["key"]).replace("%3A", ":")
+    for record in event["Records"]:
+        if record["eventName"] == "ObjectCreated:CompleteMultipartUpload":
+            bucket = record["s3"]["bucket"]["name"]
+            key = record["s3"]["object"]["key"]
 
-    # Slice n dice
-    s3_key_parts = model_key_cleaned.split("/", 4)
-    model_key_parts = s3_key_parts[4].split("/")
+            logger.info(f"Processing file {key} from bucket {bucket}")
 
-    sub = s3_key_parts[2]
-    username = s3_key_parts[3]
-    model_filename = model_key_parts[-1]
+            try:
+                # Create a temporary directory for extraction
+                tmp_dir = "/tmp/extracted"
+                if not os.path.exists(tmp_dir):
+                    os.makedirs(tmp_dir)
 
-    model_key = f"private/{sub}/{model_filename}"
-    variables = {
-        "sub": sub,
-        "username": username,
-        "modelId": hashlib.sha256(model_key.encode("utf-8")).hexdigest(),
-        "modelname": model_filename.replace(".tar.gz", ""),
-        "modelMD5": "",
-        "fileMetaData": {
-            "key": model_key,
-            "filename": model_filename,
-            "uploadedDateTime": scalar_types_utils.aws_datetime(),
-        },
-        "modelMetaData": {
-            "actionSpaceType": None,
-            "sensor": [],
-            "trainingAlgorithm": None,
-            "metadataMd5": None,
-        },
-        "status": "UPLOADED",
-    }
+                # Download the tar.gz file into memory
+                tar_obj = s3_client.get_object(Bucket=bucket, Key=key)
+                buffer = io.BytesIO(tar_obj["Body"].read())
 
-    logger.info(f"variables => {variables}")
+                # Extract the tar.gz file
+                with tarfile.open(fileobj=buffer, mode="r:gz") as tar:
+                    # Check for path traversal attempts
+                    for member in tar.getmembers():
+                        if member.name.startswith("/") or ".." in member.name:
+                            logger.error(
+                                f"Potentially malicious path in tar: {member.name}"
+                            )
+                            raise ValueError("Potentially malicious tar file detected")
+                        # Additional security check for absolute paths
+                        member_path = os.path.join(tmp_dir, member.name)
+                        if not os.path.abspath(member_path).startswith(
+                            os.path.abspath(tmp_dir)
+                        ):
+                            logger.error(
+                                f"Path traversal attempt detected: {member.name}"
+                            )
+                            raise ValueError("Path traversal attempt detected")
 
-    query = """
-     mutation AddModel(
-        $fileMetaData: FileMetadataInput
-        $modelId: ID!
-        $modelname: String
-        $modelMD5: String
-        $modelMetaData: ModelMetadataInput
-        $status: ModelStatusEnum!
-        $sub: ID!
-        $username: String!
-      ) {
-        addModel(
-          fileMetaData: $fileMetaData
-          modelId: $modelId
-          modelname:  $modelname
-          modelMD5: $modelMD5
-          modelMetaData: $modelMetaData
-          status: $status
-          sub: $sub
-          username: $username
-        ) {
-          fileMetaData {
-            filename
-            key
-            uploadedDateTime
-          }
-          modelId
-          modelname
-          modelMD5
-          modelMetaData {
-            actionSpaceType
-            sensor
-            trainingAlgorithm
-          }
-          status
-          sub
-          username
-        }
-      }
-      """
+                    # Safe to extract
+                    tar.extractall(tmp_dir)
 
-    appsync_helpers.send_mutation(query, variables)
+                logger.info(f"Successfully extracted files to {tmp_dir}")
+
+                # Process the extracted files here
+                extracted_files = os.listdir(tmp_dir)
+                logger.info(f"Extracted files: {extracted_files}")
+
+                # Clean up
+                for root, dirs, files in os.walk(tmp_dir, topdown=False):
+                    for name in files:
+                        os.remove(os.path.join(root, name))
+                    for name in dirs:
+                        os.rmdir(os.path.join(root, name))
+                os.rmdir(tmp_dir)
+
+            except tarfile.ReadError as e:
+                logger.error(f"Error reading tar file: {str(e)}")
+                raise
+            except Exception as e:
+                logger.error(f"Error processing tar.gz file: {str(e)}")
+                raise
+
+    return {"statusCode": 200, "body": json.dumps("Processing completed successfully")}

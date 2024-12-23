@@ -223,7 +223,11 @@ export class LogsManager extends Construct {
       bundling: {
         image: props.lambdaConfig.bundlingImage,
       },
-      layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
+      layers: [
+        props.lambdaConfig.layersConfig.appsyncHelpersLayer,
+        props.lambdaConfig.layersConfig.helperFunctionsLayer,
+        props.lambdaConfig.layersConfig.powerToolsLayer,
+      ],
     });
 
     // Grant permissions to Lambda
