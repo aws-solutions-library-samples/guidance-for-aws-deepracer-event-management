@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
+import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as batch from 'aws-cdk-lib/aws-batch';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
@@ -37,8 +38,8 @@ export interface LogsManagerProps {
 }
 
 export class LogsManager extends Construct {
-  public readonly bagUploadBucket: s3.IBucket;
-  public readonly videoOutputBucket: s3.IBucket;
+  public readonly bagUploadBucket: s3.Bucket;
+  public readonly videoOutputBucket: s3.Bucket;
   public readonly logsTable: dynamodb.Table;
   public readonly vpc: ec2.IVpc;
   public readonly jobQueue: batch.CfnJobQueue;
@@ -55,20 +56,54 @@ export class LogsManager extends Construct {
 
     // Use existing bucket or create new one for logs
     this.bagUploadBucket = new s3.Bucket(this, 'bag-upload-bucket', {
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      encryption: s3.BucketEncryption.S3_MANAGED, // TODO change to KMS encryption CMK
+      serverAccessLogsBucket: props.logsBucket,
+      serverAccessLogsPrefix: 'access-logs/upload_bucket/',
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      enforceSSL: true,
       autoDeleteObjects: true,
+      eventBridgeEnabled: true,
+      removalPolicy: RemovalPolicy.DESTROY,
       lifecycleRules: [
-        {
-          enabled: true,
-          expiration: cdk.Duration.days(30),
-        },
+        { expiration: Duration.days(15), tagFilters: { lifecycle: 'true' } },
+        { abortIncompleteMultipartUploadAfter: Duration.days(1) },
       ],
     });
 
+    const corsRule = {
+      allowedHeaders: ['*'],
+      allowedMethods: [
+        s3.HttpMethods.PUT,
+        s3.HttpMethods.POST,
+        s3.HttpMethods.GET,
+        s3.HttpMethods.HEAD,
+        s3.HttpMethods.DELETE,
+      ],
+      allowedOrigins: [
+        '*',
+        // "http://localhost:3000",
+        // "https://" + distribution.distribution_domain_name
+      ],
+      exposedHeaders: ['x-amz-server-side-encryption', 'x-amz-request-id', 'x-amz-id-2', 'ETag'],
+      maxAge: 3000,
+    };
+    this.bagUploadBucket.addCorsRule(corsRule);
+
     // Use existing bucket or create new one for output
     this.videoOutputBucket = new s3.Bucket(this, 'video-output-bucket', {
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      encryption: s3.BucketEncryption.S3_MANAGED, // TODO change to KMS encryption CMK
+      serverAccessLogsBucket: props.logsBucket,
+      serverAccessLogsPrefix: 'access-logs/models_bucket/',
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      enforceSSL: true,
       autoDeleteObjects: true,
+      eventBridgeEnabled: true,
+      removalPolicy: RemovalPolicy.DESTROY,
+      versioned: true,
+      lifecycleRules: [
+        { expiration: Duration.days(15), tagFilters: { lifecycle: 'true' } },
+        { abortIncompleteMultipartUploadAfter: Duration.days(1) },
+      ],
     });
 
     // Use existing table or create new one
@@ -177,6 +212,8 @@ export class LogsManager extends Construct {
       code: lambda.Code.fromAsset('lib/lambdas/logs_processor'),
       environment: {
         LOGS_TABLE: this.logsTable.tableName,
+        BAGS_UPLOAD_BUCKET: this.bagUploadBucket.bucketName,
+        OUTPUT_BUCKET: this.videoOutputBucket.bucketName,
         JOB_QUEUE: this.jobQueue.ref,
         JOB_DEFINITION: this.jobDefinition.ref,
       },
@@ -186,6 +223,7 @@ export class LogsManager extends Construct {
 
     // Grant permissions to Lambda
     this.bagUploadBucket.grantRead(processorFunction);
+    this.videoOutputBucket.grantReadWrite(processorFunction);
     this.logsTable.grantWriteData(processorFunction);
 
     // Grant permission to submit Batch jobs
