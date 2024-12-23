@@ -12,6 +12,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3notify from 'aws-cdk-lib/aws-s3-notifications';
 import { CodeFirstSchema } from 'awscdk-appsync-utils';
 import { Construct } from 'constructs';
+import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 import path = require('path');
 
 const MAX_VCPU = 8;
@@ -206,19 +207,23 @@ export class LogsManager extends Construct {
     });
 
     // Create Lambda function for processing uploaded logs
-    const processorFunction = new lambda.Function(this, 'ProcessorFunction', {
-      runtime: lambda.Runtime.PYTHON_3_9,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset('lib/lambdas/logs_processor'),
+    const processorFunction = new StandardLambdaPythonFunction(this, 'processBatchOfBags', {
+      runtime: props.lambdaConfig.runtime,
+      architecture: props.lambdaConfig.architecture,
+      entry: 'lib/lambdas/logs_processor/',
       environment: {
+        POWERTOOLS_SERVICE_NAME: 'processBatchOfBags',
+        LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
         LOGS_TABLE: this.logsTable.tableName,
         BAGS_UPLOAD_BUCKET: this.bagUploadBucket.bucketName,
         OUTPUT_BUCKET: this.videoOutputBucket.bucketName,
         JOB_QUEUE: this.jobQueue.ref,
         JOB_DEFINITION: this.jobDefinition.ref,
       },
-      timeout: cdk.Duration.minutes(5),
-      memorySize: 1024,
+      bundling: {
+        image: props.lambdaConfig.bundlingImage,
+      },
+      layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
     });
 
     // Grant permissions to Lambda
