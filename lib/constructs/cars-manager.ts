@@ -387,7 +387,7 @@ export class CarManager extends Construct {
         Type: GraphqlType.string(),
         DeviceUiPassword: GraphqlType.string(),
       },
-      directives: [Directive.cognito('admin', 'operator')],
+      directives: [Directive.iam(), Directive.cognito('admin', 'operator')],
     });
 
     props.appsyncApi.schema.addType(car_online_object_type);
@@ -401,7 +401,7 @@ export class CarManager extends Construct {
         },
         returnType: car_online_object_type.attribute({ isList: true }),
         dataSource: cars_data_source,
-        directives: [Directive.cognito('admin', 'operator')],
+        directives: [Directive.iam(), Directive.cognito('admin', 'operator')],
       })
     );
 

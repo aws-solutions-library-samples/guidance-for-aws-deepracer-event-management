@@ -211,6 +211,8 @@ export class LogsManager extends Construct {
       runtime: props.lambdaConfig.runtime,
       architecture: props.lambdaConfig.architecture,
       entry: 'lib/lambdas/logs_processor/',
+      memorySize: 1024,
+      timeout: Duration.minutes(15),
       environment: {
         POWERTOOLS_SERVICE_NAME: 'processBatchOfBags',
         LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
@@ -219,6 +221,7 @@ export class LogsManager extends Construct {
         OUTPUT_BUCKET: this.videoOutputBucket.bucketName,
         JOB_QUEUE: this.jobQueue.ref,
         JOB_DEFINITION: this.jobDefinition.ref,
+        APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
       },
       bundling: {
         image: props.lambdaConfig.bundlingImage,
@@ -234,6 +237,7 @@ export class LogsManager extends Construct {
     this.bagUploadBucket.grantRead(processorFunction);
     this.videoOutputBucket.grantReadWrite(processorFunction);
     this.logsTable.grantWriteData(processorFunction);
+    props.appsyncApi.api.grantQuery(processorFunction, 'carsOnline');
 
     // Grant permission to submit Batch jobs
     processorFunction.addToRolePolicy(
