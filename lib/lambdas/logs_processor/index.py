@@ -41,8 +41,8 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
             )
 
             # Get the car ID from AppSync
-            car_id = get_car_id(car_name)
-            logger.info(f"Found Car ID: {car_id}")
+            car_id, online = get_car_id(car_name)
+            logger.info(f"Found car {car_name} as {car_id}, online: {online}")
 
             try:
 
@@ -58,13 +58,13 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
     return {"statusCode": 200, "body": json.dumps("Processing completed successfully")}
 
 
-def get_car_id(car_name: str) -> str:
+def get_car_id(car_name: str) -> tuple[str, bool]:
     """
     Query AppSync to check if a car exists and get its ID
     Args:
         car_name: Name of the car to look up
     Returns:
-        Car ID if found
+        Tuple containing the car ID and a boolean indicating if the car is online
     Raises:
         Exception if car not found or error occurs
     """
@@ -73,20 +73,26 @@ def get_car_id(car_name: str) -> str:
     query carsOnline($online: Boolean!) {
         carsOnline(online: $online) {
             InstanceId
-            Name
+            ComputerName
+            LastPingDateTime
         }
     }
     """
 
-    variables = {"online": True}
-
     try:
-        response = appsync_helpers.run_query(query, variables)
+        response = appsync_helpers.run_query(query, {"online": True})
 
         if response.get("data", {}).get("carsOnline"):
             for car in response["data"]["carsOnline"]:
-                if car.get("Name") == car_name:
-                    return car["InstanceId"]
+                if car.get("ComputerName") == car_name:
+                    return car["InstanceId"], True
+
+        response = appsync_helpers.run_query(query, {"online": False})
+
+        if response.get("data", {}).get("carsOnline"):
+            for car in response["data"]["carsOnline"]:
+                if car.get("ComputerName") == car_name:
+                    return car["InstanceId"], False
             raise Exception(f"Car with name {car_name} not found")
         else:
             raise Exception(f"Car with name {car_name} not found")
