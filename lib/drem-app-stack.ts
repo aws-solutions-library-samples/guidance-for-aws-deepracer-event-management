@@ -22,6 +22,7 @@ import { FleetsManager } from './constructs/fleets-manager';
 import { LabelPrinter } from './constructs/label-printer';
 import { LandingPageManager } from './constructs/landing-page';
 import { Leaderboard } from './constructs/leaderboard';
+import { LogsManager } from './constructs/logs-manager';
 import { ModelOptimizer } from './constructs/model-optimizer';
 import { ModelsManager } from './constructs/models-manager';
 import { ModelsManagerDefaultModelsDeployment } from './constructs/models-manager-default-models';
@@ -120,6 +121,13 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
     const carManager = new CarManager(this, 'CarManager', {
       appsyncApi: appsyncResources,
+      lambdaConfig: lambdaConfig,
+      eventbus: props.eventbus,
+    });
+
+    new LogsManager(this, 'LogsManager', {
+      appsyncApi: appsyncResources,
+      logsBucket: props.logsBucket,
       lambdaConfig: lambdaConfig,
       eventbus: props.eventbus,
     });
