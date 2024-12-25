@@ -48,6 +48,7 @@
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
     "**/node_modules/*/**": true,
-    "**/cdk.out/**": true
+    "**/cdk.out/**": true,
+    "**/.venv/**": true
   }
 }
