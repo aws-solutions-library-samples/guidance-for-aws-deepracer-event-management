@@ -26,6 +26,8 @@ import { Construct } from 'constructs';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 import path = require('path');
 
+import { CarLogsFetchStepFunction } from './car-logs-fetch';
+
 const MAX_VCPU = 16;
 
 export interface CarLogsManagerProps {
@@ -83,7 +85,7 @@ export class CarLogsManager extends Construct {
     this.bagUploadBucket = new s3.Bucket(this, 'upload', {
       encryption: s3.BucketEncryption.S3_MANAGED, // TODO change to KMS encryption CMK
       serverAccessLogsBucket: props.logsBucket,
-      serverAccessLogsPrefix: 'access-logs/upload_bucket/',
+      serverAccessLogsPrefix: 'access-logs/car_logs_upload_bucket/',
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
       autoDeleteObjects: true,
@@ -109,7 +111,7 @@ export class CarLogsManager extends Construct {
         // "http://localhost:3000",
         // "https://" + distribution.distribution_domain_name
       ],
-      exposedHeaders: ['x-amz-server-side-encryption', 'x-amz-request-id', 'x-amz-id-2', 'ETag'],
+      exposedHeaders: ['x-amz-server-side-encryption', 'x-amz-request-id', 'x-amz-id-2', 'x-amz-version-id', 'ETag'],
       maxAge: 3000,
     };
     this.bagUploadBucket.addCorsRule(corsRule);
@@ -130,6 +132,7 @@ export class CarLogsManager extends Construct {
         { abortIncompleteMultipartUploadAfter: Duration.days(1) },
       ],
     });
+    this.carLogsBucket.addCorsRule(corsRule);
 
     // Use existing table or create new one
     this.assetsTable = new dynamodb.Table(this, 'AssetsTable', {
@@ -259,7 +262,7 @@ export class CarLogsManager extends Construct {
           { name: 'APPSYNC_URL', value: props.appsyncApi.api.graphqlUrl },
           { name: 'CODEC', value: 'avc1' },
           // { name: 'FRAME_LIMIT', value: '100' }, // For testing
-          { name: 'SKIP_DURATION', value: '20.0' },
+          { name: 'SKIP_DURATION', value: '5.0' },
           { name: 'RELATIVE_LABELS', value: 'true' },
         ],
         logConfiguration: {
@@ -371,8 +374,9 @@ export class CarLogsManager extends Construct {
       architecture: props.lambdaConfig.architecture,
       environment: {
         DDB_TABLE: this.assetsTable.tableName,
+        ASSETS_BUCKET: this.carLogsBucket.bucketName,
         OPERATOR_ASSETS_GSI_NAME: OPERATOR_ASSETS_GSI_NAME,
-        POWERTOOLS_SERVICE_NAME: 'carlogs API resolver',
+        POWERTOOLS_SERVICE_NAME: 'CarLogs Asset API resolver',
         LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
       },
       bundling: {
@@ -380,7 +384,7 @@ export class CarLogsManager extends Construct {
       },
       layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
     });
-
+    this.carLogsBucket.grantRead(carLogsAssetHandler);
     this.assetsTable.grantReadWriteData(carLogsAssetHandler);
 
     // Define the data source for the API
@@ -502,6 +506,34 @@ export class CarLogsManager extends Construct {
       })
     );
 
+    const carLogsAssetsDownloadLinksType = new ObjectType('CarLogsAssetsDownloadLinks', {
+      definition: {
+        assetId: GraphqlType.id({ isRequired: true }),
+        downloadLink: GraphqlType.string({ isRequired: true }),
+      },
+    });
+    props.appsyncApi.schema.addType(carLogsAssetsDownloadLinksType);
+
+    const carLogsAssetSubPairsInput = new InputType('CarLogsAssetSubPairsInput', {
+      definition: {
+        assetId: GraphqlType.id({ isRequired: true }),
+        sub: GraphqlType.id({ isRequired: true }),
+      },
+    });
+    props.appsyncApi.schema.addType(carLogsAssetSubPairsInput);
+
+    props.appsyncApi.schema.addQuery(
+      'getCarLogsAssetsDownloadLinks',
+      new ResolvableField({
+        args: {
+          assetSubPairs: carLogsAssetSubPairsInput.attribute({ isRequired: true, isList: true }),
+        },
+        returnType: carLogsAssetsDownloadLinksType.attribute({ isList: true }),
+        dataSource: carLogsAssetDataSource,
+        directives: [Directive.cognito('racer', 'admin', 'operator')],
+      })
+    );
+
     // Allow users in operator or admin groups to subscribe to all model updates
     // Allow users not in these groups to subscribe only to their own model updates
     const subscriptionPermissions = `
@@ -560,6 +592,12 @@ export class CarLogsManager extends Construct {
         directives: [Directive.subscribe('deleteCarLogsAsset')],
       })
     );
+
+    // Create Step Function for fetching logs
+    new CarLogsFetchStepFunction(this, 'CarLogsFetch', this.bagUploadBucket, {
+      appsyncApi: props.appsyncApi,
+      lambdaConfig: props.lambdaConfig,
+    });
 
     // Add tags
     cdk.Tags.of(this).add('Purpose', 'CarLogsProcessing');

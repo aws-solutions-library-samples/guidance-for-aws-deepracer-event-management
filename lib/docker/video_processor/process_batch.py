@@ -100,7 +100,7 @@ def create_dynamodb_entries(user_model_map: list[dict]) -> None:
                     "modelname": model["modelname"],
                     "assetMetaData": {
                         "key": video["file"],
-                        "filename": "",
+                        "filename": video["file"].split("/")[-1],
                         "uploadedDateTime": scalar_types_utils.aws_datetime(),
                     },
                     "type": "VIDEO",

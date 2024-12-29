@@ -46,6 +46,13 @@ export default function useMutation() {
           itemType: t('notifications.item-type-model'),
           name: payload.modelname ?? '',
         };
+      } else if (lowerCaseMethod.includes('carlogsasset')) {
+        console.info('NOTIFICATION', payload);
+        notificationInfo = {
+          id: payload.assetId ?? '',
+          itemType: t('notifications.item-type-asset'),
+          name: payload.filename ?? '',
+        };
       } else {
         notificationInfo = {
           id: 'common',
