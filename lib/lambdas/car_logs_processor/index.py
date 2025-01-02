@@ -21,112 +21,132 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
     logger.info(json.dumps(event))
 
     # Create a temporary directory for extraction
-    tmp_dir = EXTRACTED_DIR
-    if not os.path.exists(tmp_dir):
-        os.makedirs(tmp_dir)
+    if not os.path.exists(EXTRACTED_DIR):
+        os.makedirs(EXTRACTED_DIR)
 
     # The output bucket for the processed files
+    input_bucket = os.environ["BAGS_UPLOAD_BUCKET"]
     output_bucket = os.environ["OUTPUT_BUCKET"]
 
     # Get the required data from the event json
     # Theoretically we can receive more than one file
 
-    for record in event["Records"]:
-        if record["eventName"] in [
-            "ObjectCreated:CompleteMultipartUpload",
-            "ObjectCreated:Put",
-            "ObjectCreated:Post",
-        ]:
-            bucket = record["s3"]["bucket"]["name"]
-            key = record["s3"]["object"]["key"]
-            logger.info(f"Processing file {key} from bucket {bucket}")
+    if "Records" in event:
+        for record in event["Records"]:
+            if record["eventName"] in [
+                "ObjectCreated:CompleteMultipartUpload",
+                "ObjectCreated:Put",
+                "ObjectCreated:Post",
+            ]:
+                bucket = record["s3"]["bucket"]["name"]
+                key = record["s3"]["object"]["key"]
 
-            # Extract filename from key and strip .tar.gz
-            batch_name = key.split("/")[-1].replace(".tar.gz", "")
-            car_name = batch_name.split("_")[0]
-            timestamp = batch_name.split("_")[1]
-            logger.info(
-                f"Batch name: {batch_name}, car name: {car_name}, timestamp: {timestamp}"
-            )
+                matched_bags, job_id = process_bag_files(bucket, output_bucket, key)
+    elif "data" in event:
+        matched_bags, job_id = process_bag_files(
+            input_bucket, event["data"]["ssm"]["uploadKey"], output_bucket
+        )
+    else:
+        raise ValueError("Invalid event format")
 
-            matched_bags = {"bags": []}
-            matched_bags["car_name"] = car_name
+    return {
+        "statusCode": 200,
+        "body": {"matched_bags": matched_bags, "batchJobId": job_id},
+    }
 
-            # Get the car ID from AppSync
-            car_id, online = get_car_id(car_name)
-            logger.info(f"Found car {car_name} as {car_id}, online: {online}")
 
-            # Get the list of users from AppSync
-            all_users = query_users()
-            logger.info(f"Input user list: {all_users}")
+def process_bag_files(
+    input_bucket: str, key: str, output_bucket: str
+) -> tuple[dict, str]:
 
-            # Iterate over the tar.gz files and process them
-            try:
-                extracted_dirs = download_and_extract_tar(bucket, key, tmp_dir)
+    logger.info(f"Processing file {key} from bucket {input_bucket}")
 
-                for bag_dir in extracted_dirs:
-                    user_model_info = find_user_and_model(all_users.copy(), bag_dir)
-                    if user_model_info:
-                        logger.debug(
-                            "Found user and model match: {} {}".format(
-                                user_model_info["username"],
-                                user_model_info["model"]["name"],
-                            )
-                        )
+    # Extract filename from key and strip .tar.gz
+    batch_name = key.split("/")[-1].replace(".tar.gz", "")
+    car_name = batch_name.split("_")[0]
+    timestamp = batch_name.split("_")[1]
+    logger.info(
+        f"Batch name: {batch_name}, car name: {car_name}, timestamp: {timestamp}"
+    )
 
-                        # Upload the bag into the user's log and video directory
-                        bag_key = f"private/{user_model_info['sub']}/logs/{bag_dir}"
-                        for root, _, files in os.walk(os.path.join(tmp_dir, bag_dir)):
-                            for file in files:
-                                file_path = os.path.join(root, file)
-                                s3_key = os.path.join(
-                                    bag_key,
-                                    os.path.relpath(
-                                        file_path, os.path.join(tmp_dir, bag_dir)
-                                    ),
-                                )
-                                s3_client.upload_file(file_path, output_bucket, s3_key)
-                                logger.debug(
-                                    f"Uploaded {file_path} to s3://{output_bucket}/{s3_key}"
-                                )
-                        user_model_info["bag_key"] = bag_key
-                        matched_bags["bags"].append(user_model_info)
+    matched_bags = {"bags": []}
+    matched_bags["car_name"] = car_name
 
-                logger.info(f"Matched bags: {matched_bags}")
+    # Get the car ID from AppSync
+    car_id, online = get_car_id(car_name)
+    logger.info(f"Found car {car_name} as {car_id}, online: {online}")
 
-            except Exception as e:
-                logger.error(f"Error processing tar.gz file: {str(e)}")
-                raise
+    # Get the list of users from AppSync
+    all_users = query_users()
+    logger.info(f"Input user list: {all_users}")
 
-            finally:
-                clean_directory(tmp_dir)
+    # Iterate over the tar.gz files and process them
+    try:
+        extracted_dirs = download_and_extract_tar(input_bucket, key, EXTRACTED_DIR)
 
-            # Create a batch job for the matched bags
-            job_queue = os.environ["JOB_QUEUE"]
-            job_definition = os.environ["JOB_DEFINITION"]
-
-            batch_client = boto3.client("batch")
-
-            try:
-                response = batch_client.submit_job(
-                    jobName=f"process-logs-{timestamp}",
-                    jobQueue=job_queue,
-                    jobDefinition=job_definition,
-                    containerOverrides={
-                        "environment": [
-                            {"name": "MATCHED_BAGS", "value": json.dumps(matched_bags)},
-                            {"name": "CAR_ID", "value": car_id},
-                        ]
-                    },
+        for bag_dir in extracted_dirs:
+            user_model_info = find_user_and_model(all_users.copy(), bag_dir)
+            if user_model_info:
+                logger.debug(
+                    "Found user and model match: {} {}".format(
+                        user_model_info["username"],
+                        user_model_info["model"]["name"],
+                    )
                 )
-                logger.info(f"Batch job submitted successfully: {response['jobId']}")
-            except Exception as e:
-                logger.error(f"Error submitting batch job: {str(e)}")
-                raise
 
-            create_dynamodb_entries(matched_bags)
+                # Upload the bag into the user's log and video directory
+                bag_key = f"private/{user_model_info['sub']}/logs/{bag_dir}"
+                for root, _, files in os.walk(os.path.join(EXTRACTED_DIR, bag_dir)):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        s3_key = os.path.join(
+                            bag_key,
+                            os.path.relpath(
+                                file_path, os.path.join(EXTRACTED_DIR, bag_dir)
+                            ),
+                        )
+                        s3_client.upload_file(file_path, output_bucket, s3_key)
+                        logger.debug(
+                            f"Uploaded {file_path} to s3://{output_bucket}/{s3_key}"
+                        )
+                user_model_info["bag_key"] = bag_key
+                matched_bags["bags"].append(user_model_info)
 
-    return {"statusCode": 200, "body": json.dumps("Processing completed successfully")}
+        logger.info(f"Matched bags: {matched_bags}")
+
+    except Exception as e:
+        logger.error(f"Error processing tar.gz file: {str(e)}")
+        raise
+
+    finally:
+        clean_directory(EXTRACTED_DIR)
+
+    # Create a batch job for the matched bags
+    job_queue = os.environ["JOB_QUEUE"]
+    job_definition = os.environ["JOB_DEFINITION"]
+
+    batch_client = boto3.client("batch")
+
+    try:
+        response = batch_client.submit_job(
+            jobName=f"process-logs-{timestamp}",
+            jobQueue=job_queue,
+            jobDefinition=job_definition,
+            containerOverrides={
+                "environment": [
+                    {"name": "MATCHED_BAGS", "value": json.dumps(matched_bags)},
+                    {"name": "CAR_ID", "value": car_id},
+                ]
+            },
+        )
+        logger.info(f"Batch job submitted successfully: {response['jobId']}")
+    except Exception as e:
+        logger.error(f"Error submitting batch job: {str(e)}")
+        raise
+
+    create_dynamodb_entries(matched_bags)
+
+    return matched_bags, response["jobId"]
 
 
 def create_dynamodb_entries(matched_bags: dict) -> None:

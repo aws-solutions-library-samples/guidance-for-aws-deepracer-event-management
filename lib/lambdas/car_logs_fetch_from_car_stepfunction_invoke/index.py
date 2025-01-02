@@ -35,27 +35,42 @@ def lambda_handler(event, context):
     start_time_filename = time.strftime(
         "%Y%m%d-%H%M%S", datetime.datetime.now().timetuple()
     )
+
+    filename = f"{carName}_{start_time_filename}"
+    key = "/".join(["upload", filename + ".tar.gz"])
+
     logger.info(f"Start - JobId: {jobId}, carName: {carName}")
 
     item_started = {
         "jobId": jobId,
-        "status": "Started",
+        "status": "REQUESTED_UPLOAD",
         "fetchStartTime": start_time,
-        "eventId": eventId,
+        "uploadKey": key,
     }
 
     try:
-        query = """mutation updateFetchFromCarDbEntry($jobId: ID!, $status: String!, $eventId: ID!, $endTime: AWSDateTime, $fetchStartTime: AWSDateTime) {
-            updateFetchFromCarDbEntry(jobId: $jobId, status: $status, eventId: $eventId, endTime: $endTime, fetchStartTime: $fetchStartTime) {
-                jobId
-                status
-                eventId
-                endTime
-                fetchStartTime
+        query = """mutation updateFetchFromCarDbEntry($jobId: ID!, $status: CarLogsFetchStatus!, $endTime: AWSDateTime, $fetchStartTime: AWSDateTime, $uploadKey: String) {
+            updateFetchFromCarDbEntry(jobId: $jobId, status: $status, endTime: $endTime, fetchStartTime: $fetchStartTime, uploadKey: $uploadKey) {
+                    carInstanceId
+                    carName
+                    carFleetId
+                    carFleetName
+                    carIpAddress
+                    eventId
+                    eventName
+                    jobId
+                    laterThan
+                    startTime
+                    fetchStartTime
+                    status
+                    endTime
+                    uploadKey
             }
         }
         """
-        appsync_helpers.send_mutation(query, item_started)
+        result = appsync_helpers.send_mutation(query, item_started)
+        if not result:
+            raise Exception("Failed to update the status of the job")
 
     except Exception as error:
         logger.exception(error)
@@ -64,8 +79,6 @@ def lambda_handler(event, context):
     ## SSM code here
     try:
 
-        filename = f"{carName}_{start_time_filename}"
-        key = "/".join(["upload", filename + ".tar.gz"])
         # Generate a presigned URL for the S3 object
         try:
             presigned_url = s3_client.generate_presigned_url(
@@ -100,8 +113,9 @@ def lambda_handler(event, context):
         return {
             "carInstanceId": carInstanceId,
             "ssmCommandId": command_id,
+            "uploadKey": key,
         }
 
     except Exception as error:
         logger.exception(error)
-        return error
+        raise error

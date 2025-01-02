@@ -107,7 +107,7 @@ def createStartFetchFromCarDbEntry(
         "startTime": startTime,
         "status": status,
     }
-    response = ddbTable.put_item(Item=input)
+    _ = ddbTable.put_item(Item=input)
 
     logger.info(f"Starting fetch from carInstanceId {carInstanceId}")
 
@@ -119,9 +119,9 @@ def createStartFetchFromCarDbEntry(
 def updateFetchFromCarDbEntry(
     jobId,
     status,
-    eventId,
     endTime,
     fetchStartTime,
+    uploadKey,
 ):
     key = {
         "jobId": jobId,
@@ -135,6 +135,9 @@ def updateFetchFromCarDbEntry(
     if fetchStartTime is not None:
         UpdateExpression = UpdateExpression + ", uploadStartTime=:u"
         updateValues[":u"] = fetchStartTime
+    if uploadKey is not None:
+        UpdateExpression = UpdateExpression + ", uploadKey=:k"
+        updateValues[":k"] = uploadKey
 
     response = ddbTable.update_item(
         Key=key,
@@ -147,14 +150,8 @@ def updateFetchFromCarDbEntry(
     logger.info(response)
     logger.info(f"Updating job {jobId}")
 
-    return_data = {
-        "jobId": jobId,
-        "status": status,
-        "fetchStartTime": fetchStartTime,
-        "endTime": endTime,
-        "eventId": eventId,
-    }
-    return return_data
+    response = ddbTable.get_item(Key=key)
+    return response.get("Item", {})
 
 
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)

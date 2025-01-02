@@ -28,7 +28,7 @@ def lambda_handler(event, context):
     eventName = event["data"]["eventName"]
     laterThan = event["data"]["laterThan"]
     startTime = scalar_types_utils.aws_datetime()
-    status = "Created"
+    status = "CREATED"
 
     logger.info(f"JobId: {jobId}, carInstanceId: {carInstanceId}")
 
@@ -47,7 +47,7 @@ def lambda_handler(event, context):
     }
 
     try:
-        query = """mutation createStartFetchFromCarDbEntry($carFleetId: String!, $carFleetName: String!, $carInstanceId: String!, $carIpAddress: String!, $carName: String!, $jobId: ID!, $startTime: AWSDateTime!, $status: String!, $eventId: ID!, $eventName: String!, laterThan: AWSDateTime) {
+        query = """mutation createStartFetchFromCarDbEntry($carFleetId: String!, $carFleetName: String!, $carInstanceId: String!, $carIpAddress: String!, $carName: String!, $jobId: ID!, $startTime: AWSDateTime!, $status: CarLogsFetchStatus!, $eventId: ID!, $eventName: String!, $laterThan: AWSDateTime) {
             createStartFetchFromCarDbEntry(carFleetId: $carFleetId, carFleetName: $carFleetName, carInstanceId: $carInstanceId, carIpAddress: $carIpAddress, carName: $carName, jobId: $jobId, startTime: $startTime, status: $status, eventId: $eventId, eventName: $eventName, laterThan: $laterThan) {
                 carFleetId
                 carFleetName
@@ -63,10 +63,12 @@ def lambda_handler(event, context):
             }
         }
         """
-        appsync_helpers.send_mutation(query, item)
+        result = appsync_helpers.send_mutation(query, item)
+        if not result:
+            raise Exception("Error sending mutation")
 
     except Exception as error:
         logger.exception(error)
-        return error
+        raise error
 
     return item

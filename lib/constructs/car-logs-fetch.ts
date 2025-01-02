@@ -1,18 +1,28 @@
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
+import * as batch from 'aws-cdk-lib/aws-batch';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as stepFunctions from 'aws-cdk-lib/aws-stepfunctions';
 import * as stepFunctionsTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
-import { Directive, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
+import { Directive, EnumType, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
 import { Construct } from 'constructs';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 export class CarLogsFetchStepFunction extends Construct {
   readonly stepFunction: stepFunctions.StateMachine;
 
-  constructor(scope: Construct, id: string, bagUploadBucket: s3.Bucket, props: any) {
+  constructor(
+    scope: Construct,
+    id: string,
+    bagUploadBucket: s3.Bucket,
+    processorFunction: StandardLambdaPythonFunction,
+    jobQueue: batch.CfnJobQueue,
+    sharedLambdaRole: iam.Role,
+    cloudWatchLogsPermissionsPolicy: iam.Policy,
+    props: any
+  ) {
     super(scope, id);
 
     const fetchJobsTable = new dynamodb.Table(this, 'CarLogsFetchJobTable', {
@@ -43,6 +53,7 @@ export class CarLogsFetchStepFunction extends Construct {
       description: 'Starts the fetch from car process',
       timeout: Duration.minutes(1),
       runtime: props.lambdaConfig.runtime,
+      role: sharedLambdaRole,
       environment: {
         POWERTOOLS_SERVICE_NAME: 'car_logs_fetch_from_car_stepfunction_create',
         DDB_TABLE: fetchJobsTable.tableName,
@@ -53,9 +64,15 @@ export class CarLogsFetchStepFunction extends Construct {
         props.lambdaConfig.layersConfig.powerToolsLayer,
         props.lambdaConfig.layersConfig.appsyncHelpersLayer,
       ],
+      cloudWatchPolicy: cloudWatchLogsPermissionsPolicy,
     });
 
-    props.appsyncApi.api.grantMutation(fetchFromCarSFNCreate, 'createStartFetchFromCarDbEntry');
+    props.appsyncApi.api.grantMutation(sharedLambdaRole, 'createStartFetchFromCarDbEntry');
+
+    // Start Wait
+    const startWait = new stepFunctions.Wait(this, 'startWait', {
+      time: stepFunctions.WaitTime.duration(Duration.seconds(1)),
+    });
 
     const write_to_dynamo = new stepFunctionsTasks.LambdaInvoke(this, 'Write Fetch Request to DynamoDB', {
       lambdaFunction: fetchFromCarSFNCreate,
@@ -63,6 +80,18 @@ export class CarLogsFetchStepFunction extends Construct {
         data: stepFunctions.JsonPath.stringAt('$'),
         executionArn: stepFunctions.JsonPath.stringAt('$$.Execution.Id'),
       }),
+      resultPath: '$',
+      resultSelector: {
+        'carInstanceId.$': '$.Payload.carInstanceId',
+        'carName.$': '$.Payload.carName',
+        'carFleetId.$': '$.Payload.carFleetId',
+        'carFleetName.$': '$.Payload.carFleetName',
+        'carIpAddress.$': '$.Payload.carIpAddress',
+        'eventId.$': '$.Payload.eventId',
+        'eventName.$': '$.Payload.eventName',
+        'jobId.$': '$.Payload.jobId',
+        'laterThan.$': '$.Payload.laterThan',
+      },
     });
 
     // Invoke
@@ -71,6 +100,7 @@ export class CarLogsFetchStepFunction extends Construct {
       description: 'car_logs_fetch_from_car_stepfunction_invoke',
       timeout: Duration.minutes(1),
       runtime: props.lambdaConfig.runtime,
+      role: sharedLambdaRole,
       environment: {
         POWERTOOLS_SERVICE_NAME: 'car_logs_fetch_from_car_stepfunction_invoke',
         APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
@@ -81,19 +111,18 @@ export class CarLogsFetchStepFunction extends Construct {
         props.lambdaConfig.layersConfig.powerToolsLayer,
         props.lambdaConfig.layersConfig.appsyncHelpersLayer,
       ],
+      cloudWatchPolicy: cloudWatchLogsPermissionsPolicy,
     });
 
-    fetchFromCarSFNInvoke.addToRolePolicy(
+    sharedLambdaRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ['ssm:SendCommand'],
         resources: ['*'],
       })
     );
-    // permissions for s3 bucket write
-    bagUploadBucket.grantWrite(fetchFromCarSFNInvoke, 'upload/*');
 
-    props.appsyncApi.api.grantMutation(fetchFromCarSFNInvoke, 'updateFetchFromCarDbEntry');
+    props.appsyncApi.api.grantMutation(sharedLambdaRole, 'updateFetchFromCarDbEntry');
 
     const invokeWithSsm = new stepFunctionsTasks.LambdaInvoke(this, 'Invoke fetch from car via SSM', {
       lambdaFunction: fetchFromCarSFNInvoke,
@@ -101,18 +130,19 @@ export class CarLogsFetchStepFunction extends Construct {
         data: stepFunctions.JsonPath.stringAt('$'),
         executionArn: stepFunctions.JsonPath.stringAt('$$.Execution.Id'),
       }),
-      resultPath: '$.ssmCommandId',
-      resultSelector: { 'ssmCommandId.$': '$.Payload.ssmCommandId' },
+      resultPath: '$.ssm',
+      resultSelector: { 'ssmCommandId.$': '$.Payload.ssmCommandId', 'uploadKey.$': '$.Payload.uploadKey' },
     });
 
-    // Status
+    // Status SSM
     const fetchFromCarSFNStatus = new StandardLambdaPythonFunction(this, 'fetchFromCarSFNStatus', {
-      entry: 'lib/lambdas/car_logs_fetch_from_car_stepfunction_status',
-      description: 'car_logs_fetch_from_car_stepfunction_status',
+      entry: 'lib/lambdas/car_logs_fetch_from_car_stepfunction_ssm_status',
+      description: 'car_logs_fetch_from_car_stepfunction_ssm_status',
       timeout: Duration.minutes(1),
       runtime: props.lambdaConfig.runtime,
+      role: sharedLambdaRole,
       environment: {
-        POWERTOOLS_SERVICE_NAME: 'car_logs_fetch_from_car_stepfunction_status',
+        POWERTOOLS_SERVICE_NAME: 'car_logs_fetch_from_car_stepfunction_ssm_status',
         APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
       },
       layers: [
@@ -120,9 +150,10 @@ export class CarLogsFetchStepFunction extends Construct {
         props.lambdaConfig.layersConfig.powerToolsLayer,
         props.lambdaConfig.layersConfig.appsyncHelpersLayer,
       ],
+      cloudWatchPolicy: cloudWatchLogsPermissionsPolicy,
     });
 
-    fetchFromCarSFNStatus.addToRolePolicy(
+    sharedLambdaRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ['ssm:GetCommandInvocation'],
@@ -130,71 +161,146 @@ export class CarLogsFetchStepFunction extends Construct {
       })
     );
 
-    props.appsyncApi.api.grantMutation(fetchFromCarSFNStatus, 'updateFetchFromCarDbEntry');
-
-    const statusWithSsm = new stepFunctionsTasks.LambdaInvoke(this, 'Status of fetch from car via SSM', {
+    const statusWithSsm = new stepFunctionsTasks.LambdaInvoke(this, 'Read SSM Command Status', {
       lambdaFunction: fetchFromCarSFNStatus,
       payload: stepFunctions.TaskInput.fromObject({
         data: stepFunctions.JsonPath.stringAt('$'),
         executionArn: stepFunctions.JsonPath.stringAt('$$.Execution.Id'),
       }),
-      resultPath: '$.status',
-      resultSelector: { 'status.$': '$.Payload.status' },
-    });
-
-    // passToSsm
-    const passToSsm = new stepFunctions.Pass(this, 'passToSsm', {
-      parameters: {
-        carInstanceId: stepFunctions.JsonPath.stringAt('$.Payload.carInstanceId'),
-        carName: stepFunctions.JsonPath.stringAt('$.Payload.carName'),
-        carFleetId: stepFunctions.JsonPath.stringAt('$.Payload.carFleetId'),
-        carFleetName: stepFunctions.JsonPath.stringAt('$.Payload.carFleetName'),
-        carIpAddress: stepFunctions.JsonPath.stringAt('$.Payload.carIpAddress'),
-        eventId: stepFunctions.JsonPath.stringAt('$.Payload.eventId'),
-        eventName: stepFunctions.JsonPath.stringAt('$.Payload.eventName'),
-        jobId: stepFunctions.JsonPath.stringAt('$.Payload.jobId'),
-        laterThan: stepFunctions.JsonPath.stringAt('$.Payload.laterThan'),
+      resultPath: '$.ssm',
+      resultSelector: {
+        'status.$': '$.Payload.status',
+        'ssmCommandId.$': '$.Payload.ssmCommandId',
+        'uploadKey.$': '$.Payload.uploadKey',
       },
-      resultPath: '$',
     });
 
-    const passToSsmWait = new stepFunctions.Wait(this, 'passToSsmWait', {
+    const passToSsmWait = new stepFunctions.Wait(this, 'Wait for SSM', {
       time: stepFunctions.WaitTime.duration(Duration.seconds(1)),
     });
 
-    const passToSsmChoice = new stepFunctions.Choice(this, 'passToSsmChoice');
-    const condition1 = stepFunctions.Condition.stringEquals('$.status.status', 'InProgress');
-    const condition2 = stepFunctions.Condition.stringEquals('$.status.status', 'Pending');
-    const finish = new stepFunctions.Pass(this, 'Finish');
+    const passToSsmChoice = new stepFunctions.Choice(this, 'Check if SSM is done');
+    const ssmCond1 = stepFunctions.Condition.stringEquals('$.ssm.status', 'InProgress');
+    const ssmCond2 = stepFunctions.Condition.stringEquals('$.ssm.status', 'Pending');
+    const ssmCond3 = stepFunctions.Condition.stringEquals('$.ssm.status', 'Delayed');
+    const ssmCond4 = stepFunctions.Condition.stringEquals('$.ssm.status', 'Success');
 
-    const passToSsmChoiceDefinition = passToSsmChoice
-      .when(stepFunctions.Condition.or(condition1, condition2), passToSsmWait)
-      .otherwise(finish);
-
-    // passToSsm definition
-    passToSsm.next(invokeWithSsm.next(passToSsmWait).next(statusWithSsm).next(passToSsmChoiceDefinition));
-
-    // Start Wait
-    const startWait = new stepFunctions.Wait(this, 'startWait', {
-      time: stepFunctions.WaitTime.duration(Duration.seconds(1)),
+    const processorLambdaTask = new stepFunctionsTasks.LambdaInvoke(this, 'Trigger Bag Matching Lambda', {
+      lambdaFunction: processorFunction,
+      payload: stepFunctions.TaskInput.fromObject({
+        data: stepFunctions.JsonPath.stringAt('$'),
+        executionArn: stepFunctions.JsonPath.stringAt('$$.Execution.Id'),
+      }),
+      resultPath: '$.processing',
+      resultSelector: { 'matchedBags.$': '$.Payload.body.matched_bags', 'batchJobId.$': '$.Payload.body.batchJobId' },
     });
 
-    // Definition
-    const definition = startWait.next(write_to_dynamo).next(passToSsm);
+    // Status SSM
+    const videoProcessorStatus = new StandardLambdaPythonFunction(this, 'videoProcessorStatus', {
+      entry: 'lib/lambdas/car_logs_fetch_from_car_stepfunction_vp_status',
+      description: 'car_logs_fetch_from_car_stepfunction_vp_status',
+      timeout: Duration.minutes(1),
+      runtime: props.lambdaConfig.runtime,
+      role: sharedLambdaRole,
+      environment: {
+        POWERTOOLS_SERVICE_NAME: 'car_logs_fetch_from_car_stepfunction_vp_status',
+        APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
+        JOB_QUEUE: jobQueue.attrJobQueueArn,
+      },
+      layers: [
+        props.lambdaConfig.layersConfig.helperFunctionsLayer,
+        props.lambdaConfig.layersConfig.powerToolsLayer,
+        props.lambdaConfig.layersConfig.appsyncHelpersLayer,
+      ],
+      cloudWatchPolicy: cloudWatchLogsPermissionsPolicy,
+    });
 
-    this.stepFunction = new stepFunctions.StateMachine(this, 'CarStatusUpdater', {
-      definition: definition,
+    sharedLambdaRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['batch:DescribeJobs'],
+        resources: ['*'], //TODO: restrict to something less permissive
+      })
+    );
+
+    const statusWithBatch = new stepFunctionsTasks.LambdaInvoke(this, 'Read Batch Command Status', {
+      lambdaFunction: videoProcessorStatus,
+      payload: stepFunctions.TaskInput.fromObject({
+        data: stepFunctions.JsonPath.stringAt('$'),
+        executionArn: stepFunctions.JsonPath.stringAt('$$.Execution.Id'),
+      }),
+      resultPath: '$.batch',
+      resultSelector: {
+        'status.$': '$.Payload.status',
+      },
+    });
+
+    const passToBatchWait = new stepFunctions.Wait(this, 'Wait for Batch', {
+      time: stepFunctions.WaitTime.duration(Duration.seconds(15)),
+    });
+
+    const passToBatchChoice = new stepFunctions.Choice(this, 'Check if Batch is done');
+    const batchCondFailed = stepFunctions.Condition.stringEquals('$.batch.status', 'FAILED');
+    const batchCondSuccess = stepFunctions.Condition.stringEquals('$.batch.status', 'SUCCEEDED');
+
+    const failState = new stepFunctions.Fail(this, 'FailState', {
+      error: 'Fetching of logs failed',
+      cause: 'The batch process failed.',
+    });
+
+    const finish = new stepFunctions.Pass(this, 'Finished');
+
+    const definition = startWait
+      .next(write_to_dynamo)
+      .next(invokeWithSsm)
+      .next(passToSsmWait)
+      .next(statusWithSsm)
+      .next(
+        passToSsmChoice
+          .when(stepFunctions.Condition.or(ssmCond1, ssmCond2, ssmCond3), passToSsmWait)
+          .when(
+            ssmCond4,
+            processorLambdaTask
+              .next(passToBatchWait)
+              .next(statusWithBatch)
+              .next(
+                passToBatchChoice
+                  .when(batchCondSuccess, finish)
+                  .when(batchCondFailed, failState)
+                  .otherwise(passToBatchWait)
+              )
+          )
+          .otherwise(failState)
+      );
+
+    this.stepFunction = new stepFunctions.StateMachine(this, 'StateMachine', {
+      definitionBody: stepFunctions.DefinitionBody.fromChainable(definition),
       tracingEnabled: true,
-      timeout: Duration.minutes(10),
+      timeout: Duration.minutes(30),
       /*logs: {
-        destination: car_status_update_SM_log_group,
-        level: stepFunctions.LogLevel.ALL,
+      destination: car_status_update_SM_log_group,
+      level: stepFunctions.LogLevel.ALL,
       },*/
     });
 
     // AppSync //
 
     // AppSync Objects
+    const carLogsFetchStatus = new EnumType('CarLogsFetchStatus', {
+      definition: [
+        'CREATED',
+        'REQUESTED_UPLOAD',
+        'WAITING_FOR_UPLOAD',
+        'UPLOAD_FAILED',
+        'UPLOADED',
+        'ANALYZED',
+        'QUEUED_FOR_PROCESSING',
+        'PROCESSING',
+        'DONE',
+        'FAILED',
+      ],
+    });
+    props.appsyncApi.schema.addType(carLogsFetchStatus);
+
     const startFetchFromCarType = new ObjectType('StartFetchFromCar', {
       definition: {
         jobId: GraphqlType.string(),
@@ -217,8 +323,9 @@ export class CarLogsFetchStepFunction extends Construct {
         laterThan: GraphqlType.awsDateTime(),
         startTime: GraphqlType.awsDateTime(),
         fetchStartTime: GraphqlType.awsDateTime(),
-        status: GraphqlType.string(),
+        status: carLogsFetchStatus.attribute(),
         endTime: GraphqlType.awsDateTime(),
+        uploadKey: GraphqlType.string(),
       },
       directives: [Directive.iam(), Directive.cognito('admin', 'operator')],
     });
@@ -241,6 +348,7 @@ export class CarLogsFetchStepFunction extends Construct {
         image: props.lambdaConfig.bundlingImage,
       },
       layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
+      cloudWatchPolicy: cloudWatchLogsPermissionsPolicy,
     });
 
     fetchLogsToCarAppSyncHandler.addToRolePolicy(
@@ -254,7 +362,7 @@ export class CarLogsFetchStepFunction extends Construct {
     fetchLogsToCarAppSyncHandler.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
-        actions: ['dynamodb:Query', 'dynamodb:PutItem', 'dynamodb:UpdateItem'],
+        actions: ['dynamodb:Query', 'dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:UpdateItem'],
         resources: [fetchJobsTable.tableArn, fetchJobsTable.tableArn + '/index/eventId'],
       })
     );
@@ -297,7 +405,7 @@ export class CarLogsFetchStepFunction extends Construct {
           eventName: GraphqlType.string(),
           laterThan: GraphqlType.awsDateTime(),
           startTime: GraphqlType.awsDateTime(),
-          status: GraphqlType.string(),
+          status: carLogsFetchStatus.attribute(),
         },
         returnType: fetchFromCarJobType.attribute(),
         dataSource: fetchFromCarDataSource,
@@ -310,10 +418,10 @@ export class CarLogsFetchStepFunction extends Construct {
       new ResolvableField({
         args: {
           jobId: GraphqlType.id(),
-          status: GraphqlType.string(),
-          eventId: GraphqlType.id(),
+          status: carLogsFetchStatus.attribute(),
           endTime: GraphqlType.awsDateTime(),
           fetchStartTime: GraphqlType.awsDateTime(),
+          uploadKey: GraphqlType.string(),
         },
         returnType: fetchFromCarJobType.attribute(),
         dataSource: fetchFromCarDataSource,

@@ -63,6 +63,23 @@ export class CarLogsManager extends Construct {
   constructor(scope: Construct, id: string, props: CarLogsManagerProps) {
     super(scope, id);
 
+    const sharedLambdaRole = new iam.Role(this, 'SharedLambdaRole', {
+      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+    });
+    const account = cdk.Stack.of(this).account;
+    const region = cdk.Stack.of(this).region;
+
+    const cloudWatchLogsPermissionsPolicy = new iam.Policy(this, 'CloudWatch', {
+      statements: [
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: ['logs:DescribeLogGroups'],
+          resources: [`arn:aws:logs:${region}:${account}:log-group:/aws/lambda/*${id}*`], // Allow access to log groups with the specific prefix
+        }),
+      ],
+    });
+    sharedLambdaRole.attachInlinePolicy(cloudWatchLogsPermissionsPolicy);
+
     // Use dedicated VPC
     this.vpc = new ec2.Vpc(this, 'LogsVPC', {
       maxAzs: 2,
@@ -187,23 +204,20 @@ export class CarLogsManager extends Construct {
       managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonECSTaskExecutionRolePolicy')],
     });
 
-    const taskRole = new iam.Role(this, 'TaskRole', {
-      assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
-    });
-
-    const logGroup = new cdk.aws_logs.LogGroup(this, 'CarLogsProcessor', {
+    const taskLogGroup = new cdk.aws_logs.LogGroup(this, 'CarLogsProcessor', {
       retention: cdk.aws_logs.RetentionDays.SIX_MONTHS,
     });
 
-    const cloudWatchLogsPermissions = new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
-      resources: [logGroup.logGroupArn],
+    const taskRole = new iam.Role(this, 'TaskRole', {
+      assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonECSTaskExecutionRolePolicy')],
     });
 
-    taskRole.attachInlinePolicy(
-      new iam.Policy(this, `${id}-CloudWatchLogs`, {
-        statements: [cloudWatchLogsPermissions],
+    taskRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
+        resources: [taskLogGroup.logGroupArn],
       })
     );
 
@@ -268,7 +282,7 @@ export class CarLogsManager extends Construct {
         logConfiguration: {
           logDriver: 'awslogs',
           options: {
-            'awslogs-group': logGroup.logGroupName,
+            'awslogs-group': taskLogGroup.logGroupName,
             'awslogs-region': cdk.Stack.of(this).region,
             'awslogs-stream-prefix': 'logs-processor',
           },
@@ -277,14 +291,15 @@ export class CarLogsManager extends Construct {
     });
 
     // Create Lambda function for processing uploaded logs
-    const processorFunction = new StandardLambdaPythonFunction(this, 'processBatchOfBags', {
+    const processorFunction = new StandardLambdaPythonFunction(this, 'ProcessBatchOfBags', {
       runtime: props.lambdaConfig.runtime,
       architecture: props.lambdaConfig.architecture,
       entry: 'lib/lambdas/car_logs_processor/',
       memorySize: 1024,
       timeout: Duration.minutes(15),
+      role: sharedLambdaRole,
       environment: {
-        POWERTOOLS_SERVICE_NAME: 'processBatchOfBags',
+        POWERTOOLS_SERVICE_NAME: 'ProcessBatchOfBags',
         LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
         BAGS_UPLOAD_BUCKET: this.bagUploadBucket.bucketName,
         OUTPUT_BUCKET: this.carLogsBucket.bucketName,
@@ -300,18 +315,19 @@ export class CarLogsManager extends Construct {
         props.lambdaConfig.layersConfig.helperFunctionsLayer,
         props.lambdaConfig.layersConfig.powerToolsLayer,
       ],
+      cloudWatchPolicy: cloudWatchLogsPermissionsPolicy,
     });
 
     // Grant permissions to Lambda
-    this.bagUploadBucket.grantRead(processorFunction);
-    this.carLogsBucket.grantReadWrite(processorFunction);
-    props.appsyncApi.api.grantQuery(processorFunction, 'carsOnline');
-    props.appsyncApi.api.grantQuery(processorFunction, 'getAllModels');
-    props.appsyncApi.api.grantQuery(processorFunction, 'listUsers');
-    props.appsyncApi.api.grantMutation(processorFunction, 'addCarLogsAsset');
+    this.bagUploadBucket.grantReadWrite(sharedLambdaRole);
+    this.carLogsBucket.grantReadWrite(sharedLambdaRole);
+    props.appsyncApi.api.grantQuery(sharedLambdaRole, 'carsOnline');
+    props.appsyncApi.api.grantQuery(sharedLambdaRole, 'getAllModels');
+    props.appsyncApi.api.grantQuery(sharedLambdaRole, 'listUsers');
+    props.appsyncApi.api.grantMutation(sharedLambdaRole, 'addCarLogsAsset');
 
     // Grant permission to submit Batch jobs
-    processorFunction.addToRolePolicy(
+    sharedLambdaRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ['batch:SubmitJob'],
         resources: [this.jobQueue.attrJobQueueArn, this.jobDefinition.ref],
@@ -322,7 +338,7 @@ export class CarLogsManager extends Construct {
     this.bagUploadBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3notify.LambdaDestination(processorFunction),
-      { prefix: 'upload/', suffix: '.tar.gz' }
+      { prefix: 'manual_upload/', suffix: '.tar.gz' }
     );
 
     const assetsOnDeleteHandler = new StandardLambdaPythonFunction(this, 'AssetsOnDeleteHandler', {
@@ -331,6 +347,7 @@ export class CarLogsManager extends Construct {
         'Generates a deleteCarLogsAsset mutation to delete the asset in the db as well as pushing update to FE',
       runtime: props.lambdaConfig.runtime,
       architecture: props.lambdaConfig.architecture,
+      role: sharedLambdaRole,
       environment: {
         POWERTOOLS_SERVICE_NAME: 'car_logs_on_delete',
         LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
@@ -344,6 +361,7 @@ export class CarLogsManager extends Construct {
         props.lambdaConfig.layersConfig.appsyncHelpersLayer,
         props.lambdaConfig.layersConfig.powerToolsLayer,
       ],
+      cloudWatchPolicy: cloudWatchLogsPermissionsPolicy,
     });
 
     const deleteLambdaFctS3ObjectDeleteRule = new Rule(this, 'DeleteLambdaFctS3ObjectDeleteRule', {
@@ -360,7 +378,7 @@ export class CarLogsManager extends Construct {
       targets: [new LambdaFunction(assetsOnDeleteHandler)],
     });
 
-    props.appsyncApi.api.grantMutation(assetsOnDeleteHandler, 'deleteCarLogsAsset');
+    props.appsyncApi.api.grantMutation(sharedLambdaRole, 'deleteCarLogsAsset');
 
     // Create Lambda function for the CarLogs API
     const carLogsAssetHandler = new StandardLambdaPythonFunction(this, 'ApiFunction', {
@@ -383,6 +401,7 @@ export class CarLogsManager extends Construct {
         image: props.lambdaConfig.bundlingImage,
       },
       layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
+      cloudWatchPolicy: cloudWatchLogsPermissionsPolicy,
     });
     this.carLogsBucket.grantRead(carLogsAssetHandler);
     this.assetsTable.grantReadWriteData(carLogsAssetHandler);
@@ -594,10 +613,19 @@ export class CarLogsManager extends Construct {
     );
 
     // Create Step Function for fetching logs
-    new CarLogsFetchStepFunction(this, 'CarLogsFetch', this.bagUploadBucket, {
-      appsyncApi: props.appsyncApi,
-      lambdaConfig: props.lambdaConfig,
-    });
+    new CarLogsFetchStepFunction(
+      this,
+      'FetchLogs',
+      this.bagUploadBucket,
+      processorFunction,
+      this.jobQueue,
+      sharedLambdaRole,
+      cloudWatchLogsPermissionsPolicy,
+      {
+        appsyncApi: props.appsyncApi,
+        lambdaConfig: props.lambdaConfig,
+      }
+    );
 
     // Add tags
     cdk.Tags.of(this).add('Purpose', 'CarLogsProcessing');
