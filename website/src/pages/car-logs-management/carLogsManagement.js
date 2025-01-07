@@ -1,5 +1,5 @@
-import { SpaceBetween } from '@cloudscape-design/components';
-import { Auth } from 'aws-amplify';
+import { SpaceBetween, Tabs } from '@cloudscape-design/components';
+import { API, Auth } from 'aws-amplify';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
@@ -13,7 +13,14 @@ import {
   ColumnConfigurationRacer,
   FilteringPropertiesRacer,
 } from '../../components/tableCarLogsAssetsConfigRacer';
+import {
+  ColumnConfigurationProc,
+  FilteringPropertiesProc,
+} from '../../components/tableCarLogsAssetsProcessing';
 import { TableHeader } from '../../components/tableConfig';
+import * as queries from '../../graphql/queries';
+import * as subscriptions from '../../graphql/subscriptions';
+import { useSelectedEventContext } from '../../store/contexts/storeProvider';
 import { useStore } from '../../store/store';
 import { DeleteAssetModal } from './components/deleteAssetModal';
 import { DownloadAssetModal } from './components/downloadAssetModal';
@@ -22,14 +29,18 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
   const { t } = useTranslation(['translation', 'help-model-carlogs', 'help-admin-model-carlogs']);
   const [columnConfiguration, setColumnConfiguration] = useState(ColumnConfigurationRacer());
   const [filteringProperties, setFilteringProperties] = useState(FilteringPropertiesRacer());
+  const [columnConfigurationProc] = useState(ColumnConfigurationProc());
+  const [filteringPropertiesProc] = useState(FilteringPropertiesProc());
   const [selectedAssets, setSelectedAssets] = useState([]);
   const [breadcrumbs, setBreadcrumbs] = useState([]);
+  const [allJobItems, setJobItems] = useState([]);
   const [state] = useStore();
+  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
+  const isLoading = state.assets.isLoading;
   const [, dispatch] = useStore();
   const assets = state.assets.assets;
-  const isLoading = state.assets.isLoading;
+  const selectedEvent = useSelectedEventContext();
 
-  // based on onlyDisplayOwnAssets select if only the users own assets should be displayed or all available assets
   const assetsToDisplay = onlyDisplayOwnAssets
     ? assets.filter((asset) => asset.sub === Auth.user.attributes.sub)
     : assets;
@@ -54,7 +65,6 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
     );
   }, [t]);
 
-  // based on isOperatorView select if the operator view should be displayed or the racer view
   useEffect(() => {
     if (isOperatorView) {
       setColumnConfiguration(ColumnConfigurationOperator());
@@ -108,38 +118,173 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
 
   const operatorActionButtons = actionButtons;
 
-  return (
-    <PageLayout
-      helpPanelHidden={false}
-      helpPanelContent={isOperatorView ? operatorHelpPanel : helpPanel}
-      header={t('carlogs.assets.header')}
-      description={
-        isOperatorView ? t('carlogs.assets.operator.description') : t('carlogs.assets.description')
+  useEffect(() => {
+    async function listFetchesFromCar() {
+      setJobItems([]);
+      var response = await API.graphql({
+        query: queries.listFetchesFromCar,
+        variables: {
+          eventId: selectedEvent.eventId,
+        },
+      });
+      setJobItems(response.data.listFetchesFromCar);
+      setIsLoadingJobs(false);
+    }
+
+    if (typeof selectedEvent.eventId !== 'undefined' && isOperatorView) {
+      listFetchesFromCar();
+    }
+    return () => {
+      // Unmounting
+    };
+  }, [selectedEvent, setJobItems, isOperatorView]);
+
+  useEffect(() => {
+    let subscriptionCreate;
+    let subscriptionUpdate;
+
+    async function subscribeToFetches() {
+      subscriptionCreate = API.graphql({
+        query: subscriptions.onFetchesFromCarCreated,
+        variables: {
+          eventId: selectedEvent.eventId,
+        },
+      }).subscribe({
+        next: ({ value }) => {
+          const newFetch = value.data.onFetchesFromCarCreated;
+          setJobItems((prevItems) => [...prevItems, newFetch]);
+        },
+        error: (error) => console.warn(error),
+      });
+
+      subscriptionUpdate = API.graphql({
+        query: subscriptions.onFetchesFromCarUpdated,
+        variables: {
+          eventId: selectedEvent.eventId,
+        },
+      }).subscribe({
+        next: ({ value }) => {
+          const updatedFetch = value.data.onFetchesFromCarUpdated;
+          setJobItems((prevItems) =>
+            prevItems.map((item) => (item.jobId === updatedFetch.jobId ? updatedFetch : item))
+          );
+        },
+        error: (error) => console.warn(error),
+      });
+    }
+
+    if (isOperatorView) {
+      subscribeToFetches();
+    }
+
+    return () => {
+      if (subscriptionCreate) {
+        subscriptionCreate.unsubscribe();
       }
-      breadcrumbs={breadcrumbs}
-    >
-      <PageTable
-        selectedItems={selectedAssets}
-        setSelectedItems={setSelectedAssets}
-        tableItems={assetsToDisplay}
-        selectionType="multi"
-        columnConfiguration={columnConfiguration}
-        trackBy="assetId"
-        header={
-          <TableHeader
-            nrSelectedItems={selectedAssets.length}
-            nrTotalItems={assetsToDisplay.length}
-            header={t('carlogs.assets.header')}
-            actions={isOperatorView ? operatorActionButtons : actionButtons}
-          />
-        }
-        itemsIsLoading={isLoading}
-        isItemDisabled={(item) => ['NONE'].includes(item.type)}
-        loadingText={t('carlogs.assets.loading-models')}
-        localStorageKey="assets-table-preferences"
-        filteringProperties={filteringProperties}
-        filteringI18nStringsName="assets"
-      />
-    </PageLayout>
-  );
+      if (subscriptionUpdate) {
+        subscriptionUpdate.unsubscribe();
+      }
+    };
+  }, [isOperatorView, dispatch, selectedEvent]);
+
+  if (isOperatorView) {
+    return (
+      <PageLayout
+        helpPanelHidden={false}
+        helpPanelContent={operatorHelpPanel}
+        header={t('carlogs.assets.header')}
+        description={t('carlogs.assets.operator.description')}
+        breadcrumbs={breadcrumbs}
+      >
+        <Tabs
+          tabs={[
+            {
+              label: t('carlogs.assets.tab1'),
+              id: 'tab1',
+              content: (
+                <PageTable
+                  selectedItems={selectedAssets}
+                  setSelectedItems={setSelectedAssets}
+                  tableItems={assetsToDisplay}
+                  selectionType="multi"
+                  columnConfiguration={columnConfiguration}
+                  trackBy="assetId"
+                  header={
+                    <TableHeader
+                      nrSelectedItems={selectedAssets.length}
+                      nrTotalItems={assetsToDisplay.length}
+                      header={t('carlogs.assets.header')}
+                      actions={operatorActionButtons}
+                    />
+                  }
+                  itemsIsLoading={isLoading}
+                  isItemDisabled={(item) => ['NONE'].includes(item.type)}
+                  loadingText={t('carlogs.assets.loading-models')}
+                  localStorageKey="assets-table-preferences"
+                  filteringProperties={filteringProperties}
+                  filteringI18nStringsName="assets"
+                />
+              ),
+            },
+            {
+              label: t('carlogs.assets.tab2'),
+              id: 'tab2',
+              content: (
+                <PageTable
+                  tableItems={allJobItems}
+                  columnConfiguration={columnConfigurationProc}
+                  trackBy="jobId"
+                  header={
+                    <TableHeader
+                      nrTotalItems={allJobItems.length}
+                      header={t('carlogs.assets.proc-header')}
+                    />
+                  }
+                  itemsIsLoading={isLoadingJobs}
+                  isItemDisabled={(item) => ['NONE'].includes(item.type)}
+                  loadingText={t('carlogs.assets.loading-processing')}
+                  localStorageKey="assets-proc-table-preferences"
+                  filteringProperties={filteringPropertiesProc}
+                  filteringI18nStringsName="assets"
+                />
+              ),
+            },
+          ]}
+        />
+      </PageLayout>
+    );
+  } else {
+    return (
+      <PageLayout
+        helpPanelHidden={false}
+        helpPanelContent={helpPanel}
+        header={t('carlogs.assets.header')}
+        description={t('carlogs.assets.description')}
+        breadcrumbs={breadcrumbs}
+      >
+        <PageTable
+          selectedItems={selectedAssets}
+          setSelectedItems={setSelectedAssets}
+          tableItems={assetsToDisplay}
+          selectionType="multi"
+          columnConfiguration={columnConfiguration}
+          trackBy="assetId"
+          header={
+            <TableHeader
+              nrSelectedItems={selectedAssets.length}
+              nrTotalItems={assetsToDisplay.length}
+              header={t('carlogs.assets.header')}
+              actions={actionButtons}
+            />
+          }
+          itemsIsLoading={isLoading}
+          isItemDisabled={(item) => ['NONE'].includes(item.type)}
+          loadingText={t('carlogs.assets.loading-models')}
+          localStorageKey="assets-table-preferences"
+          filteringProperties={filteringProperties}
+          filteringI18nStringsName="assets"
+        />
+      </PageLayout>
+    );
+  }
 };

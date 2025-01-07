@@ -721,6 +721,19 @@
           "new_pw_conf.ph": "Confirm your new password"
         }
       }
+    },
+    "upload": {
+      "status": {
+        "created": "Created",
+        "requested_upload": "Requested upload",
+        "waiting_for_upload": "Waiting for upload",
+        "upload_failed": "Upload failed",
+        "uploaded": "Uploaded",
+        "analyzed": "Analyzed",
+        "processing": "Processing",
+        "done": "Done",
+        "failed": "Failed"
+      }
     }
   },
   "upload-to-car-status": {
