@@ -237,6 +237,11 @@ We recommend that you use the Makefile based commands to simplify the steps requ
 
 If you plan to help develop DREM and contribute code, the initial deployment of DREM is the same as above. Once DREM has deployed, to make the deployed DREM stack available for local development, run the following commands, alternatively the stack can be run using docker compose to create containers for each of the three react applications that make up DREM:
 
+In Visual Studio Code add the following extensions for the best experience:
+
+- Prettier - `esbenp.prettier-vscode`
+- Black Formatter - `ms-python.black-formatter`
+
 ### Local frontend development
 
 Running all resources and installing all dependencies on the local machine
