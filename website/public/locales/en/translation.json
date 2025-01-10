@@ -270,7 +270,7 @@
   },
   "events": {
     "events-information": "Event information",
-    "rovider.please-select-an-event": "Select an event",
+    "provider.please-select-an-event": "Select an event",
     "create-event": "Create event",
     "edit-event": "Edit event",
     "description": "An event is a physical DeepRacer competition.",
