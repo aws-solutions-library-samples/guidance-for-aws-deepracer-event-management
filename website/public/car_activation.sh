@@ -346,7 +346,7 @@ index 1b6c315..6db49ac 100644
          # Construct the cli command
          for flag, value in dict(common_params, **platform_parms).items():
 EOF
- 
+
     # Prevent double click on the range buttons to zoom in
     echo -e -n "\n- Fix range button zoom issue"
     cp ${staticPath}/bundle.css ${backupDir}/bundle.css.bak
@@ -404,9 +404,6 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
     fi
 
     # All cars
-    if [ $varHost != NULL ]; then
-        SET_HOSTNAME
-    fi
     SET_PASSWORD
     SSM_ACTIVATION
 
@@ -425,6 +422,9 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
 
     # All cars
     CAR_TWEAKS
+    if [ $varHost != NULL ]; then
+        SET_HOSTNAME
+    fi
 
 else
     echo -e -n "\nSorry, not sure what we're running here, terminating.\n"
