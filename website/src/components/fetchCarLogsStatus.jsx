@@ -14,7 +14,7 @@ export const FetchCarLogsStatus = ({ status }) => {
     );
   else if (status === 'WAITING_FOR_UPLOAD')
     return (
-      <StatusIndicator type="pending">
+      <StatusIndicator type="in-progress">
         {t('carlogs.upload.status.waiting_for_upload')}
       </StatusIndicator>
     );
@@ -23,12 +23,16 @@ export const FetchCarLogsStatus = ({ status }) => {
       <StatusIndicator type="error">{t('carlogs.upload.status.upload_failed')}</StatusIndicator>
     );
   else if (status === 'UPLOADED')
-    return <StatusIndicator type="pending">{t('carlogs.upload.status.uploaded')}</StatusIndicator>;
+    return (
+      <StatusIndicator type="in-progress">{t('carlogs.upload.status.uploaded')}</StatusIndicator>
+    );
   else if (status === 'ANALYZED')
-    return <StatusIndicator type="pending">{t('carlogs.upload.status.analyzed')}</StatusIndicator>;
+    return (
+      <StatusIndicator type="in-progress">{t('carlogs.upload.status.analyzed')}</StatusIndicator>
+    );
   else if (status === 'PROCESSING')
     return (
-      <StatusIndicator type="pending">{t('carlogs.upload.status.processing')}</StatusIndicator>
+      <StatusIndicator type="in-progress">{t('carlogs.upload.status.processing')}</StatusIndicator>
     );
   else if (status === 'DONE')
     return <StatusIndicator type="success">{t('carlogs.upload.status.done')}</StatusIndicator>;

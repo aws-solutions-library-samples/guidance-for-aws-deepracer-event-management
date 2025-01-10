@@ -420,6 +420,7 @@
     "edit-cars.delete-models-header": "Delete models on cars",
     "edit-cars.delete-models-message": "Are you sure you want to delete models on cars(s)",
     "edit-cars.edit-cars": "Edit devices",
+    "edit-cars.fetch-logs": "Fetch logs",
     "edit-cars.select-color": "Select colour",
     "edit-cars.select-fleet": "Fleet",
     "edit-cars.update-fleets": "Update fleets",
