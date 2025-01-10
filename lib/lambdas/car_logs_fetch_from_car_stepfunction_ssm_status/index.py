@@ -43,11 +43,16 @@ def lambda_handler(event, context):
 
         systemStatus = "WAITING_FOR_UPLOAD"
         if ssmCommandStatus == "Success":
+            logger.info(result["StandardOutputContent"])
+            if "StandardErrorContent" in result:
+                logger.info(result["StandardErrorContent"])
             systemStatus = "UPLOADED"
         elif ssmCommandStatus in ["InProgress", "Pending", "Delayed"]:
             systemStatus = "WAITING_FOR_UPLOAD"
         else:
             systemStatus = "UPLOAD_FAILED"
+            logger.info(result["StandardOutputContent"])
+            logger.error(result["StandardErrorContent"])
 
         logger.info(
             f"Updated Stats - JobId: {jobId}, ssmStatus:"

@@ -95,9 +95,11 @@ def lambda_handler(event, context):
             DocumentName="AWS-RunShellScript",
             Parameters={
                 "commands": [
-                    "source /opt/aws/deepracer/lib/setup.sh",
-                    "# Find out what is the root folder for logs",
-                    "logs_folder=/opt/aws/deepracer/logs",
+                    "#!/bin/bash",
+                    "export HOME=/root",
+                    "source /opt/aws/deepracer/lib/setup.bash",
+                    'logs_folder=$(ros2 param get /logging_pkg/bag_log_node output_path --hide-type --no-daemon) || { logs_folder="/opt/aws/deepracer/logs"; echo "Using default path - $logs_folder"; }',
+                    "echo Using folder $logs_folder",
                     "# Find folders created after the given time point and add them to a tar file",
                     f"cd $logs_folder",
                     f'find . -mindepth 1 -maxdepth 1 -type d -newermt "{laterThan}" -exec tar -rvf /tmp/{filename}.tar {{}} +',
