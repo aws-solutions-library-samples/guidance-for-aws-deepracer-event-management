@@ -129,6 +129,64 @@
     "download-printable-label": "Download printable label",
     "download-printable-labels": "Download printable labels"
   },
+  "carlogs": {
+    "assets": {
+      "header": "Car Logs & Videos",
+      "car-name": "Car",
+      "car-fleet-name": "Fleet",
+      "close-modal-ari-label": "Close modal",
+      "description": "Manage your car logs and videos.",
+      "operator.description": "Operators can view and manage car logs and videos.",
+      "delete-assets": "Delete selected assets",
+      "delete-asset": "Delete asset",
+      "delete-modal": {
+        "header": "Delete assets?",
+        "description": "Are you sure you want to delete the following assets?"
+      },
+      "download-asset": "Download asset",
+      "download-assets": "Download selected assets",
+      "download-modal": {
+        "header": "Download assets",
+        "description": "Are you sure you want to download the following assets?"
+      },
+      "model-information": "Model Information",
+      "model-name": "Model Name",
+      "type": "Type",
+      "filename": "Filename",
+      "upload-date": "Upload Date",
+      "user-name": "Username",
+      "status": "Status",
+      "start-time": "Start Time",
+      "loading-models": "Loading models...",
+      "loading-processing": "Loading processing logs...",
+      "tab1": "Assets",
+      "tab2": "Processing logs",
+      "types": {
+        "video": "Video",
+        "bag_sqlite": "ROS Bag - SQLite"
+      },
+      "notifications": {
+        "downloading": "Downloading file",
+        "download-successful": "Downloaded file",
+        "download-failed": "Could not download file",
+        "dismiss-message": "Dismiss message"
+      },
+      "proc-header": "Processing logs"
+    },
+    "upload": {
+      "status": {
+        "created": "Created",
+        "requested_upload": "Requested upload",
+        "waiting_for_upload": "Waiting for upload",
+        "upload_failed": "Upload failed",
+        "uploaded": "Uploaded",
+        "analyzed": "Analyzed",
+        "processing": "Processing",
+        "done": "Done",
+        "failed": "Failed"
+      }
+    }
+  },
   "carmodelupload": {
     "clear-filter": "Clear filter",
     "clear": "Clear car models first?",
@@ -439,6 +497,7 @@
     "delete-item-error": "{{itemType}} {{itemName}} could not be deleted, {{errorMessage}}"
   },
   "home.breadcrumb": "Home",
+  "home.header": "DeepRacer Event Manager",
   "homeCards": {
     "homeCards.models-description": "Model management",
     "homeCards.models": "Models",
@@ -466,6 +525,7 @@
     "models": "Models",
     "breadcrumb": "Model management",
     "models.breadcrumb": "Models",
+    "models.assets.breadcrumb": "Car logs and videos",
     "all-breadcrumb": "All models",
     "header": "Model management",
     "description": "Upload and manage your models.",
@@ -623,6 +683,7 @@
     "models-management": "Model management",
     "models": "Models",
     "models-own": "Model management",
+    "models-logsvideo": "Car logs and videos",
     "more": "More",
     "quarantined-models": "Quarantined models",
     "search": "Search",
@@ -720,19 +781,6 @@
           "new_pw_conf": "New password confirm",
           "new_pw_conf.ph": "Confirm your new password"
         }
-      }
-    },
-    "upload": {
-      "status": {
-        "created": "Created",
-        "requested_upload": "Requested upload",
-        "waiting_for_upload": "Waiting for upload",
-        "upload_failed": "Upload failed",
-        "uploaded": "Uploaded",
-        "analyzed": "Analyzed",
-        "processing": "Processing",
-        "done": "Done",
-        "failed": "Failed"
       }
     }
   },
