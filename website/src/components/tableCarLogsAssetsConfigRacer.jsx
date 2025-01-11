@@ -49,20 +49,26 @@ export const ColumnConfigurationRacer = () => {
         id: 'filename',
         header: i18next.t('carlogs.assets.filename'),
         cell: (item) => item.assetMetaData.filename || '-',
+        sortingField: 'filename',
+        sortingComparator: (a, b) =>
+          a.assetMetaData.filename.localeCompare(b.assetMetaData.filename),
         width: 240,
         minWidth: 150,
       },
       {
         id: 'uploadedDateTime',
         header: i18next.t('carlogs.assets.upload-date'),
-        cell: (item) => formatAwsDateTime(item.assetMetaData.uploadedDateTime) || '-',
+        cell: (item) => String(formatAwsDateTime(item.assetMetaData.uploadedDateTime)) || '-',
+        sortingField: 'uploadedDateTime',
+        sortingComparator: (a, b) =>
+          new Date(a.assetMetaData.uploadedDateTime) - new Date(b.assetMetaData.uploadedDateTime),
         width: 240,
         minWidth: 150,
       },
     ],
   };
-  returnObject.defaultSortingColumn = returnObject.columnDefinitions[0]; // uploadedDateTime
-  returnObject.defaultSortingIsDescending = false;
+  returnObject.defaultSortingColumn = returnObject.columnDefinitions[3]; // uploadedDateTime
+  returnObject.defaultSortingIsDescending = true;
 
   return returnObject;
 };

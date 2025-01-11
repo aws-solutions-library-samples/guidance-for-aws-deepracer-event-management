@@ -65,10 +65,15 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
     );
   }, [t]);
 
-  useEffect(() => {
+  useMemo(() => {
     if (isOperatorView) {
       setColumnConfiguration(ColumnConfigurationOperator());
       setFilteringProperties(FilteringPropertiesOperator());
+    }
+  }, [isOperatorView]);
+
+  useEffect(() => {
+    if (isOperatorView) {
       setBreadcrumbs([
         { text: t('home.breadcrumb'), href: '/' },
         { text: t('operator.breadcrumb'), href: '/admin/home' },
@@ -81,8 +86,6 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
       });
       dispatch('HELP_PANEL_IS_OPEN', false);
     } else {
-      setColumnConfiguration(ColumnConfigurationRacer());
-      setFilteringProperties(FilteringPropertiesRacer());
       setBreadcrumbs([
         { text: t('home.breadcrumb'), href: '/' },
         { text: t('models.breadcrumb'), href: '/models/view' },
