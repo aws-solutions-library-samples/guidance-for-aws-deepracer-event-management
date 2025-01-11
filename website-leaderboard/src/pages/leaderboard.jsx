@@ -10,7 +10,7 @@ import { getLeaderboard } from '../graphql/queries';
 import { onDeleteLeaderboardEntry, onNewLeaderboardEntry, onUpdateLeaderboardEntry } from '../graphql/subscriptions';
 import styles from './leaderboard.module.css';
 
-const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled }) => {
+const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, showFlag }) => {
   const [leaderboardEntries, SetleaderboardEntries] = useState([]);
   const [leaderboardConfig, setLeaderboardConfig] = useState({
     headerText: '',
@@ -270,6 +270,7 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled }
               leaderboardEntries={leaderboardEntries}
               scrollEnabled={scrollEnabled}
               fastest={raceFormat === 'fastest'}
+              showFlag={showFlag}
             />
           </div>
           <FollowFooter
