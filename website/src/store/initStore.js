@@ -1,3 +1,4 @@
+import configureAssetsStore from './assetsStore';
 import configureCarsStore from './carsStore';
 import configureEventsStore from './eventsStore';
 import configureFleetsStore from './fleetsStore';
@@ -16,6 +17,7 @@ const initDataStores = () => {
   configureFleetsStore();
   configureEventsStore();
   configureModelsStore();
+  configureAssetsStore();
 
   configureSideNavStore();
   configureSplitPanelStore();

@@ -14,6 +14,34 @@ logger = Logger()
 auth = AWS4Auth(access_id, secret_key, region, "appsync", session_token=session_token)
 
 
+def run_query(query, variables):
+    """Sends a query to the Appsync API"""
+
+    endpoint = os.environ.get("APPSYNC_URL", None)
+    headers = {"Content-Type": "application/json"}
+
+    payload = {
+        "query": query,
+        "variables": variables,
+    }
+    logger.info(payload)
+    try:
+        logger.debug("sending query!!")
+        response = requests.post(
+            endpoint, auth=auth, json=payload, headers=headers
+        ).json()
+        logger.info(f"query response: {response}")
+        if "errors" in response:
+            logger.error("Error attempting to query AppSync")
+            logger.error(response["errors"])
+        else:
+            return response
+    except Exception as exception:
+        logger.exception("Error with Query")
+        logger.exception(exception)
+    return None
+
+
 def send_mutation(query, variables):
     """Triggers a mutation on the Appsync API to trigger a subscription"""
 
@@ -26,7 +54,7 @@ def send_mutation(query, variables):
     }
     logger.info(payload)
     try:
-        logger.info("posting mutation!!")
+        logger.debug("posting mutation!!")
         response = requests.post(
             endpoint, auth=auth, json=payload, headers=headers
         ).json()

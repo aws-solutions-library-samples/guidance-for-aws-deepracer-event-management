@@ -14,6 +14,7 @@ import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import { CodeFirstSchema } from 'awscdk-appsync-utils';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
+import { CarLogsManager } from './constructs/car-logs-manager';
 import { CarManager } from './constructs/cars-manager';
 import { ClamscanServerless } from './constructs/clamscan-serverless';
 import { CwRumAppMonitor } from './constructs/cw-rum';
@@ -120,6 +121,14 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
     const carManager = new CarManager(this, 'CarManager', {
       appsyncApi: appsyncResources,
+      lambdaConfig: lambdaConfig,
+      eventbus: props.eventbus,
+    });
+
+    new CarLogsManager(this, 'CarLogsManager', {
+      appsyncApi: appsyncResources,
+      logsBucket: props.logsBucket,
+      modelsBucket: modelsManager.modelsBucket,
       lambdaConfig: lambdaConfig,
       eventbus: props.eventbus,
     });

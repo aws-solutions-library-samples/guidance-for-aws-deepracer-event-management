@@ -1,0 +1,5 @@
+{
+  "header": "## Logs & Videos",
+  "content": "On this page, you can view the Logs and Videos that was uploaded from an AWS DeepRacer car by the Pit Crew as your race completed.\n\n**File types**\n\n* ROS Bags - Raw logs files\n * Video - MP4 files generated from the ROS Bags",
+  "footer": ""
+}

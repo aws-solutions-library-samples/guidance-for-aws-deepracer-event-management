@@ -6,7 +6,7 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 // EVENTS
 const defaultEvent = (t) => {
   const defEvent = { ...event };
-  defEvent.eventName = t('event-provider.please-select-an-event');
+  defEvent.eventName = t('events.provider.please-select-an-event');
   return defEvent;
 };
 

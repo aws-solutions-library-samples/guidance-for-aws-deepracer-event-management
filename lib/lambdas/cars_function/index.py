@@ -128,8 +128,11 @@ def carDeleteAllModels(resourceIds: List[str]):
                 DocumentName="AWS-RunShellScript",
                 Parameters={
                     "commands": [
+                        "systemctl stop deepracer-core",
                         "rm -rf /opt/aws/deepracer/artifacts/*",
+                        "rm -rf /opt/aws/deepracer/logs/*",
                         "rm -rf /root/.ros/log/*",
+                        "systemctl start deepracer-core",
                     ]
                 },
             )
@@ -190,9 +193,8 @@ def callRosService(instaneId: str, rosCommand: str):
     finalCommand = [
         "#!/bin/bash",
         'export HOME="/home/deepracer"',
-        "source /opt/ros/foxy/setup.bash",
         "source /opt/intel/openvino_2021/bin/setupvars.sh",
-        "source /opt/aws/deepracer/lib/local_setup.bash",
+        "source /opt/aws/deepracer/lib/setup.bash",
         rosCommand,
     ]
 

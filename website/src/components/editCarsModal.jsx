@@ -1,6 +1,7 @@
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSelectedEventContext } from '../store/contexts/storeProvider';
 
 import * as mutations from '../graphql/mutations';
 import * as queries from '../graphql/queries';
@@ -36,6 +37,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
 
   const [state] = useStore();
   const fleets = state.fleets.fleets;
+  const selectedEvent = useSelectedEventContext();
 
   // convert fleets data to dropdown format
   useEffect(() => {
@@ -71,6 +73,25 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
       query: mutations.carDeleteAllModels,
       variables: { resourceIds: InstanceIds },
     });
+  }
+
+  // fetch logs from Cars
+  async function carFetchLogs() {
+    for (const car of selectedItems) {
+      const response = await API.graphql({
+        query: mutations.startFetchFromCar,
+        variables: {
+          carInstanceId: car.InstanceId,
+          carName: car.ComputerName,
+          carFleetId: car.fleetId,
+          carFleetName: car.fleetName,
+          carIpAddress: car.IpAddress,
+          eventId: selectedEvent.eventId,
+          eventName: selectedEvent.eventName,
+          laterThan: null,
+        },
+      });
+    }
   }
 
   // Update Cars
@@ -219,16 +240,27 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
 
           <Container>
             <FormField label="Models">
-              <Button
-                disabled={!online}
-                variant="primary"
-                onClick={() => {
-                  setVisible(false);
-                  setDeleteModalVisible(true);
-                }}
-              >
-                {t('fleets.edit-cars.delete-models')}
-              </Button>
+              <SpaceBetween direction="horizontal" size="xs">
+                <Button
+                  disabled={!online}
+                  variant="primary"
+                  onClick={() => {
+                    setVisible(false);
+                    carFetchLogs();
+                  }}
+                >
+                  {t('fleets.edit-cars.fetch-logs')}
+                </Button>
+                <Button
+                  disabled={!online}
+                  onClick={() => {
+                    setVisible(false);
+                    setDeleteModalVisible(true);
+                  }}
+                >
+                  {t('fleets.edit-cars.delete-models')}
+                </Button>
+              </SpaceBetween>
             </FormField>
           </Container>
 
