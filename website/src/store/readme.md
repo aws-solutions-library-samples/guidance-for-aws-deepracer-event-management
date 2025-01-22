@@ -8,6 +8,10 @@
     races: {
         races: []
         isLoading: boolean
+    },
+    assets: {
+        assets: []
+        isLoading: boolean
     }
 }
 ```
