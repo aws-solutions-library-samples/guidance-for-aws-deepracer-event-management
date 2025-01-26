@@ -83,7 +83,9 @@ def upload_files_to_s3(folder, s3_bucket, s3_prefix) -> None:
     return uploaded_files
 
 
-def create_dynamodb_entries(user_model_map: list[dict], fetch_job_id: str) -> None:
+def create_dynamodb_entries(
+    user_model_map: list[dict], fetch_job_id: str, car_name: str
+) -> None:
 
     logger.info("Creating DynamoDB entries for map: {}".format(user_model_map))
 
@@ -99,6 +101,7 @@ def create_dynamodb_entries(user_model_map: list[dict], fetch_job_id: str) -> No
                     "modelId": model["modelId"],
                     "modelname": model["modelname"],
                     "fetchJobId": fetch_job_id,
+                    "carName": car_name,
                     "assetMetaData": {
                         "key": video["file"],
                         "filename": video["file"].split("/")[-1],
@@ -119,6 +122,7 @@ def create_dynamodb_entries(user_model_map: list[dict], fetch_job_id: str) -> No
                     $sub: ID!
                     $username: String!
                     $fetchJobId: String
+                    $carName: String
                 ) {
                     addCarLogsAsset(
                     assetId: $assetId
@@ -129,6 +133,7 @@ def create_dynamodb_entries(user_model_map: list[dict], fetch_job_id: str) -> No
                     sub: $sub
                     username: $username
                     fetchJobId: $fetchJobId
+                    carName: $carName
                     ) {
                     assetId
                     assetMetaData {
@@ -139,6 +144,7 @@ def create_dynamodb_entries(user_model_map: list[dict], fetch_job_id: str) -> No
                     modelId
                     modelname
                     fetchJobId
+                    carName
                     type
                     sub
                     username
@@ -363,7 +369,7 @@ def main():
 
                 sys.exit(exit_code)
 
-    create_dynamodb_entries(user_model_map, fetch_job_id)
+    create_dynamodb_entries(user_model_map, fetch_job_id, matched_bags["car_name"])
 
     logger.info("\nFinished processing videos...\n")
 

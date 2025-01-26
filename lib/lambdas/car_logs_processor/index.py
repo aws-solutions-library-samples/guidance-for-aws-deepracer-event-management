@@ -171,6 +171,7 @@ def create_dynamodb_entries(matched_bags: dict, fetch_job_id: str) -> None:
                 "uploadedDateTime": scalar_types_utils.aws_datetime(),
             },
             "fetchJobId": fetch_job_id,
+            "carName": matched_bags["car_name"],
             "type": "BAG_SQLITE",
         }
 
@@ -187,6 +188,7 @@ def create_dynamodb_entries(matched_bags: dict, fetch_job_id: str) -> None:
             $sub: ID!
             $username: String!
             $fetchJobId: String
+            $carName: String
         ) {
             addCarLogsAsset(
             assetId: $assetId
@@ -194,6 +196,7 @@ def create_dynamodb_entries(matched_bags: dict, fetch_job_id: str) -> None:
             modelId: $modelId
             modelname:  $modelname
             fetchJobId: $fetchJobId
+            carName: $carName
             type: $type
             sub: $sub
             username: $username
@@ -207,6 +210,7 @@ def create_dynamodb_entries(matched_bags: dict, fetch_job_id: str) -> None:
             modelId
             modelname
             fetchJobId
+            carName
             type
             sub
             username

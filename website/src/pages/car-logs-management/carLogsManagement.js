@@ -29,11 +29,11 @@ import { DownloadAssetModal } from './components/downloadAssetModal';
 
 export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets = true }) => {
   const { t } = useTranslation(['translation', 'help-model-carlogs', 'help-admin-model-carlogs']);
-  const [columnConfiguration, setColumnConfiguration] = useState(ColumnConfigurationRacer());
-  const [filteringProperties, setFilteringProperties] = useState(FilteringPropertiesRacer());
+  const [columnConfiguration, setColumnConfiguration] = useState(() => ColumnConfigurationRacer());
+  const [filteringProperties, setFilteringProperties] = useState(() => FilteringPropertiesRacer());
   const [activeTab, setActiveTab] = useState('tab1');
   const [filters, setFilters] = useState({ tokens: [], operation: 'and' });
-  const [filteringPropertiesProc] = useState(FilteringPropertiesProc());
+  const [filteringPropertiesProc] = useState(() => FilteringPropertiesProc());
   const [selectedAssets, setSelectedAssets] = useState([]);
   const [breadcrumbs, setBreadcrumbs] = useState([]);
   const [allJobItems, setJobItems] = useState([]);
@@ -73,7 +73,7 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
     );
   }, [t]);
 
-  const navigateToTab1WithFilter = async (jobId) => {
+  const navigateToAssetTabWithFilter = (jobId) => {
     setActiveTab('tab1');
     setFilters({
       tokens: [{ propertyKey: 'fetchJobId', operator: '=', value: jobId }],
@@ -81,12 +81,14 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
     });
     console.log('Filtering by jobId:', jobId);
   };
-  const [columnConfigurationProc] = useState(ColumnConfigurationProc(navigateToTab1WithFilter));
+  const [columnConfigurationProc] = useState(() =>
+    ColumnConfigurationProc(navigateToAssetTabWithFilter)
+  );
 
   useMemo(() => {
     if (isOperatorView) {
-      setColumnConfiguration(ColumnConfigurationOperator());
-      setFilteringProperties(FilteringPropertiesOperator());
+      setColumnConfiguration(() => ColumnConfigurationOperator());
+      setFilteringProperties(() => FilteringPropertiesOperator());
     }
   }, [isOperatorView]);
 

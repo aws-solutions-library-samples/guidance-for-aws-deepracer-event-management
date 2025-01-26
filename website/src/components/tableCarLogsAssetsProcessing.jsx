@@ -3,7 +3,7 @@ import i18next from '../i18n';
 import { formatAwsDateTime } from '../support-functions/time';
 import { FetchCarLogsStatus } from './fetchCarLogsStatus';
 
-export const ColumnConfigurationProc = (navigateToTab1WithFilter) => {
+export const ColumnConfigurationProc = (navigateToAssetTabWithFilter) => {
   var returnObject = {
     defaultVisibleColumns: ['carname', 'carfleetname', 'starttime', 'status', 'actions'],
     visibleContentOptions: [
@@ -84,7 +84,7 @@ export const ColumnConfigurationProc = (navigateToTab1WithFilter) => {
         cell: (item) => (
           <Button
             onClick={() => {
-              navigateToTab1WithFilter(item.jobId);
+              navigateToAssetTabWithFilter(item.jobId);
             }}
             variant="inline-link"
             iconName="list-view"

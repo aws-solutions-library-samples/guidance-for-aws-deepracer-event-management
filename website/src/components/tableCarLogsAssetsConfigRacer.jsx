@@ -4,7 +4,7 @@ import { CarLogsAssetType } from './assetType';
 
 export const ColumnConfigurationRacer = () => {
   var returnObject = {
-    defaultVisibleColumns: ['modelname', 'type', 'filename', 'uploadedDateTime'],
+    defaultVisibleColumns: ['modelname', 'carname', 'type', 'filename', 'uploadedDateTime'],
     visibleContentOptions: [
       {
         label: i18next.t('carlogs.assets.model-information'),
@@ -12,6 +12,10 @@ export const ColumnConfigurationRacer = () => {
           {
             id: 'modelname',
             label: i18next.t('carlogs.assets.model-name'),
+          },
+          {
+            id: 'carname',
+            label: i18next.t('carlogs.assets.car-name'),
           },
           {
             id: 'type',
@@ -34,6 +38,14 @@ export const ColumnConfigurationRacer = () => {
         header: i18next.t('carlogs.assets.model-name'),
         cell: (item) => item.modelname || '-',
         sortingField: 'modelname',
+        width: 200,
+        minWidth: 150,
+      },
+      {
+        id: 'carname',
+        header: i18next.t('carlogs.assets.car-name'),
+        cell: (item) => item.carName || '-',
+        sortingField: 'carName',
         width: 200,
         minWidth: 150,
       },
@@ -67,7 +79,7 @@ export const ColumnConfigurationRacer = () => {
       },
     ],
   };
-  returnObject.defaultSortingColumn = returnObject.columnDefinitions[3]; // uploadedDateTime
+  returnObject.defaultSortingColumn = returnObject.columnDefinitions[4]; // uploadedDateTime
   returnObject.defaultSortingIsDescending = true;
 
   return returnObject;
@@ -79,6 +91,11 @@ export const FilteringPropertiesRacer = () => {
     {
       key: 'modelname',
       propertyLabel: i18next.t('carlogs.assets.model-name'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'carname',
+      propertyLabel: i18next.t('carlogs.assets.car-name'),
       operators: [':', '!:', '=', '!='],
     },
     {
