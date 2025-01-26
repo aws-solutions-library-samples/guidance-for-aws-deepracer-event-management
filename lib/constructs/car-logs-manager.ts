@@ -430,7 +430,7 @@ export class CarLogsManager extends Construct {
 
     // GraphQL API
     const carLogsAssetType = new EnumType('CarLogsAssetTypeEnum', {
-      definition: ['BAG_SQLITE', 'VIDEO', 'NONE'],
+      definition: ['BAG_SQLITE', 'BAG_MCAP', 'VIDEO', 'NONE'],
     });
     props.appsyncApi.schema.addType(carLogsAssetType);
 

@@ -5,6 +5,7 @@ import os
 import io
 
 import appsync_helpers
+import yaml
 import simplejson as json
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes.appsync import scalar_types_utils
@@ -101,6 +102,20 @@ def process_bag_files(
 
                 # Upload the bag into the user's log and video directory
                 bag_key = f"private/{user_model_info['sub']}/logs/{bag_dir}"
+
+                bag_type = "UNKNOWN"
+                with open(
+                    os.path.join(EXTRACTED_DIR, bag_dir, "metadata.yaml"), "r"
+                ) as yaml_file:
+                    metadata = yaml.safe_load(yaml_file)
+                    bag_type_raw = metadata.get("rosbag2_bagfile_information", {}).get(
+                        "storage_identifier", "unknown"
+                    )
+                    if bag_type_raw == "sqlite3":
+                        bag_type = "BAG_SQLITE"
+                    elif bag_type_raw == "mcap":
+                        bag_type = "BAG_MCAP"
+
                 for root, _, files in os.walk(os.path.join(EXTRACTED_DIR, bag_dir)):
                     for file in files:
                         file_path = os.path.join(root, file)
@@ -115,6 +130,7 @@ def process_bag_files(
                             f"Uploaded {file_path} to s3://{output_bucket}/{s3_key}"
                         )
                 user_model_info["bag_key"] = bag_key
+                user_model_info["bag_type"] = bag_type
                 matched_bags["bags"].append(user_model_info)
 
         logger.info(f"Matched bags: {matched_bags}")
@@ -172,7 +188,7 @@ def create_dynamodb_entries(matched_bags: dict, fetch_job_id: str) -> None:
             },
             "fetchJobId": fetch_job_id,
             "carName": matched_bags["car_name"],
-            "type": "BAG_SQLITE",
+            "type": bag["bag_type"],
         }
 
         logger.info(f"variables => {variables}")

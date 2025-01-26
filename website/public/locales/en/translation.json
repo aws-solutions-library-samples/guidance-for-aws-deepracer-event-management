@@ -165,7 +165,8 @@
       "tab2": "Processing Logs",
       "types": {
         "video": "Video",
-        "bag_sqlite": "ROS Bag - SQLite"
+        "bag_sqlite": "ROS Bag - SQLite",
+        "bag_mcap": "ROS Bag - MCAP"
       },
       "notifications": {
         "downloading": "Downloading file",
