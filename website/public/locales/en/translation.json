@@ -137,6 +137,7 @@
       "car-fleet-name": "Fleet",
       "close-modal-ari-label": "Close modal",
       "description": "Manage your car logs and videos.",
+      "duration": "Duration",
       "operator.description": "Operators can view and manage car logs and videos.",
       "delete-assets": "Delete selected assets",
       "delete-asset": "Delete asset",

@@ -37,6 +37,10 @@ export const ColumnConfigurationOperator = () => {
             id: 'fetchjobid',
             label: i18next.t('carlogs.assets.fetch-job-id'),
           },
+          {
+            id: 'duration',
+            label: i18next.t('carlogs.assets.duration'),
+          },
         ],
       },
     ],
@@ -92,6 +96,20 @@ export const ColumnConfigurationOperator = () => {
           new Date(a.assetMetaData.uploadedDateTime) - new Date(b.assetMetaData.uploadedDateTime),
         width: 240,
         minWidth: 150,
+      },
+      {
+        id: 'duration',
+        header: i18next.t('carlogs.assets.duration'),
+        cell: (item) =>
+          item.mediaMetaData
+            ? `${Math.floor(item.mediaMetaData.duration / 60)}m ${Math.floor(item.mediaMetaData.duration % 60)}s`
+            : '-',
+        sortingField: 'duration',
+        sortingComparator: (a, b) =>
+          (a.mediaMetaData ? a.mediaMetaData.duration : 0) -
+          (b.mediaMetaData ? b.mediaMetaData.duration : 0),
+        width: 100,
+        minWidth: 75,
       },
       {
         id: 'fetchjobid',

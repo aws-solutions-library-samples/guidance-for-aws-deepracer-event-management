@@ -29,6 +29,10 @@ export const ColumnConfigurationRacer = () => {
             id: 'uploadedDateTime',
             label: i18next.t('carlogs.assets.upload-date'),
           },
+          {
+            id: 'duration',
+            label: i18next.t('carlogs.assets.duration'),
+          },
         ],
       },
     ],
@@ -76,6 +80,20 @@ export const ColumnConfigurationRacer = () => {
           new Date(a.assetMetaData.uploadedDateTime) - new Date(b.assetMetaData.uploadedDateTime),
         width: 240,
         minWidth: 150,
+      },
+      {
+        id: 'duration',
+        header: i18next.t('carlogs.assets.duration'),
+        cell: (item) =>
+          item.mediaMetaData
+            ? `${Math.floor(item.mediaMetaData.duration / 60)}m ${Math.floor(item.mediaMetaData.duration % 60)}s`
+            : '-',
+        sortingField: 'duration',
+        sortingComparator: (a, b) =>
+          (a.mediaMetaData ? a.mediaMetaData.duration : 0) -
+          (b.mediaMetaData ? b.mediaMetaData.duration : 0),
+        width: 100,
+        minWidth: 75,
       },
     ],
   };

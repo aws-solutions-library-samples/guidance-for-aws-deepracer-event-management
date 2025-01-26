@@ -6,7 +6,10 @@ import sys
 import subprocess
 import boto3
 import logging
+import random
+import string
 
+from combine_videos import combine_videos, get_video_files
 from appsync_utils import send_mutation
 from aws_lambda_powertools.utilities.data_classes.appsync import scalar_types_utils
 
@@ -67,22 +70,6 @@ def download_bag_from_s3(bag, s3_bucket, input_dir) -> str:
     return bag_dir
 
 
-def upload_files_to_s3(folder, s3_bucket, s3_prefix) -> None:
-
-    uploaded_files = []
-
-    for root, _, files in os.walk(folder):
-        for file in files:
-            file_path = os.path.join(root, file)
-            s3_key = os.path.relpath(file_path, folder)
-            s3_key = "/".join([s3_prefix, s3_key])
-            uploaded_files.append(s3_key)
-            logger.info(f"Uploading {file_path} to s3://{s3_bucket}/{s3_key}")
-            s3.upload_file(file_path, s3_bucket, s3_key)
-
-    return uploaded_files
-
-
 def create_dynamodb_entries(
     user_model_map: list[dict], fetch_job_id: str, car_name: str
 ) -> None:
@@ -96,16 +83,22 @@ def create_dynamodb_entries(
                     "sub": user["sub"],
                     "username": user["username"],
                     "assetId": hashlib.sha256(
-                        video["file"].encode("utf-8")
+                        video["s3_key"].encode("utf-8")
                     ).hexdigest(),
                     "modelId": model["modelId"],
                     "modelname": model["modelname"],
                     "fetchJobId": fetch_job_id,
                     "carName": car_name,
                     "assetMetaData": {
-                        "key": video["file"],
-                        "filename": video["file"].split("/")[-1],
+                        "key": video["s3_key"],
+                        "filename": video["s3_key"].split("/")[-1],
                         "uploadedDateTime": scalar_types_utils.aws_datetime(),
+                    },
+                    "mediaMetaData": {
+                        "duration": video["duration"],
+                        "resolution": video["resolution"],
+                        "fps": video["fps"],
+                        "codec": video["codec"],
                     },
                     "type": "VIDEO",
                 }
@@ -114,8 +107,9 @@ def create_dynamodb_entries(
 
                 query = """
                 mutation AddCarLogsAsset(
-                    $assetMetaData: AssetMetadataInput
                     $assetId: ID!
+                    $assetMetaData: AssetMetadataInput
+                    $mediaMetaData: MediaMetadataInput
                     $modelname: String
                     $modelId: String!
                     $type: CarLogsAssetTypeEnum!
@@ -127,6 +121,7 @@ def create_dynamodb_entries(
                     addCarLogsAsset(
                     assetId: $assetId
                     assetMetaData: $assetMetaData
+                    mediaMetaData: $mediaMetaData
                     modelId: $modelId
                     modelname:  $modelname
                     type: $type
@@ -140,6 +135,12 @@ def create_dynamodb_entries(
                         filename
                         key
                         uploadedDateTime
+                    }
+                    mediaMetaData {
+                        duration
+                        resolution
+                        fps
+                        codec
                     }
                     modelId
                     modelname
@@ -218,6 +219,15 @@ def main():
     group_slice = os.getenv("GROUP_SLICE", ":-2")
 
     user_model_map = []
+
+    background = os.path.join(
+        script_dir,
+        "resources",
+        "AWS-Deepracer_Background_Machine-Learning.928f7bc20a014c7c7823e819ce4c2a84af17597c.jpg",
+    )
+
+    font_path_bd = os.path.join(script_dir, "resources", "Amazon_Ember_Bd.ttf")
+    font_path_rg = os.path.join(script_dir, "resources", "Amazon_Ember_Rg.ttf")
 
     for bag in matched_bags["bags"]:
 
@@ -317,57 +327,46 @@ def main():
             )
             os.makedirs(final_output_dir, exist_ok=True)
 
-            # After processing all bag files, combine the videos
-            combine_videos_script = os.path.join(script_dir, "combine_videos.py")
-            cmd = [
-                "python3",
-                combine_videos_script,
-                "--input_dir",
+            video_files_dict = get_video_files(
                 os.path.join(output_dir, user["sub"], model["modelId"], "intermediate"),
-                "--output_dir",
-                final_output_dir,
-                "--codec",
-                codec,
-                "--pattern",
                 pattern,
-                "--skip_duration",
-                str(skip_duration),
-                "--group_slice",
                 group_slice,
-                "--update_frequency",
-                "1",
-                "--car_name",
-                matched_bags["car_name"],
-                "--delimiter",
-                "_",
-                "--unique",
-            ]
-            logger.info("Running command: %s", cmd)
-            result = subprocess.run(cmd)
-            exit_code = result.returncode
-            if exit_code == 0:
-                logger.info(f"Finished combining videos for {user}")
+                "-",
+            )
+            print("Video files grouped by prefix and date:", video_files_dict)
+            for (prefix, date), video_files in video_files_dict.items():
 
-                uploaded_files = upload_files_to_s3(
-                    final_output_dir,
-                    logs_bucket,
-                    "/".join(["private", user["sub"], "videos"]),
+                name_components = [prefix]
+                if matched_bags.get("car_name", None):
+                    name_components.append(matched_bags["car_name"].strip())
+                name_components.append(date)
+                unique_suffix = "".join(random.choices(string.ascii_letters, k=4))
+                name_components.append(unique_suffix)
+                output_file = os.path.join(
+                    final_output_dir, "_".join(name_components) + ".mp4"
                 )
 
-                # Add the video file to the current model
-                for s3_key in uploaded_files:
-                    model["videos"].append({"file": s3_key})
-
-            else:
-                logger.error(
-                    f"Error processing {bag_path}. Exiting with code {exit_code}"
+                video_info = combine_videos(
+                    video_files,
+                    output_file,
+                    background,
+                    font_path_bd,
+                    font_path_rg,
+                    codec=codec,
+                    skip_duration=skip_duration,
+                    update_frequency=1,
                 )
+                logger.info(f"Created video {output_file}.", video_info)
 
-                # Log the contents of the TMP_DIR
-                logger.info("Listing contents of TMP_DIR:")
-                subprocess.run(["ls", "-lR", TMP_DIR])
+                s3_key = os.path.relpath(output_file, final_output_dir)
+                s3_key = "/".join(["private", user["sub"], "videos", s3_key])
+                logger.info(f"Uploading {output_file} to s3://{logs_bucket}/{s3_key}")
+                s3.upload_file(output_file, logs_bucket, s3_key)
+                video_info["s3_key"] = s3_key
 
-                sys.exit(exit_code)
+                model["videos"].append(video_info)
+
+            logger.info(f"Finished combining videos for {user}")
 
     create_dynamodb_entries(user_model_map, fetch_job_id, matched_bags["car_name"])
 
