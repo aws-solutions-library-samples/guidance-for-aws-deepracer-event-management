@@ -41,22 +41,27 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                 bucket = record["s3"]["bucket"]["name"]
                 key = record["s3"]["object"]["key"]
 
-                matched_bags, job_id = process_bag_files(bucket, output_bucket, key)
+                matched_bags, batch_job_id = process_bag_files(
+                    bucket, key, output_bucket, None
+                )
     elif "data" in event:
-        matched_bags, job_id = process_bag_files(
-            input_bucket, event["data"]["ssm"]["uploadKey"], output_bucket
+        matched_bags, batch_job_id = process_bag_files(
+            input_bucket,
+            event["data"]["ssm"]["uploadKey"],
+            output_bucket,
+            event["data"]["jobId"],
         )
     else:
         raise ValueError("Invalid event format")
 
     return {
         "statusCode": 200,
-        "body": {"matched_bags": matched_bags, "batchJobId": job_id},
+        "body": {"matched_bags": matched_bags, "batchJobId": batch_job_id},
     }
 
 
 def process_bag_files(
-    input_bucket: str, key: str, output_bucket: str
+    input_bucket: str, key: str, output_bucket: str, fetch_job_id: str
 ) -> tuple[dict, str]:
 
     logger.info(f"Processing file {key} from bucket {input_bucket}")
@@ -136,6 +141,7 @@ def process_bag_files(
                 "environment": [
                     {"name": "MATCHED_BAGS", "value": json.dumps(matched_bags)},
                     {"name": "CAR_ID", "value": car_id},
+                    {"name": "FETCH_JOB_ID", "value": fetch_job_id},
                 ]
             },
         )
@@ -144,12 +150,12 @@ def process_bag_files(
         logger.error(f"Error submitting batch job: {str(e)}")
         raise
 
-    create_dynamodb_entries(matched_bags)
+    create_dynamodb_entries(matched_bags, fetch_job_id)
 
     return matched_bags, response["jobId"]
 
 
-def create_dynamodb_entries(matched_bags: dict) -> None:
+def create_dynamodb_entries(matched_bags: dict, fetch_job_id: str) -> None:
 
     for bag in matched_bags["bags"]:
 
@@ -164,6 +170,7 @@ def create_dynamodb_entries(matched_bags: dict) -> None:
                 "filename": bag["bag_key"].split("/")[-1],
                 "uploadedDateTime": scalar_types_utils.aws_datetime(),
             },
+            "fetchJobId": fetch_job_id,
             "type": "BAG_SQLITE",
         }
 
@@ -175,15 +182,18 @@ def create_dynamodb_entries(matched_bags: dict) -> None:
             $assetId: ID!
             $modelname: String
             $modelId: String!
+            $fetchJobId: ID
             $type: CarLogsAssetTypeEnum!
             $sub: ID!
             $username: String!
+            $fetchJobId: String
         ) {
             addCarLogsAsset(
             assetId: $assetId
             assetMetaData: $assetMetaData
             modelId: $modelId
             modelname:  $modelname
+            fetchJobId: $fetchJobId
             type: $type
             sub: $sub
             username: $username
@@ -196,6 +206,7 @@ def create_dynamodb_entries(matched_bags: dict) -> None:
             }
             modelId
             modelname
+            fetchJobId
             type
             sub
             username

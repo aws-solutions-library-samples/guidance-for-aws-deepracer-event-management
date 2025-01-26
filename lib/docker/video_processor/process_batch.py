@@ -83,7 +83,7 @@ def upload_files_to_s3(folder, s3_bucket, s3_prefix) -> None:
     return uploaded_files
 
 
-def create_dynamodb_entries(user_model_map: list[dict]) -> None:
+def create_dynamodb_entries(user_model_map: list[dict], fetch_job_id: str) -> None:
 
     logger.info("Creating DynamoDB entries for map: {}".format(user_model_map))
 
@@ -98,6 +98,7 @@ def create_dynamodb_entries(user_model_map: list[dict]) -> None:
                     ).hexdigest(),
                     "modelId": model["modelId"],
                     "modelname": model["modelname"],
+                    "fetchJobId": fetch_job_id,
                     "assetMetaData": {
                         "key": video["file"],
                         "filename": video["file"].split("/")[-1],
@@ -117,6 +118,7 @@ def create_dynamodb_entries(user_model_map: list[dict]) -> None:
                     $type: CarLogsAssetTypeEnum!
                     $sub: ID!
                     $username: String!
+                    $fetchJobId: String
                 ) {
                     addCarLogsAsset(
                     assetId: $assetId
@@ -126,6 +128,7 @@ def create_dynamodb_entries(user_model_map: list[dict]) -> None:
                     type: $type
                     sub: $sub
                     username: $username
+                    fetchJobId: $fetchJobId
                     ) {
                     assetId
                     assetMetaData {
@@ -135,6 +138,7 @@ def create_dynamodb_entries(user_model_map: list[dict]) -> None:
                     }
                     modelId
                     modelname
+                    fetchJobId
                     type
                     sub
                     username
@@ -195,6 +199,7 @@ def main():
         sys.exit(1)
 
     # Read in optional environment variables
+    fetch_job_id = os.getenv("FETCH_JOB_ID", None)
     logs_bucket = os.getenv("LOGS_BUCKET")
     models_bucket = os.getenv("MODELS_BUCKET")
     codec = os.getenv("CODEC", "avc1")
@@ -358,7 +363,7 @@ def main():
 
                 sys.exit(exit_code)
 
-    create_dynamodb_entries(user_model_map)
+    create_dynamodb_entries(user_model_map, fetch_job_id)
 
     logger.info("\nFinished processing videos...\n")
 

@@ -1,10 +1,11 @@
+import Button from '@cloudscape-design/components/button';
 import i18next from '../i18n';
 import { formatAwsDateTime } from '../support-functions/time';
 import { FetchCarLogsStatus } from './fetchCarLogsStatus';
 
-export const ColumnConfigurationProc = () => {
+export const ColumnConfigurationProc = (navigateToTab1WithFilter) => {
   var returnObject = {
-    defaultVisibleColumns: ['carname', 'carfleetname', 'starttime', 'status'],
+    defaultVisibleColumns: ['carname', 'carfleetname', 'starttime', 'status', 'actions'],
     visibleContentOptions: [
       {
         label: i18next.t('carlogs.assets.model-information'),
@@ -24,6 +25,14 @@ export const ColumnConfigurationProc = () => {
           {
             id: 'status',
             label: i18next.t('carlogs.assets.status'),
+          },
+          {
+            id: 'fetchjobid',
+            label: i18next.t('carlogs.assets.fetch-job-id'),
+          },
+          {
+            id: 'actions',
+            label: i18next.t('carlogs.assets.actions'),
           },
         ],
       },
@@ -60,6 +69,28 @@ export const ColumnConfigurationProc = () => {
         sortingField: 'status',
         width: 200,
         minWidth: 150,
+      },
+      {
+        id: 'fetchjobid',
+        header: i18next.t('carlogs.assets.fetch-job-id'),
+        cell: (item) => item.jobId || '-',
+        sortingField: 'jobId',
+        width: 200,
+        minWidth: 150,
+      },
+      {
+        id: 'actions',
+        header: i18next.t('carlogs.assets.actions'),
+        cell: (item) => (
+          <Button
+            onClick={() => {
+              navigateToTab1WithFilter(item.jobId);
+            }}
+            variant="inline-link"
+            iconName="list-view"
+            disabled={item.status !== 'DONE'}
+          ></Button>
+        ),
       },
     ],
   };

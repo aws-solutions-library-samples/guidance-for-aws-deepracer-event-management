@@ -29,6 +29,10 @@ export const ColumnConfigurationOperator = () => {
             id: 'uploadedDateTime',
             label: i18next.t('carlogs.assets.upload-date'),
           },
+          {
+            id: 'fetchjobid',
+            label: i18next.t('carlogs.assets.fetch-job-id'),
+          },
         ],
       },
     ],
@@ -77,6 +81,14 @@ export const ColumnConfigurationOperator = () => {
         width: 240,
         minWidth: 150,
       },
+      {
+        id: 'fetchjobid',
+        header: i18next.t('carlogs.assets.fetch-job-id'),
+        cell: (item) => item.fetchJobId || '-',
+        sortingField: 'fetchJobId',
+        width: 200,
+        minWidth: 150,
+      },
     ],
   };
   returnObject.defaultSortingColumn = returnObject.columnDefinitions[4]; // uploadedDateTime
@@ -100,6 +112,16 @@ export const FilteringPropertiesOperator = () => {
     {
       key: 'type',
       propertyLabel: i18next.t('carlogs.assets.type'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'uploadedDateTime',
+      propertyLabel: i18next.t('carlogs.assets.upload-date'),
+      operators: ['<', '>', '=', '!='],
+    },
+    {
+      key: 'fetchJobId',
+      propertyLabel: i18next.t('carlogs.assets.fetch-job-id'),
       operators: [':', '!:', '=', '!='],
     },
   ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
