@@ -24,7 +24,7 @@
   },
   "scripts": {
     "start": "ESLINT_NO_DEV_ERRORS='true' react-scripts start",
-    "build": "DISABLE_ESLINT_PLUGIN='true' react-scripts --max_old_space_size=4096 build",
+    "build": "DISABLE_ESLINT_PLUGIN='true' react-scripts",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
