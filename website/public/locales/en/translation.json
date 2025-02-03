@@ -248,6 +248,7 @@
     "breadcrumb": "Devices",
     "type": "Device type",
     "car-information": "Device information",
+    "core-sw-version": "Core software",
     "device-links": "Device links",
     "device-links.timer": "Timer console",
     "device-links.car": "Car console",

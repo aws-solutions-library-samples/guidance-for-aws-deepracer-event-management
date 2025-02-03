@@ -19,6 +19,8 @@ export const DevicesTable = ({
   const isLoading = state.cars.isLoading;
 
   const [query, setQuery] = useState({ tokens: [], operation: 'and' });
+  const [columnConfiguration] = useState(() => ColumnConfiguration());
+  const [filteringProperties] = useState(() => FilteringProperties());
 
   useEffect(() => {
     if (fleetQuery.length > 0) {
@@ -31,9 +33,6 @@ export const DevicesTable = ({
       // Unmounting
     };
   }, [fleetQuery]);
-
-  const columnConfiguration = ColumnConfiguration();
-  const filteringProperties = FilteringProperties();
 
   return (
     <PageTable

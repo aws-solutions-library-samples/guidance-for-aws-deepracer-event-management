@@ -35,7 +35,7 @@ export const DeviceLink = ({ type, IP, deviceUiPassword, pingStatus }) => {
 };
 
 export const ColumnConfiguration = () => {
-  return {
+  var returnObject = {
     defaultVisibleColumns: ['carName', 'fleetName', 'carIp'],
     visibleContentOptions: [
       {
@@ -62,7 +62,7 @@ export const ColumnConfiguration = () => {
           },
           {
             id: 'deviceLinks',
-            label: 'Access device',
+            label: i18next.t('devices.device-links'),
           },
           {
             id: 'deviceType',
@@ -84,6 +84,10 @@ export const ColumnConfiguration = () => {
             id: 'fleetId',
             label: i18next.t('devices.fleet-id'),
           },
+          {
+            id: 'coreSWVersion',
+            label: i18next.t('devices.core-sw-version'),
+          },
         ],
       },
     ],
@@ -92,7 +96,7 @@ export const ColumnConfiguration = () => {
         id: 'instanceId',
         header: i18next.t('devices.instance'),
         cell: (item) => item.InstanceId,
-        sortingField: 'key',
+        sortingField: 'InstanceId',
         width: 200,
         minWidth: 150,
       },
@@ -100,7 +104,7 @@ export const ColumnConfiguration = () => {
         id: 'carName',
         header: i18next.t('devices.host-name'),
         cell: (item) => item.ComputerName || '-',
-        sortingField: 'carName',
+        sortingField: 'ComputerName',
         width: 200,
         minWidth: 150,
       },
@@ -116,7 +120,12 @@ export const ColumnConfiguration = () => {
         id: 'carIp',
         header: i18next.t('devices.car-ip'),
         cell: (item) => item.IpAddress || '-',
-        sortingField: 'carIp',
+        sortingField: 'IpAddress',
+        sortingComparator: (a, b) => {
+          const ipToNum = (ip) =>
+            ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0);
+          return ipToNum(a.IpAddress) - ipToNum(b.IpAddress);
+        },
         width: 200,
         minWidth: 150,
       },
@@ -131,7 +140,6 @@ export const ColumnConfiguration = () => {
             pingStatus={item.PingStatus}
           />
         ),
-        sortingField: 'deviceLinks',
         width: 200,
         minWidth: 150,
       },
@@ -139,34 +147,46 @@ export const ColumnConfiguration = () => {
         id: 'deviceType',
         header: i18next.t('devices.type'),
         cell: (item) => item.Type || '-',
-        sortingField: 'deviceType',
+        sortingField: 'Type',
+        width: 200,
+        minWidth: 150,
       },
       {
         id: 'agentVersion',
         header: i18next.t('devices.agent-version'),
         cell: (item) => item.AgentVersion || '-',
-        sortingField: 'agentVersion',
+        sortingField: 'AgentVersion',
       },
       {
         id: 'registrationDate',
         header: i18next.t('devices.registration-date'),
         cell: (item) => formatAwsDateTime(item.RegistrationDate) || '-',
-        sortingField: 'registrationDate',
+        sortingField: 'RegistrationDate',
       },
       {
         id: 'lastPingDateTime',
         header: i18next.t('devices.last-ping-time'),
         cell: (item) => formatAwsDateTime(item.LastPingDateTime) || '-',
-        sortingField: 'lastPingDateTime',
+        sortingField: 'LastPingDateTime',
       },
       {
         id: 'fleetId',
         header: i18next.t('devices.fleet-id'),
         cell: (item) => item.fleetId || '-',
-        sortingField: 'fleetId',
+        sortingField: 'fleet-id',
+      },
+      {
+        id: 'coreSWVersion',
+        header: i18next.t('devices.core-sw-version'),
+        cell: (item) => item.DeepRacerCoreVersion || '-',
+        sortingField: 'DeepRacerCoreVersion',
       },
     ],
   };
+  returnObject.defaultSortingColumn = returnObject.columnDefinitions[1]; // uploadedDateTime
+  returnObject.defaultSortingIsDescending = false;
+
+  return returnObject;
 };
 
 export const FilteringProperties = () => {
@@ -184,6 +204,11 @@ export const FilteringProperties = () => {
     {
       key: 'IpAddress',
       propertyLabel: i18next.t('devices.car-ip'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'CoreSWVersion',
+      propertyLabel: i18next.t('devices.core-sw-version'),
       operators: [':', '!:', '=', '!='],
     },
     {

@@ -40,8 +40,8 @@ def lambda_handler(event, context):
     return app.resolve(event, context)
 
 
-@app.resolver(type_name="Query", field_name="carsOnline")
-def carOnline(online: str):
+@app.resolver(type_name="Query", field_name="listCars")
+def listCars(online: str):
     try:
         if online is False:
             PingStatusFilter = "ConnectionLost"
@@ -79,8 +79,45 @@ def carOnline(online: str):
         return error
 
 
-@app.resolver(type_name="Mutation", field_name="carUpdates")
-def carUpdates(resourceIds: List[str], fleetId: str, fleetName: str):
+@app.resolver(type_name="Mutation", field_name="carsUpdateStatus")
+def carsUpdateStatus(cars: List[dict]):
+    try:
+        logger.info({"Cars": cars})
+
+        with ddbTable.batch_writer() as carsTable:
+            for car in cars:
+                existing_item = ddbTable.get_item(
+                    Key={"InstanceId": car["InstanceId"]}
+                ).get("Item")
+                if existing_item:
+                    update_expression = "set "
+                    expression_attribute_values = {}
+                    expression_attribute_names = {}
+                    for key, value in car.items():
+                        if key == "InstanceId":
+                            continue
+                        update_expression += f"#{key}=:val_{key}, "
+                        expression_attribute_names[f"#{key}"] = key
+                        expression_attribute_values[f":val_{key}"] = value
+                    update_expression = update_expression.rstrip(", ")
+                    ddbTable.update_item(
+                        Key={"InstanceId": car["InstanceId"]},
+                        UpdateExpression=update_expression,
+                        ExpressionAttributeNames=expression_attribute_names,
+                        ExpressionAttributeValues=expression_attribute_values,
+                    )
+                else:
+                    carsTable.put_item(Item=car)
+
+        return cars
+
+    except Exception as error:
+        logger.exception(error)
+        raise Exception(f"Error updating car statuses: {str(error)}")
+
+
+@app.resolver(type_name="Mutation", field_name="carsUpdateFleet")
+def carsUpdateFleet(resourceIds: List[str], fleetId: str, fleetName: str):
     try:
         logger.info(resourceIds)
 
@@ -193,7 +230,7 @@ def callRosService(instaneId: str, rosCommand: str):
     finalCommand = [
         "#!/bin/bash",
         'export HOME="/home/deepracer"',
-        "source /opt/intel/openvino_2021/bin/setupvars.sh",
+        "source $(find /opt/intel -name setupvars.sh)",
         "source /opt/aws/deepracer/lib/setup.bash",
         rosCommand,
     ]

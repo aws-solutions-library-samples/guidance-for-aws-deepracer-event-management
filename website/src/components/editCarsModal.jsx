@@ -69,7 +69,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
   async function carDeleteAllModels() {
     const InstanceIds = selectedItems.map((i) => i.InstanceId);
 
-    const response = await API.graphql({
+    await API.graphql({
       query: mutations.carDeleteAllModels,
       variables: { resourceIds: InstanceIds },
     });
@@ -78,7 +78,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
   // fetch logs from Cars
   async function carFetchLogs() {
     for (const car of selectedItems) {
-      const response = await API.graphql({
+      await API.graphql({
         query: mutations.startFetchFromCar,
         variables: {
           carInstanceId: car.InstanceId,
@@ -95,11 +95,11 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
   }
 
   // Update Cars
-  async function carUpdates() {
+  async function carsUpdateFleet() {
     const InstanceIds = selectedItems.map((i) => i.InstanceId);
 
-    const response = await API.graphql({
-      query: mutations.carUpdates,
+    await API.graphql({
+      query: mutations.carsUpdateFleet,
       variables: {
         resourceIds: InstanceIds,
         fleetName: dropDownSelectedItem.fleetName,
@@ -140,7 +140,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
   async function carColorUpdates() {
     const InstanceIds = selectedItems.map((i) => i.InstanceId);
 
-    const response = await API.graphql({
+    await API.graphql({
       query: mutations.carSetTaillightColor,
       variables: {
         resourceIds: InstanceIds,
@@ -160,7 +160,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
   async function carRestartService() {
     const InstanceIds = selectedItems.map((i) => i.InstanceId);
 
-    const response = await API.graphql({
+    await API.graphql({
       query: mutations.carRestartService,
       variables: {
         resourceIds: InstanceIds,
@@ -174,7 +174,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
   async function carEmergencyStop() {
     const InstanceIds = selectedItems.map((i) => i.InstanceId);
 
-    const response = await API.graphql({
+    await API.graphql({
       query: mutations.carEmergencyStop,
       variables: {
         resourceIds: InstanceIds,
@@ -229,7 +229,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                 <Button
                   variant="primary"
                   onClick={() => {
-                    carUpdates();
+                    carsUpdateFleet();
                   }}
                 >
                   {t('fleets.edit-cars.update-fleets')}

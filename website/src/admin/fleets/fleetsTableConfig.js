@@ -2,7 +2,7 @@ import i18next from '../../i18n';
 import { formatAwsDateTime } from '../../support-functions/time';
 
 export const ColumnConfiguration = (getUserNameFromId) => {
-  return {
+  var returnObject = {
     defaultVisibleColumns: ['fleetName', 'createdAt', 'createdBy'],
     visibleContentOptions: [
       {
@@ -53,6 +53,10 @@ export const ColumnConfiguration = (getUserNameFromId) => {
       },
     ],
   };
+  returnObject.defaultSortingColumn = returnObject.columnDefinitions[0]; // uploadedDateTime
+  returnObject.defaultSortingIsDescending = false;
+
+  return returnObject;
 };
 
 export const FilteringProperties = () => {
