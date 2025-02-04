@@ -346,6 +346,7 @@ export class CarManager extends Construct {
         LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
         DDB_TABLE: carStatusTable.tableName,
         DDB_PING_STATE_INDEX: carsTable_ping_state_index_name,
+        STEP_FUNCTION_ARN: car_status_update_SM.stateMachineArn,
       },
     });
 
@@ -361,6 +362,14 @@ export class CarManager extends Construct {
           'ssm:GetCommandInvocation',
         ],
         resources: ['*'],
+      })
+    );
+
+    cars_function_handler.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['states:StartExecution', 'states:ListExecutions', 'states:DescribeExecution'],
+        resources: [car_status_update_SM.stateMachineArn],
       })
     );
 
