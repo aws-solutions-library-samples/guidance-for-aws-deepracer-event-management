@@ -15,6 +15,7 @@ const configureStore = () => {
           console.debug('MERGED CAR', mergedCar);
           updatedCars.cars[index] = mergedCar;
         }
+        updatedCars.refresh = false;
       });
       return { cars: updatedCars };
     },
@@ -29,9 +30,15 @@ const configureStore = () => {
       updatedCars.isLoading = isLoading;
       return { cars: updatedCars };
     },
+    REFRESH_CARS: (curState) => {
+      console.debug('REFRESH_CARS DISPATCH FUNCTION');
+      const updatedCars = { ...curState.cars };
+      updatedCars.refresh = true;
+      return { cars: updatedCars };
+    },
   };
 
-  initStore(actions, { cars: { cars: [], isLoading: true } });
+  initStore(actions, { cars: { cars: [], isLoading: true, refresh: false } });
 };
 
 export default configureStore;

@@ -1,10 +1,7 @@
 import { Button, ButtonDropdown, SpaceBetween } from '@cloudscape-design/components';
-import { API } from 'aws-amplify';
 import { default as React, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useCarsApi } from '../hooks/useCarsApi';
-import { usePermissions } from '../hooks/usePermissions';
 import { useStore } from '../store/store';
 
 import {
@@ -16,12 +13,12 @@ import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-pan
 import { PageLayout } from '../components/pageLayout';
 import { PageTable } from '../components/pageTable';
 import { TableHeader } from '../components/tableConfig';
-import * as queries from '../graphql/queries';
+import { useCarCmdApi } from '../hooks/useCarCmdApi';
 import { Breadcrumbs } from './fleets/support-functions/supportFunctions';
 
 const AdminDevices = () => {
   const { t } = useTranslation(['translation', 'help-admin-cars']);
-  const [state] = useStore();
+  const [state, dispatch] = useStore();
   const [carsToDisplay, setCarsToDisplay] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -30,12 +27,12 @@ const AdminDevices = () => {
   const [refresh, setRefresh] = useState(false);
   const [columnConfiguration] = useState(() => ColumnConfiguration());
   const [filteringProperties] = useState(() => FilteringProperties());
-  const permissions = usePermissions();
-  const { triggerReload } = useCarsApi(permissions.api.cars);
+  const { getLabelSync } = useCarCmdApi();
 
   const reloadCars = async () => {
     setIsLoading(true);
-    await triggerReload();
+    setRefresh(true);
+    dispatch('REFRESH_CARS');
   };
 
   useEffect(() => {
@@ -57,6 +54,7 @@ const AdminDevices = () => {
 
   useEffect(() => {
     if (refresh) {
+      setSelectedItems([]);
       setRefresh(false);
     }
     return () => {
@@ -64,24 +62,11 @@ const AdminDevices = () => {
     };
   }, [refresh]);
 
-  function getLabelSync(instanceId) {
-    API.graphql({
-      query: queries.carPrintableLabel,
-      variables: {
-        instanceId: instanceId,
-      },
-    }).then((response) => {
-      const labelURL = response.data.carPrintableLabel.toString();
-      window.open(labelURL);
-    });
-  }
-
   function getLabels(event) {
     event.preventDefault();
 
     selectedItems.forEach((selectedCar) => {
-      const instanceId = selectedCar.InstanceId;
-      getLabelSync(instanceId);
+      getLabelSync(selectedCar.InstanceId, selectedCar.ComputerName);
     });
   }
 

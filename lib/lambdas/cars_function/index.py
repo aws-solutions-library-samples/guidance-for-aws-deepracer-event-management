@@ -83,6 +83,7 @@ def listCars(online: str):
 def carsUpdateStatus(cars: List[dict]):
     try:
         logger.info({"Cars": cars})
+        updated_cars = []
 
         with ddbTable.batch_writer() as carsTable:
             for car in cars:
@@ -90,26 +91,23 @@ def carsUpdateStatus(cars: List[dict]):
                     Key={"InstanceId": car["InstanceId"]}
                 ).get("Item")
                 if existing_item:
-                    update_expression = "set "
-                    expression_attribute_values = {}
-                    expression_attribute_names = {}
+                    has_changes = False
+
                     for key, value in car.items():
                         if key == "InstanceId":
                             continue
-                        update_expression += f"#{key}=:val_{key}, "
-                        expression_attribute_names[f"#{key}"] = key
-                        expression_attribute_values[f":val_{key}"] = value
-                    update_expression = update_expression.rstrip(", ")
-                    ddbTable.update_item(
-                        Key={"InstanceId": car["InstanceId"]},
-                        UpdateExpression=update_expression,
-                        ExpressionAttributeNames=expression_attribute_names,
-                        ExpressionAttributeValues=expression_attribute_values,
-                    )
+                        if existing_item.get(key) != value:
+                            has_changes = True
+                            existing_item[key] = value
+
+                    if has_changes:
+                        ddbTable.put_item(Item=existing_item)
+                        updated_cars.append(existing_item)
                 else:
                     carsTable.put_item(Item=car)
+                    updated_cars.append(car)
 
-        return cars
+        return updated_cars
 
     except Exception as error:
         logger.exception(error)

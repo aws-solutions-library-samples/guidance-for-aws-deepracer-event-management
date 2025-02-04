@@ -267,7 +267,12 @@
     "registration-date": "Registration date",
     "filter-deepracer": "DeepRacer car",
     "filter-timer": "Timer",
-    "cars": "Cars"
+    "cars": "Cars",
+    "notifications": {
+      "dismiss-message": "Dismiss message",
+      "label-ready": "Car Label is ready for ",
+      "error-label": "Error creating car label for"
+    }
   },
   "events": {
     "events-information": "Event information",

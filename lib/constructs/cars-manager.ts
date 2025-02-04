@@ -23,6 +23,7 @@ export interface CarManagerProps {
   appsyncApi: {
     schema: CodeFirstSchema;
     api: appsync.GraphqlApi;
+    noneDataSource: appsync.NoneDataSource;
   };
   lambdaConfig: {
     runtime: lambda.Runtime;
@@ -140,7 +141,7 @@ export class CarManager extends Construct {
           .otherwise(succeed_job)
       );
 
-    const car_status_update_SM_log_group = new logs.LogGroup(this, 'MyLogGroup', {
+    const car_status_update_SM_log_group = new logs.LogGroup(this, 'StatusSFN', {
       retention: logs.RetentionDays.SIX_MONTHS,
     });
     const car_status_update_SM = new stepFunctions.StateMachine(this, 'CarStatusUpdater', {
@@ -520,6 +521,22 @@ export class CarManager extends Construct {
         returnType: GraphqlType.awsJson(),
         dataSource: cars_data_source,
         directives: [Directive.cognito('admin', 'operator')],
+      })
+    );
+
+    props.appsyncApi.schema.addSubscription(
+      'onUpdatedCarsStatus',
+      new ResolvableField({
+        returnType: car_online_object_type.attribute({ isList: true }),
+        dataSource: props.appsyncApi.noneDataSource,
+        requestMappingTemplate: appsync.MappingTemplate.fromString(
+          `{
+                        "version": "2017-02-28",
+                        "payload": $util.toJson($context.arguments.entry)
+                    }`
+        ),
+        responseMappingTemplate: appsync.MappingTemplate.fromString('$util.toJson($context.result)'),
+        directives: [Directive.subscribe('carsUpdateStatus'), Directive.cognito('admin', 'operator')],
       })
     );
 
