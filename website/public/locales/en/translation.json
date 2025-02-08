@@ -270,8 +270,22 @@
     "cars": "Cars",
     "notifications": {
       "dismiss-message": "Dismiss message",
+      "label-start": "Creatin car label for ",
       "label-ready": "Car Label is ready for ",
-      "error-label": "Error creating car label for"
+      "label-error": "Error creating car label for",
+      "fetch-start": "Fetching car logs for ",
+      "fetch-error": "Error fetching car logs for ",
+      "restart-start": "Restarting DeepRacer service for selected cars",
+      "restart-error": "Error restarting DeepRacer service for selected cars ",
+      "emergencystop-start": "Emergency stop for selected cars triggered",
+      "emergencystop-error": "Error triggering emergency stop for selected cars",
+      "deleteall-start": "Deleting all models for selected cars",
+      "deleteall-error": "Error deleting all models for selected cars",
+      "updatefleet-start": "Updating fleet for selected cars to ",
+      "updatefleet-error": "Error updating fleet",
+      "settaillight-start": "Setting taillight color for selected cars",
+      "settaillight-error": "Error setting taillight color for selected cars",
+      "gettaillight-error": "Error getting available taillight colors"
     }
   },
   "events": {

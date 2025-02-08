@@ -13,7 +13,7 @@ import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-pan
 import { PageLayout } from '../components/pageLayout';
 import { PageTable } from '../components/pageTable';
 import { TableHeader } from '../components/tableConfig';
-import { useCarCmdApi } from '../hooks/useCarCmdApi';
+import { useCarCmdApi } from '../hooks/useCarsApi';
 import { Breadcrumbs } from './fleets/support-functions/supportFunctions';
 
 const AdminDevices = () => {
