@@ -418,6 +418,7 @@ export class CarManager extends Construct {
       Type: GraphqlType.string(),
       DeviceUiPassword: GraphqlType.string(),
       DeepRacerCoreVersion: GraphqlType.string(),
+      LoggingCapable: GraphqlType.boolean(),
     };
 
     const car_online_object_type = new ObjectType('carOnline', {

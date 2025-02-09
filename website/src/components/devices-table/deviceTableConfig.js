@@ -36,7 +36,7 @@ export const DeviceLink = ({ type, IP, deviceUiPassword, pingStatus }) => {
 
 export const ColumnConfiguration = () => {
   var returnObject = {
-    defaultVisibleColumns: ['carName', 'fleetName', 'carIp'],
+    defaultVisibleColumns: ['carName', 'fleetName', 'carIp', 'deviceLinks', 'coreSWVersion'],
     visibleContentOptions: [
       {
         label: i18next.t('devices.device-information'),
@@ -87,6 +87,10 @@ export const ColumnConfiguration = () => {
           {
             id: 'coreSWVersion',
             label: i18next.t('devices.core-sw-version'),
+          },
+          {
+            id: 'loggingCapable',
+            label: i18next.t('devices.loggingcapable'),
           },
         ],
       },
@@ -140,22 +144,24 @@ export const ColumnConfiguration = () => {
             pingStatus={item.PingStatus}
           />
         ),
-        width: 200,
-        minWidth: 150,
+        width: 150,
+        minWidth: 100,
       },
       {
         id: 'deviceType',
         header: i18next.t('devices.type'),
         cell: (item) => item.Type || '-',
         sortingField: 'Type',
-        width: 200,
-        minWidth: 150,
+        width: 150,
+        minWidth: 100,
       },
       {
         id: 'agentVersion',
         header: i18next.t('devices.agent-version'),
         cell: (item) => item.AgentVersion || '-',
         sortingField: 'AgentVersion',
+        width: 150,
+        minWidth: 100,
       },
       {
         id: 'registrationDate',
@@ -180,6 +186,15 @@ export const ColumnConfiguration = () => {
         header: i18next.t('devices.core-sw-version'),
         cell: (item) => item.DeepRacerCoreVersion || '-',
         sortingField: 'DeepRacerCoreVersion',
+        minWidth: 175,
+        width: 250,
+      },
+      {
+        id: 'loggingCapable',
+        header: i18next.t('devices.loggingcapable'),
+        cell: (item) => (item.LoggingCapable ? 'Yes' : 'No'),
+        minWidth: 100,
+        width: 150,
       },
     ],
   };

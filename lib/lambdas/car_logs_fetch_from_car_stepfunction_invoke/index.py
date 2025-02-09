@@ -98,6 +98,7 @@ def lambda_handler(event, context):
                     "#!/bin/bash",
                     "export HOME=/root",
                     "source /opt/aws/deepracer/lib/setup.bash",
+                    "ros2 service call /logging_pkg/stop_logging std_srvs/srv/Trigger",
                     'logs_folder=$(ros2 param get /logging_pkg/bag_log_node output_path --hide-type --no-daemon) || { logs_folder="/opt/aws/deepracer/logs"; echo "Using default path - $logs_folder"; }',
                     "echo Using folder $logs_folder",
                     "# Find folders created after the given time point and add them to a tar file",

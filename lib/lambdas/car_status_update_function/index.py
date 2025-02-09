@@ -30,12 +30,23 @@ def lambda_handler(event: dict, context: LambdaContext):
                 Filters=[{"Key": "Name", "Values": ["aws-deepracer-core"]}],
             )
             logger.debug(response)
+
+            instance["DeepRacerCoreVersion"] = "Unknown Version"
             for entry in response.get("Entries", []):
                 if entry.get("Name") == "aws-deepracer-core":
                     instance["DeepRacerCoreVersion"] = entry.get(
                         "Version", "Unknown Version"
                     )
                     break
+
+            instance["LoggingCapable"] = False
+            try:
+                version_str = instance["DeepRacerCoreVersion"].split("+")[0]
+                version_parts = list(map(int, version_str.split(".")))
+                if version_parts >= [2, 1, 2, 7]:
+                    instance["LoggingCapable"] = True
+            except ValueError:
+                pass
 
             # get tags from SSM
             tags_response = client_ssm.list_tags_for_resource(
@@ -105,6 +116,7 @@ def send_status_update(instances):
             Type
             DeviceUiPassword
             DeepRacerCoreVersion
+            LoggingCapable
         }
     }
     """

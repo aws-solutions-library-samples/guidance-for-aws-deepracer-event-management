@@ -166,6 +166,15 @@ export const useCarCmdApi = () => {
   // fetch logs from Cars
   function carFetchLogs(selectedCars, selectedEvent) {
     for (const car of selectedCars) {
+      if (car.LoggingCapable === false) {
+        addNotifications(
+          'carFetchLogs',
+          car.ComputerName + t('devices.notifications.fetch-not-possible'),
+          'error',
+          dispatch
+        );
+        continue;
+      }
       API.graphql(
         graphqlOperation(startFetchFromCar, {
           carInstanceId: car.InstanceId,
