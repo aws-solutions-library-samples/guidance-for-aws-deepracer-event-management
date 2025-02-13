@@ -1,6 +1,9 @@
 import { Checkbox, FormField, Link } from '@cloudscape-design/components';
+import ButtonDropdown from '@cloudscape-design/components/button-dropdown';
 import { useTranslation } from 'react-i18next';
+import { useCarCmdApi } from '../../hooks/useCarsApi';
 import i18next from '../../i18n';
+import { useSelectedEventContext } from '../../store/contexts/storeProvider';
 import { formatAwsDateTime } from '../../support-functions/time';
 
 export const DeviceLink = ({ type, IP, deviceUiPassword, pingStatus }) => {
@@ -34,9 +37,67 @@ export const DeviceLink = ({ type, IP, deviceUiPassword, pingStatus }) => {
     else return '-';
 };
 
+export const ItemActions = ({ item }) => {
+  const { carFetchLogs, carRestartService, carEmergencyStop, carDeleteAllModels } = useCarCmdApi();
+  const { t } = useTranslation();
+  const selectedEvent = useSelectedEventContext();
+  if (item.PingStatus === 'Online')
+    return (
+      <ButtonDropdown
+        items={[
+          {
+            id: 'fetch-logs',
+            text: t('devices.fetch-logs'),
+          },
+          {
+            id: 'delete-models',
+            text: t('devices.delete-models'),
+          },
+          {
+            id: 'restart-service',
+            text: t('devices.restart-service'),
+          },
+          {
+            id: 'car-stop',
+            text: t('devices.car-stop'),
+          },
+        ]}
+        variant="inline-icon"
+        expandToViewport
+        disabled={item.Type !== 'deepracer'}
+        onItemClick={({ detail }) => {
+          switch (detail.id) {
+            case 'fetch-logs':
+              carFetchLogs([item], selectedEvent);
+              break;
+            case 'delete-models':
+              carDeleteAllModels([item.InstanceId]);
+              break;
+            case 'restart-service':
+              carRestartService([item.InstanceId]);
+              break;
+            case 'car-stop':
+              carEmergencyStop([item.InstanceId]);
+              break;
+            default:
+              break;
+          }
+        }}
+      />
+    );
+  else return '-';
+};
+
 export const ColumnConfiguration = () => {
   var returnObject = {
-    defaultVisibleColumns: ['carName', 'fleetName', 'carIp', 'deviceLinks', 'coreSWVersion'],
+    defaultVisibleColumns: [
+      'carName',
+      'fleetName',
+      'carIp',
+      'deviceLinks',
+      'coreSWVersion',
+      'actions',
+    ],
     visibleContentOptions: [
       {
         label: i18next.t('devices.device-information'),
@@ -91,6 +152,10 @@ export const ColumnConfiguration = () => {
           {
             id: 'loggingCapable',
             label: i18next.t('devices.loggingcapable'),
+          },
+          {
+            id: 'actions',
+            label: i18next.t('devices.actions'),
           },
         ],
       },
@@ -195,6 +260,11 @@ export const ColumnConfiguration = () => {
         cell: (item) => (item.LoggingCapable ? 'Yes' : 'No'),
         minWidth: 100,
         width: 150,
+      },
+      {
+        id: 'actions',
+        header: '',
+        cell: (item) => <ItemActions item={item} />,
       },
     ],
   };
