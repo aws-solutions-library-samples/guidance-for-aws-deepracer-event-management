@@ -67,6 +67,7 @@ def lambda_handler(event, context):
                     eventName
                     jobId
                     laterThan
+                    racerName
                     startTime
                     fetchStartTime
                     status

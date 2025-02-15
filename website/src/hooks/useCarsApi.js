@@ -74,20 +74,22 @@ export const useCarsApi = (userHasAccess = false) => {
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
-    const subscription = API.graphql(graphqlOperation(onUpdatedCarsStatus)).subscribe({
-      next: (event) => {
-        const updatedCars = event.value.data.onUpdatedCarsStatus;
-        dispatch('ADD_CARS', updatedCars);
-      },
-      error: (error) => {
-        const errors = error.error.errors;
-        addErrorNotifications('onUpdatedCarsStatus subscription', errors, dispatch);
-      },
-    });
+    if (userHasAccess) {
+      const subscription = API.graphql(graphqlOperation(onUpdatedCarsStatus)).subscribe({
+        next: (event) => {
+          const updatedCars = event.value.data.onUpdatedCarsStatus;
+          dispatch('ADD_CARS', updatedCars);
+        },
+        error: (error) => {
+          const errors = error.error.errors;
+          addErrorNotifications('onUpdatedCarsStatus subscription', errors, dispatch);
+        },
+      });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+      return () => {
+        if (subscription) subscription.unsubscribe();
+      };
+    }
   }, [dispatch, addErrorNotifications]);
 
   return {};
@@ -164,7 +166,7 @@ export const useCarCmdApi = () => {
   }
 
   // fetch logs from Cars
-  function carFetchLogs(selectedCars, selectedEvent) {
+  function carFetchLogs(selectedCars, selectedEvent, laterThan = null, racerName = null) {
     for (const car of selectedCars) {
       if (car.LoggingCapable === false) {
         addNotifications(
@@ -184,7 +186,8 @@ export const useCarCmdApi = () => {
           carIpAddress: car.IpAddress,
           eventId: selectedEvent.eventId,
           eventName: selectedEvent.eventName,
-          laterThan: null,
+          laterThan: laterThan,
+          racerName: racerName,
         })
       )
         .then(() => {

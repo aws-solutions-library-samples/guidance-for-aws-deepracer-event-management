@@ -22,9 +22,13 @@ def lambda_handler(event, context):
     logger.info(event)
 
     jobId = event["data"]["jobId"]
-    eventId = event["data"]["eventId"]
     carName = event["data"]["carName"]
     carInstanceId = event["data"]["carInstanceId"]
+
+    if event["data"].get("racerName") is not None:
+        racerName = event["data"].get("racerName")
+    else:
+        racerName = ""
 
     if event["data"].get("laterThan") is not None:
         laterThan = event["data"]["laterThan"]
@@ -60,6 +64,7 @@ def lambda_handler(event, context):
                     eventName
                     jobId
                     laterThan
+                    racerName
                     startTime
                     fetchStartTime
                     status
@@ -103,7 +108,8 @@ def lambda_handler(event, context):
                     "echo Using folder $logs_folder",
                     "# Find folders created after the given time point and add them to a tar file",
                     f"cd $logs_folder",
-                    f'find . -mindepth 1 -maxdepth 1 -type d -newermt "{laterThan}" -exec tar -rvf /tmp/{filename}.tar {{}} +',
+                    f'find . -mindepth 1 -maxdepth 1 -type d -newermt "{laterThan}" -name "{racerName}*" -exec tar -rvf /tmp/{filename}.tar {{}} +',
+                    f"[ -e /tmp/{filename}.tar ] || tar -cvf /tmp/{filename}.tar --files-from /dev/null",
                     f"gzip /tmp/{filename}.tar",
                     f"curl -X PUT -T /tmp/{filename}.tar.gz '{presigned_url}'",
                     f"rm /tmp/{filename}.tar.gz",
