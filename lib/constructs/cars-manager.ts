@@ -481,6 +481,7 @@ export class CarManager extends Construct {
       new ResolvableField({
         args: {
           resourceIds: GraphqlType.string({ isList: true, isRequired: true }),
+          withSystemLogs: GraphqlType.boolean({ isRequired: false }),
         },
         returnType: GraphqlType.awsJson(),
         dataSource: cars_data_source,

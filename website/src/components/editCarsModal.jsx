@@ -70,10 +70,10 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
     setVisible(false);
   }
 
-  // delete models from Cars
+  // delete models and logs from Cars, including ROS logs and restart
   async function triggerDeleteAllModels() {
     const instanceIds = selectedItems.map((i) => i.InstanceId);
-    carDeleteAllModels(instanceIds);
+    carDeleteAllModels(instanceIds, true);
 
     setVisible(false);
     setRefresh(true);
@@ -189,7 +189,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
           </Container>
 
           <Container>
-            <FormField label="Models">
+            <FormField label={t('fleets.edit-cars.logs-and-models')}>
               <SpaceBetween direction="horizontal" size="xs">
                 <Button
                   disabled={!online}
@@ -206,7 +206,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                     setDeleteModalVisible(true);
                   }}
                 >
-                  {t('fleets.edit-cars.delete-models')}
+                  {t('fleets.edit-cars.clean-cars')}
                 </Button>
               </SpaceBetween>
             </FormField>
@@ -298,9 +298,9 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
             </SpaceBetween>
           </Box>
         }
-        header={t('fleets.edit-cars.delete-models-header')}
+        header={t('fleets.edit-cars.clean-cars-header')}
       >
-        {t('fleets.edit-cars.delete-models-message')}: <br></br>{' '}
+        {t('fleets.edit-cars.clean-cars-message')}: <br></br>{' '}
         {selectedItems.map((selectedItems) => {
           return selectedItems.ComputerName + ' ';
         })}

@@ -51,7 +51,7 @@ export const ItemActions = ({ item }) => {
           },
           {
             id: 'delete-models',
-            text: t('devices.delete-models'),
+            text: t('devices.clean-car'),
           },
           {
             id: 'restart-service',
@@ -71,7 +71,7 @@ export const ItemActions = ({ item }) => {
               carFetchLogs([item], selectedEvent);
               break;
             case 'delete-models':
-              carDeleteAllModels([item.InstanceId]);
+              carDeleteAllModels([item.InstanceId], true);
               break;
             case 'restart-service':
               carRestartService([item.InstanceId]);

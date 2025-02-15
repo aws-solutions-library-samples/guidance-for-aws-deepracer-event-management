@@ -188,26 +188,26 @@ def carsUpdateFleet(resourceIds: List[str], fleetId: str, fleetName: str):
 
 
 @app.resolver(type_name="Mutation", field_name="carDeleteAllModels")
-def carDeleteAllModels(resourceIds: List[str]):
+def carDeleteAllModels(resourceIds: List[str], withSystemLogs: bool = False):
     try:
         logger.info(resourceIds)
 
         for instance_id in resourceIds:
             # empty the artifacts folder
             logger.info(instance_id)
+            commands = [
+                "rm -rf /opt/aws/deepracer/artifacts/*",
+                "rm -rf /opt/aws/deepracer/logs/*",
+            ]
+            if withSystemLogs:
+                commands.insert(0, "systemctl stop deepracer-core")
+                commands.append("rm -rf /root/.ros/log/*")
+                commands.append("systemctl start deepracer-core")
 
             response = client_ssm.send_command(
                 InstanceIds=[instance_id],
                 DocumentName="AWS-RunShellScript",
-                Parameters={
-                    "commands": [
-                        "systemctl stop deepracer-core",
-                        "rm -rf /opt/aws/deepracer/artifacts/*",
-                        "rm -rf /opt/aws/deepracer/logs/*",
-                        "rm -rf /root/.ros/log/*",
-                        "systemctl start deepracer-core",
-                    ]
-                },
+                Parameters={"commands": commands},
             )
             # command_id = response['Command']['CommandId']
             logger.info(response)

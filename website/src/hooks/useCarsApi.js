@@ -255,8 +255,13 @@ export const useCarCmdApi = () => {
   }
 
   // delete all models on Cars
-  function carDeleteAllModels(selectedCars) {
-    API.graphql(graphqlOperation(carDeleteAllModelsOperation, { resourceIds: selectedCars }))
+  function carDeleteAllModels(selectedCars, withSystemLogs = false) {
+    API.graphql(
+      graphqlOperation(carDeleteAllModelsOperation, {
+        resourceIds: selectedCars,
+        withSystemLogs: withSystemLogs,
+      })
+    )
       .then(() => {
         addNotifications(
           'carDeleteAllModels',
