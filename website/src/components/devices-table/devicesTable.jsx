@@ -19,7 +19,9 @@ export const DevicesTable = ({
   const isLoading = state.cars.isLoading;
 
   const [query, setQuery] = useState({ tokens: [], operation: 'and' });
-  const [columnConfiguration] = useState(() => ColumnConfiguration());
+  const [columnConfiguration] = useState(() =>
+    ColumnConfiguration(['carName', 'fleetName', 'carIp'])
+  );
   const [filteringProperties] = useState(() => FilteringProperties());
 
   useEffect(() => {

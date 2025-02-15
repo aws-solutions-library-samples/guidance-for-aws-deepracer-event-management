@@ -88,16 +88,11 @@ export const ItemActions = ({ item }) => {
   else return '-';
 };
 
-export const ColumnConfiguration = () => {
-  var returnObject = {
-    defaultVisibleColumns: [
-      'carName',
-      'fleetName',
-      'carIp',
-      'deviceLinks',
-      'coreSWVersion',
-      'actions',
-    ],
+export const ColumnConfiguration = (
+  visibleColumns = ['carName', 'fleetName', 'carIp', 'deviceLinks', 'coreSWVersion', 'actions']
+) => {
+  const returnObject = {
+    defaultVisibleColumns: visibleColumns,
     visibleContentOptions: [
       {
         label: i18next.t('devices.device-information'),
