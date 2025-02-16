@@ -99,6 +99,7 @@ export const useCarCmdApi = () => {
   const { t } = useTranslation();
   const [, dispatch] = useStore();
   const counterRef = useRef(0);
+  const messageDisplayTime = 4000;
 
   const incrementCounter = useCallback(() => {
     counterRef.current += 1;
@@ -119,6 +120,7 @@ export const useCarCmdApi = () => {
           dispatch('DISMISS_NOTIFICATION', notificationId);
         },
       });
+      setTimeout(() => dispatch('DISMISS_NOTIFICATION', notificationId), messageDisplayTime);
       return notificationId;
     },
     [t, incrementCounter]
