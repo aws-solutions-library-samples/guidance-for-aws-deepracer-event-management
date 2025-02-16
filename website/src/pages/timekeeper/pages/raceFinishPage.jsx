@@ -165,9 +165,11 @@ export const RaceFinishPage = ({
     <Box float="right">
       <SpaceBetween direction="horizontal" size="xs">
         <ToggleButton
-          onChange={({ detail }) => setFetchLogs(detail.checked)}
-          checked={fetchLogs}
+          onChange={({ detail }) => setFetchLogs(detail.pressed)}
+          pressed={fetchLogs}
           disabled={!fetchLogsEnable}
+          iconName="upload"
+          pressedIconName="upload"
         >
           {t('timekeeper.end-session.fetch-logs')}
         </ToggleButton>
