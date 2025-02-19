@@ -94,6 +94,8 @@ export const ColumnConfigurationOperator = () => {
         sortingField: 'uploadedDateTime',
         width: 240,
         minWidth: 150,
+        sortingComparator: (a, b) =>
+          new Date(a.fileMetaData.uploadedDateTime) - new Date(b.fileMetaData.uploadedDateTime),
       },
       {
         id: 'modelMD5Hash',
@@ -108,20 +110,19 @@ export const ColumnConfigurationOperator = () => {
         cell: (item) => item.modelMetaData.metadataMd5 || '-',
         width: 200,
         minWidth: 150,
+        sortingComparator: (a, b) =>
+          (a.modelMetaData.metadataMd5 || '').localeCompare(b.modelMetaData.metadataMd5 || ''),
       },
-      // {
-      //   id: 'modelS3Key',
-      //   header: i18next.t('models.model-s3-key'),
-      //   cell: (item) => item.modelKey || '-',
-      //   width: 200,
-      //   minWidth: 150,
-      // },
       {
         id: 'sensor',
         header: i18next.t('models.sensor'),
         cell: (item) => item.modelMetaData.sensor.join(',') || '-',
         width: 200,
         minWidth: 150,
+        sortingComparator: (a, b) =>
+          (a.modelMetaData.sensor.join(',') || '').localeCompare(
+            b.modelMetaData.sensor.join(',') || ''
+          ),
       },
       {
         id: 'actionSpaceType',
@@ -129,6 +130,10 @@ export const ColumnConfigurationOperator = () => {
         cell: (item) => item.modelMetaData.actionSpaceType || '-',
         width: 200,
         minWidth: 150,
+        sortingComparator: (a, b) =>
+          (a.modelMetaData.actionSpaceType || '').localeCompare(
+            b.modelMetaData.actionSpaceType || ''
+          ),
       },
       {
         id: 'trainingAlgorithm',
@@ -136,10 +141,14 @@ export const ColumnConfigurationOperator = () => {
         cell: (item) => item.modelMetaData.trainingAlgorithm || '-',
         width: 200,
         minWidth: 150,
+        sortingComparator: (a, b) =>
+          (a.modelMetaData.trainingAlgorithm || '').localeCompare(
+            b.modelMetaData.trainingAlgorithm || ''
+          ),
       },
     ],
   };
-  returnObject.defaultSortingColumn = returnObject.columnDefinitions[4];  // uploadedDateTime
+  returnObject.defaultSortingColumn = returnObject.columnDefinitions[4]; // uploadedDateTime
   returnObject.defaultSortingIsDescending = true;
 
   return returnObject;
