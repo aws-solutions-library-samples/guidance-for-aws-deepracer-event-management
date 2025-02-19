@@ -1,6 +1,7 @@
 import { SpaceBetween, Tabs } from '@cloudscape-design/components';
+import Button from '@cloudscape-design/components/button';
 import { API, Auth } from 'aws-amplify';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../components/pageLayout';
@@ -20,6 +21,7 @@ import {
 import { TableHeader } from '../../components/tableConfig';
 import * as queries from '../../graphql/queries';
 import * as subscriptions from '../../graphql/subscriptions';
+import { useCarLogsApi } from '../../hooks/useCarLogsApi';
 import { useSelectedEventContext } from '../../store/contexts/storeProvider';
 import { useStore } from '../../store/store';
 import { DeleteAssetModal } from './components/deleteAssetModal';
@@ -27,10 +29,11 @@ import { DownloadAssetModal } from './components/downloadAssetModal';
 
 export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets = true }) => {
   const { t } = useTranslation(['translation', 'help-model-carlogs', 'help-admin-model-carlogs']);
-  const [columnConfiguration, setColumnConfiguration] = useState(ColumnConfigurationRacer());
-  const [filteringProperties, setFilteringProperties] = useState(FilteringPropertiesRacer());
-  const [columnConfigurationProc] = useState(ColumnConfigurationProc());
-  const [filteringPropertiesProc] = useState(FilteringPropertiesProc());
+  const [columnConfiguration, setColumnConfiguration] = useState(() => ColumnConfigurationRacer());
+  const [filteringProperties, setFilteringProperties] = useState(() => FilteringPropertiesRacer());
+  const [activeTab, setActiveTab] = useState('tab1');
+  const [filters, setFilters] = useState({ tokens: [], operation: 'and' });
+  const [filteringPropertiesProc] = useState(() => FilteringPropertiesProc());
   const [selectedAssets, setSelectedAssets] = useState([]);
   const [breadcrumbs, setBreadcrumbs] = useState([]);
   const [allJobItems, setJobItems] = useState([]);
@@ -39,11 +42,16 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
   const isLoading = state.assets.isLoading;
   const [, dispatch] = useStore();
   const assets = state.assets.assets;
+  const { triggerReload } = useCarLogsApi();
   const selectedEvent = useSelectedEventContext();
 
   const assetsToDisplay = onlyDisplayOwnAssets
     ? assets.filter((asset) => asset.sub === Auth.user.attributes.sub)
     : assets;
+
+  const reloadAssets = async () => {
+    await triggerReload();
+  };
 
   const operatorHelpPanel = useMemo(() => {
     return (
@@ -65,10 +73,22 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
     );
   }, [t]);
 
+  const navigateToAssetTabWithFilter = (jobId) => {
+    setActiveTab('tab1');
+    setFilters({
+      tokens: [{ propertyKey: 'fetchJobId', operator: '=', value: jobId }],
+      operation: 'and',
+    });
+    console.log('Filtering by jobId:', jobId);
+  };
+  const [columnConfigurationProc] = useState(() =>
+    ColumnConfigurationProc(navigateToAssetTabWithFilter)
+  );
+
   useMemo(() => {
     if (isOperatorView) {
-      setColumnConfiguration(ColumnConfigurationOperator());
-      setFilteringProperties(FilteringPropertiesOperator());
+      setColumnConfiguration(() => ColumnConfigurationOperator());
+      setFilteringProperties(() => FilteringPropertiesOperator());
     }
   }, [isOperatorView]);
 
@@ -103,8 +123,22 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
     setSelectedAssets([]);
   };
 
+  const listFetchesFromCar = useCallback(async () => {
+    setIsLoadingJobs(true);
+    setJobItems([]);
+    const response = await API.graphql({
+      query: queries.listFetchesFromCar,
+      variables: {
+        eventId: selectedEvent.eventId,
+      },
+    });
+    setJobItems(response.data.listFetchesFromCar);
+    setIsLoadingJobs(false);
+  }, [selectedEvent.eventId]);
+
   const actionButtons = (
     <SpaceBetween direction="horizontal" size="xs">
+      <Button iconName="refresh" variant="normal" disabled={isLoading} onClick={reloadAssets} />
       <DeleteAssetModal
         disabled={selectedAssets.length === 0}
         selectedAssets={selectedAssets}
@@ -119,28 +153,32 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
     </SpaceBetween>
   );
 
-  const operatorActionButtons = actionButtons;
+  const fetchActionButtons = (
+    <SpaceBetween direction="horizontal" size="xs">
+      <Button
+        iconName="refresh"
+        variant="normal"
+        disabled={isLoadingJobs}
+        onClick={listFetchesFromCar}
+      />
+    </SpaceBetween>
+  );
 
   useEffect(() => {
-    async function listFetchesFromCar() {
-      setJobItems([]);
-      var response = await API.graphql({
-        query: queries.listFetchesFromCar,
-        variables: {
-          eventId: selectedEvent.eventId,
-        },
-      });
-      setJobItems(response.data.listFetchesFromCar);
-      setIsLoadingJobs(false);
-    }
-
     if (typeof selectedEvent.eventId !== 'undefined' && isOperatorView) {
       listFetchesFromCar();
     }
     return () => {
       // Unmounting
     };
-  }, [selectedEvent, setJobItems, isOperatorView]);
+  }, [selectedEvent, setJobItems, isOperatorView, listFetchesFromCar]);
+
+  useEffect(() => {
+    if (activeTab !== 'tab1') setFilters({ tokens: [], operation: 'and' });
+    return () => {
+      // Unmounting
+    };
+  }, [activeTab]);
 
   useEffect(() => {
     let subscriptionCreate;
@@ -200,6 +238,8 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
         breadcrumbs={breadcrumbs}
       >
         <Tabs
+          activeTabId={activeTab}
+          onChange={({ detail }) => setActiveTab(detail.activeTabId)}
           tabs={[
             {
               label: t('carlogs.assets.tab1'),
@@ -217,7 +257,7 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
                       nrSelectedItems={selectedAssets.length}
                       nrTotalItems={assetsToDisplay.length}
                       header={t('carlogs.assets.header')}
-                      actions={operatorActionButtons}
+                      actions={actionButtons}
                     />
                   }
                   itemsIsLoading={isLoading}
@@ -226,6 +266,7 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
                   localStorageKey="assets-table-preferences"
                   filteringProperties={filteringProperties}
                   filteringI18nStringsName="assets"
+                  query={filters}
                 />
               ),
             },
@@ -241,6 +282,7 @@ export const CarLogsManagement = ({ isOperatorView = false, onlyDisplayOwnAssets
                     <TableHeader
                       nrTotalItems={allJobItems.length}
                       header={t('carlogs.assets.proc-header')}
+                      actions={fetchActionButtons}
                     />
                   }
                   itemsIsLoading={isLoadingJobs}

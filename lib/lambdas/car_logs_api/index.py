@@ -91,9 +91,11 @@ def get_assets(user_sub: str = None, limit: int = 200, nextToken: dict = None):
             return item
 
         # Get only the users own assets since user is not a privileged user
-        query_settings["FilterExpression"] = Attr("type").eq("BAG_SQLITE") | Attr(
-            "type"
-        ).eq("VIDEO")
+        query_settings["FilterExpression"] = (
+            Attr("type").eq("BAG_SQLITE")
+            | Attr("type").eq("VIDEO")
+            | Attr("type").eq("BAG_MCAP")
+        )
         query_settings["KeyConditionExpression"] = Key("sub").eq(sub)
         response = ddbTable.query(**query_settings)
 

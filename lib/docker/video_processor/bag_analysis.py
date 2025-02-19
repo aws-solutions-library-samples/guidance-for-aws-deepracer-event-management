@@ -351,7 +351,7 @@ def process_input_frame(
         timestamp = timestamp - start_time
 
         step["timestamp"] = timestamp
-        step["seq"] = int(msg.images[0].header.frame_id)
+        step["seq"] = seq  # int(msg.images[0].header.frame_id)
         step["seq_0"] = seq
 
         # Extract original image from first camera
@@ -428,7 +428,7 @@ def analyze_bag(bag_path: str, metadata: ModelMetadata) -> Dict:
             first_stamp = timestamp
 
         step["timestamp"] = timestamp - first_stamp
-        step["seq"] = int(msg.images[0].header.frame_id)
+        step["seq"] = s  # int(msg.images[0].header.frame_id)
         steps_data["steps"].append(step)
 
         s += 1

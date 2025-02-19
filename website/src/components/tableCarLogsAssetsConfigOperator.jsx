@@ -4,7 +4,7 @@ import { CarLogsAssetType } from './assetType';
 
 export const ColumnConfigurationOperator = () => {
   var returnObject = {
-    defaultVisibleColumns: ['username', 'modelname', 'type', 'uploadedDateTime'],
+    defaultVisibleColumns: ['username', 'modelname', 'carname', 'type', 'uploadedDateTime'],
     visibleContentOptions: [
       {
         label: i18next.t('carlogs.assets.model-information'),
@@ -18,6 +18,10 @@ export const ColumnConfigurationOperator = () => {
             label: i18next.t('carlogs.assets.model-name'),
           },
           {
+            id: 'carname',
+            label: i18next.t('carlogs.assets.car-name'),
+          },
+          {
             id: 'filename',
             label: i18next.t('carlogs.assets.filename'),
           },
@@ -28,6 +32,14 @@ export const ColumnConfigurationOperator = () => {
           {
             id: 'uploadedDateTime',
             label: i18next.t('carlogs.assets.upload-date'),
+          },
+          {
+            id: 'fetchjobid',
+            label: i18next.t('carlogs.assets.fetch-job-id'),
+          },
+          {
+            id: 'duration',
+            label: i18next.t('carlogs.assets.duration'),
           },
         ],
       },
@@ -46,6 +58,14 @@ export const ColumnConfigurationOperator = () => {
         header: i18next.t('carlogs.assets.model-name'),
         cell: (item) => item.modelname || '-',
         sortingField: 'modelname',
+        width: 200,
+        minWidth: 150,
+      },
+      {
+        id: 'carname',
+        header: i18next.t('carlogs.assets.car-name'),
+        cell: (item) => item.carName || '-',
+        sortingField: 'carName',
         width: 200,
         minWidth: 150,
       },
@@ -77,9 +97,31 @@ export const ColumnConfigurationOperator = () => {
         width: 240,
         minWidth: 150,
       },
+      {
+        id: 'duration',
+        header: i18next.t('carlogs.assets.duration'),
+        cell: (item) =>
+          item.mediaMetaData
+            ? `${Math.floor(item.mediaMetaData.duration / 60)}m ${Math.floor(item.mediaMetaData.duration % 60)}s`
+            : '-',
+        sortingField: 'duration',
+        sortingComparator: (a, b) =>
+          (a.mediaMetaData ? a.mediaMetaData.duration : 0) -
+          (b.mediaMetaData ? b.mediaMetaData.duration : 0),
+        width: 100,
+        minWidth: 75,
+      },
+      {
+        id: 'fetchjobid',
+        header: i18next.t('carlogs.assets.fetch-job-id'),
+        cell: (item) => item.fetchJobId || '-',
+        sortingField: 'fetchJobId',
+        width: 200,
+        minWidth: 150,
+      },
     ],
   };
-  returnObject.defaultSortingColumn = returnObject.columnDefinitions[4]; // uploadedDateTime
+  returnObject.defaultSortingColumn = returnObject.columnDefinitions[5]; // uploadedDateTime
   returnObject.defaultSortingIsDescending = true;
 
   return returnObject;
@@ -98,8 +140,23 @@ export const FilteringPropertiesOperator = () => {
       operators: [':', '!:', '=', '!='],
     },
     {
+      key: 'carname',
+      propertyLabel: i18next.t('carlogs.assets.car-name'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
       key: 'type',
       propertyLabel: i18next.t('carlogs.assets.type'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'uploadedDateTime',
+      propertyLabel: i18next.t('carlogs.assets.upload-date'),
+      operators: ['<', '>', '=', '!='],
+    },
+    {
+      key: 'fetchJobId',
+      propertyLabel: i18next.t('carlogs.assets.fetch-job-id'),
       operators: [':', '!:', '=', '!='],
     },
   ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
