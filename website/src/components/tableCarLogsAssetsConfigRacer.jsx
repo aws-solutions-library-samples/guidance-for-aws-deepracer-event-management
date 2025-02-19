@@ -4,7 +4,7 @@ import { CarLogsAssetType } from './assetType';
 
 export const ColumnConfigurationRacer = () => {
   var returnObject = {
-    defaultVisibleColumns: ['modelname', 'type', 'filename', 'uploadedDateTime'],
+    defaultVisibleColumns: ['modelname', 'carname', 'type', 'filename', 'uploadedDateTime'],
     visibleContentOptions: [
       {
         label: i18next.t('carlogs.assets.model-information'),
@@ -12,6 +12,10 @@ export const ColumnConfigurationRacer = () => {
           {
             id: 'modelname',
             label: i18next.t('carlogs.assets.model-name'),
+          },
+          {
+            id: 'carname',
+            label: i18next.t('carlogs.assets.car-name'),
           },
           {
             id: 'type',
@@ -25,6 +29,10 @@ export const ColumnConfigurationRacer = () => {
             id: 'uploadedDateTime',
             label: i18next.t('carlogs.assets.upload-date'),
           },
+          {
+            id: 'duration',
+            label: i18next.t('carlogs.assets.duration'),
+          },
         ],
       },
     ],
@@ -34,6 +42,14 @@ export const ColumnConfigurationRacer = () => {
         header: i18next.t('carlogs.assets.model-name'),
         cell: (item) => item.modelname || '-',
         sortingField: 'modelname',
+        width: 200,
+        minWidth: 150,
+      },
+      {
+        id: 'carname',
+        header: i18next.t('carlogs.assets.car-name'),
+        cell: (item) => item.carName || '-',
+        sortingField: 'carName',
         width: 200,
         minWidth: 150,
       },
@@ -65,9 +81,23 @@ export const ColumnConfigurationRacer = () => {
         width: 240,
         minWidth: 150,
       },
+      {
+        id: 'duration',
+        header: i18next.t('carlogs.assets.duration'),
+        cell: (item) =>
+          item.mediaMetaData
+            ? `${Math.floor(item.mediaMetaData.duration / 60)}m ${Math.floor(item.mediaMetaData.duration % 60)}s`
+            : '-',
+        sortingField: 'duration',
+        sortingComparator: (a, b) =>
+          (a.mediaMetaData ? a.mediaMetaData.duration : 0) -
+          (b.mediaMetaData ? b.mediaMetaData.duration : 0),
+        width: 100,
+        minWidth: 75,
+      },
     ],
   };
-  returnObject.defaultSortingColumn = returnObject.columnDefinitions[3]; // uploadedDateTime
+  returnObject.defaultSortingColumn = returnObject.columnDefinitions[4]; // uploadedDateTime
   returnObject.defaultSortingIsDescending = true;
 
   return returnObject;
@@ -79,6 +109,11 @@ export const FilteringPropertiesRacer = () => {
     {
       key: 'modelname',
       propertyLabel: i18next.t('carlogs.assets.model-name'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'carname',
+      propertyLabel: i18next.t('carlogs.assets.car-name'),
       operators: [':', '!:', '=', '!='],
     },
     {

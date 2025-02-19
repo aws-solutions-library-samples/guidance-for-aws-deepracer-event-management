@@ -106,7 +106,7 @@ def get_rosbag_options(
         Tuple[rosbag2_py.StorageOptions, rosbag2_py.ConverterOptions]: A tuple containing the storage options and converter options.
     """
 
-    storage_options = rosbag2_py.StorageOptions(uri=path, storage_id="sqlite3")
+    storage_options = rosbag2_py.StorageOptions(uri=path)
 
     converter_options = rosbag2_py.ConverterOptions(
         input_serialization_format=serialization_format,

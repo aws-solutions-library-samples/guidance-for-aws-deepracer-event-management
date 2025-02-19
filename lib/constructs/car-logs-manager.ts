@@ -430,7 +430,7 @@ export class CarLogsManager extends Construct {
 
     // GraphQL API
     const carLogsAssetType = new EnumType('CarLogsAssetTypeEnum', {
-      definition: ['BAG_SQLITE', 'VIDEO', 'NONE'],
+      definition: ['BAG_SQLITE', 'BAG_MCAP', 'VIDEO', 'NONE'],
     });
     props.appsyncApi.schema.addType(carLogsAssetType);
 
@@ -456,6 +456,28 @@ export class CarLogsManager extends Construct {
 
     props.appsyncApi.schema.addType(assetMetadataInputType);
 
+    const mediaMetadataObjectType = new ObjectType('MediaMetadata', {
+      definition: {
+        duration: GraphqlType.float(),
+        codec: GraphqlType.string(),
+        fps: GraphqlType.float(),
+        resolution: GraphqlType.string(),
+      },
+      directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator')], // TODO anyone who is logged in should have access to this
+    });
+    props.appsyncApi.schema.addType(mediaMetadataObjectType);
+
+    const mediaMetadataInputType = new InputType('MediaMetadataInput', {
+      definition: {
+        duration: GraphqlType.float(),
+        codec: GraphqlType.string(),
+        fps: GraphqlType.float(),
+        resolution: GraphqlType.string(),
+      },
+      directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator')], // TODO anyone who is logged in should have access to this
+    });
+    props.appsyncApi.schema.addType(mediaMetadataInputType);
+
     const carLogsAssetObjectType = new ObjectType('CarLogsAsset', {
       definition: {
         assetId: GraphqlType.id({ isRequired: true }),
@@ -463,7 +485,10 @@ export class CarLogsManager extends Construct {
         username: GraphqlType.string({ isRequired: true }),
         modelId: GraphqlType.string({ isRequired: true }),
         modelname: GraphqlType.string(),
+        fetchJobId: GraphqlType.string(),
+        carName: GraphqlType.string(),
         assetMetaData: assetMetadataObjectType.attribute(),
+        mediaMetaData: mediaMetadataObjectType.attribute(),
         type: carLogsAssetType.attribute({ isRequired: true }),
       },
       directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator', 'commentator')], // TODO anyone who is logged in should have access to this
@@ -503,7 +528,10 @@ export class CarLogsManager extends Construct {
           username: GraphqlType.string(),
           modelId: GraphqlType.string({ isRequired: true }),
           modelname: GraphqlType.string(),
+          fetchJobId: GraphqlType.string(),
+          carName: GraphqlType.string(),
           assetMetaData: assetMetadataInputType.attribute(),
+          mediaMetaData: mediaMetadataInputType.attribute(),
           type: carLogsAssetType.attribute(),
         },
         returnType: carLogsAssetObjectType.attribute(),
