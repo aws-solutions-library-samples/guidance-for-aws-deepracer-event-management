@@ -321,7 +321,7 @@ export class CarLogsManager extends Construct {
     // Grant permissions to Lambda
     this.bagUploadBucket.grantReadWrite(sharedLambdaRole);
     this.carLogsBucket.grantReadWrite(sharedLambdaRole);
-    props.appsyncApi.api.grantQuery(sharedLambdaRole, 'carsOnline');
+    props.appsyncApi.api.grantQuery(sharedLambdaRole, 'listCars');
     props.appsyncApi.api.grantQuery(sharedLambdaRole, 'getAllModels');
     props.appsyncApi.api.grantQuery(sharedLambdaRole, 'listUsers');
     props.appsyncApi.api.grantMutation(sharedLambdaRole, 'addCarLogsAsset');

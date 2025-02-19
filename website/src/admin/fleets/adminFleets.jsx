@@ -27,8 +27,8 @@ const AdminFleets = () => {
   const [, , getUserNameFromId] = useUsers();
 
   const navigate = useNavigate();
-  const filteringProperties = FilteringProperties();
-  const columnConfiguration = ColumnConfiguration(getUserNameFromId);
+  const [columnConfiguration] = useState(() => ColumnConfiguration(getUserNameFromId));
+  const [filteringProperties] = useState(() => FilteringProperties());
 
   // Edit Fleet
   const editFleetHandler = () => {

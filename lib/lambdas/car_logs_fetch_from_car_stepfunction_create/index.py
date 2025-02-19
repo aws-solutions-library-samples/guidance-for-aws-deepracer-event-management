@@ -27,6 +27,7 @@ def lambda_handler(event, context):
     eventId = event["data"]["eventId"]
     eventName = event["data"]["eventName"]
     laterThan = event["data"]["laterThan"]
+    racerName = event["data"]["racerName"]
     startTime = scalar_types_utils.aws_datetime()
     status = "CREATED"
 
@@ -42,13 +43,14 @@ def lambda_handler(event, context):
         "eventId": eventId,
         "eventName": eventName,
         "laterThan": laterThan,
+        "racerName": racerName,
         "startTime": startTime,
         "status": status,
     }
 
     try:
-        query = """mutation createStartFetchFromCarDbEntry($carFleetId: String!, $carFleetName: String!, $carInstanceId: String!, $carIpAddress: String!, $carName: String!, $jobId: ID!, $startTime: AWSDateTime!, $status: CarLogsFetchStatus!, $eventId: ID!, $eventName: String!, $laterThan: AWSDateTime) {
-            createStartFetchFromCarDbEntry(carFleetId: $carFleetId, carFleetName: $carFleetName, carInstanceId: $carInstanceId, carIpAddress: $carIpAddress, carName: $carName, jobId: $jobId, startTime: $startTime, status: $status, eventId: $eventId, eventName: $eventName, laterThan: $laterThan) {
+        query = """mutation createStartFetchFromCarDbEntry($carFleetId: String!, $carFleetName: String!, $carInstanceId: String!, $carIpAddress: String!, $carName: String!, $jobId: ID!, $startTime: AWSDateTime!, $status: CarLogsFetchStatus!, $eventId: ID!, $eventName: String!, $laterThan: AWSDateTime, $racerName: String) {
+            createStartFetchFromCarDbEntry(carFleetId: $carFleetId, carFleetName: $carFleetName, carInstanceId: $carInstanceId, carIpAddress: $carIpAddress, carName: $carName, jobId: $jobId, startTime: $startTime, status: $status, eventId: $eventId, eventName: $eventName, laterThan: $laterThan, racerName: $racerName) {
                 carFleetId
                 carFleetName
                 carInstanceId
@@ -57,6 +59,7 @@ def lambda_handler(event, context):
                 eventId
                 eventName
                 laterThan
+                racerName
                 jobId
                 startTime
                 status

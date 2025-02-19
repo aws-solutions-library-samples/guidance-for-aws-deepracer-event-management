@@ -406,8 +406,8 @@ def get_car_id(car_name: str) -> tuple[str, bool]:
     """
 
     query = """
-    query carsOnline($online: Boolean!) {
-        carsOnline(online: $online) {
+    query listCars($online: Boolean!) {
+        listCars(online: $online) {
             InstanceId
             ComputerName
             LastPingDateTime
@@ -418,15 +418,15 @@ def get_car_id(car_name: str) -> tuple[str, bool]:
     try:
         response = appsync_helpers.run_query(query, {"online": True})
 
-        if response.get("data", {}).get("carsOnline"):
-            for car in response["data"]["carsOnline"]:
+        if response.get("data", {}).get("listCars"):
+            for car in response["data"]["listCars"]:
                 if car.get("ComputerName") == car_name:
                     return car["InstanceId"], True
 
         response = appsync_helpers.run_query(query, {"online": False})
 
-        if response.get("data", {}).get("carsOnline"):
-            for car in response["data"]["carsOnline"]:
+        if response.get("data", {}).get("listCars"):
+            for car in response["data"]["listCars"]:
                 if car.get("ComputerName") == car_name:
                     return car["InstanceId"], False
             raise Exception(f"Car with name {car_name} not found")

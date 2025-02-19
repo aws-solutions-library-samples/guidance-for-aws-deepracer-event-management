@@ -91,6 +91,7 @@ export class CarLogsFetchStepFunction extends Construct {
         'eventName.$': '$.Payload.eventName',
         'jobId.$': '$.Payload.jobId',
         'laterThan.$': '$.Payload.laterThan',
+        'racerName.$': '$.Payload.racerName',
       },
     });
 
@@ -321,6 +322,7 @@ export class CarLogsFetchStepFunction extends Construct {
         eventName: GraphqlType.string(),
         jobId: GraphqlType.id(),
         laterThan: GraphqlType.awsDateTime(),
+        racerName: GraphqlType.string(),
         startTime: GraphqlType.awsDateTime(),
         fetchStartTime: GraphqlType.awsDateTime(),
         status: carLogsFetchStatus.attribute(),
@@ -384,6 +386,7 @@ export class CarLogsFetchStepFunction extends Construct {
           eventId: GraphqlType.id(),
           eventName: GraphqlType.string(),
           laterThan: GraphqlType.awsDateTime(),
+          racerName: GraphqlType.string(),
         },
         returnType: startFetchFromCarType.attribute(),
         dataSource: fetchFromCarDataSource,
@@ -404,6 +407,7 @@ export class CarLogsFetchStepFunction extends Construct {
           eventId: GraphqlType.id(),
           eventName: GraphqlType.string(),
           laterThan: GraphqlType.awsDateTime(),
+          racerName: GraphqlType.string(),
           startTime: GraphqlType.awsDateTime(),
           status: carLogsFetchStatus.attribute(),
         },

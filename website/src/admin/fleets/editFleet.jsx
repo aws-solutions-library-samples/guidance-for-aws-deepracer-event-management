@@ -45,7 +45,7 @@ export const EditFleet = () => {
   }, [selectedFleet]);
 
   const onUpdateHandler = async () => {
-    send('carUpdates', {
+    send('carsUpdateFleet', {
       resourceIds: fleetConfig.carIds,
       fleetId: fleetConfig.fleetId,
       fleetName: fleetConfig.fleetName,

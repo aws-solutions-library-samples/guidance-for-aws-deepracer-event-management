@@ -1,10 +1,6 @@
-import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelectedEventContext } from '../store/contexts/storeProvider';
-
-import * as mutations from '../graphql/mutations';
-import * as queries from '../graphql/queries';
 
 import {
   Box,
@@ -15,13 +11,22 @@ import {
   Modal,
   SpaceBetween,
 } from '@cloudscape-design/components';
+import { useCarCmdApi } from '../hooks/useCarsApi';
 import { useStore } from '../store/store';
 
 /* eslint import/no-anonymous-default-export: [2, {"allowArrowFunction": true}] */
 export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
-  // const [cars, setCars] = useState(false);
+  const {
+    carFetchLogs,
+    carRestartService,
+    carEmergencyStop,
+    carDeleteAllModels,
+    carsUpdateFleet,
+    carsUpdateTaillightColor,
+    getAvailableTaillightColors,
+  } = useCarCmdApi();
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const [dropDownFleets, setDropDownFleets] = useState([{ id: 'none', text: 'none' }]);
@@ -56,130 +61,75 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
     };
   }, [fleets]);
 
-  function modalOpen(selectedItems) {
+  function modalOpen() {
     setVisible(true);
-    // setCars(selectedItems);
+    fetchColors();
   }
 
   function modalClose() {
     setVisible(false);
   }
 
-  // delete models from Cars
-  async function carDeleteAllModels() {
-    const InstanceIds = selectedItems.map((i) => i.InstanceId);
+  // delete models and logs from Cars, including ROS logs and restart
+  async function triggerDeleteAllModels() {
+    const instanceIds = selectedItems.map((i) => i.InstanceId);
+    carDeleteAllModels(instanceIds, true);
 
-    const response = await API.graphql({
-      query: mutations.carDeleteAllModels,
-      variables: { resourceIds: InstanceIds },
-    });
+    setVisible(false);
+    setRefresh(true);
   }
 
   // fetch logs from Cars
-  async function carFetchLogs() {
-    for (const car of selectedItems) {
-      const response = await API.graphql({
-        query: mutations.startFetchFromCar,
-        variables: {
-          carInstanceId: car.InstanceId,
-          carName: car.ComputerName,
-          carFleetId: car.fleetId,
-          carFleetName: car.fleetName,
-          carIpAddress: car.IpAddress,
-          eventId: selectedEvent.eventId,
-          eventName: selectedEvent.eventName,
-          laterThan: null,
-        },
-      });
-    }
+  async function triggerCarFetchLogs() {
+    carFetchLogs(selectedItems, selectedEvent);
+
+    setVisible(false);
+    setRefresh(true);
   }
 
   // Update Cars
-  async function carUpdates() {
-    const InstanceIds = selectedItems.map((i) => i.InstanceId);
-
-    const response = await API.graphql({
-      query: mutations.carUpdates,
-      variables: {
-        resourceIds: InstanceIds,
-        fleetName: dropDownSelectedItem.fleetName,
-        fleetId: dropDownSelectedItem.fleetId,
-      },
-    });
+  async function triggerCarsUpdateFleet() {
+    const instanceIds = selectedItems.map((i) => i.InstanceId);
+    carsUpdateFleet(instanceIds, dropDownSelectedItem.fleetName, dropDownSelectedItem.fleetId);
 
     setVisible(false);
     setRefresh(true);
     setDropDownSelectedItem({ fleetName: t('fleets.edit-cars.select-fleet') });
   }
 
-  // get color options when component is mounted
-  useEffect(() => {
-    // Get Colors
-    async function getAvailableTaillightColors() {
-      const response = await API.graphql({
-        query: queries.availableTaillightColors,
-      });
-      const colors = JSON.parse(response.data.availableTaillightColors);
-      setDropDownColors(
-        colors.map((thisColor) => {
-          return {
-            id: thisColor,
-            text: thisColor,
-          };
-        })
-      );
-    }
-    getAvailableTaillightColors();
-
-    return () => {
-      // Unmounting
-    };
-  }, []);
+  async function fetchColors() {
+    const colors = JSON.parse(await getAvailableTaillightColors());
+    setDropDownColors(
+      colors.map((thisColor) => {
+        return {
+          id: thisColor,
+          text: thisColor,
+        };
+      })
+    );
+  }
 
   // Update Tail Light Colors on Cars
-  async function carColorUpdates() {
-    const InstanceIds = selectedItems.map((i) => i.InstanceId);
-
-    const response = await API.graphql({
-      query: mutations.carSetTaillightColor,
-      variables: {
-        resourceIds: InstanceIds,
-        selectedColor: dropDownSelectedColor.id,
-      },
-    });
+  async function triggerCarColorUpdates() {
+    const instanceIds = selectedItems.map((i) => i.InstanceId);
+    carsUpdateTaillightColor(instanceIds, dropDownSelectedColor.id);
 
     setVisible(false);
     setRefresh(true);
-    /*setDropDownSelectedColor({
-      id: t('fleets.edit-cars.select-color'),
-      text: t('fleets.edit-cars.select-color'),
-    });*/
   }
 
   // Restart DeepRacer Service
-  async function carRestartService() {
-    const InstanceIds = selectedItems.map((i) => i.InstanceId);
-
-    const response = await API.graphql({
-      query: mutations.carRestartService,
-      variables: {
-        resourceIds: InstanceIds,
-      },
-    });
+  async function triggerCarRestartService() {
+    const instanceIds = selectedItems.map((i) => i.InstanceId);
+    carRestartService(instanceIds);
 
     setVisible(false);
     setRefresh(true);
   }
 
-  async function carEmergencyStop() {
-    const InstanceIds = selectedItems.map((i) => i.InstanceId);
-
-    const response = await API.graphql({
-      query: mutations.carEmergencyStop,
-      variables: {
-        resourceIds: InstanceIds,
-      },
-    });
+  async function triggerCarEmergencyStop() {
+    const instanceIds = selectedItems.map((i) => i.InstanceId);
+    carEmergencyStop(instanceIds);
 
     setVisible(false);
     setRefresh(true);
@@ -191,7 +141,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
         disabled={disabled}
         variant={variant}
         onClick={() => {
-          modalOpen(selectedItems);
+          modalOpen();
         }}
       >
         {t('fleets.edit-cars.edit-cars')}
@@ -229,7 +179,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                 <Button
                   variant="primary"
                   onClick={() => {
-                    carUpdates();
+                    triggerCarsUpdateFleet();
                   }}
                 >
                   {t('fleets.edit-cars.update-fleets')}
@@ -239,14 +189,13 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
           </Container>
 
           <Container>
-            <FormField label="Models">
+            <FormField label={t('fleets.edit-cars.logs-and-models')}>
               <SpaceBetween direction="horizontal" size="xs">
                 <Button
                   disabled={!online}
                   variant="primary"
                   onClick={() => {
-                    setVisible(false);
-                    carFetchLogs();
+                    triggerCarFetchLogs();
                   }}
                 >
                   {t('fleets.edit-cars.fetch-logs')}
@@ -254,11 +203,10 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                 <Button
                   disabled={!online}
                   onClick={() => {
-                    setVisible(false);
                     setDeleteModalVisible(true);
                   }}
                 >
-                  {t('fleets.edit-cars.delete-models')}
+                  {t('fleets.edit-cars.clean-cars')}
                 </Button>
               </SpaceBetween>
             </FormField>
@@ -270,7 +218,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                 <Button
                   disabled={!online || selectedItems.length > 1}
                   onClick={() => {
-                    carRestartService();
+                    triggerCarRestartService();
                   }}
                 >
                   {t('fleets.edit-cars.restart-ros')}
@@ -280,7 +228,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                   iconName="status-warning"
                   variant="normal"
                   onClick={() => {
-                    carEmergencyStop();
+                    triggerCarEmergencyStop();
                   }}
                 >
                   {t('fleets.edit-cars.stop')}
@@ -305,7 +253,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                   disabled={!online}
                   variant="primary"
                   onClick={() => {
-                    carColorUpdates();
+                    triggerCarColorUpdates();
                   }}
                 >
                   {t('fleets.edit-cars.update-tail-lights')}
@@ -341,7 +289,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
               <Button
                 variant="primary"
                 onClick={() => {
-                  carDeleteAllModels();
+                  triggerDeleteAllModels();
                   setDeleteModalVisible(false);
                 }}
               >
@@ -350,9 +298,9 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
             </SpaceBetween>
           </Box>
         }
-        header={t('fleets.edit-cars.delete-models-header')}
+        header={t('fleets.edit-cars.clean-cars-header')}
       >
-        {t('fleets.edit-cars.delete-models-message')}: <br></br>{' '}
+        {t('fleets.edit-cars.clean-cars-message')}: <br></br>{' '}
         {selectedItems.map((selectedItems) => {
           return selectedItems.ComputerName + ' ';
         })}
