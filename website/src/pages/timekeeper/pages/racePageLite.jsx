@@ -39,6 +39,7 @@ export const RacePage = ({
   raceConfig,
   onNext,
   selectedCar,
+  setStartTime,
 }) => {
   const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-page']);
   const [state] = useStore();
@@ -57,7 +58,7 @@ export const RacePage = ({
   const [btnUndoFalseFinish, setBtnUndoFalseFinish] = useState(true);
   const [btnEndRace, setBtnEndRace] = useState(false);
   const [btnStartRace, setBtnStartRace] = useState(false);
-  const [currentCar, setCurrentCar] = useState(selectedCar || defaultCar)
+  const [currentCar, setCurrentCar] = useState(selectedCar || defaultCar);
 
   const [
     carResetCounter,
@@ -90,6 +91,7 @@ export const RacePage = ({
       },
       startTimer: () => {
         setStartButtonText(t('timekeeper.pause-race'));
+        setStartTime(new Date());
         startTimers();
         // Buttons
         toggleBtnState(false);
@@ -302,12 +304,15 @@ export const RacePage = ({
                 <span>
                   <Header variant="h5">{t('timekeeper.current-car')}:</Header>
                   <Select
-                    selectedOption={{ label: currentCar.ComputerName, value: currentCar.Computername }}
-                    onChange={({ detail }) => {
-                      setCurrentCar(detail.selectedOption.value)
+                    selectedOption={{
+                      label: currentCar.ComputerName,
+                      value: currentCar.Computername,
                     }}
-                    options={cars.map(car => {
-                        return { label: car['ComputerName'], value: car }
+                    onChange={({ detail }) => {
+                      setCurrentCar(detail.selectedOption.value);
+                    }}
+                    options={cars.map((car) => {
+                      return { label: car['ComputerName'], value: car };
                     })}
                   />
                 </span>

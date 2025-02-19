@@ -653,6 +653,7 @@
     "end-session.warning-message": "Discarding the race will delete the race without saving it!",
     "end-session.page-header": "Timekeeper: Submit race",
     "end-session.page-description": "Check lap information and racer details before submitting a race to the leaderboard.",
+    "end-session.fetch-logs": "Fetch logs",
     "fastest-lap": "Fastest lap",
     "lap-table.valid-header": "Valid",
     "lap-table.valid": "Yes",
