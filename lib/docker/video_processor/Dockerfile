@@ -16,6 +16,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     ros-humble-cv-bridge \
     ros-humble-pybind11-vendor \
     ros-humble-test-msgs \
+    ros-humble-rosbag2-storage-mcap \
     libjsoncpp-dev \
     v4l-utils \
     ffmpeg \

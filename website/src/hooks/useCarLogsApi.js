@@ -11,7 +11,12 @@ const ASSETS_GET_LIMIT = 200;
 export const useCarLogsApi = (allowedToFetchAllAssets = false) => {
   const { t } = useTranslation();
   const [, dispatch] = useStore();
+  const [reload, setReload] = useState(false);
   const [subscriptionVariables, setSubscriptionVariables] = useState({});
+
+  const triggerReload = () => {
+    setReload((prev) => !prev);
+  };
 
   // adds an error notification for each API error
   const addErrorNotifications = useCallback(
@@ -79,7 +84,7 @@ export const useCarLogsApi = (allowedToFetchAllAssets = false) => {
     return () => {
       // Unmounting
     };
-  }, [dispatch, addErrorNotifications]);
+  }, [dispatch, addErrorNotifications, reload]);
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
@@ -120,4 +125,8 @@ export const useCarLogsApi = (allowedToFetchAllAssets = false) => {
       subscription.unsubscribe();
     };
   }, [subscriptionVariables, dispatch, addErrorNotifications]);
+
+  return {
+    triggerReload,
+  };
 };

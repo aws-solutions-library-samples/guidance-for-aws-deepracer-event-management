@@ -119,7 +119,7 @@ def combine_videos(
     codec: str = "avc1",
     skip_duration: float = 20.0,
     update_frequency: float = 0.1,
-) -> None:
+) -> dict:
     """
     Combine multiple video files into a single video file.
 
@@ -132,10 +132,13 @@ def combine_videos(
         codec (str): The codec for the video writer.
         skip_duration (float): Skip video files with duration less than the specified value.
         update_frequency (float): Update frequency for the progress bar.
+
+    Returns:
+        dict: Information about the combined video file.
     """
     if not video_files:
         print("No video files to combine.")
-        return
+        return {}
 
     print(f"Starting new video file: {output_file}")
 
@@ -150,6 +153,10 @@ def combine_videos(
     fourcc = cv2.VideoWriter_fourcc(*codec)
     out = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
 
+    total_duration = 0
+
+    divider_duration = 1.5  # Duration of the divider frame in seconds
+
     for video_file in video_files:
         # Extract prefix and date_time from the filename
         parts = os.path.basename(video_file).split("-")
@@ -163,6 +170,8 @@ def combine_videos(
             cap.release()
             continue
 
+        total_duration += duration
+
         # Create and write divider frame
         divider_frame = create_divider_frame(
             width,
@@ -173,8 +182,12 @@ def combine_videos(
             font_path_bd,
             font_path_rg,
         )
-        for _ in range(int(fps * 1.5)):  # Display the divider for 1.5 second
+        for _ in range(
+            int(fps * divider_duration)
+        ):  # Display the divider for 1.5 second
             out.write(divider_frame)
+
+        total_duration += divider_duration
 
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         with tqdm(
@@ -193,6 +206,14 @@ def combine_videos(
 
     out.release()
     print(f"Finished video file: {output_file}")
+
+    return {
+        "output_file": output_file,
+        "resolution": f"{width}x{height}",
+        "duration": total_duration,
+        "codec": codec,
+        "fps": fps,
+    }
 
 
 def main():
@@ -281,7 +302,7 @@ def main():
             args.output_dir, args.delimiter.join(name_components) + ".mp4"
         )
 
-        combine_videos(
+        video_info = combine_videos(
             video_files,
             output_file,
             args.background,
@@ -291,6 +312,7 @@ def main():
             skip_duration=args.skip_duration,
             update_frequency=args.update_frequency,
         )
+        print("Video information:", video_info)
 
 
 if __name__ == "__main__":
