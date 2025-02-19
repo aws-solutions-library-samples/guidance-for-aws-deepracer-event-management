@@ -131,11 +131,13 @@
   },
   "carlogs": {
     "assets": {
+      "actions": "Actions",
       "header": "Car Logs & Videos",
       "car-name": "Car",
       "car-fleet-name": "Fleet",
       "close-modal-ari-label": "Close modal",
       "description": "Manage your car logs and videos.",
+      "duration": "Duration",
       "operator.description": "Operators can view and manage car logs and videos.",
       "delete-assets": "Delete selected assets",
       "delete-asset": "Delete asset",
@@ -149,6 +151,7 @@
         "header": "Download assets",
         "description": "Are you sure you want to download the following assets?"
       },
+      "fetch-job-id": "Fetch Job ID",
       "model-information": "Model Information",
       "model-name": "Model Name",
       "type": "Type",
@@ -160,10 +163,11 @@
       "loading-models": "Loading models...",
       "loading-processing": "Loading processing logs...",
       "tab1": "Assets",
-      "tab2": "Processing logs",
+      "tab2": "Processing Logs",
       "types": {
         "video": "Video",
-        "bag_sqlite": "ROS Bag - SQLite"
+        "bag_sqlite": "ROS Bag - SQLite",
+        "bag_mcap": "ROS Bag - MCAP"
       },
       "notifications": {
         "downloading": "Downloading file",
@@ -171,7 +175,7 @@
         "download-failed": "Could not download file",
         "dismiss-message": "Dismiss message"
       },
-      "proc-header": "Processing logs"
+      "proc-header": "Processing Logs"
     },
     "upload": {
       "status": {

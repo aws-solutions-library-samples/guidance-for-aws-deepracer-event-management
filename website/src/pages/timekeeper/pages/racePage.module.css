@@ -103,16 +103,16 @@
 }
 
 #undofalsefinish {
-  background-color: #d4dada;
+  background-color: #e3242b;
 }
 
 #undofalsefinish:hover,
 #undofalsefinish:focus {
-  background-color: #ced0d0;
+  background-color: #990f02;
 }
 
 #undofalsefinish:active {
-  background-color: #c1c3c3;
+  background-color: #d0312d;
   transition: 0.5s;
   position: relative;
   top: 2px;

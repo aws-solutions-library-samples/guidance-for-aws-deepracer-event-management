@@ -5,6 +5,7 @@ import os
 import io
 
 import appsync_helpers
+import yaml
 import simplejson as json
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes.appsync import scalar_types_utils
@@ -41,22 +42,27 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                 bucket = record["s3"]["bucket"]["name"]
                 key = record["s3"]["object"]["key"]
 
-                matched_bags, job_id = process_bag_files(bucket, output_bucket, key)
+                matched_bags, batch_job_id = process_bag_files(
+                    bucket, key, output_bucket, None
+                )
     elif "data" in event:
-        matched_bags, job_id = process_bag_files(
-            input_bucket, event["data"]["ssm"]["uploadKey"], output_bucket
+        matched_bags, batch_job_id = process_bag_files(
+            input_bucket,
+            event["data"]["ssm"]["uploadKey"],
+            output_bucket,
+            event["data"]["jobId"],
         )
     else:
         raise ValueError("Invalid event format")
 
     return {
         "statusCode": 200,
-        "body": {"matched_bags": matched_bags, "batchJobId": job_id},
+        "body": {"matched_bags": matched_bags, "batchJobId": batch_job_id},
     }
 
 
 def process_bag_files(
-    input_bucket: str, key: str, output_bucket: str
+    input_bucket: str, key: str, output_bucket: str, fetch_job_id: str
 ) -> tuple[dict, str]:
 
     logger.info(f"Processing file {key} from bucket {input_bucket}")
@@ -96,6 +102,20 @@ def process_bag_files(
 
                 # Upload the bag into the user's log and video directory
                 bag_key = f"private/{user_model_info['sub']}/logs/{bag_dir}"
+
+                bag_type = "UNKNOWN"
+                with open(
+                    os.path.join(EXTRACTED_DIR, bag_dir, "metadata.yaml"), "r"
+                ) as yaml_file:
+                    metadata = yaml.safe_load(yaml_file)
+                    bag_type_raw = metadata.get("rosbag2_bagfile_information", {}).get(
+                        "storage_identifier", "unknown"
+                    )
+                    if bag_type_raw == "sqlite3":
+                        bag_type = "BAG_SQLITE"
+                    elif bag_type_raw == "mcap":
+                        bag_type = "BAG_MCAP"
+
                 for root, _, files in os.walk(os.path.join(EXTRACTED_DIR, bag_dir)):
                     for file in files:
                         file_path = os.path.join(root, file)
@@ -110,6 +130,7 @@ def process_bag_files(
                             f"Uploaded {file_path} to s3://{output_bucket}/{s3_key}"
                         )
                 user_model_info["bag_key"] = bag_key
+                user_model_info["bag_type"] = bag_type
                 matched_bags["bags"].append(user_model_info)
 
         logger.info(f"Matched bags: {matched_bags}")
@@ -136,6 +157,7 @@ def process_bag_files(
                 "environment": [
                     {"name": "MATCHED_BAGS", "value": json.dumps(matched_bags)},
                     {"name": "CAR_ID", "value": car_id},
+                    {"name": "FETCH_JOB_ID", "value": fetch_job_id},
                 ]
             },
         )
@@ -144,12 +166,12 @@ def process_bag_files(
         logger.error(f"Error submitting batch job: {str(e)}")
         raise
 
-    create_dynamodb_entries(matched_bags)
+    create_dynamodb_entries(matched_bags, fetch_job_id)
 
     return matched_bags, response["jobId"]
 
 
-def create_dynamodb_entries(matched_bags: dict) -> None:
+def create_dynamodb_entries(matched_bags: dict, fetch_job_id: str) -> None:
 
     for bag in matched_bags["bags"]:
 
@@ -164,7 +186,9 @@ def create_dynamodb_entries(matched_bags: dict) -> None:
                 "filename": bag["bag_key"].split("/")[-1],
                 "uploadedDateTime": scalar_types_utils.aws_datetime(),
             },
-            "type": "BAG_SQLITE",
+            "fetchJobId": fetch_job_id,
+            "carName": matched_bags["car_name"],
+            "type": bag["bag_type"],
         }
 
         logger.info(f"variables => {variables}")
@@ -175,15 +199,20 @@ def create_dynamodb_entries(matched_bags: dict) -> None:
             $assetId: ID!
             $modelname: String
             $modelId: String!
+            $fetchJobId: ID
             $type: CarLogsAssetTypeEnum!
             $sub: ID!
             $username: String!
+            $fetchJobId: String
+            $carName: String
         ) {
             addCarLogsAsset(
             assetId: $assetId
             assetMetaData: $assetMetaData
             modelId: $modelId
             modelname:  $modelname
+            fetchJobId: $fetchJobId
+            carName: $carName
             type: $type
             sub: $sub
             username: $username
@@ -196,6 +225,8 @@ def create_dynamodb_entries(matched_bags: dict) -> None:
             }
             modelId
             modelname
+            fetchJobId
+            carName
             type
             sub
             username
