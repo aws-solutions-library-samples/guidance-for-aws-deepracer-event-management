@@ -1,5 +1,7 @@
 import os
 from typing import List
+import json
+from datetime import datetime, timedelta
 
 import boto3
 from aws_lambda_powertools import Logger, Tracer
@@ -12,12 +14,15 @@ app = AppSyncResolver()
 
 logger = Logger()
 
-DDB_TABLE_NAME = os.environ["DDB_TABLE"]
-DDB_PING_STATE_INDEX_NAME = os.environ["DDB_PING_STATE_INDEX"]
+DDB_TABLE_NAME = os.environ.get("DDB_TABLE")
+DDB_PING_STATE_INDEX_NAME = os.environ.get("DDB_PING_STATE_INDEX")
+STEP_FUNCTION_ARN = os.environ.get("STEP_FUNCTION_ARN")
+
 dynamodb = boto3.resource("dynamodb")
 client_dynamodb = boto3.client("dynamodb")
 paginator_dynamodb = client_dynamodb.get_paginator("query")
 client_ssm = boto3.client("ssm")
+client_sfn = boto3.client("stepfunctions")
 
 ddbTable = dynamodb.Table(DDB_TABLE_NAME)
 
@@ -34,19 +39,51 @@ colors = {
 }
 
 
+def check_and_run_car_status_step_function():
+    try:
+        response = client_sfn.list_executions(
+            stateMachineArn=STEP_FUNCTION_ARN, maxResults=1
+        )
+        executions = response.get("executions", [])
+        logger.info(executions)
+        if not executions:
+            # No executions found, run the step function
+            client_sfn.start_execution(
+                stateMachineArn=STEP_FUNCTION_ARN,
+                input=json.dumps({"NextToken": ""}),  # Add your input here
+            )
+        else:
+            if executions[0]["status"] in ["STARTING", "RUNNING"]:
+                logger.info("Step function is already running.")
+                return
+            last_execution_time = executions[0]["stopDate"]
+            if datetime.now(
+                last_execution_time.tzinfo
+            ) - last_execution_time > timedelta(minutes=1):
+                # Last execution was more than 1 minute ago, run the step function
+                client_sfn.start_execution(
+                    stateMachineArn=STEP_FUNCTION_ARN,
+                    input=json.dumps({"NextToken": ""}),
+                )
+    except Exception as error:
+        logger.exception(f"Error checking or running step function: {str(error)}")
+        raise Exception(f"Error checking or running step function: {str(error)}")
+
+
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
 @tracer.capture_lambda_handler
 def lambda_handler(event, context):
     return app.resolve(event, context)
 
 
-@app.resolver(type_name="Query", field_name="carsOnline")
-def carOnline(online: str):
+@app.resolver(type_name="Query", field_name="listCars")
+def listCars(online: str):
     try:
         if online is False:
             PingStatusFilter = "ConnectionLost"
         else:
             PingStatusFilter = "Online"
+            check_and_run_car_status_step_function()
 
         return_array = []
 
@@ -58,13 +95,13 @@ def carOnline(online: str):
         )
 
         for page in paginateResult:
-            logger.info(page)
+            logger.debug(page)
 
             for item in page["Items"]:
                 new_item = {}
                 for key in item:
                     new_item[key] = list(item[key].values())[0]
-                logger.info(new_item)
+                logger.debug(new_item)
 
                 if "IsLatestVersion" in new_item:
                     new_item["IsLatestVersion"] = str(new_item["IsLatestVersion"])
@@ -76,11 +113,47 @@ def carOnline(online: str):
 
     except Exception as error:
         logger.exception(error)
-        return error
+        raise Exception(f"Error listing cars: {str(error)}")
 
 
-@app.resolver(type_name="Mutation", field_name="carUpdates")
-def carUpdates(resourceIds: List[str], fleetId: str, fleetName: str):
+@app.resolver(type_name="Mutation", field_name="carsUpdateStatus")
+def carsUpdateStatus(cars: List[dict]):
+    try:
+        logger.debug({"Cars": cars})
+        updated_cars = []
+
+        with ddbTable.batch_writer() as carsTable:
+            for car in cars:
+                existing_item = ddbTable.get_item(
+                    Key={"InstanceId": car["InstanceId"]}
+                ).get("Item")
+                if existing_item:
+                    has_changes = False
+
+                    for key, value in car.items():
+                        if key == "InstanceId":
+                            continue
+                        if existing_item.get(key) != value:
+                            has_changes = True
+                            existing_item[key] = value
+
+                    if has_changes:
+                        ddbTable.put_item(Item=existing_item)
+                        updated_cars.append(existing_item)
+                else:
+                    carsTable.put_item(Item=car)
+                    updated_cars.append(car)
+
+        logger.info({"Updated cars": updated_cars})
+        return updated_cars
+
+    except Exception as error:
+        logger.exception(error)
+        raise Exception(f"Error updating car statuses: {str(error)}")
+
+
+@app.resolver(type_name="Mutation", field_name="carsUpdateFleet")
+def carsUpdateFleet(resourceIds: List[str], fleetId: str, fleetName: str):
     try:
         logger.info(resourceIds)
 
@@ -115,23 +188,26 @@ def carUpdates(resourceIds: List[str], fleetId: str, fleetName: str):
 
 
 @app.resolver(type_name="Mutation", field_name="carDeleteAllModels")
-def carDeleteAllModels(resourceIds: List[str]):
+def carDeleteAllModels(resourceIds: List[str], withSystemLogs: bool = False):
     try:
         logger.info(resourceIds)
 
         for instance_id in resourceIds:
             # empty the artifacts folder
             logger.info(instance_id)
+            commands = [
+                "rm -rf /opt/aws/deepracer/artifacts/*",
+                "rm -rf /opt/aws/deepracer/logs/*",
+            ]
+            if withSystemLogs:
+                commands.insert(0, "systemctl stop deepracer-core")
+                commands.append("rm -rf /root/.ros/log/*")
+                commands.append("systemctl start deepracer-core")
 
             response = client_ssm.send_command(
                 InstanceIds=[instance_id],
                 DocumentName="AWS-RunShellScript",
-                Parameters={
-                    "commands": [
-                        "rm -rf /opt/aws/deepracer/artifacts/*",
-                        "rm -rf /root/.ros/log/*",
-                    ]
-                },
+                Parameters={"commands": commands},
             )
             # command_id = response['Command']['CommandId']
             logger.info(response)
@@ -190,9 +266,8 @@ def callRosService(instaneId: str, rosCommand: str):
     finalCommand = [
         "#!/bin/bash",
         'export HOME="/home/deepracer"',
-        "source /opt/ros/foxy/setup.bash",
-        "source /opt/intel/openvino_2021/bin/setupvars.sh",
-        "source /opt/aws/deepracer/lib/local_setup.bash",
+        "source $(find /opt/intel -name setupvars.sh)",
+        "source /opt/aws/deepracer/lib/setup.bash",
         rosCommand,
     ]
 

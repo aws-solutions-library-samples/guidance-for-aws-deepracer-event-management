@@ -237,6 +237,11 @@ We recommend that you use the Makefile based commands to simplify the steps requ
 
 If you plan to help develop DREM and contribute code, the initial deployment of DREM is the same as above. Once DREM has deployed, to make the deployed DREM stack available for local development, run the following commands, alternatively the stack can be run using docker compose to create containers for each of the three react applications that make up DREM:
 
+In Visual Studio Code add the following extensions for the best experience:
+
+- Prettier - `esbenp.prettier-vscode`
+- Black Formatter - `ms-python.black-formatter`
+
 ### Local frontend development
 
 Running all resources and installing all dependencies on the local machine
@@ -429,6 +434,32 @@ They were trained for 12 hours using the PPO training algorithm, default discret
 - Number of experience episodes between each policy-updating iteration: 20
 
 These models can be found in `lib/default_models`
+
+## Leaderboard Switches
+
+There are a few display options for the leaderboard URL as detailed below:
+
+| Key | Values | Default value | Notes |
+| --- | ------ | ------------- | ----- |
+| lang | de, en, es, fr, jp, se | en | Translation files located in `website-leaderboard/public/locales/` |
+| qr | header, footer | off | Show the QR code in the header or footer |
+| scroll | true, false | true | Automatically scrolls to the bottom of the leaderboard on a time interval | 
+| track | track id | combined | Used to show a specific event track or a combined leaderboard of all event tracks |
+| format | fastest, average | fastest |
+| flag | true, false | true | Can be used to show the racers country flag |
+
+## Overlay Switches
+
+There are a nunber of display options for the streaming overlay URL:
+
+| Key | Values | Default value | Notes |
+| --- | ------ | ------------- | ----- |
+| lang | de, en, jp | en | Translation files located in `website-stream-overlays/public/locales/` |
+| track | track id | 1 | Used to show a specific event track or a combined leaderboard of all event tracks |
+| showLeaderboard | | 1 | Show the top 4 leaderboard in between races |
+| format | fastest, average | fastest |
+| chrome | 1, 0 | 1 | Add a chroma colour to the  overlay
+| chromaColor | hex value | 00ff00 | Change the colour of the background chroma |
 
 ## Security
 

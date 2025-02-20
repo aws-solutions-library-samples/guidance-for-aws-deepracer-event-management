@@ -19,7 +19,6 @@ const LeaderboardWrapper = () => {
 
   let showQRcode = queryParams.get('qr');
   if (showQRcode === null || showQRcode === 'false') showQRcode = false;
-  console.debug(`showQRcode: ${showQRcode}`);
 
   let scroll = queryParams.get('scroll');
   if (scroll === null) {
@@ -31,11 +30,20 @@ const LeaderboardWrapper = () => {
   let raceFormat = queryParams.get('format');
   if (raceFormat == null) raceFormat = 'fastest';
 
+  let showFlag = queryParams.get('flag');
+  if (showFlag === null) {
+    showFlag = true;
+  } else {
+    showFlag = /true/i.test(showFlag);
+  }
+
   console.debug('eventId: ' + eventId);
   console.debug('language: ' + language);
   console.debug('trackId: ' + trackId);
   console.debug('scroll: ' + scroll);
   console.debug('raceFormat: ' + raceFormat);
+  console.debug('showQRcode: ' + showQRcode);
+  console.debug('showFlag: ' + showFlag);
 
   useEffect(() => {
     i18n.changeLanguage(language);
@@ -49,6 +57,7 @@ const LeaderboardWrapper = () => {
       language={language}
       showQrCode={showQRcode}
       scrollEnabled={scroll}
+      showFlag={showFlag}
     />
   );
 };

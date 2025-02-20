@@ -6,6 +6,7 @@ import {
   Header,
   Modal,
   SpaceBetween,
+  Toggle,
 } from '@cloudscape-design/components';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -20,12 +21,13 @@ export const RaceFinishPage = ({
   fastestAverageLap = [],
   raceConfig,
   onAction,
-  onNext,
-  submitRaceHandler,
-  discardRaceHandler
+  discardRaceHandler,
+  fetchLogsEnable,
+  fetchLogs,
+  setFetchLogs,
 }) => {
   const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-finish']);
-  const [buttonsIsDisabled, SetButtonsIsDisabled] = useState(false);
+  const [buttonsIsDisabled] = useState(false);
   const [warningModalVisible, setWarningModalVisible] = useState(false);
 
   const raceInfoPanel = (
@@ -46,6 +48,14 @@ export const RaceFinishPage = ({
         <Box>
           <Header variant="h3">{t('timekeeper.end-session.raced-by-proxy')}</Header>
           {raceInfo.racedByProxy ? t('common.yes') : t('common.no')}
+        </Box>
+        <Box>
+          <Header variant="h3">{t('timekeeper.end-session.fetch-logs')}</Header>
+          <Toggle
+            onChange={({ detail }) => setFetchLogs(detail.checked)}
+            checked={fetchLogs}
+            disabled={!fetchLogsEnable}
+          />
         </Box>
       </SpaceBetween>
     </Container>

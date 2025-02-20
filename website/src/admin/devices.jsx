@@ -1,60 +1,60 @@
 import { Button, ButtonDropdown, SpaceBetween } from '@cloudscape-design/components';
-import { API } from 'aws-amplify';
-import React, { useEffect, useState } from 'react';
-import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
-import { TableHeader } from '../components/tableConfig';
-
+import { default as React, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { useStore } from '../store/store';
+
 import {
   ColumnConfiguration,
   FilteringProperties,
 } from '../components/devices-table/deviceTableConfig';
 import EditCarsModal from '../components/editCarsModal';
+import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
 import { PageLayout } from '../components/pageLayout';
 import { PageTable } from '../components/pageTable';
-import * as queries from '../graphql/queries';
+import { TableHeader } from '../components/tableConfig';
+import { useCarCmdApi } from '../hooks/useCarsApi';
 import { Breadcrumbs } from './fleets/support-functions/supportFunctions';
 
 const AdminDevices = () => {
   const { t } = useTranslation(['translation', 'help-admin-cars']);
-  const [allItems, setItems] = useState([]);
+  const [state, dispatch] = useStore();
+  const [carsToDisplay, setCarsToDisplay] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
   const [online, setOnline] = useState('Online');
   const [onlineBool, setOnlineBool] = useState(true);
   const [refresh, setRefresh] = useState(false);
+  const [columnConfiguration] = useState(() => ColumnConfiguration());
+  const [filteringProperties] = useState(() => FilteringProperties());
+  const { getLabelSync } = useCarCmdApi();
 
-  // Get Cars
-  async function getCars() {
-    var thisOnlineBool = true;
-    if (online !== 'Online') {
-      setOnlineBool(false);
-      thisOnlineBool = false;
-    } else {
-      setOnlineBool(true);
-    }
-    const response = await API.graphql({
-      query: queries.carsOnline,
-      variables: { online: thisOnlineBool },
-    });
-    setSelectedItems([]);
-    setIsLoading(false);
-    setItems(response.data.carsOnline);
-
-    console.debug(response);
-  }
+  const reloadCars = async () => {
+    setIsLoading(true);
+    setRefresh(true);
+    dispatch('REFRESH_CARS');
+  };
 
   useEffect(() => {
-    getCars();
+    setIsLoading(state.cars.isLoading);
+  }, [state.cars.isLoading]);
+
+  useEffect(() => {
+    var onlineBool_ = online === 'Online';
+    const updatedCars = state.cars.cars.filter((car) =>
+      onlineBool_ ? car.PingStatus === 'Online' : car.PingStatus !== 'Online'
+    );
+    setOnlineBool(onlineBool_);
+    setCarsToDisplay(updatedCars);
+    setIsLoading(state.cars.isLoading);
     return () => {
       // Unmounting
     };
-  }, [online]);
+  }, [online, state.cars]);
 
   useEffect(() => {
     if (refresh) {
-      setIsLoading(true);
-      getCars();
+      setSelectedItems([]);
       setRefresh(false);
     }
     return () => {
@@ -62,33 +62,18 @@ const AdminDevices = () => {
     };
   }, [refresh]);
 
-  const columnConfiguration = ColumnConfiguration();
-  const filteringProperties = FilteringProperties();
-
-  function getLabelSync(instanceId) {
-    API.graphql({
-      query: queries.carPrintableLabel,
-      variables: {
-        instanceId: instanceId,
-      },
-    }).then((response) => {
-      const labelURL = response.data.carPrintableLabel.toString();
-      window.open(labelURL);
-    });
-  }
-
   function getLabels(event) {
     event.preventDefault();
 
-    selectedItems.map((selectedCar) => {
-      const instanceId = selectedCar.InstanceId;
-      getLabelSync(instanceId);
+    selectedItems.forEach((selectedCar) => {
+      getLabelSync(selectedCar.InstanceId, selectedCar.ComputerName);
     });
   }
 
   const HeaderActionButtons = () => {
     return (
       <SpaceBetween direction="horizontal" size="xs">
+        <Button iconName="refresh" variant="normal" disabled={isLoading} onClick={reloadCars} />
         <ButtonDropdown
           items={[
             { text: t('devices.online'), id: 'Online', disabled: false },
@@ -100,7 +85,6 @@ const AdminDevices = () => {
           ]}
           onItemClick={({ detail }) => {
             setOnline(detail.id);
-            setIsLoading(true);
           }}
         >
           {online}
@@ -141,13 +125,13 @@ const AdminDevices = () => {
       <PageTable
         selectedItems={selectedItems}
         setSelectedItems={setSelectedItems}
-        tableItems={allItems}
+        tableItems={carsToDisplay}
         selectionType="multi"
         columnConfiguration={columnConfiguration}
         header={
           <TableHeader
             nrSelectedItems={selectedItems.length}
-            nrTotalItems={allItems.length}
+            nrTotalItems={carsToDisplay.length}
             header={t('devices.header')}
             actions={<HeaderActionButtons />}
           />

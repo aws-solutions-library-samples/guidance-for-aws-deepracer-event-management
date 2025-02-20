@@ -45,10 +45,15 @@ def lambda_handler(event, context):
 
 
 @app.resolver(type_name="Query", field_name="getAllModels")
-def get_models(limit: int = 200, nextToken: dict = None):
+def get_models(user_sub: str = None, limit: int = 200, nextToken: dict = None):
     global identity
     try:
-        sub = identity["sub"]
+        if "claims" in identity and "cognito:username" in identity["claims"]:
+            sub = identity["sub"]
+        elif "userArn" in identity:
+            sub = user_sub
+        else:
+            sub = identity["sub"]
 
         logger.debug(f"limit: {limit}, nextToken: {nextToken}")
 

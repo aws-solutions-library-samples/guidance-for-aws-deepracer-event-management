@@ -7,7 +7,7 @@ import {
   Header,
   Modal,
   Select,
-  SpaceBetween
+  SpaceBetween,
 } from '@cloudscape-design/components';
 import { useMachine } from '@xstate/react';
 import React, { useEffect, useRef, useState } from 'react';
@@ -37,6 +37,7 @@ import styles from './racePage.module.css';
 export const RacePage = ({
   raceInfo,
   setRaceInfo,
+  setStartTime,
   fastestLap,
   fastestAverageLap,
   raceConfig,
@@ -59,7 +60,7 @@ export const RacePage = ({
   const [btnUndoFalseFinish, setBtnUndoFalseFinish] = useState(true);
   const [btnEndRace, setBtnEndRace] = useState(false);
   const [btnStartRace, setBtnStartRace] = useState(false);
-  const [currentCar, setCurrentCar] = useState(defaultCar)
+  const [currentCar, setCurrentCar] = useState(defaultCar);
 
   const [
     carResetCounter,
@@ -91,6 +92,7 @@ export const RacePage = ({
         setBtnStartRace(true);
       },
       startTimer: () => {
+        setStartTime(new Date());
         setStartButtonText(t('timekeeper.pause-race'));
         startTimers();
         // Buttons
@@ -317,12 +319,15 @@ export const RacePage = ({
                 <span>
                   <Header variant="h5">{t('timekeeper.current-car')}:</Header>
                   <Select
-                    selectedOption={{ label: currentCar.ComputerName, value: currentCar.Computername }}
-                    onChange={({ detail }) => {
-                      setCurrentCar(detail.selectedOption.value)
+                    selectedOption={{
+                      label: currentCar.ComputerName,
+                      value: currentCar.Computername,
                     }}
-                    options={cars.map(car => {
-                        return { label: car['ComputerName'], value: car }
+                    onChange={({ detail }) => {
+                      setCurrentCar(detail.selectedOption.value);
+                    }}
+                    options={cars.map((car) => {
+                      return { label: car['ComputerName'], value: car };
                     })}
                   />
                 </span>

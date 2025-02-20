@@ -60,6 +60,8 @@ export const ColumnConfigurationRacer = () => {
         sortingField: 'uploadedDateTime',
         width: 240,
         minWidth: 150,
+        sortingComparator: (a, b) =>
+          new Date(a.fileMetaData.uploadedDateTime) - new Date(b.fileMetaData.uploadedDateTime),
       },
       {
         id: 'sensor',
@@ -67,6 +69,8 @@ export const ColumnConfigurationRacer = () => {
         cell: (item) => item.modelMetaData.sensor.join(',') || '-',
         width: 200,
         minWidth: 150,
+        sortingComparator: (a, b) =>
+          a.modelMetaData.sensor.join(',').localeCompare(b.modelMetaData.sensor.join(',')),
       },
       {
         id: 'actionSpaceType',
@@ -74,6 +78,8 @@ export const ColumnConfigurationRacer = () => {
         cell: (item) => item.modelMetaData.actionSpaceType || '-',
         width: 200,
         minWidth: 150,
+        sortingComparator: (a, b) =>
+          a.modelMetaData.actionSpaceType.localeCompare(b.modelMetaData.actionSpaceType),
       },
       {
         id: 'trainingAlgorithm',
@@ -81,10 +87,12 @@ export const ColumnConfigurationRacer = () => {
         cell: (item) => item.modelMetaData.trainingAlgorithm || '-',
         width: 200,
         minWidth: 150,
+        sortingComparator: (a, b) =>
+          a.modelMetaData.trainingAlgorithm.localeCompare(b.modelMetaData.trainingAlgorithm),
       },
     ],
   };
-  returnObject.defaultSortingColumn = returnObject.columnDefinitions[2];  // uploadedDateTime
+  returnObject.defaultSortingColumn = returnObject.columnDefinitions[2]; // uploadedDateTime
   returnObject.defaultSortingIsDescending = true;
 
   return returnObject;

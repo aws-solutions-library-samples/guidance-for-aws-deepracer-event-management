@@ -15,12 +15,16 @@ export const Timekeeper = () => {
   const [activeStepIndex, setActiveStepIndex] = useLocalStorage('DREM-timekeeper-state', 0);
   const [raceConfig, setRaceConfig] = useLocalStorage('DREM-timekeeper-race-config', {});
   const [race, setRace] = useLocalStorage('DREM-timekeeper-current-race', defaultRace);
-  const [fastestLap, SetFastestLap] = useState([]);
+  const [fetchLogsEnable, setFetchLogsEnable] = useState(false);
+  const [fastestLap, setFastestLap] = useState([]);
   const [fastestAverageLap, setFastestAverageLap] = useState([]);
+  const [startTime, setStartTime] = useState(() => {
+    new Date();
+  });
   const selectedEvent = useSelectedEventContext();
   const selectedTrack = useSelectedTrackContext();
 
-  const [, dispatch] = useStore();
+  const [state, dispatch] = useStore();
   // change event info and race config when a user select another event
   useEffect(() => {
     if (selectedEvent.eventId !== race.eventId) {
@@ -31,7 +35,8 @@ export const Timekeeper = () => {
       const modifiedRace = { ...race, eventId: selectedEvent.eventId };
       setRace(modifiedRace);
     }
-  }, [selectedEvent, selectedTrack, race, setRace, setRaceConfig]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEvent, selectedTrack]);
 
   // Reset the timekeeper when navigating away from the timekeeper
   useEffect(() => {
@@ -40,6 +45,7 @@ export const Timekeeper = () => {
       setActiveStepIndex(0);
       setRace(defaultRace);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -65,12 +71,26 @@ export const Timekeeper = () => {
         const obj = validLaps.find((o) => {
           return o.time === res;
         });
-        SetFastestLap([obj]);
+        setFastestLap([obj]);
+        // Find if any car is able to log
+        if (!fetchLogsEnable) {
+          validLaps.some((lap) => {
+            const car = state.cars.cars.find((car) => {
+              return car.ComputerName === lap.carName && car.LoggingCapable;
+            });
+            if (car) {
+              setFetchLogsEnable(true);
+              return true;
+            } else {
+              return false;
+            }
+          });
+        }
       } else {
-        SetFastestLap([]);
+        setFastestLap([]);
       }
     } else {
-      SetFastestLap([]);
+      setFastestLap([]);
     }
 
     race.averageLaps = getAverageWindows(race.laps, raceConfig.averageLapsWindow);
@@ -82,6 +102,7 @@ export const Timekeeper = () => {
     } else {
       setFastestAverageLap([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [race.laps]);
 
   // handlers functions
@@ -115,7 +136,7 @@ export const Timekeeper = () => {
   const resetRacehandler = () => {
     setRace(defaultRace);
     setRaceConfig({});
-    SetFastestLap([]);
+    setFastestLap([]);
     setFastestAverageLap([]);
 
     setActiveStepIndex(0);
@@ -135,6 +156,7 @@ export const Timekeeper = () => {
             fastestLap={fastestLap}
             fastestAverageLap={fastestAverageLap}
             raceConfig={raceConfig}
+            setStartTime={setStartTime}
             onNext={raceIsDoneHandler}
           />
         );
@@ -149,6 +171,8 @@ export const Timekeeper = () => {
             raceConfig={raceConfig}
             onAction={actionHandler}
             onNext={resetRacehandler}
+            startTime={startTime}
+            fetchLogsEnable={fetchLogsEnable}
           />
         );
         break;

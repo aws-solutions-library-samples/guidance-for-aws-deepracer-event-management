@@ -6,12 +6,14 @@ import {
   Header,
   Modal,
   SpaceBetween,
+  ToggleButton,
 } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RaceTypeEnum } from '../../../admin/events/support-functions/raceConfig';
 import { SimpleHelpPanelLayout } from '../../../components/help-panels/simple-help-panel';
 import { PageLayout } from '../../../components/pageLayout';
+import { useCarCmdApi } from '../../../hooks/useCarsApi';
 import useMutation from '../../../hooks/useMutation';
 import { useStore } from '../../../store/store';
 import { FastestAverageLapTable } from '../components/fastesAverageLapTable';
@@ -26,12 +28,16 @@ export const RaceFinishPage = ({
   raceConfig,
   onAction,
   onNext,
+  startTime,
+  fetchLogsEnable,
 }) => {
   const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-finish']);
+  const { carFetchLogs } = useCarCmdApi();
   const [buttonsIsDisabled, SetButtonsIsDisabled] = useState(false);
   const [sendMutation, loading, errorMessage, data] = useMutation();
   const [warningModalVisible, setWarningModalVisible] = useState(false);
-  const [, dispatch] = useStore();
+  const [state, dispatch] = useStore();
+  const [fetchLogs, setFetchLogs] = React.useState(fetchLogsEnable);
   const messageDisplayTime = 4000;
   const notificationId = '';
 
@@ -44,7 +50,7 @@ export const RaceFinishPage = ({
         onNext();
       }, messageDisplayTime);
     }
-  }, [errorMessage, loading]);
+  }, [errorMessage, loading, data, dispatch, notificationId, onNext]);
 
   const submitRaceHandler = async () => {
     SetButtonsIsDisabled(true);
@@ -62,6 +68,27 @@ export const RaceFinishPage = ({
       raceStatus: 'RACE_SUBMITTED',
     });
     sendMutation('addRace', { ...raceInfo });
+
+    if (fetchLogs) {
+      const uniqueCars = new Set();
+      raceInfo.laps.forEach((lap) => {
+        const car = state.cars.cars.find((car) => {
+          return car.ComputerName === lap.carName && car.LoggingCapable;
+        });
+        if (car) {
+          uniqueCars.add(car);
+        }
+      });
+
+      console.debug(Array.from(uniqueCars));
+
+      carFetchLogs(
+        uniqueCars,
+        { eventId: raceInfo.eventId, eventName: raceConfig.eventName },
+        new Date(startTime.getTime()).toISOString(),
+        raceInfo.username
+      );
+    }
   };
 
   const discardRaceHandler = () => {
@@ -137,6 +164,15 @@ export const RaceFinishPage = ({
   const actionButtons = (
     <Box float="right">
       <SpaceBetween direction="horizontal" size="xs">
+        <ToggleButton
+          onChange={({ detail }) => setFetchLogs(detail.pressed)}
+          pressed={fetchLogs}
+          disabled={!fetchLogsEnable}
+          iconName="upload"
+          pressedIconName="upload"
+        >
+          {t('timekeeper.end-session.fetch-logs')}
+        </ToggleButton>
         <Button
           variant="link"
           disabled={buttonsIsDisabled}

@@ -27,7 +27,7 @@ import {
   DefaultPreferences,
   EmptyState,
   MatchesCountText,
-  TablePreferences
+  TablePreferences,
 } from '../../../components/tableConfig';
 
 import { ColumnConfiguration } from '../../../components/devices-table/deviceTableConfig';
@@ -234,8 +234,9 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
   const cars = state.cars.cars.filter((car) => car.PingStatus === 'Online');
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
 
-  const columnConfiguration = ColumnConfiguration();
-
+  const [columnConfiguration] = useState(() =>
+    ColumnConfiguration(['carName', 'fleetName', 'carIp'])
+  );
   const [preferences, setPreferences] = useState({
     ...DefaultPreferences,
     visibleContent: columnConfiguration.defaultVisibleColumns,

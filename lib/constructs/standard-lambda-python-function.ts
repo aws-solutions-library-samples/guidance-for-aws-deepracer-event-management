@@ -26,6 +26,7 @@ export interface StandardPythonFunctionProps extends lambdaPython.PythonFunction
   };
   logRetention?: logs.RetentionDays;
   role?: iam.Role;
+  cloudWatchPolicy?: iam.Policy;
 }
 export class StandardLambdaPythonFunction extends lambdaPython.PythonFunction {
   public readonly role: iam.Role;
@@ -97,20 +98,24 @@ export class StandardLambdaPythonFunction extends lambdaPython.PythonFunction {
       resources: [super.logGroup.logGroupArn],
     });
 
-    localProps.role.attachInlinePolicy(
-      new iam.Policy(this, `${id}-CloudWatchLogs`, {
-        statements: [cloudWatchLogsPermissions],
-      })
-    );
+    if (localProps.cloudWatchPolicy) {
+      localProps.cloudWatchPolicy.addStatements(cloudWatchLogsPermissions);
+    } else {
+      localProps.role.attachInlinePolicy(
+        new iam.Policy(this, `${id}-CloudWatchLogs`, {
+          statements: [cloudWatchLogsPermissions],
+        })
+      );
+      NagSuppressions.addResourceSuppressionsByPath(stack, `${scope.node.path}/${id}/${id}-CloudWatchLogs/Resource`, [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'CloudWatch Logs permissions require a wildcard as streams are created dynamically.',
+        },
+      ]);
+    }
     this.role = localProps.role;
 
     this.nodePath = `${scope.node.path}/${id}`;
-    NagSuppressions.addResourceSuppressionsByPath(stack, `${scope.node.path}/${id}/${id}-CloudWatchLogs/Resource`, [
-      {
-        id: 'AwsSolutions-IAM5',
-        reason: 'CloudWatch Logs permissions require a wildcard as streams are created dynamically.',
-      },
-    ]);
 
     NagSuppressions.addResourceSuppressions(
       this.role,

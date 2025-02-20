@@ -1,6 +1,9 @@
 import { Checkbox, FormField, Link } from '@cloudscape-design/components';
+import ButtonDropdown from '@cloudscape-design/components/button-dropdown';
 import { useTranslation } from 'react-i18next';
+import { useCarCmdApi } from '../../hooks/useCarsApi';
 import i18next from '../../i18n';
+import { useSelectedEventContext } from '../../store/contexts/storeProvider';
 import { formatAwsDateTime } from '../../support-functions/time';
 
 export const DeviceLink = ({ type, IP, deviceUiPassword, pingStatus }) => {
@@ -34,9 +37,62 @@ export const DeviceLink = ({ type, IP, deviceUiPassword, pingStatus }) => {
     else return '-';
 };
 
-export const ColumnConfiguration = () => {
-  return {
-    defaultVisibleColumns: ['carName', 'fleetName', 'carIp'],
+export const ItemActions = ({ item }) => {
+  const { carFetchLogs, carRestartService, carEmergencyStop, carDeleteAllModels } = useCarCmdApi();
+  const { t } = useTranslation();
+  const selectedEvent = useSelectedEventContext();
+  if (item.PingStatus === 'Online')
+    return (
+      <ButtonDropdown
+        items={[
+          {
+            id: 'fetch-logs',
+            text: t('devices.fetch-logs'),
+          },
+          {
+            id: 'delete-models',
+            text: t('devices.clean-car'),
+          },
+          {
+            id: 'restart-service',
+            text: t('devices.restart-service'),
+          },
+          {
+            id: 'car-stop',
+            text: t('devices.car-stop'),
+          },
+        ]}
+        variant="inline-icon"
+        expandToViewport
+        disabled={item.Type !== 'deepracer'}
+        onItemClick={({ detail }) => {
+          switch (detail.id) {
+            case 'fetch-logs':
+              carFetchLogs([item], selectedEvent);
+              break;
+            case 'delete-models':
+              carDeleteAllModels([item.InstanceId], true);
+              break;
+            case 'restart-service':
+              carRestartService([item.InstanceId]);
+              break;
+            case 'car-stop':
+              carEmergencyStop([item.InstanceId]);
+              break;
+            default:
+              break;
+          }
+        }}
+      />
+    );
+  else return '-';
+};
+
+export const ColumnConfiguration = (
+  visibleColumns = ['carName', 'fleetName', 'carIp', 'deviceLinks', 'coreSWVersion', 'actions']
+) => {
+  const returnObject = {
+    defaultVisibleColumns: visibleColumns,
     visibleContentOptions: [
       {
         label: i18next.t('devices.device-information'),
@@ -62,7 +118,7 @@ export const ColumnConfiguration = () => {
           },
           {
             id: 'deviceLinks',
-            label: 'Access device',
+            label: i18next.t('devices.device-links'),
           },
           {
             id: 'deviceType',
@@ -84,6 +140,18 @@ export const ColumnConfiguration = () => {
             id: 'fleetId',
             label: i18next.t('devices.fleet-id'),
           },
+          {
+            id: 'coreSWVersion',
+            label: i18next.t('devices.core-sw-version'),
+          },
+          {
+            id: 'loggingCapable',
+            label: i18next.t('devices.loggingcapable'),
+          },
+          {
+            id: 'actions',
+            label: i18next.t('devices.actions'),
+          },
         ],
       },
     ],
@@ -92,7 +160,7 @@ export const ColumnConfiguration = () => {
         id: 'instanceId',
         header: i18next.t('devices.instance'),
         cell: (item) => item.InstanceId,
-        sortingField: 'key',
+        sortingField: 'InstanceId',
         width: 200,
         minWidth: 150,
       },
@@ -100,7 +168,7 @@ export const ColumnConfiguration = () => {
         id: 'carName',
         header: i18next.t('devices.host-name'),
         cell: (item) => item.ComputerName || '-',
-        sortingField: 'carName',
+        sortingField: 'ComputerName',
         width: 200,
         minWidth: 150,
       },
@@ -116,7 +184,12 @@ export const ColumnConfiguration = () => {
         id: 'carIp',
         header: i18next.t('devices.car-ip'),
         cell: (item) => item.IpAddress || '-',
-        sortingField: 'carIp',
+        sortingField: 'IpAddress',
+        sortingComparator: (a, b) => {
+          const ipToNum = (ip) =>
+            ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0);
+          return ipToNum(a.IpAddress) - ipToNum(b.IpAddress);
+        },
         width: 200,
         minWidth: 150,
       },
@@ -131,42 +204,69 @@ export const ColumnConfiguration = () => {
             pingStatus={item.PingStatus}
           />
         ),
-        sortingField: 'deviceLinks',
-        width: 200,
-        minWidth: 150,
+        width: 150,
+        minWidth: 100,
       },
       {
         id: 'deviceType',
         header: i18next.t('devices.type'),
         cell: (item) => item.Type || '-',
-        sortingField: 'deviceType',
+        sortingField: 'Type',
+        width: 150,
+        minWidth: 100,
       },
       {
         id: 'agentVersion',
         header: i18next.t('devices.agent-version'),
         cell: (item) => item.AgentVersion || '-',
-        sortingField: 'agentVersion',
+        sortingField: 'AgentVersion',
+        width: 150,
+        minWidth: 100,
       },
       {
         id: 'registrationDate',
         header: i18next.t('devices.registration-date'),
         cell: (item) => formatAwsDateTime(item.RegistrationDate) || '-',
-        sortingField: 'registrationDate',
+        sortingField: 'RegistrationDate',
       },
       {
         id: 'lastPingDateTime',
         header: i18next.t('devices.last-ping-time'),
         cell: (item) => formatAwsDateTime(item.LastPingDateTime) || '-',
-        sortingField: 'lastPingDateTime',
+        sortingField: 'LastPingDateTime',
       },
       {
         id: 'fleetId',
         header: i18next.t('devices.fleet-id'),
         cell: (item) => item.fleetId || '-',
-        sortingField: 'fleetId',
+        sortingField: 'fleet-id',
+      },
+      {
+        id: 'coreSWVersion',
+        header: i18next.t('devices.core-sw-version'),
+        cell: (item) => item.DeepRacerCoreVersion || '-',
+        sortingField: 'DeepRacerCoreVersion',
+        minWidth: 175,
+        width: 250,
+      },
+      {
+        id: 'loggingCapable',
+        header: i18next.t('devices.loggingcapable'),
+        cell: (item) => (item.LoggingCapable ? 'Yes' : 'No'),
+        minWidth: 100,
+        width: 150,
+      },
+      {
+        id: 'actions',
+        header: '',
+        cell: (item) => <ItemActions item={item} />,
       },
     ],
   };
+  returnObject.defaultSortingColumn = returnObject.columnDefinitions[1]; // uploadedDateTime
+  returnObject.defaultSortingIsDescending = false;
+
+  return returnObject;
 };
 
 export const FilteringProperties = () => {
@@ -184,6 +284,11 @@ export const FilteringProperties = () => {
     {
       key: 'IpAddress',
       propertyLabel: i18next.t('devices.car-ip'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'CoreSWVersion',
+      propertyLabel: i18next.t('devices.core-sw-version'),
       operators: [':', '!:', '=', '!='],
     },
     {

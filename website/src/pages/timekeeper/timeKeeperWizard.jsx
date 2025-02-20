@@ -5,16 +5,15 @@ import {
   Form,
   Modal,
   SpaceBetween,
-  Wizard
+  Wizard,
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import WithEventSelected from '../../components/WithEventSelected';
 import * as mutations from '../../graphql/mutations';
+import { useCarCmdApi } from '../../hooks/useCarsApi';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-// import * as queries from '../../graphql/queries';
-// import * as subscriptions from '../../graphql/subscriptions'
 import useMutation from '../../hooks/useMutation';
 import {
   useSelectedEventContext,
@@ -32,16 +31,28 @@ import { defaultRace } from './support-functions/raceDomain';
 
 const LocalTimekeeperWizard = () => {
   const { t } = useTranslation();
-  const [activeStepIndex, setActiveStepIndex] = useLocalStorage('DREM-timekeeper-activeStepIndex', 0);
-  const [previousStepIndex, setPreviousStepIndex] = useLocalStorage('DREM-timekeeper-previousStepIndex', 0);
+  const { carFetchLogs } = useCarCmdApi();
+  const [activeStepIndex, setActiveStepIndex] = useLocalStorage(
+    'DREM-timekeeper-activeStepIndex',
+    0
+  );
+  const [previousStepIndex, setPreviousStepIndex] = useLocalStorage(
+    'DREM-timekeeper-previousStepIndex',
+    0
+  );
   const [raceConfig, setRaceConfig] = useLocalStorage('DREM-timekeeper-race-config', {});
   const [race, setRace] = useLocalStorage('DREM-timekeeper-current-race', defaultRace);
-  const [fastestLap, SetFastestLap] = useState([]);
+  const [fetchLogsEnable, setFetchLogsEnable] = useState(false);
+  const [fetchLogs, setFetchLogs] = useState(false);
+  const [fastestLap, setFastestLap] = useState([]);
   const [fastestAverageLap, setFastestAverageLap] = useState([]);
   const selectedEvent = useSelectedEventContext();
   const selectedTrack = useSelectedTrackContext();
   const [selectedModels, setSelectedModels] = useState([]);
-  const [clearModelsOnCarToggle, setClearModelsOnCarToggle] = useLocalStorage('DREM-timekeeper-clearModelsOnCarToggle', true);
+  const [clearModelsOnCarToggle, setClearModelsOnCarToggle] = useLocalStorage(
+    'DREM-timekeeper-clearModelsOnCarToggle',
+    true
+  );
   const [selectedCars, setSelectedCars] = useState([]);
   const [errorText, setErrorText] = useState('');
   const [isLoadingNextStep, setIsLoadingNextStep] = useState(false);
@@ -50,12 +61,15 @@ const LocalTimekeeperWizard = () => {
   const messageDisplayTime = 4000;
   const notificationId = '';
   const [warningModalVisible, setWarningModalVisible] = useState(false);
+  const [startTime, setStartTime] = useState(() => {
+    new Date();
+  });
 
   // delete models from Cars
   async function carDeleteAllModels() {
     const InstanceIds = selectedCars.map((i) => i.InstanceId);
 
-    const response = await API.graphql({
+    await API.graphql({
       query: mutations.carDeleteAllModels,
       variables: { resourceIds: InstanceIds },
     });
@@ -66,14 +80,14 @@ const LocalTimekeeperWizard = () => {
     if (activeStepIndex === 4) {
       setIsLoadingNextStep(true);
     }
-  },[activeStepIndex])
+  }, [activeStepIndex]);
 
   useEffect(() => {
-    console.log("username:", race.username)
-    setSelectedModels([])
-  },[race.username])
+    console.log('username:', race.username);
+    setSelectedModels([]);
+  }, [race.username]);
 
-  const [, dispatch] = useStore();
+  const [state, dispatch] = useStore();
   // change event info and race config when a user select another event
   useEffect(() => {
     if (selectedEvent.eventId !== race.eventId) {
@@ -84,6 +98,7 @@ const LocalTimekeeperWizard = () => {
       const modifiedRace = { ...race, eventId: selectedEvent.eventId };
       setRace(modifiedRace);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedEvent, selectedTrack, setRace, setRaceConfig]);
 
   // Reset the timekeeper when navigating away from the timekeeper
@@ -95,6 +110,7 @@ const LocalTimekeeperWizard = () => {
       setIsModalOpen(false);
       setRace(defaultRace);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -103,10 +119,11 @@ const LocalTimekeeperWizard = () => {
 
   // Ensures Laps are cleared when wizard is reset.
   useEffect(() => {
-    if (race.username === null){
+    if (race.username === null) {
       race.laps = [];
     }
-  }, [race.username])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [race.username]);
 
   // Find the fastest lap and fastest average window
   useEffect(() => {
@@ -127,12 +144,28 @@ const LocalTimekeeperWizard = () => {
         const obj = validLaps.find((o) => {
           return o.time === res;
         });
-        SetFastestLap([obj]);
+        setFastestLap([obj]);
+
+        // Find if any car is able to log
+        if (!fetchLogsEnable) {
+          validLaps.some((lap) => {
+            const car = state.cars.cars.find((car) => {
+              return car.ComputerName === lap.carName && car.LoggingCapable;
+            });
+            if (car) {
+              setFetchLogsEnable(true);
+              setFetchLogs(true);
+              return true;
+            } else {
+              return false;
+            }
+          });
+        }
       } else {
-        SetFastestLap([]);
+        setFastestLap([]);
       }
     } else {
-      SetFastestLap([]);
+      setFastestLap([]);
     }
 
     race.averageLaps = getAverageWindows(race.laps, raceConfig.averageLapsWindow);
@@ -144,7 +177,8 @@ const LocalTimekeeperWizard = () => {
     } else {
       setFastestAverageLap([]);
     }
-    console.info("Find the fastest lap and fastest average window:", race);
+    console.info('Find the fastest lap and fastest average window:', race);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [race.laps]);
 
   // handlers functions
@@ -158,7 +192,7 @@ const LocalTimekeeperWizard = () => {
   };
 
   const raceIsDoneHandler = () => {
-    setIsLoadingNextStep(false)
+    setIsLoadingNextStep(false);
     setPreviousStepIndex(5);
     setActiveStepIndex(5);
   };
@@ -173,9 +207,11 @@ const LocalTimekeeperWizard = () => {
     console.info('Reset Race Handler');
     setRace(defaultRace);
     setRaceConfig({});
-    SetFastestLap([]);
+    setFastestLap([]);
     setFastestAverageLap([]);
-    setErrorText("");
+    setErrorText('');
+    setFetchLogsEnable(false);
+    setFetchLogs(false);
 
     setPreviousStepIndex(0);
     setActiveStepIndex(0);
@@ -188,28 +224,32 @@ const LocalTimekeeperWizard = () => {
   };
 
   async function handleOnNavigate(detail) {
-    console.log("handleOnNavigate", detail);
+    console.log('handleOnNavigate', detail);
     if (activeStepIndex === 0 && race.username === null) {
       // console.log("race", race);
-      setErrorText(t("timekeeper.wizard.select-racer-error"));
-    } else if (activeStepIndex === 1 && selectedCars.length === 0 && detail.reason === "next") {
-      setErrorText(t("timekeeper.wizard.no-car-selected-error"));
-    } else if (activeStepIndex === 2 && selectedModels.length === 0 && detail.reason === "next") {
-      setErrorText(t("timekeeper.wizard.no-models-selected-error"));
-    } else if (activeStepIndex === 2 && selectedModels.length > 0 && detail.reason === "next" && clearModelsOnCarToggle) {
+      setErrorText(t('timekeeper.wizard.select-racer-error'));
+    } else if (activeStepIndex === 1 && selectedCars.length === 0 && detail.reason === 'next') {
+      setErrorText(t('timekeeper.wizard.no-car-selected-error'));
+    } else if (activeStepIndex === 2 && selectedModels.length === 0 && detail.reason === 'next') {
+      setErrorText(t('timekeeper.wizard.no-models-selected-error'));
+    } else if (
+      activeStepIndex === 2 &&
+      selectedModels.length > 0 &&
+      detail.reason === 'next' &&
+      clearModelsOnCarToggle
+    ) {
       setIsModalOpen(true);
-    }
-    else if (detail.reason === "previous") {
-      console.log("previous");
-      setIsLoadingNextStep(false)
-      setPreviousStepIndex(previousStepIndex - 1)
-      setActiveStepIndex(previousStepIndex)
-      setErrorText("");
+    } else if (detail.reason === 'previous') {
+      console.log('previous');
+      setIsLoadingNextStep(false);
+      setPreviousStepIndex(previousStepIndex - 1);
+      setActiveStepIndex(previousStepIndex);
+      setErrorText('');
     } else {
-      setIsLoadingNextStep(false)
+      setIsLoadingNextStep(false);
       setPreviousStepIndex(activeStepIndex);
-      setActiveStepIndex(detail.requestedStepIndex)
-      setErrorText("");
+      setActiveStepIndex(detail.requestedStepIndex);
+      setErrorText('');
     }
   }
 
@@ -222,11 +262,12 @@ const LocalTimekeeperWizard = () => {
         resetRacehandler();
       }, messageDisplayTime);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [errorMessage, loading]);
 
   const submitRaceHandler = async () => {
     //SetButtonsIsDisabled(true);
-    console.log("race:", race);
+    console.log('race:', race);
 
     sendMutation('updateOverlayInfo', {
       eventId: race.eventId,
@@ -240,6 +281,27 @@ const LocalTimekeeperWizard = () => {
       raceStatus: 'RACE_SUBMITTED',
     });
     sendMutation('addRace', { ...race });
+
+    if (fetchLogs) {
+      const uniqueCars = new Set();
+      race.laps.forEach((lap) => {
+        const car = state.cars.cars.find((car) => {
+          return car.ComputerName === lap.carName && car.LoggingCapable;
+        });
+        if (car) {
+          uniqueCars.add(car);
+        }
+      });
+
+      console.debug(Array.from(uniqueCars));
+
+      carFetchLogs(
+        uniqueCars,
+        { eventId: race.eventId, eventName: raceConfig.eventName },
+        new Date(startTime.getTime()).toISOString(),
+        race.username
+      );
+    }
   };
 
   const discardRaceHandler = () => {
@@ -265,179 +327,190 @@ const LocalTimekeeperWizard = () => {
     { text: t('home.breadcrumb'), href: '/' },
     { text: t('operator.breadcrumb'), href: '/admin/home' },
     { text: t('topnav.time-keeper-wizard'), href: '/admin/timekeeper-wizard' },
-  ]
+  ];
 
   // JSX
-  return <>
-    <Modal
-      onDismiss={() => {
-        setIsModalOpen(false);
-      }}
-      visible={isModalOpen}
-      closeAriaLabel={t('carmodelupload.close-modal-ari-label')}
-      footer={
-        <Box float="right">
-          <SpaceBetween direction="horizontal" size="xs">
-            <Button
-              variant="link"
-              onClick={() => {
-                setIsModalOpen(false);
-              }}
-            >
-              {t('button.cancel')}
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => {
-                carDeleteAllModels();
-                setIsModalOpen(false);
-                setPreviousStepIndex(2);
-                setActiveStepIndex(3);
-                setErrorText("");
-              }}
-            >
-              {t('carmodelupload.header-delete-upload')}
-            </Button>
-          </SpaceBetween>
-        </Box>
-      }
-      header={t('carmodelupload.header-delete')}
-    >
-      {t('carmodelupload.header-delete-confirm')}: <br></br>{' '}
-      {selectedCars.map((selectedCars) => {
-        return selectedCars.ComputerName + ' ';
-      })}
-    </Modal>
+  return (
+    <>
+      <Modal
+        onDismiss={() => {
+          setIsModalOpen(false);
+        }}
+        visible={isModalOpen}
+        closeAriaLabel={t('carmodelupload.close-modal-ari-label')}
+        footer={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                variant="link"
+                onClick={() => {
+                  setIsModalOpen(false);
+                }}
+              >
+                {t('button.cancel')}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  carDeleteAllModels();
+                  setIsModalOpen(false);
+                  setPreviousStepIndex(2);
+                  setActiveStepIndex(3);
+                  setErrorText('');
+                }}
+              >
+                {t('carmodelupload.header-delete-upload')}
+              </Button>
+            </SpaceBetween>
+          </Box>
+        }
+        header={t('carmodelupload.header-delete')}
+      >
+        {t('carmodelupload.header-delete-confirm')}: <br></br>{' '}
+        {selectedCars.map((selectedCars) => {
+          return selectedCars.ComputerName + ' ';
+        })}
+      </Modal>
 
-    <Modal
-      onDismiss={() => setWarningModalVisible(false)}
-      visible={warningModalVisible}
-      closeAriaLabel="Warning"
-      footer={
-        <Box float="right">
-          <SpaceBetween direction="horizontal" size="xs">
-            <Button
-              variant="secondary"
-              disabled={false} 
-              onClick={() => setWarningModalVisible(false)}
-            >
-              {t('button.cancel')}
-            </Button>
-            <Button variant="primary" disabled={false} onClick={discardRaceHandler}>
-              {t('timekeeper.end-session.discard-race')}
-            </Button>
-          </SpaceBetween>
-        </Box>
-      }
-      header="Warning!"
-    >
-      {t('timekeeper.end-session.warning-message')}
-    </Modal>
+      <Modal
+        onDismiss={() => setWarningModalVisible(false)}
+        visible={warningModalVisible}
+        closeAriaLabel="Warning"
+        footer={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                variant="secondary"
+                disabled={false}
+                onClick={() => setWarningModalVisible(false)}
+              >
+                {t('button.cancel')}
+              </Button>
+              <Button variant="primary" disabled={false} onClick={discardRaceHandler}>
+                {t('timekeeper.end-session.discard-race')}
+              </Button>
+            </SpaceBetween>
+          </Box>
+        }
+        header="Warning!"
+      >
+        {t('timekeeper.end-session.warning-message')}
+      </Modal>
 
-    <BreadcrumbGroup items={breadcrumbs} ariaLabel="Breadcrumbs" />
-    <Form errorText={errorText}>
-      <Wizard
+      <BreadcrumbGroup items={breadcrumbs} ariaLabel="Breadcrumbs" />
+      <Form errorText={errorText}>
+        <Wizard
           i18nStrings={{
-          stepNumberLabel: (stepNumber) => `Step ${stepNumber}`,
-          collapsedStepsLabel: (stepNumber, stepsCount) =>
-            `Step ${stepNumber} of ${stepsCount}`,
-          skipToButtonLabel: (step, stepNumber) => `Skip to ${step.title}`,
-          navigationAriaLabel: t("common.steps"),
-          cancelButton: t("button.cancel"),
-          previousButton: t("button.previous"),
-          nextButton: t("button.next"),
-          submitButton: t("button.submit-race"),
-          optional: t("button.optional"),
-        }}
-        onNavigate={({ detail }) => handleOnNavigate(detail)}
-        onSubmit={({ detail }) => {
-          console.log("Submit Race");
-          submitRaceHandler();
-        }}
-        onCancel={() => {
-          // console.log("Reset Wizard")
-          confirmResetRacehandler();
-        }}
-        activeStepIndex={activeStepIndex}
-        isLoadingNextStep={isLoadingNextStep}
-        allowSkipTo={true}
-        steps={[
-          {
-            title: t("timekeeper.wizard.select-racer"),
-            content: (
-              <RaceSetupPage race={race} setRace={setRace}/>
-            ),
-            isOptional: false,
-          },
-          {
-            title: t("timekeeper.wizard.select-car"),
-            content: (
-              <CarSelector query={{
-                tokens: [{ propertyKey: 'fleetName', value: selectedTrack.fleetId, operator: '=' }],
-                operation: 'and',
-              }}
-              selectedCars={selectedCars} setSelectedCars={setSelectedCars}/>
-            ),
-            isOptional: true,
-          },
-          {
-            title: t("timekeeper.wizard.select-models"),
-            content: (
-              <ModelSelector query={{
-                tokens: [{ propertyKey: 'username', value: race.username, operator: '=' }],
-                operation: 'and',
-              }}
-              selectedModels={selectedModels}
-              setSelectedModels={setSelectedModels}
-              clearModelsOnCarToggle={clearModelsOnCarToggle}
-              setClearModelsOnCarToggle={setClearModelsOnCarToggle}
-              />
-            ),
-            isOptional: true,
-          },
-          {
-            title: t("timekeeper.wizard.upload-progress"),
-            content: (
-              <UploadModelToCar cars={selectedCars} event={selectedEvent} modelsToUpload={selectedModels}/>
-            ),
-            isOptional: true,
-          },
-          {
-            title: t("timekeeper.wizard.timekeeper"),
-            content: (
-              <RacePage
-                raceInfo={race}
-                setRaceInfo={raceInfoHandler}
-                fastestLap={fastestLap}
-                fastestAverageLap={fastestAverageLap}
-                raceConfig={raceConfig}
-                onNext={raceIsDoneHandler}
-                selectedCar={selectedCars[0]}
-              />
-            ),
-            isOptional: false,
-          },
-          {
-            title: t("timekeeper.wizard.submit-race"),
-            content: (
-              <RaceFinishPage
-                eventName={raceConfig.eventName}
-                raceInfo={race}
-                fastestLap={fastestLap}
-                fastestAverageLap={fastestAverageLap}
-                raceConfig={raceConfig}
-                onAction={actionHandler}
-                onNext={resetRacehandler}
-                submitRaceHandler={submitRaceHandler}
-                discardRaceHandler={discardRaceHandler}
-              />
-            ),
-            isOptional: false,
-          },
-        ]}
-      />
-    </Form>
-  </>;
+            stepNumberLabel: (stepNumber) => `Step ${stepNumber}`,
+            collapsedStepsLabel: (stepNumber, stepsCount) => `Step ${stepNumber} of ${stepsCount}`,
+            skipToButtonLabel: (step, stepNumber) => `Skip to ${step.title}`,
+            navigationAriaLabel: t('common.steps'),
+            cancelButton: t('button.cancel'),
+            previousButton: t('button.previous'),
+            nextButton: t('button.next'),
+            submitButton: t('button.submit-race'),
+            optional: t('button.optional'),
+          }}
+          onNavigate={({ detail }) => handleOnNavigate(detail)}
+          onSubmit={({ detail }) => {
+            console.log('Submit Race');
+            submitRaceHandler();
+          }}
+          onCancel={() => {
+            // console.log("Reset Wizard")
+            confirmResetRacehandler();
+          }}
+          activeStepIndex={activeStepIndex}
+          isLoadingNextStep={isLoadingNextStep}
+          allowSkipTo={true}
+          steps={[
+            {
+              title: t('timekeeper.wizard.select-racer'),
+              content: <RaceSetupPage race={race} setRace={setRace} />,
+              isOptional: false,
+            },
+            {
+              title: t('timekeeper.wizard.select-car'),
+              content: (
+                <CarSelector
+                  query={{
+                    tokens: [
+                      { propertyKey: 'fleetName', value: selectedTrack.fleetId, operator: '=' },
+                    ],
+                    operation: 'and',
+                  }}
+                  selectedCars={selectedCars}
+                  setSelectedCars={setSelectedCars}
+                />
+              ),
+              isOptional: true,
+            },
+            {
+              title: t('timekeeper.wizard.select-models'),
+              content: (
+                <ModelSelector
+                  query={{
+                    tokens: [{ propertyKey: 'username', value: race.username, operator: '=' }],
+                    operation: 'and',
+                  }}
+                  selectedModels={selectedModels}
+                  setSelectedModels={setSelectedModels}
+                  clearModelsOnCarToggle={clearModelsOnCarToggle}
+                  setClearModelsOnCarToggle={setClearModelsOnCarToggle}
+                />
+              ),
+              isOptional: true,
+            },
+            {
+              title: t('timekeeper.wizard.upload-progress'),
+              content: (
+                <UploadModelToCar
+                  cars={selectedCars}
+                  event={selectedEvent}
+                  modelsToUpload={selectedModels}
+                />
+              ),
+              isOptional: true,
+            },
+            {
+              title: t('timekeeper.wizard.timekeeper'),
+              content: (
+                <RacePage
+                  raceInfo={race}
+                  setRaceInfo={raceInfoHandler}
+                  fastestLap={fastestLap}
+                  fastestAverageLap={fastestAverageLap}
+                  raceConfig={raceConfig}
+                  onNext={raceIsDoneHandler}
+                  selectedCar={selectedCars[0]}
+                  setStartTime={setStartTime}
+                />
+              ),
+              isOptional: false,
+            },
+            {
+              title: t('timekeeper.wizard.submit-race'),
+              content: (
+                <RaceFinishPage
+                  eventName={raceConfig.eventName}
+                  raceInfo={race}
+                  fastestLap={fastestLap}
+                  fastestAverageLap={fastestAverageLap}
+                  raceConfig={raceConfig}
+                  onAction={actionHandler}
+                  discardRaceHandler={discardRaceHandler}
+                  fetchLogsEnable={fetchLogsEnable}
+                  fetchLogs={fetchLogs}
+                  setFetchLogs={setFetchLogs}
+                />
+              ),
+              isOptional: false,
+            },
+          ]}
+        />
+      </Form>
+    </>
+  );
 };
 
-export const TimekeeperWizard = WithEventSelected(LocalTimekeeperWizard)
+export const TimekeeperWizard = WithEventSelected(LocalTimekeeperWizard);
