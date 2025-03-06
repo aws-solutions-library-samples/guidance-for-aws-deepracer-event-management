@@ -45,7 +45,9 @@ export const RacePage = ({
 }) => {
   const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-page']);
   const [state] = useStore();
-  const cars = [defaultCar].concat(state.cars.cars.filter((car) => car.PingStatus === 'Online'));
+  const cars = [defaultCar].concat(
+    state.cars.cars.filter((car) => car.PingStatus === 'Online' && car.Type === 'deepracer')
+  );
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const [currentLap, SetCurrentLap] = useState(defaultLap);
   const lapsForOverlay = useRef([]);

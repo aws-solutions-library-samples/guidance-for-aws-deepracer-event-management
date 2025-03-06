@@ -146,7 +146,7 @@ export class CarManager extends Construct {
     });
     const car_status_update_SM = new stepFunctions.StateMachine(this, 'CarStatusUpdater', {
       definition: definition,
-      timeout: Duration.minutes(3),
+      timeout: Duration.minutes(9),
       tracingEnabled: true,
       logs: {
         destination: car_status_update_SM_log_group,

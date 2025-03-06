@@ -2,35 +2,33 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import {
-  Button
-} from '@cloudscape-design/components';
+import { Button } from '@cloudscape-design/components';
 
 import { PageTable } from '../../../components/pageTable';
+import { EmptyState, TableHeader } from '../../../components/tableConfig';
+
 import {
-  EmptyState,
-  TableHeader
-} from '../../../components/tableConfig';
-
-
-import { ColumnConfiguration, FilteringProperties } from '../../../components/devices-table/deviceTableConfig';
+  ColumnConfiguration,
+  FilteringProperties,
+} from '../../../components/devices-table/deviceTableConfig';
 import { useStore } from '../../../store/store';
 
-
-export const CarSelector = ({ 
+export const CarSelector = ({
   query = { tokens: [], operation: 'and' },
   selectedCars,
-  setSelectedCars
- }) => {
+  setSelectedCars,
+}) => {
   const { t } = useTranslation();
 
   const [state] = useStore();
-  const cars = state.cars.cars.filter((car) => car.PingStatus === 'Online');
-  const enrichedCars = cars.map(car => {
+  const cars = state.cars.cars.filter(
+    (car) => car.PingStatus === 'Online' && car.Type === 'deepracer'
+  );
+  const enrichedCars = cars.map((car) => {
     car['key'] = car['InstanceId'];
     console.log('car:', car);
-    return car
- })
+    return car;
+  });
 
   const columnConfiguration = ColumnConfiguration();
   const filteringProperties = FilteringProperties();
@@ -69,21 +67,21 @@ export const CarSelector = ({
 
   return (
     <PageTable
-    selectedItems={selectedCars}
-    setSelectedItems={setSelectedCars}
-    tableItems={items}
-    selectionType="single"
-    columnConfiguration={columnConfiguration}
-    trackBy="modelId"
-    sortingColumn="uploadedDateTime"
-    header={tabeleHeaderContent}
-    itemsIsLoading={false}
-    //isItemDisabled={(item) => !['AVAILABLE', 'OPTIMIZED'].includes(item.status)}
-    loadingText={t('cars.loading-models')}
-    localStorageKey="cars-table-preferences"
-    filteringProperties={filteringProperties}
-    filteringI18nStringsName="cars"
-    query={query}
-  />
+      selectedItems={selectedCars}
+      setSelectedItems={setSelectedCars}
+      tableItems={items}
+      selectionType="single"
+      columnConfiguration={columnConfiguration}
+      trackBy="modelId"
+      sortingColumn="uploadedDateTime"
+      header={tabeleHeaderContent}
+      itemsIsLoading={false}
+      //isItemDisabled={(item) => !['AVAILABLE', 'OPTIMIZED'].includes(item.status)}
+      loadingText={t('cars.loading-models')}
+      localStorageKey="cars-table-preferences"
+      filteringProperties={filteringProperties}
+      filteringI18nStringsName="cars"
+      query={query}
+    />
   );
 };

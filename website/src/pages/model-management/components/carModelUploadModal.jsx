@@ -231,7 +231,9 @@ export const CarModelUploadModal = ({ modelsToUpload }) => {
   const [modernToggleLabel, setModernToggleLabel] = useState();
   const [modernToggleSelectionType, setModernToggleSelectionType] = useState('single');
   const selectedEvent = useSelectedEventContext();
-  const cars = state.cars.cars.filter((car) => car.PingStatus === 'Online');
+  const cars = state.cars.cars.filter(
+    (car) => car.PingStatus === 'Online' && car.Type === 'deepracer'
+  );
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState(false);
 
   const [columnConfiguration] = useState(() =>
