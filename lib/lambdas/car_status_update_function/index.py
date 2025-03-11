@@ -1,79 +1,47 @@
 import os
+import time
 
 import boto3
+from appsync_helpers import send_mutation
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
-from appsync_helpers import send_mutation
-
 
 tracer = Tracer()
 logger = Logger()
-
-# EVENTS_DDB_TABLE_NAME = os.environ["DDB_TABLE"]
-# dynamodb = boto3.resource("dynamodb")
-# ddbTable = dynamodb.Table(EVENTS_DDB_TABLE_NAME)
 client_ssm = boto3.client("ssm")
+
+UNKNOWN_VERSION = "Unknown Version"
+MINIMUM_LOGGING_VERSION = [2, 1, 2, 7]
 
 
 @logger.inject_lambda_context
 @tracer.capture_lambda_handler
 def lambda_handler(event: dict, context: LambdaContext):
     result = {}
+    start_time = time.time()
+
     try:
+        logger.info(
+            f"Processing {len(event['Instances']['InstanceInformationList'])} instances"
+        )
         instances = event["Instances"]["InstanceInformationList"]
 
         for instance in instances:
-            # get SW version from SSM
-            response = client_ssm.list_inventory_entries(
-                InstanceId=instance["InstanceId"],
-                TypeName="AWS:Application",
-                Filters=[{"Key": "Name", "Values": ["aws-deepracer-core"]}],
-            )
-            logger.debug(response)
 
-            instance["DeepRacerCoreVersion"] = "Unknown Version"
-            for entry in response.get("Entries", []):
-                if entry.get("Name") == "aws-deepracer-core":
-                    instance["DeepRacerCoreVersion"] = entry.get(
-                        "Version", "Unknown Version"
-                    )
-                    break
-
-            instance["LoggingCapable"] = False
             try:
-                version_str = instance["DeepRacerCoreVersion"].split("+")[0]
-                version_parts = list(map(int, version_str.split(".")))
-                if version_parts >= [2, 1, 2, 7]:
-                    instance["LoggingCapable"] = True
-            except ValueError:
-                pass
+                if instance["PingStatus"] != "ConnectionLost":
+                    # Get core version info and check logging capability
+                    fetch_deepracer_core_version_and_check_logging(instance)
 
-            # get tags from SSM
-            tags_response = client_ssm.list_tags_for_resource(
-                ResourceType="ManagedInstance",
-                ResourceId=instance["InstanceId"],
-            )
-            logger.debug(tags_response)
+                    # Get and process tags
+                    fetch_and_process_tags(instance)
 
-            # list of tags that we copy from SSM to DynamoBD table
-            tag_keys_to_copy = [
-                "fleetName",
-                "fleetId",
-                "DeviceUiPassword",
-                "Type",
-            ]
-            for tag in tags_response["TagList"]:
-                if tag["Key"] in tag_keys_to_copy:
-                    instance[tag["Key"]] = tag["Value"]
-
-            # delete all keys in instance containing 'Association'
-            keys_to_delete = [
-                key
-                for key in instance.keys()
-                if "Association" in key or "Source" in key
-            ]
-            for key in keys_to_delete:
-                del instance[key]
+                # Clean up instance data
+                clean_instance_data(instance)
+            except Exception as e:
+                logger.warning(
+                    f"Error processing instance {instance['InstanceId']}: {e}"
+                )
 
         logger.info(instances)
         send_status_update(instances)
@@ -83,11 +51,108 @@ def lambda_handler(event: dict, context: LambdaContext):
         else:
             result = {"result": "success"}
 
+        logger.info(
+            f"Successfully processed all instances in {time.time() - start_time:.2f} seconds"
+        )
     except Exception as e:
-        logger.exception(e)
-        result = {"result": "error"}
+        logger.exception(f"Error processing instances: {e}")
+        result = {"result": "error", "message": str(e)}
 
     return result
+
+
+def fetch_deepracer_core_version_and_check_logging(instance):
+    """Fetch DeepRacer core version from SSM inventory and check logging capability."""
+    # Set default values
+    instance["DeepRacerCoreVersion"] = UNKNOWN_VERSION
+    instance["LoggingCapable"] = False
+
+    try:
+        # Fetch version from inventory
+        response = client_ssm.list_inventory_entries(
+            InstanceId=instance["InstanceId"],
+            TypeName="AWS:Application",
+            Filters=[{"Key": "Name", "Values": ["aws-deepracer-core"]}],
+        )
+        logger.debug(response)
+
+        # Process version information
+        for entry in response.get("Entries", []):
+            if entry.get("Name") == "aws-deepracer-core":
+                version = entry.get("Version", UNKNOWN_VERSION)
+                instance["DeepRacerCoreVersion"] = version
+
+                # Check logging capability based on version
+                if version != UNKNOWN_VERSION:
+                    try:
+                        version_str = version.split("+")[0]
+                        version_parts = list(map(int, version_str.split(".")))
+                        if version_parts >= MINIMUM_LOGGING_VERSION:
+                            instance["LoggingCapable"] = True
+                    except ValueError:
+                        pass
+                break
+    except Exception as e:
+        logger.warning(f"Error fetching DeepRacer core version: {e}")
+
+
+def fetch_and_process_tags(instance):
+    """Fetch and process tags from SSM."""
+    tags_response = client_ssm.list_tags_for_resource(
+        ResourceType=instance["ResourceType"],
+        ResourceId=instance["InstanceId"],
+    )
+    logger.debug(tags_response)
+
+    tag_keys_to_copy = [
+        "fleetName",
+        "fleetId",
+        "DeviceUiPassword",
+        "Type",
+    ]
+    for tag in tags_response["TagList"]:
+        if tag["Key"] in tag_keys_to_copy:
+            instance[tag["Key"]] = tag["Value"]
+
+
+def clean_instance_data(instance):
+    """Clean up instance data by keeping only the required fields."""
+    # Define the list of fields to keep
+    if instance.get("PingStatus") == "ConnectionLost":
+        # For disconnected instances, only keep minimal information
+        allowed_fields = ["InstanceId", "PingStatus", "LastPingDateTime"]
+    else:
+        # For connected instances, keep all relevant fields
+        allowed_fields = [
+            "InstanceId",
+            "PingStatus",
+            "LastPingDateTime",
+            "AgentVersion",
+            "IsLatestVersion",
+            "PlatformType",
+            "PlatformName",
+            "PlatformVersion",
+            "ActivationId",
+            "IamRole",
+            "RegistrationDate",
+            "ResourceType",
+            "Name",
+            "IpAddress",
+            "ComputerName",
+            "fleetId",
+            "fleetName",
+            "Type",
+            "DeviceUiPassword",
+            "DeepRacerCoreVersion",
+            "LoggingCapable",
+        ]
+
+    # Get a list of keys to delete (keys that aren't in the allowed list)
+    keys_to_delete = [key for key in list(instance.keys()) if key not in allowed_fields]
+
+    # Delete all unwanted keys
+    for key in keys_to_delete:
+        del instance[key]
 
 
 def send_status_update(instances):
