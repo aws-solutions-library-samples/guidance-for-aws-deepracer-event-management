@@ -124,6 +124,12 @@ export class CarManager extends Construct {
       iamResources: ['*'],
       parameters: {
         MaxResults: 50,
+        Filters: [
+          {
+            Key: 'tag:Type',
+            Values: ['deepracer', 'timer'],
+          },
+        ],
         'NextToken.$': '$.NextToken',
       },
       resultPath: '$.Instances',
