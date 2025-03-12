@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime, timedelta
 
 import boto3
 from appsync_helpers import send_mutation
@@ -26,25 +27,40 @@ def lambda_handler(event: dict, context: LambdaContext):
         )
         instances = event["Instances"]["InstanceInformationList"]
 
+        update_instance_data = []
         for instance in instances:
 
             try:
-                if instance["PingStatus"] != "ConnectionLost":
+                if instance["PingStatus"] == "Online":
                     # Get core version info and check logging capability
                     fetch_deepracer_core_version_and_check_logging(instance)
 
                     # Get and process tags
                     fetch_and_process_tags(instance)
 
+                else:
+                    # Skip any update if LastPingDateTime is more than 90 days in the past
+                    last_ping = datetime.strptime(
+                        instance["LastPingDateTime"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                    )
+                    if datetime.utcnow() - last_ping > timedelta(days=90):
+                        logger.info(
+                            f"Instance {instance['InstanceId']} last pinged more than 90 days ago, skipping."
+                        )
+                        continue
+
                 # Clean up instance data
                 clean_instance_data(instance)
+
             except Exception as e:
                 logger.warning(
                     f"Error processing instance {instance['InstanceId']}: {e}"
                 )
 
-        logger.info(instances)
-        send_status_update(instances)
+            update_instance_data.append(instance)
+
+        logger.info(update_instance_data)
+        send_status_update(update_instance_data)
 
         if "NextToken" in event["Instances"]:
             result = {"result": "success", "NextToken": event["Instances"]["NextToken"]}
