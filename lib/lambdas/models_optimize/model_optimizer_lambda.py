@@ -78,6 +78,11 @@ def lambda_handler(event, context):
             model_key,
             os.path.join(constants.APIDefaults.TMP_DIR, model_target_file),
         )
+        # Get the tags of the downloaded file as we'
+        s3_object_tags = client_s3.get_object_tagging(
+            Bucket=src_bucket,
+            Key=model_key
+        )['TagSet']
 
         if not os.path.isdir(model_target_dir):
             os.makedirs(model_target_dir)
@@ -100,9 +105,10 @@ def lambda_handler(event, context):
                 return
 
             try:
-                client_s3.upload_file(archive_file, src_bucket, model_key)
+                #Add the same tags as the downloaded file when uploading the optimized model
+                client_s3.upload_file(archive_file, src_bucket, model_key,ExtraArgs={'Tagging': '&'.join([f"{tag['Key']}={tag['Value']}" for tag in s3_object_tags])})
                 logger.info(
-                    f"Uploading {archive_file} to s3://{src_bucket}/{model_key}"
+                    f"Uploading {archive_file} to s3://{src_bucket}/{model_key} with tags {s3_object_tags}"
                 )
             except ClientError as e:
                 logger.error(f"Error in uploading {archive_file}", e)

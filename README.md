@@ -156,6 +156,8 @@ cdk bootstrap -c email=$EMAIL -c account=$ACCOUNT -c region=$REGION -c source_br
 
 This command creates a CodePipeline pipeline, this pipeline coordinates the build and deployment of all required DREM services.
 
+Note - when deploying DREM in an account for the first time it may fail when creating AWS CodeStar Notifications, as the service-linked role for AWS CodeStar Notifications might not yet exist. Wait a few minutes, and then try again.
+
 ```sh
 make install
 ```
