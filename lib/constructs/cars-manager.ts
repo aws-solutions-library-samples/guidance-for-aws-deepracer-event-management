@@ -151,7 +151,7 @@ export class CarManager extends Construct {
       retention: logs.RetentionDays.SIX_MONTHS,
     });
     const car_status_update_SM = new stepFunctions.StateMachine(this, 'CarStatusUpdater', {
-      definition: definition,
+      definitionBody: stepFunctions.DefinitionBody.fromChainable(definition),
       timeout: Duration.minutes(9),
       tracingEnabled: true,
       logs: {

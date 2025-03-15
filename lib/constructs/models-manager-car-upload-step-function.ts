@@ -72,7 +72,7 @@ export class CarUploadStepFunction extends Construct {
     const mapToDynamo = new stepFunctions.Map(this, 'mapToDynamo', {
       maxConcurrency: 1,
       itemsPath: stepFunctions.JsonPath.stringAt('$.modelData'),
-      parameters: {
+      itemSelector: {
         carInstanceId: stepFunctions.JsonPath.stringAt('$.carInstanceId'),
         carName: stepFunctions.JsonPath.stringAt('$.carName'),
         carFleetId: stepFunctions.JsonPath.stringAt('$.carFleetId'),
@@ -86,7 +86,7 @@ export class CarUploadStepFunction extends Construct {
       },
       resultPath: '$.mapOutput',
     });
-    mapToDynamo.iterator(write_to_dynamo);
+    mapToDynamo.itemProcessor(write_to_dynamo);
 
     // Invoke
     const uploadToCarSFNInvoke = new StandardLambdaPythonFunction(this, 'uploadToCarSFNInvoke', {
@@ -169,7 +169,7 @@ export class CarUploadStepFunction extends Construct {
     const mapToSsm = new stepFunctions.Map(this, 'mapToSsm', {
       maxConcurrency: 1,
       itemsPath: stepFunctions.JsonPath.stringAt('$.modelData'),
-      parameters: {
+      itemSelector: {
         carInstanceId: stepFunctions.JsonPath.stringAt('$.carInstanceId'),
         carName: stepFunctions.JsonPath.stringAt('$.carName'),
         carFleetId: stepFunctions.JsonPath.stringAt('$.carFleetId'),
@@ -198,7 +198,7 @@ export class CarUploadStepFunction extends Construct {
       .otherwise(finish);
 
     // mapToSsm definition
-    mapToSsm.iterator(invokeWithSsm.next(mapToSsmWait).next(statusWithSsm).next(mapToSsmChoiceDefinition));
+    mapToSsm.itemProcessor(invokeWithSsm.next(mapToSsmWait).next(statusWithSsm).next(mapToSsmChoiceDefinition));
 
     // Start Wait
     const startWait = new stepFunctions.Wait(this, 'startWait', {
@@ -209,7 +209,7 @@ export class CarUploadStepFunction extends Construct {
     const definition = startWait.next(mapToDynamo).next(mapToSsm);
 
     this.stepFunction = new stepFunctions.StateMachine(this, 'CarStatusUpdater', {
-      definition: definition,
+      definitionBody: stepFunctions.DefinitionBody.fromChainable(definition),
       tracingEnabled: true,
       timeout: Duration.minutes(10),
       /*logs: {
