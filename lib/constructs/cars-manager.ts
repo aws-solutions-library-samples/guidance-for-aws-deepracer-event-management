@@ -366,6 +366,7 @@ export class CarManager extends Construct {
           'ssm:RemoveTagsFromResource',
           'ssm:SendCommand',
           'ssm:GetCommandInvocation',
+          'ssm:DeregisterManagedInstance',
         ],
         resources: ['*'],
       })
@@ -479,6 +480,18 @@ export class CarManager extends Construct {
         returnType: GraphqlType.awsJson(),
         dataSource: cars_data_source,
         directives: [Directive.cognito('admin', 'operator')],
+      })
+    );
+
+    props.appsyncApi.schema.addMutation(
+      'carsDelete',
+      new ResolvableField({
+        args: {
+          resourceIds: GraphqlType.string({ isList: true, isRequired: true }),
+        },
+        returnType: GraphqlType.awsJson(),
+        dataSource: cars_data_source,
+        directives: [Directive.cognito('admin')],
       })
     );
 

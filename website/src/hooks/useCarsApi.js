@@ -10,6 +10,7 @@ import {
   carDeleteAllModels as carDeleteAllModelsOperation,
   carEmergencyStop as carEmergencyStopOperation,
   carRestartService as carRestartServiceOperation,
+  carsDelete as carsDeleteOperation,
   carSetTaillightColor as carSetTaillightColorOperation,
   carsUpdateFleet as carsUpdateFleetOperation,
   startFetchFromCar,
@@ -20,12 +21,19 @@ export const useCarsApi = (userHasAccess = false) => {
   const { t } = useTranslation();
   const [state, dispatch] = useStore();
   const [reload, setReload] = useState(false);
+  const [offlineCars, setOfflineCars] = useState(false);
 
   useEffect(() => {
     if (state.cars.refresh) {
       setReload((prev) => !prev);
     }
   }, [state.cars.refresh]);
+
+  useEffect(() => {
+    if (state.cars.offlineCars) {
+      setOfflineCars(state.cars.offlineCars);
+    }
+  }, [state.cars.offlineCars]);
 
   // adds an error notification for each API error
   const addErrorNotifications = useCallback(
@@ -59,7 +67,9 @@ export const useCarsApi = (userHasAccess = false) => {
         }
         dispatch('CARS_IS_LOADING', true);
         getCars(true);
-        getCars(false);
+        if (offlineCars) {
+          getCars(false);
+        }
         dispatch('CARS_IS_LOADING', false);
       }
     } catch (error) {
@@ -70,7 +80,7 @@ export const useCarsApi = (userHasAccess = false) => {
     return () => {
       // Unmounting
     };
-  }, [userHasAccess, dispatch, reload, addErrorNotifications]);
+  }, [userHasAccess, dispatch, reload, offlineCars, addErrorNotifications]);
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
@@ -107,9 +117,8 @@ export const useCarCmdApi = () => {
   }, []);
 
   // adds an error notification for each API error
-  const addNotifications = useCallback(
-    (apiMethodName, label, type, dispatch) => {
-      const notificationId = `${apiMethodName}_N${incrementCounter()}`;
+  const createUpdateNotification = useCallback(
+    (label, type, dispatch, notificationId) => {
       dispatch('ADD_NOTIFICATION', {
         header: label,
         type: type,
@@ -120,10 +129,23 @@ export const useCarCmdApi = () => {
           dispatch('DISMISS_NOTIFICATION', notificationId);
         },
       });
-      setTimeout(() => dispatch('DISMISS_NOTIFICATION', notificationId), messageDisplayTime);
+      const timeoutId = setTimeout(
+        () => dispatch('DISMISS_NOTIFICATION', notificationId),
+        messageDisplayTime
+      );
+      return timeoutId;
+    },
+    [t]
+  );
+
+  // adds an error notification for each API error
+  const addNotifications = useCallback(
+    (apiMethodName, label, type, dispatch) => {
+      const notificationId = `${apiMethodName}_N${incrementCounter()}`;
+      createUpdateNotification(label, type, dispatch, notificationId);
       return notificationId;
     },
-    [t, incrementCounter]
+    [incrementCounter, createUpdateNotification]
   );
 
   // fetch label from Cars
@@ -257,6 +279,64 @@ export const useCarCmdApi = () => {
   }
 
   // delete all models on Cars
+  function carsDelete(selectedCars) {
+    // Show info notification during processing
+    const notificationId = `carsDelete_N${incrementCounter()}`;
+    var timeoutId = createUpdateNotification(
+      t('devices.notifications.deletedevice-start', { count: selectedCars.length }),
+      'info',
+      dispatch,
+      notificationId
+    );
+
+    API.graphql(
+      graphqlOperation(carsDeleteOperation, {
+        resourceIds: selectedCars,
+      })
+    )
+      .then((response) => {
+        console.debug('Delete cars response:', response);
+        const deletedCars = JSON.parse(response.data.carsDelete).cars;
+        for (const car of deletedCars) {
+          dispatch('DELETE_CAR', car);
+        }
+        // Dismiss the processing notification
+        clearTimeout(timeoutId);
+
+        if (deletedCars.length !== selectedCars.length) {
+          timeoutId = createUpdateNotification(
+            t('devices.notifications.deletedevice-warning', {
+              count: selectedCars.length,
+              deleted: deletedCars.length,
+            }),
+            'warning',
+            dispatch,
+            notificationId
+          );
+        } else {
+          // Show success notification when complete
+          timeoutId = createUpdateNotification(
+            t('devices.notifications.deletedevice-complete', { count: selectedCars.length }),
+            'success',
+            dispatch,
+            notificationId
+          );
+        }
+      })
+      .catch((error) => {
+        // Dismiss the processing notification
+        clearTimeout(timeoutId);
+        timeoutId = createUpdateNotification(
+          t('devices.notifications.deletedevice-error'),
+          'error',
+          dispatch,
+          notificationId
+        );
+        console.error('Error with deleting cars', error);
+      });
+  }
+
+  // delete all models on Cars
   function carDeleteAllModels(selectedCars, withSystemLogs = false) {
     API.graphql(
       graphqlOperation(carDeleteAllModelsOperation, {
@@ -364,6 +444,7 @@ export const useCarCmdApi = () => {
     carDeleteAllModels,
     carsUpdateFleet,
     carsUpdateTaillightColor,
+    carsDelete,
     getAvailableTaillightColors,
   };
 };

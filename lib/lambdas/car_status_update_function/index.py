@@ -136,7 +136,13 @@ def clean_instance_data(instance):
     # Define the list of fields to keep
     if instance.get("PingStatus") == "ConnectionLost":
         # For disconnected instances, only keep minimal information
-        allowed_fields = ["InstanceId", "PingStatus", "LastPingDateTime"]
+        allowed_fields = [
+            "InstanceId",
+            "PingStatus",
+            "LastPingDateTime",
+            "ComputerName",
+            "RegistrationDate",
+        ]
     else:
         # For connected instances, keep all relevant fields
         allowed_fields = [
