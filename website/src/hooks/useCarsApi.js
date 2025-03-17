@@ -278,7 +278,7 @@ export const useCarCmdApi = () => {
       });
   }
 
-  // delete all models on Cars
+  // delete Cars (or timers)
   function carsDelete(selectedCars) {
     // Show info notification during processing
     const notificationId = `carsDelete_N${incrementCounter()}`;
