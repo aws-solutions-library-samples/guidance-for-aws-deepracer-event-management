@@ -1,6 +1,9 @@
 import { Button, Form, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { useStore } from '../../store/store';
+
 import { useLocation, useNavigate } from 'react-router-dom';
 import { PageLayout } from '../../components/pageLayout';
 import useMutation from '../../hooks/useMutation';
@@ -15,7 +18,7 @@ export const EditFleet = () => {
   const location = useLocation();
   const selectedFleet = location.state;
   const navigate = useNavigate();
-
+  const [state, dispatch] = useStore();
   const [send, loading, errorMessage, data] = useMutation();
   const [createButtonIsDisabled, setCreateButtonIsDisabled] = useState(false);
   const [fleetConfig, setFleetConfig] = useState(fleet);
@@ -26,10 +29,20 @@ export const EditFleet = () => {
     }
   }, [loading, data, errorMessage, navigate]);
 
-  const UpdateConfigHandler = (attr) => {
-    if (Array.isArray(attr.carIds) && attr.carIds.length === 0) {
+  // Ensure that also offline cars are loaded
+  useEffect(() => {
+    if (!state.cars.offlineCars) {
+      (async () => {
+        await dispatch('REFRESH_CARS', true);
+      })();
+    }
+  }, [dispatch, state.cars.offlineCars]);
+
+  const updateConfigHandler = (attr) => {
+    console.debug('EditFleet - Changed Cars - Updating fleetConfig', JSON.stringify(attr));
+    if (Array.isArray(attr.carIds)) {
       setFleetConfig((prevState) => {
-        return { ...prevState, carIds: [] };
+        return { ...prevState, carIds: attr.carIds };
       });
     } else if (attr) {
       setFleetConfig((prevState) => {
@@ -42,15 +55,14 @@ export const EditFleet = () => {
     if (selectedFleet) {
       setFleetConfig(selectedFleet);
     }
-  }, [selectedFleet]);
+  }, [selectedFleet, dispatch, state.cars.offlineCars]);
 
-  const onUpdateHandler = async () => {
-    send('carsUpdateFleet', {
-      resourceIds: fleetConfig.carIds,
-      fleetId: fleetConfig.fleetId,
-      fleetName: fleetConfig.fleetName,
-    });
-    send('updateFleet', fleetConfig);
+  const onSaveHandler = async () => {
+    console.debug('Sending fleet updates', fleetConfig);
+    await send('updateFleet', fleetConfig);
+    setTimeout(async () => {
+      await dispatch('REFRESH_CARS', true);
+    }, 5000);
   };
 
   const formIsValidHandler = () => {
@@ -80,7 +92,7 @@ export const EditFleet = () => {
               </Button>
               <Button
                 variant="primary"
-                onClick={onUpdateHandler}
+                onClick={onSaveHandler}
                 disabled={loading || createButtonIsDisabled}
               >
                 {t('button.save-changes')}
@@ -93,11 +105,11 @@ export const EditFleet = () => {
           <SpaceBetween size="l">
             <GeneralInfoPanel
               {...fleetConfig}
-              onChange={UpdateConfigHandler}
+              onChange={updateConfigHandler}
               onFormIsValid={formIsValidHandler}
               onFormIsInvalid={formIsInvalidHandler}
             />
-            <DevicesPanel onChange={UpdateConfigHandler} {...fleetConfig} />
+            <DevicesPanel onChange={updateConfigHandler} {...fleetConfig} />
           </SpaceBetween>
         </Form>
       </form>
