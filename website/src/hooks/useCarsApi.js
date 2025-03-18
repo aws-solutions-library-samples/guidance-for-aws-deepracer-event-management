@@ -85,6 +85,7 @@ export const useCarsApi = (userHasAccess = false) => {
   // subscribe to data changes and append them to local array
   useEffect(() => {
     if (userHasAccess) {
+      console.debug('Subscribing to onUpdatedCarsStatus');
       const subscription = API.graphql(graphqlOperation(onUpdatedCarsStatus)).subscribe({
         next: (event) => {
           const updatedCars = event.value.data.onUpdatedCarsStatus;
@@ -97,12 +98,15 @@ export const useCarsApi = (userHasAccess = false) => {
       });
 
       return () => {
+        console.debug('Unsubscribing from onUpdatedCarsStatus');
         if (subscription) subscription.unsubscribe();
       };
     }
-  }, [dispatch, addErrorNotifications]);
+  }, [userHasAccess, dispatch, addErrorNotifications]);
 
-  return {};
+  return {
+    isLoading: state.cars.isLoading,
+  };
 };
 
 export const useCarCmdApi = () => {
