@@ -119,7 +119,7 @@ def updateFleet(fleetId: str, fleetName: str, carIds: list[str] = []):
 
     response = ddbTable.update_item(
         Key={"fleetId": fleetId},
-        UpdateExpression="SET fleetName= :newName",
+        UpdateExpression="SET fleetName= :newName, carIds= :carIds",
         ExpressionAttributeValues={
             ":newName": fleetName,
             ":carIds": carIds,
