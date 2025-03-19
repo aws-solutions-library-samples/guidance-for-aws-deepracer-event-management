@@ -2,7 +2,7 @@ import { API, graphqlOperation } from 'aws-amplify';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { listCars } from '../graphql/queries';
-import { onUpdatedCarsStatus } from '../graphql/subscriptions';
+import { onUpdatedCarsInfo } from '../graphql/subscriptions';
 import { useStore } from '../store/store';
 
 import { useRef } from 'react';
@@ -85,20 +85,20 @@ export const useCarsApi = (userHasAccess = false) => {
   // subscribe to data changes and append them to local array
   useEffect(() => {
     if (userHasAccess) {
-      console.debug('Subscribing to onUpdatedCarsStatus');
-      const subscription = API.graphql(graphqlOperation(onUpdatedCarsStatus)).subscribe({
+      console.debug('Subscribing to onUpdatedCarsInfo');
+      const subscription = API.graphql(graphqlOperation(onUpdatedCarsInfo)).subscribe({
         next: (event) => {
-          const updatedCars = event.value.data.onUpdatedCarsStatus;
+          const updatedCars = event.value.data.onUpdatedCarsInfo;
           dispatch('ADD_CARS', updatedCars);
         },
         error: (error) => {
           const errors = error.error.errors;
-          addErrorNotifications('onUpdatedCarsStatus subscription', errors, dispatch);
+          addErrorNotifications('onUpdatedCarsInfo subscription', errors, dispatch);
         },
       });
 
       return () => {
-        console.debug('Unsubscribing from onUpdatedCarsStatus');
+        console.debug('Unsubscribing from onUpdatedCarsInfo');
         if (subscription) subscription.unsubscribe();
       };
     }

@@ -155,7 +155,13 @@ def carsUpdateStatus(cars: List[dict]):
 @app.resolver(type_name="Mutation", field_name="carsUpdateFleet")
 def carsUpdateFleet(resourceIds: List[str], fleetId: str, fleetName: str):
     try:
-        logger.info(resourceIds)
+        logger.info(
+            "Changing fleet to Fleet ID: %s, Fleet Name: %s, Resource IDs: %s",
+            fleetId,
+            fleetName,
+            resourceIds,
+        )
+        updated_cars = []
 
         for resource_id in resourceIds:
             response = client_ssm.add_tags_to_resource(
@@ -168,19 +174,17 @@ def carsUpdateFleet(resourceIds: List[str], fleetId: str, fleetName: str):
             )
 
             logger.info(response)
-            partiQLQuery = (
-                f'UPDATE "{DDB_TABLE_NAME}" SET fleetId="{fleetId}" SET'
-                f' fleetName="{fleetName}" WHERE InstanceId = {resource_id}'
-            )
-            logger.info(partiQLQuery)
-            ddbTable.update_item(
+
+            car = ddbTable.update_item(
                 Key={"InstanceId": resource_id},
                 UpdateExpression="set fleetId=:fId, fleetName=:fName",
                 ExpressionAttributeValues={":fId": fleetId, ":fName": fleetName},
-                ReturnValues="UPDATED_NEW",
-            )
+                ReturnValues="ALL_NEW",
+            ).get("Attributes")
+            updated_cars.append(car)
 
-        return {"result": "success"}
+        logger.info(updated_cars)
+        return updated_cars
 
     except Exception as error:
         logger.exception(error)

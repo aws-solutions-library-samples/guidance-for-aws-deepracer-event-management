@@ -60,9 +60,6 @@ export const EditFleet = () => {
   const onSaveHandler = async () => {
     console.debug('Sending fleet updates', fleetConfig);
     await send('updateFleet', fleetConfig);
-    setTimeout(async () => {
-      await dispatch('REFRESH_CARS', true);
-    }, 5000);
   };
 
   const formIsValidHandler = () => {
