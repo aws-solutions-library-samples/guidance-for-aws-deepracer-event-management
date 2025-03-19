@@ -43,7 +43,7 @@ export const useCarsApi = (userHasAccess = false) => {
         const notificationId = `${apiMethodName}Error${index}`;
 
         dispatch('ADD_NOTIFICATION', {
-          header: errorMessage,
+          content: errorMessage,
           type: 'error',
           dismissible: true,
           dismissLabel: t('devices.notifications.dismiss-message'),
@@ -124,7 +124,7 @@ export const useCarCmdApi = () => {
   const createUpdateNotification = useCallback(
     (label, type, dispatch, notificationId) => {
       dispatch('ADD_NOTIFICATION', {
-        header: label,
+        content: label,
         type: type,
         dismissible: true,
         dismissLabel: t('devices.notifications.dismiss-message'),
