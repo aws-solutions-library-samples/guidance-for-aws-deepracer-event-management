@@ -527,6 +527,7 @@
     "item-type-user": "User",
     "item-type-race": "Race",
     "item-type-model": "Model",
+    "item-type-fleet": "Fleet",
     "creating-item": "Creating {{itemType}} {{itemName}}...",
     "create-item-success": "{{itemType}} {{itemName}} created",
     "create-item-error": "{{itemType} {{itemName}} could not be created, {{errorMessage}}",

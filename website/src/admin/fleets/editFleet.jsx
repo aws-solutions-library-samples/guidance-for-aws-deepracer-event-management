@@ -96,8 +96,6 @@ export const EditFleet = () => {
               </Button>
             </SpaceBetween>
           }
-          errorText={errorMessage}
-          errorIconAriaLabel="Error"
         >
           <SpaceBetween size="l">
             <GeneralInfoPanel
