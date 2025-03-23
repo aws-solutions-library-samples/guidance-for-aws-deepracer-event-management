@@ -157,7 +157,7 @@ DR_CAR_UPDATE()
     # Update DeepRacer packages
     echo -e -n "\n- Update DeepRacer packages"
     apt-get update
-    apt-get install -y aws-deepracer-* -o Dpkg::Options::="--force-overwrite"
+    apt-get install -y "aws-deepracer-*" -o Dpkg::Options::="--force-overwrite"
 
     # Remove redundant packages
     echo -e -n "\n- Remove redundant packages"
