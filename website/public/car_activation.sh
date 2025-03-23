@@ -403,6 +403,13 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
         ARCH=arm64
     fi
 
+    # Are there community packages?
+    echo -e -n "\n- Checking for community version of aws-deepracer-core"
+    if dpkg -l | grep -q "aws-deepracer-core.*community"; then
+        echo -e -n "\n- Community version detected"
+        COMMUNITY=YES
+    fi
+
     # All cars
     SET_PASSWORD
     SSM_ACTIVATION
@@ -412,8 +419,15 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
         DISABLE_IPV6
         CREATE_WIFI_SERVICE
         DR_CAR_UPDATE
-        DISABLE_DR_UPDATE
         DR_CAR_TWEAKS
+
+        # Don't do the tweaks if community version
+        if [ -z "$COMMUNITY" ]; then
+            DISABLE_DR_UPDATE
+            CAR_TWEAKS
+        else
+            echo -e -n "\n- Community version detected, skipping DeepRacer tweaks"
+        fi
     fi
 
     # Raspberry Pi only
@@ -421,7 +435,6 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
     # fi
 
     # All cars
-    CAR_TWEAKS
     if [ $varHost != NULL ]; then
         SET_HOSTNAME
     fi
