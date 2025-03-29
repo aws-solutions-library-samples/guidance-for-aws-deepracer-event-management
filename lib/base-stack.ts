@@ -79,10 +79,7 @@ export class BaseStack extends cdk.Stack {
 
     // Terms And Conditions webpage
     const tacWebsite = new Website(this, 'TermsNConditions', {
-      contentPath: './website/public/',
-      pathPattern: '/terms-and-conditions.html',
       logsBucket: logsBucket,
-      cdnDistribution: cdn.distribution,
     });
     this.tacSourceBucket = tacWebsite.sourceBucket;
 
