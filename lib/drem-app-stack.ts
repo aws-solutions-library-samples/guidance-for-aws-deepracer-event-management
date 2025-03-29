@@ -42,6 +42,8 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
   identiyPool: CfnIdentityPool;
   userPoolClientWeb: UserPoolClient;
   cloudfrontDistribution: IDistribution;
+  tacCloudfrontDistribution?: IDistribution;
+  tacSourceBucket?: IBucket;
   logsBucket: IBucket;
   lambdaConfig: {
     runtime: lambda.Runtime;
@@ -59,6 +61,8 @@ export class DeepracerEventManagerStack extends cdk.Stack {
   public readonly leaderboardSourceBucketName: cdk.CfnOutput;
   public readonly streamingOverlayDistributionId: cdk.CfnOutput;
   public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
+  public readonly tacWebsitedistributionId: cdk.CfnOutput;
+  public readonly tacSourceBucketName: cdk.CfnOutput; // this is missing
 
   constructor(scope: Construct, id: string, props: DeepracerEventManagerStackProps) {
     super(scope, id, props);
