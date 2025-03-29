@@ -22,7 +22,7 @@ ssmRegion=NULL
 ssid=NULL
 wifiPass=NULL
 
-optstring=":h:p:c:i:r:s:w:"
+optstring=":h:p:c:i:r:s:w:u"
 
 while getopts $optstring arg; do
     case ${arg} in
@@ -33,6 +33,7 @@ while getopts $optstring arg; do
         r) ssmRegion=${OPTARG};;
         s) ssid=${OPTARG};;
         w) wifiPass=${OPTARG};;
+        u) upgradeConsole=YES;;
         ?) USAGE ;;
     esac
 done
@@ -295,14 +296,9 @@ DR_CAR_TWEAKS()
     #  [ + ]  whoopsie
 }
 
-CAR_TWEAKS()
+DR_SW_TWEAKS()
 {
-    echo -e -n "\n\nCAR_TWEAKS\n"
-    # Disable video stream by default
-    echo -e -n "\n- Disable video stream"
-    cp ${bundlePath}/bundle.js ${backupDir}/bundle.js.bak
-    rm ${bundlePath}/bundle.js
-    cat ${backupDir}/bundle.js.bak | sed -e "s/isVideoPlaying\: true/isVideoPlaying\: false/" > ${bundlePath}/bundle.js
+    echo -e -n "\n\nDR_SW_TWEAKS\n"
 
     # Allow multiple logins on the console
     echo -e -n "\n- Enable multiple logins to the console"
@@ -315,12 +311,6 @@ CAR_TWEAKS()
     cp ${webserverPath}/login.py ${backupDir}/login.py.bak
     rm ${webserverPath}/login.py
     cat ${backupDir}/login.py.bak | sed -e "s/datetime.timedelta(hours=1)/datetime.timedelta(hours=12)/" > $webserverPath/login.py
-
-    # Replace the login page
-    echo -e -n "\n- Replace the login.html page"
-    cp ${templatesPath}/login.html ${backupDir}/login.html.bak
-    rm ${templatesPath}/login.html
-    mv login.html ${templatesPath}/login.html
 
     # Enable use of model optimizer cache
     echo -e -n "\n- Enable model optimizer cache"
@@ -347,10 +337,39 @@ index 1b6c315..6db49ac 100644
          for flag, value in dict(common_params, **platform_parms).items():
 EOF
 
+}
+
+CONSOLE_TWEAKS() 
+{
+    # Replace the login page
+    echo -e -n "\n- Replace the login.html page"
+    cp ${templatesPath}/login.html ${backupDir}/login.html.bak
+    rm ${templatesPath}/login.html
+    mv login.html ${templatesPath}/login.html
+
+    # Disable video stream by default
+    echo -e -n "\n- Disable video stream"
+    cp ${bundlePath}/bundle.js ${backupDir}/bundle.js.bak
+    rm ${bundlePath}/bundle.js
+    cat ${backupDir}/bundle.js.bak | sed -e "s/isVideoPlaying\: true/isVideoPlaying\: false/" > ${bundlePath}/bundle.js
+
     # Prevent double click on the range buttons to zoom in
     echo -e -n "\n- Fix range button zoom issue"
     cp ${staticPath}/bundle.css ${backupDir}/bundle.css.bak
     sed -i 's/.range-btn-minus button,.range-btn-plus button{background-color:#aab7b8!important;border-radius:4px!important;border:1px solid #879596!important}/.range-btn-minus button,.range-btn-plus button{background-color:#aab7b8!important;border-radius:4px!important;border:1px solid #879596!important;touch-action: manipulation;user-select: none;}/' ${staticPath}/bundle.css
+
+}
+
+INSTALL_CUSTOM_CONSOLE()
+{
+    # Install the community custom console
+    echo -e -n "\n- Registering the community device console APT repository"
+    curl -sSL https://aws-deepracer-community-sw.s3.eu-west-1.amazonaws.com/deepracer-custom-car/deepracer-community.key -o /usr/share/keyrings/deepracer-community.key
+    echo "deb [arch=all signed-by=/usr/share/keyrings/deepracer-community.key] https://aws-deepracer-community-sw.s3.eu-west-1.amazonaws.com/deepracer-custom-car stable device-console" | tee /etc/apt/sources.list.d/aws_deepracer-community-console.list >/dev/null
+
+    echo -e -n "\n- Retrieve package list and install community device console"
+    apt-get update
+    apt-get install -y aws-deepracer-community-device-console
 }
 
 # Check the operating system version and architecture
@@ -407,12 +426,25 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
     echo -e -n "\n- Checking for community version of aws-deepracer-core"
     if dpkg -l | grep -q "aws-deepracer-core.*community"; then
         echo -e -n "\n- Community version detected"
-        COMMUNITY=YES
+        COMMUNITY_CORE=YES
     fi
 
+    echo -e -n "\n- Checking for community device console / aws-deepracer-community-device-console"
+    if dpkg -l | grep -q "aws-deepracer-community-device-console"; then
+        echo -e -n "\n- Community device console detected"
+        COMMUNITY_CONSOLE=YES
+    fi
+        
     # All cars
     SET_PASSWORD
     SSM_ACTIVATION
+
+    # Check for upgrade option
+    if [ ${upgradeConsole} = "YES" ]; then
+        echo -e -n "\n- Upgrade console"
+        INSTALL_CUSTOM_CONSOLE
+        COMMUNITY_CONSOLE=YES
+    fi
 
     # AWS DeepRacer only
     if [ $DEVICE = "dr" ]; then
@@ -422,12 +454,19 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
         DR_CAR_TWEAKS
 
         # Don't do the tweaks if community version
-        if [ -z "$COMMUNITY" ]; then
+        if [ -z "$COMMUNITY_CORE" ]; then
             DISABLE_DR_UPDATE
-            CAR_TWEAKS
+            DR_SW_TWEAKS
         else
             echo -e -n "\n- Community version detected, skipping DeepRacer tweaks"
         fi
+    fi
+
+    # Console patches
+    if [ -z "$COMMUNITY_CONSOLE" ]; then
+        CONSOLE_TWEAKS
+    else
+        echo -e -n "\n- Community device console detected, skipping console tweaks"
     fi
 
     # Raspberry Pi only
