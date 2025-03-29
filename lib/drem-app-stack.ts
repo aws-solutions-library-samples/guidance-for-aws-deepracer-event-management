@@ -42,8 +42,6 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
   identiyPool: CfnIdentityPool;
   userPoolClientWeb: UserPoolClient;
   cloudfrontDistribution: IDistribution;
-  tacCloudfrontDistribution: IDistribution;
-  tacSourceBucket: IBucket;
   logsBucket: IBucket;
   lambdaConfig: {
     runtime: lambda.Runtime;
@@ -61,8 +59,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
   public readonly leaderboardSourceBucketName: cdk.CfnOutput;
   public readonly streamingOverlayDistributionId: cdk.CfnOutput;
   public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
-  public readonly tacWebsitedistributionId: cdk.CfnOutput;
-  public readonly tacSourceBucketName: cdk.CfnOutput; // this is missing
 
   constructor(scope: Construct, id: string, props: DeepracerEventManagerStackProps) {
     super(scope, id, props);
@@ -203,19 +199,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     // Outputs
     new cdk.CfnOutput(this, 'DremWebsite', {
       value: 'https://' + props.cloudfrontDistribution.distributionDomainName,
-    });
-
-    new cdk.CfnOutput(this, 'tacWebsite', {
-      value: 'https://' + props.tacCloudfrontDistribution.distributionDomainName,
-    });
-    this.tacWebsitedistributionId = new cdk.CfnOutput(this, 'tacWebsitedistributionId', {
-      value: props.tacCloudfrontDistribution.distributionId,
-    });
-    new cdk.CfnOutput(this, 'tacWebsitedistributionName', {
-      value: props.tacCloudfrontDistribution.distributionDomainName,
-    });
-    this.tacSourceBucketName = new cdk.CfnOutput(this, 'tacSourceBucketName', {
-      value: props.tacSourceBucket.bucketName,
     });
 
     this.distributionId = new cdk.CfnOutput(this, 'distributionId', {

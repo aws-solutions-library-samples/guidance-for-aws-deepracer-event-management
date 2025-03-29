@@ -79,8 +79,6 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
   new DeepracerEventManagerStack(app, `drem-backend-${labelName}-infrastructure`, {
     baseStackName: baseStack.stackName,
     cloudfrontDistribution: baseStack.cloudfrontDistribution,
-    tacCloudfrontDistribution: baseStack.tacCloudfrontDistribution,
-    tacSourceBucket: baseStack.tacSourceBucket,
     logsBucket: baseStack.logsBucket,
     lambdaConfig: baseStack.lambdaConfig,
     adminGroupRole: baseStack.idp.adminGroupRole,

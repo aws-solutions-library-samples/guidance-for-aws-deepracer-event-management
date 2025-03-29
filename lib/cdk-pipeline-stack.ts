@@ -28,8 +28,6 @@ class InfrastructurePipelineStage extends Stage {
   public readonly leaderboardSourceBucketName: cdk.CfnOutput;
   public readonly streamingOverlayDistributionId: cdk.CfnOutput;
   public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
-  public readonly termAndConditionsDistributionId: cdk.CfnOutput;
-  public readonly termAndConditionsSourceBucketName: cdk.CfnOutput;
 
   constructor(scope: Construct, id: string, props: InfrastructurePipelineStageProps) {
     super(scope, id, props);
@@ -38,8 +36,6 @@ class InfrastructurePipelineStage extends Stage {
     const stack = new DeepracerEventManagerStack(this, 'infrastructure', {
       baseStackName: baseStack.stackName,
       cloudfrontDistribution: baseStack.cloudfrontDistribution,
-      tacCloudfrontDistribution: baseStack.tacCloudfrontDistribution,
-      tacSourceBucket: baseStack.tacSourceBucket,
       logsBucket: baseStack.logsBucket,
       lambdaConfig: baseStack.lambdaConfig,
       adminGroupRole: baseStack.idp.adminGroupRole,
@@ -60,8 +56,6 @@ class InfrastructurePipelineStage extends Stage {
     this.leaderboardDistributionId = stack.leaderboardDistributionId;
     this.streamingOverlaySourceBucketName = stack.streamingOverlaySourceBucketName;
     this.streamingOverlayDistributionId = stack.streamingOverlayDistributionId;
-    this.termAndConditionsSourceBucketName = stack.tacSourceBucketName;
-    this.termAndConditionsDistributionId = stack.tacWebsitedistributionId;
   }
 }
 export interface CdkPipelineStackProps extends cdk.StackProps {
@@ -264,28 +258,6 @@ export class CdkPipelineStack extends cdk.Stack {
         envFromCfnOutputs: {
           streamingOverlaySourceBucketName: infrastructure.streamingOverlaySourceBucketName,
           streamingOverlayDistributionId: infrastructure.streamingOverlayDistributionId,
-        },
-        rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
-      })
-    );
-
-    // Terms and Conditions website Deploy to S3
-    infrastructure_stage.addPost(
-      new pipelines.CodeBuildStep('TermsAndConditionsDeployToS3', {
-        buildEnvironment: {
-          privileged: false,
-          computeType: codebuild.ComputeType.LARGE,
-        },
-        commands: [
-          // configure and deploy Terms and Conditions website
-          "echo 'Starting to deploy the Terms and Conditions website'",
-          'echo website bucket= $sourceBucketName',
-          'aws s3 sync ./website-terms-and-conditions/ s3://$sourceBucketName/ --delete',
-          "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'",
-        ],
-        envFromCfnOutputs: {
-          sourceBucketName: infrastructure.termAndConditionsSourceBucketName,
-          distributionId: infrastructure.termAndConditionsDistributionId,
         },
         rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
       })

@@ -1,13 +1,13 @@
 import {
-    Button,
-    Checkbox,
-    Container,
-    Form,
-    FormField,
-    Grid,
-    Input,
-    Link,
-    SpaceBetween,
+  Button,
+  Checkbox,
+  Container,
+  Form,
+  FormField,
+  Grid,
+  Input,
+  Link,
+  SpaceBetween,
 } from '@cloudscape-design/components';
 import { API } from 'aws-amplify';
 import React, { useEffect, useState } from 'react';
@@ -18,7 +18,6 @@ import { SimpleHelpPanelLayout } from '../../components/help-panels/simple-help-
 import { PageLayout } from '../../components/pageLayout';
 import * as mutations from '../../graphql/mutations';
 
-import awsconfig from '../../config.json';
 import { useStore } from '../../store/store';
 
 const notificationId = 'create_user';
@@ -187,10 +186,7 @@ export function CreateUser() {
                   onChange={({ detail }) => setTncChecked(detail.checked)}
                   checked={tncChecked}
                 >
-                  <Link
-                    href={awsconfig.Urls.termsAndConditionsUrl + '/terms-and-conditions.html'}
-                    target="_blank"
-                  >
+                  <Link href={'/public/terms-and-conditions.html'} target="_blank">
                     {t('users.terms-and-conditions')}
                   </Link>
                 </Checkbox>
