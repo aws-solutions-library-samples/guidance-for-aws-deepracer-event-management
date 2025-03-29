@@ -66,6 +66,13 @@ if (sourceBranchName) {
   console.info('source_branch Name not provided, using default: ' + sourceBranchName);
 }
 
+let domainName = app.node.tryGetContext('domain_name');
+if (domainName) {
+  console.info('Use provided domain_name Name: ' + domainName);
+} else {
+  domainName = undefined;
+}
+
 if (app.node.tryGetContext('manual_deploy') === 'True') {
   console.info('Manual Deploy started....');
 
@@ -73,6 +80,7 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
   const baseStack = new BaseStack(app, `drem-backend-${labelName}-base`, {
     email: mailAddress,
     labelName: labelName,
+    domainName: domainName,
     env: env,
   });
 

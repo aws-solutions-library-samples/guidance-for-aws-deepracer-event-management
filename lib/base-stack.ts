@@ -1,8 +1,11 @@
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import * as cdk from 'aws-cdk-lib';
 import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
 import * as awsLambda from 'aws-cdk-lib/aws-lambda';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
@@ -17,6 +20,7 @@ const WAF_IP_RATE_LIMIT = 1000; // number of allowed reuested per 5 minute per I
 export interface BaseStackProps extends cdk.StackProps {
   email: string;
   labelName: string;
+  domainName?: string;
 }
 
 export class BaseStack extends cdk.Stack {
@@ -70,13 +74,49 @@ export class BaseStack extends cdk.Stack {
 
     this.dremWebsitebucket = dremWebsite.sourceBucket;
 
+    // Required variables for setting up CloudFront
+    let certificate: acm.ICertificate | undefined;
+    let siteSubdomain = 'drem';
+    let siteDomain: string[] | undefined;
+    let hostedZone;
+
+    // If the label is not main, we need to add it to the subdomain
+    if (props.labelName && props.labelName !== 'main') {
+      siteSubdomain = `${siteSubdomain}-${props.labelName}`;
+    }
+
+    if (props.domainName) {
+      siteDomain = [`${siteSubdomain}.${props.domainName}`];
+
+      // If you have a hosted zone in Route 53, you can look it up
+      hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
+        domainName: props.domainName,
+      });
+
+      // Create a certificate for the domain (in us-east-1 for CloudFront)
+      certificate = new acm.DnsValidatedCertificate(this, 'SiteCertificate', {
+        domainName: siteDomain[0],
+        hostedZone: hostedZone,
+        region: 'us-east-1', // CloudFront requires certificates in us-east-1
+      });
+    }
     //  cloudfront Distribution
     const cdn = new Cdn(this, 'cdn', {
       defaultOrigin: dremWebsite.origin,
       logsBucket: logsBucket,
+      domainNames: siteDomain,
+      certificate: certificate,
     });
     this.cloudfrontDistribution = cdn.distribution;
 
+    // Create a DNS record pointing to your CloudFront distribution
+    if (props.domainName && hostedZone) {
+      new route53.ARecord(this, 'SiteAliasRecord', {
+        recordName: siteSubdomain,
+        target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(cdn.distribution)),
+        zone: hostedZone,
+      });
+    }
     // Terms And Conditions webpage
     const tacWebsite = new Website(this, 'TermsNConditions', {
       contentPath: './website-terms-and-conditions/',
