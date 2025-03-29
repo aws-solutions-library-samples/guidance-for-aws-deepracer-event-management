@@ -186,7 +186,7 @@ export function CreateUser() {
                   onChange={({ detail }) => setTncChecked(detail.checked)}
                   checked={tncChecked}
                 >
-                  <Link href={'/public/terms-and-conditions.html'} target="_blank">
+                  <Link href={'/terms-and-conditions.html'} target="_blank">
                     {t('users.terms-and-conditions')}
                   </Link>
                 </Checkbox>

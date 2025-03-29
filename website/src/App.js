@@ -78,7 +78,7 @@ const components = {
 
     return (
       <View textAlign="center" padding={tokens.space.large}>
-        <Link href={'/public/terms-and-conditions.html'} target="_blank">
+        <Link href={'/terms-and-conditions.html'} target="_blank">
           {i18next.t('app.signup.terms-and-conditions')}
         </Link>
       </View>
