@@ -429,22 +429,9 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
         COMMUNITY_CORE=YES
     fi
 
-    echo -e -n "\n- Checking for community device console / aws-deepracer-community-device-console"
-    if dpkg -l | grep -q "aws-deepracer-community-device-console"; then
-        echo -e -n "\n- Community device console detected"
-        COMMUNITY_CONSOLE=YES
-    fi
-        
     # All cars
     SET_PASSWORD
     SSM_ACTIVATION
-
-    # Check for upgrade option
-    if [ ${upgradeConsole} = "YES" ]; then
-        echo -e -n "\n- Upgrade console"
-        INSTALL_CUSTOM_CONSOLE
-        COMMUNITY_CONSOLE=YES
-    fi
 
     # AWS DeepRacer only
     if [ $DEVICE = "dr" ]; then
@@ -462,11 +449,17 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
         fi
     fi
 
-    # Console patches
-    if [ -z "$COMMUNITY_CONSOLE" ]; then
-        CONSOLE_TWEAKS
-    else
+    # Check for upgrade option
+    if [ ${upgradeConsole} = "YES" ]; then
+        echo -e -n "\n- Upgrade console"
+        INSTALL_CUSTOM_CONSOLE
+    fi
+
+    echo -e -n "\n- Checking if aws-deepracer-community-device-console is installed"
+    if dpkg -l | grep -q "aws-deepracer-community-device-console"; then
         echo -e -n "\n- Community device console detected, skipping console tweaks"
+    else
+        CONSOLE_TWEAKS
     fi
 
     # Raspberry Pi only
