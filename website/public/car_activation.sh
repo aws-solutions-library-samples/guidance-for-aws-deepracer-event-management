@@ -365,7 +365,7 @@ INSTALL_CUSTOM_CONSOLE()
     # Install the community custom console
     echo -e -n "\n- Registering the community device console APT repository"
     curl -sSL https://aws-deepracer-community-sw.s3.eu-west-1.amazonaws.com/deepracer-custom-car/deepracer-community.key -o /usr/share/keyrings/deepracer-community.key
-    echo "deb [arch=all signed-by=/usr/share/keyrings/deepracer-community.key] https://aws-deepracer-community-sw.s3.eu-west-1.amazonaws.com/deepracer-custom-car stable device-console" | tee /etc/apt/sources.list.d/aws_deepracer-community-console.list >/dev/null
+    echo "deb [arch=all signed-by=CFB167A8F18DE6A634A6A2E4A63BC335D48DF8C6] https://aws-deepracer-community-sw.s3.eu-west-1.amazonaws.com/deepracer-custom-car stable device-console" | tee /etc/apt/sources.list.d/aws_deepracer-community-console.list >/dev/null
 
     echo -e -n "\n- Retrieve package list and install community device console"
     apt-get update
