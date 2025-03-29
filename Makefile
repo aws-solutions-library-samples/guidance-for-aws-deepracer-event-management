@@ -63,8 +63,8 @@ manual.deploy.hotswap: 				## Deploy via cdk --hotswap
 
 manual.deploy.website: local.config
 	cd website && npm run build
-	aws s3 sync build/ s3://$(jq -r '.[] | select(.OutputKey=="sourceBucketName") | .OutputValue' ../cfn.outputs)/ --delete
-	aws cloudfront create-invalidation --distribution-id $(jq -r '.[] | select(.OutputKey=="distributionId") | .OutputValue' ../cfn.outputs) --paths "/*"
+	aws s3 sync website/build/ s3://$$(jq -r '.[] | select(.OutputKey=="sourceBucketName") | .OutputValue' cfn.outputs)/ --delete
+	aws cloudfront create-invalidation --distribution-id $$(jq -r '.[] | select(.OutputKey=="distributionId") | .OutputValue' cfn.outputs) --paths "/*"
 
 local.install:					## Install Javascript dependencies
 	npm install
