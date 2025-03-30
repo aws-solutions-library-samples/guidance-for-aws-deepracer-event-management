@@ -58,8 +58,16 @@ drem.clean-base:			## Delete DREM application
 manual.deploy:  				## Deploy via cdk
 	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) --all
 
+manual.deploy.specific:         ## Deploy a specific stack (usage: make manual.deploy.specific stack=YourStackName)
+	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) -e $(stack)
+
 manual.deploy.hotswap: 				## Deploy via cdk --hotswap
 	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) --all --hotswap
+
+manual.deploy.website: local.config
+	cd website && npm run build
+	aws s3 sync website/build/ s3://$$(jq -r '.[] | select(.OutputKey=="sourceBucketName") | .OutputValue' cfn.outputs)/ --delete
+	aws cloudfront create-invalidation --distribution-id $$(jq -r '.[] | select(.OutputKey=="distributionId") | .OutputValue' cfn.outputs) --paths "/*"
 
 local.install:					## Install Javascript dependencies
 	npm install
