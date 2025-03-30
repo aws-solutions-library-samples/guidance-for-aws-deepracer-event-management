@@ -168,7 +168,13 @@ export const useCarCmdApi = () => {
   }
 
   // fetch logs from Cars
-  function carFetchLogs(selectedCars, selectedEvent, laterThan = null, racerName = null) {
+  function carFetchLogs(
+    selectedCars,
+    selectedEvent,
+    laterThan = null,
+    racerName = null,
+    raceData = null
+  ) {
     for (const car of selectedCars) {
       if (car.LoggingCapable === false) {
         addNotifications(
@@ -179,19 +185,23 @@ export const useCarCmdApi = () => {
         );
         continue;
       }
-      API.graphql(
-        graphqlOperation(startFetchFromCar, {
-          carInstanceId: car.InstanceId,
-          carName: car.ComputerName,
-          carFleetId: car.fleetId,
-          carFleetName: car.fleetName,
-          carIpAddress: car.IpAddress,
-          eventId: selectedEvent.eventId,
-          eventName: selectedEvent.eventName,
-          laterThan: laterThan,
-          racerName: racerName,
-        })
-      )
+      const operationInput = {
+        carInstanceId: car.InstanceId,
+        carName: car.ComputerName,
+        carFleetId: car.fleetId,
+        carFleetName: car.fleetName,
+        carIpAddress: car.IpAddress,
+        eventId: selectedEvent.eventId,
+        eventName: selectedEvent.eventName,
+        laterThan: laterThan,
+        racerName: racerName,
+      };
+
+      if (raceData !== null) {
+        operationInput.raceData = JSON.stringify(raceData);
+      }
+
+      API.graphql(graphqlOperation(startFetchFromCar, operationInput))
         .then(() => {
           addNotifications(
             'carFetchLogs',

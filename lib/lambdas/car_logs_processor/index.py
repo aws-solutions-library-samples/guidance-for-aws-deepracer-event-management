@@ -1,12 +1,12 @@
 import hashlib
-import boto3
-import tarfile
-import os
 import io
+import os
+import tarfile
 
 import appsync_helpers
-import yaml
+import boto3
 import simplejson as json
+import yaml
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes.appsync import scalar_types_utils
 from aws_lambda_powertools.utilities.typing import LambdaContext
@@ -46,11 +46,17 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                     bucket, key, output_bucket, None
                 )
     elif "data" in event:
+
+        race_data = None
+        if "raceData" in event["data"]:
+            race_data = event["data"]["raceData"]
+
         matched_bags, batch_job_id = process_bag_files(
             input_bucket,
             event["data"]["ssm"]["uploadKey"],
             output_bucket,
             event["data"]["jobId"],
+            race_data,
         )
     else:
         raise ValueError("Invalid event format")
@@ -62,7 +68,11 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
 
 
 def process_bag_files(
-    input_bucket: str, key: str, output_bucket: str, fetch_job_id: str
+    input_bucket: str,
+    key: str,
+    output_bucket: str,
+    fetch_job_id: str,
+    race_data: dict = None,
 ) -> tuple[dict, str]:
 
     logger.info(f"Processing file {key} from bucket {input_bucket}")
@@ -149,17 +159,25 @@ def process_bag_files(
     batch_client = boto3.client("batch")
 
     try:
+
+        job_variables = {
+            "environment": [
+                {"name": "MATCHED_BAGS", "value": json.dumps(matched_bags)},
+                {"name": "CAR_ID", "value": car_id},
+                {"name": "FETCH_JOB_ID", "value": fetch_job_id},
+            ]
+        }
+
+        if race_data:
+            job_variables["environment"].append(
+                {"name": "RACE_DATA", "value": race_data}
+            )
+
         response = batch_client.submit_job(
             jobName=f"process-logs-{timestamp}",
             jobQueue=job_queue,
             jobDefinition=job_definition,
-            containerOverrides={
-                "environment": [
-                    {"name": "MATCHED_BAGS", "value": json.dumps(matched_bags)},
-                    {"name": "CAR_ID", "value": car_id},
-                    {"name": "FETCH_JOB_ID", "value": fetch_job_id},
-                ]
-            },
+            containerOverrides=job_variables,
         )
         logger.info(f"Batch job submitted successfully: {response['jobId']}")
     except Exception as e:

@@ -299,7 +299,8 @@ const LocalTimekeeperWizard = () => {
         uniqueCars,
         { eventId: race.eventId, eventName: raceConfig.eventName },
         new Date(startTime.getTime()).toISOString(),
-        race.username
+        race.username,
+        { ...race }
       );
     }
   };
