@@ -181,6 +181,12 @@ To manually enable this integration, you can follow these steps:
 6. Switch the configuration to `Send email with Amazon SES` and complete the rest of the email configuration appropriately
 7. Click `Save changes`
 
+#### Optional: Custom URL
+
+To have a custom URL, rather than the default URL in `cloudfront.net`, add `domain_name` to `build.config`. Note; this domain name must be registered as a hosted zone in Route 53 in advance.
+
+DREM will be available on `drem.your_domain`. It is possible to configure this retrospectively for already deployed DREM instances.
+
 ### Option 2. Deploy DREM as a developer / contributor
 
 #### Prerequisites
@@ -441,27 +447,27 @@ These models can be found in `lib/default_models`
 
 There are a few display options for the leaderboard URL as detailed below:
 
-| Key | Values | Default value | Notes |
-| --- | ------ | ------------- | ----- |
-| lang | de, en, es, fr, jp, se | en | Translation files located in `website-leaderboard/public/locales/` |
-| qr | header, footer | off | Show the QR code in the header or footer |
-| scroll | true, false | true | Automatically scrolls to the bottom of the leaderboard on a time interval | 
-| track | track id | combined | Used to show a specific event track or a combined leaderboard of all event tracks |
-| format | fastest, average | fastest |
-| flag | true, false | true | Can be used to show the racers country flag |
+| Key    | Values                 | Default value | Notes                                                                             |
+| ------ | ---------------------- | ------------- | --------------------------------------------------------------------------------- |
+| lang   | de, en, es, fr, jp, se | en            | Translation files located in `website-leaderboard/public/locales/`                |
+| qr     | header, footer         | off           | Show the QR code in the header or footer                                          |
+| scroll | true, false            | true          | Automatically scrolls to the bottom of the leaderboard on a time interval         |
+| track  | track id               | combined      | Used to show a specific event track or a combined leaderboard of all event tracks |
+| format | fastest, average       | fastest       |
+| flag   | true, false            | true          | Can be used to show the racers country flag                                       |
 
 ## Overlay Switches
 
 There are a nunber of display options for the streaming overlay URL:
 
-| Key | Values | Default value | Notes |
-| --- | ------ | ------------- | ----- |
-| lang | de, en, jp | en | Translation files located in `website-stream-overlays/public/locales/` |
-| track | track id | 1 | Used to show a specific event track or a combined leaderboard of all event tracks |
-| showLeaderboard | | 1 | Show the top 4 leaderboard in between races |
-| format | fastest, average | fastest |
-| chrome | 1, 0 | 1 | Add a chroma colour to the  overlay
-| chromaColor | hex value | 00ff00 | Change the colour of the background chroma |
+| Key             | Values           | Default value | Notes                                                                             |
+| --------------- | ---------------- | ------------- | --------------------------------------------------------------------------------- |
+| lang            | de, en, jp       | en            | Translation files located in `website-stream-overlays/public/locales/`            |
+| track           | track id         | 1             | Used to show a specific event track or a combined leaderboard of all event tracks |
+| showLeaderboard |                  | 1             | Show the top 4 leaderboard in between races                                       |
+| format          | fastest, average | fastest       |
+| chrome          | 1, 0             | 1             | Add a chroma colour to the overlay                                                |
+| chromaColor     | hex value        | 00ff00        | Change the colour of the background chroma                                        |
 
 ## Security
 
