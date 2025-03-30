@@ -43,6 +43,7 @@ class InfrastructurePipelineStage extends Stage {
     const stack = new DeepracerEventManagerStack(this, 'infrastructure', {
       baseStackName: baseStack.stackName,
       cloudfrontDistribution: baseStack.cloudfrontDistribution,
+      cloudfrontDomainNames: baseStack.cloudfrontDomainNames,
       tacCloudfrontDistribution: baseStack.tacCloudfrontDistribution,
       tacSourceBucket: baseStack.tacSourceBucket,
       logsBucket: baseStack.logsBucket,
@@ -75,6 +76,7 @@ export interface CdkPipelineStackProps extends cdk.StackProps {
   sourceBranchName: string;
   email: string;
   env: Environment;
+  domainName?: string;
 }
 
 export class CdkPipelineStack extends cdk.Stack {

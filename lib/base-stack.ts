@@ -27,6 +27,7 @@ export class BaseStack extends cdk.Stack {
   public readonly eventbridge: Eventbridge;
   public readonly idp: Idp;
   public readonly cloudfrontDistribution: Distribution;
+  public readonly cloudfrontDomainNames?: string[];
   public readonly tacSourceBucket: s3.Bucket;
   public readonly tacCloudfrontDistribution: Distribution;
   public readonly logsBucket: s3.Bucket;
@@ -87,7 +88,7 @@ export class BaseStack extends cdk.Stack {
 
     if (props.domainName) {
       siteDomain = [`${siteSubdomain}.${props.domainName}`];
-
+      this.cloudfrontDomainNames = siteDomain;
       // If you have a hosted zone in Route 53, you can look it up
       hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
         domainName: props.domainName,

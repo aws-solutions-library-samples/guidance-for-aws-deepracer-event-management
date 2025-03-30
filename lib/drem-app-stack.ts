@@ -42,6 +42,7 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
   identiyPool: CfnIdentityPool;
   userPoolClientWeb: UserPoolClient;
   cloudfrontDistribution: IDistribution;
+  cloudfrontDomainNames?: string[];
   tacCloudfrontDistribution: IDistribution;
   tacSourceBucket: IBucket;
   logsBucket: IBucket;
@@ -197,14 +198,16 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     });
 
     const cwRumAppMonitor = new CwRumAppMonitor(this, 'CwRumAppMonitor', {
-      domainName: props.cloudfrontDistribution.distributionDomainName,
+      domainName: props.cloudfrontDomainNames?.at(0) || props.cloudfrontDistribution.distributionDomainName,
     });
 
     // Outputs
     new cdk.CfnOutput(this, 'DremWebsite', {
+      value: 'https://' + props.cloudfrontDomainNames?.at(0) || props.cloudfrontDistribution.distributionDomainName,
+    });
+    new cdk.CfnOutput(this, 'DremWebsiteDistributionDomainName', {
       value: 'https://' + props.cloudfrontDistribution.distributionDomainName,
     });
-
     new cdk.CfnOutput(this, 'tacWebsite', {
       value: 'https://' + props.tacCloudfrontDistribution.distributionDomainName,
     });

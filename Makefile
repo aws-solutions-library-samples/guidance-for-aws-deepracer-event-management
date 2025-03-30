@@ -18,6 +18,12 @@ ifndef source_branch
 override source_branch = release/stable
 endif
 
+ifdef domain_name
+domain_name_arg = -c domain=$(domain_name)
+else
+domain_name_arg =
+endif
+
 ## CONSTANTS
 dremSrcPath := website/src
 leaderboardSrcPath := website-leaderboard/src
@@ -41,10 +47,10 @@ clean: pipeline.clean s3.clean
 ## Dev related targets
 
 pipeline.synth: 				## Synth the CDK pipeline
-	npx cdk synth -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
+	npx cdk synth -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg)
 
 pipeline.deploy: 				## Deploy the CDK pipeline
-	npx cdk deploy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
+	npx cdk deploy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg)
 
 pipeline.clean: 				## Destroys the CDK pipeline
 	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
@@ -56,10 +62,10 @@ drem.clean-base:			## Delete DREM application
 	aws cloudformation delete-stack --stack-name drem-backend-$(label)-base --region $(region)
 
 manual.deploy:  				## Deploy via cdk
-	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) -c domain_name=$(domain_name) --all
+	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg) --all
 
-manual.deploy.hotswap: 				## Deploy via cdk --hotswap
-	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) --all --hotswap
+manual.deploy.hotswap: 			## Deploy via cdk --hotswap
+	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg) --all --hotswap
 
 manual.deploy.website: local.config
 	cd website && npm run build
