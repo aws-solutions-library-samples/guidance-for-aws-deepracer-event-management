@@ -19,7 +19,7 @@ override source_branch = release/stable
 endif
 
 ifdef domain_name
-domain_name_arg = -c domain=$(domain_name)
+domain_name_arg = -c domain_name=$(domain_name)
 else
 domain_name_arg =
 endif
