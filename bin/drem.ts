@@ -111,6 +111,7 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
     sourceRepo: sourceRepo,
     sourceBranchName: sourceBranchName,
     email: mailAddress,
+    domainName: domainName,
     env: env,
   });
 }
