@@ -235,6 +235,9 @@ export class UserManager extends Construct {
     props.appsyncApi.schema.addQuery(
       'listUsers',
       new ResolvableField({
+        args: {
+          username_prefix: GraphqlType.string({ isRequired: false }),
+        },
         returnType: user_object.attribute({ isList: true }),
         dataSource: users_data_source,
         directives: [Directive.iam(), Directive.cognito('admin', 'registration', 'operator')],
