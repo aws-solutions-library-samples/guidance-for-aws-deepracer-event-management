@@ -17,6 +17,8 @@ MINIMUM_LOGGING_VERSION = [2, 1, 2, 7]
 
 @logger.inject_lambda_context
 @tracer.capture_lambda_handler
+@logger.inject_lambda_context
+@tracer.capture_lambda_handler
 def lambda_handler(event: dict, context: LambdaContext):
     result = {}
     start_time = time.time()
@@ -29,17 +31,9 @@ def lambda_handler(event: dict, context: LambdaContext):
 
         update_instance_data = []
         for instance in instances:
-
             try:
-                if instance["PingStatus"] == "Online":
-                    # Get core version info and check logging capability
-                    fetch_deepracer_core_version_and_check_logging(instance)
-
-                    # Get and process tags
-                    fetch_and_process_tags(instance)
-
-                else:
-                    # Skip any update if LastPingDateTime is more than 90 days in the past
+                # Skip any update if LastPingDateTime is more than 90 days in the past
+                if 'LastPingDateTime' in instance:
                     last_ping = datetime.strptime(
                         instance["LastPingDateTime"], "%Y-%m-%dT%H:%M:%S.%fZ"
                     )
@@ -49,15 +43,29 @@ def lambda_handler(event: dict, context: LambdaContext):
                         )
                         continue
 
-                # Clean up instance data
+                if instance["PingStatus"] == "Online":
+                    # Get core version info and check logging capability
+                    fetch_deepracer_core_version_and_check_logging(instance)
+
+                    # Get and process tags
+                    fetch_and_process_tags(instance)
+
+                # Clean up instance data regardless of status
                 clean_instance_data(instance)
+                update_instance_data.append(instance)
 
             except Exception as e:
                 logger.warning(
                     f"Error processing instance {instance['InstanceId']}: {e}"
                 )
-
-            update_instance_data.append(instance)
+                # Even if there's an error, try to clean and add the instance
+                try:
+                    clean_instance_data(instance)
+                    update_instance_data.append(instance)
+                except Exception as clean_error:
+                    logger.warning(
+                        f"Error cleaning instance {instance['InstanceId']}: {clean_error}"
+                    )
 
         logger.info(update_instance_data)
         send_status_update(update_instance_data)
@@ -169,16 +177,15 @@ def clean_instance_data(instance):
             "LoggingCapable",
         ]
 
-    # Get a list of keys to delete (keys that aren't in the allowed list)
-    keys_to_delete = [key for key in list(instance.keys()) if key not in allowed_fields]
-
-    # Delete all unwanted keys
-    for key in keys_to_delete:
-        del instance[key]
+    # Create a new dict with only the allowed fields
+    cleaned_instance = {k: instance[k] for k in allowed_fields if k in instance}
+    
+    # Replace the content of the original instance
+    instance.clear()
+    instance.update(cleaned_instance)
 
 
 def send_status_update(instances):
-
     # Prepare the mutation
     mutation = """
     mutation carsUpdateStatus($cars: [carOnlineInput!]!) {
