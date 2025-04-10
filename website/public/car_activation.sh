@@ -362,12 +362,16 @@ CONSOLE_TWEAKS()
 
 INSTALL_CUSTOM_CONSOLE()
 {
-    # Install the community custom console
-    echo -e -n "\n- Registering the community device console APT repository"
-    curl -sSL https://aws-deepracer-community-sw.s3.eu-west-1.amazonaws.com/deepracer-custom-car/deepracer-community.key -o /usr/share/keyrings/deepracer-community.key
-    echo "deb [arch=all signed-by=CFB167A8F18DE6A634A6A2E4A63BC335D48DF8C6] https://aws-deepracer-community-sw.s3.eu-west-1.amazonaws.com/deepracer-custom-car stable device-console" | tee /etc/apt/sources.list.d/aws_deepracer-community-console.list >/dev/null
+    if dpkg -l | grep -q "aws-deepracer-community-device-console"; then
+        echo -e -n "\n- Community device console detected, not adding repos again" 
+    else
+        # Install the community custom console repository
+        echo -e -n "\n- Registering the community device console APT repository"
+        curl -sSL https://aws-deepracer-community-sw.s3.eu-west-1.amazonaws.com/deepracer-custom-car/deepracer-community.key -o /usr/share/keyrings/deepracer-community.key
+        echo "deb [arch=all signed-by=CFB167A8F18DE6A634A6A2E4A63BC335D48DF8C6] https://aws-deepracer-community-sw.s3.eu-west-1.amazonaws.com/deepracer-custom-car stable device-console" | tee /etc/apt/sources.list.d/aws_deepracer-community-console.list >/dev/null
+    fi
 
-    echo -e -n "\n- Retrieve package list and install community device console"
+    echo -e -n "\n- Retrieve package list and install/upgrade community device console"
     apt-get update
     apt-get install -y aws-deepracer-community-device-console
 }
@@ -437,11 +441,11 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
     if [ $DEVICE = "dr" ]; then
         DISABLE_IPV6
         CREATE_WIFI_SERVICE
-        DR_CAR_UPDATE
         DR_CAR_TWEAKS
 
         # Don't do the tweaks if community version
         if [ -z "$COMMUNITY_CORE" ]; then
+            DR_CAR_UPDATE
             DISABLE_DR_UPDATE
             DR_SW_TWEAKS
         else
