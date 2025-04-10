@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 import hashlib
 import json
-import os
-import sys
-import subprocess
-import boto3
 import logging
+import os
 import random
 import string
+import subprocess
+import sys
 
-from combine_videos import combine_videos, get_video_files
+import boto3
 from appsync_utils import send_mutation
 from aws_lambda_powertools.utilities.data_classes.appsync import scalar_types_utils
+from combine_videos import combine_videos, get_video_files
 
 TMP_DIR = "/tmp"
 
@@ -218,6 +218,13 @@ def main():
     skip_duration = float(os.getenv("SKIP_DURATION", 20.0))
     group_slice = os.getenv("GROUP_SLICE", ":-2")
 
+    race_data = os.getenv("RACE_DATA")
+    try:
+        race_data = json.loads(race_data) if race_data else None
+    except json.JSONDecodeError as e:
+        race_data = None
+        logger.warning(f"Error decoding RACE_DATA: {e}")
+
     user_model_map = []
 
     background = os.path.join(
@@ -355,6 +362,7 @@ def main():
                     codec=codec,
                     skip_duration=skip_duration,
                     update_frequency=1,
+                    race_data=race_data,
                 )
                 logger.info(f"Created video {output_file}.", video_info)
 

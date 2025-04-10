@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
+import argparse
+import fnmatch
 import os
+import random
+import string
+
 import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
-import argparse
-import fnmatch
 from tqdm import tqdm
-import random
-import string
 
 
 def get_video_files(
@@ -119,6 +120,7 @@ def combine_videos(
     codec: str = "avc1",
     skip_duration: float = 20.0,
     update_frequency: float = 0.1,
+    race_data: dict = None,
 ) -> dict:
     """
     Combine multiple video files into a single video file.

@@ -1,6 +1,7 @@
 import hashlib
 import io
 import os
+import re
 import tarfile
 
 import appsync_helpers
@@ -46,10 +47,9 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                     bucket, key, output_bucket, None
                 )
     elif "data" in event:
-
         race_data = None
         if "raceData" in event["data"]:
-            race_data = event["data"]["raceData"]
+            race_data = json.loads(event["data"]["raceData"])
 
         matched_bags, batch_job_id = process_bag_files(
             input_bucket,
@@ -92,18 +92,30 @@ def process_bag_files(
     car_id, online = get_car_id(car_name)
     logger.info(f"Found car {car_name} as {car_id}, online: {online}")
 
-    # Get the list of users from AppSync
-    all_users = query_users()
-    logger.info(f"Input user list: {all_users}")
+    # If provided with a race user, find the user in the list
+    if race_data:
+        filtered_users = query_users(race_data["username"])
+        race_user = [
+            user for user in filtered_users if user["username"] == race_data["username"]
+        ][0]
+    else:
+        # Get the list of users from AppSync
+        all_users = query_users()
+        logger.info(f"Input user list: {all_users}")
 
     # Iterate over the tar.gz files and process them
     try:
         extracted_dirs = download_and_extract_tar(input_bucket, key, EXTRACTED_DIR)
 
         for bag_dir in extracted_dirs:
-            user_model_info = find_user_and_model(all_users.copy(), bag_dir)
+
+            if race_data:
+                user_model_info = confirm_user_and_model(race_user, bag_dir)
+            else:
+                user_model_info = find_user_and_model(all_users.copy(), bag_dir)
+
             if user_model_info:
-                logger.debug(
+                logger.info(
                     "Found user and model match: {} {}".format(
                         user_model_info["username"],
                         user_model_info["model"]["name"],
@@ -142,6 +154,8 @@ def process_bag_files(
                 user_model_info["bag_key"] = bag_key
                 user_model_info["bag_type"] = bag_type
                 matched_bags["bags"].append(user_model_info)
+            else:
+                logger.warning(f"Could not find user/model match for {bag_dir}")
 
         logger.info(f"Matched bags: {matched_bags}")
 
@@ -170,7 +184,7 @@ def process_bag_files(
 
         if race_data:
             job_variables["environment"].append(
-                {"name": "RACE_DATA", "value": race_data}
+                {"name": "RACE_DATA", "value": json.dumps(race_data)}
             )
 
         response = batch_client.submit_job(
@@ -255,64 +269,165 @@ def create_dynamodb_entries(matched_bags: dict, fetch_job_id: str) -> None:
         appsync_helpers.send_mutation(query, variables)
 
 
+def confirm_user_and_model(user: dict, bag_dir: str) -> dict:
+    """
+    Confirm the user and model from the bag directory name
+    Expected format: <username>-<modelname>-YYYYMMDD-HHMMSS
+    Where username and modelname can themselves contain hyphens.
+    If username contains underscore (_) it is stripped during comparison!
+    Args:
+        user: Username to confirm
+        bag_dir: Name of the bag directory
+    Returns:
+        Dictionary containing user and model information, or None if not found
+    """
+    # Use regex to extract the date and time part
+    pattern = r"^(.*)-(\d{8}-\d{6})$"
+    match = re.match(pattern, bag_dir)
+
+    if not match:
+        logger.warning(
+            f"Bag directory {bag_dir} has invalid format (doesn't match expected pattern)"
+        )
+        return None
+
+    # Extract the components
+    prefix = match.group(1)  # This contains username-modelname
+    bag_timestamp = match.group(2)  # YYYYMMDD-HHMMSS
+
+    # Normalize username (remove underscores)
+    normalized_username = user["username"].replace("_", "")
+
+    # Check if the bag directory starts with the normalized username
+    if not prefix.startswith(f"{normalized_username}-"):
+        logger.warning(
+            f"Normalized username: '{normalized_username}' does not match as prefix in '{prefix}'"
+        )
+        return None
+
+    # Extract model name - it's everything after username- and before the timestamp
+    if len(normalized_username) + 1 >= len(prefix):
+        logger.warning(
+            f"Invalid prefix structure in {bag_dir}, can't extract model name"
+        )
+        return None
+
+    model_name = prefix[len(normalized_username) + 1 :]
+
+    # Create the matched model dictionary
+    matched_model = {
+        "model": {"name": model_name},
+        "username": user["username"],
+        "username_normalized": normalized_username,
+        "sub": user["sub"],
+        "timestamp": bag_timestamp,
+    }
+
+    # Check if the model exists
+    model_info = query_model(matched_model["sub"], model_name)
+    if not model_info:
+        logger.warning(f"Model '{model_name}' not found for user '{user}'")
+        return None
+
+    matched_model["model"] = model_info
+    return matched_model
+
+
 def find_user_and_model(all_users: list[dict], bag_dir: str) -> dict:
     """
     Find the user and model from the bag directory name
+    Expected format: <username>-<modelname>-YYYYMMDD-HHMMSS
+    Where username and modelname can themselves contain hyphens.
+    If username contains underscore (_) it is stripped during comparison!
+
     Args:
+        all_users: List of dictionaries containing user information
         bag_dir: Name of the bag directory
     Returns:
-        Tuple containing the user and model
+        Dictionary containing user and model information, or None if not found
     """
 
-    # Example bag_dir: user1-model1-20210901-123456
-    # Both user and model names can contain hyphen!
+    # Use regex to extract the date and time part
+    pattern = r"^(.*)-(\d{8}-\d{6})$"
+    match = re.match(pattern, bag_dir)
 
-    # Search for unique username:
+    if not match:
+        logger.warning(
+            f"Bag directory {bag_dir} has invalid format (doesn't match expected pattern)"
+        )
+        return None
+
+    # Extract the components
+    prefix = match.group(1)  # This contains username-modelname
+    bag_timestamp = match.group(2)  # YYYYMMDD-HHMMSS
+
+    # Validate bag directory format
+    prefix_split = prefix.split("-")
+
+    # Search for unique username match
     candidate_user_model = []
 
-    bag_name_split = bag_dir.split("-")
-    for segment in range(1, len(bag_name_split) - 3):
-        user_prefix = "-".join(bag_name_split[:segment])
+    # Try every possible segment division, leaving at least one segment for the model name
+    for segment in range(1, len(prefix_split)):
+        user_prefix = "-".join(prefix_split[:segment])
         logger.info(f"Checking for user prefix: {user_prefix}")
 
-        for user in all_users[:]:
+        matching_users = []
+        remaining_users = []
+
+        # Pre-normalize usernames and create a more efficient lookup structure
+        for user in all_users:
             username = user["username"]
-            logger.info(f"Checking user {username} {user_prefix}")
+            normalized_username = username.replace("_", "")
 
-            if user["username"] == user_prefix:
-                candidate_user_model.append(
-                    (user, {"name": "-".join(bag_name_split[segment:-2])})
-                )
-                all_users.remove(user)
-            elif not user["username"].startswith("-".join(user_prefix)):
-                all_users.remove(user)
+            # Store both original user and normalized username
+            if normalized_username == user_prefix:
+                # We have a match - the username exactly matches our prefix
+                model_name = "-".join(prefix_split[segment:])
+                matching_users.append((user, normalized_username, {"name": model_name}))
+            elif normalized_username.startswith(user_prefix):
+                # Keep users that might match a longer prefix
+                remaining_users.append(user)
 
-        if len(candidate_user_model) > 0:
+        # Replace all_users with the filtered list for next iteration
+        all_users = remaining_users
+
+        if matching_users:
+            candidate_user_model.extend(matching_users)
             logger.info(
-                f"Found candidate user / model combinations: {candidate_user_model}"
+                {
+                    "message": "Found candidate matches",
+                    "bag_dir": bag_dir,
+                    "matches": [u[0]["username"] for u in matching_users],
+                }
             )
             break
 
-    if len(candidate_user_model) == 0:
+    if not candidate_user_model:
         logger.warning(f"Could not find user / model match for {bag_dir}")
         return None
 
     matched_model = {}
 
     # Iterate over the proposed user / model combinations and check if the model exists
-    for user, model_name in candidate_user_model:
+    valid_candidates = []
+    for user, normalized_username, model_name in candidate_user_model:
         # Check if the model exists
         model_info = query_model(user["sub"], model_name["name"])
         if model_info:
+            valid_candidates.append((user, model_name))
             matched_model["model"] = model_info
             matched_model["username"] = user["username"]
+            matched_model["username_normalized"] = normalized_username
             matched_model["sub"] = user["sub"]
-        else:
-            candidate_user_model.remove((user, model_name))
+            matched_model["timestamp"] = bag_timestamp
+
+    # Update candidate_user_model to only include valid candidates
+    candidate_user_model = valid_candidates
 
     # No candidate found - can't proceed
-    if len(candidate_user_model) == 0:
-        logger.warning(f"Could not find user / model match for {bag_dir}")
+    if not candidate_user_model:
+        logger.warning(f"Could not find valid model match for {bag_dir}")
         return None
 
     # Multiple matches not possible!
@@ -376,9 +491,11 @@ def query_model(sub: str, model_name: str) -> dict:
         raise
 
 
-def query_users() -> list[dict]:
+def query_users(username_prefix: str = None) -> list[dict]:
     """
     Query AppSync to check if a user exists and get their ID
+    Args:
+        username_prefix: Optional username prefix to filter users on the server side
     Returns:
         List of user IDs and their unique identifiers
     Raises:
@@ -386,26 +503,38 @@ def query_users() -> list[dict]:
     """
 
     query = """
-    query listUsers {
-        listUsers {
+    query listUsers($username_prefix: String) {
+        listUsers(username_prefix: $username_prefix) {
             sub
             Username
         }    
     }
     """
 
+    # If username_prefix is not provided, pass None or don't include it in variables
+    variables = {}
+    if username_prefix:
+        variables["username_prefix"] = username_prefix
+
     try:
         users = []
 
-        response = appsync_helpers.run_query(query, {})
+        response = appsync_helpers.run_query(query, variables)
 
         if response.get("data", {}).get("listUsers"):
             for user in response["data"]["listUsers"]:
                 users.append({"username": user["Username"], "sub": user["sub"]})
-            logger.info(f"Found users: {users}")
+
+            log_message = f"Found {len(users)} users"
+            if username_prefix:
+                log_message += f" matching prefix '{username_prefix}'"
+            logger.info(log_message)
+
             return users
         else:
-            raise Exception(f"No users found!")
+            raise Exception(
+                f"No users found{' with prefix ' + username_prefix if username_prefix else ''}!"
+            )
 
     except Exception as e:
         logger.error(f"Error querying for users: {str(e)}")
@@ -486,9 +615,8 @@ def download_and_extract_tar(bucket: str, key: str, tmp_dir: str) -> list[str]:
             extracted_files = os.listdir(tmp_dir)
             logger.debug(f"Extracted files: {extracted_files}")
 
+            logger.info(f"Successfully extracted files to {tmp_dir}")
             return extracted_files
-
-        logger.info(f"Successfully extracted files to {tmp_dir}")
 
     except tarfile.ReadError as e:
         logger.error(f"Error reading tar file: {str(e)}")
