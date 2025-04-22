@@ -795,15 +795,15 @@
     "header": "Account details",
     "header.details": "Account details",
     "description": "Update your user settings and password.",
-    "settings.name": "Name",
     "breadcrumb": "User",
-    "settings.breadcrumb": "Settings",
     "buttons.delete": "Delete account",
     "modal.button.delete-confirm": "Confirm",
     "modal.header-delete-account": "Delete DREM account",
     "modal.confirm-delete-account": "Are you sure you wish to delete your DREM account, this action is not reversible?",
     "buttons.update-password": "Change your password",
     "settings": {
+      "breadcrumb": "Settings",
+      "name": "Name",
       "delete.header": "Delete your DREM account",
       "changepw.header": "Complete the form to update your password",
       "form": {
