@@ -21,6 +21,7 @@ ssmId=NULL
 ssmRegion=NULL
 ssid=NULL
 wifiPass=NULL
+upgradeConsole=NULL
 
 optstring=":h:p:c:i:r:s:w:u"
 
