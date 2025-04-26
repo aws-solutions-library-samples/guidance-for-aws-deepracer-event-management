@@ -199,6 +199,8 @@ export const useCarCmdApi = () => {
 
       if (raceData !== null) {
         operationInput.raceData = JSON.stringify(raceData);
+      } else {
+        operationInput.raceData = null;
       }
 
       API.graphql(graphqlOperation(startFetchFromCar, operationInput))
