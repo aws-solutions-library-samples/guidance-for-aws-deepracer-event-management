@@ -82,7 +82,7 @@ export default function useMutation() {
           notificationInfo.itemType !== 'unknown'
         );
         dispatch('ADD_NOTIFICATION', {
-          header: notificationHeader,
+          content: notificationHeader,
           type: 'info',
           loading: true,
           dismissible: true,
@@ -96,7 +96,7 @@ export default function useMutation() {
 
       return notificationInfo;
     },
-    [dispatch]
+    [dispatch, t]
   );
 
   const generateResponseNotification = useCallback(
@@ -132,7 +132,7 @@ export default function useMutation() {
       if (notificationHeader != null && notificationInfo.itemType !== 'unknown') {
         console.debug('Add response - notification');
         dispatch('ADD_NOTIFICATION', {
-          header: notificationHeader,
+          content: notificationHeader,
           type: status,
           dismissible: true,
           dismissLabel: 'Dismiss message',
@@ -143,7 +143,7 @@ export default function useMutation() {
         });
       }
     },
-    [dispatch]
+    [dispatch, t]
   );
 
   const send = useCallback(

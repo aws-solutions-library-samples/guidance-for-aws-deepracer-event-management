@@ -151,6 +151,7 @@
         "header": "Download assets",
         "description": "Are you sure you want to download the following assets?"
       },
+      "event-name": "Event",
       "fetch-job-id": "Fetch Job ID",
       "model-information": "Model Information",
       "model-name": "Model Name",
@@ -516,6 +517,7 @@
   "users-list.header": "Users",
   "users-list.description": "Users are assigned roles that determine which actions they can perform in DREM.",
   "notifications": {
+    "item-type-asset": "Assset",
     "item-type-event": "Event",
     "item-type-user": "User",
     "item-type-race": "Race",

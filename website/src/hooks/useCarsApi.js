@@ -111,7 +111,7 @@ export const useCarCmdApi = () => {
     (apiMethodName, label, type, dispatch) => {
       const notificationId = `${apiMethodName}_N${incrementCounter()}`;
       dispatch('ADD_NOTIFICATION', {
-        header: label,
+        content: label,
         type: type,
         dismissible: true,
         dismissLabel: t('devices.notifications.dismiss-message'),
