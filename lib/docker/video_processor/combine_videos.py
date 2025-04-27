@@ -200,8 +200,7 @@ def create_divider_frame(
     prefix: str,
     date_time: str,
     background_path: str,
-    font_path_bd: str,
-    font_path_rg: str,
+    fonts: dict,
 ) -> np.ndarray:
     """
     Create a divider frame with the specified text and background.
@@ -212,8 +211,7 @@ def create_divider_frame(
         prefix (str): The prefix to display on the first line.
         date_time (str): The date and time to display on the second line.
         background_path (str): The path to the background image.
-        font_path_bd (str): The path to the bold font.
-        font_path_rg (str): The path to the regular font.
+        fonts (dict): A dict with paths to the fonts.
 
     Returns:
         np.ndarray: The created divider frame.
@@ -226,8 +224,8 @@ def create_divider_frame(
     draw = ImageDraw.Draw(background_pil)
 
     # Load custom fonts
-    font_bd = ImageFont.truetype(font_path_bd, 60)
-    font_rg = ImageFont.truetype(font_path_rg, 45)
+    font_bd = ImageFont.truetype(fonts["bold"], 60)
+    font_rg = ImageFont.truetype(fonts["regular"], 45)
 
     # Calculate text positions using textbbox
     text_bbox_prefix = draw.textbbox((0, 0), prefix, font=font_bd)
@@ -262,8 +260,7 @@ def combine_videos(
     video_files: list,
     output_file: str,
     background_path: str,
-    font_path_bd: str,
-    font_path_rg: str,
+    fonts: dict,
     codec: str = "avc1",
     skip_duration: float = 20.0,
     update_frequency: float = 0.1,
@@ -276,8 +273,7 @@ def combine_videos(
         video_files (list): A list of video file paths to combine.
         output_file (str): The path to the output video file.
         background_path (str): The path to the background image for dividers.
-        font_path_bd (str): The path to the bold font.
-        font_path_rg (str): The path to the regular font.
+        fonts (dict): A dict with paths to the fonts.
         codec (str): The codec for the video writer.
         skip_duration (float): Skip video files with duration less than the specified value.
         update_frequency (float): Update frequency for the progress bar.
@@ -328,8 +324,7 @@ def combine_videos(
             prefix,
             date_time,
             background_path,
-            font_path_bd,
-            font_path_rg,
+            fonts
         )
         for _ in range(
             int(fps * divider_duration)

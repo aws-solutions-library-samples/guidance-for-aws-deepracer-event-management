@@ -238,8 +238,12 @@ def main():
         "AWS-Deepracer_Background_Machine-Learning.928f7bc20a014c7c7823e819ce4c2a84af17597c.jpg",
     )
 
-    font_path_bd = os.path.join(script_dir, "resources", "Amazon_Ember_Bd.ttf")
-    font_path_rg = os.path.join(script_dir, "resources", "Amazon_Ember_Rg.ttf")
+    fonts = {
+        "regular": os.path.join(script_dir, "resources", "Amazon_Ember_Rg.ttf"),
+        "bold": os.path.join(script_dir, "resources", "Amazon_Ember_Bd.ttf"),
+        "heavy": os.path.join(script_dir, "resources", "Amazon_Ember_He.ttf"),
+        "heavy-italic": os.path.join(script_dir, "resources", "Amazon_Ember_HeIt.ttf"),
+    }
 
     for bag in matched_bags["bags"]:
 
@@ -365,8 +369,7 @@ def main():
             video["source_videos"],
             output_file,
             background,
-            font_path_bd,
-            font_path_rg,
+            fonts,
             codec=codec,
             skip_duration=skip_duration,
             update_frequency=1,
