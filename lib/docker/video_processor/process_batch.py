@@ -197,22 +197,7 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(models_dir, exist_ok=True)
 
-    matched_bags = os.getenv("MATCHED_BAGS")
-    if not matched_bags:
-        logger.error("MATCHED_BAGS environment variable is required.")
-        sys.exit(1)
-
-    try:
-        matched_bags = json.loads(matched_bags) if matched_bags else {}
-        if not isinstance(matched_bags, dict):
-            raise ValueError("MATCHED_BAGS should be a JSON object.")
-        if "bags" not in matched_bags:
-            raise ValueError("MATCHED_BAGS should contain an element 'bags'.")
-    except json.JSONDecodeError as e:
-        logger.error(f"Error decoding MATCHED_BAGS: {e}")
-        sys.exit(1)
-
-    # Read in optional environment variables
+    # Read in environment variables
     fetch_job_id = os.getenv("FETCH_JOB_ID", None)
     logs_bucket = os.getenv("LOGS_BUCKET")
     models_bucket = os.getenv("MODELS_BUCKET")
@@ -222,13 +207,26 @@ def main():
     relative_labels = os.getenv("RELATIVE_LABELS", "False").lower() == "true"
     background = os.getenv("BACKGROUND", "True").lower() == "true"
     skip_duration = float(os.getenv("SKIP_DURATION", 20.0))
+    job_data_bucket = os.getenv("JOB_DATA_BUCKET")
+    job_data_key = os.getenv("JOB_DATA_KEY")
 
-    race_data = os.getenv("RACE_DATA")
     try:
-        race_data = json.loads(race_data) if race_data else None
+        job_data = json.loads(
+            s3.get_object(Bucket=job_data_bucket, Key=job_data_key)["Body"].read()
+        )
+        logger.info(f"JOB_DATA: {job_data}")
     except json.JSONDecodeError as e:
-        race_data = None
-        logger.warning(f"Error decoding RACE_DATA: {e}")
+        logger.error(f"Error decoding JOB_DATA: {e}")
+        sys.exit(1)
+
+    matched_bags = job_data["matched_bags"]
+    if not matched_bags:
+        logger.error("MATCHED_BAGS environment variable is required.")
+        sys.exit(1)
+    if "bags" not in matched_bags:
+        raise ValueError("MATCHED_BAGS should contain an element 'bags'.")
+
+    race_data = job_data.get("race_data")
 
     user_model_videos_map = []
 

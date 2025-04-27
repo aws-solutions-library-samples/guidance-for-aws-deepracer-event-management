@@ -176,23 +176,28 @@ def process_bag_files(
     # Create a batch job for the matched bags
     job_queue = os.environ["JOB_QUEUE"]
     job_definition = os.environ["JOB_DEFINITION"]
+    job_config_key = f"job-configs/{fetch_job_id}.json"
+    job_data = {
+        "matched_bags": matched_bags,
+        "car_id": car_id,
+    }
+    if race_data:
+        job_data.append({"race_data": race_data})
+
+    s3_client.put_object(
+        Bucket=output_bucket, Key=job_config_key, Body=json.dumps(job_data)
+    )
 
     batch_client = boto3.client("batch")
-
     try:
 
         job_variables = {
             "environment": [
-                {"name": "MATCHED_BAGS", "value": json.dumps(matched_bags)},
-                {"name": "CAR_ID", "value": car_id},
                 {"name": "FETCH_JOB_ID", "value": fetch_job_id},
+                {"name": "JOB_DATA_BUCKET", "value": output_bucket},
+                {"name": "JOB_DATA_KEY", "value": job_config_key},
             ]
         }
-
-        if race_data:
-            job_variables["environment"].append(
-                {"name": "RACE_DATA", "value": json.dumps(race_data)}
-            )
 
         response = batch_client.submit_job(
             jobName=f"process-logs-{timestamp}",
