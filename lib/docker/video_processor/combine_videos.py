@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import datetime
 import os
 import random
 import string
@@ -256,15 +257,219 @@ def create_divider_frame(
     return background
 
 
+def create_title_frame(
+    width: int,
+    height: int,
+    username: str,
+    models: list,
+    car_name: str = None,
+    event_name: str = None,
+    background_path: str = None,
+    logo_path: str = None,
+    fonts: dict = None,
+) -> np.ndarray:
+    """
+    Create a title frame to display at the start of a combined video.
+
+    Args:
+        width (int): The width of the frame.
+        height (int): The height of the frame.
+        username (str): The username to display on the first line.
+        models (list): List of models used in the video, each with modelName.
+        car_name (str, optional): The name of the car. Defaults to None.
+        event_name (str, optional): The name of the event. Defaults to None.
+        background_path (str): The path to the background image.
+        logo_path (str): The path to the logo image.
+        fonts (dict): A dict with paths to the fonts.
+
+    Returns:
+        np.ndarray: The created title frame.
+    """
+    background = cv2.imread(background_path)
+    background = cv2.resize(background, (width, height))
+
+    # Convert the background to a PIL image
+    background_pil = Image.fromarray(cv2.cvtColor(background, cv2.COLOR_BGR2RGB))
+    draw = ImageDraw.Draw(background_pil)
+
+    # Add logo to the top left corner if provided
+    if logo_path and os.path.exists(logo_path):
+        try:
+            logo = Image.open(logo_path).convert("RGBA")
+            
+            # Resize logo to appropriate size (height of about 10% of the frame)
+            logo_height = int(height * 0.1)  # 10% of frame height
+            logo_width = int(logo.width * (logo_height / logo.height))
+            logo = logo.resize((logo_width, logo_height), Image.LANCZOS)
+            
+            # Position logo in the top left with some padding
+            padding = 20
+            logo_position = (padding, padding)
+            
+            # Create a new image with alpha channel for proper transparency
+            if logo.mode == 'RGBA':
+                # Create a new RGB image with white background for PIL to handle transparency
+                temp_img = Image.new('RGBA', background_pil.size, (0, 0, 0, 0))
+                temp_img.paste(logo, logo_position)
+                
+                # Composite the images
+                background_pil = Image.alpha_composite(
+                    background_pil.convert('RGBA'), 
+                    temp_img
+                ).convert('RGB')
+            else:
+                # If no transparency, just paste directly
+                background_pil.paste(logo, logo_position, logo)
+            
+            # Recreate the draw object after modifying the image
+            draw = ImageDraw.Draw(background_pil)
+            
+        except Exception as e:
+            print(f"Error adding logo: {e}")
+
+    # Load custom fonts
+    font_bd_50 = ImageFont.truetype(fonts["bold"], 50)  # Title font
+    font_he_80 = ImageFont.truetype(fonts["heavy"], 80)  # Larger for racer name
+    font_he_45 = ImageFont.truetype(fonts["heavy"], 45)  # Headers (Models)
+    font_he_38 = ImageFont.truetype(fonts["heavy"], 38)  # Bold labels for footer
+    font_rg = ImageFont.truetype(fonts["regular"], 40)  # Regular text
+    font_sm = ImageFont.truetype(fonts["regular"], 38)  # Smaller text for models and footer
+
+    vertical_start = height // 7  # Start slightly higher for better balance
+    line_spacing = 90  # Increased spacing for the larger racer name
+    
+    # Draw the title - use event name if provided, otherwise use default
+    title_text = event_name if event_name else "AWS DeepRacer Session"
+    text_bbox_title = draw.textbbox((0, 0), title_text, font=font_bd_50)
+    text_x_title = (width - (text_bbox_title[2] - text_bbox_title[0])) // 2
+    
+    # Draw the title
+    draw.text(
+        (text_x_title, vertical_start), 
+        title_text, 
+        font=font_bd_50, 
+        fill=(255, 255, 255)
+    )
+    
+    # Draw username (larger, centered)
+    text_bbox_username = draw.textbbox((0, 0), username, font=font_he_80)
+    text_x_username = (width - (text_bbox_username[2] - text_bbox_username[0])) // 2
+    draw.text(
+        (text_x_username, vertical_start + line_spacing), 
+        username, 
+        font=font_he_80, 
+        fill=(255, 255, 255)
+    )
+    
+    # Models header - centered in the main content area
+    models_start_y = vertical_start + line_spacing * 2 + 30
+    
+    # Draw 'Models' or 'Model' label centered
+    models_title = "Model" if len(models) == 1 else "Models"
+    text_bbox_models_title = draw.textbbox((0, 0), models_title, font=font_he_45)
+    text_x_models_title = (width - (text_bbox_models_title[2] - text_bbox_models_title[0])) // 2
+    draw.text(
+        (text_x_models_title, models_start_y), 
+        models_title, 
+        font=font_he_45, 
+        fill=(255, 255, 255)
+    )
+    
+    # List each model used, centered
+    model_y = models_start_y + 60
+    for model in models:
+        model_text = model.get("modelName", "Unknown model")
+        text_bbox_model = draw.textbbox((0, 0), model_text, font=font_sm)
+        text_x_model = (width - (text_bbox_model[2] - text_bbox_model[0])) // 2
+        draw.text(
+            (text_x_model, model_y), 
+            model_text, 
+            font=font_sm, 
+            fill=(255, 255, 255)
+        )
+        model_y += 45  # Slightly more space between model names
+    
+    # Footer area with Car and Created date
+    footer_y = height - 100
+    
+    # Draw date on the right side - using bold for "Created" and regular for the date
+    current_date = datetime.datetime.now().strftime('%Y-%m-%d')
+    
+    # First, draw the "Created" label in bold
+    created_label = "Created"
+    text_bbox_created = draw.textbbox((0, 0), created_label, font=font_he_38)
+    
+    # Then calculate the date width
+    date_text = current_date
+    text_bbox_date = draw.textbbox((0, 0), date_text, font=font_sm)
+    
+    # Calculate total width of the combined text for centering in the right half
+    total_width = (text_bbox_created[2] - text_bbox_created[0]) + 10 + (text_bbox_date[2] - text_bbox_date[0])
+    right_center_x = (width // 4) * 3
+    start_x = right_center_x - (total_width // 2)
+    
+    # Draw the label
+    draw.text(
+        (start_x, footer_y), 
+        created_label, 
+        font=font_he_38, 
+        fill=(255, 255, 255)
+    )
+    
+    # Draw the date (with a space after "Created")
+    draw.text(
+        (start_x + (text_bbox_created[2] - text_bbox_created[0]) + 10, footer_y), 
+        date_text, 
+        font=font_sm, 
+        fill=(255, 255, 255)
+    )
+    
+    # Draw car info on the left side if provided - using bold for "Car" and regular for car name
+    if car_name:
+        # First, calculate the "Car" label width
+        car_label = "Car"
+        text_bbox_car_label = draw.textbbox((0, 0), car_label, font=font_he_38)
+        
+        # Then calculate the car name width
+        car_name_text = car_name
+        text_bbox_car_name = draw.textbbox((0, 0), car_name_text, font=font_sm)
+        
+        # Calculate total width for centering in left half
+        total_width = (text_bbox_car_label[2] - text_bbox_car_label[0]) + 10 + (text_bbox_car_name[2] - text_bbox_car_name[0])
+        left_center_x = width // 4
+        start_x = left_center_x - (total_width // 2)
+        
+        # Draw the "Car" label in bold
+        draw.text(
+            (start_x, footer_y), 
+            car_label, 
+            font=font_he_38, 
+            fill=(255, 255, 255)
+        )
+        
+        # Draw the car name (with a space after "Car")
+        draw.text(
+            (start_x + (text_bbox_car_label[2] - text_bbox_car_label[0]) + 10, footer_y), 
+            car_name_text, 
+            font=font_sm, 
+            fill=(255, 255, 255)
+        )
+
+    # Convert the PIL image back to a NumPy array
+    background = cv2.cvtColor(np.array(background_pil), cv2.COLOR_RGB2BGR)
+
+    return background
+
+
 def combine_videos(
     video_files: list,
     output_file: str,
-    background_path: str,
+    image_assets: dict,
     fonts: dict,
     codec: str = "avc1",
     skip_duration: float = 20.0,
     update_frequency: float = 0.1,
-    race_data: dict = None,
+    metadata: dict = None,
 ) -> dict:
     """
     Combine multiple video files into a single video file.
@@ -272,11 +477,12 @@ def combine_videos(
     Args:
         video_files (list): A list of video file paths to combine.
         output_file (str): The path to the output video file.
-        background_path (str): The path to the background image for dividers.
+        image_assets (dict): A dict with paths to the background image and logo.
         fonts (dict): A dict with paths to the fonts.
         codec (str): The codec for the video writer.
         skip_duration (float): Skip video files with duration less than the specified value.
         update_frequency (float): Update frequency for the progress bar.
+        metadata (dict): Additional race data including username, models, car_name, and event_name.
 
     Returns:
         dict: Information about the combined video file.
@@ -299,9 +505,30 @@ def combine_videos(
     out = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
 
     total_duration = 0
+    
+    # Add title frame at the beginning (if race_data is provided)
+    title_duration = 3.0  # Show title frame for 3 seconds
+    if metadata and metadata.get('username') and metadata.get('models'):
+        title_frame = create_title_frame(
+            width,
+            height,
+            metadata.get('username'),
+            metadata.get('models'),
+            car_name=metadata.get('car_name'),
+            event_name=metadata.get('event_name'),
+            background_path=image_assets["background"],
+            logo_path=image_assets["logo"],
+            fonts=fonts
+        )
+        
+        for _ in range(int(fps * title_duration)):
+            out.write(title_frame)
+        
+        total_duration += title_duration
 
     divider_duration = 1.5  # Duration of the divider frame in seconds
 
+    # Rest of the function remains unchanged
     for video_file in video_files:
         # Extract prefix and date_time from the filename
         parts = os.path.basename(video_file).split("-")
@@ -323,7 +550,7 @@ def combine_videos(
             height,
             prefix,
             date_time,
-            background_path,
+            image_assets["background"],
             fonts
         )
         for _ in range(

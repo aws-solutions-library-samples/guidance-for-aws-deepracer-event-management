@@ -238,6 +238,15 @@ def main():
         "AWS-Deepracer_Background_Machine-Learning.928f7bc20a014c7c7823e819ce4c2a84af17597c.jpg",
     )
 
+    image_assets = {
+        "background": background,
+        "logo": os.path.join(
+            script_dir,
+            "resources",
+            "logo192.png",
+        ),
+    }
+
     fonts = {
         "regular": os.path.join(script_dir, "resources", "Amazon_Ember_Rg.ttf"),
         "bold": os.path.join(script_dir, "resources", "Amazon_Ember_Bd.ttf"),
@@ -323,7 +332,7 @@ def main():
                 video_file,
             ]
             + (["--relative_labels"] if relative_labels else [])
-            + (["--background"] if background else [])
+            + (["--background"] if image_assets["background"] else [])
             + (["--frame_limit", frame_limit] if frame_limit else [])
             + (["--describe"] if describe else [])
         )
@@ -368,12 +377,18 @@ def main():
         video_info = combine_videos(
             video["source_videos"],
             output_file,
-            background,
+            image_assets,
             fonts,
             codec=codec,
             skip_duration=skip_duration,
             update_frequency=1,
-            race_data=race_data,
+            metadata={
+                "username": video["username"],
+                "race_data": race_data,
+                "car_name": matched_bags["car_name"],
+                "event_name": matched_bags.get("event_name", None),
+                "models": video["models"],
+            },
         )
         logger.info(f"Created video {output_file}.", video_info)
 
