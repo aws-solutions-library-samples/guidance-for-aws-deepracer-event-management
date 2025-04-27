@@ -252,6 +252,7 @@ def main():
         "bold": os.path.join(script_dir, "resources", "Amazon_Ember_Bd.ttf"),
         "heavy": os.path.join(script_dir, "resources", "Amazon_Ember_He.ttf"),
         "heavy-italic": os.path.join(script_dir, "resources", "Amazon_Ember_HeIt.ttf"),
+        "light": os.path.join(script_dir, "resources", "Amazon_Ember_Lt.ttf"),
     }
 
     for bag in matched_bags["bags"]:

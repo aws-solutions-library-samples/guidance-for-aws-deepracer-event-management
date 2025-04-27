@@ -298,7 +298,7 @@ def create_title_frame(
             logo = Image.open(logo_path).convert("RGBA")
             
             # Resize logo to appropriate size (height of about 10% of the frame)
-            logo_height = int(height * 0.1)  # 10% of frame height
+            logo_height = int(height * 0.2)  # 10% of frame height
             logo_width = int(logo.width * (logo_height / logo.height))
             logo = logo.resize((logo_width, logo_height), Image.LANCZOS)
             
@@ -461,6 +461,309 @@ def create_title_frame(
     return background
 
 
+def create_lap_times_frame(
+    width: int,
+    height: int,
+    race_data: dict,
+    username: str = None,
+    car_name: str = None,
+    event_name: str = None,
+    background_path: str = None,
+    logo_path: str = None,
+    fonts: dict = None,
+) -> np.ndarray:
+    """
+    Create a frame to display lap times from race data.
+
+    Args:
+        width (int): The width of the frame.
+        height (int): The height of the frame.
+        race_data (dict): Dictionary containing race data with lap times.
+        username (str): The username to display in the header.
+        car_name (str): The name of the car to display in the header.
+        event_name (str): The name of the event to display in the header.
+        background_path (str): The path to the background image.
+        logo_path (str): The path to the logo image.
+        fonts (dict): A dict with paths to the fonts.
+
+    Returns:
+        np.ndarray: The created lap times frame.
+    """
+    background = cv2.imread(background_path)
+    background = cv2.resize(background, (width, height))
+
+    # Convert the background to a PIL image
+    background_pil = Image.fromarray(cv2.cvtColor(background, cv2.COLOR_BGR2RGB))
+    draw = ImageDraw.Draw(background_pil)
+
+    # Load custom fonts
+    font_he_32 = ImageFont.truetype(fonts["heavy"], 32)  # Section headers
+    font_he_24 = ImageFont.truetype(fonts["heavy"], 24)  # Top bar labels
+    font_bd_xs = ImageFont.truetype(fonts["bold"], 22)      # Important data
+    font_rg = ImageFont.truetype(fonts["regular"], 36)   # Regular data
+    font_sm = ImageFont.truetype(fonts["regular"], 24)   # Top bar values
+    font_xs = ImageFont.truetype(fonts["light"], 22)   # Items
+    
+    # Define top bar area - make it more compact
+    top_bar_height = height * 0.08  # Reduced from 0.1
+    top_bar_y = 15  # Reduced from 20
+    
+    # Add logo to the top left corner if provided
+    logo_width = 0
+    if logo_path and os.path.exists(logo_path):
+        try:
+            logo = Image.open(logo_path).convert("RGBA")
+            
+            # Resize logo to appropriate size (height of about 10% of the frame)
+            logo_height = int(top_bar_height)
+            logo_width = int(logo.width * (logo_height / logo.height))
+            logo = logo.resize((logo_width, logo_height), Image.LANCZOS)
+            
+            # Position logo in the top left with some padding
+            padding = 20
+            logo_position = (padding, padding)
+            
+            # Create a new image with alpha channel for proper transparency
+            if logo.mode == 'RGBA':
+                temp_img = Image.new('RGBA', background_pil.size, (0, 0, 0, 0))
+                temp_img.paste(logo, logo_position)
+                
+                # Composite the images
+                background_pil = Image.alpha_composite(
+                    background_pil.convert('RGBA'), 
+                    temp_img
+                ).convert('RGB')
+            else:
+                background_pil.paste(logo, logo_position, logo)
+            
+            # Recreate the draw object after modifying the image
+            draw = ImageDraw.Draw(background_pil)
+            
+        except Exception as e:
+            print(f"Error adding logo: {e}")
+    
+    # Calculate start position after logo
+    left_margin = logo_width + 40 if logo_width > 0 else 20
+    
+    # Create a top bar with key info
+    # Extract track info
+    track_name = race_data.get('trackName', 'Unknown')
+    
+    # Determine which username to use
+    display_username = username or race_data.get('username', 'Unknown Racer')
+    
+    # Create a header info section with key details
+    header_items = [
+        {"label": "Racer", "value": display_username},
+        {"label": "Car", "value": car_name or "Unknown"},
+        {"label": "Event", "value": event_name or "Unknown"},
+        {"label": "Track", "value": track_name}
+    ]
+        
+    # Calculate available width for the top bar (excluding logo area)
+    available_width = width - left_margin - 20  # 20px right margin
+    item_width = available_width / len(header_items)
+    
+    # Calculate vertical alignment for the top bar items
+    logo_center_y = top_bar_y + (top_bar_height / 2)
+    text_height = font_he_24.getbbox("a")[3]  # Approximate height of the text
+    text_y = logo_center_y - (text_height / 2) - 5
+    
+    # Draw top bar items
+    for i, item in enumerate(header_items):
+        x_pos = left_margin + (i * item_width)
+        
+        # Combine label and value into a single string for centering
+        combined_text = f"{item['label']}  {item['value']}"
+        
+        # Calculate the total width of the combined text
+        combined_bbox = draw.textbbox((0, 0), combined_text, font=font_he_24)
+        combined_width = combined_bbox[2] - combined_bbox[0]
+        
+        # Center the combined text within the item width
+        combined_x = x_pos + (item_width - combined_width) / 2
+        
+        # Draw label and value separately, keeping their respective fonts
+        label_text = f"{item['label']} "
+        label_bbox = draw.textbbox((0, 0), label_text, font=font_he_24)
+        label_width = label_bbox[2] - label_bbox[0]
+        
+        # Draw label in heavy font
+        draw.text(
+            (combined_x, text_y),
+            label_text,
+            font=font_he_24,
+            fill=(255, 255, 255)
+        )
+        
+        # Draw value in smaller font, positioned right after the label
+        draw.text(
+            (combined_x + label_width, text_y),
+            item["value"],
+            font=font_sm,
+            fill=(255, 255, 255)
+        )
+        
+    # Main title - more compact positioning
+    vertical_start = top_bar_height + 10  # Reduced from 25
+    title_text = "Lap Times"
+    text_bbox_title = draw.textbbox((0, 0), title_text, font=font_he_32)
+    text_x_title = (width - (text_bbox_title[2] - text_bbox_title[0])) // 2
+    draw.text(
+        (text_x_title, vertical_start), 
+        title_text, 
+        font=font_he_32, 
+        fill=(255, 255, 255)
+    )
+    
+    # Check if we have all the data we need
+    if not race_data or 'laps' not in race_data or not race_data['laps']:
+        no_data_text = "No lap data available"
+        text_bbox_no_data = draw.textbbox((0, 0), no_data_text, font=font_rg)
+        text_x_no_data = (width - (text_bbox_no_data[2] - text_bbox_no_data[0])) // 2
+        draw.text(
+            (text_x_no_data, height // 2), 
+            no_data_text, 
+            font=font_rg, 
+            fill=(255, 255, 255)
+        )
+        
+        # Convert and return early
+        background = cv2.cvtColor(np.array(background_pil), cv2.COLOR_RGB2BGR)
+        return background
+    
+    # Start of the two-column layout - moved higher
+    table_start_y = vertical_start + 50  # Reduced from 100
+    
+    # Split the table area in two columns
+    # Left column: Individual laps (65% of width)
+    # Right column: Average times (35% of width)
+    left_col_width = width * 0.6
+    
+    # Set up left column for lap times
+    lap_col_x = left_col_width * 0.1
+    time_col_x = left_col_width * 0.25
+    diff_col_x = left_col_width * 0.45
+    resets_col_x = left_col_width * 0.65
+    valid_col_x = left_col_width * 0.8
+    
+    # Draw column headers for lap times
+    draw.text((lap_col_x, table_start_y), "Lap", font=font_he_24, fill=(255, 255, 255))
+    draw.text((time_col_x, table_start_y), "Time", font=font_he_24, fill=(255, 255, 255))
+    draw.text((diff_col_x, table_start_y), "Diff", font=font_he_24, fill=(255, 255, 255))
+    draw.text((resets_col_x, table_start_y), "Resets", font=font_he_24, fill=(255, 255, 255))
+    draw.text((valid_col_x, table_start_y), "Valid", font=font_he_24, fill=(255, 255, 255))
+    
+    # Set up right column for averages
+    avg_header_x = left_col_width + ((width - left_col_width) / 2)
+    avg_col1_x = left_col_width + ((width - left_col_width) * 0.15)
+    avg_col2_x = left_col_width + ((width - left_col_width) * 0.7)
+    
+    # Draw column header for average times
+    avg_header_text = "Average Times"
+    avg_header_bbox = draw.textbbox((0, 0), avg_header_text, font=font_he_24)
+    avg_header_width = avg_header_bbox[2] - avg_header_bbox[0]
+    
+    draw.text(
+        (avg_header_x - (avg_header_width / 2), table_start_y),
+        avg_header_text,
+        font=font_he_24,
+        fill=(255, 255, 255)
+    )
+    
+    # Draw horizontal line under column headers
+    line_y = table_start_y + 35  # Reduced from 50
+    COLOR_EDGE = (167, 131, 225)  # Converted hex color "#a783e1" to RGB
+    draw.line([(0, line_y), (width, line_y)], fill=COLOR_EDGE, width=1)
+    
+    # Draw vertical dividing line between columns
+    draw.line([(left_col_width, table_start_y), (left_col_width, height)], 
+              fill=COLOR_EDGE, width=1)
+    
+    # Draw individual lap data
+    row_y = line_y + 10
+    row_height = 26  # Reduced from 40 to fit more rows
+    
+    # Calculate how many rows we can fit with the new top bar layout
+    available_height = height - row_y - 20  # Reduced bottom margin from 50 to 30
+    max_rows_that_fit = max(20, int(available_height / row_height))  # Ensure at least 20 rows
+    max_rows = min(max_rows_that_fit, len(race_data['laps']))
+    
+    # Check if we need to display "continued on next page" message
+    show_continued = len(race_data['laps']) > max_rows
+    
+    # Find the best lap time among valid laps
+    valid_laps = [lap for lap in race_data['laps'] if lap.get('isValid', False)]
+    best_lap_time = min(lap['time'] for lap in valid_laps) if valid_laps else None
+    
+    for i, lap in enumerate(race_data['laps'][:max_rows]):
+        lap_num = str(lap['lapId'] + 1)  # Add 1 to 0-indexed lap IDs for display
+        
+        # Format time from milliseconds to seconds with 3 decimal places
+        time_ms = lap['time']
+        time_str = f"{time_ms/1000:.3f} s"
+        
+        # Calculate difference to the best lap
+        if not lap.get('isValid', False):
+            diff_str = ""
+        else:
+            diff_ms = time_ms - best_lap_time
+            diff_str = f"+{diff_ms/1000:.3f} s" if diff_ms > 0 else "-0.000 s"
+        
+        resets = str(lap['resets'])
+        valid = "Yes" if lap.get('isValid', False) else "No"
+        
+        # Determine color based on validity
+        valid_color = (255, 255, 255) if lap.get('isValid', False) else (255, 150, 150)
+        
+        # Use bold font for the best lap, otherwise regular font
+        lap_font = font_bd_xs if time_ms == best_lap_time else font_xs
+        
+        draw.text((lap_col_x, row_y), lap_num, font=lap_font, fill=(255, 255, 255))
+        draw.text((time_col_x, row_y), time_str, font=lap_font, fill=(255, 255, 255))
+        draw.text((diff_col_x, row_y), diff_str, font=lap_font, fill=(255, 255, 255))
+        draw.text((resets_col_x, row_y), resets, font=lap_font, fill=(255, 255, 255))
+        draw.text((valid_col_x, row_y), valid, font=lap_font, fill=valid_color)
+        row_y += row_height
+    
+    if show_continued:
+        continued_text = f"(+ {len(race_data['laps']) - max_rows} more laps)"
+        draw.text(
+            (lap_col_x, row_y + 5),  # Reduced from 10
+            continued_text,
+            font=font_sm,  # Use smaller font (font_sm instead of font_rg)
+            fill=(200, 200, 200)
+        )
+
+    # Draw average lap times in the right column
+    if 'averageLaps' in race_data and race_data['averageLaps']:
+        avg_row_y = line_y + 15
+        
+        # Find the best average lap time
+        best_avg_time = min(avg['avgTime'] for avg in race_data['averageLaps'])
+        
+        for avg in race_data['averageLaps']:
+            # Format the laps range and time
+            start_lap = avg['startLapId'] + 1  # Add 1 to 0-indexed lap IDs
+            end_lap = avg['endLapId'] + 1
+            laps_range = f"Laps {start_lap}-{end_lap}"
+            
+            avg_time = avg['avgTime']
+            avg_time_str = f"{avg_time/1000:.3f} s"
+            
+            # Highlight the best average lap time
+            font_to_use = font_bd_xs if avg_time == best_avg_time else font_xs
+           
+            draw.text((avg_col1_x, avg_row_y), laps_range, font=font_to_use, fill=(255, 255, 255))
+            draw.text((avg_col2_x, avg_row_y), avg_time_str, font=font_to_use, fill=(255, 255, 255))
+            
+            avg_row_y += row_height
+    
+    # Convert the PIL image back to a NumPy array
+    background = cv2.cvtColor(np.array(background_pil), cv2.COLOR_RGB2BGR)
+
+    return background
+
 def combine_videos(
     video_files: list,
     output_file: str,
@@ -506,7 +809,7 @@ def combine_videos(
 
     total_duration = 0
     
-    # Add title frame at the beginning (if race_data is provided)
+    # Add title frame at the beginning
     title_duration = 3.0  # Show title frame for 3 seconds
     if metadata and metadata.get('username') and metadata.get('models'):
         title_frame = create_title_frame(
@@ -516,8 +819,8 @@ def combine_videos(
             metadata.get('models'),
             car_name=metadata.get('car_name'),
             event_name=metadata.get('event_name'),
-            background_path=image_assets["background"],
-            logo_path=image_assets["logo"],
+            background_path=image_assets.get('background'),
+            logo_path=image_assets.get('logo'),
             fonts=fonts
         )
         
@@ -525,6 +828,26 @@ def combine_videos(
             out.write(title_frame)
         
         total_duration += title_duration
+    
+    # Add lap times frame if race data is available
+    if metadata and metadata.get('race_data') and metadata['race_data'].get('laps'):
+        lap_times_duration = 4.0  # Show lap times for 4 seconds
+        lap_times_frame = create_lap_times_frame(
+            width,
+            height,
+            metadata.get('race_data'),
+            username=metadata.get('username'),
+            car_name=metadata.get('car_name'),
+            event_name=metadata.get('event_name'),
+            background_path=image_assets.get('background'),
+            logo_path=image_assets.get('logo'),
+            fonts=fonts
+        )
+        
+        for _ in range(int(fps * lap_times_duration)):
+            out.write(lap_times_frame)
+        
+        total_duration += lap_times_duration
 
     divider_duration = 1.5  # Duration of the divider frame in seconds
 
