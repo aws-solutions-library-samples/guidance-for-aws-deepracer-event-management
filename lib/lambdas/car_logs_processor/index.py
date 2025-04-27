@@ -48,7 +48,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                 )
     elif "data" in event:
         race_data = None
-        if "raceData" in event["data"]:
+        if "raceData" in event["data"] and event["data"]["raceData"] is not None:
             race_data = json.loads(event["data"]["raceData"])
 
         matched_bags, batch_job_id = process_bag_files(
@@ -57,6 +57,8 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
             output_bucket,
             event["data"]["jobId"],
             race_data,
+            event["data"].get("eventId", None),
+            event["data"].get("eventName", None),
         )
     else:
         raise ValueError("Invalid event format")
@@ -73,6 +75,8 @@ def process_bag_files(
     output_bucket: str,
     fetch_job_id: str,
     race_data: dict = None,
+    eventId: str = None,
+    eventName: str = None,
 ) -> tuple[dict, str]:
 
     logger.info(f"Processing file {key} from bucket {input_bucket}")
@@ -87,6 +91,9 @@ def process_bag_files(
 
     matched_bags = {"bags": []}
     matched_bags["car_name"] = car_name
+    if eventId:
+        matched_bags["event_id"] = eventId
+        matched_bags["event_name"] = eventName
 
     # Get the car ID from AppSync
     car_id, online = get_car_id(car_name)
@@ -204,15 +211,19 @@ def process_bag_files(
 
 
 def create_dynamodb_entries(matched_bags: dict, fetch_job_id: str) -> None:
-
     for bag in matched_bags["bags"]:
+        # Create a models list with the current model
+        models_list = [
+            {"modelId": bag["model"]["id"], "modelName": bag["model"]["name"]}
+        ]
 
         variables = {
             "sub": bag["sub"],
             "username": bag["username"],
             "assetId": hashlib.sha256(bag["bag_key"].encode("utf-8")).hexdigest(),
-            "modelId": bag["model"]["id"],
-            "modelname": bag["model"]["name"],
+            "models": models_list,
+            "eventId": matched_bags.get("eventId", None),
+            "eventName": matched_bags.get("eventName", None),
             "assetMetaData": {
                 "key": bag["bag_key"],
                 "filename": bag["bag_key"].split("/")[-1],
@@ -229,20 +240,21 @@ def create_dynamodb_entries(matched_bags: dict, fetch_job_id: str) -> None:
         mutation AddCarLogsAsset(
             $assetMetaData: AssetMetadataInput
             $assetId: ID!
-            $modelname: String
-            $modelId: String!
-            $fetchJobId: ID
+            $models: [CarLogsModelInput]
+            $eventId: String
+            $eventName: String
+            $fetchJobId: String
             $type: CarLogsAssetTypeEnum!
             $sub: ID!
             $username: String!
-            $fetchJobId: String
             $carName: String
         ) {
             addCarLogsAsset(
             assetId: $assetId
             assetMetaData: $assetMetaData
-            modelId: $modelId
-            modelname:  $modelname
+            models: $models
+            eventId: $eventId
+            eventName: $eventName
             fetchJobId: $fetchJobId
             carName: $carName
             type: $type
@@ -255,8 +267,12 @@ def create_dynamodb_entries(matched_bags: dict, fetch_job_id: str) -> None:
                 key
                 uploadedDateTime
             }
-            modelId
-            modelname
+            models {
+                modelId
+                modelName
+            }
+            eventId
+            eventName
             fetchJobId
             carName
             type

@@ -71,7 +71,11 @@ def download_bag_from_s3(bag, s3_bucket, input_dir) -> str:
 
 
 def create_dynamodb_entries(
-    user_model_map: list[dict], fetch_job_id: str, car_name: str
+    user_model_map: list[dict],
+    fetch_job_id: str,
+    car_name: str,
+    event_id: str = None,
+    event_name: str = None,
 ) -> None:
 
     logger.info("Creating DynamoDB entries for map: {}".format(user_model_map))
@@ -79,16 +83,22 @@ def create_dynamodb_entries(
     for user in user_model_map:
         for model in user["models"]:
             for video in model["videos"]:
+                # Create models list with current model
+                models_list = [
+                    {"modelId": model["modelId"], "modelName": model["modelname"]}
+                ]
+
                 variables = {
                     "sub": user["sub"],
                     "username": user["username"],
                     "assetId": hashlib.sha256(
                         video["s3_key"].encode("utf-8")
                     ).hexdigest(),
-                    "modelId": model["modelId"],
-                    "modelname": model["modelname"],
+                    "models": models_list,  # Use models as a list of objects
                     "fetchJobId": fetch_job_id,
                     "carName": car_name,
+                    "eventId": event_id,  # Add event ID
+                    "eventName": event_name,  # Add event name
                     "assetMetaData": {
                         "key": video["s3_key"],
                         "filename": video["s3_key"].split("/")[-1],
@@ -110,8 +120,9 @@ def create_dynamodb_entries(
                     $assetId: ID!
                     $assetMetaData: AssetMetadataInput
                     $mediaMetaData: MediaMetadataInput
-                    $modelname: String
-                    $modelId: String!
+                    $models: [CarLogsModelInput]
+                    $eventId: String
+                    $eventName: String
                     $type: CarLogsAssetTypeEnum!
                     $sub: ID!
                     $username: String!
@@ -122,8 +133,9 @@ def create_dynamodb_entries(
                     assetId: $assetId
                     assetMetaData: $assetMetaData
                     mediaMetaData: $mediaMetaData
-                    modelId: $modelId
-                    modelname:  $modelname
+                    models: $models
+                    eventId: $eventId
+                    eventName: $eventName
                     type: $type
                     sub: $sub
                     username: $username
@@ -142,8 +154,12 @@ def create_dynamodb_entries(
                         fps
                         codec
                     }
-                    modelId
-                    modelname
+                    models {
+                        modelId
+                        modelName
+                    }
+                    eventId
+                    eventName
                     fetchJobId
                     carName
                     type
@@ -376,7 +392,13 @@ def main():
 
             logger.info(f"Finished combining videos for {user}")
 
-    create_dynamodb_entries(user_model_map, fetch_job_id, matched_bags["car_name"])
+    create_dynamodb_entries(
+        user_model_map,
+        fetch_job_id,
+        matched_bags["car_name"],
+        matched_bags.get("event_id", None),
+        matched_bags.get("event_name", None),
+    )
 
     logger.info("\nFinished processing videos...\n")
 

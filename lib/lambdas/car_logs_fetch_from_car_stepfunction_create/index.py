@@ -45,12 +45,10 @@ def lambda_handler(event, context):
         "eventName": eventName,
         "laterThan": laterThan,
         "racerName": racerName,
+        "raceData": raceData,
         "startTime": startTime,
         "status": status,
     }
-
-    if raceData:
-        item["raceData"] = json.dumps(raceData)
 
     try:
         query = """mutation createStartFetchFromCarDbEntry($carFleetId: String!, $carFleetName: String!, $carInstanceId: String!, $carIpAddress: String!, $carName: String!, $jobId: ID!, $startTime: AWSDateTime!, $status: CarLogsFetchStatus!, $eventId: ID!, $eventName: String!, $laterThan: AWSDateTime, $racerName: String, $raceData: AWSJSON) {
