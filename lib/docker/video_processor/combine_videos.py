@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-import argparse
-import fnmatch
 import os
 import random
 import string
+from enum import Enum
 
 import cv2
 import numpy as np
@@ -12,40 +11,188 @@ from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 
 
-def get_video_files(
-    directory: str, pattern: str, group_slice: str, delimiter: str
-) -> dict:
+class VideoGroupingMode(Enum):
+    USER_MODEL_DATE = 1
+    USER_MODEL = 2
+    USER_RACE = 3
+
+def unique_suffix(length: int = 4) -> str:
     """
-    Get a dictionary of video files grouped by prefix and date, filtered by a pattern.
+    Generate a unique suffix for filenames.
 
     Args:
-        directory (str): The directory containing the video files.
-        pattern (str): The pattern to filter video files.
-        group_slice (str): The slice to allow videos to be grouped.
-        delimiter (str): The delimiter to use for the output file name.
+        length (int): Length of the unique suffix. Defaults to 4.
 
     Returns:
-        dict: A dictionary where keys are tuples of (prefix, date) and values are lists of video file paths.
+        str: A unique suffix string.
     """
-    video_files = {}
-    for file in os.listdir(directory):
-        if file.endswith(".mp4") and fnmatch.fnmatch(file, pattern):
-            parts = file.split("-")
-            prefix_start, prefix_end = (
-                int(x) if x else None for x in group_slice.split(":")
-            )
-            prefix = delimiter.join(parts[prefix_start:prefix_end])
-            date = parts[-2]
-            key = (prefix, date)
-            if key not in video_files:
-                video_files[key] = []
-            video_files[key].append(os.path.join(directory, file))
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-    for key in video_files:
-        video_files[key].sort()
 
-    return video_files
+def organize_videos(
+    user_model_videos: list,
+    car_name: str = None,
+    video_grouping_mode: VideoGroupingMode = VideoGroupingMode.USER_MODEL_DATE,
+) -> list:
+    """
+    Organize videos based on the specified grouping mode.
 
+    Args:
+        user_model_videos (list): A list of dictionaries with user info, models, and videos.
+        car_name (str, optional): The name of the car. Defaults to None.
+        video_grouping_mode (VideoGroupingMode): The mode to group videos.
+
+    Returns:
+        list: A list of videos to create, with format:
+        [
+            {
+                "sub": user_id,
+                "username": username,
+                "username_normalized": username_normalized,
+                "output_file": filename,
+                "model_name": model_name,      # Only for USER_MODEL_DATE and USER_MODEL modes
+                "date": date,                  # Only for USER_MODEL_DATE mode
+                "source_videos": [list of video files sorted by timestamp]
+            }
+        ]
+    """
+    
+    organized_videos = []
+    
+    # Process each user
+    for user in user_model_videos:
+        user_id = user["sub"]
+        username = user.get("username", user_id)
+        username_normalized = user.get("username_normalized", user_id)
+        
+        match video_grouping_mode:
+            case VideoGroupingMode.USER_MODEL_DATE:
+                # Group by user, model, and date
+                for model in user["models"]:
+                    model_name = model["modelname"]
+                    model_id = model["modelId"]
+                    
+                    # Group videos by date
+                    videos_by_date = {}
+                    for video in model["videos"]:
+                        # Extract date from timestamp (format: YYYYMMDD-HHMMSS)
+                        date = video["timestamp"][:8]  # First 8 chars (YYYYMMDD)
+                        if date not in videos_by_date:
+                            videos_by_date[date] = []
+                        videos_by_date[date].append({
+                            "file": video["file"], 
+                            "timestamp": video["timestamp"]
+                        })
+                    
+                    # Create a video output for each date
+                    for date, video_files in videos_by_date.items():
+                        # Sort videos by timestamp
+                        video_files.sort(key=lambda x: x["timestamp"])
+                        sorted_files = [v["file"] for v in video_files]
+                        
+                        # Build file name components
+                        name_parts = [username_normalized, model_name]
+                        if car_name:
+                            name_parts.append(car_name.strip())
+                        name_parts.append(date)
+                        name_parts.append(unique_suffix())
+                        
+                        output_filename = "_".join(name_parts) + ".mp4"
+                        
+                        organized_videos.append({
+                            "sub": user_id,
+                            "username": username,
+                            "username_normalized": username_normalized,
+                            "output_file": output_filename,
+                            "models": [{"modelId": model_id, "modelName": model_name}],
+                            "date": date,
+                            "source_videos": sorted_files
+                        })
+            
+            case VideoGroupingMode.USER_MODEL:
+                # Group by user and model only
+                for model in user["models"]:
+                    model_name = model["modelname"]
+                    model_id = model["modelId"]
+                    
+                    # Collect videos with timestamps
+                    video_files_with_timestamps = [
+                        {"file": video["file"], "timestamp": video["timestamp"]}
+                        for video in model["videos"]
+                    ]
+                    
+                    # Sort videos by timestamp
+                    video_files_with_timestamps.sort(key=lambda x: x["timestamp"])
+                    sorted_files = [v["file"] for v in video_files_with_timestamps]
+                    
+                    if sorted_files:                      
+                        # Build file name components
+                        name_parts = [username_normalized, model_name]
+                        if car_name:
+                            name_parts.append(car_name.strip())
+                        name_parts.append(unique_suffix())
+                        
+                        output_filename = "_".join(name_parts) + ".mp4"
+                        
+                        organized_videos.append({
+                            "sub": user_id,
+                            "username": username,
+                            "username_normalized": username_normalized,                            
+                            "output_file": output_filename,
+                            "models": [{"modelId": model_id, "modelName": model_name}],
+                            "source_videos": sorted_files
+                        })
+            
+            case VideoGroupingMode.USER_RACE:
+                # Group all videos by user only
+                video_files_with_timestamps = []
+                models_set = []  # Collect unique models
+                
+                # Collect all videos with timestamps and track all models
+                for model in user["models"]:
+                    model_id = model["modelId"]
+                    model_name = model["modelname"]
+                    
+                    # Add model to the set if it has videos
+                    if model["videos"]:
+                        models_set.append({
+                            "modelId": model_id, 
+                            "modelName": model_name
+                        })
+                    
+                    for video in model["videos"]:
+                        video_files_with_timestamps.append({
+                            "file": video["file"],
+                            "timestamp": video["timestamp"]
+                        })
+                
+                # Sort all videos by timestamp
+                video_files_with_timestamps.sort(key=lambda x: x["timestamp"])
+                sorted_files = [v["file"] for v in video_files_with_timestamps]
+                
+                if sorted_files:                   
+                    # Get the first timestamp from the sorted list
+                    first_timestamp = video_files_with_timestamps[0]["timestamp"] if video_files_with_timestamps else "unknown"
+                    
+                    # Build file name components
+                    name_parts = [username_normalized]
+                    if car_name:
+                        name_parts.append(car_name.strip())
+                    name_parts.append(first_timestamp)  # Include the full timestamp
+                    name_parts.append(unique_suffix())
+                    
+                    output_filename = "_".join(name_parts) + ".mp4"
+                    
+                    organized_videos.append({
+                        "sub": user_id,
+                        "username": username,
+                        "username_normalized": username_normalized,                        
+                        "output_file": output_filename,
+                        "models": models_set,  # Add the array of models
+                        "source_videos": sorted_files
+                    })
+    
+    return organized_videos
 
 def create_divider_frame(
     width: int,
@@ -216,106 +363,3 @@ def combine_videos(
         "codec": codec,
         "fps": fps,
     }
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Combine videos with the same prefix created on the same day."
-    )
-    parser.add_argument(
-        "--codec", help="The codec for the video writer", default="avc1"
-    )
-    parser.add_argument(
-        "--input_dir", help="The directory containing the video files", required=True
-    )
-    parser.add_argument(
-        "--output_dir", help="The directory to save the combined videos", required=True
-    )
-    parser.add_argument(
-        "--background",
-        help="The path to the background image for dividers",
-        default=None,
-    )
-    parser.add_argument(
-        "--pattern", help="Pattern to filter video files", default="*.mp4"
-    )
-    parser.add_argument(
-        "--skip_duration",
-        help="Skip video files with duration less than the specified value",
-        type=float,
-        default=20.0,
-    )
-    parser.add_argument(
-        "--group_slice", help="Slice to allow videos to be grouped", default=":-2"
-    )
-    parser.add_argument(
-        "--update_frequency",
-        help="Update frequency for the progress bar",
-        default=0.1,
-        type=float,
-    )
-    parser.add_argument(
-        "--car_name",
-        help="The name of the car to display on the video",
-        default=None,
-        type=str,
-    )
-    parser.add_argument(
-        "--unique",
-        help="Add a unique suffix to the file namee",
-        default=False,
-        action="store_true",
-    )
-    parser.add_argument(
-        "--delimiter",
-        help="The delimiter to use for the output file name",
-        default="-",
-        type=str,
-    )
-
-    args = parser.parse_args()
-
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-
-    if args.background is None:
-        args.background = os.path.join(
-            script_dir,
-            "resources",
-            "AWS-Deepracer_Background_Machine-Learning.928f7bc20a014c7c7823e819ce4c2a84af17597c.jpg",
-        )
-
-    font_path_bd = os.path.join(script_dir, "resources", "Amazon_Ember_Bd.ttf")
-    font_path_rg = os.path.join(script_dir, "resources", "Amazon_Ember_Rg.ttf")
-
-    video_files_dict = get_video_files(
-        args.input_dir, args.pattern, args.group_slice, "-"
-    )
-    print("Video files grouped by prefix and date:", video_files_dict)
-    for (prefix, date), video_files in video_files_dict.items():
-
-        name_components = [prefix]
-        if args.car_name:
-            name_components.append(args.car_name.strip())
-        name_components.append(date)
-        if args.unique:
-            unique_suffix = "".join(random.choices(string.ascii_letters, k=4))
-            name_components.append(unique_suffix)
-        output_file = os.path.join(
-            args.output_dir, args.delimiter.join(name_components) + ".mp4"
-        )
-
-        video_info = combine_videos(
-            video_files,
-            output_file,
-            args.background,
-            font_path_bd,
-            font_path_rg,
-            codec=args.codec,
-            skip_duration=args.skip_duration,
-            update_frequency=args.update_frequency,
-        )
-        print("Video information:", video_info)
-
-
-if __name__ == "__main__":
-    main()

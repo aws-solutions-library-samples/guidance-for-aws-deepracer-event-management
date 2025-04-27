@@ -45,7 +45,7 @@ def lambda_handler(event, context):
         "eventName": eventName,
         "laterThan": laterThan,
         "racerName": racerName,
-        "raceData": raceData,
+        "raceData": json.dumps(raceData) if raceData else None,
         "startTime": startTime,
         "status": status,
     }

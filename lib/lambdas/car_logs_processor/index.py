@@ -222,8 +222,8 @@ def create_dynamodb_entries(matched_bags: dict, fetch_job_id: str) -> None:
             "username": bag["username"],
             "assetId": hashlib.sha256(bag["bag_key"].encode("utf-8")).hexdigest(),
             "models": models_list,
-            "eventId": matched_bags.get("eventId", None),
-            "eventName": matched_bags.get("eventName", None),
+            "eventId": matched_bags.get("event_id", None),
+            "eventName": matched_bags.get("event_name", None),
             "assetMetaData": {
                 "key": bag["bag_key"],
                 "filename": bag["bag_key"].split("/")[-1],
