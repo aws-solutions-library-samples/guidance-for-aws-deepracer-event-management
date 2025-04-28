@@ -182,7 +182,7 @@ def process_bag_files(
         "car_id": car_id,
     }
     if race_data:
-        job_data.append({"race_data": race_data})
+        job_data["race_data"] = race_data
 
     s3_client.put_object(
         Bucket=output_bucket, Key=job_config_key, Body=json.dumps(job_data)
