@@ -142,19 +142,7 @@ export const ColumnConfigurationRacer = () => {
 export const FilteringPropertiesRacer = () => {
   return [
     {
-      key: 'models',
-      propertyKey: (item) => {
-        // Extract all model names from the models array for filtering
-        if (item.models && item.models.length > 0) {
-          return item.models.map((model) => model.modelName).join(' ');
-        }
-        return '';
-      },
-      propertyLabel: i18next.t('carlogs.assets.model-name'),
-      operators: [':', '!:', '=', '!='],
-    },
-    {
-      key: 'carname',
+      key: 'carName',
       propertyLabel: i18next.t('carlogs.assets.car-name'),
       operators: [':', '!:', '=', '!='],
     },
