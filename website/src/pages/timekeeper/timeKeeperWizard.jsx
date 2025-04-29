@@ -108,6 +108,7 @@ const LocalTimekeeperWizard = () => {
       setIsModalOpen(false);
       setRace(defaultRace);
       setStartTime(undefined);
+      setFetchLogsEnable(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

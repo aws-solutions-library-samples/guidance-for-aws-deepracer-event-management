@@ -42,6 +42,7 @@ export const Timekeeper = () => {
       setRaceConfig({});
       setActiveStepIndex(0);
       setRace(defaultRace);
+      setFetchLogsEnable(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -138,6 +139,7 @@ export const Timekeeper = () => {
     setFastestAverageLap([]);
     setStartTime(undefined);
     setActiveStepIndex(0);
+    setFetchLogsEnable(false);
   };
 
   const stateMachine = (activeStep) => {
