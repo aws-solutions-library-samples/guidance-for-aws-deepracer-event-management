@@ -44,7 +44,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                 key = record["s3"]["object"]["key"]
 
                 matched_bags, batch_job_id = process_bag_files(
-                    bucket, key, output_bucket, None
+                    bucket, key, output_bucket, "Manual"
                 )
     elif "data" in event:
         race_data = None
