@@ -19,6 +19,7 @@ export interface InfrastructurePipelineStageProps extends cdk.StackProps {
   labelName: string;
   email: string;
   env: Environment;
+  domainName?: string;
 }
 
 class InfrastructurePipelineStage extends Stage {
@@ -34,10 +35,15 @@ class InfrastructurePipelineStage extends Stage {
   constructor(scope: Construct, id: string, props: InfrastructurePipelineStageProps) {
     super(scope, id, props);
 
-    const baseStack = new BaseStack(this, 'base', { email: props.email, labelName: props.labelName });
+    const baseStack = new BaseStack(this, 'base', {
+      email: props.email,
+      labelName: props.labelName,
+      domainName: props.domainName,
+    });
     const stack = new DeepracerEventManagerStack(this, 'infrastructure', {
       baseStackName: baseStack.stackName,
       cloudfrontDistribution: baseStack.cloudfrontDistribution,
+      cloudfrontDomainNames: baseStack.cloudfrontDomainNames,
       tacCloudfrontDistribution: baseStack.tacCloudfrontDistribution,
       tacSourceBucket: baseStack.tacSourceBucket,
       logsBucket: baseStack.logsBucket,
@@ -70,6 +76,7 @@ export interface CdkPipelineStackProps extends cdk.StackProps {
   sourceBranchName: string;
   email: string;
   env: Environment;
+  domainName?: string;
 }
 
 export class CdkPipelineStack extends cdk.Stack {
@@ -97,7 +104,10 @@ export class CdkPipelineStack extends cdk.Stack {
           'node --version',
 
           'npm install',
-          `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c label=${props.labelName} -c account=${props.env.account} -c region=${props.env.region} -c source_branch=${props.sourceBranchName} -c source_repo=${props.sourceRepo}`,
+          `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c label=${props.labelName}` +
+            ` -c account=${props.env.account} -c region=${props.env.region}` +
+            ` -c source_branch=${props.sourceBranchName} -c source_repo=${props.sourceRepo}` +
+            (props.domainName ? ` -c domain_name=${props.domainName}` : ''),
         ],
         // partialBuildSpec: codebuild.BuildSpec.fromObject(
         //     {
