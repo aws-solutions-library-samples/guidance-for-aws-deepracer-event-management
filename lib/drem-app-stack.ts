@@ -358,7 +358,9 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     const schema = new CodeFirstSchema();
     const appsyncApi = new appsync.GraphqlApi(this, 'graphQlApi', {
       name: `api-${stackName}`,
-      schema: schema,
+      definition: {
+        schema: schema,
+      },
       authorizationConfig: {
         defaultAuthorization: {
           authorizationType: appsync.AuthorizationType.USER_POOL,
