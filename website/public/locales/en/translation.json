@@ -91,6 +91,7 @@
   "AdminActivation": {
     "car-activation": {
       "breadcrumb": "Car activation",
+      "custom-console": "Install community car console",
       "description": "Register and update cars.",
       "fleet": "Fleet",
       "generate": "Generate",
