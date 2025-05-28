@@ -53,6 +53,12 @@ export default function useMutation() {
           itemType: t('notifications.item-type-asset'),
           name: payload.filename ?? '',
         };
+      } else if (lowerCaseMethod.includes('fleet')) {
+        notificationInfo = {
+          id: payload.fleetId ?? '',
+          itemType: t('notifications.item-type-fleet'),
+          name: payload.fleetName ?? '',
+        };
       } else {
         notificationInfo = {
           id: 'common',
@@ -82,7 +88,7 @@ export default function useMutation() {
           notificationInfo.itemType !== 'unknown'
         );
         dispatch('ADD_NOTIFICATION', {
-          header: notificationHeader,
+          content: notificationHeader,
           type: 'info',
           loading: true,
           dismissible: true,
@@ -96,7 +102,7 @@ export default function useMutation() {
 
       return notificationInfo;
     },
-    [dispatch]
+    [t, dispatch]
   );
 
   const generateResponseNotification = useCallback(
@@ -132,7 +138,7 @@ export default function useMutation() {
       if (notificationHeader != null && notificationInfo.itemType !== 'unknown') {
         console.debug('Add response - notification');
         dispatch('ADD_NOTIFICATION', {
-          header: notificationHeader,
+          content: notificationHeader,
           type: status,
           dismissible: true,
           dismissLabel: 'Dismiss message',
@@ -143,7 +149,7 @@ export default function useMutation() {
         });
       }
     },
-    [dispatch]
+    [t, dispatch]
   );
 
   const send = useCallback(

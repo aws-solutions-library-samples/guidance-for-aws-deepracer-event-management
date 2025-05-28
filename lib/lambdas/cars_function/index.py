@@ -1,7 +1,7 @@
-import os
-from typing import List
 import json
+import os
 from datetime import datetime, timedelta
+from typing import List
 
 import boto3
 from aws_lambda_powertools import Logger, Tracer
@@ -155,7 +155,13 @@ def carsUpdateStatus(cars: List[dict]):
 @app.resolver(type_name="Mutation", field_name="carsUpdateFleet")
 def carsUpdateFleet(resourceIds: List[str], fleetId: str, fleetName: str):
     try:
-        logger.info(resourceIds)
+        logger.info(
+            "Changing fleet to Fleet ID: %s, Fleet Name: %s, Resource IDs: %s",
+            fleetId,
+            fleetName,
+            resourceIds,
+        )
+        updated_cars = []
 
         for resource_id in resourceIds:
             response = client_ssm.add_tags_to_resource(
@@ -168,19 +174,45 @@ def carsUpdateFleet(resourceIds: List[str], fleetId: str, fleetName: str):
             )
 
             logger.info(response)
-            partiQLQuery = (
-                f'UPDATE "{DDB_TABLE_NAME}" SET fleetId="{fleetId}" SET'
-                f' fleetName="{fleetName}" WHERE InstanceId = {resource_id}'
-            )
-            logger.info(partiQLQuery)
-            ddbTable.update_item(
+
+            car = ddbTable.update_item(
                 Key={"InstanceId": resource_id},
                 UpdateExpression="set fleetId=:fId, fleetName=:fName",
                 ExpressionAttributeValues={":fId": fleetId, ":fName": fleetName},
-                ReturnValues="UPDATED_NEW",
-            )
+                ReturnValues="ALL_NEW",
+            ).get("Attributes")
+            updated_cars.append(car)
 
-        return {"result": "success"}
+        logger.info(updated_cars)
+        return updated_cars
+
+    except Exception as error:
+        logger.exception(error)
+        return error
+
+
+@app.resolver(type_name="Mutation", field_name="carsDelete")
+def carsDelete(resourceIds: List[str]):
+    try:
+        logger.info(resourceIds)
+        deletedIds: List[str] = []
+
+        for instance_id in resourceIds:
+            try:
+                # Deregister the managed instance from SSM
+                client_ssm.deregister_managed_instance(InstanceId=instance_id)
+
+                # Remove from DynamoDB
+                ddbTable.delete_item(Key={"InstanceId": instance_id})
+
+                deletedIds.append(instance_id)
+                logger.info(f"Successfully deleted car with ID: {instance_id}")
+
+            except Exception as car_error:
+                logger.error(f"Error deleting car {instance_id}: {str(car_error)}")
+                # Continue with other cars even if one fails
+
+        return {"result": "success", "cars": deletedIds}
 
     except Exception as error:
         logger.exception(error)

@@ -33,7 +33,7 @@ def lambda_handler(event: dict, context: LambdaContext):
         for instance in instances:
             try:
                 # Skip any update if LastPingDateTime is more than 90 days in the past
-                if 'LastPingDateTime' in instance:
+                if "LastPingDateTime" in instance:
                     last_ping = datetime.strptime(
                         instance["LastPingDateTime"], "%Y-%m-%dT%H:%M:%S.%fZ"
                     )
@@ -144,7 +144,13 @@ def clean_instance_data(instance):
     # Define the list of fields to keep
     if instance.get("PingStatus") == "ConnectionLost":
         # For disconnected instances, only keep minimal information
-        allowed_fields = ["InstanceId", "PingStatus", "LastPingDateTime"]
+        allowed_fields = [
+            "InstanceId",
+            "PingStatus",
+            "LastPingDateTime",
+            "ComputerName",
+            "RegistrationDate",
+        ]
     else:
         # For connected instances, keep all relevant fields
         allowed_fields = [
@@ -173,7 +179,7 @@ def clean_instance_data(instance):
 
     # Create a new dict with only the allowed fields
     cleaned_instance = {k: instance[k] for k in allowed_fields if k in instance}
-    
+
     # Replace the content of the original instance
     instance.clear()
     instance.update(cleaned_instance)
