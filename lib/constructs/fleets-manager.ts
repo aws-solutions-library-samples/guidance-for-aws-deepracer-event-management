@@ -13,7 +13,7 @@ export interface FleetsManagerProps {
   userPoolId: string;
   appsyncApi: {
     schema: CodeFirstSchema;
-    api: appsync.IGraphqlApi;
+    api: appsync.GraphqlApi;
     noneDataSource: appsync.NoneDataSource;
   };
   lambdaConfig: {
@@ -24,6 +24,7 @@ export interface FleetsManagerProps {
       powerToolsLogLevel: string;
       helperFunctionsLayer: lambda.ILayerVersion;
       powerToolsLayer: lambda.ILayerVersion;
+      appsyncHelpersLayer: lambda.ILayerVersion;
     };
   };
   eventbus: EventBus;
@@ -56,18 +57,18 @@ export class FleetsManager extends Construct {
       bundling: {
         image: props.lambdaConfig.bundlingImage,
       },
-      layers: [props.lambdaConfig.layersConfig.powerToolsLayer],
+      layers: [props.lambdaConfig.layersConfig.powerToolsLayer, props.lambdaConfig.layersConfig.appsyncHelpersLayer],
       environment: {
         DDB_TABLE: fleets_table.tableName,
         user_pool_id: props.userPoolId,
         POWERTOOLS_SERVICE_NAME: 'fleets_resolver',
         LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
-        eventbus_name: props.eventbus.eventBusName,
+        APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
       },
     });
 
     fleets_table.grantReadWriteData(fleets_handler);
-    props.eventbus.grantPutEventsTo(fleets_handler);
+    props.appsyncApi.api.grantMutation(fleets_handler, 'carsUpdateFleet');
 
     // Define the data source for the API
     const fleets_data_source = props.appsyncApi.api.addLambdaDataSource('FleetsDataSource', fleets_handler);

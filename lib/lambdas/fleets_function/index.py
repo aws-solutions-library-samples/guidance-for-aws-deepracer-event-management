@@ -4,6 +4,7 @@ import json
 import os
 
 import boto3
+from appsync_helpers import send_mutation
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import AppSyncResolver
 from aws_lambda_powertools.logging import correlation_paths
@@ -13,49 +14,60 @@ tracer = Tracer()
 logger = Logger()
 app = AppSyncResolver()
 
-EVENTS_DDB_TABLE_NAME = os.environ["DDB_TABLE"]
+FLEETS_DDB_TABLE_NAME = os.environ["DDB_TABLE"]
 dynamodb = boto3.resource("dynamodb")
-ddbTable = dynamodb.Table(EVENTS_DDB_TABLE_NAME)
-client_events = boto3.client("events")
-eventbus_name = os.environ["eventbus_name"]
-
-session = boto3.session.Session()
-credentials = session.get_credentials()
-region = session.region_name or "eu-west-1"
-graphql_endpoint = os.environ.get("APPSYNC_URL", None)
+ddbTable = dynamodb.Table(FLEETS_DDB_TABLE_NAME)
 
 sub = ""
 
 
-def post_eventbridge_carsUpdate_event(
+def post_appsync_carsUpdate_call(
     fleetId: str, fleetName: str, carIds: list[str]
 ) -> bool:
     try:
-        detail = {
-            "metadata": {
-                "service": "fleets",
-                "domain": "DREM",
-            },
-            "data": {"fleetId": fleetId, "fleetName": fleetName, "carIds": carIds},
+        # GraphQL mutation
+        mutation = """
+        mutation CarsUpdateFleet($fleetId: String!, $fleetName: String!, $resourceIds: [String!]!) {
+            carsUpdateFleet(fleetId: $fleetId, fleetName: $fleetName, resourceIds: $resourceIds) {
+                            InstanceId
+                            PingStatus
+                            LastPingDateTime
+                            AgentVersion
+                            IsLatestVersion
+                            PlatformType
+                            PlatformName
+                            PlatformVersion
+                            ActivationId
+                            IamRole
+                            RegistrationDate
+                            ResourceType
+                            Name
+                            IpAddress
+                            ComputerName
+                            fleetId
+                            fleetName
+                            Type
+                            DeviceUiPassword
+                            DeepRacerCoreVersion
+                            LoggingCapable
+            }
         }
-        logger.info(detail)
+        """
 
-        response = client_events.put_events(
-            Entries=[
-                {
-                    "Source": "fleets",
-                    "DetailType": "carsUpdate",
-                    "Detail": json.dumps(detail),
-                    "EventBusName": eventbus_name,
-                },
-            ]
-        )
-        logger.info(response)
+        # Variables for the mutation
+        variables = {"fleetId": fleetId, "fleetName": fleetName, "resourceIds": carIds}
+
+        # Send the mutation using the helper
+        response = send_mutation(mutation, variables)
+        if not response:
+            logger.error("Failed to send carsUpdate mutation")
+            return False
+
         return True
 
     except Exception as error:
         logger.exception(error)
-        return False
+        raise
 
 
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
@@ -97,7 +109,7 @@ def addFleet(fleetName: str, carIds: list[str] = [], **args):
     logger.info(f"ddb put response: {response}")
     logger.info(f"addFleet: response={item}")
 
-    post_eventbridge_carsUpdate_event(fleetId, fleetName, carIds)
+    post_appsync_carsUpdate_call(fleetId, fleetName, carIds)
     return item
 
 
@@ -114,8 +126,8 @@ def deleteFleets(fleetIds: list[str]):
 
 
 @app.resolver(type_name="Mutation", field_name="updateFleet")
-def udpateFleet(fleetId: str, fleetName: str, carIds: list[str] = []):
-    logger.info(f"udpateFleet: fleetId={fleetId}")
+def updateFleet(fleetId: str, fleetName: str, carIds: list[str] = []):
+    logger.info(f"updateFleet: fleetId={fleetId}")
 
     response = ddbTable.update_item(
         Key={"fleetId": fleetId},
@@ -127,7 +139,7 @@ def udpateFleet(fleetId: str, fleetName: str, carIds: list[str] = []):
         ReturnValues="ALL_NEW",
     )
 
-    post_eventbridge_carsUpdate_event(fleetId, fleetName, carIds)
+    post_appsync_carsUpdate_call(fleetId, fleetName, carIds)
 
     updatedFleet = response["Attributes"]
     return updatedFleet

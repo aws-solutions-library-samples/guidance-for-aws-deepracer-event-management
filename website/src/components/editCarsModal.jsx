@@ -7,7 +7,7 @@ import {
   Button,
   ButtonDropdown,
   Container,
-  FormField,
+  Header,
   Modal,
   SpaceBetween,
 } from '@cloudscape-design/components';
@@ -22,12 +22,14 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
     carFetchLogs,
     carRestartService,
     carEmergencyStop,
+    carsDelete,
     carDeleteAllModels,
     carsUpdateFleet,
     carsUpdateTaillightColor,
     getAvailableTaillightColors,
   } = useCarCmdApi();
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteModelsModalVisible, setDeleteModelsModalVisible] = useState(false);
+  const [deleteCarsModalVisible, setDeleteCarsModalVisible] = useState(false);
 
   const [dropDownFleets, setDropDownFleets] = useState([{ id: 'none', text: 'none' }]);
   const [dropDownSelectedItem, setDropDownSelectedItem] = useState({
@@ -135,6 +137,14 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
     setRefresh(true);
   }
 
+  async function triggerDeleteCars() {
+    const instanceIds = selectedItems.map((i) => i.InstanceId);
+    carsDelete(instanceIds);
+
+    setVisible(false);
+    setRefresh(true);
+  }
+
   return (
     <>
       <Button
@@ -163,117 +173,120 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
         }
         header={t('fleets.edit-cars.edit-cars')}
       >
-        <SpaceBetween direction="vertical" size="xs">
-          <Container>
-            <FormField label="Fleets">
-              <SpaceBetween direction="horizontal" size="xs">
-                <ButtonDropdown
-                  items={dropDownFleets}
-                  onItemClick={({ detail }) => {
-                    const index = fleets.map((e) => e.fleetId).indexOf(detail.id);
-                    setDropDownSelectedItem(fleets[index]);
-                  }}
-                >
-                  {dropDownSelectedItem.fleetName}
-                </ButtonDropdown>
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    triggerCarsUpdateFleet();
-                  }}
-                >
-                  {t('fleets.edit-cars.update-fleets')}
-                </Button>
-              </SpaceBetween>
-            </FormField>
+        <SpaceBetween direction="vertical" size="m">
+          <Container header={<Header variant="h4">{t('fleets.header')}</Header>}>
+            <SpaceBetween direction="horizontal" size="xs">
+              <ButtonDropdown
+                items={dropDownFleets}
+                onItemClick={({ detail }) => {
+                  const index = fleets.map((e) => e.fleetId).indexOf(detail.id);
+                  setDropDownSelectedItem(fleets[index]);
+                }}
+              >
+                {dropDownSelectedItem.fleetName}
+              </ButtonDropdown>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  triggerCarsUpdateFleet();
+                }}
+              >
+                {t('fleets.edit-cars.update-fleets')}
+              </Button>
+            </SpaceBetween>
           </Container>
 
-          <Container>
-            <FormField label={t('fleets.edit-cars.logs-and-models')}>
-              <SpaceBetween direction="horizontal" size="xs">
-                <Button
-                  disabled={!online}
-                  variant="primary"
-                  onClick={() => {
-                    triggerCarFetchLogs();
-                  }}
-                >
-                  {t('fleets.edit-cars.fetch-logs')}
-                </Button>
-                <Button
-                  disabled={!online}
-                  onClick={() => {
-                    setDeleteModalVisible(true);
-                  }}
-                >
-                  {t('fleets.edit-cars.clean-cars')}
-                </Button>
-              </SpaceBetween>
-            </FormField>
+          <Container header={<Header variant="h4">{t('fleets.edit-cars.logs-and-models')}</Header>}>
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                disabled={!online}
+                variant="primary"
+                onClick={() => {
+                  triggerCarFetchLogs();
+                }}
+              >
+                {t('fleets.edit-cars.fetch-logs')}
+              </Button>
+              <Button
+                disabled={!online}
+                onClick={() => {
+                  setDeleteModelsModalVisible(true);
+                }}
+              >
+                {t('fleets.edit-cars.clean-cars')}
+              </Button>
+            </SpaceBetween>
           </Container>
 
-          <Container>
-            <FormField label={t('fleets.edit-cars.title')}>
-              <SpaceBetween direction="horizontal" size="xs">
-                <Button
-                  disabled={!online || selectedItems.length > 1}
-                  onClick={() => {
-                    triggerCarRestartService();
-                  }}
-                >
-                  {t('fleets.edit-cars.restart-ros')}
-                </Button>
-                <Button
-                  disabled={!online || selectedItems.length > 1}
-                  iconName="status-warning"
-                  variant="normal"
-                  onClick={() => {
-                    triggerCarEmergencyStop();
-                  }}
-                >
-                  {t('fleets.edit-cars.stop')}
-                </Button>
-              </SpaceBetween>
-            </FormField>
+          <Container header={<Header variant="h4">{t('fleets.edit-cars.title')}</Header>}>
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                disabled={!online || selectedItems.length > 1}
+                onClick={() => {
+                  triggerCarRestartService();
+                }}
+              >
+                {t('fleets.edit-cars.restart-ros')}
+              </Button>
+              <Button
+                disabled={!online || selectedItems.length > 1}
+                iconName="status-warning"
+                variant="normal"
+                onClick={() => {
+                  triggerCarEmergencyStop();
+                }}
+              >
+                {t('fleets.edit-cars.stop')}
+              </Button>
+
+              <ButtonDropdown
+                items={dropDownColors}
+                onItemClick={({ detail }) => {
+                  const index = dropDownColors.map((e) => e.id).indexOf(detail.id);
+                  setDropDownSelectedColor(dropDownColors[index]);
+                }}
+              >
+                {dropDownSelectedColor.id}
+              </ButtonDropdown>
+              <Button
+                disabled={!online}
+                variant="primary"
+                onClick={() => {
+                  triggerCarColorUpdates();
+                }}
+              >
+                {t('fleets.edit-cars.update-tail-lights')}
+              </Button>
+            </SpaceBetween>
           </Container>
 
-          <Container>
-            <FormField label={t('fleets.edit-cars.taillight-label')}>
-              <SpaceBetween direction="horizontal" size="xs">
-                <ButtonDropdown
-                  items={dropDownColors}
-                  onItemClick={({ detail }) => {
-                    const index = dropDownColors.map((e) => e.id).indexOf(detail.id);
-                    setDropDownSelectedColor(dropDownColors[index]);
-                  }}
-                >
-                  {dropDownSelectedColor.id}
-                </ButtonDropdown>
-                <Button
-                  disabled={!online}
-                  variant="primary"
-                  onClick={() => {
-                    triggerCarColorUpdates();
-                  }}
-                >
-                  {t('fleets.edit-cars.update-tail-lights')}
-                </Button>
-              </SpaceBetween>
-            </FormField>
+          <Container header={<Header variant="h4">{t('fleets.edit-cars.delete')}</Header>}>
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                disabled={online || selectedItems.length === 0}
+                iconName="status-negative"
+                variant="normal"
+                onClick={() => {
+                  setDeleteCarsModalVisible(true);
+                }}
+              >
+                {t('fleets.edit-cars.delete')}
+              </Button>
+            </SpaceBetween>
           </Container>
 
           {/* <Container>
-            <FormField label='Label Printing'>
-              Coming Soon...
-            </FormField>
-          </Container> */}
+              <FormField label='Label Printing'>
+                Coming Soon...
+              </FormField>
+              </Container> */}
         </SpaceBetween>
       </Modal>
 
       {/* delete modal */}
       <Modal
-        onDismiss={() => setDeleteModalVisible(false)}
-        visible={deleteModalVisible}
+        onDismiss={() => setDeleteModelsModalVisible(false)}
+        visible={deleteModelsModalVisible}
         closeAriaLabel="Close modal"
         footer={
           <Box float="right">
@@ -281,7 +294,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
               <Button
                 variant="link"
                 onClick={() => {
-                  setDeleteModalVisible(false);
+                  setDeleteModelsModalVisible(false);
                 }}
               >
                 {t('button.cancel')}
@@ -290,7 +303,7 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
                 variant="primary"
                 onClick={() => {
                   triggerDeleteAllModels();
-                  setDeleteModalVisible(false);
+                  setDeleteModelsModalVisible(false);
                 }}
               >
                 {t('button.delete')}
@@ -301,6 +314,42 @@ export default ({ disabled, setRefresh, selectedItems, online, variant }) => {
         header={t('fleets.edit-cars.clean-cars-header')}
       >
         {t('fleets.edit-cars.clean-cars-message')}: <br></br>{' '}
+        {selectedItems.map((selectedItems) => {
+          return selectedItems.ComputerName + ' ';
+        })}
+      </Modal>
+
+      {/* delete cars */}
+      <Modal
+        onDismiss={() => setDeleteCarsModalVisible(false)}
+        visible={deleteCarsModalVisible}
+        closeAriaLabel="Close modal"
+        footer={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button
+                variant="link"
+                onClick={() => {
+                  setDeleteCarsModalVisible(false);
+                }}
+              >
+                {t('button.cancel')}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  triggerDeleteCars();
+                  setDeleteCarsModalVisible(false);
+                }}
+              >
+                {t('button.delete')}
+              </Button>
+            </SpaceBetween>
+          </Box>
+        }
+        header={t('fleets.edit-cars.delete-cars-header')}
+      >
+        {t('fleets.edit-cars.delete-cars-message')}: <br></br>{' '}
         {selectedItems.map((selectedItems) => {
           return selectedItems.ComputerName + ' ';
         })}
