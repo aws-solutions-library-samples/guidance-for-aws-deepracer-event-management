@@ -1,9 +1,9 @@
-FROM ros:humble-ros-base
+FROM public.ecr.aws/docker/library/ros:humble-ros-base
 
-# Install Python and AWS Lambda Runtime Interface Client
-RUN apt-get update && apt-get install -y \
-    python3-pip \
-    && rm -rf /var/lib/apt/lists/*
+# Set the Ubuntu mirrors
+ARG AWS_REGION=us-east-1
+RUN sed -i "s|http://archive.ubuntu.com|http://${AWS_REGION}.ec2.archive.ubuntu.com|g" /etc/apt/sources.list && \
+    sed -i "s|http://security.ubuntu.com|http://${AWS_REGION}.ec2.archive.ubuntu.com|g" /etc/apt/sources.list
 
 # Create Lambda runtime directory structure
 RUN mkdir -p /var/runtime /var/task /var/task/src /var/task/.tmp/matplotlib
@@ -17,6 +17,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     ros-humble-pybind11-vendor \
     ros-humble-test-msgs \
     ros-humble-rosbag2-storage-mcap \
+    python3-pip \
     libjsoncpp-dev \
     v4l-utils \
     ffmpeg \

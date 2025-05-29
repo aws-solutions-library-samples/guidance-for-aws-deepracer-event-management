@@ -184,6 +184,9 @@ export class CarLogsManager extends Construct {
     // Add this before your job definition
     const dockerImage = new ecr_assets.DockerImageAsset(this, 'VideoProcessorImage', {
       directory: path.join(__dirname, '../docker/video_processor'), // Adjust path to your Dockerfile location
+      buildArgs: {
+        AWS_REGION: cdk.Stack.of(this).region,
+      },
     });
 
     // Create security group for Batch
