@@ -32,7 +32,7 @@ const AdminDevices = () => {
   const reloadCars = async () => {
     setIsLoading(true);
     setRefresh(true);
-    dispatch('REFRESH_CARS');
+    dispatch('REFRESH_CARS', !onlineBool);
   };
 
   useEffect(() => {
@@ -85,6 +85,7 @@ const AdminDevices = () => {
           ]}
           onItemClick={({ detail }) => {
             setOnline(detail.id);
+            setSelectedItems([]);
           }}
         >
           {online}
