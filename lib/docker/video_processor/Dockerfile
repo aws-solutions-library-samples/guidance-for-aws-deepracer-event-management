@@ -1,4 +1,4 @@
-FROM ros:humble-ros-base
+FROM public.ecr.aws/docker/library/ros:humble-ros-base
 
 # Install Python and AWS Lambda Runtime Interface Client
 RUN apt-get update && apt-get install -y \
