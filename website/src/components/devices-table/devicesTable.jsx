@@ -8,6 +8,7 @@ import { ColumnConfiguration, FilteringProperties } from './deviceTableConfig';
 
 export const DevicesTable = ({
   selectedDevicesInTable = [],
+  initialSelectedDevices = [],
   setSelectedDevicesInTable,
   fleetQuery = '',
   fleetName = '',
@@ -49,6 +50,9 @@ export const DevicesTable = ({
           nrTotalItems={cars.length}
           header={t('devices.header')}
         />
+      }
+      isItemDisabled={(item) =>
+        initialSelectedDevices.some((device) => device.InstanceId === item.InstanceId)
       }
       itemsIsLoading={isLoading}
       loadingText={t('devices.loading')}

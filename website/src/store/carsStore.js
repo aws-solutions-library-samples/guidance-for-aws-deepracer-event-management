@@ -17,28 +17,30 @@ const configureStore = () => {
         }
         updatedCars.refresh = false;
       });
-      return { cars: updatedCars };
+      return { cars: { ...updatedCars, cars: [...updatedCars.cars] } };
     },
     DELETE_CAR: (curState, car) => {
-      console.debug('DELETE_CAR DISPATCH FUNCTION');
+      console.debug('DELETE_CAR DISPATCH FUNCTION', car);
       const updatedCars = { ...curState.cars };
-      return { cars: updatedCars.cars.filter((c) => c.InstanceId !== car.InstanceId) };
+      updatedCars.cars = updatedCars.cars.filter((c) => c.InstanceId !== car);
+      return { cars: { ...updatedCars, cars: [...updatedCars.cars] } };
     },
     CARS_IS_LOADING: (curState, isLoading) => {
       console.debug('CARS_IS_LOADING DISPATCH FUNCTION', isLoading);
       const updatedCars = { ...curState.cars };
       updatedCars.isLoading = isLoading;
-      return { cars: updatedCars };
+      return { cars: { ...updatedCars } };
     },
-    REFRESH_CARS: (curState) => {
-      console.debug('REFRESH_CARS DISPATCH FUNCTION');
+    REFRESH_CARS: (curState, offlineCars) => {
+      console.debug('REFRESH_CARS DISPATCH FUNCTION', offlineCars);
       const updatedCars = { ...curState.cars };
       updatedCars.refresh = true;
-      return { cars: updatedCars };
+      updatedCars.offlineCars = offlineCars;
+      return { cars: { ...updatedCars } };
     },
   };
 
-  initStore(actions, { cars: { cars: [], isLoading: true, refresh: false } });
+  initStore(actions, { cars: { cars: [], isLoading: true, refresh: false, offlineCars: false } });
 };
 
 export default configureStore;

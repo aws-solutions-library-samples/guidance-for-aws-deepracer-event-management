@@ -4,10 +4,13 @@ import { useTranslation } from 'react-i18next';
 
 export const GeneralInfoPanel = ({ onFormIsValid, onFormIsInvalid, fleetName, onChange }) => {
   const [errorMessage, setErrorMessage] = useState();
+  const [isDirty, setIsDirty] = useState(false);
   const { t } = useTranslation();
 
   // Input validation for the fleet name
   useEffect(() => {
+    if (!isDirty) return; // Skip validation if form hasn't been touched
+
     if (fleetName) {
       setErrorMessage('');
       onFormIsValid();
@@ -15,7 +18,7 @@ export const GeneralInfoPanel = ({ onFormIsValid, onFormIsInvalid, fleetName, on
       setErrorMessage(t('fleets.fleet-name-empty-message'));
       onFormIsInvalid();
     }
-  }, [fleetName, onFormIsInvalid, onFormIsValid]);
+  }, [t, fleetName, onFormIsInvalid, onFormIsValid, isDirty]);
 
   return (
     <Container header={<Header variant="h2">General settings</Header>}>
@@ -29,7 +32,10 @@ export const GeneralInfoPanel = ({ onFormIsValid, onFormIsInvalid, fleetName, on
             placeholder={t('fleets.fleet-name-placeholder')}
             ariaRequired={true}
             value={fleetName}
-            onChange={(event) => onChange({ fleetName: event.detail.value })}
+            onChange={(event) => {
+              setIsDirty(true);
+              onChange({ fleetName: event.detail.value });
+            }}
           />
         </FormField>
       </SpaceBetween>

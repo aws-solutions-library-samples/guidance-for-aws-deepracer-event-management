@@ -1,5 +1,6 @@
 import { Checkbox, FormField, Link } from '@cloudscape-design/components';
 import ButtonDropdown from '@cloudscape-design/components/button-dropdown';
+import DatePicker from '@cloudscape-design/components/date-picker';
 import { useTranslation } from 'react-i18next';
 import { useCarCmdApi } from '../../hooks/useCarsApi';
 import i18next from '../../i18n';
@@ -290,6 +291,76 @@ export const FilteringProperties = () => {
       key: 'CoreSWVersion',
       propertyLabel: i18next.t('devices.core-sw-version'),
       operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'LastPingDateTime',
+      propertyLabel: i18next.t('devices.last-ping-time'),
+      operators: [
+        {
+          operator: '=',
+          form: ({ value, onChange }) => (
+            <FormField>
+              <DatePicker
+                onChange={({ detail }) => onChange(detail.value)}
+                value={value || ''}
+                placeholder="YYYY/MM/DD"
+                expandToViewport
+              />
+            </FormField>
+          ),
+          // Format only returning the date for equality comparison
+          format: (value) => `${value}`,
+          // Custom matcher that only compares the date part
+          match: (itemValue, filterValue) => {
+            if (!itemValue || !filterValue) return false;
+            const itemDate = new Date(itemValue).toISOString().split('T')[0];
+            const filterDate = new Date(filterValue).toISOString().split('T')[0];
+            return itemDate === filterDate;
+          },
+        },
+        {
+          operator: '>',
+          form: ({ value, onChange }) => (
+            <FormField>
+              <DatePicker
+                onChange={({ detail }) => onChange(detail.value)}
+                value={value || ''}
+                placeholder="YYYY/MM/DD"
+                expandToViewport
+              />
+            </FormField>
+          ),
+          format: (value) => `${value}`,
+          // Custom matcher for greater than comparison (dates after the selected date)
+          match: (itemValue, filterValue) => {
+            if (!itemValue || !filterValue) return false;
+            const itemDate = new Date(itemValue).toISOString().split('T')[0];
+            const filterDate = new Date(filterValue).toISOString().split('T')[0];
+            return itemDate > filterDate;
+          },
+        },
+        {
+          operator: '<',
+          form: ({ value, onChange }) => (
+            <FormField>
+              <DatePicker
+                onChange={({ detail }) => onChange(detail.value)}
+                value={value || ''}
+                placeholder="YYYY/MM/DD"
+                expandToViewport
+              />
+            </FormField>
+          ),
+          format: (value) => `${value}`,
+          // Custom matcher for less than comparison (dates before the selected date)
+          match: (itemValue, filterValue) => {
+            if (!itemValue || !filterValue) return false;
+            const itemDate = new Date(itemValue).toISOString().split('T')[0];
+            const filterDate = new Date(filterValue).toISOString().split('T')[0];
+            return itemDate < filterDate;
+          },
+        },
+      ],
     },
     {
       key: 'Type',
