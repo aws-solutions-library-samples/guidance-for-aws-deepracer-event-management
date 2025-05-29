@@ -1,12 +1,12 @@
 import hashlib
-import boto3
-import tarfile
-import os
 import io
+import os
+import tarfile
 
 import appsync_helpers
-import yaml
+import boto3
 import simplejson as json
+import yaml
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes.appsync import scalar_types_utils
 from aws_lambda_powertools.utilities.typing import LambdaContext
@@ -43,7 +43,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                 key = record["s3"]["object"]["key"]
 
                 matched_bags, batch_job_id = process_bag_files(
-                    bucket, key, output_bucket, None
+                    bucket, key, output_bucket, "Manual"
                 )
     elif "data" in event:
         matched_bags, batch_job_id = process_bag_files(
@@ -253,7 +253,7 @@ def find_user_and_model(all_users: list[dict], bag_dir: str) -> dict:
     candidate_user_model = []
 
     bag_name_split = bag_dir.split("-")
-    for segment in range(1, len(bag_name_split) - 3):
+    for segment in range(1, len(bag_name_split) - 2):
         user_prefix = "-".join(bag_name_split[:segment])
         logger.info(f"Checking for user prefix: {user_prefix}")
 
