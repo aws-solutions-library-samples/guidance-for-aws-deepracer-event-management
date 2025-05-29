@@ -35,7 +35,7 @@
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
     "@babel/plugin-proposal-private-property-in-object": "^7.16.7",
-    "aws-cdk": "2.177.0",
+    "aws-cdk": "2.178.2",
     "eslint": "^8.48.0",
     "eslint-config-node": "^4.1.0",
     "eslint-config-prettier": "^9.0.0",
