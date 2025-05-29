@@ -86,7 +86,8 @@ export const RaceFinishPage = ({
         uniqueCars,
         { eventId: raceInfo.eventId, eventName: raceConfig.eventName },
         new Date(startTime.getTime()).toISOString(),
-        raceInfo.username
+        raceInfo.username,
+        { ...raceInfo }
       );
     }
   };

@@ -478,13 +478,23 @@ export class CarLogsManager extends Construct {
     });
     props.appsyncApi.schema.addType(mediaMetadataInputType);
 
+    const carLogsModelRef = new ObjectType('CarLogsModelRef', {
+      definition: {
+        modelId: GraphqlType.string({ isRequired: true }),
+        modelName: GraphqlType.string({ isRequired: true }),
+      },
+      directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator', 'commentator')],
+    });
+    props.appsyncApi.schema.addType(carLogsModelRef);
+
     const carLogsAssetObjectType = new ObjectType('CarLogsAsset', {
       definition: {
         assetId: GraphqlType.id({ isRequired: true }),
         sub: GraphqlType.id({ isRequired: true }),
         username: GraphqlType.string({ isRequired: true }),
-        modelId: GraphqlType.string({ isRequired: true }),
-        modelname: GraphqlType.string(),
+        models: carLogsModelRef.attribute({ isList: true }),
+        eventId: GraphqlType.string(),
+        eventName: GraphqlType.string(),
         fetchJobId: GraphqlType.string(),
         carName: GraphqlType.string(),
         assetMetaData: assetMetadataObjectType.attribute(),
@@ -519,6 +529,16 @@ export class CarLogsManager extends Construct {
       })
     );
 
+    // Define the CarLogsModelInput type at the schema level
+    const carLogsModelInput = new InputType('CarLogsModelInput', {
+      definition: {
+        modelId: GraphqlType.string({ isRequired: true }),
+        modelName: GraphqlType.string({ isRequired: true }),
+      },
+      directives: [Directive.iam(), Directive.cognito('racer', 'admin', 'operator', 'commentator')],
+    });
+    props.appsyncApi.schema.addType(carLogsModelInput);
+
     props.appsyncApi.schema.addMutation(
       'addCarLogsAsset',
       new ResolvableField({
@@ -526,8 +546,9 @@ export class CarLogsManager extends Construct {
           assetId: GraphqlType.id({ isRequired: true }),
           sub: GraphqlType.id({ isRequired: true }),
           username: GraphqlType.string(),
-          modelId: GraphqlType.string({ isRequired: true }),
-          modelname: GraphqlType.string(),
+          models: carLogsModelInput.attribute({ isList: true }),
+          eventId: GraphqlType.string(),
+          eventName: GraphqlType.string(),
           fetchJobId: GraphqlType.string(),
           carName: GraphqlType.string(),
           assetMetaData: assetMetadataInputType.attribute(),

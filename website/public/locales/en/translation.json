@@ -152,6 +152,7 @@
         "header": "Download assets",
         "description": "Are you sure you want to download the following assets?"
       },
+      "event-name": "Event",
       "fetch-job-id": "Fetch Job ID",
       "model-information": "Model Information",
       "model-name": "Model Name",
@@ -524,6 +525,7 @@
   "users-list.header": "Users",
   "users-list.description": "Users are assigned roles that determine which actions they can perform in DREM.",
   "notifications": {
+    "item-type-asset": "Assset",
     "item-type-event": "Event",
     "item-type-user": "User",
     "item-type-race": "Race",
@@ -802,15 +804,15 @@
     "header": "Account details",
     "header.details": "Account details",
     "description": "Update your user settings and password.",
-    "settings.name": "Name",
     "breadcrumb": "User",
-    "settings.breadcrumb": "Settings",
     "buttons.delete": "Delete account",
     "modal.button.delete-confirm": "Confirm",
     "modal.header-delete-account": "Delete DREM account",
     "modal.confirm-delete-account": "Are you sure you wish to delete your DREM account, this action is not reversible?",
     "buttons.update-password": "Change your password",
     "settings": {
+      "breadcrumb": "Settings",
+      "name": "Name",
       "delete.header": "Delete your DREM account",
       "changepw.header": "Complete the form to update your password",
       "form": {

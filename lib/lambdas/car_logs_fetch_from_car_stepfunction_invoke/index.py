@@ -1,6 +1,6 @@
+import datetime
 import os
 import time
-import datetime
 
 import appsync_helpers
 import boto3
@@ -26,7 +26,7 @@ def lambda_handler(event, context):
     carInstanceId = event["data"]["carInstanceId"]
 
     if event["data"].get("racerName") is not None:
-        racerName = event["data"].get("racerName")
+        racerName = event["data"].get("racerName").replace("_", "")
     else:
         racerName = ""
 

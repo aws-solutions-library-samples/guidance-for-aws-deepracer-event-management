@@ -78,6 +78,13 @@ def get_assets(user_sub: str = None, limit: int = 200, nextToken: dict = None):
             logger.info(response)
             table_items = response["Items"]
 
+            # If modelId and modelname exist but models does not, add it
+            for item in table_items:
+                if "modelId" in item and "modelname" in item and "models" not in item:
+                    item["models"] = [
+                        {"modelId": item["modelId"], "modelName": item["modelname"]}
+                    ]
+
             sorted_table_items = sorted(
                 table_items,
                 key=lambda d: d["gsiUploadedTimestamp"],
@@ -102,6 +109,13 @@ def get_assets(user_sub: str = None, limit: int = 200, nextToken: dict = None):
         logger.info(response)
         assets = response["Items"]
 
+        # If modelId and modelname exist but models does not, add it
+        for item in assets:
+            if "modelId" in item and "modelname" in item and "models" not in item:
+                item["models"] = [
+                    {"modelId": item["modelId"], "modelName": item["modelname"]}
+                ]
+
         # Check if all items has been returned or if they where paginated
         nextToken = None
         if "LastEvaluatedKey" in response:
@@ -117,8 +131,15 @@ def get_assets(user_sub: str = None, limit: int = 200, nextToken: dict = None):
 
 @app.resolver(type_name="Mutation", field_name="addCarLogsAsset")
 def add_asset(**args):
+    logger.info(f"Adding asset with args: {args}")
 
     item = {**args}
+
+    # Make sure models is properly formatted as a list if it exists
+    if "models" in item and not isinstance(item["models"], list):
+        item["models"] = [item["models"]]
+    elif "models" not in item:
+        item["models"] = []
 
     del item["sub"]
     del item["assetId"]
@@ -129,7 +150,7 @@ def add_asset(**args):
 
     ddb_update_expressions = dynamo_helpers.generate_update_query(item)
 
-    logger.info(item)
+    logger.info(f"DynamoDB update item: {item}")
 
     response = ddbTable.update_item(
         Key={"sub": args["sub"], "assetId": args["assetId"]},
@@ -138,7 +159,7 @@ def add_asset(**args):
         ExpressionAttributeValues=ddb_update_expressions["ExpressionAttributeValues"],
         ReturnValues="ALL_NEW",
     )
-    logger.info(response)
+    logger.info(f"DynamoDB response: {response}")
 
     return_obj = {
         **item,
@@ -146,7 +167,7 @@ def add_asset(**args):
         "sub": args["sub"],
     }
 
-    logger.info(f"addCarLogsAsset item: {return_obj}")
+    logger.info(f"addCarLogsAsset return: {return_obj}")
     return return_obj
 
 

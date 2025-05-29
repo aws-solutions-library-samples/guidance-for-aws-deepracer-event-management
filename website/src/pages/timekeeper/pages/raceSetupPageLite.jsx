@@ -1,10 +1,4 @@
-import {
-  Container,
-  FormField,
-  Grid,
-  Header,
-  Toggle
-} from '@cloudscape-design/components';
+import { Container, FormField, Grid, Header, Toggle } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useMutation from '../../../hooks/useMutation.js';
@@ -50,9 +44,10 @@ export const RaceSetupPage = (props) => {
         ...preValue,
         eventId: selectedEvent.eventId,
         trackId: selectedTrack.trackId,
+        trackName: selectedTrack.leaderBoardTitle,
       };
     });
-  }, [selectedEvent.eventId, selectedTrack.trackId]);
+  }, [selectedEvent, selectedTrack]);
 
   useEffect(() => {
     if (selectedEvent.eventId == null) return;
@@ -113,39 +108,38 @@ export const RaceSetupPage = (props) => {
   //     </SpaceBetween>
   //   </Box>
   // );
-  
-  return (
 
-        <Container
-          header={
-            <Header>
-              Race:{' '}
-              {`${selectedEvent.eventName} ${t('timekeeper.race-setup-page.racing-on-trackId')} ${
-                selectedTrack.leaderBoardTitle
-              } `}
-            </Header>
-          }
+  return (
+    <Container
+      header={
+        <Header>
+          Race:{' '}
+          {`${selectedEvent.eventName} ${t('timekeeper.race-setup-page.racing-on-trackId')} ${
+            selectedTrack.leaderBoardTitle
+          } `}
+        </Header>
+      }
+    >
+      <Grid gridDefinition={[{ colspan: 6 }, { colspan: 3 }, { colspan: 3 }, { colspan: 12 }]}>
+        <RacerSelector
+          description={t('timekeeper.race-setup-page.racer-description')}
+          race={props.race}
+          onConfigUpdate={configUpdateHandler}
+          racerValidation={racerValidation}
+          selectedEvent={selectedEvent}
+        />
+        <RacesDoneByUser selecedEvent={selectedEvent} selecedUserId={props.race.userId} />
+        <FormField
+          label={t('race-admin.raced-by-proxy')}
+          description={t('race-admin.raced-by-proxy-description')}
         >
-          <Grid gridDefinition={[{ colspan: 6 }, { colspan: 3 }, { colspan: 3 }, { colspan: 12 }]}>
-            <RacerSelector
-              description={t('timekeeper.race-setup-page.racer-description')}
-              race={props.race}
-              onConfigUpdate={configUpdateHandler}
-              racerValidation={racerValidation}
-              selectedEvent={selectedEvent}
-            />
-            <RacesDoneByUser selecedEvent={selectedEvent} selecedUserId={props.race.userId} />
-            <FormField
-              label={t('race-admin.raced-by-proxy')}
-              description={t('race-admin.raced-by-proxy-description')}
-            >
-              <Toggle
-                checked={props.race.racedByProxy}
-                onChange={(value) => configUpdateHandler({ racedByProxy: value.detail.checked })}
-              />
-            </FormField>
-            {/* {actionButtons} */}
-          </Grid>
-        </Container>
+          <Toggle
+            checked={props.race.racedByProxy}
+            onChange={(value) => configUpdateHandler({ racedByProxy: value.detail.checked })}
+          />
+        </FormField>
+        {/* {actionButtons} */}
+      </Grid>
+    </Container>
   );
 };

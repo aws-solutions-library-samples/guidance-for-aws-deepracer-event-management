@@ -43,6 +43,7 @@ def startFetchFromCar(
     eventName,
     laterThan,
     racerName,
+    raceData,
 ):
     jobId = str(uuid.uuid4())
     input = {
@@ -55,6 +56,7 @@ def startFetchFromCar(
         "eventName": eventName,
         "laterThan": laterThan,
         "racerName": racerName,
+        "raceData": raceData,
         "jobId": jobId,
     }
     response = client.start_execution(
@@ -96,6 +98,7 @@ def createStartFetchFromCarDbEntry(
     racerName,
     startTime,
     status,
+    raceData,
 ):
     input = {
         "jobId": jobId,
@@ -110,6 +113,7 @@ def createStartFetchFromCarDbEntry(
         "racerName": racerName,
         "startTime": startTime,
         "status": status,
+        "raceData": raceData,
     }
     _ = ddbTable.put_item(Item=input)
 

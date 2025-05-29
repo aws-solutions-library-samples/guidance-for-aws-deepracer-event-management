@@ -55,8 +55,6 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
             key
             uploadedDateTime
           }
-          modelId
-          modelname
           sub
           type
           username
