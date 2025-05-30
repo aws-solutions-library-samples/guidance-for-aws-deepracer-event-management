@@ -435,7 +435,6 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
     fi
 
     # All cars
-    SET_PASSWORD
     SSM_ACTIVATION
 
     # AWS DeepRacer only
@@ -472,6 +471,9 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
     # fi
 
     # All cars
+    if [ $varPass != NULL ]; then
+        SET_PASSWORD
+    fi
     if [ $varHost != NULL ]; then
         SET_HOSTNAME
     fi
