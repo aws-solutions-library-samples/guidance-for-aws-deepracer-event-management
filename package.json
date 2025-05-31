@@ -56,7 +56,7 @@
   },
   "dependencies": {
     "@aws-cdk/aws-lambda-python-alpha": "^2.177.0-alpha.0",
-    "aws-cdk-lib": "2.177.0",
+    "aws-cdk-lib": "2.189.1",
     "awscdk-appsync-utils": "^0.0.190",
     "cdk-nag": "2.27.111",
     "cdk-serverless-clamscan": "^2.5.64",
