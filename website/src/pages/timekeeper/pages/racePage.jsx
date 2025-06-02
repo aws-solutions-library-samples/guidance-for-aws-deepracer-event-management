@@ -73,6 +73,7 @@ export const RacePage = ({
 
   const lapTimerRef = useRef();
   const raceTimerRef = useRef();
+  const startTimeRef = useRef();
   const [PublishOverlay] = usePublishOverlay();
 
   // populate the laps on page refresh, without this laps array in the overlay is empty
@@ -92,9 +93,13 @@ export const RacePage = ({
         // Buttons
         setBtnEndRace(true);
         setBtnStartRace(true);
+        setStartTime(startTimeRef.current);
       },
       startTimer: () => {
-        setStartTime(new Date());
+        if (startTimeRef.current === undefined) {
+          startTimeRef.current = new Date();
+          console.debug('Setting initial race start time', startTimeRef.current);
+        }
         setStartButtonText(t('timekeeper.pause-race'));
         startTimers();
         // Buttons

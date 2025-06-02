@@ -43,14 +43,26 @@ def __get_user(username: str) -> dict:
     return clean_json(user)
 
 
-def __get_users() -> list:
+def __get_users(username_prefix=None) -> list:
     paginator = cognito_client.get_paginator("list_users")
+
+    # Base filter for enabled users
+    filter_string = 'status = "Enabled"'
+
+    # Use username prefix filter instead if provided
+    if username_prefix:
+        # Escape quotes in the prefix to prevent injection
+        safe_prefix = username_prefix.replace('"', '\\"')
+        filter_string = f'username ^= "{safe_prefix}"'
+
+    logger.debug(f"Filter string: {filter_string}")
+
     response_iterator = paginator.paginate(
         UserPoolId=user_pool_id,
         PaginationConfig={
             "PageSize": 60,
         },
-        Filter='status = "Enabled"',
+        Filter=filter_string,
     )
 
     users = []
@@ -122,13 +134,13 @@ def lambda_handler(event, context):
 
 
 @app.resolver(type_name="Query", field_name="listUsers")
-def listUsers():
+def listUsers(username_prefix=None):
     # TODO: Probably need to change this to a paging request so the frontend
     #       can send a request for the next page
 
     # TODO fetch users and group memberships in parallel
 
-    users = __get_users()
+    users = __get_users(username_prefix)
     group_memberships = __get_group_memberships()
 
     users_with_roles = __add_roles_to_users(users, group_memberships)

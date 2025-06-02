@@ -4,7 +4,14 @@ import { CarLogsAssetType } from './assetType';
 
 export const ColumnConfigurationRacer = () => {
   var returnObject = {
-    defaultVisibleColumns: ['modelname', 'carname', 'type', 'filename', 'uploadedDateTime'],
+    defaultVisibleColumns: [
+      'modelname',
+      'carname',
+      'eventname',
+      'type',
+      'filename',
+      'uploadedDateTime',
+    ],
     visibleContentOptions: [
       {
         label: i18next.t('carlogs.assets.model-information'),
@@ -16,6 +23,10 @@ export const ColumnConfigurationRacer = () => {
           {
             id: 'carname',
             label: i18next.t('carlogs.assets.car-name'),
+          },
+          {
+            id: 'eventname',
+            label: i18next.t('carlogs.assets.event-name'),
           },
           {
             id: 'type',
@@ -40,8 +51,24 @@ export const ColumnConfigurationRacer = () => {
       {
         id: 'modelname',
         header: i18next.t('carlogs.assets.model-name'),
-        cell: (item) => item.modelname || '-',
+        cell: (item) => {
+          if (item.models && item.models.length > 0) {
+            if (item.models.length === 1) {
+              return item.models[0].modelName || '-';
+            }
+
+            // Show multiple model names separated by commas
+            return item.models.map((model) => model.modelName).join(', ');
+          }
+          return '-';
+        },
         sortingField: 'modelname',
+        sortingComparator: (a, b) => {
+          // Compare first model name in each array
+          const aName = a.models && a.models.length > 0 ? a.models[0].modelName : a.modelname || '';
+          const bName = b.models && b.models.length > 0 ? b.models[0].modelName : b.modelname || '';
+          return aName.localeCompare(bName);
+        },
         width: 200,
         minWidth: 150,
       },
@@ -50,8 +77,16 @@ export const ColumnConfigurationRacer = () => {
         header: i18next.t('carlogs.assets.car-name'),
         cell: (item) => item.carName || '-',
         sortingField: 'carName',
-        width: 200,
-        minWidth: 150,
+        width: 100,
+        minWidth: 75,
+      },
+      {
+        id: 'eventname',
+        header: i18next.t('carlogs.assets.event-name'),
+        cell: (item) => item.eventName || '-',
+        sortingField: 'eventName',
+        width: 150,
+        minWidth: 100,
       },
       {
         id: 'type',
@@ -97,7 +132,7 @@ export const ColumnConfigurationRacer = () => {
       },
     ],
   };
-  returnObject.defaultSortingColumn = returnObject.columnDefinitions[4]; // uploadedDateTime
+  returnObject.defaultSortingColumn = returnObject.columnDefinitions[5]; // uploadedDateTime
   returnObject.defaultSortingIsDescending = true;
 
   return returnObject;
@@ -107,13 +142,13 @@ export const ColumnConfigurationRacer = () => {
 export const FilteringPropertiesRacer = () => {
   return [
     {
-      key: 'modelname',
-      propertyLabel: i18next.t('carlogs.assets.model-name'),
+      key: 'carName',
+      propertyLabel: i18next.t('carlogs.assets.car-name'),
       operators: [':', '!:', '=', '!='],
     },
     {
-      key: 'carname',
-      propertyLabel: i18next.t('carlogs.assets.car-name'),
+      key: 'eventName',
+      propertyLabel: i18next.t('carlogs.assets.event-name'),
       operators: [':', '!:', '=', '!='],
     },
     {

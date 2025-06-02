@@ -28,6 +28,7 @@ def lambda_handler(event, context):
     eventName = event["data"]["eventName"]
     laterThan = event["data"]["laterThan"]
     racerName = event["data"]["racerName"]
+    raceData = event["data"]["raceData"]
     startTime = scalar_types_utils.aws_datetime()
     status = "CREATED"
 
@@ -44,13 +45,14 @@ def lambda_handler(event, context):
         "eventName": eventName,
         "laterThan": laterThan,
         "racerName": racerName,
+        "raceData": json.dumps(raceData) if raceData else None,
         "startTime": startTime,
         "status": status,
     }
 
     try:
-        query = """mutation createStartFetchFromCarDbEntry($carFleetId: String!, $carFleetName: String!, $carInstanceId: String!, $carIpAddress: String!, $carName: String!, $jobId: ID!, $startTime: AWSDateTime!, $status: CarLogsFetchStatus!, $eventId: ID!, $eventName: String!, $laterThan: AWSDateTime, $racerName: String) {
-            createStartFetchFromCarDbEntry(carFleetId: $carFleetId, carFleetName: $carFleetName, carInstanceId: $carInstanceId, carIpAddress: $carIpAddress, carName: $carName, jobId: $jobId, startTime: $startTime, status: $status, eventId: $eventId, eventName: $eventName, laterThan: $laterThan, racerName: $racerName) {
+        query = """mutation createStartFetchFromCarDbEntry($carFleetId: String!, $carFleetName: String!, $carInstanceId: String!, $carIpAddress: String!, $carName: String!, $jobId: ID!, $startTime: AWSDateTime!, $status: CarLogsFetchStatus!, $eventId: ID!, $eventName: String!, $laterThan: AWSDateTime, $racerName: String, $raceData: AWSJSON) {
+            createStartFetchFromCarDbEntry(carFleetId: $carFleetId, carFleetName: $carFleetName, carInstanceId: $carInstanceId, carIpAddress: $carIpAddress, carName: $carName, jobId: $jobId, startTime: $startTime, status: $status, eventId: $eventId, eventName: $eventName, laterThan: $laterThan, racerName: $racerName, raceData: $raceData) {
                 carFleetId
                 carFleetName
                 carInstanceId
@@ -63,6 +65,7 @@ def lambda_handler(event, context):
                 jobId
                 startTime
                 status
+                raceData
             }
         }
         """

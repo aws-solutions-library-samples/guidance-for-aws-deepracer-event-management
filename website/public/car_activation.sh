@@ -21,8 +21,9 @@ ssmId=NULL
 ssmRegion=NULL
 ssid=NULL
 wifiPass=NULL
+upgradeConsole=NULL
 
-optstring=":h:p:c:i:r:s:w:"
+optstring=":h:p:c:i:r:s:w:u"
 
 while getopts $optstring arg; do
     case ${arg} in
@@ -33,6 +34,7 @@ while getopts $optstring arg; do
         r) ssmRegion=${OPTARG};;
         s) ssid=${OPTARG};;
         w) wifiPass=${OPTARG};;
+        u) upgradeConsole=YES;;
         ?) USAGE ;;
     esac
 done
@@ -142,12 +144,22 @@ DR_CAR_UPDATE()
 
     echo -e -n "\n- Updating DeepRacer car software...\n"
 
-    # Update ROS cert
-    curl https://repo.ros2.org/repos.key | apt-key add -
+    # Remove old ROS keys and config
+    echo -e -n "\n- Remove old ROS keys and config"
+    apt-key del "F42E D6FB AB17 C654"
+    rm -f /usr/share/keyrings/ros-archive-keyring.gpg
+    rm -f /etc/apt/sources.list.d/ros2-latest.list
+    
+    # Add new ROS repository package
+    echo -e -n "\n- Add new ROS repository package"
+    export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
+    curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo $UBUNTU_CODENAME)_all.deb"
+    apt install /tmp/ros2-apt-source.deb
 
     # Get latest key from OpenVINO
+    echo -e -n "\n- Get latest OpenVINO GPG key"
     curl -o GPG-PUB-KEY-INTEL-SW-PRODUCTS https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
-    sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS
+    apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS
 
     # Update Ubuntu - removed for now as it takes so long from the standard 20.04 build
     # echo -e -n "\n- Updating Ubuntu packages"
@@ -157,7 +169,7 @@ DR_CAR_UPDATE()
     # Update DeepRacer packages
     echo -e -n "\n- Update DeepRacer packages"
     apt-get update
-    apt-get install -y aws-deepracer-* -o Dpkg::Options::="--force-overwrite"
+    apt-get install -y "aws-deepracer-*" -o Dpkg::Options::="--force-overwrite"
 
     # Remove redundant packages
     echo -e -n "\n- Remove redundant packages"
@@ -295,14 +307,9 @@ DR_CAR_TWEAKS()
     #  [ + ]  whoopsie
 }
 
-CAR_TWEAKS()
+DR_SW_TWEAKS()
 {
-    echo -e -n "\n\nCAR_TWEAKS\n"
-    # Disable video stream by default
-    echo -e -n "\n- Disable video stream"
-    cp ${bundlePath}/bundle.js ${backupDir}/bundle.js.bak
-    rm ${bundlePath}/bundle.js
-    cat ${backupDir}/bundle.js.bak | sed -e "s/isVideoPlaying\: true/isVideoPlaying\: false/" > ${bundlePath}/bundle.js
+    echo -e -n "\n\nDR_SW_TWEAKS\n"
 
     # Allow multiple logins on the console
     echo -e -n "\n- Enable multiple logins to the console"
@@ -315,12 +322,6 @@ CAR_TWEAKS()
     cp ${webserverPath}/login.py ${backupDir}/login.py.bak
     rm ${webserverPath}/login.py
     cat ${backupDir}/login.py.bak | sed -e "s/datetime.timedelta(hours=1)/datetime.timedelta(hours=12)/" > $webserverPath/login.py
-
-    # Replace the login page
-    echo -e -n "\n- Replace the login.html page"
-    cp ${templatesPath}/login.html ${backupDir}/login.html.bak
-    rm ${templatesPath}/login.html
-    mv login.html ${templatesPath}/login.html
 
     # Enable use of model optimizer cache
     echo -e -n "\n- Enable model optimizer cache"
@@ -347,10 +348,43 @@ index 1b6c315..6db49ac 100644
          for flag, value in dict(common_params, **platform_parms).items():
 EOF
 
+}
+
+CONSOLE_TWEAKS() 
+{
+    # Replace the login page
+    echo -e -n "\n- Replace the login.html page"
+    cp ${templatesPath}/login.html ${backupDir}/login.html.bak
+    rm ${templatesPath}/login.html
+    mv login.html ${templatesPath}/login.html
+
+    # Disable video stream by default
+    echo -e -n "\n- Disable video stream"
+    cp ${bundlePath}/bundle.js ${backupDir}/bundle.js.bak
+    rm ${bundlePath}/bundle.js
+    cat ${backupDir}/bundle.js.bak | sed -e "s/isVideoPlaying\: true/isVideoPlaying\: false/" > ${bundlePath}/bundle.js
+
     # Prevent double click on the range buttons to zoom in
     echo -e -n "\n- Fix range button zoom issue"
     cp ${staticPath}/bundle.css ${backupDir}/bundle.css.bak
     sed -i 's/.range-btn-minus button,.range-btn-plus button{background-color:#aab7b8!important;border-radius:4px!important;border:1px solid #879596!important}/.range-btn-minus button,.range-btn-plus button{background-color:#aab7b8!important;border-radius:4px!important;border:1px solid #879596!important;touch-action: manipulation;user-select: none;}/' ${staticPath}/bundle.css
+
+}
+
+INSTALL_CUSTOM_CONSOLE()
+{
+    if dpkg -l | grep -q "aws-deepracer-community-device-console"; then
+        echo -e -n "\n- Community device console detected, not adding repos again" 
+    else
+        # Install the community custom console repository
+        echo -e -n "\n- Registering the community device console APT repository"
+        curl -sSL https://aws-deepracer-community-sw.s3.eu-west-1.amazonaws.com/deepracer-custom-car/deepracer-community.key -o /etc/apt/trusted.gpg.d/deepracer-community.asc
+        echo "deb [arch=all signed-by=CFB167A8F18DE6A634A6A2E4A63BC335D48DF8C6] https://aws-deepracer-community-sw.s3.eu-west-1.amazonaws.com/deepracer-custom-car stable device-console" | tee /etc/apt/sources.list.d/aws_deepracer-community-console.list >/dev/null
+    fi
+
+    echo -e -n "\n- Retrieve package list and install/upgrade community device console"
+    apt-get update
+    apt-get install -y aws-deepracer-community-device-console
 }
 
 # Check the operating system version and architecture
@@ -403,17 +437,43 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
         ARCH=arm64
     fi
 
+    # Are there community packages?
+    echo -e -n "\n- Checking for community version of aws-deepracer-core"
+    if dpkg -l | grep -q "aws-deepracer-core.*community"; then
+        echo -e -n "\n- Community version detected"
+        COMMUNITY_CORE=YES
+    fi
+
     # All cars
-    SET_PASSWORD
     SSM_ACTIVATION
 
     # AWS DeepRacer only
     if [ $DEVICE = "dr" ]; then
         DISABLE_IPV6
         CREATE_WIFI_SERVICE
-        DR_CAR_UPDATE
-        DISABLE_DR_UPDATE
         DR_CAR_TWEAKS
+
+        # Don't do the tweaks if community version
+        if [ -z "$COMMUNITY_CORE" ]; then
+            DR_CAR_UPDATE
+            DISABLE_DR_UPDATE
+            DR_SW_TWEAKS
+        else
+            echo -e -n "\n- Community version detected, skipping DeepRacer tweaks"
+        fi
+    fi
+
+    # Check for upgrade option
+    if [ ${upgradeConsole} = "YES" ]; then
+        echo -e -n "\n- Upgrade console"
+        INSTALL_CUSTOM_CONSOLE
+    fi
+
+    echo -e -n "\n- Checking if aws-deepracer-community-device-console is installed"
+    if dpkg -l | grep -q "aws-deepracer-community-device-console"; then
+        echo -e -n "\n- Community device console detected, skipping console tweaks"
+    else
+        CONSOLE_TWEAKS
     fi
 
     # Raspberry Pi only
@@ -421,7 +481,9 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
     # fi
 
     # All cars
-    CAR_TWEAKS
+    if [ $varPass != NULL ]; then
+        SET_PASSWORD
+    fi
     if [ $varHost != NULL ]; then
         SET_HOSTNAME
     fi

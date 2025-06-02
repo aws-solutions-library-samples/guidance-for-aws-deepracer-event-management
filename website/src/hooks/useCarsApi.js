@@ -2,7 +2,7 @@ import { API, graphqlOperation } from 'aws-amplify';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { listCars } from '../graphql/queries';
-import { onUpdatedCarsStatus } from '../graphql/subscriptions';
+import { onUpdatedCarsInfo } from '../graphql/subscriptions';
 import { useStore } from '../store/store';
 
 import { useRef } from 'react';
@@ -10,6 +10,7 @@ import {
   carDeleteAllModels as carDeleteAllModelsOperation,
   carEmergencyStop as carEmergencyStopOperation,
   carRestartService as carRestartServiceOperation,
+  carsDelete as carsDeleteOperation,
   carSetTaillightColor as carSetTaillightColorOperation,
   carsUpdateFleet as carsUpdateFleetOperation,
   startFetchFromCar,
@@ -20,12 +21,19 @@ export const useCarsApi = (userHasAccess = false) => {
   const { t } = useTranslation();
   const [state, dispatch] = useStore();
   const [reload, setReload] = useState(false);
+  const [offlineCars, setOfflineCars] = useState(false);
 
   useEffect(() => {
     if (state.cars.refresh) {
       setReload((prev) => !prev);
     }
   }, [state.cars.refresh]);
+
+  useEffect(() => {
+    if (state.cars.offlineCars) {
+      setOfflineCars(state.cars.offlineCars);
+    }
+  }, [state.cars.offlineCars]);
 
   // adds an error notification for each API error
   const addErrorNotifications = useCallback(
@@ -35,7 +43,7 @@ export const useCarsApi = (userHasAccess = false) => {
         const notificationId = `${apiMethodName}Error${index}`;
 
         dispatch('ADD_NOTIFICATION', {
-          header: errorMessage,
+          content: errorMessage,
           type: 'error',
           dismissible: true,
           dismissLabel: t('devices.notifications.dismiss-message'),
@@ -59,7 +67,9 @@ export const useCarsApi = (userHasAccess = false) => {
         }
         dispatch('CARS_IS_LOADING', true);
         getCars(true);
-        getCars(false);
+        if (offlineCars) {
+          getCars(false);
+        }
         dispatch('CARS_IS_LOADING', false);
       }
     } catch (error) {
@@ -70,29 +80,33 @@ export const useCarsApi = (userHasAccess = false) => {
     return () => {
       // Unmounting
     };
-  }, [userHasAccess, dispatch, reload, addErrorNotifications]);
+  }, [userHasAccess, dispatch, reload, offlineCars, addErrorNotifications]);
 
   // subscribe to data changes and append them to local array
   useEffect(() => {
     if (userHasAccess) {
-      const subscription = API.graphql(graphqlOperation(onUpdatedCarsStatus)).subscribe({
+      console.debug('Subscribing to onUpdatedCarsInfo');
+      const subscription = API.graphql(graphqlOperation(onUpdatedCarsInfo)).subscribe({
         next: (event) => {
-          const updatedCars = event.value.data.onUpdatedCarsStatus;
+          const updatedCars = event.value.data.onUpdatedCarsInfo;
           dispatch('ADD_CARS', updatedCars);
         },
         error: (error) => {
           const errors = error.error.errors;
-          addErrorNotifications('onUpdatedCarsStatus subscription', errors, dispatch);
+          addErrorNotifications('onUpdatedCarsInfo subscription', errors, dispatch);
         },
       });
 
       return () => {
+        console.debug('Unsubscribing from onUpdatedCarsInfo');
         if (subscription) subscription.unsubscribe();
       };
     }
-  }, [dispatch, addErrorNotifications]);
+  }, [userHasAccess, dispatch, addErrorNotifications]);
 
-  return {};
+  return {
+    isLoading: state.cars.isLoading,
+  };
 };
 
 export const useCarCmdApi = () => {
@@ -107,11 +121,10 @@ export const useCarCmdApi = () => {
   }, []);
 
   // adds an error notification for each API error
-  const addNotifications = useCallback(
-    (apiMethodName, label, type, dispatch) => {
-      const notificationId = `${apiMethodName}_N${incrementCounter()}`;
+  const createUpdateNotification = useCallback(
+    (label, type, dispatch, notificationId) => {
       dispatch('ADD_NOTIFICATION', {
-        header: label,
+        content: label,
         type: type,
         dismissible: true,
         dismissLabel: t('devices.notifications.dismiss-message'),
@@ -120,10 +133,23 @@ export const useCarCmdApi = () => {
           dispatch('DISMISS_NOTIFICATION', notificationId);
         },
       });
-      setTimeout(() => dispatch('DISMISS_NOTIFICATION', notificationId), messageDisplayTime);
+      const timeoutId = setTimeout(
+        () => dispatch('DISMISS_NOTIFICATION', notificationId),
+        messageDisplayTime
+      );
+      return timeoutId;
+    },
+    [t]
+  );
+
+  // adds an error notification for each API error
+  const addNotifications = useCallback(
+    (apiMethodName, label, type, dispatch) => {
+      const notificationId = `${apiMethodName}_N${incrementCounter()}`;
+      createUpdateNotification(label, type, dispatch, notificationId);
       return notificationId;
     },
-    [t, incrementCounter]
+    [incrementCounter, createUpdateNotification]
   );
 
   // fetch label from Cars
@@ -168,7 +194,13 @@ export const useCarCmdApi = () => {
   }
 
   // fetch logs from Cars
-  function carFetchLogs(selectedCars, selectedEvent, laterThan = null, racerName = null) {
+  function carFetchLogs(
+    selectedCars,
+    selectedEvent,
+    laterThan = null,
+    racerName = null,
+    raceData = null
+  ) {
     for (const car of selectedCars) {
       if (car.LoggingCapable === false) {
         addNotifications(
@@ -179,19 +211,25 @@ export const useCarCmdApi = () => {
         );
         continue;
       }
-      API.graphql(
-        graphqlOperation(startFetchFromCar, {
-          carInstanceId: car.InstanceId,
-          carName: car.ComputerName,
-          carFleetId: car.fleetId,
-          carFleetName: car.fleetName,
-          carIpAddress: car.IpAddress,
-          eventId: selectedEvent.eventId,
-          eventName: selectedEvent.eventName,
-          laterThan: laterThan,
-          racerName: racerName,
-        })
-      )
+      const operationInput = {
+        carInstanceId: car.InstanceId,
+        carName: car.ComputerName,
+        carFleetId: car.fleetId,
+        carFleetName: car.fleetName,
+        carIpAddress: car.IpAddress,
+        eventId: selectedEvent.eventId,
+        eventName: selectedEvent.eventName,
+        laterThan: laterThan,
+        racerName: racerName,
+      };
+
+      if (raceData !== null) {
+        operationInput.raceData = JSON.stringify(raceData);
+      } else {
+        operationInput.raceData = null;
+      }
+
+      API.graphql(graphqlOperation(startFetchFromCar, operationInput))
         .then(() => {
           addNotifications(
             'carFetchLogs',
@@ -253,6 +291,64 @@ export const useCarCmdApi = () => {
           dispatch
         );
         console.error('Error with emergency stop', error);
+      });
+  }
+
+  // delete Cars (or timers)
+  function carsDelete(selectedCars) {
+    // Show info notification during processing
+    const notificationId = `carsDelete_N${incrementCounter()}`;
+    var timeoutId = createUpdateNotification(
+      t('devices.notifications.deletedevice-start', { count: selectedCars.length }),
+      'info',
+      dispatch,
+      notificationId
+    );
+
+    API.graphql(
+      graphqlOperation(carsDeleteOperation, {
+        resourceIds: selectedCars,
+      })
+    )
+      .then((response) => {
+        console.debug('Delete cars response:', response);
+        const deletedCars = JSON.parse(response.data.carsDelete).cars;
+        for (const car of deletedCars) {
+          dispatch('DELETE_CAR', car);
+        }
+        // Dismiss the processing notification
+        clearTimeout(timeoutId);
+
+        if (deletedCars.length !== selectedCars.length) {
+          timeoutId = createUpdateNotification(
+            t('devices.notifications.deletedevice-warning', {
+              count: selectedCars.length,
+              deleted: deletedCars.length,
+            }),
+            'warning',
+            dispatch,
+            notificationId
+          );
+        } else {
+          // Show success notification when complete
+          timeoutId = createUpdateNotification(
+            t('devices.notifications.deletedevice-complete', { count: selectedCars.length }),
+            'success',
+            dispatch,
+            notificationId
+          );
+        }
+      })
+      .catch((error) => {
+        // Dismiss the processing notification
+        clearTimeout(timeoutId);
+        timeoutId = createUpdateNotification(
+          t('devices.notifications.deletedevice-error'),
+          'error',
+          dispatch,
+          notificationId
+        );
+        console.error('Error with deleting cars', error);
       });
   }
 
@@ -364,6 +460,7 @@ export const useCarCmdApi = () => {
     carDeleteAllModels,
     carsUpdateFleet,
     carsUpdateTaillightColor,
+    carsDelete,
     getAvailableTaillightColors,
   };
 };

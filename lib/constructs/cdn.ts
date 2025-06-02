@@ -1,4 +1,5 @@
 import { Stack } from 'aws-cdk-lib';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import { IOrigin } from 'aws-cdk-lib/aws-cloudfront';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
@@ -8,6 +9,8 @@ import { Construct } from 'constructs';
 export interface CdnProps {
   logsBucket: IBucket;
   defaultOrigin: IOrigin;
+  domainNames?: string[];
+  certificate?: acm.ICertificate;
 }
 
 export class Cdn extends Construct {
@@ -34,6 +37,8 @@ export class Cdn extends Construct {
         { httpStatus: 403, responseHttpStatus: 200, responsePagePath: '/index.html' },
         { httpStatus: 404, responseHttpStatus: 200, responsePagePath: '/errors/404.html' },
       ],
+      domainNames: props.domainNames,
+      certificate: props.certificate,
     });
 
     this.distribution = cloudfrontDistribution;

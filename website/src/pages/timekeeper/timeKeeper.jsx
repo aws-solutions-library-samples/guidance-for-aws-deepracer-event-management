@@ -18,9 +18,7 @@ export const Timekeeper = () => {
   const [fetchLogsEnable, setFetchLogsEnable] = useState(false);
   const [fastestLap, setFastestLap] = useState([]);
   const [fastestAverageLap, setFastestAverageLap] = useState([]);
-  const [startTime, setStartTime] = useState(() => {
-    new Date();
-  });
+  const [startTime, setStartTime] = useState(undefined);
   const selectedEvent = useSelectedEventContext();
   const selectedTrack = useSelectedTrackContext();
 
@@ -44,6 +42,7 @@ export const Timekeeper = () => {
       setRaceConfig({});
       setActiveStepIndex(0);
       setRace(defaultRace);
+      setFetchLogsEnable(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -138,8 +137,9 @@ export const Timekeeper = () => {
     setRaceConfig({});
     setFastestLap([]);
     setFastestAverageLap([]);
-
+    setStartTime(undefined);
     setActiveStepIndex(0);
+    setFetchLogsEnable(false);
   };
 
   const stateMachine = (activeStep) => {

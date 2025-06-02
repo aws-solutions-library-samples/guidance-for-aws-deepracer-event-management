@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 import hashlib
 import json
-import os
-import sys
-import subprocess
-import boto3
 import logging
+import os
 import random
 import string
+import subprocess
+import sys
 
-from combine_videos import combine_videos, get_video_files
+import boto3
 from appsync_utils import send_mutation
 from aws_lambda_powertools.utilities.data_classes.appsync import scalar_types_utils
+from combine_videos import VideoGroupingMode, combine_videos, organize_videos
 
 TMP_DIR = "/tmp"
 
@@ -27,7 +27,7 @@ s3 = boto3.client("s3")
 
 def usage():
     logger.info(
-        "Usage: Set the following environment variables: MATCHED_BAGS, CODEC, FRAME_LIMIT, DESCRIBE, RELATIVE_LABELS, BACKGROUND, PATTERN, SKIP_DURATION, GROUP_SLICE"
+        "Usage: Set the following environment variables: MATCHED_BAGS, CODEC, FRAME_LIMIT, DESCRIBE, RELATIVE_LABELS, BACKGROUND, SKIP_DURATION"
     )
     sys.exit(1)
 
@@ -71,89 +71,98 @@ def download_bag_from_s3(bag, s3_bucket, input_dir) -> str:
 
 
 def create_dynamodb_entries(
-    user_model_map: list[dict], fetch_job_id: str, car_name: str
+    video_list: list[dict],
+    fetch_job_id: str,
+    car_name: str,
+    event_id: str = None,
+    event_name: str = None,
 ) -> None:
 
-    logger.info("Creating DynamoDB entries for map: {}".format(user_model_map))
+    logger.info("Creating DynamoDB entries for map: {}".format(video_list))
 
-    for user in user_model_map:
-        for model in user["models"]:
-            for video in model["videos"]:
-                variables = {
-                    "sub": user["sub"],
-                    "username": user["username"],
-                    "assetId": hashlib.sha256(
-                        video["s3_key"].encode("utf-8")
-                    ).hexdigest(),
-                    "modelId": model["modelId"],
-                    "modelname": model["modelname"],
-                    "fetchJobId": fetch_job_id,
-                    "carName": car_name,
-                    "assetMetaData": {
-                        "key": video["s3_key"],
-                        "filename": video["s3_key"].split("/")[-1],
-                        "uploadedDateTime": scalar_types_utils.aws_datetime(),
-                    },
-                    "mediaMetaData": {
-                        "duration": video["duration"],
-                        "resolution": video["resolution"],
-                        "fps": video["fps"],
-                        "codec": video["codec"],
-                    },
-                    "type": "VIDEO",
-                }
+    for video in video_list:
+        variables = {
+            "sub": video["sub"],
+            "username": video["username"],
+            "assetId": hashlib.sha256(
+                video["info"]["s3_key"].encode("utf-8")
+            ).hexdigest(),
+            "models": video["models"],  # Use models as a list of objects
+            "fetchJobId": fetch_job_id,
+            "carName": car_name,
+            "eventId": event_id,  # Add event ID
+            "eventName": event_name,  # Add event name
+            "assetMetaData": {
+                "key": video["info"]["s3_key"],
+                "filename": video["info"]["s3_key"].split("/")[-1],
+                "uploadedDateTime": scalar_types_utils.aws_datetime(),
+            },
+            "mediaMetaData": {
+                "duration": video["info"]["duration"],
+                "resolution": video["info"]["resolution"],
+                "fps": video["info"]["fps"],
+                "codec": video["info"]["codec"],
+            },
+            "type": "VIDEO",
+        }
 
-                logger.info(f"variables => {variables}")
+        logger.info(f"variables => {variables}")
 
-                query = """
-                mutation AddCarLogsAsset(
-                    $assetId: ID!
-                    $assetMetaData: AssetMetadataInput
-                    $mediaMetaData: MediaMetadataInput
-                    $modelname: String
-                    $modelId: String!
-                    $type: CarLogsAssetTypeEnum!
-                    $sub: ID!
-                    $username: String!
-                    $fetchJobId: String
-                    $carName: String
-                ) {
-                    addCarLogsAsset(
-                    assetId: $assetId
-                    assetMetaData: $assetMetaData
-                    mediaMetaData: $mediaMetaData
-                    modelId: $modelId
-                    modelname:  $modelname
-                    type: $type
-                    sub: $sub
-                    username: $username
-                    fetchJobId: $fetchJobId
-                    carName: $carName
-                    ) {
-                    assetId
-                    assetMetaData {
-                        filename
-                        key
-                        uploadedDateTime
-                    }
-                    mediaMetaData {
-                        duration
-                        resolution
-                        fps
-                        codec
-                    }
-                    modelId
-                    modelname
-                    fetchJobId
-                    carName
-                    type
-                    sub
-                    username
-                    }
-                }
-                """
+        query = """
+        mutation AddCarLogsAsset(
+            $assetId: ID!
+            $assetMetaData: AssetMetadataInput
+            $mediaMetaData: MediaMetadataInput
+            $models: [CarLogsModelInput]
+            $eventId: String
+            $eventName: String
+            $type: CarLogsAssetTypeEnum!
+            $sub: ID!
+            $username: String!
+            $fetchJobId: String
+            $carName: String
+        ) {
+            addCarLogsAsset(
+            assetId: $assetId
+            assetMetaData: $assetMetaData
+            mediaMetaData: $mediaMetaData
+            models: $models
+            eventId: $eventId
+            eventName: $eventName
+            type: $type
+            sub: $sub
+            username: $username
+            fetchJobId: $fetchJobId
+            carName: $carName
+            ) {
+            assetId
+            assetMetaData {
+                filename
+                key
+                uploadedDateTime
+            }
+            mediaMetaData {
+                duration
+                resolution
+                fps
+                codec
+            }
+            models {
+                modelId
+                modelName
+            }
+            eventId
+            eventName
+            fetchJobId
+            carName
+            type
+            sub
+            username
+            }
+        }
+        """
 
-                send_mutation(query, variables)
+        send_mutation(query, variables)
 
 
 def main():
@@ -170,9 +179,7 @@ def main():
         DESCRIBE (bool): Describe the actions (default: False).
         RELATIVE_LABELS (bool): Make labels relative, not fixed to value in action space (default: False).
         BACKGROUND (bool): Add a background to the video (default: True).
-        PATTERN (str): Pattern to filter bag files (default: "*").
         SKIP_DURATION (float): Skip video files with duration less than the specified value (default: 20.0).
-        GROUP_SLICE (str): Slice to allow videos to be grouped (default: ":-2").
     Exits with status 1 if any of the required directories do not exist.
     """
 
@@ -190,22 +197,7 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(models_dir, exist_ok=True)
 
-    matched_bags = os.getenv("MATCHED_BAGS")
-    if not matched_bags:
-        logger.error("MATCHED_BAGS environment variable is required.")
-        sys.exit(1)
-
-    try:
-        matched_bags = json.loads(matched_bags) if matched_bags else {}
-        if not isinstance(matched_bags, dict):
-            raise ValueError("MATCHED_BAGS should be a JSON object.")
-        if "bags" not in matched_bags:
-            raise ValueError("MATCHED_BAGS should contain an element 'bags'.")
-    except json.JSONDecodeError as e:
-        logger.error(f"Error decoding MATCHED_BAGS: {e}")
-        sys.exit(1)
-
-    # Read in optional environment variables
+    # Read in environment variables
     fetch_job_id = os.getenv("FETCH_JOB_ID", None)
     logs_bucket = os.getenv("LOGS_BUCKET")
     models_bucket = os.getenv("MODELS_BUCKET")
@@ -214,11 +206,29 @@ def main():
     describe = os.getenv("DESCRIBE", "False").lower() == "true"
     relative_labels = os.getenv("RELATIVE_LABELS", "False").lower() == "true"
     background = os.getenv("BACKGROUND", "True").lower() == "true"
-    pattern = os.getenv("PATTERN", "*")
     skip_duration = float(os.getenv("SKIP_DURATION", 20.0))
-    group_slice = os.getenv("GROUP_SLICE", ":-2")
+    job_data_bucket = os.getenv("JOB_DATA_BUCKET")
+    job_data_key = os.getenv("JOB_DATA_KEY")
 
-    user_model_map = []
+    try:
+        job_data = json.loads(
+            s3.get_object(Bucket=job_data_bucket, Key=job_data_key)["Body"].read()
+        )
+        logger.info(f"JOB_DATA: {job_data}")
+    except json.JSONDecodeError as e:
+        logger.error(f"Error decoding JOB_DATA: {e}")
+        sys.exit(1)
+
+    matched_bags = job_data["matched_bags"]
+    if not matched_bags:
+        logger.error("MATCHED_BAGS environment variable is required.")
+        sys.exit(1)
+    if "bags" not in matched_bags:
+        raise ValueError("MATCHED_BAGS should contain an element 'bags'.")
+
+    race_data = job_data.get("race_data")
+
+    user_model_videos_map = []
 
     background = os.path.join(
         script_dir,
@@ -226,23 +236,44 @@ def main():
         "AWS-Deepracer_Background_Machine-Learning.928f7bc20a014c7c7823e819ce4c2a84af17597c.jpg",
     )
 
-    font_path_bd = os.path.join(script_dir, "resources", "Amazon_Ember_Bd.ttf")
-    font_path_rg = os.path.join(script_dir, "resources", "Amazon_Ember_Rg.ttf")
+    image_assets = {
+        "background": background,
+        "logo": os.path.join(
+            script_dir,
+            "resources",
+            "logo192.png",
+        ),
+    }
+
+    fonts = {
+        "regular": os.path.join(script_dir, "resources", "Amazon_Ember_Rg.ttf"),
+        "bold": os.path.join(script_dir, "resources", "Amazon_Ember_Bd.ttf"),
+        "heavy": os.path.join(script_dir, "resources", "Amazon_Ember_He.ttf"),
+        "heavy-italic": os.path.join(script_dir, "resources", "Amazon_Ember_HeIt.ttf"),
+        "light": os.path.join(script_dir, "resources", "Amazon_Ember_Lt.ttf"),
+    }
 
     for bag in matched_bags["bags"]:
 
         logger.info(f"Processing bag: {bag}")
 
         # Store the user in our map
-        if not any(user_model["sub"] == bag["sub"] for user_model in user_model_map):
-            user_model_map.append(
-                {"sub": bag["sub"], "username": bag["username"], "models": []}
+        if not any(
+            user_model["sub"] == bag["sub"] for user_model in user_model_videos_map
+        ):
+            user_model_videos_map.append(
+                {
+                    "sub": bag["sub"],
+                    "username": bag["username"],
+                    "username_normalized": bag["username_normalized"],
+                    "models": [],
+                }
             )
 
         # Get the node of the current user
         current_user = next(
             user_model
-            for user_model in user_model_map
+            for user_model in user_model_videos_map
             if user_model["sub"] == bag["sub"]
         )
 
@@ -284,91 +315,97 @@ def main():
         os.makedirs(os.path.dirname(video_file), exist_ok=True)
 
         logger.info(f"Running analysis for {bag_path}")
-        cmd = [
-            "python3",
-            os.path.join(script_dir, "bag_analysis.py"),
-            "--bag_path",
-            bag_path,
-            "--model",
-            model_path,
-            "--codec",
-            codec,
-            "--update_frequency",
-            "5",
-            "--output_file",
-            video_file,
-        ]
-        if relative_labels:
-            cmd.extend(["--relative_labels"])
-        if background:
-            cmd.extend(["--background"])
-        if frame_limit:
-            cmd.extend(["--frame_limit", frame_limit])
-        if describe:
-            cmd.append("--describe")
+        cmd = (
+            [
+                "python3",
+                os.path.join(script_dir, "bag_analysis.py"),
+                "--bag_path",
+                bag_path,
+                "--model",
+                model_path,
+                "--codec",
+                codec,
+                "--update_frequency",
+                "5",
+                "--output_file",
+                video_file,
+            ]
+            + (["--relative_labels"] if relative_labels else [])
+            + (["--background"] if image_assets["background"] else [])
+            + (["--frame_limit", frame_limit] if frame_limit else [])
+            + (["--describe"] if describe else [])
+        )
 
         logger.info("Running command: %s", cmd)
         result = subprocess.run(cmd)
         exit_code = result.returncode
         if exit_code == 0:
             logger.info(f"Finished processing {bag_path}")
+            current_model["videos"].append(
+                {
+                    "file": video_file,
+                    "timestamp": bag["timestamp"],
+                }
+            )
         else:
-            logger.error(f"Error processing {bag_path}. Exiting with code {exit_code}")
+            logger.error(f"Error processing {bag_path}. Code {exit_code}")
 
-            sys.exit(exit_code)
+    video_grouping_mode = VideoGroupingMode.USER_MODEL_DATE
+    if race_data is not None and race_data.get("eventId") is not None:
+        video_grouping_mode = VideoGroupingMode.USER_RACE
 
-    logger.info("\nFinished processing all bag files. Combining videos...\n")
+    logger.info(
+        f"\nFinished processing all bag files. Combining videos using {video_grouping_mode.name}.\n"
+    )
 
-    for user in user_model_map:
-        for model in user["models"]:
+    video_files_list = organize_videos(
+        user_model_videos_map,
+        video_grouping_mode=video_grouping_mode,
+        car_name=matched_bags["car_name"],
+    )
+    logger.info(
+        "Video files grouped by prefix and date: %s",
+        json.dumps(video_files_list, indent=2),
+    )
 
-            final_output_dir = os.path.join(
-                output_dir, user["sub"], model["modelId"], "final"
-            )
-            os.makedirs(final_output_dir, exist_ok=True)
+    for video in video_files_list:
+        final_output_dir = os.path.join(output_dir, video["sub"], "final")
+        os.makedirs(final_output_dir, exist_ok=True)
+        output_file = os.path.join(final_output_dir, video["output_file"])
 
-            video_files_dict = get_video_files(
-                os.path.join(output_dir, user["sub"], model["modelId"], "intermediate"),
-                pattern,
-                group_slice,
-                "-",
-            )
-            print("Video files grouped by prefix and date:", video_files_dict)
-            for (prefix, date), video_files in video_files_dict.items():
+        video_info = combine_videos(
+            video["source_videos"],
+            output_file,
+            image_assets,
+            fonts,
+            codec=codec,
+            skip_duration=skip_duration,
+            update_frequency=1,
+            metadata={
+                "username": video["username"],
+                "race_data": race_data,
+                "car_name": matched_bags["car_name"],
+                "event_name": matched_bags.get("event_name", None),
+                "models": video["models"],
+            },
+        )
+        logger.info(f"Created video {output_file}.", video_info)
 
-                name_components = [prefix]
-                if matched_bags.get("car_name", None):
-                    name_components.append(matched_bags["car_name"].strip())
-                name_components.append(date)
-                unique_suffix = "".join(random.choices(string.ascii_letters, k=4))
-                name_components.append(unique_suffix)
-                output_file = os.path.join(
-                    final_output_dir, "_".join(name_components) + ".mp4"
-                )
+        s3_key = os.path.relpath(output_file, final_output_dir)
+        s3_key = "/".join(["private", video["sub"], "videos", s3_key])
+        logger.info(f"Uploading {output_file} to s3://{logs_bucket}/{s3_key}")
+        s3.upload_file(output_file, logs_bucket, s3_key)
+        video_info["s3_key"] = s3_key
 
-                video_info = combine_videos(
-                    video_files,
-                    output_file,
-                    background,
-                    font_path_bd,
-                    font_path_rg,
-                    codec=codec,
-                    skip_duration=skip_duration,
-                    update_frequency=1,
-                )
-                logger.info(f"Created video {output_file}.", video_info)
+        video["info"] = video_info
 
-                s3_key = os.path.relpath(output_file, final_output_dir)
-                s3_key = "/".join(["private", user["sub"], "videos", s3_key])
-                logger.info(f"Uploading {output_file} to s3://{logs_bucket}/{s3_key}")
-                s3.upload_file(output_file, logs_bucket, s3_key)
-                video_info["s3_key"] = s3_key
-
-                model["videos"].append(video_info)
-
-            logger.info(f"Finished combining videos for {user}")
-
-    create_dynamodb_entries(user_model_map, fetch_job_id, matched_bags["car_name"])
+    create_dynamodb_entries(
+        video_files_list,
+        fetch_job_id,
+        matched_bags["car_name"],
+        matched_bags.get("event_id", None),
+        matched_bags.get("event_name", None),
+    )
 
     logger.info("\nFinished processing videos...\n")
 

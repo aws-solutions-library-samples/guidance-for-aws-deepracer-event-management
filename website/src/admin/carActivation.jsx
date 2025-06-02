@@ -7,6 +7,7 @@ import * as mutations from '../graphql/mutations';
 import { Breadcrumbs } from './fleets/support-functions/supportFunctions';
 
 import {
+  Badge,
   Box,
   Button,
   ButtonDropdown,
@@ -21,6 +22,7 @@ import {
   SpaceBetween,
   StatusIndicator,
   TextContent,
+  Toggle,
 } from '@cloudscape-design/components';
 import { PageLayout } from '../components/pageLayout';
 import { useStore } from '../store/store';
@@ -28,15 +30,12 @@ import { useStore } from '../store/store';
 const AdminCarActivation = (props) => {
   const { t } = useTranslation(['translation', 'help-admin-car-activation']);
 
-  const [result, setResult] = useState('');
-  const [activationCode, setActivationCode] = useState('');
-  const [activationId, setActivationId] = useState('');
-  const [region, setRegion] = useState('');
   const [hostname, setHostname] = useState('');
   const [password, setPassword] = useState('');
   const [ssid, setSsid] = useState('');
   const [wifiPass, setWifiPass] = useState('');
   const [wifiActivation, setWifiActivation] = useState('');
+  const [installCustomConsole, setInstallCustomConsole] = useState(false);
   const [ssmCommand, setSsmCommand] = useState('');
   const [updateCommand, setUpdateCommand] = useState('');
   const [buttonDisabled, setButtonDisabled] = useState(true);
@@ -52,7 +51,7 @@ const AdminCarActivation = (props) => {
   const [state] = useStore();
   const fleets = state.fleets.fleets;
 
-  const [dremUrl, setDremUrl] = useState(
+  const [dremUrl] = useState(
     window.location.protocol +
       '//' +
       window.location.hostname +
@@ -80,8 +79,10 @@ const AdminCarActivation = (props) => {
   }, [fleets]);
 
   useEffect(() => {
-    if (password !== '' && hostname !== '') {
+    if (ssid !== '' && wifiPass !== '') {
       setWifiActivation(' -s ' + ssid + ' -w ' + wifiPass);
+    } else {
+      setWifiActivation('');
     }
     return () => {
       // Unmounting
@@ -100,7 +101,7 @@ const AdminCarActivation = (props) => {
     return () => {
       // Unmounting
     };
-  }, [password, hostname, dropDownSelectedItem]);
+  }, [t, password, hostname, dropDownSelectedItem]);
 
   async function getActivation() {
     const apiResponse = await API.graphql({
@@ -114,10 +115,6 @@ const AdminCarActivation = (props) => {
       },
     });
     const response = apiResponse['data']['deviceActivation'];
-    setResult(response);
-    setActivationCode(response['activationCode']);
-    setActivationId(response['activationId']);
-    setRegion(response['region']);
     setSsmCommand(
       'sudo amazon-ssm-agent -register -code "' +
         response['activationCode'] +
@@ -142,7 +139,8 @@ const AdminCarActivation = (props) => {
         response['activationId'] +
         ' -r ' +
         response['region'] +
-        wifiActivation
+        wifiActivation +
+        (installCustomConsole ? ' -u' : '')
     );
     setLoading('');
   }
@@ -218,6 +216,16 @@ const AdminCarActivation = (props) => {
                     setPassword(fleet.detail.value);
                   }}
                 />
+              </FormField>
+              <FormField label={t('AdminActivation.car-activation.custom-console')}>
+                <Toggle
+                  checked={installCustomConsole}
+                  onChange={({ detail }) => {
+                    setInstallCustomConsole(detail.checked);
+                  }}
+                >
+                  <Badge color="blue">{t('topnav.beta')}</Badge>
+                </Toggle>
               </FormField>
 
               <ExpandableSection header={t('AdminActivation.car-activation.wifi-config')}>

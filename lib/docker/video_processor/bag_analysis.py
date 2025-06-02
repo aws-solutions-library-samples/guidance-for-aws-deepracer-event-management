@@ -3,30 +3,32 @@ import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # or any {'0', '1', '2'}
 
-from typing import List, Dict, Tuple
-import multiprocessing as mp
-import heapq
-import queue
-import datetime
 import argparse
+import datetime
+import heapq
+import multiprocessing as mp
+import queue
+import signal
+from typing import Dict, List, Tuple
+
 import cv2
 import matplotlib
-from matplotlib import gridspec, pyplot as plt
-from matplotlib import font_manager as fm, rcParams
 import numpy as np
-import psutil
 import pandas as pd
-from tqdm.auto import tqdm
-import signal
-
-from cv_bridge import CvBridge  # type: ignore
+import psutil
 import rclpy.logging  # type: ignore
-from rclpy.serialization import deserialize_message  # type: ignore
-from deepracer_viz.model.model import Model
-from deepracer_viz.model.metadata import ModelMetadata
-from deepracer_viz.gradcam.cam import GradCam
-from deepracer_interfaces_pkg.msg import InferResultsArray  # type: ignore
 import utils
+from cv_bridge import CvBridge  # type: ignore
+from deepracer_interfaces_pkg.msg import InferResultsArray  # type: ignore
+from deepracer_viz.gradcam.cam import GradCam
+from deepracer_viz.model.metadata import ModelMetadata
+from deepracer_viz.model.model import Model
+from matplotlib import font_manager as fm
+from matplotlib import gridspec
+from matplotlib import pyplot as plt
+from matplotlib import rcParams
+from rclpy.serialization import deserialize_message  # type: ignore
+from tqdm.auto import tqdm
 
 matplotlib.use("Agg")
 
@@ -808,4 +810,8 @@ if __name__ == "__main__":
     import tensorflow as tf  # type: ignore
 
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"Error: {e}")
+        exit(1)

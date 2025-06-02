@@ -61,9 +61,7 @@ const LocalTimekeeperWizard = () => {
   const messageDisplayTime = 4000;
   const notificationId = '';
   const [warningModalVisible, setWarningModalVisible] = useState(false);
-  const [startTime, setStartTime] = useState(() => {
-    new Date();
-  });
+  const [startTime, setStartTime] = useState(undefined);
 
   // delete models from Cars
   async function carDeleteAllModels() {
@@ -109,6 +107,8 @@ const LocalTimekeeperWizard = () => {
       setActiveStepIndex(0);
       setIsModalOpen(false);
       setRace(defaultRace);
+      setStartTime(undefined);
+      setFetchLogsEnable(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -299,7 +299,8 @@ const LocalTimekeeperWizard = () => {
         uniqueCars,
         { eventId: race.eventId, eventName: raceConfig.eventName },
         new Date(startTime.getTime()).toISOString(),
-        race.username
+        race.username,
+        { ...race }
       );
     }
   };
