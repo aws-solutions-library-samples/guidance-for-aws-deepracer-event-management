@@ -316,8 +316,8 @@ def confirm_user_and_model(user: dict, bag_dir: str) -> dict:
     prefix = match.group(1)  # This contains username-modelname
     bag_timestamp = match.group(2)  # YYYYMMDD-HHMMSS
 
-    # Normalize username (remove underscores)
-    normalized_username = user["username"].replace("_", "")
+    # Normalize username (remove non-allowed characters)
+    normalized_username = re.sub("[^0-9a-zA-Z-]+", "", user["username"])
 
     # Check if the bag directory starts with the normalized username
     if not prefix.startswith(f"{normalized_username}-"):
@@ -399,7 +399,7 @@ def find_user_and_model(all_users: list[dict], bag_dir: str) -> dict:
         # Pre-normalize usernames and create a more efficient lookup structure
         for user in all_users:
             username = user["username"]
-            normalized_username = username.replace("_", "")
+            normalized_username = re.sub("[^0-9a-zA-Z-]+", "", username)
 
             # Store both original user and normalized username
             if normalized_username == user_prefix:
