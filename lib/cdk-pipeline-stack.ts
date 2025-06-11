@@ -92,7 +92,7 @@ export class CdkPipelineStack extends cdk.Stack {
       // Add this to fix asset publishing steps
       assetPublishingCodeBuildDefaults: {
         buildEnvironment: {
-          buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2023_STANDARD_3_0,
+          buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2023_5,
           computeType: codebuild.ComputeType.LARGE,
         },
         partialBuildSpec: codebuild.BuildSpec.fromObject({
