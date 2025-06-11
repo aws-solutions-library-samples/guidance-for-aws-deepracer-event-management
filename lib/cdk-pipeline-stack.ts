@@ -92,13 +92,26 @@ export class CdkPipelineStack extends cdk.Stack {
       // Add this to fix asset publishing steps
       assetPublishingCodeBuildDefaults: {
         buildEnvironment: {
-          buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2023_STANDARD_3_0, // Newer image with Node 20+
+          buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2023_STANDARD_3_0,
           computeType: codebuild.ComputeType.LARGE,
         },
+        partialBuildSpec: codebuild.BuildSpec.fromObject({
+          phases: {
+            install: {
+              commands: [
+                // Update Node.js first
+                `n ${NODE_VERSION}`,
+                'node --version',
+                // Install CDK with compatible cdk-assets
+                `npm install -g aws-cdk@${CDK_VERSION}`,
+              ],
+            },
+          },
+        }),
       },
       synth: new pipelines.CodeBuildStep('SynthAndDeployBackend', {
         buildEnvironment: {
-          buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2023_STANDARD_3_0, // Update this
+          buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2023_STANDARD_3_0,
           computeType: codebuild.ComputeType.LARGE,
         },
         input: pipelines.CodePipelineSource.gitHub(props.sourceRepo, props.sourceBranchName, {
