@@ -89,9 +89,16 @@ export class CdkPipelineStack extends cdk.Stack {
     const pipeline = new pipelines.CodePipeline(this, 'Pipeline', {
       dockerEnabledForSynth: true,
       publishAssetsInParallel: false,
+      // Add this to fix asset publishing steps
+      assetPublishingCodeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2023_STANDARD_3_0, // Newer image with Node 20+
+          computeType: codebuild.ComputeType.LARGE,
+        },
+      },
       synth: new pipelines.CodeBuildStep('SynthAndDeployBackend', {
         buildEnvironment: {
-          buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
+          buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2023_STANDARD_3_0, // Update this
           computeType: codebuild.ComputeType.LARGE,
         },
         input: pipelines.CodePipelineSource.gitHub(props.sourceRepo, props.sourceBranchName, {
@@ -189,7 +196,7 @@ export class CdkPipelineStack extends cdk.Stack {
           'amplify codegen', // I'm not repeating myself ;)
           'cd ../..',
           'docker run --rm -v $(pwd):/foo -w /foo' +
-            " public.ecr.aws/sam/build-nodejs18.x:latest bash -c 'npm install" +
+            " public.ecr.aws/sam/build-nodejs20.x:latest bash -c 'npm install" +
             " --cache /tmp/empty-cache && npm run build'",
           'aws s3 sync ./build/ s3://$sourceBucketName/ --delete',
           'echo distributionId=$distributionId',
@@ -228,7 +235,7 @@ export class CdkPipelineStack extends cdk.Stack {
           'amplify codegen', // I'm not repeating myself ;)
           'cd ../..',
           'docker run --rm -v $(pwd):/foo -w /foo' +
-            " public.ecr.aws/sam/build-nodejs18.x:latest bash -c 'npm install" +
+            " public.ecr.aws/sam/build-nodejs20.x:latest bash -c 'npm install" +
             " --cache /tmp/empty-cache && npm run build'",
           'aws s3 sync ./build/ s3://$leaderboardSourceBucketName/ --delete',
           "aws cloudfront create-invalidation --distribution-id $leaderboardDistributionId --paths '/*'",
@@ -266,7 +273,7 @@ export class CdkPipelineStack extends cdk.Stack {
           'amplify codegen', // I'm not repeating myself ;)
           'cd ../..',
           'docker run --rm -v $(pwd):/foo -w /foo' +
-            " public.ecr.aws/sam/build-nodejs18.x:latest bash -c 'npm install" +
+            " public.ecr.aws/sam/build-nodejs20.x:latest bash -c 'npm install" +
             " --cache /tmp/empty-cache && npm run build'",
           'aws s3 sync ./build/ s3://$streamingOverlaySourceBucketName/ --delete',
           "aws cloudfront create-invalidation --distribution-id $streamingOverlayDistributionId --paths '/*'",
