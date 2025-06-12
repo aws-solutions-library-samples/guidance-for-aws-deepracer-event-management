@@ -555,8 +555,6 @@ def create_lap_times_frame(
     # Create a header info section with key details
     header_items = [
         {"label": "Racer", "value": display_username},
-        {"label": "Car", "value": car_name or "Unknown"},
-        {"label": "Event", "value": event_name or "Unknown"},
         {"label": "Track", "value": track_name}
     ]
         

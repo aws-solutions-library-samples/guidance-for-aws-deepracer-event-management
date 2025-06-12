@@ -73,6 +73,7 @@ def process_worker(
     bag_info: dict,
     background: np.ndarray,
     action_names: List[str],
+    error_queue: mp.Queue = None,  # Add error queue parameter
 ):
     """
     Worker function to process data frames using a machine learning model and Grad-CAM for visualization.
@@ -90,43 +91,77 @@ def process_worker(
         Exception: If an error occurs during frame processing.
     """
 
-    result_list, list_lock = result
-    flip_x = bag_info["flip_x"]
-    fig = create_plot(
-        action_names, flip_x, HEIGHT, WIDTH, 72, transparent=(background is not None)
-    )
+    try:
+        result_list, list_lock = result
+        flip_x = bag_info.get("flip_x", False)
 
-    model = Model.from_bytes(
-        model_bytes=model_bytes, metadata=metadata, log_device_placement=False
-    )
-    with model.session as _:
-        cam = GradCam(model, model.get_conv_outputs())
+        fig = create_plot(
+            action_names,
+            flip_x,
+            HEIGHT,
+            WIDTH,
+            72,
+            transparent=(background is not None),
+        )
 
-        while True:
-            try:
-                task_data = data_queue.get(timeout=1)
-                if task_data is None:
-                    break
+        model = Model.from_bytes(
+            model_bytes=model_bytes, metadata=metadata, log_device_placement=False
+        )
 
-                index, data = task_data
-                step, img, grad_img = process_input_frame(
-                    data, start_time=bag_info["start_time"], seq=index, cam=cam
-                )
-                encimg = create_img(
-                    fig, step, bag_info, img, grad_img, action_names, flip_x, background
-                )
+        with model.session as _:
+            cam = GradCam(model, model.get_conv_outputs())
 
-                with list_lock:
-                    result_list.append([index, step, encimg])
+            while True:
+                try:
+                    task_data = data_queue.get(timeout=1)
+                    if task_data is None:
+                        break
 
-            except queue.Empty:
-                continue
+                    index, data = task_data
+                    step, img, grad_img = process_input_frame(
+                        data, start_time=bag_info["start_time"], seq=index, cam=cam
+                    )
+                    encimg = create_img(
+                        fig,
+                        step,
+                        bag_info,
+                        img,
+                        grad_img,
+                        action_names,
+                        flip_x,
+                        background,
+                    )
 
-            except Exception as e:
-                print(f"Error processing frame: {e}")
-                raise
+                    with list_lock:
+                        result_list.append([index, step, encimg])
 
-    plt.close(fig)
+                except queue.Empty:
+                    continue
+                except Exception as frame_error:
+                    # Log frame-specific errors but continue processing
+                    error_msg = f"Worker {os.getpid()}: Error processing frame {index if 'index' in locals() else 'unknown'}: {frame_error}"
+                    print(error_msg)
+                    if error_queue:
+                        error_queue.put(("frame_error", error_msg))
+                    continue
+
+    except Exception as worker_error:
+        # Critical worker initialization/setup errors
+        error_msg = (
+            f"Worker {os.getpid()}: Critical error in worker setup: {worker_error}"
+        )
+        print(error_msg)
+        if error_queue:
+            error_queue.put(("worker_error", error_msg))
+        return  # Exit worker process
+
+    finally:
+        # Cleanup resources
+        try:
+            if "fig" in locals():
+                plt.close(fig)
+        except Exception as cleanup_error:
+            print(f"Worker {os.getpid()}: Error during cleanup: {cleanup_error}")
 
 
 def create_plot(
@@ -194,22 +229,24 @@ def create_plot(
         spine.set_edgecolor(COLOR_EDGE)
         spine.set_linewidth(1)
 
-    if flip_x:
-        action_names_display = action_names[::-1]
-    else:
-        action_names_display = action_names
+    # Action names means we have a discrete action spaceq
+    if len(action_names) > 0:
+        if flip_x:
+            action_names_display = action_names[::-1]
+        else:
+            action_names_display = action_names
 
-    for i, label in enumerate(action_names_display):
-        ax2.text(
-            i,
-            0.5,
-            label,
-            ha="center",
-            va="center",
-            rotation=90,
-            color=COLOR_TEXT_SECONDARY,
-            fontproperties=FONT_SMALL,
-        )
+        for i, label in enumerate(action_names_display):
+            ax2.text(
+                i,
+                0.5,
+                label,
+                ha="center",
+                va="center",
+                rotation=90,
+                color=COLOR_TEXT_SECONDARY,
+                fontproperties=FONT_SMALL,
+            )
 
     return fig
 
@@ -287,15 +324,17 @@ def create_img(
     ax[0].imshow(img)
     ax[1].imshow(grad_img)
 
-    # Highlight the highest bar in a different color
-    bar_colors = [COLOR_EDGE] * len(car_result["probability"])
-    max_index = car_result["probability"].idxmax()
-    bar_colors[max_index] = COLOR_HIGHLIGHT
+    # If there are action_names it is a discrete action space
+    if len(action_names) > 0:
+        # Highlight the highest bar in a different color
+        bar_colors = [COLOR_EDGE] * len(car_result["probability"])
+        max_index = car_result["probability"].idxmax()
+        bar_colors[max_index] = COLOR_HIGHLIGHT
 
-    if flip_x:
-        ax[2].bar(x, car_result["probability"][::-1], color=bar_colors[::-1])
-    else:
-        ax[2].bar(x, car_result["probability"], color=bar_colors)
+        if flip_x:
+            ax[2].bar(x, car_result["probability"][::-1], color=bar_colors[::-1])
+        else:
+            ax[2].bar(x, car_result["probability"], color=bar_colors)
 
     fig.canvas.draw()
 
@@ -454,10 +493,11 @@ def analyze_bag(bag_path: str, metadata: ModelMetadata) -> Dict:
     bag_info["step_diff"] = step_diff + 1
     bag_info["step_actual"] = len(df.index)
     bag_info["elapsed_time"] = df["timestamp"].max()
-    bag_info["action_space_size"] = len(msg.results)
     bag_info["image_shape"] = tmp_img.shape
-    bag_info["action_space"] = metadata.action_space.action_space
-    bag_info["flip_x"] = metadata.action_space.action_space[0]["steering_angle"] < 0
+    if metadata.action_space_type == "discrete":
+        bag_info["action_space_size"] = len(msg.results)
+        bag_info["action_space"] = metadata.action_space.action_space
+        bag_info["flip_x"] = metadata.action_space.action_space[0]["steering_angle"] < 0
 
     return bag_info
 
@@ -485,35 +525,36 @@ def process_file(
 
     # Prepare action names
     action_names = []
-    action_space = metadata.action_space.action_space
-    max_steering_angle = max(float(action["steering_angle"]) for action in action_space)
-    max_speed = max(float(action["speed"]) for action in action_space)
+    if metadata.action_space_type == "discrete":
+        action_space = metadata.action_space.action_space
+        max_steering_angle = max(
+            float(action["steering_angle"]) for action in action_space
+        )
+        max_speed = max(float(action["speed"]) for action in action_space)
 
-    for action in action_space:
-        if args.relative_labels:
-            if float(action["steering_angle"]) == 0.0:
-                steering_label = "C"
+        for action in action_space:
+            if args.relative_labels:
+                if float(action["steering_angle"]) == 0.0:
+                    steering_label = "C"
+                else:
+                    steering_label = "L" if float(action["steering_angle"]) > 0 else "R"
+                steering_value = abs(
+                    float(action["steering_angle"]) * 100 / max_steering_angle
+                )
+                speed_value = float(action["speed"]) * 100 / max_speed
+                action_names.append(
+                    f"{steering_label}{steering_value:.0f}% x {speed_value:.0f}%"
+                )
             else:
-                steering_label = "L" if float(action["steering_angle"]) > 0 else "R"
-            steering_value = abs(
-                float(action["steering_angle"]) * 100 / max_steering_angle
-            )
-            speed_value = float(action["speed"]) * 100 / max_speed
-            action_names.append(
-                f"{steering_label}{steering_value:.0f}% x {speed_value:.0f}%"
-            )
-        else:
-            action_names.append(
-                str(action["steering_angle"])
-                + "\N{DEGREE SIGN}"
-                + " "
-                + "%.1f" % action["speed"]
-            )
+                action_names.append(
+                    str(action["steering_angle"])
+                    + "\N{DEGREE SIGN}"
+                    + " "
+                    + "%.1f" % action["speed"]
+                )
 
     bag_info = analyze_bag(bag_path, metadata)
     utils.print_baginfo(bag_info)
-
-    # flip_x = action_space[0]['steering_angle'] < 0
 
     # Key data points
     worker_count = int((psutil.cpu_count(logical=False)) * 3 / 4)
@@ -558,9 +599,9 @@ def process_file(
     steps_data = {"steps": []}
 
     try:
-
-        # Create queues for data and results
+        # Create queues for data, results, and errors
         data_queue = mp.Queue()
+        error_queue = mp.Queue()  # Add error queue
         manager = mp.Manager()
         result_list = manager.list()
         list_lock = manager.Lock()
@@ -573,7 +614,7 @@ def process_file(
         procs.append(stream_reader)
         stream_reader.start()
 
-        # Create worker processes
+        # Create worker processes with error queue
         for _ in range(worker_count):
             p = mp.Process(
                 target=process_worker,
@@ -585,6 +626,7 @@ def process_file(
                     bag_info,
                     background,
                     action_names,
+                    error_queue,  # Pass error queue
                 ),
             )
             p.start()
@@ -607,14 +649,45 @@ def process_file(
             mininterval=args.update_frequency,
         )
 
-        # Read results from the result queue, stop once we have received expected number of frames
         # Priority queue to store results
         pq = []
         expected_index = 1
         received = 0
+        error_count = 0
+        max_errors = 5  # Set a threshold for maximum errors
 
         while True:
             try:
+                # Check for errors from workers
+                try:
+                    while not error_queue.empty():
+                        error_type, error_msg = error_queue.get_nowait()
+                        print(f"Worker error ({error_type}): {error_msg}")
+                        error_count += 1
+
+                        if error_type == "worker_error":
+                            # Critical worker error - might need to restart or abort
+                            print("Critical worker error detected!")
+
+                        if error_count > max_errors:
+                            raise Exception(
+                                f"Too many worker errors ({error_count}), aborting"
+                            )
+
+                except queue.Empty:
+                    pass
+
+                # Check if any worker processes died unexpectedly
+                dead_workers = [
+                    p for p in procs[1:] if not p.is_alive() and p.exitcode != 0
+                ]
+                if dead_workers:
+                    print(
+                        f"Warning: {len(dead_workers)} worker process(es) died unexpectedly"
+                    )
+                    for worker in dead_workers:
+                        print(f"Worker PID {worker.pid} exit code: {worker.exitcode}")
+
                 while len(result_list) > 0:
                     with list_lock:
                         result = result_list.pop(0)
@@ -645,7 +718,7 @@ def process_file(
                     break
 
             except Exception as e:
-                print(f"Error writing frame: {e}")
+                print(f"Error in main processing loop: {e}")
                 raise
 
         # Wait for the stream reader to finish, then send termination
@@ -660,10 +733,25 @@ def process_file(
         raise
 
     finally:
-        writer.release()
+        # Enhanced cleanup
+        try:
+            writer.release()
+        except:
+            pass
+
+        # Terminate all processes gracefully
         for p in procs:
-            p.terminate()
-            p.join()
+            if p.is_alive():
+                p.terminate()
+            try:
+                p.join(timeout=5)  # Wait up to 5 seconds
+            except:
+                pass
+
+            # Force kill if still alive
+            if p.is_alive():
+                p.kill()
+                p.join()
 
     return steps_data, bag_info, action_names, output_file
 
@@ -740,9 +828,6 @@ def main():
         print("Using model archive: {}".format(args.model))
     else:
         raise ValueError("Model path must be a directory or a tar.gz/tgz file")
-
-    if metadata.action_space_type == "continuous":
-        return NotImplementedError("Continuous action space not supported.")
 
     bag_path = args.bag_path.rstrip("/")
     if not os.path.exists(bag_path):

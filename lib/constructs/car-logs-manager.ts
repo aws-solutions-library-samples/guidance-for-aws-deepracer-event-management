@@ -28,7 +28,8 @@ import path = require('path');
 
 import { CarLogsFetchStepFunction } from './car-logs-fetch';
 
-const MAX_VCPU = 16;
+const MAX_VCPU = 32;
+const MAX_JOB_VCPU = MAX_VCPU / 2;
 
 export interface CarLogsManagerProps {
   logsBucket: s3.IBucket;
@@ -234,7 +235,7 @@ export class CarLogsManager extends Construct {
       type: 'MANAGED',
       state: 'ENABLED',
       computeResources: {
-        type: 'FARGATE_SPOT', // Changed to use Spot instances
+        type: 'FARGATE',
         maxvCpus: MAX_VCPU,
         subnets: this.vpc.selectSubnets({ subnetType: SubnetType.PUBLIC }).subnetIds,
         securityGroupIds: [batchSG.securityGroupId],
@@ -264,7 +265,7 @@ export class CarLogsManager extends Construct {
           platformVersion: 'LATEST',
         },
         resourceRequirements: [
-          { type: 'VCPU', value: MAX_VCPU.toString() },
+          { type: 'VCPU', value: MAX_JOB_VCPU.toString() },
           { type: 'MEMORY', value: '32768' },
         ],
         executionRoleArn: taskExecutionRole.roleArn,
@@ -278,7 +279,6 @@ export class CarLogsManager extends Construct {
           { name: 'MODELS_BUCKET', value: props.modelsBucket.bucketName },
           { name: 'APPSYNC_URL', value: props.appsyncApi.api.graphqlUrl },
           { name: 'CODEC', value: 'avc1' },
-          // { name: 'FRAME_LIMIT', value: '100' }, // For testing
           { name: 'SKIP_DURATION', value: '5.0' },
           { name: 'RELATIVE_LABELS', value: 'true' },
         ],
@@ -290,6 +290,9 @@ export class CarLogsManager extends Construct {
             'awslogs-stream-prefix': 'logs-processor',
           },
         },
+      },
+      timeout: {
+        attemptDurationSeconds: 7200, // 2 hour timeout
       },
     });
 
