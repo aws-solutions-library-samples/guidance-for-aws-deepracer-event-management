@@ -35,7 +35,7 @@
     "@typescript-eslint/eslint-plugin": "^6.5.0",
     "@typescript-eslint/parser": "^6.5.0",
     "@babel/plugin-proposal-private-property-in-object": "^7.16.7",
-    "aws-cdk": "2.193.0",
+    "aws-cdk-lib": "2.195.0",
     "eslint": "^8.48.0",
     "eslint-config-node": "^4.1.0",
     "eslint-config-prettier": "^9.0.0",
@@ -55,8 +55,8 @@
     "typescript": "5.2.2"
   },
   "dependencies": {
-    "@aws-cdk/aws-lambda-python-alpha": "^2.193.0-alpha.0",
-    "aws-cdk-lib": "2.193.0",
+    "@aws-cdk/aws-lambda-python-alpha": "^2.195.0-alpha.0",
+    "aws-cdk-lib": "2.195.0",
     "awscdk-appsync-utils": "^0.0.190",
     "cdk-nag": "2.27.111",
     "cdk-serverless-clamscan": "^2.5.64",
