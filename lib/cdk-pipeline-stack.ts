@@ -209,7 +209,7 @@ export class CdkPipelineStack extends cdk.Stack {
           'amplify codegen', // I'm not repeating myself ;)
           'cd ../..',
           'docker run --rm -v $(pwd):/foo -w /foo' +
-            " public.ecr.aws/sam/build-nodejs20.x:latest bash -c 'npm install" +
+            " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
             " --cache /tmp/empty-cache && npm run build'",
           'aws s3 sync ./build/ s3://$sourceBucketName/ --delete',
           'echo distributionId=$distributionId',
@@ -248,7 +248,7 @@ export class CdkPipelineStack extends cdk.Stack {
           'amplify codegen', // I'm not repeating myself ;)
           'cd ../..',
           'docker run --rm -v $(pwd):/foo -w /foo' +
-            " public.ecr.aws/sam/build-nodejs20.x:latest bash -c 'npm install" +
+            " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
             " --cache /tmp/empty-cache && npm run build'",
           'aws s3 sync ./build/ s3://$leaderboardSourceBucketName/ --delete',
           "aws cloudfront create-invalidation --distribution-id $leaderboardDistributionId --paths '/*'",
@@ -286,7 +286,7 @@ export class CdkPipelineStack extends cdk.Stack {
           'amplify codegen', // I'm not repeating myself ;)
           'cd ../..',
           'docker run --rm -v $(pwd):/foo -w /foo' +
-            " public.ecr.aws/sam/build-nodejs20.x:latest bash -c 'npm install" +
+            " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
             " --cache /tmp/empty-cache && npm run build'",
           'aws s3 sync ./build/ s3://$streamingOverlaySourceBucketName/ --delete',
           "aws cloudfront create-invalidation --distribution-id $streamingOverlayDistributionId --paths '/*'",
