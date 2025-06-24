@@ -1,11 +1,11 @@
-from typing import List, Tuple
-import cv2
 import datetime
-import rosbag2_py
-import os
 import json
+import os
 import tarfile
+from typing import List, Tuple
 
+import cv2
+import rosbag2_py
 from deepracer_viz.model.metadata import ModelMetadata
 
 
@@ -164,13 +164,14 @@ def print_baginfo(bag_info: dict):
     )
     print("Elapsed time: {:.2f} seconds".format(bag_info["elapsed_time"]))
     print("Average FPS: {:.1f}".format(bag_info["fps"]))
-    print(
-        "Action Space: {} actions, first steering angle: {}, flip x-axis: {}".format(
-            bag_info["action_space_size"],
-            bag_info["action_space"][0]["steering_angle"],
-            bag_info["flip_x"],
+    if bag_info.get("action_space_size"):
+        print(
+            "Action Space: {} actions, first steering angle: {}, flip x-axis: {}".format(
+                bag_info["action_space_size"],
+                bag_info["action_space"][0]["steering_angle"],
+                bag_info["flip_x"],
+            )
         )
-    )
     print(
         "Input image: {}x{}, {} channels.".format(
             bag_info["image_shape"][1],

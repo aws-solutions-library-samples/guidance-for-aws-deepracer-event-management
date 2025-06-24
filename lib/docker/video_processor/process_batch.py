@@ -339,7 +339,7 @@ def main():
         logger.info("Running command: %s", cmd)
         result = subprocess.run(cmd)
         exit_code = result.returncode
-        if exit_code == 0:
+        if exit_code == 0 and os.path.isfile(video_file):
             logger.info(f"Finished processing {bag_path}")
             current_model["videos"].append(
                 {
