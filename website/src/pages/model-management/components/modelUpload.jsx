@@ -1,6 +1,6 @@
 import { Button, ProgressBar } from '@cloudscape-design/components';
 import { Auth, Storage } from 'aws-amplify';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useStore } from '../../../store/store';
@@ -105,7 +105,7 @@ export function ModelUpload() {
         dispatch('ADD_NOTIFICATION', {
           header: t('models.notifications.could-not-upload') + ' ' + file.name,
           type: 'error',
-          content: file.name + ' ' + t('carmodelupload-modal.file-regex'),
+          content: file.name + ' ' + t('carmodelupload.modal.file-regex'),
           dismissible: true,
           dismissLabel: t('models.notifications.dismiss-message'),
           id: file.name,
