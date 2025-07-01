@@ -406,7 +406,7 @@ if [ $DISTRIB_RELEASE = "16.04" ]; then
     exit 1
 
 elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ] || [ $DISTRIB_RELEASE = "24.04" ]; then
-    echo -e -n "\n- Ubuntu 20.04 or 22.04 detected"
+    echo -e -n "\n- Ubuntu $DISTRIB_RELEASE detected"
 
     pythonPath=python3.8
     if [ $DISTRIB_RELEASE = "22.04" ]; then
