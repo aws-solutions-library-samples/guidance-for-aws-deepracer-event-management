@@ -26,7 +26,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Python packages
-RUN pip3 install -U --no-cache-dir 'tensorflow-cpu<2.17' \
+RUN pip3 install -U --break-system-packages --no-cache-dir 'tensorflow-cpu<2.17' \
     python-resize-image \
     'deepracer-utils>=1.0.3' \
     pillow \
