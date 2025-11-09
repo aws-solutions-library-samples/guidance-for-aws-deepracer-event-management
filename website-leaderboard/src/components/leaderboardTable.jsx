@@ -9,7 +9,7 @@ import { scrollTo } from '../utils';
 import { Flag } from './flag';
 import styles from './leaderboardTable.module.css';
 
-const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag }) => {
+const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag, raceFormat }) => {
   const { t } = useTranslation();
   const [leaderboardListItems, SetLeaderboardListItems] = useState(<div></div>);
   const entriesRef = useRef(null);
@@ -38,7 +38,7 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
       }
 
       let timeValue = t('leaderboard.DNF');
-      if (raceFormat === 'TOTAL_RACE_TIME' && entry.totalLapTime) {
+      if (raceFormat === 'total' && entry.totalLapTime) {
         timeValue = convertMsToString(entry.totalLapTime);
       } else if (fastest) {
         timeValue = convertMsToString(entry.fastestLapTime);
@@ -84,7 +84,7 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
       );
     });
     SetLeaderboardListItems(items);
-  }, [leaderboardEntries, aspectRatio]);
+  }, [leaderboardEntries, aspectRatio, raceFormat, fastest, t]);
 
   /* optional hide the scrollbar, but then lose visuals of progress */
   useEffect(() => {
@@ -114,7 +114,7 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
           <div className={styles.positionTitle}>{t('leaderboard.position')}</div>
           <div className={styles.racerTitle}>{t('leaderboard.racer')}</div>
           <div className={styles.timeTitle}>
-            {t(raceFormat === 'TOTAL_RACE_TIME' ? 'leaderboard.totalTime' : 
+            {t(raceFormat === 'total' ? 'leaderboard.totalTime' : 
                fastest ? 'leaderboard.time' : 'leaderboard.average')}
           </div>
         </div>
@@ -136,7 +136,7 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
         <div className={styles.positionTitle}>{t('leaderboard.position')}</div>
         <div className={styles.racerTitle}>{t('leaderboard.racer')}</div>
         <div className={styles.timeTitle}>
-          {t(raceFormat === 'TOTAL_RACE_TIME' ? 'leaderboard.totalTime' : 
+          {t(raceFormat === 'total' ? 'leaderboard.totalTime' : 
              fastest ? 'leaderboard.time' : 'leaderboard.average')}
         </div>
       </div>

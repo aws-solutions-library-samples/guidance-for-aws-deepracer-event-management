@@ -1,5 +1,5 @@
 import { API, graphqlOperation } from 'aws-amplify';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Logo from '../assets/logo1024.png';
 import { FollowFooter } from '../components/followFooter';
 import { Header } from '../components/header';
@@ -100,6 +100,8 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
     } else {
       if (raceFormat === 'fastest') {
         newEntry.gapToFastest = newEntry.fastestLapTime - allEntries[0].fastestLapTime;
+      } else if (raceFormat === 'total') {
+        newEntry.gapToFastest = newEntry.totalLapTime - allEntries[0].totalLapTime;
       } else if (newEntry.fastestAverageLap) {
         newEntry.gapToFastest = newEntry.fastestAverageLap.avgTime - allEntries[0].fastestAverageLap.avgTime;
       } else {
@@ -155,10 +157,24 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
         if (!b.fastestAverageLap) return -1;
         return a.fastestAverageLap.avgTime - b.fastestAverageLap.avgTime;
       };
+      const totalTimeSortFunction = (a, b) => {
+        // Exclude entries with 0 valid laps
+        if (a.numberOfValidLaps === 0 && b.numberOfValidLaps === 0) return 0;
+        if (a.numberOfValidLaps === 0) return 1;
+        if (b.numberOfValidLaps === 0) return -1;
+        return (a.totalLapTime || 0) - (b.totalLapTime || 0);
+      };
 
-      const sortedLeaderboard = newState.sort(
-        raceFormat === 'fastest' ? fastestSortFunction : fastestAverageSortFunction
+      let sortedLeaderboard = newState.sort(
+        raceFormat === 'fastest' ? fastestSortFunction : 
+        raceFormat === 'total' ? totalTimeSortFunction :
+        fastestAverageSortFunction
       );
+
+      // Filter out entries with 0 valid laps for total race time
+      if (raceFormat === 'total') {
+        sortedLeaderboard = sortedLeaderboard.filter(entry => entry.numberOfValidLaps > 0);
+      }
 
       const oldPosition = oldEntryIndex + 1; // +1 due to that list index start from 0 and leaderboard on 1
       calcRaceSummary(newLeaderboardEntry, oldPosition, sortedLeaderboard);
@@ -271,6 +287,7 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
               scrollEnabled={scrollEnabled}
               fastest={raceFormat === 'fastest'}
               showFlag={showFlag}
+              raceFormat={raceFormat}
             />
           </div>
           <FollowFooter
