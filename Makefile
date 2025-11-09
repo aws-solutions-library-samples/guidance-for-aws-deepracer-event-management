@@ -15,7 +15,7 @@ override source_repo = aws-solutions-library-samples/guidance-for-aws-deepracer-
 endif
 
 ifndef source_branch
-override source_branch = release/stable
+override source_branch = devel
 endif
 
 ifdef domain_name

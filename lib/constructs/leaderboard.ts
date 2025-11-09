@@ -229,6 +229,7 @@ export class Leaderboard extends Construct {
         avgLapsPerAttempt: GraphqlType.float(),
         countryCode: GraphqlType.string(),
         mostConcecutiveLaps: GraphqlType.int(),
+        totalLapTime: GraphqlType.float(),
       },
       directives: [Directive.apiKey(), Directive.iam(), Directive.cognito('admin', 'operator', 'commentator')],
     });
@@ -247,6 +248,7 @@ export class Leaderboard extends Construct {
       avgLapsPerAttempt: GraphqlType.float(),
       countryCode: GraphqlType.string(),
       mostConcecutiveLaps: GraphqlType.int(),
+      totalLapTime: GraphqlType.float(),
     };
 
     props.appsyncApi.schema.addType(leaderboardEntryObjectType);

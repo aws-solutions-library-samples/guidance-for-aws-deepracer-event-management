@@ -777,6 +777,7 @@
       "fastestLapId": "Lap",
       "fastestAvg": "Fastest avg. (Run)",
       "fastestAvgWindow": "Laps",
+      "totalTime": "Total Time",
       "rank": "Rank",
       "gapToFastest": "Gap to 1st",
       "actualPosition": "Actual position",
