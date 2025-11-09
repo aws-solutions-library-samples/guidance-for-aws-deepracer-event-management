@@ -11,10 +11,11 @@ override label = main
 endif
 
 ifndef source_repo
-override source_repo = aws-solutions-library-samples/guidance-for-aws-deepracer-event-management
+override source_repo = jonathanmhurley/guidance-for-aws-deepracer-event-management
 endif
 
 ifndef source_branch
+#override source_branch = release/stable
 override source_branch = devel
 endif
 
