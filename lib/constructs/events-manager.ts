@@ -6,13 +6,13 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda';
 import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import {
-  CodeFirstSchema,
-  Directive,
-  EnumType,
-  GraphqlType,
-  InputType,
-  ObjectType,
-  ResolvableField,
+    CodeFirstSchema,
+    Directive,
+    EnumType,
+    GraphqlType,
+    InputType,
+    ObjectType,
+    ResolvableField,
 } from 'awscdk-appsync-utils';
 import { NagSuppressions } from 'cdk-nag';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
@@ -146,7 +146,7 @@ export class EventsManager extends Construct {
     props.appsyncApi.schema.addType(trackTypeMethodEnum);
 
     const raceRankingMethodEnum = new EnumType('RankingMethod', {
-      definition: ['BEST_LAP_TIME', 'BEST_AVERAGE_LAP_TIME_X_LAP'],
+      definition: ['BEST_LAP_TIME', 'BEST_AVERAGE_LAP_TIME_X_LAP', 'TOTAL_RACE_TIME'],
     });
     props.appsyncApi.schema.addType(raceRankingMethodEnum);
 

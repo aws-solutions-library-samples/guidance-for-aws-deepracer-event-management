@@ -372,6 +372,7 @@
       "ranking.best-lap-time": "Best lap time",
       "ranking.finish-x-laps": "Finish x laps",
       "ranking.best-average-lap-time-x-lap": "Average over X laps window",
+      "ranking.total-race-time": "Total Race Time",
       "race-customisations": "Race customisations",
       "allowed-races-per-racer-label": "Allowed races per racer",
       "allowed-races-per-racer-description": "The maximum number of races a racer is allowed to do during an event",
