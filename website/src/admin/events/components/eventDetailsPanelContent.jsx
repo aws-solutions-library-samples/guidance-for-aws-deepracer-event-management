@@ -1,5 +1,4 @@
 import { Box, ColumnLayout, SpaceBetween } from '@cloudscape-design/components';
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { EventLinksButtons } from '../../../components/eventLinksButtons';
 import { Flag } from '../../../components/flag';
@@ -7,10 +6,10 @@ import awsconfig from '../../../config.json';
 import { useUsers } from '../../../hooks/useUsers';
 import { GetTypeOfEventNameFromId } from '../support-functions/eventDomain';
 import {
-  GetRaceResetsNameFromId,
-  GetRankingNameFromId,
-  GetTrackTypeNameFromId,
-  RaceTypeEnum,
+    GetRaceResetsNameFromId,
+    GetRankingNameFromId,
+    GetTrackTypeNameFromId,
+    RaceTypeEnum,
 } from '../support-functions/raceConfig';
 import { TrackTable } from './trackTable';
 
@@ -24,6 +23,8 @@ export const EventDetailsPanelContent = ({ event }) => {
   let raceFormat = 'fastest';
   if (event.raceConfig.rankingMethod === RaceTypeEnum.BEST_AVERAGE_LAP_TIME_X_LAP) {
     raceFormat = 'average';
+  } else if (event.raceConfig.rankingMethod === RaceTypeEnum.TOTAL_RACE_TIME) {
+    raceFormat = 'total';
   }
 
   const attributeField = (header, value) => {
