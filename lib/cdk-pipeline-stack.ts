@@ -12,7 +12,7 @@ import { DeepracerEventManagerStack } from './drem-app-stack';
 
 // Constants
 const NODE_VERSION = '22'; // other possible options: stable, latest, lts
-const CDK_VERSION = '2.1019.1'; // other possible options: latest
+const CDK_VERSION = '2.1033.0'; // other possible options: latest
 const AMPLIFY_VERSION = '12.14.4';
 
 export interface InfrastructurePipelineStageProps extends cdk.StackProps {
@@ -118,11 +118,12 @@ export class CdkPipelineStack extends cdk.Stack {
           authentication: cdk.SecretValue.secretsManager('drem/github-token'),
           trigger: cdk.aws_codepipeline_actions.GitHubTrigger.POLL,
         }),
-        commands: [
-          // Node update
+        installCommands: [
+          // Update Node.js before install phase
           `n ${NODE_VERSION}`,
           'node --version',
-
+        ],
+        commands: [
           'npm install',
           `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c label=${props.labelName}` +
             ` -c account=${props.env.account} -c region=${props.env.region}` +
