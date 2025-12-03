@@ -118,11 +118,12 @@ export class CdkPipelineStack extends cdk.Stack {
           authentication: cdk.SecretValue.secretsManager('drem/github-token'),
           trigger: cdk.aws_codepipeline_actions.GitHubTrigger.POLL,
         }),
-        commands: [
-          // Node update
+        installCommands: [
+          // Update Node.js before install phase
           `n ${NODE_VERSION}`,
           'node --version',
-
+        ],
+        commands: [
           'npm install',
           `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c label=${props.labelName}` +
             ` -c account=${props.env.account} -c region=${props.env.region}` +
