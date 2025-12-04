@@ -59,7 +59,7 @@
     "aws-cdk-lib": "2.202.0",
     "awscdk-appsync-utils": "^0.0.769",
     "cdk-nag": "2.36.24",
-    "cdk-serverless-clamscan": "^2.11.61",
+    "cdk-serverless-clamscan": "^2.13.46",
     "constructs": "^10.4.2",
     "source-map-support": "^0.5.21"
   }
