@@ -116,6 +116,7 @@ def __add_to_leaderboard(variables):
             $racedByProxy: Boolean!
             $countryCode: String!
             $mostConcecutiveLaps: Int!
+            $totalLapTime: Float
         ) {
             addLeaderboardEntry(
                 avgLapTime: $avgLapTime
@@ -131,6 +132,7 @@ def __add_to_leaderboard(variables):
                 racedByProxy: $racedByProxy
                 countryCode: $countryCode
                 mostConcecutiveLaps: $mostConcecutiveLaps
+                totalLapTime: $totalLapTime
             ) {
             avgLapTime
             avgLapsPerAttempt
@@ -149,6 +151,7 @@ def __add_to_leaderboard(variables):
             racedByProxy
             countryCode
             mostConcecutiveLaps
+            totalLapTime
             }
         }
         """
@@ -172,6 +175,7 @@ def __update_entry_on_leaderboard(variables):
             $username: String!
             $racedByProxy: Boolean!
             $countryCode: String
+            $totalLapTime: Float
         ) {
             updateLeaderboardEntry(
                 avgLapTime: $avgLapTime
@@ -186,6 +190,7 @@ def __update_entry_on_leaderboard(variables):
                 username: $username
                 racedByProxy: $racedByProxy
                 countryCode: $countryCode
+                totalLapTime: $totalLapTime
             ) {
             avgLapTime
             avgLapsPerAttempt
@@ -203,6 +208,7 @@ def __update_entry_on_leaderboard(variables):
             username
             racedByProxy
             countryCode
+            totalLapTime
             }
         }
         """

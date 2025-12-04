@@ -1,4 +1,4 @@
-import { default as React, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import classnames from 'classnames';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +9,7 @@ import { scrollTo } from '../utils';
 import { Flag } from './flag';
 import styles from './leaderboardTable.module.css';
 
-const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag }) => {
+const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag, raceFormat }) => {
   const { t } = useTranslation();
   const [leaderboardListItems, SetLeaderboardListItems] = useState(<div></div>);
   const entriesRef = useRef(null);
@@ -38,7 +38,9 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
       }
 
       let timeValue = t('leaderboard.DNF');
-      if (fastest) {
+      if (raceFormat === 'total' && entry.totalLapTime) {
+        timeValue = convertMsToString(entry.totalLapTime);
+      } else if (fastest) {
         timeValue = convertMsToString(entry.fastestLapTime);
       } else if (entry.fastestAverageLap) {
         timeValue = convertMsToString(entry.fastestAverageLap.avgTime);
@@ -82,7 +84,7 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
       );
     });
     SetLeaderboardListItems(items);
-  }, [leaderboardEntries, aspectRatio]);
+  }, [leaderboardEntries, aspectRatio, raceFormat, fastest, t]);
 
   /* optional hide the scrollbar, but then lose visuals of progress */
   useEffect(() => {
@@ -104,12 +106,39 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
     };
   }, [scrollEnabled]);
 
+  // Handle empty state
+  if (leaderboardEntries.length === 0) {
+    return (
+      <div className={styles.layout}>
+        <div className={styles.titles}>
+          <div className={styles.positionTitle}>{t('leaderboard.position')}</div>
+          <div className={styles.racerTitle}>{t('leaderboard.racer')}</div>
+          <div className={styles.timeTitle}>
+            {t(raceFormat === 'total' ? 'leaderboard.totalTime' : 
+               fastest ? 'leaderboard.time' : 'leaderboard.average')}
+          </div>
+        </div>
+        <div className={styles.entries}>
+          <div className={styles.emptyState} style={{ textAlign: 'center', padding: '2rem', color: '#fff' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+              {t('leaderboard.emptyState')}
+            </div>
+            <div>{t('leaderboard.emptyStateMessage')}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.layout}>
       <div className={styles.titles}>
         <div className={styles.positionTitle}>{t('leaderboard.position')}</div>
         <div className={styles.racerTitle}>{t('leaderboard.racer')}</div>
-        <div className={styles.timeTitle}>{t(fastest ? 'leaderboard.time' : 'leaderboard.average')}</div>
+        <div className={styles.timeTitle}>
+          {t(raceFormat === 'total' ? 'leaderboard.totalTime' : 
+             fastest ? 'leaderboard.time' : 'leaderboard.average')}
+        </div>
       </div>
       <div ref={entriesRef} className={styles.entries}>
         <div id="entries" className={styles.entry}>

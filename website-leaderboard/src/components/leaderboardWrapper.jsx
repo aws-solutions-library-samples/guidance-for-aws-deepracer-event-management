@@ -27,8 +27,8 @@ const LeaderboardWrapper = () => {
     scroll = /true/i.test(scroll);
   }
 
+  // Get format from URL, or it will be determined from event config
   let raceFormat = queryParams.get('format');
-  if (raceFormat == null) raceFormat = 'fastest';
 
   let showFlag = queryParams.get('flag');
   if (showFlag === null) {

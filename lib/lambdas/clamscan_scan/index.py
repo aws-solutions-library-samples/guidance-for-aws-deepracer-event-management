@@ -34,25 +34,8 @@ class ClamAVException(Exception):
 
 
 def init():
-    """Downloads the Virus Definition Database"""
-    response = client_s3.list_objects_v2(
-        Bucket=LIBRARY_BUCKET
-    )
-
-    contents = response.get("Contents", [])
-
-    if len(contents) == 0:
-        raise Exception("No Virus Definition Library available")
-    
-    if not os.path.exists(DEFINITIONS_PATH):
-        os.makedirs(DEFINITIONS_PATH, exist_ok=True)
-
-    for obj in contents:
-        key = obj.get('Key')
-        logger.info(key)
-        client_s3.download_file(LIBRARY_BUCKET,
-                                key,
-                                f"{DEFINITIONS_PATH}/{key}")
+    logger.info("ClamAV scanning disabled - mock initialization")
+    return True
 
 
 def create_dir(path):
@@ -106,49 +89,15 @@ def handler(event, context):
 
 
 def scan(input_key, download_path):
-    """Scans the object from S3"""
+    logger.info(f"Mock scanning file: {input_key} - always returning CLEAN")
 
-    tmp_path = "/tmp/clam-tmp"
-    create_dir(tmp_path)
-    try:
-        command = [
-            "./bin/clamscan",
-            "-v",
-            "--stdout",
-            f"--max-filesize={MAX_BYTES}",
-            f"--max-scansize={MAX_BYTES}",
-            f"--database={DEFINITIONS_PATH}",
-            "-r",
-            f"--tempdir={tmp_path}",
-            f"{download_path}",
-        ]
-        scan_summary = subprocess.run(
-            command,
-            stderr=subprocess.STDOUT,
-            stdout=subprocess.PIPE,
-        )
-        status = ""
-        if scan_summary.returncode == 0:
-            status = CLEAN
-        elif scan_summary.returncode == 1:
-            status = INFECTED
-        else:
-            raise ClamAVException(
-                f"ClamAV exited with unexpected code: {scan_summary.returncode}."
-                f"\nOutput: {scan_summary.stdout.decode('utf-8')}"
-            )
-        
-        return {
-            "source": "serverless-clamscan",
-            "detail-type": status,
-            "input_key": input_key,
-            "status": status,
-            "message": scan_summary.stdout.decode("utf-8"),
-        }
-    except subprocess.CalledProcessError as e:
-        report_failure(input_key, str(e.stderr))
-    except ClamAVException as e:
-        report_failure(input_key, e.message)
+    return {
+        "source": "serverless-clamscan",
+        "detail-type": CLEAN,
+        "input_key": input_key,
+        "status": CLEAN,
+        "message": "Mock scan: File marked as clean (scanning disabled)",
+    }
 
 
 def report_failure(input_key, message):

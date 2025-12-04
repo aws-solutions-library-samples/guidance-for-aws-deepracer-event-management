@@ -1,6 +1,6 @@
 import { SpaceBetween } from '@cloudscape-design/components';
 import { API, graphqlOperation } from 'aws-amplify';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RaceTypeEnum } from '../admin/events/support-functions/raceConfig';
 import { EventSelectorModal } from '../components/eventSelectorModal';
@@ -49,6 +49,14 @@ const CommentatorStats = () => {
     if (!b.fastestAverageLap) return -1;
     return a.fastestAverageLap.avgTime - b.fastestAverageLap.avgTime;
   };
+  const totalTimeSortFunction = (a, b) => {
+    // Exclude entries with 0 valid laps
+    if (a.numberOfValidLaps === 0 && b.numberOfValidLaps === 0) return 0;
+    if (a.numberOfValidLaps === 0) return 1;
+    if (b.numberOfValidLaps === 0) return -1;
+    // Sort by total lap time ascending (lowest first)
+    return (a.totalLapTime || 0) - (b.totalLapTime || 0);
+  };
   /**
    * Update leaderboard with a new entry
    * @param  {Object} newEntry Leaderboard entry to be added
@@ -75,8 +83,15 @@ const CommentatorStats = () => {
       const sortedLeaderboard = newState.sort(
         selectedEvent.raceConfig.rankingMethod === RaceTypeEnum.BEST_LAP_TIME
           ? fastestSortFunction
+          : selectedEvent.raceConfig.rankingMethod === RaceTypeEnum.TOTAL_RACE_TIME
+          ? totalTimeSortFunction
           : fastestAverageSortFunction
       );
+
+      // Filter out entries with 0 valid laps for TOTAL_RACE_TIME
+      if (selectedEvent.raceConfig.rankingMethod === RaceTypeEnum.TOTAL_RACE_TIME) {
+        return sortedLeaderboard.filter(entry => entry.numberOfValidLaps > 0);
+      }
 
       return sortedLeaderboard;
     });
@@ -95,8 +110,15 @@ const CommentatorStats = () => {
       sortedLeaderboard = response.data.getLeaderboard.entries.sort(
         selectedEvent.raceConfig.rankingMethod === RaceTypeEnum.BEST_LAP_TIME
           ? fastestSortFunction
+          : selectedEvent.raceConfig.rankingMethod === RaceTypeEnum.TOTAL_RACE_TIME
+          ? totalTimeSortFunction
           : fastestAverageSortFunction
       );
+
+      // Filter out entries with 0 valid laps for TOTAL_RACE_TIME
+      if (selectedEvent.raceConfig.rankingMethod === RaceTypeEnum.TOTAL_RACE_TIME) {
+        sortedLeaderboard = sortedLeaderboard.filter(entry => entry.numberOfValidLaps > 0);
+      }
     }
 
     setLeaderboard(sortedLeaderboard);

@@ -247,6 +247,9 @@ def __calculate_race_summary(event_id, track_id, user_id) -> dict:
     average_lap = __get_fastest_average_lap(stored_races)
     mostConcecutiveLaps = __get_most_concecutive_laps(stored_races)
 
+    # Calculate total lap time (sum of all valid laps)
+    total_lap_time = sum(valid_lap_times) if valid_lap_times else 0
+
     summary = {
         "numberOfValidLaps": len(valid_laps),
         "numberOfInvalidLaps": len(invalid_laps),
@@ -257,6 +260,7 @@ def __calculate_race_summary(event_id, track_id, user_id) -> dict:
         * 100,  # percentage
         "avgLapsPerAttempt": round(avg_laps_per_attempt, 1),
         "mostConcecutiveLaps": mostConcecutiveLaps,
+        "totalLapTime": total_lap_time,
     }
     logger.info(summary)
     return summary

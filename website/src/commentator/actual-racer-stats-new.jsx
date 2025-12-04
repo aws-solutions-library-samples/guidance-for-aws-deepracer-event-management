@@ -1,4 +1,3 @@
-import React from 'react';
 
 import Container from '@cloudscape-design/components/container';
 import Header from '@cloudscape-design/components/header';
@@ -54,6 +53,8 @@ const ActualRacerStatsNew = ({ leaderboard, overlayInfo, raceFormat }) => {
   const [gapToLeader, SetGapToLeader] = useState('-');
   const [fastestEventLapTime, SetFastestEventLapTime] = useState();
   const [fastestEventAvgLap, SetFastestEventAvgLap] = useState();
+  const [currentTotalTime, SetCurrentTotalTime] = useState(0);
+  const [fastestEventTotalTime, SetFastestEventTotalTime] = useState(null);
   const [actualPosition, SetActualPosition] = useState();
   const [newPosition, SetNewPosition] = useState();
   const [selectedRacer, SetSelectedRacer] = useState('');
@@ -65,6 +66,9 @@ const ActualRacerStatsNew = ({ leaderboard, overlayInfo, raceFormat }) => {
     if (raceFormat === RaceTypeEnum.BEST_LAP_TIME && fastestEventLapTime && fastestRaceLap) {
       leaderTime = fastestEventLapTime;
       fastestRacerTime = fastestRaceLap.time;
+    } else if (raceFormat === RaceTypeEnum.TOTAL_RACE_TIME && fastestEventTotalTime && currentTotalTime) {
+      leaderTime = fastestEventTotalTime;
+      fastestRacerTime = currentTotalTime;
     } else if (fastestEventAvgLap && fastestRaceAvg) {
       leaderTime = fastestEventAvgLap.avgTime;
       fastestRacerTime = fastestRaceAvg.avgTime;
@@ -88,7 +92,7 @@ const ActualRacerStatsNew = ({ leaderboard, overlayInfo, raceFormat }) => {
     }
   };
 
-  const calculatePositions = (username, fastestRaceLap, fastestRaceAvg) => {
+  const calculatePositions = (username, fastestRaceLap, fastestRaceAvg, currentTotalTime) => {
     if (leaderboard?.length > 0 && username) {
       // actual position
       const actualPosition = leaderboard.findIndex((entry) => entry.username === username);
@@ -96,6 +100,8 @@ const ActualRacerStatsNew = ({ leaderboard, overlayInfo, raceFormat }) => {
       var newPosition = null;
       if (raceFormat === RaceTypeEnum.BEST_LAP_TIME) {
         newPosition = leaderboard.findIndex((entry) => entry.fastestLapTime > fastestRaceLap?.time);
+      } else if (raceFormat === RaceTypeEnum.TOTAL_RACE_TIME) {
+        newPosition = leaderboard.findIndex((entry) => entry.totalLapTime > currentTotalTime);
       } else {
         newPosition = leaderboard.findIndex(
           (entry) =>
@@ -138,8 +144,15 @@ const ActualRacerStatsNew = ({ leaderboard, overlayInfo, raceFormat }) => {
 
     SetFastestRaceAvg(getFacestAvgFromOverlayInfo(overlayInfo));
 
+    // Calculate current total time for TOTAL_RACE_TIME
+    if (raceFormat === RaceTypeEnum.TOTAL_RACE_TIME && overlayInfo.laps) {
+      const validLaps = overlayInfo.laps.filter(lap => lap.isValid);
+      const currentTotal = validLaps.reduce((sum, lap) => sum + lap.time, 0);
+      SetCurrentTotalTime(currentTotal);
+    }
+
     calculateGapToLeaderValue();
-    calculatePositions(overlayInfo.username, fastestRaceLap, fastestRaceAvg);
+    calculatePositions(overlayInfo.username, fastestRaceLap, fastestRaceAvg, currentTotalTime);
     SetSelectedRacer(overlayInfo.username);
   };
 
@@ -165,6 +178,15 @@ const ActualRacerStatsNew = ({ leaderboard, overlayInfo, raceFormat }) => {
 
       SetFastestEventLapTime(fastest.fastestLapTime);
       SetFastestEventAvgLap(fastest.fastestAverageLap);
+      
+      // Calculate fastest total time for TOTAL_RACE_TIME
+      if (raceFormat === RaceTypeEnum.TOTAL_RACE_TIME) {
+        const validEntries = leaderboard.filter(entry => entry.numberOfValidLaps > 0);
+        if (validEntries.length > 0) {
+          SetFastestEventTotalTime(Math.min(...validEntries.map(e => e.totalLapTime)));
+        }
+      }
+      
       calculatePositions();
     }
   }, [leaderboard, raceFormat]);
@@ -225,18 +247,26 @@ const ActualRacerStatsNew = ({ leaderboard, overlayInfo, raceFormat }) => {
           </Grid>
 
           <Grid gridDefinition={gridDefinition}>
-            <ValueWithLabel label={t('commentator.race.fastest')} color="text-status-info">
-              <RaceTimeAsString timeInMS={fastestRaceLap?.time}></RaceTimeAsString>
-            </ValueWithLabel>
-            <ValueWithLabel label={t('commentator.race.fastestLapId')} color="text-status-info">
-              {fastestRaceLap?.lapId ? Number(fastestRaceLap.lapId) + 1 : '-'}
-            </ValueWithLabel>
-            <ValueWithLabel label={t('commentator.race.fastestAvg')} color="text-status-info">
-              <RaceTimeAsString timeInMS={fastestRaceAvg?.avgTime}></RaceTimeAsString>
-            </ValueWithLabel>
-            <ValueWithLabel label={t('commentator.race.fastestAvgWindow')} color="text-status-info">
-              <FastestAvgWindow averageLapInformation={fastestRaceAvg}></FastestAvgWindow>
-            </ValueWithLabel>
+            {raceFormat === RaceTypeEnum.TOTAL_RACE_TIME ? (
+              <ValueWithLabel label={t('commentator.race.totalTime')} color="text-status-info">
+                <RaceTimeAsString timeInMS={currentTotalTime}></RaceTimeAsString>
+              </ValueWithLabel>
+            ) : (
+              <>
+                <ValueWithLabel label={t('commentator.race.fastest')} color="text-status-info">
+                  <RaceTimeAsString timeInMS={fastestRaceLap?.time}></RaceTimeAsString>
+                </ValueWithLabel>
+                <ValueWithLabel label={t('commentator.race.fastestLapId')} color="text-status-info">
+                  {fastestRaceLap?.lapId ? Number(fastestRaceLap.lapId) + 1 : '-'}
+                </ValueWithLabel>
+                <ValueWithLabel label={t('commentator.race.fastestAvg')} color="text-status-info">
+                  <RaceTimeAsString timeInMS={fastestRaceAvg?.avgTime}></RaceTimeAsString>
+                </ValueWithLabel>
+                <ValueWithLabel label={t('commentator.race.fastestAvgWindow')} color="text-status-info">
+                  <FastestAvgWindow averageLapInformation={fastestRaceAvg}></FastestAvgWindow>
+                </ValueWithLabel>
+              </>
+            )}
           </Grid>
         </SpaceBetween>
       </Container>

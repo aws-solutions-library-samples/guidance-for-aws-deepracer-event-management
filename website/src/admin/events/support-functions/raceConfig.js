@@ -142,6 +142,7 @@ export const GetTrackTypeNameFromId = (id) => {
 export const RaceTypeEnum = {
   BEST_AVERAGE_LAP_TIME_X_LAP: 'BEST_AVERAGE_LAP_TIME_X_LAP',
   BEST_LAP_TIME: 'BEST_LAP_TIME',
+  TOTAL_RACE_TIME: 'TOTAL_RACE_TIME',
 };
 
 // RACE TYPE OPTIONS METHODS
@@ -153,6 +154,7 @@ export const RaceTypeConfig = () => {
       label: i18next.t('events.race.ranking.best-average-lap-time-x-lap'),
       value: RaceTypeEnum.BEST_AVERAGE_LAP_TIME_X_LAP,
     },
+    { label: i18next.t('events.race.ranking.total-race-time'), value: RaceTypeEnum.TOTAL_RACE_TIME },
   ];
 };
 

@@ -1,5 +1,5 @@
 import { API, graphqlOperation } from 'aws-amplify';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Logo from '../assets/logo1024.png';
 import { FollowFooter } from '../components/followFooter';
 import { Header } from '../components/header';
@@ -16,6 +16,7 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
     headerText: '',
     followFooterText: '',
   });
+  const [actualRaceFormat, setActualRaceFormat] = useState(raceFormat);
   const [subscription, SetSubscription] = useState();
   const [onUpdateSubscription, SetOnUpdateSubscription] = useState();
   const [onDeleteSubscription, SetOnDeleteSubscription] = useState();
@@ -98,8 +99,10 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
     if (overallRank === 0) {
       newEntry.gapToFastest = 0;
     } else {
-      if (raceFormat === 'fastest') {
+      if (actualRaceFormat === 'fastest') {
         newEntry.gapToFastest = newEntry.fastestLapTime - allEntries[0].fastestLapTime;
+      } else if (actualRaceFormat === 'total') {
+        newEntry.gapToFastest = newEntry.totalLapTime - allEntries[0].totalLapTime;
       } else if (newEntry.fastestAverageLap) {
         newEntry.gapToFastest = newEntry.fastestAverageLap.avgTime - allEntries[0].fastestAverageLap.avgTime;
       } else {
@@ -155,10 +158,24 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
         if (!b.fastestAverageLap) return -1;
         return a.fastestAverageLap.avgTime - b.fastestAverageLap.avgTime;
       };
+      const totalTimeSortFunction = (a, b) => {
+        // Exclude entries with 0 valid laps
+        if (a.numberOfValidLaps === 0 && b.numberOfValidLaps === 0) return 0;
+        if (a.numberOfValidLaps === 0) return 1;
+        if (b.numberOfValidLaps === 0) return -1;
+        return (a.totalLapTime || 0) - (b.totalLapTime || 0);
+      };
 
-      const sortedLeaderboard = newState.sort(
-        raceFormat === 'fastest' ? fastestSortFunction : fastestAverageSortFunction
+      let sortedLeaderboard = newState.sort(
+        actualRaceFormat === 'fastest' ? fastestSortFunction : 
+        actualRaceFormat === 'total' ? totalTimeSortFunction :
+        fastestAverageSortFunction
       );
+
+      // Filter out entries with 0 valid laps for total race time
+      if (actualRaceFormat === 'total') {
+        sortedLeaderboard = sortedLeaderboard.filter(entry => entry.numberOfValidLaps > 0);
+      }
 
       const oldPosition = oldEntryIndex + 1; // +1 due to that list index start from 0 and leaderboard on 1
       calcRaceSummary(newLeaderboardEntry, oldPosition, sortedLeaderboard);
@@ -171,6 +188,25 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
       const getLeaderboardData = async () => {
         const response = await API.graphql(graphqlOperation(getLeaderboard, { eventId: eventId, trackId: trackId }));
         const leaderboard = response.data.getLeaderboard;
+        
+        // Auto-detect race format from data if not explicitly set in URL
+        if (!raceFormat && leaderboard.entries && leaderboard.entries.length > 0) {
+          const firstEntry = leaderboard.entries[0];
+          // Check which field has meaningful data to determine format
+          if (firstEntry.totalLapTime && firstEntry.totalLapTime > 0) {
+            setActualRaceFormat('total');
+          } else if (firstEntry.fastestAverageLap) {
+            setActualRaceFormat('average');
+          } else {
+            setActualRaceFormat('fastest');
+          }
+        } else if (raceFormat) {
+          setActualRaceFormat(raceFormat);
+        } else {
+          // Default fallback
+          setActualRaceFormat('fastest');
+        }
+        
         response.data.getLeaderboard.entries.forEach((entry) => updateLeaderboardEntries(entry));
         setLeaderboardConfig(leaderboard.config);
       };
@@ -263,21 +299,22 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
               headerText={leaderboardConfig.leaderBoardTitle}
               eventId={eventId}
               trackId={trackId}
-              raceFormat={raceFormat}
+              raceFormat={actualRaceFormat}
               qrCodeVisible={showQrCode}
             />
             <LeaderboardTable
               leaderboardEntries={leaderboardEntries}
               scrollEnabled={scrollEnabled}
-              fastest={raceFormat === 'fastest'}
+              fastest={actualRaceFormat === 'fastest'}
               showFlag={showFlag}
+              raceFormat={actualRaceFormat}
             />
           </div>
           <FollowFooter
             visible
             eventId={eventId}
             trackId={trackId}
-            raceFormat={raceFormat}
+            raceFormat={actualRaceFormat}
             text={leaderboardConfig.leaderBoardFooter}
             qrCodeVisible={showQrCode}
           />
@@ -287,9 +324,9 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
         visible={!racSummaryFooterIsVisible}
         eventId={eventId}
         trackId={trackId}
-        raceFormat={raceFormat}
+        raceFormat={actualRaceFormat}
       />
-      <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} raceFormat={raceFormat} />
+      <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} raceFormat={actualRaceFormat} />
     </>
   );
 };
