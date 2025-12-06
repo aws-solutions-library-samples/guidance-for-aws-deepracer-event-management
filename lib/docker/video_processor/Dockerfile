@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/ros:humble-ros-base
+FROM public.ecr.aws/docker/library/ros:jazzy-ros-base
 
 # Set the Ubuntu mirrors
 ARG AWS_REGION=us-east-1
@@ -11,12 +11,12 @@ RUN mkdir -p /var/runtime /var/task /var/task/src /var/task/.tmp/matplotlib
 # Install additional dependencies
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     libboost-all-dev \
-    ros-humble-image-transport \
-    ros-humble-compressed-image-transport \
-    ros-humble-cv-bridge \
-    ros-humble-pybind11-vendor \
-    ros-humble-test-msgs \
-    ros-humble-rosbag2-storage-mcap \
+    ros-jazzy-image-transport \
+    ros-jazzy-compressed-image-transport \
+    ros-jazzy-cv-bridge \
+    ros-jazzy-pybind11-vendor \
+    ros-jazzy-test-msgs \
+    ros-jazzy-rosbag2-storage-mcap \
     python3-pip \
     libjsoncpp-dev \
     v4l-utils \
@@ -26,7 +26,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Python packages
-RUN pip3 install -U --no-cache-dir 'tensorflow-cpu<2.17' \
+RUN pip3 install -U --break-system-packages --no-cache-dir 'tensorflow-cpu<2.17' \
     python-resize-image \
     'deepracer-utils>=1.0.3' \
     pillow \
@@ -43,7 +43,7 @@ ENV MPLCONFIGDIR=/var/task/.tmp/matplotlib
 RUN cd /var/task/src && \
     git clone -b logging https://github.com/larsll/deepracer-viz && \
     git clone -b compressed-image https://github.com/larsll/aws-deepracer-interfaces-pkg && \
-    bash -c 'cd /var/task && source /opt/ros/humble/setup.bash && colcon build --merge-install && rm -rf build && rm -rf log && rm -rf src'
+    bash -c 'cd /var/task && source /opt/ros/jazzy/setup.bash && colcon build --merge-install && rm -rf build && rm -rf log && rm -rf src'
 
 # Copy function code
 COPY *.py /var/task/
