@@ -405,12 +405,14 @@ if [ $DISTRIB_RELEASE = "16.04" ]; then
     echo -e -n "\nPlease update your car to at least 20.04 -> https://docs.aws.amazon.com/deepracer/latest/developerguide/deepracer-ubuntu-update.html\n"
     exit 1
 
-elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
-    echo -e -n "\n- Ubuntu 20.04 or 22.04 detected"
+elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ] || [ $DISTRIB_RELEASE = "24.04" ]; then
+    echo -e -n "\n- Ubuntu $DISTRIB_RELEASE detected"
 
     pythonPath=python3.8
     if [ $DISTRIB_RELEASE = "22.04" ]; then
         pythonPath=python3.10
+    elif [ $DISTRIB_RELEASE = "24.04" ]; then
+        pythonPath=python3.12
     fi
 
     # Set some paths
@@ -430,11 +432,13 @@ elif [ $DISTRIB_RELEASE = "20.04" ] || [ $DISTRIB_RELEASE = "22.04" ]; then
     fi
 
     # What are we running on?
-    hw=$(tr -d '\0' </proc/device-tree/model)
-    if [[ $hw == *"Raspberry Pi 4"* ]]; then
-        echo -e -n "\n- Raspberry Pi"
-        DEVICE=rpi
-        ARCH=arm64
+    if [ -f /proc/device-tree/model ]; then
+        hw=$(tr -d '\0' </proc/device-tree/model)
+        if [[ $hw == *"Raspberry Pi"* ]]; then
+            echo -e -n "\n- Raspberry Pi"
+            DEVICE=rpi
+            ARCH=arm64
+        fi
     fi
 
     # Are there community packages?
