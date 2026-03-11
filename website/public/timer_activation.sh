@@ -61,27 +61,55 @@ fi
 # Install Node
 echo -e -n "\n- Install Node\n"
 rpiVersion=$(tr -d '\0' </proc/device-tree/model)
-nodeVersion=v18.18.0
+nodeVersion=v18.20.8
 
-# Get the right version for the device we're on
-if [[ $rpiVersion = *"Zero W"* ]]; then
-    # Releases -> https://unofficial-builds.nodejs.org/download/release/
-    rpiArch=armv6l
-    ARCH=arm
-    curl -o node-${nodeVersion}-linux-${rpiArch}.tar.xz https://unofficial-builds.nodejs.org/download/release/${nodeVersion}/node-${nodeVersion}-linux-${rpiArch}.tar.xz
-elif [[ $rpiVersion == *"Model B"* ]]; then
+echo -e -n "\n  Detected device: ${rpiVersion}\n"
+
+# Verify this is a Raspberry Pi before continuing
+if [[ $rpiVersion != *"Raspberry Pi"* ]]; then
+    echo "This device does not appear to be a Raspberry Pi (model: '${rpiVersion}'). Exiting."
+    exit 1
+fi
+
+# Use the actual running kernel architecture to select the correct Node.js build.
+# This correctly handles all RPi variants across 32-bit and 64-bit OS images:
+#   aarch64 : RPi 3/4/5, Zero 2W, CM3/4/5 running a 64-bit OS
+#   armv7l  : RPi 2/3, Zero 2W, CM3    running a 32-bit (ARMv7) OS
+#   armv6l  : RPi 1, Zero, Zero W, CM1  (ARMv6 — only unofficial Node builds exist)
+cpuArch=$(uname -m)
+echo -e -n "\n  CPU architecture: ${cpuArch}\n"
+
+if [[ $cpuArch == "aarch64" ]]; then
     rpiArch=arm64
     ARCH=arm64
 
-    # Needed for SSM-agent
+    # libc6:armhf is required by the SSM agent on arm64 systems
     sudo dpkg --add-architecture armhf
     sudo apt-get update
     sudo apt-get install -y libc6:armhf
 
-    # Node
+    # Official Node.js build for arm64
     curl -o node-${nodeVersion}-linux-${rpiArch}.tar.xz https://nodejs.org/dist/${nodeVersion}/node-${nodeVersion}-linux-${rpiArch}.tar.xz
+
+elif [[ $cpuArch == "armv7l" ]]; then
+    # Covers RPi 2/3, Zero 2W and CM3 running a 32-bit OS
+    rpiArch=armv7l
+    ARCH=arm
+
+    # Official Node.js build for armv7l
+    curl -o node-${nodeVersion}-linux-${rpiArch}.tar.xz https://nodejs.org/dist/${nodeVersion}/node-${nodeVersion}-linux-${rpiArch}.tar.xz
+
+elif [[ $cpuArch == "armv6l" ]]; then
+    # Covers RPi Zero, Zero W and original RPi 1 / CM1 (ARMv6)
+    rpiArch=armv6l
+    ARCH=arm
+
+    # Official builds do not exist for ARMv6; use unofficial builds instead.
+    # Releases -> https://unofficial-builds.nodejs.org/download/release/
+    curl -o node-${nodeVersion}-linux-${rpiArch}.tar.xz https://unofficial-builds.nodejs.org/download/release/${nodeVersion}/node-${nodeVersion}-linux-${rpiArch}.tar.xz
+
 else
-    echo "Not sure what kind of Pi this is.... sorry it didn't work out."
+    echo "Unsupported CPU architecture '${cpuArch}' on device '${rpiVersion}'. Exiting."
     exit 1
 fi
 
@@ -89,7 +117,8 @@ fi
 tar -xf node-${nodeVersion}-linux-${rpiArch}.tar.xz
 cd node-${nodeVersion}-linux-${rpiArch}
 rm -rf docs
-rm README.md
+rm README.md CHANGELOG.md LICENSE
+
 sudo cp -rf * /usr/local
 cd ..
 rm -rf node-${nodeVersion}-linux-${rpiArch}.tar.xz node-${nodeVersion}-linux-${rpiArch}
@@ -122,6 +151,13 @@ cd ${timerPath}
 echo -e -n "\n- Installing timer dependencies\n"
 npm install
 
+# node-libgpiod uses the kernel character device interface (/dev/gpiochipN) and
+# works on all RPi models with kernel 6.x (where legacy sysfs GPIO numbering
+# changed to base 512, breaking rpi-gpio). Install it on all devices.
+echo -e -n "\n- Installing node-libgpiod (required for kernel 6.x GPIO support)\n"
+sudo apt-get install -y libgpiod-dev
+npm install node-libgpiod
+
 # Update deepracer-timer.service with the correct $homeDir
 # Using s!search!replace! for sed as there are '/' in the variables
 echo -e -n "\n- Update the path in the service-definition file\n"
@@ -146,6 +182,15 @@ sudo systemctl status deepracer-timer.service
 
 #other possible commands
 #sudo systemctl [status,start,stop,restart,enable,disable] deepracer-timer.service
+
+# Open port 8080 in ufw if it is installed and active
+if command -v ufw &>/dev/null && ufw status | grep -q "^Status: active"; then
+    echo -e -n "\n- Opening port 8080 in ufw\n"
+    ufw allow 8080/tcp
+    ufw reload
+else
+    echo -e -n "\n- ufw not active, skipping firewall rule for port 8080\n"
+fi
 
 echo -e -n "\nDone!"
 echo -e -n "\nTimer ${varHost} should be visible in DREM in ~5 minutes"
