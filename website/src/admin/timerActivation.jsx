@@ -1,5 +1,5 @@
 import { API } from 'aws-amplify';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 // import { ListOfFleets } from '../components/listOfFleets';
 import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
@@ -128,7 +128,7 @@ const AdminTimerActivation = (props) => {
   }
 
   const breadcrumbs = Breadcrumbs();
-  breadcrumbs.push({ text: t('timer-activation.breadcrumb') });
+  breadcrumbs.push({ text: t('AdminActivation.timer-activation.breadcrumb') });
 
   return (
     <PageLayout
@@ -140,8 +140,8 @@ const AdminTimerActivation = (props) => {
           footerContent={t('footer', { ns: 'help-admin-timer-activation' })}
         />
       }
-      header={t('timer-activation.header')}
-      description={t('timer-activation.description')}
+      header={t('AdminActivation.timer-activation.header')}
+      description={t('AdminActivation.timer-activation.description')}
       breadcrumbs={breadcrumbs}
     >
       <SpaceBetween direction="vertical" size="l">
@@ -155,14 +155,14 @@ const AdminTimerActivation = (props) => {
                 }}
                 disabled={buttonDisabled}
               >
-                {t('timer-activation.generate')}
+                {t('AdminActivation.timer-activation.generate')}
               </Button>
             </SpaceBetween>
           }
         >
           <Container textAlign="center">
             <SpaceBetween direction="vertical" size="l">
-              <FormField label={t('timer-activation.fleet')}>
+              <FormField label={t('AdminActivation.timer-activation.fleet')}>
                 <ButtonDropdown
                   items={dropDownFleets}
                   onItemClick={({ detail }) => {
@@ -175,10 +175,13 @@ const AdminTimerActivation = (props) => {
                   {dropDownSelectedItem.fleetName}
                 </ButtonDropdown>
               </FormField>
-              <FormField label={t('timer-activation.hostname')} errorText={hostnameErrorMessage}>
+              <FormField
+                label={t('AdminActivation.timer-activation.hostname')}
+                errorText={hostnameErrorMessage}
+              >
                 <Input
                   value={hostname}
-                  placeholder={t('timer-activation.hostname-placeholder')}
+                  placeholder={t('AdminActivation.timer-activation.hostname-placeholder')}
                   onChange={(fleet) => {
                     setHostname(fleet.detail.value);
                   }}
@@ -190,7 +193,7 @@ const AdminTimerActivation = (props) => {
 
         <Container>
           <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
-            <Header variant="h3">{t('timer-activation.script')}</Header>
+            <Header variant="h3">{t('AdminActivation.timer-activation.script')}</Header>
             <Container>
               <Box color="text-status-info" textAlign="center">
                 {loading}
@@ -218,7 +221,7 @@ const AdminTimerActivation = (props) => {
           </Grid>
 
           <Grid gridDefinition={[{ colspan: 2 }, { colspan: 8 }, { colspan: 2 }]}>
-            <Header variant="h3">{t('timer-activation.ssm-only')}</Header>
+            <Header variant="h3">{t('AdminActivation.timer-activation.ssm-only')}</Header>
             <Container>
               <Box color="text-status-info" textAlign="center">
                 {loading}
@@ -250,7 +253,7 @@ const AdminTimerActivation = (props) => {
           <div></div>
           <div>
             <Button href="/timer_activation.sh" iconAlign="right" iconName="external">
-              timer_activation.sh {t('timer-activation.script-lower')}
+              timer_activation.sh {t('AdminActivation.timer-activation.script-lower')}
             </Button>
           </div>
         </Grid>
