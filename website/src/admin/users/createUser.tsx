@@ -55,7 +55,7 @@ export function CreateUser(): JSX.Element {
       const apiResponse = await graphqlMutate<{ createUser: any }>(
         mutations.createUser,
         { email, username, countryCode },
-        { authMode: 'AMAZON_COGNITO_USER_POOLS' }
+        { authMode: 'userPool' }
       );
       const response = apiResponse.createUser;
       console.debug(response);

@@ -24,7 +24,6 @@ export const LeaderBoardConfigPanel: React.FC<LeaderBoardConfigPanelProps> = ({
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [tempConfigtStore, setTempConfigStore] = useState<Track>({
     trackId: '',
-    trackName: '',
     leaderBoardTitle: '',
     leaderBoardFooter: '',
   });

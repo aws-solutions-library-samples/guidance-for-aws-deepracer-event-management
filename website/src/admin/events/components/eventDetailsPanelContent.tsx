@@ -23,7 +23,6 @@ interface RaceConfig {
 
 interface Track {
   trackId: string;
-  trackName: string;
 }
 
 interface Event {

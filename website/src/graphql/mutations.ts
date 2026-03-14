@@ -92,13 +92,27 @@ export const deviceActivation = `mutation DeviceActivation($input: DeviceActivat
   }
 }`;
 
-export const createUser = `mutation CreateUser($input: CreateUserInput!) {
-  createUser(input: $input) {
-    userId
-    username
-    email
-  }
-}`;
+export const createUser = /* GraphQL */ `
+    mutation CreateUser($countryCode: String!, $email: String!, $username: String!) {
+        createUser(countryCode: $countryCode, email: $email, username: $username) {
+            Attributes {
+                Name
+                Value
+            }
+            Enabled
+            MFAOptions {
+                Name
+                Value
+            }
+            Roles
+            UserCreateDate
+            UserLastModifiedDate
+            UserStatus
+            Username
+            sub
+        }
+    }
+`;
 
 export const deleteUser = `mutation DeleteUser($userId: ID!) {
   deleteUser(userId: $userId) {
