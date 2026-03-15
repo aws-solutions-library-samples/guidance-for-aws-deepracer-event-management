@@ -8,7 +8,8 @@ import { getFacestAvgFromOverlayInfo } from './support-functions';
 
 interface Lap {
   lapId: number;
-  lapTime: number;
+  lapTime?: number;
+  time?: number;
 }
 
 interface AverageLap {
@@ -89,7 +90,7 @@ const RaceLapInformation: React.FC<RaceLapInformationProps> = ({
         <LapTable
           variant="embedded"
           header={t('timekeeper.recorded-laps')}
-          laps={Object.values(laps).map(lap => ({ ...lap, time: lap.lapTime, isValid: true }))}
+          laps={Object.values(laps).map(lap => ({ ...lap, time: lap.lapTime ?? lap.time ?? 0, isValid: true }))}
           averageLapInformation={overlayInformation?.averageLaps}
           rankingMethod={selectedEvent.raceConfig.rankingMethod}
           readonly={true}
@@ -97,7 +98,7 @@ const RaceLapInformation: React.FC<RaceLapInformationProps> = ({
       </Container>
       <Container>
         <RaceGraph
-          laps={Object.values(laps).map(lap => ({ ...lap, time: lap.lapTime, isValid: true }))}
+          laps={Object.values(laps).map(lap => ({ ...lap, time: lap.lapTime ?? lap.time ?? 0, isValid: true }))}
           fastestEventLapTime={thresholds.fastestLapTime}
           fastestEventAvgLap={thresholds.fastestAverageLap}
           raceFormat={selectedEvent.raceConfig.rankingMethod}

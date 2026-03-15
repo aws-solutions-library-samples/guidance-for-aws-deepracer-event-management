@@ -53,9 +53,11 @@ const LapsTable = ({
 
       return {
         ...lap,
-        time: lap.lapTime, // Map lapTime to time for table display
+        // The API returns { time, resets } directly (not lapTime/resetCount),
+        // and ...lap already includes them. Only override if the domain fields exist.
+        time: lap.lapTime ?? (lap as any).time,
         avgTime: averageLap ? averageLap.avgTime : undefined,
-        resets: lap.resetCount,
+        resets: lap.resetCount ?? (lap as any).resets,
       };
     });
 
