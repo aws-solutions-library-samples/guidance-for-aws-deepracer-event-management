@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS DeepRacer Car Activation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 200px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #232f3e;
+            margin-bottom: 10px;
+        }
+        .description {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        select, input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #ff9900;
+            box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.2);
+        }
+        .button {
+            background-color: #ff9900;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .button:hover {
+            background-color: #e88900;
+        }
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .wifi-section {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            background-color: #f9f9f9;
+        }
+        .wifi-toggle {
+            margin-bottom: 15px;
+        }
+        .wifi-fields {
+            display: none;
+        }
+        .wifi-fields.show {
+            display: block;
+        }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f0f8ff;
+            border-radius: 4px;
+            border-left: 4px solid #0073bb;
+        }
+        .script-container {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-break: break-all;
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #0073bb;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .copy-button:hover {
+            background-color: #005a9e;
+        }
+        .error {
+            color: #d13212;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .browser-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .download-link {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .download-link a {
+            color: #0073bb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .download-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="/logo-bw.png" alt="AWS DeepRacer" class="logo">
+            <h1>Car Activation</h1>
+            <p class="description">Generate activation scripts for AWS DeepRacer cars</p>
+        </div>
+
+        <div class="browser-warning">
+            <strong>Legacy Browser Mode:</strong> You are using an older browser. This simplified interface provides the core car activation functionality.
+            <br><small>User Agent: <span id="userAgent"></span></small>
+        </div>
+
+        <form id="activationForm">
+            <div class="form-group">
+                <label for="fleet">Fleet *</label>
+                <select id="fleet" required>
+                    <option value="">Select a fleet...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="hostname">Hostname *</label>
+                <input type="text" id="hostname" placeholder="Enter car hostname" required>
+                <div class="error" id="hostnameError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password *</label>
+                <input type="password" id="password" placeholder="Enter device UI password" required>
+                <div class="error" id="passwordError"></div>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="customConsole"> Install Custom Console (Beta)
+                </label>
+            </div>
+
+            <div class="wifi-section">
+                <div class="wifi-toggle">
+                    <label>
+                        <input type="checkbox" id="wifiToggle"> Configure WiFi Settings
+                    </label>
+                </div>
+                <div class="wifi-fields" id="wifiFields">
+                    <div class="form-group">
+                        <label for="ssid">WiFi SSID</label>
+                        <input type="text" id="ssid" placeholder="Enter WiFi network name">
+                    </div>
+                    <div class="form-group">
+                        <label for="wifiPassword">WiFi Password</label>
+                        <input type="password" id="wifiPassword" placeholder="Enter WiFi password">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="button" id="generateButton" disabled>Generate Activation Script</button>
+            </div>
+        </form>
+
+        <div id="loading" class="loading" style="display: none;">
+            Generating activation scripts...
+        </div>
+
+        <div id="results" class="results" style="display: none;">
+            <h3>Activation Script</h3>
+            <div class="script-container">
+                <button class="copy-button" onclick="copyToClipboard('activationScript', this)">Copy</button>
+                <div id="activationScript"></div>
+            </div>
+
+            <h3>SSM Registration Only</h3>
+            <div class="script-container">
+                <button class="copy-button" onclick="copyToClipboard('ssmScript', this)">Copy</button>
+                <div id="ssmScript"></div>
+            </div>
+
+            <div class="download-link">
+                <a href="/car_activation.sh" target="_blank">Download car_activation.sh script</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        var fleets = [];
+        var dremUrl = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
+        
+        // DOM elements
+        var fleetSelect = document.getElementById('fleet');
+        var hostnameInput = document.getElementById('hostname');
+        var passwordInput = document.getElementById('password');
+        var customConsoleCheckbox = document.getElementById('customConsole');
+        var wifiToggle = document.getElementById('wifiToggle');
+        var wifiFields = document.getElementById('wifiFields');
+        var ssidInput = document.getElementById('ssid');
+        var wifiPasswordInput = document.getElementById('wifiPassword');
+        var generateButton = document.getElementById('generateButton');
+        var loadingDiv = document.getElementById('loading');
+        var resultsDiv = document.getElementById('results');
+        var activationScriptDiv = document.getElementById('activationScript');
+        var ssmScriptDiv = document.getElementById('ssmScript');
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Display user agent for debugging
+            document.getElementById('userAgent').textContent = navigator.userAgent;
+            
+            loadFleets();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Form validation
+            hostnameInput.addEventListener('input', validateForm);
+            passwordInput.addEventListener('input', validateForm);
+            fleetSelect.addEventListener('change', validateForm);
+
+            // WiFi toggle
+            wifiToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    wifiFields.classList.add('show');
+                } else {
+                    wifiFields.classList.remove('show');
+                }
+            });
+
+            // Form submission
+            document.getElementById('activationForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                generateActivation();
+            });
+        }
+
+        function validateForm() {
+            var isValid = hostnameInput.value.trim() !== '' && 
+                         passwordInput.value.trim() !== '' && 
+                         fleetSelect.value !== '';
+            
+            generateButton.disabled = !isValid;
+        }
+
+        function loadFleets() {
+            // Make GraphQL request to get fleets
+            var query = {
+                query: 'query GetAllFleets { getAllFleets { fleetId fleetName createdAt createdBy carIds } }'
+            };
+
+            makeGraphQLRequest(query, function(data) {
+                if (data && data.getAllFleets) {
+                    fleets = data.getAllFleets;
+                    populateFleetDropdown();
+                }
+            }, function(error) {
+                console.error('Error loading fleets:', error);
+                alert('Error loading fleets. Please refresh the page and try again.');
+            });
+        }
+
+        function populateFleetDropdown() {
+            // Clear existing options except the first one
+            fleetSelect.innerHTML = '<option value="">Select a fleet...</option>';
+            
+            // Sort fleets by name
+            fleets.sort(function(a, b) {
+                return a.fleetName.toLowerCase().localeCompare(b.fleetName.toLowerCase());
+            });
+
+            // Add fleet options
+            for (var i = 0; i < fleets.length; i++) {
+                var option = document.createElement('option');
+                option.value = fleets[i].fleetId;
+                option.textContent = fleets[i].fleetName;
+                fleetSelect.appendChild(option);
+            }
+        }
+
+        function generateActivation() {
+            var selectedFleet = getSelectedFleet();
+            if (!selectedFleet) {
+                alert('Please select a fleet');
+                return;
+            }
+
+            loadingDiv.style.display = 'block';
+            resultsDiv.style.display = 'none';
+
+            var mutation = {
+                query: 'mutation DeviceActivation($deviceType: String!, $deviceUiPassword: String!, $fleetId: ID!, $fleetName: String!, $hostname: String!) { deviceActivation(deviceType: $deviceType, deviceUiPassword: $deviceUiPassword, fleetId: $fleetId, fleetName: $fleetName, hostname: $hostname) { activationCode activationId region } }',
+                variables: {
+                    hostname: hostnameInput.value.trim(),
+                    deviceType: 'deepracer',
+                    fleetId: selectedFleet.fleetId,
+                    fleetName: selectedFleet.fleetName,
+                    deviceUiPassword: passwordInput.value.trim()
+                }
+            };
+
+            makeGraphQLRequest(mutation, function(data) {
+                loadingDiv.style.display = 'none';
+                if (data && data.deviceActivation) {
+                    displayResults(data.deviceActivation);
+                } else {
+                    alert('Error generating activation. Please try again.');
+                }
+            }, function(error) {
+                loadingDiv.style.display = 'none';
+                console.error('Error generating activation:', error);
+                alert('Error generating activation. Please try again.');
+            });
+        }
+
+        function getSelectedFleet() {
+            var fleetId = fleetSelect.value;
+            for (var i = 0; i < fleets.length; i++) {
+                if (fleets[i].fleetId === fleetId) {
+                    return fleets[i];
+                }
+            }
+            return null;
+        }
+
+        function displayResults(activation) {
+            var wifiParams = '';
+            if (wifiToggle.checked && ssidInput.value.trim() && wifiPasswordInput.value.trim()) {
+                wifiParams = ' -s ' + ssidInput.value.trim() + ' -w ' + wifiPasswordInput.value.trim();
+            }
+
+            var customConsoleParam = customConsoleCheckbox.checked ? ' -u' : '';
+
+            var activationScript = 'curl -O ' + dremUrl + '/login.html && curl -O ' + dremUrl + '/car_activation.sh && chmod +x ./car_activation.sh && sudo ./car_activation.sh -p ' + passwordInput.value.trim() + ' -h ' + hostnameInput.value.trim() + ' -c ' + activation.activationCode + ' -i ' + activation.activationId + ' -r ' + activation.region + wifiParams + customConsoleParam;
+
+            var ssmScript = 'sudo amazon-ssm-agent -register -code "' + activation.activationCode + '" -id "' + activation.activationId + '" -region "' + activation.region + '"';
+
+            activationScriptDiv.textContent = activationScript;
+            ssmScriptDiv.textContent = ssmScript;
+
+            resultsDiv.style.display = 'block';
+        }
+
+        function makeGraphQLRequest(query, onSuccess, onError) {
+            var endpoint = window.__DREM_APPSYNC_ENDPOINT__ || sessionStorage.getItem('drem_appsync_endpoint');
+            if (!endpoint) {
+                onError('AppSync endpoint not found. Please navigate here via the main DREM app.');
+                return;
+            }
+
+            // Find the Cognito JWT from Amplify's localStorage entries
+            var token = null;
+            for (var i = 0; i < localStorage.length; i++) {
+                var key = localStorage.key(i);
+                if (key && key.indexOf('idToken') !== -1) {
+                    token = localStorage.getItem(key);
+                    break;
+                }
+            }
+
+            if (!token) {
+                onError('Not authenticated. Please log in via the main DREM interface first.');
+                alert('Not authenticated. Please log in via the main DREM interface first.');
+                return;
+            }
+
+            var appsyncXhr = new XMLHttpRequest();
+            appsyncXhr.open('POST', endpoint, true);
+            appsyncXhr.setRequestHeader('Content-Type', 'application/json');
+            appsyncXhr.setRequestHeader('Authorization', token);
+
+            appsyncXhr.onreadystatechange = function() {
+                if (appsyncXhr.readyState === 4) {
+                    if (appsyncXhr.status === 200) {
+                        try {
+                            var response = JSON.parse(appsyncXhr.responseText);
+                            if (response.errors) {
+                                onError(response.errors);
+                            } else {
+                                onSuccess(response.data);
+                            }
+                        } catch (e) {
+                            onError('Invalid response format');
+                        }
+                    } else {
+                        onError('HTTP ' + appsyncXhr.status + ': ' + appsyncXhr.statusText);
+                    }
+                }
+            };
+
+            appsyncXhr.send(JSON.stringify(query));
+        }
+
+        function copyToClipboard(elementId, btn) {
+            var text = document.getElementById(elementId).textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    showCopySuccess(btn);
+                }).catch(function() {
+                    fallbackCopyToClipboard(text, btn);
+                });
+            } else {
+                fallbackCopyToClipboard(text, btn);
+            }
+        }
+
+        function fallbackCopyToClipboard(text, btn) {
+            var textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showCopySuccess(btn);
+            } catch (err) {
+                alert('Copy failed. Please select and copy the text manually.');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showCopySuccess(btn) {
+            var originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(function() {
+                btn.textContent = originalText;
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

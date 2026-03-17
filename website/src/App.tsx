@@ -110,6 +110,10 @@ I18n.putVocabularies(translations);
 
 Amplify.configure(buildAmplifyConfig(config));
 
+// Expose AppSync endpoint for legacy browser pages (e.g. car-activation-legacy.html)
+(window as any).__DREM_APPSYNC_ENDPOINT__ = config.API.aws_appsync_graphqlEndpoint;
+sessionStorage.setItem('drem_appsync_endpoint', config.API.aws_appsync_graphqlEndpoint);
+
 initDataStores();
 
 let awsRum: AwsRum | null = null;
