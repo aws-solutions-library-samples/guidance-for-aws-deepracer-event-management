@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Detection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .info-box { background: #f0f8ff; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        .test-links { background: #fff3cd; padding: 15px; border-radius: 4px; margin: 20px 0; }
+        .test-links a { display: block; margin: 5px 0; color: #0073bb; text-decoration: none; }
+        .test-links a:hover { text-decoration: underline; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 2px; }
+    </style>
+</head>
+<body>
+    <h1>Browser Detection Test Page</h1>
+    
+    <div class="info-box">
+        <h3>Current Browser Information:</h3>
+        <p><strong>User Agent:</strong> <span id="userAgent"></span></p>
+        <p><strong>Browser Capabilities:</strong> <span id="capabilities"></span></p>
+        <p><strong>Would use legacy mode:</strong> <span id="legacyMode"></span></p>
+    </div>
+
+    <div class="test-links">
+        <h3>Test Links:</h3>
+        <a href="/admin/car_activation">Normal Car Activation (auto-detects browser)</a>
+        <a href="/admin/car_activation?legacy=true">Force Legacy Mode (for testing)</a>
+        <a href="/car-activation-legacy.html">Direct Legacy Page</a>
+    </div>
+
+    <div class="info-box">
+        <h3>How to Test Legacy Mode in Modern Browsers:</h3>
+        <ol>
+            <li><strong>URL Parameter:</strong> Add <code>?legacy=true</code> to the car activation URL</li>
+            <li><strong>Browser DevTools User Agent Override:</strong>
+                <ul>
+                    <li>Chrome/Edge: F12 → Network tab → "No throttling" dropdown → Add custom device with Firefox 84.0 user agent</li>
+                    <li>Firefox: F12 → Settings (gear icon) → Check "Show custom format" → Enter custom user agent</li>
+                </ul>
+            </li>
+            <li><strong>Firefox 84.0 User Agent:</strong> <code>Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0</code></li>
+        </ol>
+    </div>
+
+    <script>
+        // Browser capability detection (same as in the wrapper)
+        function detectBrowserCapabilities() {
+            try {
+                const hasModernFeatures = 
+                    typeof Promise !== 'undefined' &&
+                    typeof fetch !== 'undefined' &&
+                    typeof Object.assign !== 'undefined' &&
+                    typeof Array.prototype.find !== 'undefined' &&
+                    typeof String.prototype.includes !== 'undefined';
+
+                const hasModernReact = 
+                    typeof Symbol !== 'undefined' &&
+                    typeof Map !== 'undefined' &&
+                    typeof Set !== 'undefined';
+
+                const hasES6 = (() => {
+                    try {
+                        eval('() => {}');
+                        eval('`test`');
+                        eval('const test = 1');
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                })();
+
+                return hasModernFeatures && hasModernReact && hasES6;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function isLegacyBrowser() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            
+            const firefoxMatch = userAgent.match(/firefox\/(\d+)/);
+            if (firefoxMatch && parseInt(firefoxMatch[1]) < 85) {
+                return true;
+            }
+
+            const chromeMatch = userAgent.match(/chrome\/(\d+)/);
+            if (chromeMatch && parseInt(chromeMatch[1]) < 88) {
+                return true;
+            }
+
+            const safariMatch = userAgent.match(/version\/(\d+).*safari/);
+            if (safariMatch && parseInt(safariMatch[1]) < 14) {
+                return true;
+            }
+
+            const edgeMatch = userAgent.match(/edg\/(\d+)/);
+            if (edgeMatch && parseInt(edgeMatch[1]) < 88) {
+                return true;
+            }
+
+            return false;
+        }
+
+        // Display browser information
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('userAgent').textContent = navigator.userAgent;
+            
+            const hasCapabilities = detectBrowserCapabilities();
+            const isLegacy = isLegacyBrowser();
+            const wouldUseLegacy = !hasCapabilities || isLegacy;
+            
+            document.getElementById('capabilities').textContent = hasCapabilities ? 'Modern' : 'Legacy';
+            document.getElementById('capabilities').style.color = hasCapabilities ? 'green' : 'red';
+            
+            document.getElementById('legacyMode').textContent = wouldUseLegacy ? 'YES' : 'NO';
+            document.getElementById('legacyMode').style.color = wouldUseLegacy ? 'red' : 'green';
+            document.getElementById('legacyMode').style.fontWeight = 'bold';
+        });
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:18-alpine
+FROM public.ecr.aws/docker/library/node:22-alpine
 
 # Install packages
 RUN apk update && apk add --update --no-cache \
@@ -30,4 +30,4 @@ RUN npm install
 
 ENV PORT=3000
 
-CMD ["npm", "start"]
+CMD ["npx", "vite", "--host"]

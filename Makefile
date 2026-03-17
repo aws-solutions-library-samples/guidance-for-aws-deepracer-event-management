@@ -125,6 +125,15 @@ local.config.docker:					## Setup local config based on branch
 	cd $(overlaysSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
+## Test targets
+
+.PHONY: test test.website
+test:						## Run all tests
+	cd website && npm test
+
+test.website:					## Run website schema conformance tests
+	cd website && npm test
+
 local.config.python:		## Setup a Python .venv
 	python3 -m venv --prompt drem .venv
 	source .venv/bin/activate

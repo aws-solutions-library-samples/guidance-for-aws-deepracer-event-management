@@ -1,5 +1,5 @@
-import { GraphQLResult, GraphQLSubscription } from '@aws-amplify/api';
-import { API, Amplify, graphqlOperation } from 'aws-amplify';
+import { Amplify, type ResourcesConfig } from 'aws-amplify';
+import { generateClient } from 'aws-amplify/api';
 import { useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
@@ -15,7 +15,38 @@ import { useTranslation } from 'react-i18next';
 
 import './App.css';
 import awsExports from './config.json';
-Amplify.configure(awsExports);
+
+/**
+ * Legacy config shape produced by generate_stream_overlays_amplify_config_cfn.py
+ * We map this to Amplify v6 ResourcesConfig at runtime so the CDK scripts
+ * don't need to change.
+ */
+interface LegacyStreamOverlaysConfig {
+  API: {
+    aws_appsync_graphqlEndpoint: string;
+    aws_appsync_region: string;
+    aws_appsync_authenticationType: string;
+    aws_appsync_apiKey: string;
+  };
+}
+
+/** Map legacy config.json → Amplify v6 ResourcesConfig */
+function buildAmplifyConfig(legacy: LegacyStreamOverlaysConfig): ResourcesConfig {
+  return {
+    API: {
+      GraphQL: {
+        endpoint: legacy.API.aws_appsync_graphqlEndpoint,
+        region: legacy.API.aws_appsync_region,
+        defaultAuthMode: 'apiKey',
+        apiKey: legacy.API.aws_appsync_apiKey,
+      },
+    },
+  };
+}
+
+Amplify.configure(buildAmplifyConfig(awsExports as LegacyStreamOverlaysConfig));
+
+const client = generateClient();
 
 function App() {
 
@@ -120,22 +151,17 @@ function App() {
       data.running = data.raceStatus === 'RACE_IN_PROGRESS';
 
       if (data.username) {
-        // console.debug('competitor found!');
-        // console.debug('TimerState: ' + timerState);
 
         if (leaderBoardStateIN) {
-          // console.debug('fade out leaderboard');
           (transitions as any).LeaderboardFadeOut();
           leaderBoardStateIN = false;
         }
 
         if (!lowerThirdStateIN) {
-          // console.debug('transition IN lower third.');
           setTimeout(() => {
             (transitions as any).LowerThirdRacerAndLapInfoIn();
             lowerThirdStateIN = true;
 
-            // TODO: Change fastest-lap to fastest AVG when AVG Race (Issue with spacing)
             const fastestLabel = raceFormat === 'average' ? t('lower-thirds.fastest-avg-lap') : t('lower-thirds.fastest-lap')
 
             helpers.SetLocalizedLowerThirdsLabels(t('lower-thirds.racer-name'), t('lower-thirds.time-remaining'), fastestLabel, t('lower-thirds.previous-lap'));
@@ -144,31 +170,23 @@ function App() {
 
         var oldPauseState = isPaused;
         isPaused = data.paused;
-        // console.debug(`Old Paused: ${oldPauseState}, New Paused: ${isPaused}`);
 
         if (oldPauseState && !data.paused && !data.finished && data.running) {
-          // console.debug("RESUMING TIMER!");
           timerState = true;
           startTimer();
         }
-        // console.debug(`DATA.PAUSED: ${data.paused} !!!!!!!!!!!!!!!!!!!!!!!!!`);
 
         if (data.finished) {
-          // console.debug('FINISHED, RESET TIMER!');
-          // resetTimer();
 
           if (lowerThirdStateIN) {
-            // console.debug('Lower Third OUT!');
             (transitions as any).LowerThirdRacerAndLapInfoOut();
             lowerThirdStateIN = false;
 
-            // console.debug('Setting TimeOut to remove racer info from lower third.');
             setTimeout(() => {
               (helpers as any).SetRacerInfoName("");
               (helpers as any).SetRacerInfoFastestLap("00.000");
               (helpers as any).SetRacerInfoLastLap("00.000");
               (helpers as any).SetRacerInfoTotalTime(180000);
-              // console.debug(`CURRENT TIMER STATE: ${timerState}`);
               if (timerState) {
                 timerState = false;
                 resetTimer();
@@ -177,24 +195,20 @@ function App() {
           }
 
           if (!leaderBoardStateIN && showLeaderboard === '1') {
-            // console.debug('Setting TimeOut to fade Leaderboard in!');
             helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
             setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
           }
         }
 
         if (!timerState && data.running) {
-          // console.debug('Timer Not Running, set state to true and start timer.');
           timerState = true;
           startTimer();
         }
 
         var racer = data.username;
         (helpers as any).SetRacerInfoName(racer);
-        // console.debug("Racer: " + racer)
 
         var timeLeft = data.timeLeftInMs;
-        // console.debug('Total Time Remaining: ' + (helpers as any).GetFormattedTotalTime(timeLeft));
         (helpers as any).SetRacerInfoTotalTime((helpers as any).GetFormattedTotalTime(timeLeft));
         currentTotalTimerMS = timeLeft;
 
@@ -209,11 +223,8 @@ function App() {
           }
 
           if (fastestLap) {
-            // console.debug('Fastest Lap: ' + (helpers as any).GetFormattedLapTime(fastestLap.time));
             (helpers as any).SetRacerInfoFastestLap((helpers as any).GetFormattedLapTime(fastestLap))
           }
-
-          // console.debug(data.laps);
 
           var laps = (data.laps as any[]).filter(obj => {
             return obj.isValid
@@ -232,26 +243,21 @@ function App() {
             })[0];
 
           if (lastLap) {
-            // console.debug('Last Lap: ' + (helpers as any).GetFormattedLapTime(lastLap.time));
             (helpers as any).SetRacerInfoLastLap((helpers as any).GetFormattedLapTime(lastLap.time));
           }
         }
       }
       else if ('competitor' in data && data.competitor === null) {
-        // console.debug('Competitor NOT FOUND!');
 
         if (lowerThirdStateIN) {
-          // console.debug('Lower Third OUT!');
           (transitions as any).LowerThirdRacerAndLapInfoOut();
           lowerThirdStateIN = false;
 
-          // console.debug('Setting TimeOut to remove racer info from lower third.');
           setTimeout(() => {
             (helpers as any).SetRacerInfoName("");
             (helpers as any).SetRacerInfoFastestLap("00.000");
             (helpers as any).SetRacerInfoLastLap("00.000");
             (helpers as any).SetRacerInfoTotalTime(180000);
-            // console.debug(`CURRENT TIMER STATE: ${timerState}`);
             if (timerState) {
               timerState = false;
               resetTimer();
@@ -260,41 +266,10 @@ function App() {
         }
 
         if (!leaderBoardStateIN && showLeaderboard === '1') {
-          // console.debug('Setting TimeOut to fade Leaderboard in!');
           helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
           setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
         }
       }
-      // else if ('previous' in data && 'current' in data) {
-      //   // event name info
-      //   // console.debug('Event Config');
-      //   // console.debug(data.current.state.reported.config);
-      //   eventName = data.current.state.reported.config.localName === "" ? data.current.state.reported.config.name : data.current.state.reported.config.localName;
-      //   console.debug(`EVENT NAME SET TO: ${eventName}`);
-      //   (helpers as any).SetEventName(eventName.toUpperCase());
-
-      //   // leaderboard data.
-      //   console.debug(data.current.state.reported.entries);
-      //   leaderboardData = (helpers as any).getLeaderboardData(data.current.state.reported.entries);
-
-      //   (helpers as any).SetFirstPlaceRacerNameAndTime('', '');
-      //   (helpers as any).SetSecondPlaceRacerNameAndTime('', '');
-      //   (helpers as any).SetThirdPlaceRacerNameAndTime('', '');
-      //   (helpers as any).SetFourthPlaceRacerNameAndTime('', '');
-
-      //   (helpers as any).SetFirstPlaceRacerNameAndTime(leaderboardData[0].RacerName, leaderboardData[0].RacerTime);
-      //   (helpers as any).SetSecondPlaceRacerNameAndTime(leaderboardData[1].RacerName, leaderboardData[1].RacerTime);
-      //   (helpers as any).SetThirdPlaceRacerNameAndTime(leaderboardData[2].RacerName, leaderboardData[2].RacerTime);
-      //   (helpers as any).SetFourthPlaceRacerNameAndTime(leaderboardData[3].RacerName, leaderboardData[3].RacerTime);
-      // }
-      // else if ('state' in data && 'metadata' in data) { // this is initial state message.
-      //   leaderboardData = (helpers as any).getLeaderboardData(data.state.reported.entries);
-      //   let eventMsgConfig = data.state.reported.config;
-      //   console.debug(eventMsgConfig);
-      //   eventName = eventMsgConfig.localName === "" ? eventMsgConfig.name : eventMsgConfig.localName;
-      //   console.debug(`EVENT NAME SET TO: ${eventName}`);
-      //   (helpers as any).SetEventName(eventName.toUpperCase());
-      // }
     } catch (e) {
       console.debug("error! " + e);
     }
@@ -324,20 +299,17 @@ function App() {
       i18n.changeLanguage(desiredLanguage);
     }
 
-    // Set Localized Labels
-    // helpers.SetLocalizedLowerThirdsLabels(t('lower-thirds.racer-name'), t('lower-thirds.time-remaining'), t('lower-thirds.fastest-lap'), t('lower-thirds.previous-lap'));
-
     // fetch current leaderboard state on-load.
-    const apiGetLeaderboardState = API.graphql({
+    const apiGetLeaderboardState = client.graphql({
       query: queries.getLeaderboard,
       variables: {
         eventId: eventId,
         trackId: trackId,
       },
-    }) as Promise<GraphQLResult<any>>
+    }) as any;
 
     // once leaderboard data has been obtained, set all leaderboard positions in SVGs.
-    apiGetLeaderboardState.then((response) => {
+    (apiGetLeaderboardState as Promise<any>).then((response: any) => {
       
       const leaderboardConfig = response.data.getLeaderboard.config;
       updateLeaderboard(response.data.getLeaderboard.entries);
@@ -346,73 +318,81 @@ function App() {
 
       // check if lower thirds is showing, if not, then show leaderboard.
       if (!lowerThirdStateIN && showLeaderboard === '1') {
-        // console.debug('Setting TimeOut to fade Leaderboard in!');
         helpers.SetLocalizedLeaderboardLabels(t('leaderboard.first-place'), t('leaderboard.second-place'), t('leaderboard.third-place'), t('leaderboard.fourth-place'),t('leaderboard.lower-text'))
         setTimeout(() => { (transitions as any).LeaderboardFadeIn(); leaderBoardStateIN = true; }, 2000);
       }
     });
 
-    // subscribe to "obNewOverlayInfo" to receive live messages for in progress race data.
-    const overlaySubscription = (API.graphql<GraphQLSubscription<any>>(
-      graphqlOperation(subscriptions.onNewOverlayInfo, { eventId: eventId, trackId: trackId })) as any
-    ).subscribe({
-      next: ({ provider, value }: any) => {
-        const raceInfo = value.data.onNewOverlayInfo;
-        if (raceInfo.eventName) {
-          (helpers as any).SetEventName(raceInfo.eventName);
-        }
-        if(raceInfo.raceStatus !== 'RACE_SUBMITTED') {
-          onMessageReceived(raceInfo);
-        }
-      },
-      error: (error: any) => console.error(error),
-    });
+    // subscribe to "onNewOverlayInfo" to receive live messages for in progress race data.
+    const overlaySubscription = (client
+      .graphql({
+        query: subscriptions.onNewOverlayInfo,
+        variables: { eventId: eventId, trackId: trackId },
+      }) as any)
+      .subscribe({
+        next: ({ data }: any) => {
+          const raceInfo = data.onNewOverlayInfo;
+          if (raceInfo.eventName) {
+            (helpers as any).SetEventName(raceInfo.eventName);
+          }
+          if(raceInfo.raceStatus !== 'RACE_SUBMITTED') {
+            onMessageReceived(raceInfo);
+          }
+        },
+        error: (error: any) => console.error(error),
+      });
 
     // subscribe to "onNewLeaderboardEntry" so that we can refresh the leaderboard data when a race is "submitted"
-    const leaderboardSubscription = (API.graphql<GraphQLSubscription<any>>(
-      graphqlOperation(subscriptions.onNewLeaderboardEntry, { eventId: eventId, trackId: trackId })) as any
-    ).subscribe({
-      next: ({ provider, value }: any) => {
+    const leaderboardSubscription = (client
+      .graphql({
+        query: subscriptions.onNewLeaderboardEntry,
+        variables: { eventId: eventId, trackId: trackId },
+      }) as any)
+      .subscribe({
+        next: () => {
 
-        // when a new race is submitted, fetch latest leaderboard data
-        const apiResponse = API.graphql({
-          query: queries.getLeaderboard,
-          variables: {
-            eventId: eventId,
-            trackId: trackId,
-          },
-        }) as Promise<GraphQLResult<any>>
+          // when a new race is submitted, fetch latest leaderboard data
+          const apiResponse = client.graphql({
+            query: queries.getLeaderboard,
+            variables: {
+              eventId: eventId,
+              trackId: trackId,
+            },
+          }) as any;
 
-        // once leaderboard data is set, update the leaderboard SVG.
-        apiResponse.then((response) => {
-          updateLeaderboard(response.data.getLeaderboard.entries)
-        });
-      },
-      error: (error: any) => console.error(error),
-    });
+          // once leaderboard data is set, update the leaderboard SVG.
+          (apiResponse as Promise<any>).then((response: any) => {
+            updateLeaderboard(response.data.getLeaderboard.entries)
+          });
+        },
+        error: (error: any) => console.error(error),
+      });
 
     // subscribe to "onDeleteLeaderboardEntry" to make sure leaderboard is updated when an entry is removed.
-    const deleteLeaderboardSubscription = (API.graphql<GraphQLSubscription<any>>(
-      graphqlOperation(subscriptions.onDeleteLeaderboardEntry, { eventId: eventId, trackId: trackId })) as any
-    ).subscribe({
-      next: ({ provider, value }: any) => {
+    const deleteLeaderboardSubscription = (client
+      .graphql({
+        query: subscriptions.onDeleteLeaderboardEntry,
+        variables: { eventId: eventId, trackId: trackId },
+      }) as any)
+      .subscribe({
+        next: () => {
 
-        const apiResponse = API.graphql({
-          query: queries.getLeaderboard,
-          variables: {
-            eventId: eventId,
-            trackId: trackId,
-          },
-        }) as Promise<GraphQLResult<any>>
+          const apiResponse = client.graphql({
+            query: queries.getLeaderboard,
+            variables: {
+              eventId: eventId,
+              trackId: trackId,
+            },
+          }) as any;
 
-        // once leaderboard data is set, update the leaderboard SVG.
-        apiResponse.then((response) => {
-          const leaderboardData = (helpers as any).GetLeaderboardDataSorted(response.data.getLeaderboard.entries);
-          (helpers as any).UpdateLeaderboard(leaderboardData);
-        });
-      },
-      error: (error: any) => console.error(error),
-    });
+          // once leaderboard data is set, update the leaderboard SVG.
+          (apiResponse as Promise<any>).then((response: any) => {
+            const leaderboardData = (helpers as any).GetLeaderboardDataSorted(response.data.getLeaderboard.entries);
+            (helpers as any).UpdateLeaderboard(leaderboardData);
+          });
+        },
+        error: (error: any) => console.error(error),
+      });
 
     return () => {
       if (overlaySubscription) {

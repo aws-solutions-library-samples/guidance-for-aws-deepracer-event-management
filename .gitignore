@@ -41,6 +41,7 @@ bin/**/*.js
 test/**/*.js
 !jest.config.js
 *.d.ts
+!**/vite-env.d.ts
 node_modules
 
 # CDK asset staging directory
