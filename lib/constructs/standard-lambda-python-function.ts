@@ -35,39 +35,41 @@ export class StandardLambdaPythonFunction extends lambdaPython.PythonFunction {
   constructor(scope: Construct, id: string, props: StandardPythonFunctionProps) {
     const stack = cdk.Stack.of(scope);
 
-    var localProps = props;
+    // Create a logGroup explicitly to avoid the deprecated logRetention prop being passed to super.
+    // If the caller passed logRetention, use it as the retention period; otherwise default to SIX_MONTHS.
+    const logGroup =
+      props.logGroup ??
+      new logs.LogGroup(scope, `${id}-LogGroup`, {
+        retention: props.logRetention ?? logs.RetentionDays.SIX_MONTHS,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
 
-    // set defaults if not supplied
-    if (!localProps.index) {
-      localProps.index = 'index.py';
-    }
-    if (!localProps.handler) {
-      localProps.handler = 'lambda_handler';
-    }
-    if (!localProps.timeout) {
-      localProps.timeout = Duration.minutes(1);
-    }
-    if (!localProps.tracing) {
-      localProps.tracing = lambda.Tracing.ACTIVE;
-    }
-    if (!localProps.memorySize) {
-      localProps.memorySize = 128;
-    }
-    if (!localProps.architecture) {
-      localProps.architecture = lambda.Architecture.ARM_64;
-    }
-    if (!localProps.bundling) {
-      if (os.arch() === 'arm64') {
-        console.log('OS: ', os.arch());
-        localProps.bundling = {
-          image: DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest-arm64'),
-        };
-      } else {
-        localProps.bundling = {
-          image: DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest'),
-        };
-      }
-    }
+    const role =
+      props.role ??
+      new iam.Role(scope, `${id}-LambdaFunctionRole`, {
+        assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+        description: 'IAM Role for Lambda Function',
+      });
+
+    const localProps: StandardPythonFunctionProps = {
+      index: 'index.py',
+      handler: 'lambda_handler',
+      timeout: Duration.minutes(1),
+      tracing: lambda.Tracing.ACTIVE,
+      memorySize: 128,
+      architecture: lambda.Architecture.ARM_64,
+      bundling: os.arch() === 'arm64'
+        ? { image: DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest-arm64') }
+        : { image: DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest') },
+      ...props,
+      environment: {
+        ...props.environment,
+        LOG_LEVEL: props.environment.LOG_LEVEL ?? 'INFO',
+      },
+      logGroup,
+      role,
+    };
+
     if (!localProps.layers) {
       // Powertools layer
       const powertoolsLambdaLayer = lambdaPython.PythonLayerVersion.fromLayerVersionArn(
@@ -76,18 +78,6 @@ export class StandardLambdaPythonFunction extends lambdaPython.PythonFunction {
         `arn:aws:lambda:${stack.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2-Arm64:11`
       );
       localProps.layers = [powertoolsLambdaLayer];
-    }
-    if (!localProps.environment.LOG_LEVEL) {
-      localProps.environment.LOG_LEVEL = 'INFO';
-    }
-    if (!localProps.logRetention) {
-      localProps.logRetention = logs.RetentionDays.SIX_MONTHS;
-    }
-    if (!localProps.role) {
-      localProps.role = new iam.Role(scope, `${id}-LambdaFunctionRole`, {
-        assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-        description: 'IAM Role for Lambda Function',
-      });
     }
 
     super(scope, id, localProps);
@@ -101,7 +91,7 @@ export class StandardLambdaPythonFunction extends lambdaPython.PythonFunction {
     if (localProps.cloudWatchPolicy) {
       localProps.cloudWatchPolicy.addStatements(cloudWatchLogsPermissions);
     } else {
-      localProps.role.attachInlinePolicy(
+      role.attachInlinePolicy(
         new iam.Policy(this, `${id}-CloudWatchLogs`, {
           statements: [cloudWatchLogsPermissions],
         })
@@ -113,7 +103,7 @@ export class StandardLambdaPythonFunction extends lambdaPython.PythonFunction {
         },
       ]);
     }
-    this.role = localProps.role;
+    this.role = role;
 
     this.nodePath = `${scope.node.path}/${id}`;
 

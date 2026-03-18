@@ -18,20 +18,28 @@ export class StandardLambdaDockerImageFuncion extends lambda.DockerImageFunction
   constructor(scope: Construct, id: string, props: StandardLambdaDockerImageFuncionProps) {
     const stack = cdk.Stack.of(scope);
 
-    var localProps = props;
+    // Create a logGroup explicitly to avoid the deprecated logRetention prop being passed to super.
+    // If the caller passed logRetention, use it as the retention period; otherwise default to SIX_MONTHS.
+    const logGroup =
+      props.logGroup ??
+      new logs.LogGroup(scope, `${id}-LogGroup`, {
+        retention: props.logRetention ?? logs.RetentionDays.SIX_MONTHS,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
 
-    if (!localProps.logRetention) {
-      localProps.logRetention = logs.RetentionDays.SIX_MONTHS;
-    }
-    if (!localProps.role) {
-      localProps.role = new iam.Role(scope, `${id}-LambdaFunctionRole`, {
+    const role =
+      props.role ??
+      new iam.Role(scope, `${id}-LambdaFunctionRole`, {
         assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
         description: 'IAM Role for Lambda Function',
       });
-    }
-    if (!localProps.tracing) {
-      localProps.tracing = lambda.Tracing.ACTIVE;
-    }
+
+    const localProps = {
+      tracing: lambda.Tracing.ACTIVE,
+      ...props,
+      logGroup,
+      role,
+    };
 
     super(scope, id, localProps);
 
@@ -41,12 +49,12 @@ export class StandardLambdaDockerImageFuncion extends lambda.DockerImageFunction
       resources: [super.logGroup.logGroupArn],
     });
 
-    localProps.role.attachInlinePolicy(
+    role.attachInlinePolicy(
       new iam.Policy(this, `${id}-CloudWatchLogs`, {
         statements: [cloudWatchLogsPermissions],
       })
     );
-    this.role = localProps.role;
+    this.role = role;
 
     this.nodePath = `${scope.node.path}/${id}`;
     NagSuppressions.addResourceSuppressionsByPath(stack, `${scope.node.path}/${id}/${id}-CloudWatchLogs/Resource`, [
