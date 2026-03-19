@@ -43,7 +43,7 @@ bootstrap: 					## Bootstraps the CDK environment
 	cdk bootstrap -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
 
 .PHONY: clean
-clean: pipeline.clean s3.clean
+clean: drem.clean
 
 ## Dev related targets
 
@@ -53,14 +53,26 @@ pipeline.synth: 				## Synth the CDK pipeline
 pipeline.deploy: 				## Deploy the CDK pipeline
 	npx cdk deploy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg)
 
-pipeline.clean: 				## Destroys the CDK pipeline
-	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
+pipeline.clean: 				## Destroys the CDK pipeline stack only
+	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) --force
 
-drem.clean-infrastructure:			## Delete DREM application
+drem.clean:					## Teardown all DREM AWS resources (pipeline then app stacks, waits for each)
+	@echo "--- Destroying pipeline stack ---"
+	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) --force
+	@echo "--- Deleting infrastructure stack ---"
+	aws cloudformation delete-stack --stack-name drem-backend-$(label)-infrastructure --region $(region)
+	aws cloudformation wait stack-delete-complete --stack-name drem-backend-$(label)-infrastructure --region $(region)
+	@echo "--- Deleting base stack ---"
+	aws cloudformation delete-stack --stack-name drem-backend-$(label)-base --region $(region)
+	aws cloudformation wait stack-delete-complete --stack-name drem-backend-$(label)-base --region $(region)
+	@echo "--- DREM teardown complete ---"
+
+drem.clean-infrastructure:			## Delete infrastructure stack only (async, no wait)
 	aws cloudformation delete-stack --stack-name drem-backend-$(label)-infrastructure --region $(region)
 
-drem.clean-base:			## Delete DREM application
+drem.clean-base:				## Delete base stack only (async, no wait)
 	aws cloudformation delete-stack --stack-name drem-backend-$(label)-base --region $(region)
+
 
 manual.deploy:  				## Deploy via cdk
 	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg) --all
@@ -84,7 +96,7 @@ manual.deploy.website: local.config
 local.install:					## Install Javascript dependencies
 	npm install
 
-local.config: | $(VENV_PYTHON)				## Setup local config based on branch
+local.config: | .venv/.installed				## Setup local config based on branch
 	echo "{}" > ${dremSrcPath}/config.json
 	aws cloudformation describe-stacks --region $(region) --stack-name drem-backend-$(label)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
 	$(VENV_PYTHON) scripts/generate_amplify_config_cfn.py
@@ -105,7 +117,7 @@ local.config: | $(VENV_PYTHON)				## Setup local config based on branch
 	cd $(overlaysSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
-local.config.docker: | $(VENV_PYTHON)				## Setup local config based on branch (docker mode)
+local.config.docker: | .venv/.installed				## Setup local config based on branch (docker mode)
 	echo "{}" > ${dremSrcPath}/config.json
 	aws cloudformation describe-stacks --region $(region) --stack-name drem-backend-$(label)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
 	$(VENV_PYTHON) scripts/generate_amplify_config_cfn.py --docker
@@ -137,12 +149,17 @@ test.cdk:					## Run CDK unit tests
 test.website:					## Run website schema conformance tests
 	cd website && npm test
 
-$(VENV_PYTHON):					## Create Python virtual environment
+.venv/.installed: pyproject.toml		## (internal) create venv when pyproject.toml changes
 	python3 -m venv --prompt drem .venv
 	.venv/bin/pip install --quiet -e .[dev]
+	@touch .venv/.installed
 
-local.config.python: | $(VENV_PYTHON)		## Setup a Python .venv (alias for venv creation)
-	
+.PHONY: venv
+venv: .venv/.installed				## Create Python virtual environment
+
+.PHONY: local.config.python
+local.config.python: venv			## Setup a Python .venv
+
 local.run:					## Run the frontend application locally for development
 	PORT=3000 npm start --prefix website
 
