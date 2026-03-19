@@ -1,10 +1,6 @@
 import {
   Authenticator,
-  CheckboxField,
-  Link,
   useAuthenticator,
-  useTheme,
-  View,
 } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify, type ResourcesConfig } from 'aws-amplify';
@@ -16,7 +12,6 @@ import './App.css';
 import { CountrySelector } from './components/countrySelector';
 import TopNav from './components/topNav';
 import awsconfig from './config.json';
-import i18next from './i18n';
 import { StoreProvider } from './store/contexts/storeProvider';
 import initDataStores from './store/initStore';
 
@@ -29,7 +24,6 @@ import { useTranslation } from 'react-i18next';
  */
 interface SignUpFormData {
   username: string;
-  acknowledgement?: string;
   'custom:countryCode'?: string;
   [key: string]: any;
 }
@@ -65,7 +59,6 @@ interface LegacyConfig {
     aws_appsync_authenticationType: string;
   };
   Urls?: {
-    termsAndConditionsUrl: string;
     leaderboardWebsite?: string;
     streamingOverlayWebsite?: string;
   };
@@ -147,37 +140,13 @@ const components = {
           {/* Re-use default `Authenticator.SignUp.FormFields` */}
           <Authenticator.SignUp.FormFields />
 
-          <CountrySelector 
-            amplify={true} 
-            description={Array.isArray(validationErrors.countryCode) ? validationErrors.countryCode[0] : validationErrors.countryCode} 
-          />
-
-          {/* Append & require Terms & Conditions field to sign up  */}
-          <CheckboxField
-            errorMessage={Array.isArray(validationErrors.acknowledgement) ? validationErrors.acknowledgement[0] : validationErrors.acknowledgement}
-            hasError={!!validationErrors.acknowledgement}
-            name="acknowledgement"
-            value="yes"
-            label={i18next.t('app.signup.acknowledgement-label')}
+          <CountrySelector
+            amplify={true}
+            description={Array.isArray(validationErrors.countryCode) ? validationErrors.countryCode[0] : validationErrors.countryCode}
           />
         </>
       );
     },
-  },
-
-  Footer() {
-    const { tokens } = useTheme();
-
-    return (
-      <View textAlign="center" padding={tokens.space.large}>
-        <Link
-          href={(config.Urls?.termsAndConditionsUrl || '') + '/terms-and-conditions.html'}
-          target="_blank"
-        >
-          {i18next.t('app.signup.terms-and-conditions')}
-        </Link>
-      </View>
-    );
   },
 };
 
@@ -212,9 +181,6 @@ export default function App() {
 
             if (!validUsername.test(formData.username)) {
               errors['username'] = t('app.signup.username-error');
-            }
-            if (!formData.acknowledgement) {
-              errors['acknowledgement'] = t('app.signup.acknowledgement');
             }
             if (!formData['custom:countryCode']) {
               errors['countryCode'] = t('app.signup.select-your-country');

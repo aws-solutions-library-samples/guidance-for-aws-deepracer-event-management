@@ -32,8 +32,6 @@ with open("cfn.outputs") as json_file:
             identityPoolId = key["OutputValue"]
         if key["OutputKey"] == "appsyncId":
             appsyncId = key["OutputValue"]
-        if key["OutputKey"] == "tacWebsite":
-            tacWebsite = key["OutputValue"]
         if key["OutputKey"] == "LeaderboardWebsite":
             leaderboardWebsite = key["OutputValue"]
         if key["OutputKey"] == "streamingOverlayWebsite":
@@ -68,7 +66,6 @@ with open("cfn.outputs") as json_file:
             "aws_appsync_authenticationType": "AMAZON_COGNITO_USER_POOLS",
         },
         "Urls": {
-            "termsAndConditionsUrl": tacWebsite,
             "leaderboardWebsite": leaderboardWebsite,
             "streamingOverlayWebsite": streamingOverlayWebsite,
         },
