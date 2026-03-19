@@ -51,7 +51,7 @@ pipeline.synth: 				## Synth the CDK pipeline
 	npx cdk synth -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg)
 
 pipeline.deploy: 				## Deploy the CDK pipeline
-	npx cdk deploy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg)
+	npx cdk deploy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg) --require-approval never
 
 pipeline.clean: 				## Destroys the CDK pipeline stack only
 	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) --force
