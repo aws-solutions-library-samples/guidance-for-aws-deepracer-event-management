@@ -166,6 +166,7 @@ export class CarLogsManager extends Construct {
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
       stream: dynamodb.StreamViewType.NEW_IMAGE,
       removalPolicy: RemovalPolicy.DESTROY,
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
     });
 
     const OPERATOR_ASSETS_GSI_NAME = 'operatorAssetsIndexV2';

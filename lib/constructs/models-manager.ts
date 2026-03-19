@@ -105,6 +105,7 @@ export class ModelsManager extends Construct {
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
       stream: dynamodb.StreamViewType.NEW_IMAGE,
       removalPolicy: RemovalPolicy.DESTROY,
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
     });
 
     const OPERATOR_MODELS_GSI_NAME = 'operatorAvailableModelsIndexV2';

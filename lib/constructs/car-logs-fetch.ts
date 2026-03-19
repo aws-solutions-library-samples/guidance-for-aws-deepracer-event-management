@@ -34,7 +34,7 @@ export class CarLogsFetchStepFunction extends Construct {
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
       stream: dynamodb.StreamViewType.NEW_IMAGE,
       removalPolicy: RemovalPolicy.DESTROY,
-      pointInTimeRecovery: true,
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
     });
 
     const globalSecondaryIndexProps: dynamodb.GlobalSecondaryIndexProps = {
