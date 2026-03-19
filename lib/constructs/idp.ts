@@ -92,7 +92,7 @@ export class Idp extends Construct {
       },
       featurePlan: cognito.FeaturePlan.PLUS,
       mfa: cognito.Mfa.OPTIONAL,
-      advancedSecurityMode: cognito.AdvancedSecurityMode.ENFORCED,
+      standardThreatProtectionMode: cognito.StandardThreatProtectionMode.FULL_FUNCTION,
       selfSignUpEnabled: true,
       autoVerify: { email: true },
       removalPolicy: RemovalPolicy.DESTROY,
