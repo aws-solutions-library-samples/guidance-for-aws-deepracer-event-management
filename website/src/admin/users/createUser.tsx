@@ -1,12 +1,10 @@
 import {
   Button,
-  Checkbox,
   Container,
   Form,
   FormField,
   Grid,
   Input,
-  Link,
   SpaceBetween,
 } from '@cloudscape-design/components';
 import { useEffect, useState } from 'react';
@@ -18,7 +16,6 @@ import { PageLayout } from '../../components/pageLayout';
 import { graphqlMutate } from '../../graphql/graphqlHelpers';
 import * as mutations from '../../graphql/mutations';
 
-import awsconfig from '../../config.json';
 import { useStore } from '../../store/store';
 
 const notificationId = 'create_user';
@@ -34,7 +31,6 @@ export function CreateUser(): JSX.Element {
   const [usernameErrorText, setUsernameErrorText] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [emailErrorText, setEmailErrorText] = useState<string>('');
-  const [tncChecked, setTncChecked] = useState<boolean>(false);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
   const [countryCode, setCountryCode] = useState<string>('');
   const [, dispatch] = useStore();
@@ -73,7 +69,6 @@ export function CreateUser(): JSX.Element {
       setUsername('');
       setEmail('');
       setCountryCode('');
-      setTncChecked(false);
     } catch (response: any) {
       const errorMessage = response.errors[0].message;
 
@@ -108,7 +103,7 @@ export function CreateUser(): JSX.Element {
       regexFail = true;
     }
 
-    if (username !== '' && email !== '' && regexFail !== true && tncChecked && countryCode !== '') {
+    if (username !== '' && email !== '' && regexFail !== true && countryCode !== '') {
       setButtonDisabled(false);
     } else {
       setButtonDisabled(true);
@@ -116,7 +111,7 @@ export function CreateUser(): JSX.Element {
     return () => {
       // Unmounting
     };
-  }, [username, email, tncChecked, countryCode]);
+  }, [username, email, countryCode]);
 
   return (
     <PageLayout
@@ -180,22 +175,6 @@ export function CreateUser(): JSX.Element {
                 />
                 <Flag countryCode={countryCode}></Flag>
               </Grid>
-              <FormField
-                label={t('users.terms-and-conditions-title')}
-                errorText={tncChecked ? '' : t('users.terms-and-conditions-error')}
-              >
-                <Checkbox
-                  onChange={({ detail }) => setTncChecked(detail.checked)}
-                  checked={tncChecked}
-                >
-                  <Link
-                    href={(awsconfig as any).Urls?.termsAndConditionsUrl + '/terms-and-conditions.html' || '#'}
-                    target="_blank"
-                  >
-                    {t('users.terms-and-conditions')}
-                  </Link>
-                </Checkbox>
-              </FormField>
             </SpaceBetween>
           </Container>
         </Form>
