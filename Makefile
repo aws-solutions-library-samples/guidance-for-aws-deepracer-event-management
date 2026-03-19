@@ -28,6 +28,7 @@ endif
 dremSrcPath := website/src
 leaderboardSrcPath := website-leaderboard/src
 overlaysSrcPath := website-stream-overlays/src
+VENV_PYTHON := .venv/bin/python3
 
 ## ----------------------------------------------------------------------------
 .PHONY: help
@@ -83,61 +84,64 @@ manual.deploy.website: local.config
 local.install:					## Install Javascript dependencies
 	npm install
 
-local.config:					## Setup local config based on branch
+local.config: | $(VENV_PYTHON)				## Setup local config based on branch
 	echo "{}" > ${dremSrcPath}/config.json
 	aws cloudformation describe-stacks --region $(region) --stack-name drem-backend-$(label)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
-	python3 scripts/generate_amplify_config_cfn.py
+	$(VENV_PYTHON) scripts/generate_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL ./$(dremSrcPath)/graphql/schema.graphql
 	current_dir=$(pwd)
 	cd $(dremSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
 	echo "{}" > $(leaderboardSrcPath)/config.json
-	python3 scripts/generate_leaderboard_amplify_config_cfn.py
+	$(VENV_PYTHON) scripts/generate_leaderboard_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL $(leaderboardSrcPath)/graphql/schema.graphql
 	cd $(leaderboardSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
 	echo "{}" > $(overlaysSrcPath)/config.json
-	python3 scripts/generate_stream_overlays_amplify_config_cfn.py
+	$(VENV_PYTHON) scripts/generate_stream_overlays_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL $(overlaysSrcPath)/graphql/schema.graphql
 	cd $(overlaysSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
-local.config.docker:					## Setup local config based on branch
+local.config.docker: | $(VENV_PYTHON)				## Setup local config based on branch (docker mode)
 	echo "{}" > ${dremSrcPath}/config.json
 	aws cloudformation describe-stacks --region $(region) --stack-name drem-backend-$(label)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
-	python3 scripts/generate_amplify_config_cfn.py --docker
+	$(VENV_PYTHON) scripts/generate_amplify_config_cfn.py --docker
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL ./$(dremSrcPath)/graphql/schema.graphql
 	current_dir=$(pwd)
 	cd $(dremSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
 	echo "{}" > $(leaderboardSrcPath)/config.json
-	python3 scripts/generate_leaderboard_amplify_config_cfn.py
+	$(VENV_PYTHON) scripts/generate_leaderboard_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL $(leaderboardSrcPath)/graphql/schema.graphql
 	cd $(leaderboardSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
 	echo "{}" > $(overlaysSrcPath)/config.json
-	python3 scripts/generate_stream_overlays_amplify_config_cfn.py
+	$(VENV_PYTHON) scripts/generate_stream_overlays_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL $(overlaysSrcPath)/graphql/schema.graphql
 	cd $(overlaysSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
 ## Test targets
 
-.PHONY: test test.website
-test:						## Run all tests
-	cd website && npm test
+.PHONY: test test.cdk test.website
+test: test.cdk test.website				## Run all tests
+
+test.cdk:					## Run CDK unit tests
+	npm test
 
 test.website:					## Run website schema conformance tests
 	cd website && npm test
 
-local.config.python:		## Setup a Python .venv
+$(VENV_PYTHON):					## Create Python virtual environment
 	python3 -m venv --prompt drem .venv
-	source .venv/bin/activate
-	pip install -e .[dev]
+	.venv/bin/pip install --quiet -e .[dev]
+
+local.config.python: | $(VENV_PYTHON)		## Setup a Python .venv (alias for venv creation)
 	
 local.run:					## Run the frontend application locally for development
 	PORT=3000 npm start --prefix website
