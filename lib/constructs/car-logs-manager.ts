@@ -6,7 +6,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { SubnetType } from 'aws-cdk-lib/aws-ec2';
 import * as ecr_assets from 'aws-cdk-lib/aws-ecr-assets';
-import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
+import { IEventBus, Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -50,7 +50,7 @@ export interface CarLogsManagerProps {
       powerToolsLayer: lambda.ILayerVersion;
     };
   };
-  eventbus: EventBus;
+  eventbus: IEventBus;
 }
 
 export class CarLogsManager extends Construct {

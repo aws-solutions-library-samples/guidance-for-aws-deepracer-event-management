@@ -1,7 +1,7 @@
 import { Duration, Size } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { Platform } from 'aws-cdk-lib/aws-ecr-assets';
-import { EventBus, Match, Rule } from 'aws-cdk-lib/aws-events';
+import { IEventBus, Match, Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -19,7 +19,7 @@ interface ModelOptimizerProps {
     api: appsync.GraphqlApi;
     noneDataSource: appsync.NoneDataSource;
   };
-  eventbus: EventBus;
+  eventbus: IEventBus;
   clamScanPost: lambda.IFunction;
 }
 
