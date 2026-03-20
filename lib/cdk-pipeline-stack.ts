@@ -6,6 +6,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as pipelines from 'aws-cdk-lib/pipelines';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { BaseStack } from './base-stack';
 import { DeepracerEventManagerStack } from './drem-app-stack';
@@ -323,6 +324,27 @@ export class CdkPipelineStack extends cdk.Stack {
     );
 
     pipeline.buildPipeline();
+
+    // Suppress cdk-nag findings for CDK Pipelines-managed resources we don't control
+    NagSuppressions.addStackSuppressions(this, [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Wildcard permissions are managed by CDK Pipelines for CodeBuild and asset publishing roles',
+      },
+      {
+        id: 'AwsSolutions-CB4',
+        reason: 'KMS encryption for CodeBuild projects is managed by CDK Pipelines',
+      },
+      {
+        id: 'AwsSolutions-S1',
+        reason: 'Access logging for the pipeline artifacts bucket is managed by CDK Pipelines',
+      },
+      {
+        id: 'AwsSolutions-SNS3',
+        reason: 'SSL enforcement on the pipeline notification topic is not exposed by CDK Pipelines',
+      },
+    ]);
+
     const topic = new sns.Topic(this, 'PipelineTopic');
     topic.addSubscription(new subs.EmailSubscription(props.email));
     const rule = new notifications.NotificationRule(this, 'NotificationRule', {

@@ -1,13 +1,12 @@
 #!/usr/bin/env node
-import { App } from 'aws-cdk-lib';
-// import { App, Aspects } from 'aws-cdk-lib';
-// import { AwsSolutionsChecks } from 'cdk-nag';
+import { App, Aspects } from 'aws-cdk-lib';
+import { AwsSolutionsChecks } from 'cdk-nag';
 import { BaseStack } from '../lib/base-stack';
 import { CdkPipelineStack } from '../lib/cdk-pipeline-stack';
 import { DeepracerEventManagerStack } from '../lib/drem-app-stack';
 
 const app = new App();
-// Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
+Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 
 let accountId = process.env['CDK_DEFAULT_ACCOUNT'];
 
@@ -76,7 +75,6 @@ if (domainName) {
 if (app.node.tryGetContext('manual_deploy') === 'True') {
   console.info('Manual Deploy started....');
 
-  // Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
   const baseStack = new BaseStack(app, `drem-backend-${labelName}-base`, {
     email: mailAddress,
     labelName: labelName,
