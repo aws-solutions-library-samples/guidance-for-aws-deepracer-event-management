@@ -42,7 +42,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:post-deploy": "vitest run --reporter=default --reporter=junit --outputFile=../reports/junit-post-deploy.xml src/__tests__/graphql-schema-conformance.test.ts src/__tests__/smoke.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -57,6 +58,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.5.0",
     "graphql": "^16.13.1",
+    "playwright": "^1.58.2",
     "prettier": "^3.8.1",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.56.0",

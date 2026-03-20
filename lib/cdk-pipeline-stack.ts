@@ -32,6 +32,8 @@ class InfrastructurePipelineStage extends Stage {
   public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
   public readonly termAndConditionsDistributionId: cdk.CfnOutput;
   public readonly termAndConditionsSourceBucketName: cdk.CfnOutput;
+  public readonly dremWebsiteUrl: cdk.CfnOutput;
+  public readonly appsyncId: cdk.CfnOutput;
 
   constructor(scope: Construct, id: string, props: InfrastructurePipelineStageProps) {
     super(scope, id, props);
@@ -69,6 +71,8 @@ class InfrastructurePipelineStage extends Stage {
     this.streamingOverlayDistributionId = stack.streamingOverlayDistributionId;
     this.termAndConditionsSourceBucketName = stack.tacSourceBucketName;
     this.termAndConditionsDistributionId = stack.tacWebsitedistributionId;
+    this.dremWebsiteUrl = stack.dremWebsiteUrl;
+    this.appsyncId = stack.appsyncId;
   }
 }
 export interface CdkPipelineStackProps extends cdk.StackProps {
@@ -191,8 +195,7 @@ export class CdkPipelineStack extends cdk.Stack {
     ];
 
     // Main website Deploy to S3
-    infrastructure_stage.addPost(
-      new pipelines.CodeBuildStep('MainSiteDeployToS3', {
+    const mainSiteDeployStep = new pipelines.CodeBuildStep('MainSiteDeployToS3', {
         installCommands: [`npm install -g @aws-amplify/cli@${AMPLIFY_VERSION}`],
         buildEnvironment: {
           privileged: true,
@@ -225,8 +228,8 @@ export class CdkPipelineStack extends cdk.Stack {
           distributionId: infrastructure.distributionId,
         },
         rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
-      })
-    );
+    });
+    infrastructure_stage.addPost(mainSiteDeployStep);
 
     // Leaderboard website Deploy to S3
     infrastructure_stage.addPost(
@@ -324,6 +327,45 @@ export class CdkPipelineStack extends cdk.Stack {
         rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
       })
     );
+
+    // Post-deploy tests — run after MainSiteDeployToS3 completes
+    const postDeployStep = new pipelines.CodeBuildStep('PostDeployTests', {
+        buildEnvironment: {
+          computeType: codebuild.ComputeType.SMALL,
+        },
+        installCommands: [
+          `n ${NODE_VERSION}`,
+          'node --version',
+          'npx playwright install --with-deps chromium',
+        ],
+        commands: [
+          'npm install',
+          'aws appsync get-introspection-schema --api-id $appsyncId --format SDL website/src/graphql/schema.graphql',
+          'cd website && npm run test:post-deploy && cd ..',
+        ],
+        envFromCfnOutputs: {
+          appsyncId: infrastructure.appsyncId,
+          DREM_WEBSITE_URL: infrastructure.dremWebsiteUrl,
+        },
+        rolePolicyStatements: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: ['appsync:GetIntrospectionSchema'],
+            resources: ['*'],
+          }),
+        ],
+        partialBuildSpec: codebuild.BuildSpec.fromObject({
+          reports: {
+            post_deploy_reports: {
+              files: ['junit-post-deploy.xml'],
+              'base-directory': 'reports',
+              'file-format': 'JUNITXML',
+            },
+          },
+        }),
+    });
+    postDeployStep.addStepDependency(mainSiteDeployStep);
+    infrastructure_stage.addPost(postDeployStep);
 
     pipeline.buildPipeline();
 

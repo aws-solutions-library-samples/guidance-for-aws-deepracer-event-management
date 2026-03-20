@@ -5,6 +5,7 @@ export default defineConfig({
         include: ['src/**/*.test.ts'],
         exclude: [
             'src/__tests__/graphql-schema-conformance.test.ts',
+            'src/__tests__/smoke.test.ts',
         ],
         globals: true,
         environment: 'node',
