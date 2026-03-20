@@ -126,22 +126,24 @@ export class CdkPipelineStack extends cdk.Stack {
         ],
         commands: [
           'npm install',
+          // Tests - run before synth so pipeline fails fast on test failure
+          'npm test',
+          'cd website && npm test && cd ..',
+          'cd website-leaderboard && npm test && cd ..',
           `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c label=${props.labelName}` +
             ` -c account=${props.env.account} -c region=${props.env.region}` +
             ` -c source_branch=${props.sourceBranchName} -c source_repo=${props.sourceRepo}` +
             (props.domainName ? ` -c domain_name=${props.domainName}` : ''),
         ],
-        // partialBuildSpec: codebuild.BuildSpec.fromObject(
-        //     {
-        //         "reports": {
-        //             "pytest_reports": {
-        //                 "files": ["unittest-report.xml"],
-        //                 "base-directory": "reports",
-        //                 "file-format": "JUNITXML",
-        //             }
-        //         }
-        //     }
-        // ),
+        partialBuildSpec: codebuild.BuildSpec.fromObject({
+          reports: {
+            jest_reports: {
+              files: ['junit-cdk.xml', 'junit-website.xml', 'junit-leaderboard.xml'],
+              'base-directory': 'reports',
+              'file-format': 'JUNITXML',
+            },
+          },
+        }),
         rolePolicyStatements: [
           new iam.PolicyStatement({
             actions: ['sts:AssumeRole'],

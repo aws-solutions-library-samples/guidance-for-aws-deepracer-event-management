@@ -4,5 +4,9 @@ module.exports = {
   testMatch: ['**/*.test.ts'],
   transform: {
     '^.+\\.tsx?$': 'ts-jest'
-  }
+  },
+  reporters: [
+    'default',
+    ['jest-junit', { outputDirectory: 'reports', outputName: 'junit-cdk.xml' }],
+  ],
 };
