@@ -10,7 +10,7 @@
     "ws": "^8.19.0"
   },
   "optionalDependencies": {
-    "node-libgpiod": "^1.0.6",
+    "node-libgpiod": "^0.6.0",
     "rpi-gpio": "^2.1.7"
   },
   "engines": {
