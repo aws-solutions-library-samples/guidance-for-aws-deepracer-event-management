@@ -1,9 +1,25 @@
-# Testing Guide: SSM Parameter Store — Cross-Stack Sharing (PR 1 of 2)
+# SSM Parameter Store — Cross-Stack Sharing Migration Guide
 
 ## Overview
 
-This is the first of two PRs that together eliminate CloudFormation `Fn::ImportValue`
-hard dependencies between `BaseStack` and `DeepracerEventManagerStack`.
+This is **PR 1 of 3** that together eliminate CloudFormation `Fn::ImportValue` hard
+dependencies between `BaseStack` and `DeepracerEventManagerStack` and remove the
+Terms & Conditions feature.
+
+> **BREAKING CHANGE — Sequential upgrade required**
+>
+> If you have an **existing deployment**, you must apply these three PRs **in order**.
+> Skipping directly to the latest release will break your deployment with:
+> ```
+> Delete canceled. Cannot delete export drem-backend-X-base:ExportsOutput...
+> as it is in use by drem-backend-X-infrastructure.
+> ```
+> The three PRs must be deployed as separate pipeline runs in sequence:
+> 1. **PR 1** `feat/ssm-cross-stack-sharing` — adds SSM parameters + removes T&C frontend (this PR)
+> 2. **PR 2** `feat/ssm-infra-migration` — switches infra to SSM, removes T&C CDK infrastructure
+> 3. **PR 3** `feat/restore-base-first-ordering` — restores correct base-first pipeline ordering
+>
+> Fresh installations (no existing stacks) can apply any single PR or all three in one go.
 
 **Why this matters:** `Fn::ImportValue` creates a CloudFormation lock between stacks
 that blocks independent updates. The symptom is:
@@ -15,16 +31,22 @@ as it is in use by drem-backend-X-infrastructure.
 
 ### What this PR does (additive only — safe for fresh installs and upgrades)
 
-- Adds 14 SSM parameters to `BaseStack` under `/${stackName}/<key>`
+- Adds 19 SSM parameters to `BaseStack` under `/${stackName}/<key>`
 - Removes T&C checkbox/link from sign-up flow and admin Create User form
 - No changes to `DeepracerEventManagerStack`, the pipeline stage, or any cross-stack
   references — existing `Fn::ImportValue` dependencies are untouched
 
-### What PR 2 does (follow-up — requires two-pipeline migration, documented below)
+### What PR 2 does (follow-up — requires two-pipeline migration run from PR 1)
 
-- Switches `DeepracerEventManagerStack` to read all 14 values from SSM instead of
+- Switches `DeepracerEventManagerStack` to read all values from SSM instead of
   via `Fn::ImportValue`
 - Removes T&C CDK infrastructure (S3 bucket, CloudFront distributions, pipeline step)
+- Deploys infra before base so infra can drop `Fn::ImportValue` while base still exports
+
+### What PR 3 does (one-liner after PR 2 is deployed)
+
+- Restores `stack.addDependency(baseStack)` (base-first ordering) for ongoing development
+- Ensures new SSM parameters created in BaseStack exist before infra reads them
 
 ---
 
@@ -103,7 +125,7 @@ make install
 
 Approve `DeployDREM` when prompted. Expected: 45–90 min.
 
-This is a safe upgrade — the pipeline only **adds** 14 SSM parameters to the base
+This is a safe upgrade — the pipeline only **adds** 19 SSM parameters to the base
 stack. No exports are removed, no cross-stack references change.
 
 ### Step 4 — Verify post-deploy state
@@ -111,7 +133,7 @@ stack. No exports are removed, no cross-stack references change.
 #### SSM Parameter Store console
 
 Open [SSM Parameter Store](https://console.aws.amazon.com/systems-manager/parameters)
-and filter by `/drem-backend-<label>-base/`. Expect **14 parameters**:
+and filter by `/drem-backend-<label>-base/`. Expect **19 parameters**:
 
 | Parameter | Contains |
 |-----------|---------|
@@ -129,6 +151,11 @@ and filter by `/drem-backend-<label>-base/`. Expect **14 parameters**:
 | `commentatorGroupRoleArn` | IAM Role ARN |
 | `registrationGroupRoleArn` | IAM Role ARN |
 | `authenticatedUserRoleArn` | IAM Role ARN |
+| `defaultUserRole` | IAM Role ARN |
+| `regionalWafWebAclArn` | WAF Web ACL ARN |
+| `appsyncHelpersLambdaLayerArn` | Lambda Layer ARN |
+| `helperFunctionsLambdaLayerArn` | Lambda Layer ARN |
+| `powertoolsLambdaLayerArn` | Lambda Layer ARN |
 
 Or via CLI:
 
@@ -153,58 +180,10 @@ make test.cdk
 > - Admin Create User form has no T&C checkbox
 > - T&C page still accessible at its CloudFront URL (CDK infrastructure not yet removed)
 
-### Step 5 — Clean up
+### Step 5 — Continue to PR 2
 
-```sh
-make drem.clean
-```
-
----
-
-## PR 2 Migration Guide (Fn::ImportValue removal)
-
-> Run this **after** PR 1 has been deployed and confirmed working.
-
-PR 2 switches `DeepracerEventManagerStack` from `Fn::ImportValue` to SSM reads, and
-removes the T&C CDK infrastructure. Because this removes CloudFormation exports that
-the infra stack currently imports, it **cannot be done in a single pipeline run** when
-upgrading from PR 1. Two pipeline runs are required.
-
-### Why two pipeline runs are needed
-
-With `Fn::ImportValue`, CloudFormation enforces: a stack cannot remove an export while
-another stack imports it. Even if both stacks update in the same pipeline run, the
-evaluation is against the **currently deployed** infra state.
-
-- **Pipeline run 1** (infra-first ordering): Infra drops all `Fn::ImportValue` references
-  (reads from SSM instead). Base unchanged.
-- **Pipeline run 2** (base-first ordering): Base removes the now-unused `CfnOutput`
-  exports and the T&C CDK resources. Infra already uses SSM — no conflict.
-
-### Pipeline run 1 — Drop Fn::ImportValue from infra
-
-Switch `build.config` to the PR 2 branch with `stack.addDependency` temporarily
-**reversed** (infra first). SSM params already exist from PR 1, so infra can resolve
-them at changeset creation time.
-
-After this pipeline run completes, infra no longer has any `Fn::ImportValue`:
-
-```sh
-aws cloudformation get-template \
-  --stack-name drem-backend-<label>-infrastructure \
-  --region <region> \
-  --query 'TemplateBody' \
-  | grep -c 'Fn::ImportValue'
-# Expected: 0
-```
-
-### Pipeline run 2 — Remove base exports and T&C infrastructure
-
-Restore `stack.addDependency(baseStack)` (base first). Trigger a second pipeline run.
-Base can now safely remove its `CfnOutput` exports and T&C resources.
-
-> See `docs/testing-ssm-cross-stack-migration-pr2.md` (in the PR 2 branch) for the
-> full step-by-step guide.
+See [`docs/testing-ssm-cross-stack-migration-pr2.md`](testing-ssm-cross-stack-migration-pr2.md)
+for the PR 2 and PR 3 migration steps.
 
 ---
 
@@ -212,7 +191,7 @@ Base can now safely remove its `CfnOutput` exports and T&C resources.
 
 | File | What changed |
 |------|-------------|
-| `lib/base-stack.ts` | Writes 14 SSM parameters at end of constructor |
+| `lib/base-stack.ts` | Writes 19 SSM parameters at end of constructor |
 | `lib/constructs/cdn.ts` | Added `comment` prop for CloudFront distribution descriptions |
 | `lib/constructs/leaderboard.ts` | Passes `comment` to Cdn construct |
 | `lib/constructs/streaming-overlay.ts` | Passes `comment` to Cdn construct |
@@ -221,7 +200,7 @@ Base can now safely remove its `CfnOutput` exports and T&C resources.
 | `website/public/locales/en/translation.json` | Removed T&C translation strings |
 | `scripts/generate_amplify_config_cfn.py` | Removed `termsAndConditionsUrl` from config |
 | `tsconfig.json` | Exclude `website*/` subdirs from CDK `tsc` compilation |
-| `test/deepracer-event-manager.test.ts` | CDK assertion test for the 14 SSM parameters |
+| `test/deepracer-event-manager.test.ts` | CDK assertion test for the SSM parameters |
 | `jest.config.ts` | Converted from `.js` to `.ts` |
 | `Makefile` | `make drem.clean`, Python venv fixes, `make test.cdk`, `--require-approval never` |
 | `CLAUDE.md` | Project overview, commands, and architecture notes |
