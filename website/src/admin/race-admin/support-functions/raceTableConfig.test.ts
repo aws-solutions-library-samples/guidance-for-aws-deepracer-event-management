@@ -2,7 +2,7 @@ import i18next from '../../../i18n';
 import { ColumnDefinitions, VisibleContentOptions } from './raceTableConfig';
 
 // Mock i18next with proper typing
-const mockT = jest.fn().mockReturnValue('') as any;
+const mockT = vi.fn().mockReturnValue('') as any;
 i18next.t = mockT;
 
 describe('Race Manager', () => {
