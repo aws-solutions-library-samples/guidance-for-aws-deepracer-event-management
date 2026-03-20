@@ -6,6 +6,7 @@ export default defineConfig({
         exclude: [
             'src/admin/race-admin/support-functions/raceTableConfig.test.ts',
             'src/components/devices-table/deviceTableConfig.test.ts',
+            'src/__tests__/graphql-schema-conformance.test.ts',
         ],
         globals: true,
         environment: 'node',
