@@ -43,7 +43,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:post-deploy": "vitest run --reporter=default --reporter=junit --outputFile=../reports/junit-post-deploy.xml src/__tests__/graphql-schema-conformance.test.ts src/__tests__/smoke.test.ts"
+    "test:post-deploy": "vitest run --config vitest.config.post-deploy.ts --reporter=default --reporter=junit --outputFile=../reports/junit-post-deploy.xml src/__tests__/graphql-schema-conformance.test.ts src/__tests__/smoke.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
