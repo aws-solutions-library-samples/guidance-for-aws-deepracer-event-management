@@ -63,24 +63,23 @@ try {
   // Ignore errors thrown during CloudWatch RUM web client initialization
 }
 
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <LeaderboardWrapper />,
-  },
-  {
-    path: '/:eventId',
-    element: <LeaderboardWrapper />,
-  },
-  {
-    path: '/leaderboard/:eventId',
-    element: <LeaderboardWrapper />,
-  },
-  {
-    path: '/landing-page/:eventId',
-    element: <LandingPage />,
-  },
-]);
+const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <LeaderboardWrapper />,
+    },
+    {
+      path: '/:eventId',
+      element: <LeaderboardWrapper />,
+    },
+    {
+      path: '/landing-page/:eventId',
+      element: <LandingPage />,
+    },
+  ],
+  { basename: '/leaderboard' }
+);
 
 function App() {
   return <RouterProvider router={router} />;

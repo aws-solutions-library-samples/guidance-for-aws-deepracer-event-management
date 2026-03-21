@@ -22,6 +22,22 @@ export class Cdn extends Construct {
 
     const stack = Stack.of(this);
 
+    // CloudFront Function: rewrite sub-app deep links for SPA routing
+    const subAppSpaRewrite = new cloudfront.Function(this, 'SubAppSpaRewrite', {
+      code: cloudfront.FunctionCode.fromInline(`
+function handler(event) {
+  var uri = event.request.uri;
+  if (uri.startsWith('/leaderboard/') && uri.indexOf('.') === -1) {
+    event.request.uri = '/leaderboard/index.html';
+  } else if (uri.startsWith('/overlays/') && uri.indexOf('.') === -1) {
+    event.request.uri = '/overlays/index.html';
+  }
+  return event.request;
+}
+      `),
+      comment: 'Rewrite sub-app deep links to their index.html for SPA routing',
+    });
+
     //  cloudfront Distribution
     const cloudfrontDistribution = new cloudfront.Distribution(this, 'distribution', {
       comment: props.comment,
@@ -29,6 +45,12 @@ export class Cdn extends Construct {
         origin: props.defaultOrigin,
         responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_AND_SECURITY_HEADERS,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        functionAssociations: [
+          {
+            function: subAppSpaRewrite,
+            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+          },
+        ],
       },
       httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
       defaultRootObject: 'index.html',

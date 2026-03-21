@@ -26,10 +26,6 @@ export interface InfrastructurePipelineStageProps extends cdk.StackProps {
 class InfrastructurePipelineStage extends Stage {
   public readonly distributionId: cdk.CfnOutput;
   public readonly sourceBucketName: cdk.CfnOutput;
-  public readonly leaderboardDistributionId: cdk.CfnOutput;
-  public readonly leaderboardSourceBucketName: cdk.CfnOutput;
-  public readonly streamingOverlayDistributionId: cdk.CfnOutput;
-  public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
   public readonly dremWebsiteUrl: cdk.CfnOutput;
   public readonly appsyncId: cdk.CfnOutput;
 
@@ -53,10 +49,6 @@ class InfrastructurePipelineStage extends Stage {
 
     this.distributionId = stack.distributionId;
     this.sourceBucketName = stack.sourceBucketName;
-    this.leaderboardSourceBucketName = stack.leaderboardSourceBucketName;
-    this.leaderboardDistributionId = stack.leaderboardDistributionId;
-    this.streamingOverlaySourceBucketName = stack.streamingOverlaySourceBucketName;
-    this.streamingOverlayDistributionId = stack.streamingOverlayDistributionId;
     this.dremWebsiteUrl = stack.dremWebsiteUrl;
     this.appsyncId = stack.appsyncId;
   }
@@ -228,28 +220,27 @@ export class CdkPipelineStack extends cdk.Stack {
         commands: [
           // configure and deploy Leaderboard website
           "echo 'Starting to deploy the Leaderboard website'",
-          'echo website bucket= $leaderboardSourceBucketName',
+          'echo website bucket= $sourceBucketName',
           'aws cloudformation describe-stacks --stack-name ' +
-            `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
+            `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
           'python scripts/generate_amplify_config_cfn.py',
           'python scripts/generate_leaderboard_amplify_config_cfn.py',
           'appsyncId=`cat appsyncId.txt` && aws appsync' +
             ' get-introspection-schema --api-id $appsyncId --format SDL' +
-            ' ./website-leaderboard/src/graphql/schema.graphql',
-          'cd ./website-leaderboard/src/graphql',
+            ' ./website/leaderboard/src/graphql/schema.graphql',
+          'cd ./website/leaderboard/src/graphql',
           'amplify codegen', // this is on purpose
           'amplify codegen', // I'm not repeating myself ;)
-          'cd ../..',
-          'docker run --rm -v $(pwd):/foo -w /foo' +
+          'cd ../../../..',
+          'docker run --rm -v $(pwd):/foo -w /foo/website/leaderboard' +
             " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
             " --cache /tmp/empty-cache && npm run build'",
-          'aws s3 sync ./build/ s3://$leaderboardSourceBucketName/ --delete',
-          "aws cloudfront create-invalidation --distribution-id $leaderboardDistributionId --paths '/*'",
-          'cd ..',
+          'aws s3 sync ./website/leaderboard/build/ s3://$sourceBucketName/leaderboard/ --delete',
+          "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/leaderboard/*'",
         ],
         envFromCfnOutputs: {
-          leaderboardSourceBucketName: infrastructure.leaderboardSourceBucketName,
-          leaderboardDistributionId: infrastructure.leaderboardDistributionId,
+          sourceBucketName: infrastructure.sourceBucketName,
+          distributionId: infrastructure.distributionId,
         },
         rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
       })
@@ -266,27 +257,27 @@ export class CdkPipelineStack extends cdk.Stack {
         commands: [
           // configure and deploy Streaming overlay website
           "echo 'Starting to deploy the Streaming overlay website'",
-          'echo website bucket= $streamingOverlaySourceBucketName',
+          'echo website bucket= $sourceBucketName',
           'aws cloudformation describe-stacks --stack-name ' +
-            `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
+            `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
           'python scripts/generate_amplify_config_cfn.py',
           'python scripts/generate_stream_overlays_amplify_config_cfn.py',
           'appsyncId=`cat appsyncId.txt` && aws appsync' +
             ' get-introspection-schema --api-id $appsyncId --format SDL' +
-            ' ./website-stream-overlays/src/graphql/schema.graphql',
-          'cd ./website-stream-overlays/src/graphql',
+            ' ./website/overlays/src/graphql/schema.graphql',
+          'cd ./website/overlays/src/graphql',
           'amplify codegen', // this is on purpose
           'amplify codegen', // I'm not repeating myself ;)
-          'cd ../..',
-          'docker run --rm -v $(pwd):/foo -w /foo' +
+          'cd ../../../..',
+          'docker run --rm -v $(pwd):/foo -w /foo/website/overlays' +
             " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
             " --cache /tmp/empty-cache && npm run build'",
-          'aws s3 sync ./build/ s3://$streamingOverlaySourceBucketName/ --delete',
-          "aws cloudfront create-invalidation --distribution-id $streamingOverlayDistributionId --paths '/*'",
+          'aws s3 sync ./website/overlays/build/ s3://$sourceBucketName/overlays/ --delete',
+          "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/overlays/*'",
         ],
         envFromCfnOutputs: {
-          streamingOverlaySourceBucketName: infrastructure.streamingOverlaySourceBucketName,
-          streamingOverlayDistributionId: infrastructure.streamingOverlayDistributionId,
+          sourceBucketName: infrastructure.sourceBucketName,
+          distributionId: infrastructure.distributionId,
         },
         rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
       })
