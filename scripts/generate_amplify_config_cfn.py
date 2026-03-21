@@ -32,20 +32,12 @@ with open("cfn.outputs") as json_file:
             identityPoolId = key["OutputValue"]
         if key["OutputKey"] == "appsyncId":
             appsyncId = key["OutputValue"]
-        if key["OutputKey"] == "LeaderboardWebsite":
-            leaderboardWebsite = key["OutputValue"]
-        if key["OutputKey"] == "streamingOverlayWebsite":
-            streamingOverlayWebsite = key["OutputValue"]
         if key["OutputKey"] == "cwRumAppMonitorId":
             cwRumAppMonitorId = key["OutputValue"]
         if key["OutputKey"] == "cwRumAppMonitorRegion":
             cwRumAppMonitorRegion = key["OutputValue"]
         if key["OutputKey"] == "cwRumAppMonitorConfig":
             cwRumAppMonitorConfig = key["OutputValue"]
-
-    if command_line_config["docker"] == True:
-        leaderboardWebsite = "http://localhost:3001"
-        streamingOverlayWebsite = "http://localhost:3002"
 
     output_data = {
         "Auth": {
@@ -64,10 +56,6 @@ with open("cfn.outputs") as json_file:
             "aws_appsync_graphqlEndpoint": appsyncEndpoint,
             "aws_appsync_region": region,
             "aws_appsync_authenticationType": "AMAZON_COGNITO_USER_POOLS",
-        },
-        "Urls": {
-            "leaderboardWebsite": leaderboardWebsite,
-            "streamingOverlayWebsite": streamingOverlayWebsite,
         },
         "Rum": {
             "drem": {
