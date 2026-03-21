@@ -56,7 +56,6 @@ class InfrastructurePipelineStage extends Stage {
     this.leaderboardDistributionId = stack.leaderboardDistributionId;
     this.streamingOverlaySourceBucketName = stack.streamingOverlaySourceBucketName;
     this.streamingOverlayDistributionId = stack.streamingOverlayDistributionId;
-<<<<<<< HEAD
     this.dremWebsiteUrl = stack.dremWebsiteUrl;
     this.appsyncId = stack.appsyncId;
   }
@@ -292,14 +291,6 @@ export class CdkPipelineStack extends cdk.Stack {
       })
     );
 
-<<<<<<< HEAD
-    // Terms and Conditions website Deploy to S3
-    infrastructure_stage.addPost(
-      new pipelines.CodeBuildStep('TermsAndConditionsDeployToS3', {
-        buildEnvironment: {
-          privileged: false,
-          computeType: codebuild.ComputeType.LARGE,
-        },
     // Post-deploy tests — run after MainSiteDeployToS3 completes
     const postDeployStep = new pipelines.CodeBuildStep('PostDeployTests', {
         buildEnvironment: {
