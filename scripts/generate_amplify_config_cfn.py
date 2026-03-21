@@ -1,16 +1,4 @@
-import argparse
 import json
-
-# command line arguments
-parser = argparse.ArgumentParser(
-    description="Command line arguments",
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-)
-parser.add_argument(
-    "-d", "--docker", action="store_true", help="docker development mode"
-)
-args = parser.parse_args()
-command_line_config = vars(args)
 
 with open("cfn.outputs") as json_file:
     data = json.load(json_file)
