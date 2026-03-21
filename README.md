@@ -22,6 +22,10 @@ DREM offers event organizers tools for managing users, models, cars and fleets, 
 
 Instructions for the automated timer can be found [here](./leaderboard-timer/README.md)
 
+## Testing
+
+DREM uses a layered test pipeline covering CDK assertions, pre-deploy unit tests, and post-deploy live validation against the deployed stack. See the [testing strategy](./docs/testing-strategy.md) for full details.
+
 Please note that the most recent release of Raspberry Pi OS "Bookworm" is currently not supported, please use "Bullseye" (Legacy) for the RPi operating system.
 
 ## Deployment
