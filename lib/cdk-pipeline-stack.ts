@@ -162,109 +162,47 @@ export class CdkPipelineStack extends cdk.Stack {
       }),
     ];
 
-    // Main website Deploy to S3
+    // Deploy all three websites to S3 in a single step
     infrastructure_stage.addPost(
-      new pipelines.CodeBuildStep('MainSiteDeployToS3', {
+      new pipelines.CodeBuildStep('WebsiteDeployToS3', {
         installCommands: [`npm install -g @aws-amplify/cli@${AMPLIFY_VERSION}`],
         buildEnvironment: {
           privileged: true,
           computeType: codebuild.ComputeType.LARGE,
         },
         commands: [
-          // configure and deploy DREM website
-          "echo 'Starting to deploy the DREM website'",
-          'echo website bucket= $sourceBucketName',
           'aws cloudformation describe-stacks --stack-name ' +
             `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
-          'python scripts/generate_amplify_config_cfn.py',
-          'appsyncId=`cat appsyncId.txt` && aws appsync' +
-            ' get-introspection-schema --api-id $appsyncId --format SDL' +
-            ' ./website/src/graphql/schema.graphql',
-          'cd ./website/src/graphql',
-          'amplify codegen', // this is on purpose
-          'amplify codegen', // I'm not repeating myself ;)
-          'cd ../..',
-          'docker run --rm -v $(pwd):/foo -w /foo' +
-            " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
-            " --cache /tmp/empty-cache && npm run build'",
-          'aws s3 sync ./build/ s3://$sourceBucketName/ --delete',
-          'echo distributionId=$distributionId',
-          "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'",
-          'cd ..',
-        ],
-        envFromCfnOutputs: {
-          sourceBucketName: infrastructure.sourceBucketName,
-          distributionId: infrastructure.distributionId,
-        },
-        rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
-      })
-    );
 
-    // Leaderboard website Deploy to S3
-    infrastructure_stage.addPost(
-      new pipelines.CodeBuildStep('LeaderboardDeployToS3', {
-        installCommands: [`npm install -g @aws-amplify/cli@${AMPLIFY_VERSION}`],
-        buildEnvironment: {
-          privileged: true,
-          computeType: codebuild.ComputeType.LARGE,
-        },
-        commands: [
-          // configure and deploy Leaderboard website
-          "echo 'Starting to deploy the Leaderboard website'",
-          'echo website bucket= $sourceBucketName',
-          'aws cloudformation describe-stacks --stack-name ' +
-            `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
+          // Generate Amplify configs for all three apps
           'python scripts/generate_amplify_config_cfn.py',
           'python scripts/generate_leaderboard_amplify_config_cfn.py',
-          'appsyncId=`cat appsyncId.txt` && aws appsync' +
-            ' get-introspection-schema --api-id $appsyncId --format SDL' +
-            ' ./website/leaderboard/src/graphql/schema.graphql',
-          'cd ./website/leaderboard/src/graphql',
-          'amplify codegen', // this is on purpose
-          'amplify codegen', // I'm not repeating myself ;)
-          'cd ../../../..',
-          'docker run --rm -v $(pwd):/foo -w /foo/website/leaderboard' +
-            " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
-            " --cache /tmp/empty-cache && npm run build'",
-          'aws s3 sync ./website/leaderboard/build/ s3://$sourceBucketName/leaderboard/ --delete',
-          "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/leaderboard/*'",
-        ],
-        envFromCfnOutputs: {
-          sourceBucketName: infrastructure.sourceBucketName,
-          distributionId: infrastructure.distributionId,
-        },
-        rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
-      })
-    );
-
-    // Streaming overlay website Deploy to S3
-    infrastructure_stage.addPost(
-      new pipelines.CodeBuildStep('StreamingOverlayDeployToS3', {
-        installCommands: [`npm install -g @aws-amplify/cli@${AMPLIFY_VERSION}`],
-        buildEnvironment: {
-          privileged: true,
-          computeType: codebuild.ComputeType.LARGE,
-        },
-        commands: [
-          // configure and deploy Streaming overlay website
-          "echo 'Starting to deploy the Streaming overlay website'",
-          'echo website bucket= $sourceBucketName',
-          'aws cloudformation describe-stacks --stack-name ' +
-            `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
-          'python scripts/generate_amplify_config_cfn.py',
           'python scripts/generate_stream_overlays_amplify_config_cfn.py',
-          'appsyncId=`cat appsyncId.txt` && aws appsync' +
-            ' get-introspection-schema --api-id $appsyncId --format SDL' +
-            ' ./website/overlays/src/graphql/schema.graphql',
-          'cd ./website/overlays/src/graphql',
-          'amplify codegen', // this is on purpose
-          'amplify codegen', // I'm not repeating myself ;)
-          'cd ../../../..',
+
+          // Fetch GraphQL schema and run codegen for all three apps
+          'appsyncId=`cat appsyncId.txt`',
+          'aws appsync get-introspection-schema --api-id $appsyncId --format SDL ./website/src/graphql/schema.graphql',
+          'cd ./website/src/graphql && amplify codegen && amplify codegen && cd ../../..',
+          'aws appsync get-introspection-schema --api-id $appsyncId --format SDL ./website/leaderboard/src/graphql/schema.graphql',
+          'cd ./website/leaderboard/src/graphql && amplify codegen && amplify codegen && cd ../../../..',
+          'aws appsync get-introspection-schema --api-id $appsyncId --format SDL ./website/overlays/src/graphql/schema.graphql',
+          'cd ./website/overlays/src/graphql && amplify codegen && amplify codegen && cd ../../../..',
+
+          // Build leaderboard and overlays, copy into website/public/
+          'docker run --rm -v $(pwd):/foo -w /foo/website/leaderboard' +
+            " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
+          'mkdir -p ./website/public/leaderboard && cp -r ./website/leaderboard/build/. ./website/public/leaderboard/',
           'docker run --rm -v $(pwd):/foo -w /foo/website/overlays' +
-            " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
-            " --cache /tmp/empty-cache && npm run build'",
-          'aws s3 sync ./website/overlays/build/ s3://$sourceBucketName/overlays/ --delete',
-          "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/overlays/*'",
+            " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
+          'mkdir -p ./website/public/overlays && cp -r ./website/overlays/build/. ./website/public/overlays/',
+
+          // Build main site (sub-apps already in public/)
+          'docker run --rm -v $(pwd):/foo -w /foo/website' +
+            " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
+
+          // Sync everything and invalidate
+          'aws s3 sync ./website/build/ s3://$sourceBucketName/ --delete',
+          "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'",
         ],
         envFromCfnOutputs: {
           sourceBucketName: infrastructure.sourceBucketName,
