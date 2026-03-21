@@ -12,8 +12,6 @@ with open("cfn.outputs") as json_file:
             appsyncId = key["OutputValue"]
         if key["OutputKey"] == "appsyncApiKey":
             appsyncApiKey = key["OutputValue"]
-        if key["OutputKey"] == "DremWebsite":
-            DremWebsite = key["OutputValue"]
 
     output_data = {
         "API": {
@@ -21,9 +19,6 @@ with open("cfn.outputs") as json_file:
             "aws_appsync_region": region,
             "aws_appsync_authenticationType": "API_KEY",
             "aws_appsync_apiKey": appsyncApiKey,
-        },
-        "Urls": {
-            "drem": DremWebsite,
         },
     }
 
