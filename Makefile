@@ -26,8 +26,8 @@ endif
 
 ## CONSTANTS
 dremSrcPath := website/src
-leaderboardSrcPath := website-leaderboard/src
-overlaysSrcPath := website-stream-overlays/src
+leaderboardSrcPath := website/leaderboard/src
+overlaysSrcPath := website/overlays/src
 VENV_PYTHON := .venv/bin/python3
 
 ## ----------------------------------------------------------------------------
@@ -160,7 +160,19 @@ venv: .venv/.installed				## Create Python virtual environment
 .PHONY: local.config.python
 local.config.python: venv			## Setup a Python .venv
 
-local.run:					## Run the frontend application locally for development
+local.build.leaderboard:
+	cd website/leaderboard && npm run build
+	rm -rf website/public/leaderboard
+	cp -r website/leaderboard/build website/public/leaderboard
+
+local.build.overlays:
+	cd website/overlays && npm run build
+	rm -rf website/public/overlays
+	cp -r website/overlays/build website/public/overlays
+
+local.build: local.build.leaderboard local.build.overlays	## Build leaderboard + overlays into website/public/ for unified local dev
+
+local.run:					## Run the frontend application locally for development (run local.build first)
 	PORT=3000 npm start --prefix website
 
 local.clean:					## Remove local packages and modules
@@ -168,19 +180,14 @@ local.clean:					## Remove local packages and modules
 	rm -rf node_modules
 	-rm website/package-lock.json
 	rm -rf website/node_modules
-	-rm website-leaderboard/package-lock.json
-	rm -rf website-leaderboard/node_modules
-	-rm website-stream-overlays/package-lock.json
-	rm -rf website-stream-overlays/node_modules
+	-rm website/leaderboard/package-lock.json
+	rm -rf website/leaderboard/node_modules
+	-rm website/overlays/package-lock.json
+	rm -rf website/overlays/node_modules
 
-local.run-leaderboard:				## Run the frontend leaderboard application locally for development
-	PORT=3001 npm start --prefix website-leaderboard
 
-local.run-overlays:				## Run the frontend overlays application locally for development
-	PORT=3002 npm start --prefix website-stream-overlays
-
-local.docker.build:				## Build DREM docker services
-	docker compose build --no-cache website leaderboard overlays
+local.docker.build: local.build		## Build DREM docker service (runs local.build first)
+	docker compose build --no-cache website
 
 local.docker.up: 				## Run DREM using docker for development
 	docker compose up -d
@@ -193,8 +200,6 @@ local.docker.down:				## Stop DREM docker instance
 
 local.docker.clean:				## Remove DREM docker container and volumes (destructive)
 	docker compose rm website -f -v
-	docker compose rm leaderboard -f -v
-	docker compose rm overlays -f -v
 
 leaderboard.zip:
 	-rm website/public/leaderboard-timer.zip

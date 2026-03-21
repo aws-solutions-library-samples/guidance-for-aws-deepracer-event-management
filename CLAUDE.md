@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AWS DeepRacer Event Manager (DREM) — a full-stack event management platform for running AWS DeepRacer autonomous vehicle racing events. It consists of a React admin SPA, a public leaderboard SPA, a streaming overlays SPA, and AWS CDK infrastructure deploying a serverless AWS backend.
+AWS DeepRacer Event Manager (DREM) — a full-stack event management platform for running AWS DeepRacer autonomous vehicle racing events. It consists of a React authenticated portal, a public leaderboard, and a streaming overlays app — all served from a single CloudFront distribution — plus AWS CDK infrastructure deploying a serverless AWS backend.
 
 ## Commands
 
@@ -23,26 +23,33 @@ npm run test:watch   # Vitest (watch mode)
 ```
 Run a single test file: `npx vitest run src/path/to/file.test.tsx`
 
-### Leaderboard (`website-leaderboard/`) / Overlays (`website-stream-overlays/`)
+### Leaderboard (`website/leaderboard/`) / Overlays (`website/overlays/`)
 ```sh
-npm start            # Vite dev server (leaderboard: 3001, overlays: 3002)
-npm run build        # Type-check + Vite build
+npm run build        # Vite build (base: /leaderboard/ or /overlays/)
 npm run lint         # ESLint
 ```
+These apps are not run as standalone dev servers. They are built into `website/public/leaderboard/`
+and `website/public/overlays/` via `make local.build` and served by the main website dev server.
 
 ### Makefile shortcuts
 ```sh
-make test            # Run main website tests
-make local.run       # Start main website (port 3000)
-make local.run-leaderboard   # Start leaderboard (port 3001)
-make local.run-overlays      # Start overlays (port 3002)
-make local.config    # Pull CloudFormation outputs + regenerate Amplify configs
-make manual.deploy   # Deploy all CDK stacks directly (no pipeline)
+make test                    # Run all tests (CDK + website)
+make local.run               # Start all apps at localhost:3000 (run local.build first)
+make local.build             # Build leaderboard + overlays into website/public/
+make local.config            # Pull CloudFormation outputs + regenerate Amplify configs
+make manual.deploy           # Deploy all CDK stacks directly (no pipeline)
 make manual.deploy.hotswap   # Fast Lambda/asset hotswap redeploy
 ```
 
 ### Local dev setup
-Before running locally, `make local.config` must be run against a deployed stack to generate `aws-exports.json` for all three websites (uses `scripts/generate_amplify_config.py`).
+1. `make local.config` — pull CloudFormation outputs and regenerate Amplify configs for all three apps
+2. `make local.build` — build leaderboard and overlays into `website/public/`
+3. `make local.run` — start dev server at `localhost:3000`
+
+All three apps are then accessible from a single server:
+- `localhost:3000/` — authenticated portal
+- `localhost:3000/leaderboard/` — public leaderboard
+- `localhost:3000/overlays/<eventId>` — public stream overlays
 
 ### Python Lambda development
 ```sh
@@ -78,8 +85,8 @@ pytest                        # Run Python tests
 `admin`, `operator`, `commentator`, `registration`, `racer` — access control is enforced both in IAM (via group roles) and in AppSync resolvers.
 
 ### Public Frontends
-- **Leaderboard** (`website-leaderboard/`) — unauthenticated, subscribes to AppSync via API key for live data; supports URL query params for display (lang, QR, track, format, flag)
-- **Stream Overlays** (`website-stream-overlays/`) — unauthenticated, API key auth; uses D3.js for animated visualisations; supports chroma key background for broadcast use
+- **Leaderboard** (`website/leaderboard/`) — unauthenticated, subscribes to AppSync via API key for live data; supports URL query params for display (lang, QR, track, format, flag); built to `website/public/leaderboard/` and served at `/leaderboard/*`
+- **Stream Overlays** (`website/overlays/`) — unauthenticated, API key auth; uses D3.js for animated visualisations; supports chroma key background for broadcast use; built to `website/public/overlays/` and served at `/overlays/*`
 
 ### Cross-Stack Sharing Pattern
 

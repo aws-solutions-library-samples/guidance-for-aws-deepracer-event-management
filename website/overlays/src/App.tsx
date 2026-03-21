@@ -411,19 +411,19 @@ function App() {
     <div className="App">
       <ChromaBG />
       <div id="racerAndInfo">
-        <object type="image/svg+xml" data={ raceFormat === "fastest" ? "assets/svg/RacerAndLapInfo-Localized.svg" : "assets/svg/RacerAndLapInfo-BestAvg.svg" }id="lower-third-racer-and-lap-info">Lower Thirds SVG</object>
+        <object type="image/svg+xml" data={ raceFormat === "fastest" ? `${import.meta.env.BASE_URL}assets/svg/RacerAndLapInfo-Localized.svg` : `${import.meta.env.BASE_URL}assets/svg/RacerAndLapInfo-BestAvg.svg` }id="lower-third-racer-and-lap-info">Lower Thirds SVG</object>
       </div>
 
       <div id="track-overlay-frame">
-        <object type="image/svg+xml" data="assets/svg/re-invent-2018-track-overlay-white.svg" id="track-overlay">Track Overlay SVG</object>
+        <object type="image/svg+xml" data={`${import.meta.env.BASE_URL}assets/svg/re-invent-2018-track-overlay-white.svg`} id="track-overlay">Track Overlay SVG</object>
       </div>
 
       <div id="leaderboard-frame">
-        <object type="image/svg+xml" data="assets/svg/LeaderboardWithBackdrop-Wide.svg" id="leaderboard">Leaderboard SVG</object>
+        <object type="image/svg+xml" data={`${import.meta.env.BASE_URL}assets/svg/LeaderboardWithBackdrop-Wide.svg`} id="leaderboard">Leaderboard SVG</object>
       </div>
 
       <div id="did-you-know-frame">
-        <img src="assets/svg/DidYouKnowWithBackdrop.svg" id="did-you-know" alt="Did You Know SVG" />
+        <img src={`${import.meta.env.BASE_URL}assets/svg/DidYouKnowWithBackdrop.svg`} id="did-you-know" alt="Did You Know SVG" />
       </div>
     </div>
   );
