@@ -134,3 +134,73 @@ class Display:
         x = max(0, (self.WIDTH - len(text) * 6) // 2)
         self._pg.text(text, x, 2, scale=1)
         self._gu.update(self._pg)
+
+
+# Idle cycle interval in seconds
+IDLE_CYCLE_S = 10
+# Race-finished flash duration in seconds
+RACE_FINISH_FLASH_S = 5
+# Reset flash duration in ms
+RESET_FLASH_MS = 500
+
+
+async def display_task(display, state, config):
+    """
+    Main display loop. Runs at SCROLL_RATE_HZ; switches between idle and race modes.
+    """
+    try:
+        import uasyncio as asyncio
+    except ImportError:
+        import asyncio
+
+    race_items = config["display"].get("race_items", [])
+    idle_mode = "branding"       # "branding" or "leaderboard"
+    idle_timer = 0
+    frame_ms = 1000 // Display.SCROLL_RATE_HZ
+    prev_resets = 0
+
+    while True:
+        await asyncio.sleep_ms(frame_ms)
+        idle_timer += frame_ms
+
+        race = state.race
+
+        # --- Race mode ---
+        if race and race.get("status") in ("READY_TO_START", "RACE_IN_PROGRESS", "RACE_PAUSED"):
+            resets = race.get("resets", 0)
+            if resets > prev_resets:
+                display.flash(COLOUR_ORANGE, RESET_FLASH_MS)
+            prev_resets = resets
+            text = build_race_string(race, race_items)
+            display.set_text(text, COLOUR_WHITE)
+            display.tick()
+            continue
+
+        # --- Race finished flash ---
+        if race and race.get("status") in ("RACE_FINSIHED", "RACE_SUBMITTED"):
+            best = race.get("fastest_lap_ms")
+            if best is not None:
+                flash_text = format_s(best)
+                display.show_status(flash_text, COLOUR_GREEN)
+                await asyncio.sleep(RACE_FINISH_FLASH_S)
+            state.race = None
+            prev_resets = 0
+            idle_timer = 0
+            continue
+
+        # --- Idle mode ---
+        if idle_timer >= IDLE_CYCLE_S * 1000:
+            idle_mode = "leaderboard" if idle_mode == "branding" else "branding"
+            idle_timer = 0
+
+        if idle_mode == "branding":
+            name = state.event_name or state.leaderboard_title or "DREM"
+            display.show_status(name, COLOUR_WHITE)
+        else:
+            if state.leaderboard:
+                text = build_leaderboard_string(state.leaderboard)
+                display.set_text(text, COLOUR_WHITE)
+                display.tick()
+            else:
+                name = state.event_name or state.leaderboard_title or "DREM"
+                display.show_status(name, COLOUR_WHITE)
