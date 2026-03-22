@@ -164,4 +164,4 @@ def _handle_overlay(overlay, state, display):
     if status == "RACE_SUBMITTED":
         # Signal via sentinel; display_task handles the flash using stored fastest_lap_ms
         if state.race:
-            state.race = {**state.race, "status": "RACE_SUBMITTED"}
+            state.race["status"] = "RACE_SUBMITTED"
