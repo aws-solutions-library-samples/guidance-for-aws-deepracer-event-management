@@ -559,7 +559,6 @@
     "poll-interval-label": "Leaderboard Poll Interval (s)",
     "top-n-label": "Leaderboard Top N",
     "download-button": "Download config.json",
-    "wifi-config-title": "WiFi Configuration",
     "ssid-label": "Network Name (SSID)",
     "ssid-placeholder": "Enter your WiFi network name",
     "wifi-password-label": "WiFi Password",
