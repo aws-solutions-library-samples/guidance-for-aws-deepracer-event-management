@@ -7,26 +7,13 @@ A MicroPython application for Raspberry Pi Pico W with Pimoroni Galactic Unicorn
 - **Raspberry Pi Pico W** — wireless-enabled microcontroller
 - **Pimoroni Galactic Unicorn** — 53×11 RGB LED matrix display module
 
-Install the Pimoroni MicroPython firmware from [pimoroni/pimoroni-pico/releases](https://github.com/pimoroni/pimoroni-pico/releases). Follow the flashing instructions in the Pimoroni repository.
+Install the Pimoroni MicroPython firmware from [pimoroni/unicorn](https://github.com/pimoroni/unicorn). Follow the flashing instructions in the repository.
 
 ## Getting the Configuration
 
 1. Navigate to the **DREM admin portal** → **Device Management** → **Pico LED Display**
-2. Fill in the form with:
-   - Event ID (from DREM)
-   - Track ID
-   - Race format
-   - LED brightness (0.0–1.0)
-   - Scroll speed
-3. Click **"Download config.json"**
-4. Copy the downloaded `config.json` file into the `pico-display/` directory
-5. Edit `config.json` and add your WiFi credentials:
-   ```json
-   "wifi": {
-     "ssid": "YourNetworkName",
-     "password": "YourWiFiPassword"
-   }
-   ```
+2. Fill in the form: event, track, race format, WiFi network name and password, and display settings
+3. Click **"Download config.json"** — the file is ready to use as-is, no further editing needed
 
 If you don't have the admin portal available, use `config.json.example` as a template:
 
