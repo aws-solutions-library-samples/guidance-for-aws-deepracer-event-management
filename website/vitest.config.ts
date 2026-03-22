@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
     test: {
-        include: ['src/**/*.test.ts'],
+        include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
         exclude: [
             'src/__tests__/graphql-schema-conformance.test.ts',
             'src/__tests__/smoke.test.ts',
