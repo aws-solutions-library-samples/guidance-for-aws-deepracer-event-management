@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Container,
-  ExpandableSection,
   FormField,
   Grid,
   Header,
@@ -257,25 +256,22 @@ export const AdminPicoDisplay: React.FC = () => {
               />
             </FormField>
 
-            <ExpandableSection header={t('pico-display.wifi-config-title')}>
-              <SpaceBetween size="m">
-                <FormField label={t('pico-display.ssid-label')}>
-                  <Input
-                    value={ssid}
-                    placeholder={t('pico-display.ssid-placeholder')}
-                    onChange={({ detail }) => setSsid(detail.value)}
-                  />
-                </FormField>
-                <FormField label={t('pico-display.wifi-password-label')}>
-                  <Input
-                    value={wifiPassword}
-                    placeholder={t('pico-display.wifi-password-placeholder')}
-                    type="password"
-                    onChange={({ detail }) => setWifiPassword(detail.value)}
-                  />
-                </FormField>
-              </SpaceBetween>
-            </ExpandableSection>
+            <FormField label={t('pico-display.ssid-label')}>
+              <Input
+                value={ssid}
+                placeholder={t('pico-display.ssid-placeholder')}
+                onChange={({ detail }) => setSsid(detail.value)}
+              />
+            </FormField>
+
+            <FormField label={t('pico-display.wifi-password-label')}>
+              <Input
+                value={wifiPassword}
+                placeholder={t('pico-display.wifi-password-placeholder')}
+                type="password"
+                onChange={({ detail }) => setWifiPassword(detail.value)}
+              />
+            </FormField>
 
             <Grid gridDefinition={[{ colspan: 3 }, { colspan: 3 }, { colspan: 3 }, { colspan: 3 }]}>
               <FormField label={t('pico-display.brightness-label')}>
