@@ -1,0 +1,170 @@
+<h2>Race display layout — 53×11 Galactic Unicorn</h2>
+<p class="subtitle">53 pixels wide × 11 tall is tight. Which layout works best for the race state?</p>
+
+<style>
+  .gu { display: inline-grid; grid-template-columns: repeat(53, 7px); gap: 1px; background: #0a0a0a; padding: 6px; border-radius: 4px; }
+  .px { width: 7px; height: 7px; border-radius: 50%; background: #1a1a1a; }
+  .r { background: #ff3322; box-shadow: 0 0 3px #ff3322; }
+  .g { background: #33ff44; box-shadow: 0 0 3px #33ff44; }
+  .b { background: #3388ff; box-shadow: 0 0 3px #3388ff; }
+  .w { background: #ffffff; box-shadow: 0 0 3px #ffffff; }
+  .y { background: #ffee22; box-shadow: 0 0 3px #ffee22; }
+  .c { background: #22ffee; box-shadow: 0 0 3px #22ffee; }
+  .o { background: #ff8800; box-shadow: 0 0 3px #ff8800; }
+  .gu-wrap { background: #111; padding: 12px 16px; border-radius: 8px; display: inline-block; }
+  .layout-label { font-family: monospace; font-size: 11px; color: #777; margin-top: 6px; display: block; }
+  .card-image { background: #0a0a0a !important; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 12px; gap: 8px; }
+</style>
+
+<div class="cards">
+
+  <!-- Option A: Single scrolling line, cycling content -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="gu-wrap">
+        <!-- Row 0: red accent bar -->
+        <!-- Rows 1-9: single line of text "02:34  DAVE  3 laps  12.45s" -->
+        <!-- Row 10: red accent bar -->
+        <div class="gu" id="gu-a"></div>
+      </div>
+      <span class="layout-label">← scrolling text cycles through all data →</span>
+    </div>
+    <div class="card-body">
+      <h3>A — Single scrolling line</h3>
+      <p>One line of large-ish text scrolls continuously: <code>⏱ 02:34 · DAVE · 3 laps · best 12.45s · last 13.21s</code>. Simple, readable from a distance. Reset events flash the display red briefly.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Two rows — time top, info bottom -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="gu-wrap">
+        <div class="gu" id="gu-b"></div>
+      </div>
+      <span class="layout-label">top: time remaining  ·  bottom: scrolling racer/laps/best</span>
+    </div>
+    <div class="card-body">
+      <h3>B — Two rows</h3>
+      <p>Top row (5px tall): time remaining, always visible in yellow. Bottom row (5px tall): scrolls through racer name → laps → best lap → last lap. Reset flashes bottom row red.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Pinned left + scrolling right -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="gu-wrap">
+        <div class="gu" id="gu-c"></div>
+      </div>
+      <span class="layout-label">left: laps + resets (static)  ·  right: scrolling time info</span>
+    </div>
+    <div class="card-body">
+      <h3>C — Split: pinned + scrolling</h3>
+      <p>Left ~12px: lap count and reset count always visible (static). Right ~38px: scrolls through racer name, time remaining, best lap, last lap. Reset counter increments live and flashes orange.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Simple pixel font: 5x3 (w x h = 3 rows, 5 cols per char at 5px high using rows 1-5 and 6-10)
+// We'll draw approximate representations
+
+function makeGrid(rows, cols) {
+  const g = [];
+  for(let r=0;r<rows;r++){g.push(new Array(cols).fill('off'));}
+  return g;
+}
+
+function renderGrid(id, grid){
+  const el = document.getElementById(id);
+  grid.forEach(row => row.forEach(px => {
+    const d = document.createElement('div');
+    d.className = 'px ' + (px !== 'off' ? px : '');
+    el.appendChild(d);
+  }));
+}
+
+// ---- Grid A: single scrolling line ----
+const A = makeGrid(11, 53);
+// accent bars
+for(let c=0;c<53;c++){ A[0][c]='r'; A[10][c]='r'; }
+// "02:34" in rows 2-8, cols 1-14 (approx 5x7 digits)
+// digit 0
+const text_A = [
+  [0,1,1,1,0],
+  [1,0,0,0,1],
+  [1,0,0,1,1],
+  [1,0,1,0,1],
+  [1,1,0,0,1],
+  [1,0,0,0,1],
+  [0,1,1,1,0],
+];
+// draw "0" at col 1
+text_A.forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) A[2+ri][1+ci]='y'; }));
+// draw "2"
+const two=[[0,1,1,1,0],[1,0,0,0,1],[0,0,0,0,1],[0,0,1,1,0],[0,1,0,0,0],[1,0,0,0,0],[1,1,1,1,1]];
+two.forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) A[2+ri][7+ci]='y'; }));
+// colon at col 6
+A[3][6]='y'; A[5][6]='y';
+// vertical separator at col 14
+for(let r=3;r<9;r++) A[r][14]='w';
+// "DAVE" starting col 16 - simplified
+[[1,1,1,0,0],[1,0,0,1,0],[1,0,0,0,1],[1,0,0,1,0],[1,1,1,0,0]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) A[3+ri][16+ci]='w'; }));
+// "3 laps" col 23
+[[0,1,1,0],[1,0,0,1],[0,0,1,0],[0,0,0,1],[1,1,1,0]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) A[3+ri][23+ci]='c'; }));
+// "12.34s" col 29 - time
+[[0,1,0,0,0],[1,1,0,1,1],[0,1,0,0,1],[0,1,0,1,0],[1,1,1,1,0]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) A[3+ri][29+ci]='g'; }));
+// trailing dots to indicate scrolling
+A[6][36]='w'; A[6][38]='w'; A[6][40]='w';
+renderGrid('gu-a', A);
+
+// ---- Grid B: two rows ----
+const B = makeGrid(11, 53);
+for(let c=0;c<53;c++){ B[0][c]='r'; B[10][c]='r'; }
+// divider at row 5
+for(let c=0;c<53;c++) B[5][c]='b';
+// top row: "TIME 02:34" in yellow rows 1-4
+// "TIME"
+[[1,1,1],[1,0,0],[1,1,0],[1,0,0],[1,0,0]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) B[1+ri][1+ci]='y'; }));
+[[1,1,1],[0,1,0],[0,1,0],[0,1,0],[0,1,0]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) B[1+ri][5+ci]='y'; }));
+[[1,0,1],[1,0,1],[1,1,1],[1,0,1],[1,0,1]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) B[1+ri][9+ci]='y'; }));
+[[1,0,1],[1,0,1],[1,1,1],[0,0,1],[0,0,1]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) B[1+ri][13+ci]='y'; }));
+// "02:34"
+B[1][18]='y';B[1][19]='y';B[2][17]='y';B[2][20]='y';B[3][17]='y';B[3][20]='y';B[4][18]='y';B[4][19]='y';
+B[1][22]='y';B[1][23]='y';B[1][24]='y';
+B[2][24]='y';B[3][22]='y';B[3][23]='y';B[3][24]='y';B[4][22]='y';
+B[2][26]='y';B[4][26]='y'; // colon dots
+B[1][28]='y';B[1][29]='y';B[1][30]='y';B[2][30]='y';B[3][28]='y';B[3][29]='y';B[3][30]='y';B[4][28]='y';B[4][29]='y';B[4][30]='y';
+// bottom row: "DAVE 12.45s" in white/green rows 6-9
+[[1,1,0],[1,0,1],[1,1,0],[1,0,1],[1,1,0]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) B[6+ri][1+ci]='w'; }));
+[[1,1,1],[1,0,0],[1,1,0],[1,0,0],[1,1,1]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) B[6+ri][5+ci]='w'; }));
+B[6][10]='g';B[7][10]='g';B[8][10]='g';B[9][10]='g';B[7][11]='g';B[8][11]='g';B[9][11]='g';B[9][12]='g';
+[[1,0,1],[1,0,1],[1,1,1],[0,0,1],[0,0,1]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) B[6+ri][14+ci]='g'; }));
+B[8][17]='g';
+[[1,0,1],[1,0,1],[0,1,0],[1,0,1],[1,0,1]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) B[6+ri][19+ci]='g'; }));
+renderGrid('gu-b', B);
+
+// ---- Grid C: pinned left + scrolling right ----
+const C = makeGrid(11, 53);
+for(let c=0;c<53;c++){ C[0][c]='r'; C[10][c]='r'; }
+// vertical divider at col 13
+for(let r=1;r<10;r++) C[r][13]='b';
+// left: "3L" (laps) rows 1-5 cols 1-6
+C[1][2]='c';C[2][1]='c';C[2][2]='c';C[3][2]='c';C[4][2]='c';C[5][1]='c';C[5][2]='c';C[5][3]='c';
+C[1][5]='c';C[1][6]='c';C[2][4]='c';C[3][4]='c';C[3][5]='c';C[4][4]='c';C[4][6]='c';C[5][4]='c';C[5][5]='c';C[5][6]='c';
+// left: "2R" (resets) rows 6-10 cols 1-6
+C[7][2]='o';C[7][3]='o';C[8][1]='o';C[9][1]='o';C[9][2]='o';C[9][3]='o';C[8][3]='o';
+C[7][5]='o';C[7][6]='o';C[8][4]='o';C[8][6]='o';C[9][4]='o';C[9][5]='o';C[9][6]='o';
+// right: scrolling "02:34 DAVE" cols 15-52
+[[0,1,1],[1,0,0],[0,1,0],[0,0,1],[1,1,0]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) C[2+ri][15+ci]='y'; }));
+C[3][18]='y';C[5][18]='y';
+[[0,1,1],[1,0,0],[0,1,0],[0,0,1],[1,1,1]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) C[2+ri][20+ci]='y'; }));
+// space then DAVE
+[[1,1,0],[1,0,1],[1,1,0],[1,0,1],[1,1,0]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) C[2+ri][27+ci]='w'; }));
+[[1,1,1],[1,0,0],[1,1,0],[1,0,0],[1,1,1]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) C[2+ri][31+ci]='w'; }));
+[[1,0,1],[1,0,1],[1,1,1],[1,0,1],[1,0,1]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) C[2+ri][35+ci]='w'; }));
+[[1,0,1],[1,0,1],[1,1,1],[0,0,1],[0,0,1]].forEach((row,ri)=>row.forEach((px,ci)=>{ if(px) C[2+ri][39+ci]='w'; }));
+// dots
+C[5][44]='w';C[5][46]='w';C[5][48]='w';
+renderGrid('gu-c', C);
+</script>

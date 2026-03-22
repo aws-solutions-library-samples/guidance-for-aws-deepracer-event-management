@@ -1,0 +1,160 @@
+<h2>Which Unicorn display are you using?</h2>
+<p class="subtitle">Each variant has a different LED matrix size — this shapes what we can show and how.</p>
+
+<style>
+  .led-grid { display: inline-grid; gap: 2px; background: #111; padding: 8px; border-radius: 6px; }
+  .led { width: 8px; height: 8px; border-radius: 50%; background: #222; }
+  .led.on-r { background: #ff4444; box-shadow: 0 0 4px #ff4444; }
+  .led.on-g { background: #44ff44; box-shadow: 0 0 4px #44ff44; }
+  .led.on-b { background: #4488ff; box-shadow: 0 0 4px #4488ff; }
+  .led.on-w { background: #ffffff; box-shadow: 0 0 4px #ffffff; }
+  .led.on-y { background: #ffee44; box-shadow: 0 0 4px #ffee44; }
+  .display-label { font-size: 11px; color: #888; margin-top: 6px; text-align: center; font-family: monospace; }
+  .card-image { background: #0a0a0a !important; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; min-height: 180px; }
+</style>
+
+<div class="cards">
+
+  <div class="card" data-choice="galactic" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <!-- Galactic Unicorn: 53x11 — simulated with reduced scale -->
+      <div class="led-grid" style="grid-template-columns: repeat(53, 6px); gap: 1.5px;">
+        <!-- Row 1: blank -->
+        <script>
+          // Generate 53x11 grid with some text pixels lit
+          // "P1 DAVE 12.34s" approximation in row data
+          const rows = 11, cols = 53;
+          const lit = new Set();
+          // Accent bar top
+          for(let c=0;c<53;c++) lit.add(`0,${c}`);
+          // P glyph col 1-4, row 2-8
+          [2,3,4,5,6,7,8].forEach(r=>{lit.add(`${r},1`);});
+          [2,3].forEach(r=>{lit.add(`${r},2`);lit.add(`${r},3`);lit.add(`${r},4`);});
+          lit.add('5,2');lit.add('5,3');lit.add('5,4');
+          // 1 glyph col 6-7
+          [2,3,4,5,6,7,8].forEach(r=>lit.add(`${r},6`));
+          // separator
+          // D glyph col 9-13
+          [2,3,4,5,6,7,8].forEach(r=>lit.add(`${r},9`));
+          lit.add('2,10');lit.add('2,11');lit.add('3,12');lit.add('4,12');lit.add('5,12');lit.add('6,11');lit.add('7,10');lit.add('8,10');
+          // Time "12.34" col 20-40
+          [3,4,5,6,7].forEach(r=>{lit.add(`${r},20`);lit.add(`${r},21`);lit.add(`${r},27`);lit.add(`${r},28`);});
+          lit.add('2,22');lit.add('8,22');lit.add('2,25');lit.add('5,25');lit.add('8,25');
+          // Accent bar bottom
+          for(let c=0;c<53;c++) lit.add(`10,${c}`);
+
+          for(let r=0;r<rows;r++){
+            for(let c=0;c<cols;c++){
+              const k=`${r},${c}`;
+              let cls='led';
+              if(r===0||r===10) cls+=' on-r';
+              else if(lit.has(k)) cls+=' on-w';
+              document.write(`<div class="${cls}"></div>`);
+            }
+          }
+        </script>
+      </div>
+      <div class="display-label">53 × 11 LEDs — landscape strip</div>
+    </div>
+    <div class="card-body">
+      <h3>Galactic Unicorn</h3>
+      <p>Wide landscape strip — ideal for scrolling text, leaderboard ticker, and lap time display. Best for mounting along a barrier or desk edge. Limited to ~2 lines of content at once.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="cosmic" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <!-- Cosmic Unicorn: 32x32 -->
+      <div class="led-grid" style="grid-template-columns: repeat(32, 7px); gap: 1.5px;">
+        <script>
+          const rows2=32,cols2=32;
+          const lit2=new Set();
+          // Top bar
+          for(let c=0;c<32;c++) lit2.add(`0,${c}`);
+          for(let c=0;c<32;c++) lit2.add(`1,${c}`);
+          // "P1" row 3-7 col 1-6
+          [3,4,5,6,7].forEach(r=>lit2.add(`${r},1`));
+          [3,4].forEach(r=>{[2,3,4].forEach(c=>lit2.add(`${r},${c}`))});
+          lit2.add('5,2');lit2.add('5,3');lit2.add('5,4');
+          [3,4,5,6,7].forEach(r=>lit2.add(`${r},6`));
+          // "DAVE" row 10-14
+          [10,11,12,13,14].forEach(r=>lit2.add(`${r},1`));
+          [10,11,12,13,14].forEach(r=>lit2.add(`${r},7`));
+          [10].forEach(r=>{for(let c=2;c<=6;c++)lit2.add(`${r},${c}`)});
+          [14].forEach(r=>{for(let c=2;c<=6;c++)lit2.add(`${r},${c}`)});
+          // Lap time row 17-21
+          [17,18,19,20,21].forEach(r=>{[1,2,3,4].forEach(c=>lit2.add(`${r},${c}`))});
+          // Time value
+          for(let c=6;c<=14;c++) lit2.add(`17,${c}`);
+          for(let c=6;c<=14;c++) lit2.add(`21,${c}`);
+          [17,18,19,20,21].forEach(r=>lit2.add(`${r},6`));
+          [17,18,19,20,21].forEach(r=>lit2.add(`${r},14`));
+          // Separator
+          for(let c=0;c<32;c++) lit2.add(`15,${c}`);
+          // Bottom bar
+          for(let c=0;c<32;c++) lit2.add(`30,${c}`);
+          for(let c=0;c<32;c++) lit2.add(`31,${c}`);
+
+          for(let r=0;r<rows2;r++){
+            for(let c=0;c<cols2;c++){
+              const k=`${r},${c}`;
+              let cls='led';
+              if(r<=1||r>=30) cls+=' on-r';
+              else if(r===15) cls+=' on-b';
+              else if(k.startsWith('3,')||k.startsWith('4,')||k.startsWith('5,')||k.startsWith('6,')||k.startsWith('7,')) {
+                if(lit2.has(k)) cls+=' on-y';
+              }
+              else if(lit2.has(k)) cls+=' on-w';
+              document.write(`<div class="${cls}"></div>`);
+            }
+          }
+        </script>
+      </div>
+      <div class="display-label">32 × 32 LEDs — square panel</div>
+    </div>
+    <div class="card-body">
+      <h3>Cosmic Unicorn</h3>
+      <p>Square panel — fits 4–5 lines of content. Can show position, racer name, current lap time, and best lap simultaneously. Great all-rounder for a race display.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="stellar" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <!-- Stellar Unicorn: 16x16 -->
+      <div class="led-grid" style="grid-template-columns: repeat(16, 10px); gap: 2px;">
+        <script>
+          const rows3=16,cols3=16;
+          const lit3=new Set();
+          for(let c=0;c<16;c++) lit3.add(`0,${c}`);
+          [2,3,4,5,6].forEach(r=>lit3.add(`${r},1`));
+          [2,3].forEach(r=>{[2,3,4].forEach(c=>lit3.add(`${r},${c}`))});
+          lit3.add('4,2');lit3.add('4,3');lit3.add('4,4');
+          [2,3,4,5,6].forEach(r=>lit3.add(`${r},6`));
+          for(let c=0;c<16;c++) lit3.add(`8,${c}`);
+          [10,11,12,13,14].forEach(r=>lit3.add(`${r},1`));
+          [10,11,12,13,14].forEach(r=>lit3.add(`${r},6`));
+          for(let c=2;c<=5;c++){lit3.add(`10,${c}`);lit3.add(`14,${c}`);}
+          for(let c=0;c<16;c++) lit3.add(`15,${c}`);
+
+          for(let r=0;r<rows3;r++){
+            for(let c=0;c<cols3;c++){
+              const k=`${r},${c}`;
+              let cls='led';
+              if(r===0||r===15) cls+=' on-r';
+              else if(r===8) cls+=' on-b';
+              else if(r<=6&&lit3.has(k)) cls+=' on-y';
+              else if(lit3.has(k)) cls+=' on-w';
+              document.write(`<div class="${cls}"></div>`);
+            }
+          }
+        </script>
+      </div>
+      <div class="display-label">16 × 16 LEDs — compact square</div>
+    </div>
+    <div class="card-body">
+      <h3>Stellar Unicorn</h3>
+      <p>Compact square — tight pixel space, only 2–3 short data items visible at once. Best for simple status indicators or a single lap time. Challenging for names.</p>
+    </div>
+  </div>
+
+</div>

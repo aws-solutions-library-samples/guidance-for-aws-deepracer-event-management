@@ -177,8 +177,7 @@ async def display_task(display, state, config):
             continue
 
         # --- Race finished flash ---
-        # Note: "RACE_FINSIHED" is the correct spelling in the DREM AppSync schema
-        if race and race.get("status") in ("RACE_FINSIHED", "RACE_SUBMITTED"):
+        if race and race.get("status") in ("RACE_FINISHED", "RACE_SUBMITTED"):
             best = race.get("fastest_lap_ms")
             if best is not None:
                 flash_text = format_s(best)
