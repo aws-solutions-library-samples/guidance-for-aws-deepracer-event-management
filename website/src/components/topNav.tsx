@@ -25,6 +25,7 @@ import { AdminHome } from '../admin/home';
 import { EditRace } from '../admin/race-admin/pages/editRace';
 import { RaceAdmin } from '../admin/race-admin/raceAdmin';
 import { AdminTimerActivation } from '../admin/timerActivation';
+import { AdminPicoDisplay } from '../admin/picoDisplay';
 import { UploadToCarStatus } from '../admin/uploadToCarStatus';
 import { ProfileHome } from '../admin/user-profile/profile';
 import { CreateUser } from '../admin/users/createUser';
@@ -110,6 +111,11 @@ const operatorRoutes: ReactElement[] = [
     key="admin-timer-activation"
     path="/admin/timer_activation"
     element={<AdminTimerActivation />}
+  />,
+  <Route
+    key="admin-pico-display"
+    path="/admin/pico_display"
+    element={<AdminPicoDisplay />}
   />,
   <Route key="admin-timekeeper" path="/admin/timekeeper" element={<Timekeeper />} />,
   <Route
@@ -270,6 +276,12 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
               type: 'link',
               text: t('topnav.timer-activation'),
               href: '/admin/timer_activation',
+            },
+            {
+              type: 'link',
+              text: t('topnav.pico-display'),
+              info: <Badge color="blue">{t('topnav.beta')}</Badge>,
+              href: '/admin/pico_display',
             },
           ],
         },
