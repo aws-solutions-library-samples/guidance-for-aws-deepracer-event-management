@@ -15,6 +15,8 @@ const FORM = {
   scrollSpeed: 40,
   pollInterval: 30,
   topN: 5,
+  ssid: 'TestNetwork',
+  wifiPassword: 'TestPassword',
 };
 
 describe('generateConfig', () => {
@@ -51,10 +53,10 @@ describe('generateConfig', () => {
     ]);
   });
 
-  it('wifi block contains placeholder values', () => {
+  it('wifi block uses form ssid and password', () => {
     const cfg = generateConfig(CONNECTION, FORM);
-    expect(cfg.wifi.ssid).toBe('YourNetworkName');
-    expect(cfg.wifi.password).toBe('YourWiFiPassword');
+    expect(cfg.wifi.ssid).toBe('TestNetwork');
+    expect(cfg.wifi.password).toBe('TestPassword');
   });
 
   it('average race_format is accepted', () => {
