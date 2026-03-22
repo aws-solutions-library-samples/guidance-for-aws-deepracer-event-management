@@ -297,9 +297,66 @@ Both queries use **API_KEY** authentication (`x-api-key` header for HTTP; base64
 
 ---
 
+## DREM Companion Page
+
+A page in the DREM admin portal that surfaces the information needed to configure a Pico display and lets the operator download a ready-to-use `config.json`. Follows the same pattern as the Timer Activation and Car Activation pages.
+
+### Location in the portal
+
+- **Route:** `/admin/pico_display`
+- **File:** `website/src/admin/picoDisplay.tsx`
+- **Nav group:** Device Management — alongside Car Activation and Timer Activation
+- **Nav label:** `Pico LED Display` with a `Beta` badge (`<Badge color="blue">Beta</Badge>`)
+
+### API key availability
+
+The AppSync API key is currently only written to the leaderboard's `config.json`. It must also be added to the main website's Amplify config so the admin page can read it:
+
+1. Update `scripts/generate_amplify_config_cfn.py` to read `appsyncApiKey` from `cfn.outputs` and write it to `website/src/config.json` as `aws_appsync_apiKey`
+2. The page then reads it via the existing `awsconfig` import
+
+### Page layout
+
+The page has two containers, matching the style of other activation pages.
+
+**Container 1 — Connection details**
+
+Read-only fields populated from `awsconfig` (endpoint, region, API key). Each field has a copy-to-clipboard button.
+
+| Field | Source |
+|-------|--------|
+| AppSync Endpoint | `awsconfig.aws_appsync_graphqlEndpoint` |
+| Region | `awsconfig.aws_appsync_region` |
+| API Key | `awsconfig.aws_appsync_apiKey` |
+
+**Container 2 — Generate config**
+
+A form the operator fills in before downloading. Pre-populated from the event store where available.
+
+| Field | Type | Source / Default |
+|-------|------|-----------------|
+| Event | Select | Event selector using `eventsStore`; required |
+| Track | Select | Tracks from the selected event; required |
+| Race Format | Select (`fastest` / `average`) | Defaults to `fastest` |
+| Brightness | Number (0.0–1.0) | Default `0.5` |
+| Scroll Speed (px/s) | Number | Default `40` |
+| Leaderboard Poll Interval (s) | Number | Default `30` |
+| Leaderboard Top N | Number | Default `5` |
+
+The wifi section (`ssid` / `password`) is intentionally excluded — the operator enters those directly on the Pico before deploying.
+
+**Download config.json** button — generates `config.json` client-side from the form values and the connection details, then triggers a browser download. No server round-trip needed.
+
+**Get the code** section — a link to the `pico-display/` directory in the GitHub repository, with brief instructions (clone or download zip, copy `config.json` into the directory, flash to Pico with Thonny).
+
+### i18n
+
+Add keys for all new strings in `website/src/i18n/` following the existing pattern (en only for now; other languages can follow).
+
+---
+
 ## Future Work
 
-- **DREM config generator** — admin UI page that generates and downloads a pre-filled `config.json` for the Pico
 - **`race_format` from event data** — derive fastest/average from AppSync event rather than config
 - **Additional Unicorn variants** — Cosmic Unicorn (32×32) and Stellar Unicorn (16×16) support with alternative display layouts
 - **OTA config** — Pico polls a known URL for config updates, enabling remote reconfiguration without USB access
