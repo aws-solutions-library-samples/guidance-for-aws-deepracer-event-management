@@ -37,6 +37,7 @@ SUBSCRIPTION_QUERY = (
     " countryCode } }"
 )
 
+# Note: "RACE_FINSIHED" is the correct spelling in the DREM AppSync schema
 RACE_STATUSES = {"READY_TO_START", "RACE_IN_PROGRESS", "RACE_PAUSED", "RACE_FINSIHED", "RACE_SUBMITTED"}
 
 
@@ -154,6 +155,7 @@ def _handle_overlay(overlay, state, display):
         state.race = None
         return
 
+    # Note: "RACE_FINSIHED" is the correct spelling in the DREM AppSync schema
     if status in ("READY_TO_START", "RACE_IN_PROGRESS", "RACE_PAUSED", "RACE_FINSIHED"):
         state.race = derive_race_state(overlay)
 
