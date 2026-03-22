@@ -76,9 +76,17 @@ A single shared `State` object (plain Python object — no locking required on s
 }
 ```
 
+**Validation rules (enforced by `config.py` — any failure halts with `CONFIG ERROR`):**
+- `event.event_id` — required
+- `event.track_id` — required; sent as the `trackId` variable in the subscription (may be omitted from the query to receive all tracks, but the config field is mandatory to avoid ambiguity)
+- `event.race_format` — required; must be exactly `"fastest"` or `"average"`; any other value is a fatal config error
+- `appsync.endpoint`, `appsync.api_key`, `appsync.region` — all required
+
 **Notes:**
 - `race_items` controls which data fields appear in the race scroll and their order. Removing an item from the list drops it entirely. Items are separated by a `·` divider on the display.
-- `race_format` is a config-time setting for now. A future follow-on will derive it from AppSync event data directly.
+- `race_format` controls leaderboard sort order only: `"fastest"` sorts by fastest single lap time, `"average"` sorts by average lap time. The idle ticker always displays `fastest_lap_ms` regardless of format.
+- `scroll_speed` is in pixels per second — higher values scroll faster. 40 is a comfortable default for race-side viewing distance.
+- `leaderboard_top_n` controls how many entries to show in the idle ticker. Filtering is client-side; the API returns all entries and the Pico takes the top N after sorting.
 - A future DREM UI feature will allow generating `config.json` from the DREM admin interface, eliminating manual file editing.
 
 ---
@@ -87,19 +95,27 @@ A single shared `State` object (plain Python object — no locking required on s
 
 ### Idle — cycles on a 10s timer between:
 
-1. **Branding screen** — event name centred on the display, static or slow brightness pulse
-2. **Leaderboard ticker** — scrolls top N racers:
+1. **Branding screen** — event name centred on the display, static or slow brightness pulse. Uses `State.event_name` when non-None; falls back to `State.leaderboard_title` (from `getLeaderboard` config response) before the first subscription message arrives. `State.event_name` is initialised to `None` at boot.
+2. **Leaderboard ticker** — scrolls top N racers, always showing fastest lap time:
    ```
-   #1 DAVE 12.34s  ·  #2 ALICE 13.01s  ·  #3 BOB 14.22s →
+   #1 DAVE 12.345s  ·  #2 ALICE 13.012s  ·  #3 BOB 14.220s →
    ```
 
-Transition to race mode is triggered when `raceStatus` transitions to `READY_TO_START`, `RACE_IN_PROGRESS`, or `RACE_PAUSED`.
+**Status transitions:**
+
+| Incoming `raceStatus` | Current mode | Action |
+|----------------------|--------------|--------|
+| `READY_TO_START`, `RACE_IN_PROGRESS`, `RACE_PAUSED` | Idle | Switch to Race mode |
+| `READY_TO_START`, `RACE_IN_PROGRESS`, `RACE_PAUSED` | Race | Stay in Race mode (update data) |
+| `RACE_FINSIHED` | Race | Flash best lap 5s (green), then return to Idle |
+| `RACE_SUBMITTED` | Race | Flash `State.race["fastest_lap_ms"]` 5s (green), then return to Idle. If `fastest_lap_ms` is None (RACE_FINSIHED was never received), skip the flash and return directly to Idle. |
+| `NO_RACER_SELECTED` | Any | Return to Idle immediately; clear `State.race` |
 
 ### Race — single scrolling line
 
 Built from the configured `race_items` list, e.g.:
 ```
-⏱ 02:34  ·  3 laps  ·  best 12.45s  ·  last 13.21s  ·  2 resets →
+⏱ 02:34  ·  3 laps  ·  best 12.345s  ·  last 13.210s  ·  2 resets →
 ```
 
 **Colour coding:**
@@ -112,9 +128,7 @@ Built from the configured `race_items` list, e.g.:
 | Last lap | White |
 | Resets | Orange |
 
-**Reset flash** — when the `resets` count increments, the display flashes orange for 1–2 scroll cycles before resuming normal scroll.
-
-**Race finished** — `RACE_FINISHED` status triggers a 5-second flash of the racer's best lap time in green, then returns to idle mode.
+**Reset flash** — when the `resets` count increments (derived by summing `resets` across all laps), the display flashes orange for 500 ms before resuming normal scroll. This is a fixed wall-clock duration, independent of scroll speed or string length.
 
 ---
 
@@ -127,40 +141,105 @@ leaderboard_task
   → POST to AppSync /graphql endpoint
   → query: getLeaderboard(eventId, trackId)
   → headers: { x-api-key: <api_key> }
-  → parse entries, sort by fastestLapTime (or avgTime for "average" format)
+  → store config.leaderBoardTitle in State.leaderboard_title
+  → parse entries:
+      fastest_lap_ms = int(round(entry["fastestLapTime"])) if entry["fastestLapTime"] else None
+  → sort ascending:
+      "fastest" format: key = fastest_lap_ms (None sorts last)
+      "average" format: key = int(round(entry["avgLapTime"])) if avgLapTime is not None else float("inf")
+  → assign position: 1-based rank in the full sorted list (before slicing)
+  → take top leaderboard_top_n entries (client-side)
   → write to State.leaderboard[]
   → sleep leaderboard_poll_interval seconds, repeat
 ```
 
+**Unit note:** `fastestLapTime` and `avgLapTime` are stored and returned in **milliseconds** (confirmed: the timekeeper stores `laps[].time = getCurrentTimeInMs()` and the leaderboard Lambda derives these directly from `laps[].time`). Divide by 1000 for display.
+
 ### Race (WebSocket subscription)
+
+AWS AppSync real-time subscriptions use the **`graphql-ws`** WebSocket subprotocol (not `graphql-transport-ws`). Message types are `connection_init` / `connection_ack` / `start` / `data` / `ka` (keep-alive). For API_KEY auth, the connection URL includes base64url-encoded `header` and `payload` query parameters:
+
+```
+wss://xxxxx.appsync-realtime-api.<region>.amazonaws.com/graphql
+  ?header=<base64url({"host":"xxxxx.appsync-api.<region>.amazonaws.com","x-api-key":"<api_key>"})>
+  &payload=<base64url({})>
+```
+
+Connection sequence:
+1. Open WebSocket with `Sec-WebSocket-Protocol: graphql-ws`
+2. Send `connection_init`: `{"type": "connection_init"}`
+3. Await `connection_ack`
+4. Send `start` to begin the subscription:
+   ```json
+   {
+     "id": "1",
+     "type": "start",
+     "payload": {
+       "query": "subscription OnNewOverlayInfo($eventId: ID!, $trackId: ID) { onNewOverlayInfo(eventId: $eventId, trackId: $trackId) { eventId eventName trackId username raceStatus timeLeftInMs currentLapTimeInMs laps { lapId time isValid resets } countryCode } }",
+       "variables": { "eventId": "<event_id>", "trackId": "<track_id>" }
+     }
+   }
+   ```
+5. Process incoming `data` messages matched by `id`; ignore `ka` messages silently. Extract payload via `message["payload"]["data"]["onNewOverlayInfo"]`.
 
 ```
 race_task
-  → connect wss://xxxxx.appsync-realtime-api.<region>.amazonaws.com/graphql
-  → AppSync WebSocket protocol: header + payload base64-encoded in URL query params
-  → subscribe: onNewOverlayInfo(eventId, trackId)
-  → on message → parse raceStatus, timeLeftInMs, laps[], currentLapTimeInMs, username
-  → write to State.race
-  → on disconnect → exponential backoff reconnect (2s → 4s → 8s → cap 60s)
+  → connect (URL above), subprotocol: graphql-ws
+  → send connection_init, await connection_ack
+  → send start message (see above)
+  → on data message:
+      → extract raceStatus, timeLeftInMs, currentLapTimeInMs, laps[], username, eventName
+      → if eventName is non-empty string: State.event_name = eventName
+      → dispatch on raceStatus:
+          NO_RACER_SELECTED  → clear State.race, signal idle
+          RACE_FINSIHED      → derive final data, write to State.race, signal race-finished flash
+          RACE_SUBMITTED     → signal race-submitted flash (use existing State.race["fastest_lap_ms"])
+          otherwise          → derive and write to State.race
+      → derivations (for READY_TO_START / RACE_IN_PROGRESS / RACE_PAUSED / RACE_FINSIHED):
+          resets = sum(lap["resets"] for lap in laps)  # resets is Int per lap
+          valid_times = [lap["time"] for lap in laps if lap["isValid"] is True]
+          fastest_lap_ms = int(round(min(valid_times))) if valid_times else None
+          valid_laps_in_order = [lap for lap in laps if lap["isValid"] is True]
+          # laps[] is in chronological insertion order as sent by the timekeeper; no reordering occurs
+          last_lap_ms = int(round(valid_laps_in_order[-1]["time"])) if valid_laps_in_order else None
+          time_left_ms = int(timeLeftInMs)  # Float schema type, ms value
+  → on disconnect:
+      → retain State.race (display continues showing last known data)
+      → if no data received for >10s: show RECONNECTING... indicator
+      → exponential backoff reconnect: 2s → 4s → 8s → cap 60s
 ```
+
+**Unit note:** `laps[].time` is in **milliseconds** (confirmed: timekeeper stores `time = getCurrentTimeInMs()`). `timeLeftInMs` and `currentLapTimeInMs` are in milliseconds despite being `Float` schema type. No multiplication needed — cast to `int()` only.
 
 ### Shared State object
 
 ```python
+# Initialised at boot:
+State.event_name = None              # populated from eventName in subscription; None until first non-empty value
+State.leaderboard_title = ""         # populated from getLeaderboard config.leaderBoardTitle on first poll
+State.leaderboard = []
+State.race = None                    # None = not in a race; set to dict when race active
+
+# State.race when a race is active:
 State.race = {
-    "status": "RACE_IN_PROGRESS",   # or READY_TO_START / RACE_PAUSED / RACE_FINISHED
+    "status": "RACE_IN_PROGRESS",   # NO_RACER_SELECTED / READY_TO_START / RACE_IN_PROGRESS / RACE_PAUSED / RACE_FINSIHED / RACE_SUBMITTED
     "username": "DAVE",
-    "time_left_ms": 154000,
-    "laps": [...],                  # full laps array from subscription
-    "resets": 2,                    # total resets across all laps
-    "fastest_lap_ms": 12450,
-    "last_lap_ms": 13210,
+    "time_left_ms": 154000,         # int ms, from timeLeftInMs (Float in schema, value is ms)
+    "laps": [...],                  # full laps array; each lap: lapId, time (float ms), isValid (bool), resets (int)
+    "resets": 2,                    # derived: sum of lap["resets"] across all laps
+    "fastest_lap_ms": 12450,        # derived: int(round(min valid lap time)); None if no valid laps yet
+    "last_lap_ms": 13210,           # derived: int(round(last valid lap by chronological array position)); None if no valid laps yet
 }
+
+# State.leaderboard entries:
 State.leaderboard = [
-    { "username": "DAVE", "fastest_lap_ms": 12450, "position": 1 },
+    {
+        "username": "DAVE",
+        "fastest_lap_ms": 12450,    # int(round(fastestLapTime)); None if no valid laps
+        "position": 1,              # 1-based rank in full sorted board before top_n slice
+    },
     ...
 ]
-State.event_name = "DREM Cup 2026"
 ```
 
 ---
@@ -171,9 +250,10 @@ State.event_name = "DREM Cup 2026"
 |----------|-----------|
 | WiFi unavailable on boot | Retry up to 10× with 2s delay; display `CONNECTING...` in white |
 | WiFi drops mid-session | Display `NO WIFI` in red; retry on 5s backoff; resume when reconnected |
-| WebSocket disconnected | Silent reconnect with exponential backoff; display `RECONNECTING...` if no data for >10s |
+| WebSocket disconnected | Retain stale `State.race`; show `RECONNECTING...` if no data for >10s; exponential backoff reconnect |
 | HTTP poll fails | Skip update; retain stale leaderboard; retry next interval |
 | `config.json` missing/malformed | Display `CONFIG ERROR` in red; halt — fail loudly |
+| Unknown `race_format` value | Display `CONFIG ERROR` in red; halt |
 | Unexpected crash | Display exception on LEDs; hard-reset after 10s for self-recovery |
 
 ---
@@ -182,7 +262,7 @@ State.event_name = "DREM Cup 2026"
 
 **Leaderboard query** (`getLeaderboard`):
 ```graphql
-query GetLeaderboard($eventId: ID!, $trackId: ID!) {
+query GetLeaderboard($eventId: ID!, $trackId: ID) {
   getLeaderboard(eventId: $eventId, trackId: $trackId) {
     config { leaderBoardTitle }
     entries {
@@ -195,6 +275,8 @@ query GetLeaderboard($eventId: ID!, $trackId: ID!) {
   }
 }
 ```
+
+`fastestLapTime` and `avgLapTime` are floats in **milliseconds** (e.g. `12450.0` = 12.450 s). `avgLapTime` is nullable — sort `None` entries to the end. Store as `int(round(...))`.
 
 **Race subscription** (`onNewOverlayInfo`):
 ```graphql
@@ -209,7 +291,9 @@ subscription OnNewOverlayInfo($eventId: ID!, $trackId: ID) {
 }
 ```
 
-Both use **API_KEY** authentication (`x-api-key` header for HTTP; base64-encoded in WebSocket URL params).
+`laps[].time` is a float in **milliseconds**. `timeLeftInMs` and `currentLapTimeInMs` are floats in **milliseconds** despite the `Float` GraphQL schema type — cast to `int()`, no conversion needed.
+
+Both queries use **API_KEY** authentication (`x-api-key` header for HTTP; base64url-encoded in the WebSocket URL `header` query param for subscriptions).
 
 ---
 
