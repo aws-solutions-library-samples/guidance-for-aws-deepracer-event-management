@@ -325,7 +325,7 @@ export class RaceManager extends Construct {
         'READY_TO_START',
         'RACE_IN_PROGRESS',
         'RACE_PAUSED',
-        'RACE_FINSIHED',
+        'RACE_FINISHED',
         'RACE_SUBMITTED',
       ],
     });

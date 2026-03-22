@@ -37,8 +37,7 @@ SUBSCRIPTION_QUERY = (
     " countryCode } }"
 )
 
-# Note: "RACE_FINSIHED" is the correct spelling in the DREM AppSync schema
-RACE_STATUSES = {"READY_TO_START", "RACE_IN_PROGRESS", "RACE_PAUSED", "RACE_FINSIHED", "RACE_SUBMITTED"}
+RACE_STATUSES = {"READY_TO_START", "RACE_IN_PROGRESS", "RACE_PAUSED", "RACE_FINISHED", "RACE_SUBMITTED"}
 
 
 def _build_ws_url(config):
@@ -155,11 +154,10 @@ def _handle_overlay(overlay, state, display):
         state.race = None
         return
 
-    # Note: "RACE_FINSIHED" is the correct spelling in the DREM AppSync schema
-    if status in ("READY_TO_START", "RACE_IN_PROGRESS", "RACE_PAUSED", "RACE_FINSIHED"):
+    if status in ("READY_TO_START", "RACE_IN_PROGRESS", "RACE_PAUSED", "RACE_FINISHED"):
         state.race = derive_race_state(overlay)
 
-    if status == "RACE_FINSIHED":
+    if status == "RACE_FINISHED":
         # display_task polls state.race["status"] and triggers the flash
         pass
 
