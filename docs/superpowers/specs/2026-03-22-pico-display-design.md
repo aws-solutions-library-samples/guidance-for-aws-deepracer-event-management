@@ -107,8 +107,8 @@ A single shared `State` object (plain Python object — no locking required on s
 |----------------------|--------------|--------|
 | `READY_TO_START`, `RACE_IN_PROGRESS`, `RACE_PAUSED` | Idle | Switch to Race mode |
 | `READY_TO_START`, `RACE_IN_PROGRESS`, `RACE_PAUSED` | Race | Stay in Race mode (update data) |
-| `RACE_FINSIHED` | Race | Flash best lap 5s (green), then return to Idle |
-| `RACE_SUBMITTED` | Race | Flash `State.race["fastest_lap_ms"]` 5s (green), then return to Idle. If `fastest_lap_ms` is None (RACE_FINSIHED was never received), skip the flash and return directly to Idle. |
+| `RACE_FINISHED` | Race | Flash best lap 5s (green), then return to Idle |
+| `RACE_SUBMITTED` | Race | Flash `State.race["fastest_lap_ms"]` 5s (green), then return to Idle. If `fastest_lap_ms` is None (RACE_FINISHED was never received), skip the flash and return directly to Idle. |
 | `NO_RACER_SELECTED` | Any | Return to Idle immediately; clear `State.race` |
 
 ### Race — single scrolling line
@@ -192,10 +192,10 @@ race_task
       → if eventName is non-empty string: State.event_name = eventName
       → dispatch on raceStatus:
           NO_RACER_SELECTED  → clear State.race, signal idle
-          RACE_FINSIHED      → derive final data, write to State.race, signal race-finished flash
+          RACE_FINISHED      → derive final data, write to State.race, signal race-finished flash
           RACE_SUBMITTED     → signal race-submitted flash (use existing State.race["fastest_lap_ms"])
           otherwise          → derive and write to State.race
-      → derivations (for READY_TO_START / RACE_IN_PROGRESS / RACE_PAUSED / RACE_FINSIHED):
+      → derivations (for READY_TO_START / RACE_IN_PROGRESS / RACE_PAUSED / RACE_FINISHED):
           resets = sum(lap["resets"] for lap in laps)  # resets is Int per lap
           valid_times = [lap["time"] for lap in laps if lap["isValid"] is True]
           fastest_lap_ms = int(round(min(valid_times))) if valid_times else None
@@ -222,7 +222,7 @@ State.race = None                    # None = not in a race; set to dict when ra
 
 # State.race when a race is active:
 State.race = {
-    "status": "RACE_IN_PROGRESS",   # NO_RACER_SELECTED / READY_TO_START / RACE_IN_PROGRESS / RACE_PAUSED / RACE_FINSIHED / RACE_SUBMITTED
+    "status": "RACE_IN_PROGRESS",   # NO_RACER_SELECTED / READY_TO_START / RACE_IN_PROGRESS / RACE_PAUSED / RACE_FINISHED / RACE_SUBMITTED
     "username": "DAVE",
     "time_left_ms": 154000,         # int ms, from timeLeftInMs (Float in schema, value is ms)
     "laps": [...],                  # full laps array; each lap: lapId, time (float ms), isValid (bool), resets (int)

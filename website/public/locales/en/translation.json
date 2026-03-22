@@ -789,7 +789,7 @@
       "status.READY_TO_START": "Ready to start",
       "status.RACE_IN_PROGRESS": "Race running",
       "status.RACE_PAUSED": "Race paused",
-      "status.RACE_FINSIHED": "Race finished",
+      "status.RACE_FINISHED": "Race finished",
       "status.RACE_SUBMITTED": "Race finished",
       "status.undefined": "Not running"
     }

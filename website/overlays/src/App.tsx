@@ -147,7 +147,7 @@ function App() {
       var data = message;
 
       data.paused = data.raceStatus === 'RACE_PAUSED';
-      data.finished = data.raceStatus === 'RACE_FINSIHED';
+      data.finished = data.raceStatus === 'RACE_FINISHED';
       data.running = data.raceStatus === 'RACE_IN_PROGRESS';
 
       if (data.username) {

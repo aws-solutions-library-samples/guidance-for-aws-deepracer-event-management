@@ -822,7 +822,7 @@ SUBSCRIPTION_QUERY = (
     " countryCode } }"
 )
 
-RACE_STATUSES = {"READY_TO_START", "RACE_IN_PROGRESS", "RACE_PAUSED", "RACE_FINSIHED", "RACE_SUBMITTED"}
+RACE_STATUSES = {"READY_TO_START", "RACE_IN_PROGRESS", "RACE_PAUSED", "RACE_FINISHED", "RACE_SUBMITTED"}
 
 
 def _build_ws_url(config):
@@ -939,10 +939,10 @@ def _handle_overlay(overlay, state, display):
         state.race = None
         return
 
-    if status in ("READY_TO_START", "RACE_IN_PROGRESS", "RACE_PAUSED", "RACE_FINSIHED"):
+    if status in ("READY_TO_START", "RACE_IN_PROGRESS", "RACE_PAUSED", "RACE_FINISHED"):
         state.race = derive_race_state(overlay)
 
-    if status == "RACE_FINSIHED":
+    if status == "RACE_FINISHED":
         # display_task polls state.race["status"] and triggers the flash
         pass
 
@@ -1083,7 +1083,7 @@ async def display_task(display, state, config):
             continue
 
         # --- Race finished flash ---
-        if race and race.get("status") in ("RACE_FINSIHED", "RACE_SUBMITTED"):
+        if race and race.get("status") in ("RACE_FINISHED", "RACE_SUBMITTED"):
             best = race.get("fastest_lap_ms")
             if best is not None:
                 flash_text = format_s(best)
