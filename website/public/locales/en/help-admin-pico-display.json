@@ -1,5 +1,5 @@
 {
   "header": "## Pico LED Display",
-  "content": "This page helps you connect a **Raspberry Pi Pico W** with a **Pimoroni Galactic Unicorn** (53×11 LED matrix) to your DREM deployment.\n\n**Connection Details** shows your AppSync endpoint, region, and API key — copy these or use the config generator.\n\n**Generate config.json** creates a pre-filled configuration file for the selected event and track. Download it, add your WiFi credentials, and copy it to the Pico alongside the display code.",
+  "content": "This page helps you connect a **Raspberry Pi Pico W** with a **Pimoroni Galactic Unicorn** (53×11 LED matrix) to your DREM deployment.\n\n**Connection Details** shows your AppSync endpoint, region, and API key — copy these or use the config generator.\n\n**Generate config.json** creates a ready-to-use configuration file. Select your event and track, enter your WiFi network name and password, then click Download. Copy the file to the Pico alongside the display code — no further editing needed.",
   "footer": ""
 }
