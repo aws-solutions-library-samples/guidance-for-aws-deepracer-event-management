@@ -1,0 +1,64 @@
+import { describe, it, expect } from 'vitest';
+import { generateConfig } from './picoDisplay';
+
+const CONNECTION = {
+  endpoint: 'https://xxx.appsync-api.eu-west-1.amazonaws.com/graphql',
+  apiKey: 'da2-abc123',
+  region: 'eu-west-1',
+};
+
+const FORM = {
+  eventId: 'uuid-event-1',
+  trackId: '2',
+  raceFormat: 'fastest' as const,
+  brightness: 0.5,
+  scrollSpeed: 40,
+  pollInterval: 30,
+  topN: 5,
+};
+
+describe('generateConfig', () => {
+  it('populates appsync block from connection details', () => {
+    const cfg = generateConfig(CONNECTION, FORM);
+    expect(cfg.appsync.endpoint).toBe(CONNECTION.endpoint);
+    expect(cfg.appsync.api_key).toBe(CONNECTION.apiKey);
+    expect(cfg.appsync.region).toBe(CONNECTION.region);
+  });
+
+  it('populates event block from form values', () => {
+    const cfg = generateConfig(CONNECTION, FORM);
+    expect(cfg.event.event_id).toBe('uuid-event-1');
+    expect(cfg.event.track_id).toBe('2');
+    expect(cfg.event.race_format).toBe('fastest');
+  });
+
+  it('populates display block with defaults', () => {
+    const cfg = generateConfig(CONNECTION, FORM);
+    expect(cfg.display.brightness).toBe(0.5);
+    expect(cfg.display.scroll_speed).toBe(40);
+    expect(cfg.display.leaderboard_poll_interval).toBe(30);
+    expect(cfg.display.leaderboard_top_n).toBe(5);
+  });
+
+  it('includes all default race_items', () => {
+    const cfg = generateConfig(CONNECTION, FORM);
+    expect(cfg.display.race_items).toEqual([
+      'time_remaining',
+      'laps_completed',
+      'fastest_lap',
+      'last_lap',
+      'resets',
+    ]);
+  });
+
+  it('wifi block contains placeholder values', () => {
+    const cfg = generateConfig(CONNECTION, FORM);
+    expect(cfg.wifi.ssid).toBe('YourNetworkName');
+    expect(cfg.wifi.password).toBe('YourWiFiPassword');
+  });
+
+  it('average race_format is accepted', () => {
+    const cfg = generateConfig(CONNECTION, { ...FORM, raceFormat: 'average' });
+    expect(cfg.event.race_format).toBe('average');
+  });
+});
