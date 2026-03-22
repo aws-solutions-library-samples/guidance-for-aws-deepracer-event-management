@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Container,
+  ExpandableSection,
   FormField,
   Grid,
   Header,
@@ -39,6 +40,8 @@ export interface PicoFormValues {
   scrollSpeed: number;
   pollInterval: number;
   topN: number;
+  ssid: string;
+  wifiPassword: string;
 }
 
 export interface PicoConfig {
@@ -61,8 +64,8 @@ export interface PicoConfig {
 export function generateConfig(conn: PicoConnection, form: PicoFormValues): PicoConfig {
   return {
     wifi: {
-      ssid: 'YourNetworkName',
-      password: 'YourWiFiPassword',
+      ssid: form.ssid,
+      password: form.wifiPassword,
     },
     appsync: {
       endpoint: conn.endpoint,
@@ -117,6 +120,8 @@ export const AdminPicoDisplay: React.FC = () => {
   const [scrollSpeed, setScrollSpeed] = React.useState<string>('40');
   const [pollInterval, setPollInterval] = React.useState<string>('30');
   const [topN, setTopN] = React.useState<string>('5');
+  const [ssid, setSsid] = React.useState<string>('');
+  const [wifiPassword, setWifiPassword] = React.useState<string>('');
 
   const eventOptions = events.map((e) => ({ label: e.eventName, value: e.eventId }));
   const selectedEvent = events.find((e) => e.eventId === selectedEventId);
@@ -138,6 +143,8 @@ export const AdminPicoDisplay: React.FC = () => {
         scrollSpeed: parseInt(scrollSpeed, 10) || 40,
         pollInterval: parseInt(pollInterval, 10) || 30,
         topN: parseInt(topN, 10) || 5,
+        ssid,
+        wifiPassword,
       }
     );
     const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
@@ -250,6 +257,26 @@ export const AdminPicoDisplay: React.FC = () => {
               />
             </FormField>
 
+            <ExpandableSection header={t('pico-display.wifi-config-title')}>
+              <SpaceBetween size="m">
+                <FormField label={t('pico-display.ssid-label')}>
+                  <Input
+                    value={ssid}
+                    placeholder={t('pico-display.ssid-placeholder')}
+                    onChange={({ detail }) => setSsid(detail.value)}
+                  />
+                </FormField>
+                <FormField label={t('pico-display.wifi-password-label')}>
+                  <Input
+                    value={wifiPassword}
+                    placeholder={t('pico-display.wifi-password-placeholder')}
+                    type="password"
+                    onChange={({ detail }) => setWifiPassword(detail.value)}
+                  />
+                </FormField>
+              </SpaceBetween>
+            </ExpandableSection>
+
             <Grid gridDefinition={[{ colspan: 3 }, { colspan: 3 }, { colspan: 3 }, { colspan: 3 }]}>
               <FormField label={t('pico-display.brightness-label')}>
                 <Input value={brightness} onChange={({ detail }) => setBrightness(detail.value)} inputMode="decimal" />
@@ -264,8 +291,6 @@ export const AdminPicoDisplay: React.FC = () => {
                 <Input value={topN} onChange={({ detail }) => setTopN(detail.value)} inputMode="numeric" />
               </FormField>
             </Grid>
-
-            <StatusIndicator type="info">{t('pico-display.wifi-note')}</StatusIndicator>
 
             <Button variant="primary" disabled={!canDownload} onClick={handleDownload}>
               {t('pico-display.download-button')}
