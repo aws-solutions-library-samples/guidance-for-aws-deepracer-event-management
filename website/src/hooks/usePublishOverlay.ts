@@ -6,7 +6,7 @@ export enum RacesStatusEnum {
   READY_TO_START = 'READY_TO_START',
   RACE_IN_PROGRESS = 'RACE_IN_PROGRESS',
   RACE_PAUSED = 'RACE_PAUSED',
-  RACE_FINSIHED = 'RACE_FINSIHED',
+  RACE_FINISHED = 'RACE_FINISHED',
 }
 
 export interface OverlayInfo {
@@ -60,7 +60,7 @@ export const usePublishOverlay = (): [(callback: () => OverlayInfo, interval?: n
         trackId: lastMessage.current.trackId,
         username: lastMessage.current.username,
         userId: lastMessage.current.userId,
-        raceStatus: RacesStatusEnum.RACE_FINSIHED,
+        raceStatus: RacesStatusEnum.RACE_FINISHED,
       };
       SendMutation('updateOverlayInfo', message);
     };
