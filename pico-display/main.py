@@ -32,24 +32,33 @@ async def boot():
 
     state = State()
 
-    await asyncio.gather(
-        display_task(disp_configured, state, cfg),
-        leaderboard_task(cfg, state),
-        race_task(cfg, state, disp_configured),
-        wifi_watch(disp_configured),
-    )
+    try:
+        await asyncio.gather(
+            display_task(disp_configured, state, cfg),
+            leaderboard_task(cfg, state),
+            race_task(cfg, state, disp_configured),
+            wifi_watch(disp_configured),
+        )
+    except Exception as e:
+        import sys
+        try:
+            with open("crash.log", "w") as f:
+                f.write("gather: " + str(type(e)) + ": " + str(e) + "\n")
+                sys.print_exception(e, f)
+        except Exception:
+            pass
+        raise
 
 
 try:
     asyncio.run(boot())
 except Exception as e:
-    # Last-resort crash handler: show exception then reboot
+    # Last-resort crash handler: log exception to file then reboot
+    import sys
     try:
-        from display import Display
-        d = Display()
-        d.show_status(str(e)[:10], (255, 0, 0))
-        import utime
-        utime.sleep(10)
+        with open("crash.log", "w") as f:
+            f.write(str(type(e)) + ": " + str(e) + "\n")
+            sys.print_exception(e, f)
     except Exception:
         pass
     import machine

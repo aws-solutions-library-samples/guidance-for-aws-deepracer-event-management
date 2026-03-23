@@ -556,7 +556,6 @@
     "race-format-average": "Average lap",
     "brightness-label": "Brightness",
     "scroll-speed-label": "Scroll Speed (px/s)",
-    "poll-interval-label": "Leaderboard Poll Interval (s)",
     "top-n-label": "Leaderboard Top N",
     "download-button": "Download config.json",
     "ssid-label": "Network Name (SSID)",
@@ -565,7 +564,11 @@
     "wifi-password-placeholder": "Enter your WiFi password",
     "code-title": "Get the Display Code",
     "code-description": "Clone or download the pico-display/ directory from the DREM GitHub repository, copy your config.json into it, then flash all files to the Pico using Thonny.",
-    "github-link": "View pico-display/ on GitHub"
+    "github-link": "View pico-display/ on GitHub",
+    "debug-label": "Debug mode",
+    "debug-description": "Enables verbose serial output \u2014 connect via Thonny to view logs",
+    "debug-on": "On",
+    "debug-off": "Off"
   },
   "home.breadcrumb": "Home",
   "home.header": "DeepRacer Event Manager",
