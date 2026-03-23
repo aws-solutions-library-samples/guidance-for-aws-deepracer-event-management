@@ -49,6 +49,20 @@ rshell cp pico-display/config.json /pyboard/
 
 After uploading, the app will start automatically on the next power-on.
 
+## Display Behaviour
+
+The display runs a state machine driven by the live `raceStatus` field from AppSync:
+
+| State | Display | Notes |
+|-------|---------|-------|
+| Idle (no race) | Alternates between event name and scrolling leaderboard every 10 s | |
+| `READY_TO_START` | **READY?** in yellow | |
+| `RACE_IN_PROGRESS` | Countdown timer (MM:SS) in white, counting down smoothly between AppSync updates | Green double-flash on each completed lap; yellow double-flash on each reset |
+| `RACE_PAUSED` | **PAUSED** in red | |
+| `RACE_FINISHED` / `RACE_SUBMITTED` | Chequered flag animation (3.2 s), then results scroll (name · laps · best lap · position) × 2, then returns to leaderboard idle | |
+
+The top-left pixel shows connection health: **green** = connected, **orange** = no data for >90 s, **red** = reconnecting.
+
 ## Troubleshooting
 
 The display shows status messages during startup and operation. Common messages and solutions:
@@ -59,72 +73,138 @@ The display shows status messages during startup and operation. Common messages 
 | `NO WIFI` | Cannot connect to WiFi network | Verify SSID and password in `config.json`. Check WiFi signal strength. |
 | `RECONNECTING...` | Lost connection to DREM AppSync API | Normal operation; app will reconnect automatically. Check internet connection. |
 
-To debug further, connect to the Pico's serial console via Thonny (View → Serial) to see detailed logs.
+To debug further, connect to the Pico's serial console via Thonny (View → Serial) to see detailed logs. Enable `"debug": true` in `config.json` for verbose output.
 
-## Display Configuration Reference
+### WiFi status codes
 
-Edit the `display` section of `config.json` to customize behavior:
+When debug mode is enabled the WiFi connection log includes a numeric `status=` code on each attempt:
+
+| Code | Meaning | Action |
+|------|---------|--------|
+| `0` | Idle / not started | Normal during initial setup |
+| `1` | Connecting | Normal — waiting for association |
+| `2` | Wrong password | Check `wifi.password` in `config.json` |
+| `3` | No AP found | SSID not visible — check name and signal |
+| `-3` | Connection failed | Try power-cycling the Pico and the access point |
+| `1010` | Connected | Success |
+
+## Configuration Reference
+
+### `display` section
 
 ```json
 "display": {
-  "brightness": 0.5,                    // LED brightness (0.0–1.0)
-  "scroll_speed": 40,                   // Scroll delay in milliseconds
-  "leaderboard_poll_interval": 30,      // Query leaderboard every N seconds
-  "leaderboard_top_n": 5,               // Show top N racers on leaderboard
-  "race_items": [                       // Items to show during active race
-    "time_remaining",
-    "laps_completed",
-    "fastest_lap",
-    "last_lap",
-    "resets"
-  ]
+  "brightness": 0.5,        // LED brightness (0.0–1.0)
+  "scroll_speed": 40,       // Leaderboard scroll speed in pixels/second
+  "leaderboard_top_n": 5    // Number of leaderboard entries to show
 }
 ```
 
-## Race Items Reference
-
-Valid values for the `race_items` list. Each item is displayed on a separate screen that scrolls in sequence:
-
-| Value | Display | Color |
-|-------|---------|-------|
-| `time_remaining` | Countdown timer (MM:SS) | Yellow |
-| `laps_completed` | Number of valid laps completed | Cyan |
-| `fastest_lap` | Best valid lap time (MM:SS.mmm) | Green |
-| `last_lap` | Most recent valid lap time (MM:SS.mmm) | White |
-| `resets` | Total reset count | Orange |
-
-Example custom configuration (show only key metrics):
-
-```json
-"race_items": [
-  "time_remaining",
-  "laps_completed",
-  "fastest_lap"
-]
-```
-
-## Event Configuration Reference
-
-The `event` section specifies which event and track to monitor:
+### `event` section
 
 ```json
 "event": {
-  "event_id": "paste-event-id-from-drem-here",  // DREM event identifier
-  "track_id": "1",                                // Track number
-  "race_format": "fastest"                        // Race format (e.g., "fastest", "time_trial")
+  "event_id": "paste-event-id-from-drem-here",
+  "track_id": "1",
+  "race_format": "fastest"   // "fastest" or "average"
 }
 ```
 
-## AppSync Configuration
-
-The `appsync` section contains credentials for accessing DREM:
+### `appsync` section
 
 ```json
 "appsync": {
-  "endpoint": "https://XXXXXXXXXXXX.appsync-api.eu-west-1.amazonaws.com/graphql",  // AppSync endpoint
-  "api_key": "da2-XXXXXXXXXXXXXXXXXXXXXXXXXX",                                      // API key
-  "region": "eu-west-1"                                                             // AWS region
+  "endpoint": "https://XXXXXXXXXXXX.appsync-api.eu-west-1.amazonaws.com/graphql",
+  "api_key": "da2-XXXXXXXXXXXXXXXXXXXXXXXXXX",
+  "region": "eu-west-1"
 }
 ```
 
-Obtain these values from the DREM admin portal or your infrastructure administrator.
+### `debug` flag
+
+```json
+"debug": true
+```
+
+Enables verbose serial output: connection attempts, ping/pong, race status changes, overlay keys and lap data on every event.
+
+## AppSync WebSocket Protocol
+
+The app connects to the AppSync real-time endpoint using the `graphql-ws` subprotocol over a TLS WebSocket. Authentication follows the Amplify v6 pattern: the API key is passed as a second `Sec-WebSocket-Protocol` subprotocol header encoded as `header-<base64url({"host","x-amz-date","x-api-key"})>`.
+
+### Connection flow
+
+```
+Pico → AppSync   connection_init
+AppSync → Pico   connection_ack
+Pico → AppSync   subscribe (onNewOverlayInfo, filtered by eventId + trackId)
+AppSync → Pico   start_ack
+AppSync → Pico   data  (race state messages, see below)
+AppSync → Pico   ka    (keep-alive, every ~60 seconds)
+```
+
+After `start_ack`, AppSync immediately pushes the current overlay state and then sends updates as the race progresses.
+
+The Pico sends a WebSocket ping (RFC 6455 opcode 9) every 5 seconds to keep the CYW43 TCP connection alive (see implementation notes below). AppSync responds with a pong frame.
+
+### Race state messages
+
+Each `data` message contains an `onNewOverlayInfo` payload with a `raceStatus` field. The states arrive in this order during a normal race:
+
+| `raceStatus` | `laps` | `timeLeft` | Meaning |
+|---|---|---|---|
+| `NO_RACER_SELECTED` | 0 | null | No active racer — display returns to idle |
+| `READY_TO_START` | 0 | full duration | Race staged and ready; fires every 5 s |
+| `RACE_IN_PROGRESS` | incrementing | counting down | Race running; fires every 2 s |
+| `RACE_PAUSED` | as-is | as-is | Race paused or stopped by operator |
+| `RACE_FINISHED` | **0** | null | Race ended — see note below |
+| `RACE_SUBMITTED` | final count | 0 | Results submitted to leaderboard |
+| `NO_RACER_SELECTED` | 0 | null | Returns to idle |
+
+**Note — `RACE_FINISHED` arrives with `laps=0`:** this event is a sentinel that signals the race has ended; it does not carry the lap summary. The app preserves the lap data accumulated during `RACE_IN_PROGRESS` and only updates the status field, so the end-of-race results scroll shows the correct best time.
+
+**Note — `RACE_PAUSED` precedes `RACE_FINISHED`:** the operator ends a race by pressing Stop, which sends `RACE_PAUSED` followed ~5 s later by `RACE_FINISHED`. This is normal; the app does not flash on pause so the PAUSED state does not look like a motorsport red flag before the chequered flag.
+
+**Known backend typo:** the backend sends `RACE_FINSIHED` (missing the second `I`) instead of `RACE_FINISHED`. The app handles both spellings.
+
+### Keep-alive behaviour
+
+AppSync sends a `ka` (keep-alive) frame every ~60 seconds when no race data is being sent. The status pixel on the display reflects connection health:
+
+| Pixel colour | Meaning |
+|---|---|
+| Green | Connected and receiving data or keep-alives |
+| Orange | No data received for >90 s (one missed keep-alive interval) |
+| Red / off | Reconnecting |
+
+## CYW43 Implementation Notes
+
+These are hard-won findings from getting a reliable long-running WebSocket connection on the Pico W. Documented here to save future debugging time.
+
+### TCP idle timer (~15 s)
+
+The CYW43 WiFi chip's internal TCP stack closes connections after approximately **15 seconds of no outbound application data**. This is not configurable at the application level. Observed empirically: the first outbound write after an idle period fails immediately with `OSError(-110)` (ETIMEDOUT) regardless of the socket's configured timeout.
+
+**Fix:** send a WebSocket ping frame every 5 seconds — well within the 15 s idle threshold. This keeps the CYW43 TCP state machine alive without measurable overhead.
+
+### CYW43 power management
+
+By default the CYW43 runs in `PM_POWERSAVE` mode, sleeping between WiFi beacon intervals (~100 ms). When the chip is sleeping, outbound writes must wait for the chip to wake. With a short socket send timeout (e.g. `settimeout(0.1)` = 100 ms), writes can fail with ETIMEDOUT if the wake-up takes longer than the timeout.
+
+**Fix:** call `wlan.config(pm=wlan.PM_NONE)` immediately after connecting. This keeps the radio always awake and writes complete in <1 ms. The power cost is acceptable for an event display device that runs connected to USB.
+
+### `settimeout()` applies to both reads and writes
+
+`raw_sock.settimeout(t)` on a MicroPython socket sets the timeout for all I/O operations — reads and writes. Using it to achieve non-blocking reads (common pattern: `settimeout(0.1)`) also caps write latency, which interacts badly with power management (see above).
+
+**Fix:** leave the socket in blocking mode for writes. Use `uselect.select([raw_sock], [], [], 0)` for non-blocking read polling instead. This gives instant non-blocking reads without affecting write behaviour.
+
+### Two simultaneous TLS sessions exhaust RAM
+
+The Pico W has ~200 KB usable RAM. An active TLS WebSocket session uses ~80–100 KB of the CYW43 SSL buffer. Opening a second TLS connection (e.g. the leaderboard HTTPS fetch) while the WebSocket TLS session is active causes `ECONNABORTED` on one or both sessions.
+
+**Fix:** `leaderboard_task` waits for `state.ws_connected` to become `True` (set by `race_task` after receiving `start_ack`) and then waits a further 10 seconds for the initial WebSocket traffic to settle before opening the leaderboard HTTPS connection.
+
+### `_read_n()` retry pattern for fragmented TLS records
+
+AppSync messages of 400–550 bytes span multiple TLS records. After the first byte of a WebSocket frame header arrives, subsequent `read()` calls for the payload may return `OSError(-110)` if the remaining TLS record bytes have not yet been buffered by the CYW43. A retry loop with `utime.sleep_ms(10)` and up to 200 retries (2 s maximum) reliably reassembles fragmented frames.
