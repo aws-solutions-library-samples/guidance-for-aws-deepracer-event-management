@@ -99,7 +99,7 @@ export class CdkPipelineStack extends cdk.Stack {
           'node --version',
         ],
         commands: [
-          'npm install',
+          'npm install --ignore-scripts',  // skip postinstall — website packages not needed for synth
           `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c label=${props.labelName}` +
             ` -c account=${props.env.account} -c region=${props.env.region}` +
             ` -c source_branch=${props.sourceBranchName} -c source_repo=${props.sourceRepo}` +
