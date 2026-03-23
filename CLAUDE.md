@@ -57,6 +57,16 @@ make local.config.python     # Create venv + pip install -e .[dev]
 pytest                        # Run Python tests
 ```
 
+### Python scripting (pico-display and other standalone scripts)
+Always use a virtual environment — never install packages into the system Python:
+```sh
+python3 -m venv pico-display/.venv
+source pico-display/.venv/bin/activate
+pip install <package>
+python3 script.py
+```
+The `.venv` directory is git-ignored. All Python work (scripts, debug tools, one-off installs) must use a venv to keep the host machine clean.
+
 ## Architecture
 
 ### Two CDK Stacks (deployed via `lib/`)
