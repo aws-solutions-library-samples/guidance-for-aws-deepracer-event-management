@@ -11,6 +11,7 @@ import {
   Select,
   SpaceBetween,
   StatusIndicator,
+  Toggle,
 } from '@cloudscape-design/components';
 import { useTranslation } from 'react-i18next';
 import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
@@ -37,10 +38,10 @@ export interface PicoFormValues {
   raceFormat: 'fastest' | 'average';
   brightness: number;
   scrollSpeed: number;
-  pollInterval: number;
   topN: number;
   ssid: string;
   wifiPassword: string;
+  debug: boolean;
 }
 
 export interface PicoConfig {
@@ -50,10 +51,9 @@ export interface PicoConfig {
   display: {
     brightness: number;
     scroll_speed: number;
-    leaderboard_poll_interval: number;
     leaderboard_top_n: number;
-    race_items: string[];
   };
+  debug: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,16 +79,9 @@ export function generateConfig(conn: PicoConnection, form: PicoFormValues): Pico
     display: {
       brightness: form.brightness,
       scroll_speed: form.scrollSpeed,
-      leaderboard_poll_interval: form.pollInterval,
       leaderboard_top_n: form.topN,
-      race_items: [
-        'time_remaining',
-        'laps_completed',
-        'fastest_lap',
-        'last_lap',
-        'resets',
-      ],
     },
+    debug: form.debug,
   };
 }
 
@@ -117,10 +110,10 @@ export const AdminPicoDisplay: React.FC = () => {
   const [raceFormat, setRaceFormat] = React.useState<'fastest' | 'average'>('fastest');
   const [brightness, setBrightness] = React.useState<string>('0.5');
   const [scrollSpeed, setScrollSpeed] = React.useState<string>('40');
-  const [pollInterval, setPollInterval] = React.useState<string>('30');
   const [topN, setTopN] = React.useState<string>('5');
   const [ssid, setSsid] = React.useState<string>('');
   const [wifiPassword, setWifiPassword] = React.useState<string>('');
+  const [debug, setDebug] = React.useState<boolean>(false);
 
   const eventOptions = events.map((e) => ({ label: e.eventName, value: e.eventId }));
   const selectedEvent = events.find((e) => e.eventId === selectedEventId);
@@ -140,10 +133,10 @@ export const AdminPicoDisplay: React.FC = () => {
         raceFormat,
         brightness: parseFloat(brightness) || 0.5,
         scrollSpeed: parseInt(scrollSpeed, 10) || 40,
-        pollInterval: parseInt(pollInterval, 10) || 30,
         topN: parseInt(topN, 10) || 5,
         ssid,
         wifiPassword,
+        debug,
       }
     );
     const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
@@ -273,20 +266,23 @@ export const AdminPicoDisplay: React.FC = () => {
               />
             </FormField>
 
-            <Grid gridDefinition={[{ colspan: 3 }, { colspan: 3 }, { colspan: 3 }, { colspan: 3 }]}>
+            <Grid gridDefinition={[{ colspan: 4 }, { colspan: 4 }, { colspan: 4 }]}>
               <FormField label={t('pico-display.brightness-label')}>
                 <Input value={brightness} onChange={({ detail }) => setBrightness(detail.value)} inputMode="decimal" />
               </FormField>
               <FormField label={t('pico-display.scroll-speed-label')}>
                 <Input value={scrollSpeed} onChange={({ detail }) => setScrollSpeed(detail.value)} inputMode="numeric" />
               </FormField>
-              <FormField label={t('pico-display.poll-interval-label')}>
-                <Input value={pollInterval} onChange={({ detail }) => setPollInterval(detail.value)} inputMode="numeric" />
-              </FormField>
               <FormField label={t('pico-display.top-n-label')}>
                 <Input value={topN} onChange={({ detail }) => setTopN(detail.value)} inputMode="numeric" />
               </FormField>
             </Grid>
+
+            <FormField label={t('pico-display.debug-label')} description={t('pico-display.debug-description')}>
+              <Toggle checked={debug} onChange={({ detail }) => setDebug(detail.checked)}>
+                {debug ? t('pico-display.debug-on') : t('pico-display.debug-off')}
+              </Toggle>
+            </FormField>
 
             <Button variant="primary" disabled={!canDownload} onClick={handleDownload}>
               {t('pico-display.download-button')}
