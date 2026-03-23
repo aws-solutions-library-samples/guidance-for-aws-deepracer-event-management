@@ -16,14 +16,7 @@
   "display": {
     "brightness": 0.5,
     "scroll_speed": 40,
-    "leaderboard_poll_interval": 30,
-    "leaderboard_top_n": 5,
-    "race_items": [
-      "time_remaining",
-      "laps_completed",
-      "fastest_lap",
-      "last_lap",
-      "resets"
-    ]
-  }
+    "leaderboard_top_n": 5
+  },
+  "debug": false
 }

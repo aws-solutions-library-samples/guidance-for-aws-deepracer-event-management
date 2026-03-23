@@ -13,10 +13,10 @@ const FORM = {
   raceFormat: 'fastest' as const,
   brightness: 0.5,
   scrollSpeed: 40,
-  pollInterval: 30,
   topN: 5,
   ssid: 'TestNetwork',
   wifiPassword: 'TestPassword',
+  debug: false,
 };
 
 describe('generateConfig', () => {
@@ -34,29 +34,27 @@ describe('generateConfig', () => {
     expect(cfg.event.race_format).toBe('fastest');
   });
 
-  it('populates display block with defaults', () => {
+  it('populates display block', () => {
     const cfg = generateConfig(CONNECTION, FORM);
     expect(cfg.display.brightness).toBe(0.5);
     expect(cfg.display.scroll_speed).toBe(40);
-    expect(cfg.display.leaderboard_poll_interval).toBe(30);
     expect(cfg.display.leaderboard_top_n).toBe(5);
-  });
-
-  it('includes all default race_items', () => {
-    const cfg = generateConfig(CONNECTION, FORM);
-    expect(cfg.display.race_items).toEqual([
-      'time_remaining',
-      'laps_completed',
-      'fastest_lap',
-      'last_lap',
-      'resets',
-    ]);
   });
 
   it('wifi block uses form ssid and password', () => {
     const cfg = generateConfig(CONNECTION, FORM);
     expect(cfg.wifi.ssid).toBe('TestNetwork');
     expect(cfg.wifi.password).toBe('TestPassword');
+  });
+
+  it('debug false by default', () => {
+    const cfg = generateConfig(CONNECTION, FORM);
+    expect(cfg.debug).toBe(false);
+  });
+
+  it('debug true when enabled', () => {
+    const cfg = generateConfig(CONNECTION, { ...FORM, debug: true });
+    expect(cfg.debug).toBe(true);
   });
 
   it('average race_format is accepted', () => {

@@ -5,17 +5,23 @@
 DIVIDER = "  ·  "
 
 
+def _pad(n, width):
+    s = str(n)
+    return "0" * (width - len(s)) + s
+
+
 def format_ms(ms):
     """Format integer milliseconds as MM:SS (for time remaining)."""
     total_s = int(ms) // 1000
     m = total_s // 60
     s = total_s % 60
-    return f"{m:02d}:{s:02d}"
+    return _pad(m, 2) + ":" + _pad(s, 2)
 
 
 def format_s(ms):
-    """Format integer milliseconds as SS.sssS (for lap times)."""
-    return f"{int(ms) / 1000:.3f}s"
+    """Format integer milliseconds as S.sss (for lap times)."""
+    total = int(ms)
+    return str(total // 1000) + "." + _pad(total % 1000, 3)
 
 
 def build_race_string(race, race_items):
@@ -95,6 +101,15 @@ class Display:
         self._x_offset = 0
         self._text = ""
         self._colour = COLOUR_WHITE
+        self._status_colour = COLOUR_RED    # red until WebSocket connects
+
+    def set_status_pixel(self, colour):
+        """Set the top-left corner status pixel: green=ok, orange=warn, red=error."""
+        self._status_colour = colour
+
+    def _draw_status_pixel(self):
+        self._pg.set_pen(self._pg.create_pen(*self._status_colour))
+        self._pg.pixel(0, 0)
 
     def set_text(self, text, colour=COLOUR_WHITE):
         self._text = text
@@ -107,6 +122,7 @@ class Display:
         self._pg.clear()
         self._pg.set_pen(self._pg.create_pen(*self._colour))
         self._pg.text(self._text, self._x_offset, 2, scale=1)
+        self._draw_status_pixel()
         self._gu.update(self._pg)
         self._x_offset -= max(1, self._scroll_speed // self.SCROLL_RATE_HZ)
 
@@ -116,10 +132,11 @@ class Display:
         return self._x_offset < -text_width
 
     def flash(self, colour, duration_ms=500):
-        """Synchronous flash — blocks for duration_ms (use only from display_task)."""
+        """Synchronous full-screen flash — blocks for duration_ms."""
         import utime
         self._pg.set_pen(self._pg.create_pen(*colour))
         self._pg.clear()
+        self._draw_status_pixel()
         self._gu.update(self._pg)
         utime.sleep_ms(duration_ms)
         self._pg.set_pen(self._pg.create_pen(0, 0, 0))
@@ -133,65 +150,175 @@ class Display:
         self._pg.set_pen(self._pg.create_pen(*colour))
         x = max(0, (self.WIDTH - len(text) * 6) // 2)
         self._pg.text(text, x, 2, scale=1)
+        self._draw_status_pixel()
+        self._gu.update(self._pg)
+
+    def chequered_flag_frame(self, phase):
+        """Render one frame of a 3×3-block chequered flag. phase=0 or 1 alternates."""
+        self._pg.set_pen(self._pg.create_pen(0, 0, 0))
+        self._pg.clear()
+        white = self._pg.create_pen(255, 255, 255)
+        black = self._pg.create_pen(0, 0, 0)
+        for row in range(self.HEIGHT):
+            for col in range(self.WIDTH):
+                if (col // 3 + row // 3 + phase) % 2 == 0:
+                    self._pg.set_pen(white)
+                    self._pg.pixel(col, row)
+        self._draw_status_pixel()
         self._gu.update(self._pg)
 
 
 # Idle cycle interval in seconds
 IDLE_CYCLE_S = 10
-# Race-finished flash duration in seconds
-RACE_FINISH_FLASH_S = 5
-# Reset flash duration in ms
-RESET_FLASH_MS = 500
+# Chequered flag duration in frames (8 × 400 ms ≈ 3.2 s)
+FLAG_FRAMES = 8
 
 
 async def display_task(display, state, config):
     """
-    Main display loop. Runs at SCROLL_RATE_HZ; switches between idle and race modes.
+    Main display loop. Drives state machine:
+      idle → READY_TO_START → RACE_IN_PROGRESS → RACE_PAUSED → RACE_FINISHED → idle
     """
     try:
         import uasyncio as asyncio
     except ImportError:
         import asyncio
+    try:
+        import utime as _utime
+    except ImportError:
+        import time as _utime
 
-    race_items = config["display"].get("race_items", [])
-    idle_mode = "branding"       # "branding" or "leaderboard"
-    idle_timer = 0
+    dbg = config.get("debug", False)
     frame_ms = 1000 // Display.SCROLL_RATE_HZ
-    prev_resets = 0
+    idle_mode = "branding"   # "branding" | "leaderboard"
+    idle_timer = 0
+    _cur_text = ""
+    _prev_status = None
+    _prev_laps = 0
+    _prev_resets = 0
 
     while True:
         await asyncio.sleep_ms(frame_ms)
         idle_timer += frame_ms
 
         race = state.race
+        status = race.get("status") if race else None
 
-        # --- Race mode ---
-        if race and race.get("status") in ("READY_TO_START", "RACE_IN_PROGRESS", "RACE_PAUSED"):
+        # ── READY TO START ────────────────────────────────────────────────────
+        if status == "READY_TO_START":
+            if status != _prev_status:
+                if dbg:
+                    print("[disp] READY_TO_START")
+                _prev_status = status
+                _prev_laps = 0
+                _prev_resets = 0
+            display.show_status("READY?", COLOUR_YELLOW)
+            continue
+
+        # ── RACE IN PROGRESS ──────────────────────────────────────────────────
+        if status == "RACE_IN_PROGRESS":
+            laps = len([l for l in (race.get("laps") or []) if l.get("isValid")])
             resets = race.get("resets", 0)
-            if resets > prev_resets:
-                display.flash(COLOUR_ORANGE, RESET_FLASH_MS)
-            prev_resets = resets
-            text = build_race_string(race, race_items)
-            display.set_text(text, COLOUR_WHITE)
-            display.tick()
+
+            if _prev_status == "RACE_IN_PROGRESS":
+                if laps > _prev_laps:
+                    if dbg:
+                        print(f"[disp] lap {laps} - green flash")
+                    for _ in range(2):
+                        display.flash(COLOUR_GREEN, 250)
+                        await asyncio.sleep_ms(100)
+                if resets > _prev_resets:
+                    if dbg:
+                        print(f"[disp] reset {resets} - yellow flash")
+                    for _ in range(2):
+                        display.flash(COLOUR_YELLOW, 250)
+                        await asyncio.sleep_ms(100)
+
+            _prev_laps = laps
+            _prev_resets = resets
+            _prev_status = status
+            # Interpolate time remaining between 2s AppSync events for smooth countdown
+            received_at = race.get("time_left_received_ms")
+            if received_at is not None:
+                try:
+                    elapsed = _utime.ticks_diff(_utime.ticks_ms(), received_at)
+                except AttributeError:
+                    elapsed = int(_utime.time() * 1000) - received_at
+                effective_time = max(0, (race.get("time_left_ms") or 0) - elapsed)
+            else:
+                effective_time = race.get("time_left_ms") or 0
+            display.show_status(format_ms(effective_time), COLOUR_WHITE)
             continue
 
-        # --- Race finished flash ---
-        if race and race.get("status") in ("RACE_FINISHED", "RACE_SUBMITTED"):
+        # ── RACE PAUSED ───────────────────────────────────────────────────────
+        if status == "RACE_PAUSED":
+            if status != _prev_status:
+                if dbg:
+                    print("[disp] RACE_PAUSED")
+            _prev_status = status
+            display.show_status("PAUSED", COLOUR_RED)
+            continue
+
+        # ── RACE FINISHED / SUBMITTED ─────────────────────────────────────────
+        if status in ("RACE_FINISHED", "RACE_FINSIHED", "RACE_SUBMITTED"):
+            if dbg:
+                print(f"[disp] race ended — chequered flag")
+
+            # Chequered flag animation
+            for i in range(FLAG_FRAMES):
+                display.chequered_flag_frame(i % 2)
+                await asyncio.sleep_ms(400)
+
+            # Build results scroll: name · N laps · best X.XXXs · P1
+            username = race.get("username", "")
+            valid_laps = len([l for l in (race.get("laps") or []) if l.get("isValid")])
             best = race.get("fastest_lap_ms")
+            position = None
+            for entry in state.leaderboard:
+                if entry.get("username") == username:
+                    position = entry.get("position")
+                    break
+
+            parts = []
+            if username:
+                parts.append(username)
+            parts.append(str(valid_laps) + " laps")
             if best is not None:
-                flash_text = format_s(best)
-                display.show_status(flash_text, COLOUR_GREEN)
-                await asyncio.sleep(RACE_FINISH_FLASH_S)
+                parts.append("best " + format_s(best))
+            if position is not None:
+                parts.append("P" + str(position))
+            results = DIVIDER.join(parts)
+
+            # Scroll results twice then return to leaderboard
+            for _ in range(2):
+                display.set_text(results, COLOUR_GREEN)
+                while not display.scroll_complete():
+                    await asyncio.sleep_ms(frame_ms)
+                    display.tick()
+
             state.race = None
-            prev_resets = 0
+            _prev_status = None
+            _prev_laps = 0
+            _prev_resets = 0
+            idle_mode = "leaderboard"
             idle_timer = 0
+            _cur_text = ""
             continue
 
-        # --- Idle mode ---
+        # ── IDLE ──────────────────────────────────────────────────────────────
+        if _prev_status is not None:
+            if dbg:
+                print("[disp] -> idle")
+            _prev_status = None
+            _prev_laps = 0
+            _prev_resets = 0
+
         if idle_timer >= IDLE_CYCLE_S * 1000:
             idle_mode = "leaderboard" if idle_mode == "branding" else "branding"
             idle_timer = 0
+            _cur_text = ""
+            if dbg:
+                print(f"[disp] idle mode -> {idle_mode}")
 
         if idle_mode == "branding":
             name = state.event_name or state.leaderboard_title or "DREM"
@@ -199,7 +326,9 @@ async def display_task(display, state, config):
         else:
             if state.leaderboard:
                 text = build_leaderboard_string(state.leaderboard)
-                display.set_text(text, COLOUR_WHITE)
+                if text != _cur_text or display.scroll_complete():
+                    display.set_text(text, COLOUR_WHITE)
+                    _cur_text = text
                 display.tick()
             else:
                 name = state.event_name or state.leaderboard_title or "DREM"
