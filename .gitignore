@@ -39,7 +39,7 @@ lib/*.js
 lib/constructs/**/*.js
 bin/**/*.js
 test/**/*.js
-!jest.config.js
+jest.config.js
 *.d.ts
 !**/vite-env.d.ts
 node_modules
