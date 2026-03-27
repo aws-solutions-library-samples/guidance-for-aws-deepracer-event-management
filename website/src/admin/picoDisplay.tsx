@@ -39,6 +39,7 @@ export interface PicoFormValues {
   brightness: number;
   scrollSpeed: number;
   topN: number;
+  raceDisplayLines: 1 | 2;
   ssid: string;
   wifiPassword: string;
   debug: boolean;
@@ -52,6 +53,7 @@ export interface PicoConfig {
     brightness: number;
     scroll_speed: number;
     leaderboard_top_n: number;
+    race_display_lines: 1 | 2;
   };
   debug: boolean;
 }
@@ -80,6 +82,7 @@ export function generateConfig(conn: PicoConnection, form: PicoFormValues): Pico
       brightness: form.brightness,
       scroll_speed: form.scrollSpeed,
       leaderboard_top_n: form.topN,
+      race_display_lines: form.raceDisplayLines,
     },
     debug: form.debug,
   };
@@ -111,6 +114,7 @@ export const AdminPicoDisplay: React.FC = () => {
   const [brightness, setBrightness] = React.useState<string>('0.5');
   const [scrollSpeed, setScrollSpeed] = React.useState<string>('40');
   const [topN, setTopN] = React.useState<string>('5');
+  const [raceDisplayLines, setRaceDisplayLines] = React.useState<1 | 2>(1);
   const [ssid, setSsid] = React.useState<string>('');
   const [wifiPassword, setWifiPassword] = React.useState<string>('');
   const [debug, setDebug] = React.useState<boolean>(false);
@@ -134,6 +138,7 @@ export const AdminPicoDisplay: React.FC = () => {
         brightness: parseFloat(brightness) || 0.5,
         scrollSpeed: parseInt(scrollSpeed, 10) || 40,
         topN: parseInt(topN, 10) || 5,
+        raceDisplayLines,
         ssid,
         wifiPassword,
         debug,
@@ -277,6 +282,28 @@ export const AdminPicoDisplay: React.FC = () => {
                 <Input value={topN} onChange={({ detail }) => setTopN(detail.value)} inputMode="numeric" />
               </FormField>
             </Grid>
+
+            <FormField
+              label={t('pico-display.race-display-lines-label')}
+              description={t('pico-display.race-display-lines-description')}
+            >
+              <Select
+                selectedOption={{
+                  label:
+                    raceDisplayLines === 1
+                      ? t('pico-display.race-display-lines-1')
+                      : t('pico-display.race-display-lines-2'),
+                  value: String(raceDisplayLines),
+                }}
+                onChange={({ detail }) =>
+                  setRaceDisplayLines(parseInt(detail.selectedOption.value!, 10) as 1 | 2)
+                }
+                options={[
+                  { label: t('pico-display.race-display-lines-1'), value: '1' },
+                  { label: t('pico-display.race-display-lines-2'), value: '2' },
+                ]}
+              />
+            </FormField>
 
             <FormField label={t('pico-display.debug-label')} description={t('pico-display.debug-description')}>
               <Toggle checked={debug} onChange={({ detail }) => setDebug(detail.checked)}>

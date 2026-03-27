@@ -16,7 +16,8 @@
   "display": {
     "brightness": 0.5,
     "scroll_speed": 40,
-    "leaderboard_top_n": 5
+    "leaderboard_top_n": 5,
+    "race_display_lines": 1
   },
   "debug": false
 }

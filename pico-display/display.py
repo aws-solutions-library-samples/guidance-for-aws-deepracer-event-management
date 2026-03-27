@@ -61,6 +61,21 @@ def build_leaderboard_string(leaderboard):
     return DIVIDER.join(parts)
 
 
+def build_race_2line_bottom(race):
+    """Bottom row for 2-line race display: racer name · best lap · last lap."""
+    parts = []
+    name = race.get("username")
+    if name:
+        parts.append(name)
+    best = race.get("fastest_lap_ms")
+    if best is not None:
+        parts.append("best " + format_s(best))
+    last = race.get("last_lap_ms")
+    if last is not None:
+        parts.append("last " + format_s(last))
+    return DIVIDER.join(parts)
+
+
 # ---------------------------------------------------------------------------
 # Hardware driver — only importable on Pimoroni Galactic Unicorn firmware
 # ---------------------------------------------------------------------------
@@ -91,6 +106,12 @@ class Display:
     HEIGHT = 11
     SCROLL_RATE_HZ = 60         # ticks per second for the scroll loop
 
+    # x positions for 2-line top row (bitmap4x5 font, ~5px per char)
+    # "MM:SS" (5 chars = 25px) · laps · resets
+    _2LINE_TIME_X   = 0
+    _2LINE_LAPS_X   = 27
+    _2LINE_RST_X    = 40
+
     def __init__(self, brightness=0.5, scroll_speed=40):
         from galactic import GalacticUnicorn
         from picographics import PicoGraphics, DISPLAY_GALACTIC_UNICORN
@@ -102,34 +123,79 @@ class Display:
         self._text = ""
         self._colour = COLOUR_WHITE
         self._status_colour = COLOUR_RED    # red until WebSocket connects
+        # 2-line race mode: scrolling bottom row
+        self._bottom_text = ""
+        self._bottom_x = 0
+        self._bottom_colour = COLOUR_WHITE
 
     def set_status_pixel(self, colour):
-        """Set the top-left corner status pixel: green=ok, orange=warn, red=error."""
+        """Set the bottom-right status pixel: green=ok, orange=warn, red=error."""
         self._status_colour = colour
 
     def _draw_status_pixel(self):
-        self._pg.set_pen(self._pg.create_pen(*self._status_colour))
-        self._pg.pixel(0, 0)
+        r, g, b = self._status_colour
+        self._pg.set_pen(self._pg.create_pen(r // 4, g // 4, b // 4))
+        self._pg.pixel(52, 10)  # bottom-right, dimmed to 25%
 
     def set_text(self, text, colour=COLOUR_WHITE):
         self._text = text
         self._colour = colour
         self._x_offset = self.WIDTH  # start scrolling from the right
 
+    def set_bottom_text(self, text, colour=COLOUR_WHITE):
+        """Set the scrolling bottom row text for 2-line race mode."""
+        self._bottom_text = text
+        self._bottom_x = self.WIDTH
+        self._bottom_colour = colour
+
     def tick(self):
         """Called every frame; advances scroll by scroll_speed/SCROLL_RATE_HZ pixels."""
         self._pg.set_pen(self._pg.create_pen(0, 0, 0))
         self._pg.clear()
+        self._pg.set_font("bitmap6x8")
         self._pg.set_pen(self._pg.create_pen(*self._colour))
-        self._pg.text(self._text, self._x_offset, 2, scale=1)
+        self._pg.text(self._text, self._x_offset, 1, scale=1)
         self._draw_status_pixel()
         self._gu.update(self._pg)
         self._x_offset -= max(1, self._scroll_speed // self.SCROLL_RATE_HZ)
 
+    def tick_2line(self, time_str, laps_str, resets_str):
+        """One frame of 2-line race display.
+        Top row (bitmap4x5): time (yellow) · laps (cyan) · resets (orange).
+        Separator: dim line at y=5.
+        Bottom row (bitmap4x5): scrolling racer info.
+        """
+        self._pg.set_pen(self._pg.create_pen(0, 0, 0))
+        self._pg.clear()
+        self._pg.set_font("bitmap4x5")
+
+        # Top row — three coloured elements at fixed x positions
+        self._pg.set_pen(self._pg.create_pen(*COLOUR_YELLOW))
+        self._pg.text(time_str, self._2LINE_TIME_X, 0, scale=1)
+        self._pg.set_pen(self._pg.create_pen(*COLOUR_CYAN))
+        self._pg.text(laps_str, self._2LINE_LAPS_X, 0, scale=1)
+        self._pg.set_pen(self._pg.create_pen(*COLOUR_ORANGE))
+        self._pg.text(resets_str, self._2LINE_RST_X, 0, scale=1)
+
+        # Bottom row — scrolling racer info (natural 1px gap at y=5)
+        self._pg.set_pen(self._pg.create_pen(*self._bottom_colour))
+        self._pg.text(self._bottom_text, self._bottom_x, 6, scale=1)
+
+        self._draw_status_pixel()
+        self._gu.update(self._pg)
+        self._pg.set_font("bitmap5x7")  # restore default
+
+        self._bottom_x -= max(1, self._scroll_speed // self.SCROLL_RATE_HZ)
+
     def scroll_complete(self):
         """True when text has fully scrolled off the left edge."""
-        text_width = len(self._text) * 6  # approximate 6px per char
+        text_width = len(self._text) * 7  # bitmap6x8 at scale=1: ~7px per char
         return self._x_offset < -text_width
+
+    def bottom_scroll_complete(self):
+        """True when bottom row text has fully scrolled off the left edge."""
+        text_width = len(self._bottom_text) * 5  # ~5px per char for bitmap4x5
+        return self._bottom_x < -text_width
 
     def flash(self, colour, duration_ms=500):
         """Synchronous full-screen flash — blocks for duration_ms."""
@@ -144,12 +210,13 @@ class Display:
         self._gu.update(self._pg)
 
     def show_status(self, text, colour=COLOUR_WHITE):
-        """Show a static short status string centred on the display."""
+        """Show a static short status string centred on the display (bitmap6x8)."""
         self._pg.set_pen(self._pg.create_pen(0, 0, 0))
         self._pg.clear()
+        self._pg.set_font("bitmap6x8")
         self._pg.set_pen(self._pg.create_pen(*colour))
-        x = max(0, (self.WIDTH - len(text) * 6) // 2)
-        self._pg.text(text, x, 2, scale=1)
+        x = max(0, (self.WIDTH - len(text) * 7) // 2)
+        self._pg.text(text, x, 1, scale=1)
         self._draw_status_pixel()
         self._gu.update(self._pg)
 
@@ -189,13 +256,18 @@ async def display_task(display, state, config):
         import time as _utime
 
     dbg = config.get("debug", False)
+    display_cfg = config.get("display", {})
+    race_display_lines = display_cfg.get("race_display_lines", 1)
+    lap_time_display_ms = int(display_cfg.get("lap_time_display_s", 3) * 1000)
     frame_ms = 1000 // Display.SCROLL_RATE_HZ
     idle_mode = "branding"   # "branding" | "leaderboard"
     idle_timer = 0
     _cur_text = ""
+    _cur_bottom_text = ""
     _prev_status = None
     _prev_laps = 0
     _prev_resets = 0
+    _lap_display_until_ms = 0
 
     while True:
         await asyncio.sleep_ms(frame_ms)
@@ -221,18 +293,22 @@ async def display_task(display, state, config):
             resets = race.get("resets", 0)
 
             if _prev_status == "RACE_IN_PROGRESS":
-                if laps > _prev_laps:
-                    if dbg:
-                        print(f"[disp] lap {laps} - green flash")
-                    for _ in range(2):
-                        display.flash(COLOUR_GREEN, 250)
-                        await asyncio.sleep_ms(100)
+                # Resets checked first — flash yellow before green so the
+                # sequence reads "something went wrong" → "lap recorded"
+                # (AppSync often batches a reset + lap into one event)
                 if resets > _prev_resets:
                     if dbg:
                         print(f"[disp] reset {resets} - yellow flash")
                     for _ in range(2):
                         display.flash(COLOUR_YELLOW, 250)
                         await asyncio.sleep_ms(100)
+                if laps > _prev_laps:
+                    if dbg:
+                        print(f"[disp] lap {laps} - green flash")
+                    for _ in range(2):
+                        display.flash(COLOUR_GREEN, 250)
+                        await asyncio.sleep_ms(100)
+                    _lap_display_until_ms = _utime.ticks_ms() + lap_time_display_ms
 
             _prev_laps = laps
             _prev_resets = resets
@@ -247,7 +323,22 @@ async def display_task(display, state, config):
                 effective_time = max(0, (race.get("time_left_ms") or 0) - elapsed)
             else:
                 effective_time = race.get("time_left_ms") or 0
-            display.show_status(format_ms(effective_time), COLOUR_WHITE)
+
+            if race_display_lines == 2:
+                bottom = build_race_2line_bottom(race)
+                if bottom != _cur_bottom_text or display.bottom_scroll_complete():
+                    display.set_bottom_text(bottom, COLOUR_WHITE)
+                    _cur_bottom_text = bottom
+                display.tick_2line(format_ms(effective_time), str(laps), str(resets))
+            else:
+                try:
+                    show_lap = _utime.ticks_diff(_lap_display_until_ms, _utime.ticks_ms()) > 0
+                except AttributeError:
+                    show_lap = int(_utime.time() * 1000) < _lap_display_until_ms
+                if show_lap and race.get("last_lap_ms") is not None:
+                    display.show_status(format_s(race["last_lap_ms"]), COLOUR_GREEN)
+                else:
+                    display.show_status(format_ms(effective_time), COLOUR_WHITE)
             continue
 
         # ── RACE PAUSED ───────────────────────────────────────────────────────
@@ -300,6 +391,8 @@ async def display_task(display, state, config):
             _prev_status = None
             _prev_laps = 0
             _prev_resets = 0
+            _lap_display_until_ms = 0
+            _cur_bottom_text = ""
             idle_mode = "leaderboard"
             idle_timer = 0
             _cur_text = ""
@@ -322,14 +415,14 @@ async def display_task(display, state, config):
 
         if idle_mode == "branding":
             name = state.event_name or state.leaderboard_title or "DREM"
-            display.show_status(name, COLOUR_WHITE)
+            display.show_status(name, COLOUR_YELLOW)
         else:
             if state.leaderboard:
                 text = build_leaderboard_string(state.leaderboard)
                 if text != _cur_text or display.scroll_complete():
-                    display.set_text(text, COLOUR_WHITE)
+                    display.set_text(text, COLOUR_CYAN)
                     _cur_text = text
                 display.tick()
             else:
                 name = state.event_name or state.leaderboard_title or "DREM"
-                display.show_status(name, COLOUR_WHITE)
+                display.show_status(name, COLOUR_YELLOW)

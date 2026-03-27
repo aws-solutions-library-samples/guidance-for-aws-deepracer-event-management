@@ -1,7 +1,7 @@
 import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from display import format_ms, format_s, build_race_string, build_leaderboard_string
+from display import format_ms, format_s, build_race_string, build_leaderboard_string, build_race_2line_bottom
 
 def test_format_ms_zero():
     assert format_ms(0) == "00:00"
@@ -13,10 +13,10 @@ def test_format_ms_two_minutes_34s():
     assert format_ms(154_000) == "02:34"
 
 def test_format_s_simple():
-    assert format_s(12_450) == "12.450s"
+    assert format_s(12_450) == "12.450"
 
 def test_format_s_rounds_to_3dp():
-    assert format_s(12_001) == "12.001s"
+    assert format_s(12_001) == "12.001"
 
 def test_build_race_string_all_items():
     race = {
@@ -27,7 +27,7 @@ def test_build_race_string_all_items():
         "resets": 2,
     }
     result = build_race_string(race, ["time_remaining", "laps_completed", "fastest_lap", "last_lap", "resets"])
-    assert result == "02:34  ·  2 laps  ·  best 12.450s  ·  last 13.210s  ·  2 resets"
+    assert result == "02:34  ·  2 laps  ·  best 12.450  ·  last 13.210  ·  2 resets"
 
 def test_build_race_string_omits_none_values():
     race = {"time_left_ms": 60_000, "laps": [], "fastest_lap_ms": None, "last_lap_ms": None, "resets": 0}
@@ -45,9 +45,39 @@ def test_build_leaderboard_string():
         {"position": 2, "username": "ALICE", "fastest_lap_ms": 13_010},
     ]
     result = build_leaderboard_string(lb)
-    assert result == "#1 DAVE 12.450s  ·  #2 ALICE 13.010s"
+    assert result == "#1 DAVE 12.450  ·  #2 ALICE 13.010"
 
 def test_build_leaderboard_string_no_time():
     lb = [{"position": 1, "username": "BOB", "fastest_lap_ms": None}]
     result = build_leaderboard_string(lb)
     assert result == "#1 BOB ---"
+
+# build_race_2line_bottom
+
+def test_build_race_2line_bottom_full():
+    race = {
+        "username": "DAVE",
+        "fastest_lap_ms": 12_450,
+        "last_lap_ms": 13_210,
+    }
+    result = build_race_2line_bottom(race)
+    assert result == "DAVE  ·  best 12.450  ·  last 13.210"
+
+def test_build_race_2line_bottom_no_laps_yet():
+    race = {"username": "DAVE", "fastest_lap_ms": None, "last_lap_ms": None}
+    result = build_race_2line_bottom(race)
+    assert result == "DAVE"
+
+def test_build_race_2line_bottom_no_last_lap():
+    race = {"username": "DAVE", "fastest_lap_ms": 12_450, "last_lap_ms": None}
+    result = build_race_2line_bottom(race)
+    assert result == "DAVE  ·  best 12.450"
+
+def test_build_race_2line_bottom_no_username():
+    race = {"fastest_lap_ms": 12_450, "last_lap_ms": 13_210}
+    result = build_race_2line_bottom(race)
+    assert result == "best 12.450  ·  last 13.210"
+
+def test_build_race_2line_bottom_empty():
+    result = build_race_2line_bottom({})
+    assert result == ""
