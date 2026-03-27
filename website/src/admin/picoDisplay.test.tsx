@@ -14,6 +14,7 @@ const FORM = {
   brightness: 0.5,
   scrollSpeed: 40,
   topN: 5,
+  raceDisplayLines: 1 as const,
   ssid: 'TestNetwork',
   wifiPassword: 'TestPassword',
   debug: false,
@@ -60,5 +61,15 @@ describe('generateConfig', () => {
   it('average race_format is accepted', () => {
     const cfg = generateConfig(CONNECTION, { ...FORM, raceFormat: 'average' });
     expect(cfg.event.race_format).toBe('average');
+  });
+
+  it('race_display_lines 1 is written to display block', () => {
+    const cfg = generateConfig(CONNECTION, { ...FORM, raceDisplayLines: 1 });
+    expect(cfg.display.race_display_lines).toBe(1);
+  });
+
+  it('race_display_lines 2 is written to display block', () => {
+    const cfg = generateConfig(CONNECTION, { ...FORM, raceDisplayLines: 2 });
+    expect(cfg.display.race_display_lines).toBe(2);
   });
 });
