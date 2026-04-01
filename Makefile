@@ -24,6 +24,12 @@ else
 domain_name_arg =
 endif
 
+ifdef require_approval
+require_approval_arg = -c require_approval=$(require_approval)
+else
+require_approval_arg =
+endif
+
 ## CONSTANTS
 dremSrcPath := website/src
 leaderboardSrcPath := website-leaderboard/src
@@ -48,10 +54,10 @@ clean: drem.clean
 ## Dev related targets
 
 pipeline.synth: 				## Synth the CDK pipeline
-	npx cdk synth -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg)
+	npx cdk synth -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg) $(require_approval_arg)
 
 pipeline.deploy: 				## Deploy the CDK pipeline
-	npx cdk deploy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg) --require-approval never
+	npx cdk deploy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg) $(require_approval_arg) --require-approval never
 
 pipeline.clean: 				## Destroys the CDK pipeline stack only
 	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) --force
