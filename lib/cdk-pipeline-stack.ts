@@ -60,6 +60,7 @@ export interface CdkPipelineStackProps extends cdk.StackProps {
   email: string;
   env: Environment;
   domainName?: string;
+  requireApproval?: boolean;
 }
 
 export class CdkPipelineStack extends cdk.Stack {
@@ -117,7 +118,8 @@ export class CdkPipelineStack extends cdk.Stack {
           `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c label=${props.labelName}` +
             ` -c account=${props.env.account} -c region=${props.env.region}` +
             ` -c source_branch=${props.sourceBranchName} -c source_repo=${props.sourceRepo}` +
-            (props.domainName ? ` -c domain_name=${props.domainName}` : ''),
+            (props.domainName ? ` -c domain_name=${props.domainName}` : '') +
+            (props.requireApproval === false ? ` -c require_approval=false` : ''),
         ],
         partialBuildSpec: codebuild.BuildSpec.fromObject({
           reports: {
@@ -177,11 +179,16 @@ export class CdkPipelineStack extends cdk.Stack {
     // Manual approval depends on WebsiteTests so the approval notification
     // doesn't appear until tests pass — otherwise the two ran in parallel and
     // a deploy could be approved before tests had even started.
+    // requireApproval defaults to true. Set requireApproval=false in build.config
+    // to skip the manual approval gate (handy for fork dev environments).
+    const requireApproval = props.requireApproval !== false;
     const approvalStep = new pipelines.ManualApprovalStep('DeployDREM');
-    approvalStep.addStepDependency(websiteTestStep);
+    if (requireApproval) {
+      approvalStep.addStepDependency(websiteTestStep);
+    }
 
     const infrastructure_stage = pipeline.addStage(infrastructure, {
-      pre: [websiteTestStep, approvalStep],
+      pre: requireApproval ? [websiteTestStep, approvalStep] : [websiteTestStep],
     });
 
     const rolePolicyStatementsForWebsiteDeployStages = [

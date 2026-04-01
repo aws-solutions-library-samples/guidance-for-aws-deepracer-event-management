@@ -24,6 +24,12 @@ else
 domain_name_arg =
 endif
 
+ifdef require_approval
+require_approval_arg = -c require_approval=$(require_approval)
+else
+require_approval_arg =
+endif
+
 ## CONSTANTS
 dremSrcPath := website/src
 leaderboardSrcPath := website/leaderboard/src
@@ -69,10 +75,10 @@ drem.bootstrap: 				## Bootstrap the CDK environment
 
 .PHONY: pipeline.synth pipeline.deploy pipeline.clean
 pipeline.synth: 				## Synth the CDK pipeline
-	npx cdk synth $(CDK_CONTEXT)
+	npx cdk synth $(CDK_CONTEXT) $(require_approval_arg)
 
 pipeline.deploy: 				## Deploy the CDK pipeline
-	npx cdk deploy $(CDK_CONTEXT) --require-approval never
+	npx cdk deploy $(CDK_CONTEXT) $(require_approval_arg) --require-approval never
 
 pipeline.clean: 				## Destroys the CDK pipeline stack only
 	npx cdk destroy $(CDK_CONTEXT) --force

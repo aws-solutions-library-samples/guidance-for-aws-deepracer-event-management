@@ -88,12 +88,14 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
   });
 } else {
   console.info('Pipeline deploy started...');
+  const requireApproval = app.node.tryGetContext('require_approval') !== 'false';
   new CdkPipelineStack(app, `drem-pipeline-${labelName}`, {
     labelName: labelName,
     sourceRepo: sourceRepo,
     sourceBranchName: sourceBranchName,
     email: mailAddress,
     domainName: domainName,
+    requireApproval: requireApproval,
     env: env,
   });
 }
