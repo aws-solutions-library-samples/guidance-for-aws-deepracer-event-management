@@ -19,5 +19,8 @@
     "leaderboard_top_n": 5,
     "race_display_lines": 1
   },
+  "ota": {
+    "base_url": "https://your-drem-cloudfront-url.com/pico-display/"
+  },
   "debug": false
 }
