@@ -38,6 +38,7 @@ Then edit it with your WiFi credentials, AppSync endpoint, API key, and event de
    - `leaderboard.py`
    - `display.py`
    - `state.py`
+   - `ota.py`
    - `config.json`
 
 ### Option 2: Using rshell
@@ -48,6 +49,31 @@ rshell cp pico-display/config.json /pyboard/
 ```
 
 After uploading, the app will start automatically on the next power-on.
+
+### Option 3: Over-the-Air (OTA) Update
+
+Once the Pico has `main.py`, `ota.py`, `wifi.py`, `config.py` and a valid `config.json` with WiFi credentials and an `ota.base_url`, you can update all Python files over WiFi:
+
+1. Hold **button D** during power-up
+2. The display shows **OTA MODE**, connects to WiFi, then downloads each file
+3. After all files are written, the Pico reboots with the new code
+
+The OTA source files are served from your DREM website at `/pico-display/`. See the [OTA configuration](#ota-section) below.
+
+**Note:** `config.json` is never overwritten by OTA — your local WiFi credentials and event settings are preserved.
+
+## Hardware Buttons
+
+The Galactic Unicorn has four hardware buttons (A, B, C, D). **Hold a button during power-up** to activate that mode:
+
+| Button | Mode | Display shows |
+|--------|------|---------------|
+| **A** | Single-line race display | `1-LINE` then boots normally |
+| **B** | Dual-line race display | `2-LINE` then boots normally |
+| **C** | Reserved | — |
+| **D** | OTA update | `OTA MODE` → downloads latest code → reboots |
+
+If no button is held, the display uses the `race_display_lines` value from `config.json`.
 
 ## Display Behaviour
 
@@ -119,6 +145,18 @@ When debug mode is enabled the WiFi connection log includes a numeric `status=` 
   "region": "eu-west-1"
 }
 ```
+
+### `ota` section
+
+```json
+"ota": {
+  "base_url": "https://your-drem-cloudfront-url.com/pico-display/"
+}
+```
+
+The base URL points to your DREM website's CloudFront distribution. The OTA updater downloads each Python file from `{base_url}{filename}`. Only `.py` files are updated — `config.json` is never touched.
+
+**For developers:** after modifying pico-display Python files, run `make pico.sync` to copy them to `website/public/pico-display/` ready for deployment. Run `make pico.test` to run the test suite.
 
 ### `debug` flag
 

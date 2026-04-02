@@ -241,6 +241,21 @@ local.docker.down:				## Stop DREM docker instance
 local.docker.clean:				## Remove DREM docker container and volumes (destructive)
 	docker compose rm website -f -v
 
+##@ Pico display
+
+PICO_OTA_FILES := main.py config.py display.py leaderboard.py race.py state.py wifi.py ota.py
+PICO_SRC := pico-display
+PICO_PUBLIC := website/public/pico-display
+
+.PHONY: pico.sync pico.test
+pico.sync:					## Sync pico-display Python files to website/public/ for OTA
+	@mkdir -p $(PICO_PUBLIC)
+	@for f in $(PICO_OTA_FILES); do cp $(PICO_SRC)/$$f $(PICO_PUBLIC)/$$f; done
+	@echo "Synced $(words $(PICO_OTA_FILES)) files to $(PICO_PUBLIC)/"
+
+pico.test:					## Run pico-display unit tests
+	cd $(PICO_SRC) && python3 -m pytest tests/ -v
+
 ##@ Misc
 
 .PHONY: leaderboard.zip
