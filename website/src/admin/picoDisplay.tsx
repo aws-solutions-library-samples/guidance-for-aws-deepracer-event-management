@@ -274,7 +274,6 @@ export const AdminPicoDisplay: React.FC = () => {
               <Input
                 value={wifiPassword}
                 placeholder={t('pico-display.wifi-password-placeholder')}
-                type="password"
                 onChange={({ detail }) => setWifiPassword(detail.value)}
               />
             </FormField>
