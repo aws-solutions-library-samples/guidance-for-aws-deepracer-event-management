@@ -264,6 +264,14 @@ async def display_task(display, state, config):
     idle_timer = 0
     _cur_text = ""
     _branding_index = 0
+    # Build branding texts from config — event name + up to 2 custom lines
+    _branding_texts = []
+    _branding_texts.append(display_cfg.get("branding_1", ""))
+    _branding_texts.append(display_cfg.get("branding_2", ""))
+    # Filter out empty strings
+    _branding_texts = [t for t in _branding_texts if t]
+    if not _branding_texts:
+        _branding_texts = ["DREM"]
     _cur_bottom_text = ""
     _prev_status = None
     _prev_laps = 0
@@ -432,12 +440,7 @@ async def display_task(display, state, config):
         if idle_timer >= IDLE_CYCLE_S * 1000:
             if idle_mode == "branding":
                 _branding_index += 1
-                branding_texts = [
-                    state.event_name or state.leaderboard_title or "DREM",
-                    ">> This way towards victory >>",
-                    "DREM",
-                ]
-                if _branding_index >= len(branding_texts):
+                if _branding_index >= len(_branding_texts):
                     idle_mode = "leaderboard"
                     _branding_index = 0
             else:
@@ -448,12 +451,7 @@ async def display_task(display, state, config):
                 print(f"[disp] idle mode -> {idle_mode} branding_index={_branding_index}")
 
         if idle_mode == "branding":
-            branding_texts = [
-                state.event_name or state.leaderboard_title or "DREM",
-                ">> This way towards victory >>",
-                "DREM",
-            ]
-            text = branding_texts[_branding_index % len(branding_texts)]
+            text = _branding_texts[_branding_index % len(_branding_texts)]
             display.show_status(text, COLOUR_YELLOW)
         else:
             if state.leaderboard:
