@@ -234,6 +234,10 @@ export class CdkPipelineStack extends cdk.Stack {
           " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
         'mkdir -p ./website/public/overlays && cp -r ./website/overlays/build/. ./website/public/overlays/',
 
+        // Copy pico-display Python files to website/public/ for OTA
+        'mkdir -p ./website/public/pico-display',
+        'cp pico-display/main.py pico-display/config.py pico-display/display.py pico-display/leaderboard.py pico-display/race.py pico-display/state.py pico-display/wifi.py pico-display/ota.py ./website/public/pico-display/',
+
         // Build main site (sub-apps already in public/)
         'docker run --rm -v $(pwd):/foo -w /foo/website' +
           " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache && npm run build'",

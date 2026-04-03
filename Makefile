@@ -153,7 +153,7 @@ local.build.overlays:
 	rm -rf website/public/overlays
 	cp -r website/overlays/build website/public/overlays
 
-local.build: local.build.leaderboard local.build.overlays	## Build leaderboard + overlays into website/public/ for unified local dev
+local.build: local.build.leaderboard local.build.overlays pico.sync	## Build leaderboard + overlays + pico OTA files into website/public/
 
 local.run:					## Run the frontend application locally for development (run local.build first)
 	PORT=3000 npm start --prefix website
