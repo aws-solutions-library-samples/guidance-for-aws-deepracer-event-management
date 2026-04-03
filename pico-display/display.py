@@ -57,7 +57,7 @@ def build_leaderboard_string(leaderboard):
     for entry in leaderboard:
         t = entry.get("fastest_lap_ms")
         t_str = format_s(t) if t is not None else "---"
-        parts.append(f"#{entry['position']} {entry['username']} {t_str}")
+        parts.append(f"#{entry['position']} {entry['username']}: {t_str}")
     return DIVIDER.join(parts)
 
 
@@ -323,6 +323,14 @@ async def display_task(display, state, config):
                 effective_time = max(0, (race.get("time_left_ms") or 0) - elapsed)
             else:
                 effective_time = race.get("time_left_ms") or 0
+
+            # Timer at zero — show chequered flag until race status changes
+            if effective_time == 0:
+                _flag_phase = getattr(display, '_flag_phase', 0)
+                display.chequered_flag_frame(_flag_phase % 2)
+                display._flag_phase = _flag_phase + 1
+                await asyncio.sleep_ms(400)
+                continue
 
             if race_display_lines == 2:
                 bottom = build_race_2line_bottom(race)
