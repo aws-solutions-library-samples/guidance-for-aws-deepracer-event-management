@@ -149,10 +149,15 @@ class Display:
         self._colour = colour
         self._x_offset = self.WIDTH  # start scrolling from the right
 
-    def set_bottom_text(self, text, colour=COLOUR_WHITE):
-        """Set the scrolling bottom row text for 2-line race mode."""
+    def set_bottom_text(self, text, colour=COLOUR_WHITE, static=False):
+        """Set the bottom row text for 2-line race mode.
+        If static=True, centre the text instead of scrolling from right.
+        """
         self._bottom_text = text
-        self._bottom_x = self.WIDTH
+        if static:
+            self._bottom_x = max(0, (self.WIDTH - len(text) * 5) // 2)
+        else:
+            self._bottom_x = self.WIDTH
         self._bottom_colour = colour
 
     def tick(self):
@@ -366,7 +371,7 @@ async def display_task(display, state, config):
                     best = race.get("fastest_lap_ms")
                     lap_colour = COLOUR_GREEN if (best is not None and last <= best) else COLOUR_YELLOW
                     lap_text = _pad(laps, 2) + ": " + format_s(last)
-                    display.set_bottom_text(lap_text, lap_colour)
+                    display.set_bottom_text(lap_text, lap_colour, static=True)
                     _cur_bottom_text = ""  # force refresh when reverting
                 else:
                     bottom = build_race_2line_bottom(race)
