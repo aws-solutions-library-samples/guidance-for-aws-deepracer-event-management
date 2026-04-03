@@ -263,6 +263,7 @@ async def display_task(display, state, config):
     idle_mode = "branding"   # "branding" | "leaderboard"
     idle_timer = 0
     _cur_text = ""
+    _branding_index = 0
     _cur_bottom_text = ""
     _prev_status = None
     _prev_laps = 0
@@ -429,15 +430,31 @@ async def display_task(display, state, config):
             _prev_resets = 0
 
         if idle_timer >= IDLE_CYCLE_S * 1000:
-            idle_mode = "leaderboard" if idle_mode == "branding" else "branding"
+            if idle_mode == "branding":
+                _branding_index += 1
+                branding_texts = [
+                    state.event_name or state.leaderboard_title or "DREM",
+                    ">> This way towards victory >>",
+                    "DREM",
+                ]
+                if _branding_index >= len(branding_texts):
+                    idle_mode = "leaderboard"
+                    _branding_index = 0
+            else:
+                idle_mode = "branding"
             idle_timer = 0
             _cur_text = ""
             if dbg:
-                print(f"[disp] idle mode -> {idle_mode}")
+                print(f"[disp] idle mode -> {idle_mode} branding_index={_branding_index}")
 
         if idle_mode == "branding":
-            name = state.event_name or state.leaderboard_title or "DREM"
-            display.show_status(name, COLOUR_YELLOW)
+            branding_texts = [
+                state.event_name or state.leaderboard_title or "DREM",
+                ">> This way towards victory >>",
+                "DREM",
+            ]
+            text = branding_texts[_branding_index % len(branding_texts)]
+            display.show_status(text, COLOUR_YELLOW)
         else:
             if state.leaderboard:
                 text = build_leaderboard_string(state.leaderboard)
