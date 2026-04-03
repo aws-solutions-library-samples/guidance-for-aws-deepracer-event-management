@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Avatar from 'avataaars';
 import useInterval from '../hooks/useInterval';
+import { Flag } from './flag';
+import { parseAvatarConfig } from './parseAvatarConfig';
 import styles from './raceInfoFooter.module.css';
 
 const displayUpdateInterval = 1000 / 30; // 30 fps
@@ -26,6 +29,9 @@ interface RaceOverlayInfoProps {
   averageLaps: any;
   currentLapTimeInMs: any;
   raceFormat: any;
+  countryCode: any;
+  avatarConfig: any;
+  highlightColour: any;
 }
 
 const RaceOverlayInfo = ({
@@ -36,8 +42,12 @@ const RaceOverlayInfo = ({
   averageLaps,
   currentLapTimeInMs,
   raceFormat,
+  countryCode,
+  avatarConfig,
+  highlightColour,
 }: RaceOverlayInfoProps) => {
   const { t } = useTranslation();
+  const parsedAvatar = parseAvatarConfig(avatarConfig);
   // raw timing values
   const [bestLapMs, setBestLapMs] = useState(0);
   const [bestAvgMs, setBestAvgMs] = useState(0);
@@ -236,6 +246,32 @@ const RaceOverlayInfo = ({
       <div className={styles.footerTop}>
         <span className={styles.footerItemText}>{t('leaderboard.race-info-footer.currently-racing')}</span>
         <span className={styles.footerItemDigits}>{username}</span>
+        {(parsedAvatar || countryCode) && (
+          <span className={styles.overlayIdentity}>
+            {parsedAvatar && highlightColour && (
+              <span
+                className={styles.overlayHighlightBar}
+                style={{
+                  background: `linear-gradient(to right, ${highlightColour} 50%, transparent)`,
+                }}
+              />
+            )}
+            <span className={styles.overlayIdentityIcon}>
+              {parsedAvatar ? (
+                <>
+                  <Avatar avatarStyle="Transparent" {...(parsedAvatar as Record<string, string>)} />
+                  {countryCode && (
+                    <span className={styles.overlayIdentityFlag}>
+                      <Flag countryCode={countryCode} />
+                    </span>
+                  )}
+                </>
+              ) : (
+                <Flag countryCode={countryCode} />
+              )}
+            </span>
+          </span>
+        )}
       </div>
       <div className={styles.footerBottom}>{htmlTable}</div>
     </>
