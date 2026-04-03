@@ -19,7 +19,9 @@
     "leaderboard_top_n": 5,
     "race_display_lines": 1,
     "branding_1": "DREM",
-    "branding_2": ">> This way towards victory >>"
+    "branding_1_colour": "yellow",
+    "branding_2": ">> This way towards victory >>",
+    "branding_2_colour": "cyan"
   },
   "ota": {
     "base_url": "https://your-drem-cloudfront-url.com/pico-display/"

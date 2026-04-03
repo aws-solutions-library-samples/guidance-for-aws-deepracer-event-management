@@ -87,6 +87,15 @@ COLOUR_WHITE   = (255, 255, 255)
 COLOUR_ORANGE  = (255, 120, 0)
 COLOUR_RED     = (255, 0, 0)
 
+COLOUR_NAMES = {
+    "yellow": COLOUR_YELLOW,
+    "cyan":   COLOUR_CYAN,
+    "green":  COLOUR_GREEN,
+    "white":  COLOUR_WHITE,
+    "orange": COLOUR_ORANGE,
+    "red":    COLOUR_RED,
+}
+
 ITEM_COLOURS = {
     "time_remaining": COLOUR_YELLOW,
     "laps_completed": COLOUR_CYAN,
@@ -265,13 +274,15 @@ async def display_task(display, state, config):
     _cur_text = ""
     _branding_index = 0
     # Build branding texts from config — event name + up to 2 custom lines
-    _branding_texts = []
-    _branding_texts.append(display_cfg.get("branding_1", ""))
-    _branding_texts.append(display_cfg.get("branding_2", ""))
-    # Filter out empty strings
-    _branding_texts = [t for t in _branding_texts if t]
-    if not _branding_texts:
-        _branding_texts = ["DREM"]
+    _branding_items = []  # list of (text, colour) tuples
+    for i in (1, 2):
+        text = display_cfg.get(f"branding_{i}", "")
+        if text:
+            colour_name = display_cfg.get(f"branding_{i}_colour", "yellow")
+            colour = COLOUR_NAMES.get(colour_name, COLOUR_YELLOW)
+            _branding_items.append((text, colour))
+    if not _branding_items:
+        _branding_items = [("DREM", COLOUR_YELLOW)]
     _cur_bottom_text = ""
     _prev_status = None
     _prev_laps = 0
@@ -438,30 +449,30 @@ async def display_task(display, state, config):
             _prev_resets = 0
 
         if idle_mode == "branding":
-            text = _branding_texts[_branding_index % len(_branding_texts)]
+            text, colour = _branding_items[_branding_index % len(_branding_items)]
             fits = len(text) * 7 <= Display.WIDTH  # bitmap6x8: ~7px per char
             if fits:
                 # Short text — show static for IDLE_CYCLE_S then advance
                 if idle_timer >= IDLE_CYCLE_S * 1000:
                     _branding_index += 1
                     idle_timer = 0
-                    if _branding_index >= len(_branding_texts):
+                    if _branding_index >= len(_branding_items):
                         idle_mode = "leaderboard"
                         _branding_index = 0
                         _cur_text = ""
                 else:
-                    display.show_status(text, COLOUR_YELLOW)
+                    display.show_status(text, colour)
             else:
                 # Long text — scroll it, advance when scroll finishes
                 if text != _cur_text:
-                    display.set_text(text, COLOUR_YELLOW)
+                    display.set_text(text, colour)
                     _cur_text = text
                 display.tick()
                 if display.scroll_complete():
                     _branding_index += 1
                     _cur_text = ""
                     idle_timer = 0
-                    if _branding_index >= len(_branding_texts):
+                    if _branding_index >= len(_branding_items):
                         idle_mode = "leaderboard"
                         _branding_index = 0
         elif idle_timer >= IDLE_CYCLE_S * 1000:
