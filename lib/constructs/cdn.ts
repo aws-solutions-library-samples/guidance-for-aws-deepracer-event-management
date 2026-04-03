@@ -11,6 +11,7 @@ export interface CdnProps {
   defaultOrigin: IOrigin;
   domainNames?: string[];
   certificate?: acm.ICertificate;
+  comment?: string;
 }
 
 export class Cdn extends Construct {
@@ -23,6 +24,7 @@ export class Cdn extends Construct {
 
     //  cloudfront Distribution
     const cloudfrontDistribution = new cloudfront.Distribution(this, 'distribution', {
+      comment: props.comment,
       defaultBehavior: {
         origin: props.defaultOrigin,
         responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_AND_SECURITY_HEADERS,

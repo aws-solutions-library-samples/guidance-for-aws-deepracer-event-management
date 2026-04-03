@@ -28,6 +28,7 @@ endif
 dremSrcPath := website/src
 leaderboardSrcPath := website-leaderboard/src
 overlaysSrcPath := website-stream-overlays/src
+VENV_PYTHON := .venv/bin/python3
 
 ## ----------------------------------------------------------------------------
 .PHONY: help
@@ -42,7 +43,7 @@ bootstrap: 					## Bootstraps the CDK environment
 	cdk bootstrap -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
 
 .PHONY: clean
-clean: pipeline.clean s3.clean
+clean: drem.clean
 
 ## Dev related targets
 
@@ -50,16 +51,28 @@ pipeline.synth: 				## Synth the CDK pipeline
 	npx cdk synth -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg)
 
 pipeline.deploy: 				## Deploy the CDK pipeline
-	npx cdk deploy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg)
+	npx cdk deploy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg) --require-approval never
 
-pipeline.clean: 				## Destroys the CDK pipeline
-	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo)
+pipeline.clean: 				## Destroys the CDK pipeline stack only
+	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) --force
 
-drem.clean-infrastructure:			## Delete DREM application
+drem.clean:					## Teardown all DREM AWS resources (pipeline then app stacks, waits for each)
+	@echo "--- Destroying pipeline stack ---"
+	npx cdk destroy -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) --force
+	@echo "--- Deleting infrastructure stack ---"
+	aws cloudformation delete-stack --stack-name drem-backend-$(label)-infrastructure --region $(region)
+	aws cloudformation wait stack-delete-complete --stack-name drem-backend-$(label)-infrastructure --region $(region)
+	@echo "--- Deleting base stack ---"
+	aws cloudformation delete-stack --stack-name drem-backend-$(label)-base --region $(region)
+	aws cloudformation wait stack-delete-complete --stack-name drem-backend-$(label)-base --region $(region)
+	@echo "--- DREM teardown complete ---"
+
+drem.clean-infrastructure:			## Delete infrastructure stack only (async, no wait)
 	aws cloudformation delete-stack --stack-name drem-backend-$(label)-infrastructure --region $(region)
 
-drem.clean-base:			## Delete DREM application
+drem.clean-base:				## Delete base stack only (async, no wait)
 	aws cloudformation delete-stack --stack-name drem-backend-$(label)-base --region $(region)
+
 
 manual.deploy:  				## Deploy via cdk
 	npx cdk deploy --c manual_deploy=True -c email=$(email) -c label=$(label) -c account=$(account_id) -c region=$(region) -c source_branch=$(source_branch) -c source_repo=$(source_repo) $(domain_name_arg) --all
@@ -78,44 +91,44 @@ manual.deploy.website: local.config
 local.install:					## Install Javascript dependencies
 	npm install
 
-local.config:					## Setup local config based on branch
+local.config: | .venv/.installed				## Setup local config based on branch
 	echo "{}" > ${dremSrcPath}/config.json
 	aws cloudformation describe-stacks --region $(region) --stack-name drem-backend-$(label)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
-	python3 scripts/generate_amplify_config_cfn.py
+	$(VENV_PYTHON) scripts/generate_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL ./$(dremSrcPath)/graphql/schema.graphql
 	current_dir=$(pwd)
 	cd $(dremSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
 	echo "{}" > $(leaderboardSrcPath)/config.json
-	python3 scripts/generate_leaderboard_amplify_config_cfn.py
+	$(VENV_PYTHON) scripts/generate_leaderboard_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL $(leaderboardSrcPath)/graphql/schema.graphql
 	cd $(leaderboardSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
 	echo "{}" > $(overlaysSrcPath)/config.json
-	python3 scripts/generate_stream_overlays_amplify_config_cfn.py
+	$(VENV_PYTHON) scripts/generate_stream_overlays_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL $(overlaysSrcPath)/graphql/schema.graphql
 	cd $(overlaysSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
-local.config.docker:					## Setup local config based on branch
+local.config.docker: | .venv/.installed				## Setup local config based on branch (docker mode)
 	echo "{}" > ${dremSrcPath}/config.json
 	aws cloudformation describe-stacks --region $(region) --stack-name drem-backend-$(label)-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs
-	python3 scripts/generate_amplify_config_cfn.py --docker
+	$(VENV_PYTHON) scripts/generate_amplify_config_cfn.py --docker
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL ./$(dremSrcPath)/graphql/schema.graphql
 	current_dir=$(pwd)
 	cd $(dremSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
 	echo "{}" > $(leaderboardSrcPath)/config.json
-	python3 scripts/generate_leaderboard_amplify_config_cfn.py
+	$(VENV_PYTHON) scripts/generate_leaderboard_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL $(leaderboardSrcPath)/graphql/schema.graphql
 	cd $(leaderboardSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
 
 	echo "{}" > $(overlaysSrcPath)/config.json
-	python3 scripts/generate_stream_overlays_amplify_config_cfn.py
+	$(VENV_PYTHON) scripts/generate_stream_overlays_amplify_config_cfn.py
 	appsyncId=`cat appsyncId.txt` && aws appsync get-introspection-schema --region $(region) --api-id $$appsyncId --format SDL $(overlaysSrcPath)/graphql/schema.graphql
 	cd $(overlaysSrcPath)/graphql/ && amplify codegen
 	cd $(current_dir)
@@ -134,11 +147,17 @@ test.website:					## Run website tests
 test.leaderboard:				## Run leaderboard tests
 	cd website-leaderboard && npm test
 
-local.config.python:		## Setup a Python .venv
+.venv/.installed: pyproject.toml		## (internal) create venv when pyproject.toml changes
 	python3 -m venv --prompt drem .venv
-	source .venv/bin/activate
-	pip install -e .[dev]
-	
+	.venv/bin/pip install --quiet -e .[dev]
+	@touch .venv/.installed
+
+.PHONY: venv
+venv: .venv/.installed				## Create Python virtual environment
+
+.PHONY: local.config.python
+local.config.python: venv			## Setup a Python .venv
+
 local.run:					## Run the frontend application locally for development
 	PORT=3000 npm start --prefix website
 

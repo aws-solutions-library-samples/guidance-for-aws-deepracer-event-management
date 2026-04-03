@@ -24,6 +24,7 @@ export class StreamingOverlay extends Construct {
         const cdn = new Cdn(this, 'cdn', {
             defaultOrigin: websiteHosting.origin,
             logsBucket: props.logsBucket,
+            comment: 'DREM stream overlays',
         });
         this.distribution = cdn.distribution;
         this.websiteBucket = websiteHosting.sourceBucket;

@@ -2,7 +2,7 @@ import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
+import { IEventBus, Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -35,7 +35,7 @@ export interface LeaderboardProps {
       powerToolsLayer: lambda.ILayerVersion;
     };
   };
-  eventbus: EventBus;
+  eventbus: IEventBus;
 }
 
 export class Leaderboard extends Construct {
@@ -70,6 +70,7 @@ export class Leaderboard extends Construct {
     const cdn = new Cdn(this, 'cdn', {
       defaultOrigin: websiteHosting.origin,
       logsBucket: props.logsBucket,
+      comment: 'DREM leaderboard',
     });
     this.distribution = cdn.distribution;
     this.websiteBucket = websiteHosting.sourceBucket;

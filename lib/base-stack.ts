@@ -180,6 +180,64 @@ export class BaseStack extends cdk.Stack {
       webAclArn: wafWebAclRegional.attrArn,
       resourceArn: `arn:${this.partition}:cognito-idp:${this.region}:${this.account}:userpool/${this.idp.userPool.userPoolId}`,
     });
+
+    // SSM parameters for cross-stack sharing (avoids CloudFormation Fn::ImportValue dependencies)
+    new ssm.StringParameter(this, 'ssmCloudfrontDistributionId', {
+      parameterName: `/${this.stackName}/cloudfrontDistributionId`,
+      stringValue: cdn.distribution.distributionId,
+    });
+    new ssm.StringParameter(this, 'ssmCloudfrontDistributionDomainName', {
+      parameterName: `/${this.stackName}/cloudfrontDistributionDomainName`,
+      stringValue: cdn.distribution.distributionDomainName,
+    });
+    new ssm.StringParameter(this, 'ssmCloudfrontDomainName', {
+      parameterName: `/${this.stackName}/cloudfrontDomainName`,
+      stringValue: siteDomain ? siteDomain[0] : cdn.distribution.distributionDomainName,
+    });
+    new ssm.StringParameter(this, 'ssmLogsBucketName', {
+      parameterName: `/${this.stackName}/logsBucketName`,
+      stringValue: logsBucket.bucketName,
+    });
+    new ssm.StringParameter(this, 'ssmWebsiteBucketName', {
+      parameterName: `/${this.stackName}/websiteBucketName`,
+      stringValue: dremWebsite.sourceBucket.bucketName,
+    });
+    new ssm.StringParameter(this, 'ssmEventBusArn', {
+      parameterName: `/${this.stackName}/eventBusArn`,
+      stringValue: this.eventbridge.eventbus.eventBusArn,
+    });
+    new ssm.StringParameter(this, 'ssmUserPoolId', {
+      parameterName: `/${this.stackName}/userPoolId`,
+      stringValue: this.idp.userPool.userPoolId,
+    });
+    new ssm.StringParameter(this, 'ssmIdentityPoolId', {
+      parameterName: `/${this.stackName}/identityPoolId`,
+      stringValue: this.idp.identityPool.ref,
+    });
+    new ssm.StringParameter(this, 'ssmUserPoolClientWebId', {
+      parameterName: `/${this.stackName}/userPoolClientWebId`,
+      stringValue: this.idp.userPoolClientWeb.userPoolClientId,
+    });
+    new ssm.StringParameter(this, 'ssmAdminGroupRoleArn', {
+      parameterName: `/${this.stackName}/adminGroupRoleArn`,
+      stringValue: this.idp.adminGroupRole.roleArn,
+    });
+    new ssm.StringParameter(this, 'ssmOperatorGroupRoleArn', {
+      parameterName: `/${this.stackName}/operatorGroupRoleArn`,
+      stringValue: this.idp.operatorGroupRole.roleArn,
+    });
+    new ssm.StringParameter(this, 'ssmCommentatorGroupRoleArn', {
+      parameterName: `/${this.stackName}/commentatorGroupRoleArn`,
+      stringValue: this.idp.commentatorGroupRole.roleArn,
+    });
+    new ssm.StringParameter(this, 'ssmRegistrationGroupRoleArn', {
+      parameterName: `/${this.stackName}/registrationGroupRoleArn`,
+      stringValue: this.idp.registrationGroupRole.roleArn,
+    });
+    new ssm.StringParameter(this, 'ssmAuthenticatedUserRoleArn', {
+      parameterName: `/${this.stackName}/authenticatedUserRoleArn`,
+      stringValue: this.idp.authenticatedUserRole.roleArn,
+    });
   }
 
   lambdaLayers = (
