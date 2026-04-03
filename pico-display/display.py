@@ -321,14 +321,10 @@ async def display_task(display, state, config):
 
             if _prev_status == "RACE_IN_PROGRESS":
                 if laps > _prev_laps:
-                    last = race.get("last_lap_ms")
-                    best = race.get("fastest_lap_ms")
-                    is_fastest = best is not None and last is not None and last <= best
-                    flash_colour = COLOUR_GREEN if is_fastest else COLOUR_YELLOW
                     if dbg:
-                        print(f"[disp] lap {laps} - {'fastest' if is_fastest else 'slower'} flash")
+                        print(f"[disp] lap {laps} - green flash")
                     for _ in range(2):
-                        display.flash(flash_colour, 250)
+                        display.flash(COLOUR_GREEN, 250)
                         await asyncio.sleep_ms(100)
                     _lap_display_until_ms = _utime.ticks_ms() + lap_time_display_ms
 
