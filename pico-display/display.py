@@ -363,8 +363,7 @@ async def display_task(display, state, config):
                 if bottom != _cur_bottom_text or display.bottom_scroll_complete():
                     display.set_bottom_text(bottom, COLOUR_WHITE)
                     _cur_bottom_text = bottom
-                laps_label = _pad(laps, 2) + " laps"
-                display.tick_2line(format_ms(effective_time), laps_label, timer_colour)
+                display.tick_2line(format_ms(effective_time), _pad(laps, 2), timer_colour)
             else:
                 try:
                     show_lap = _utime.ticks_diff(_lap_display_until_ms, _utime.ticks_ms()) > 0
