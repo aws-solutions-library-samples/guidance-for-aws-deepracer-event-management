@@ -20,6 +20,72 @@ def check_boot_buttons(gu):
 
 async def boot():
     from config import load_config, ConfigError
+
+    # Check for OTA mode BEFORE importing heavy modules like display.py
+    # so those files aren't locked when we try to overwrite them
+    try:
+        from galactic import GalacticUnicorn
+        gu = GalacticUnicorn()
+    except ImportError:
+        raise SystemExit("Not running on Galactic Unicorn firmware")
+
+    boot_button = check_boot_buttons(gu)
+
+    if boot_button == 'D':
+        # OTA mode — use minimal display, don't import display.py
+        from picographics import PicoGraphics, DISPLAY_GALACTIC_UNICORN
+        pg = PicoGraphics(display=DISPLAY_GALACTIC_UNICORN)
+        gu.set_brightness(0.5)
+
+        def ota_status(text, r, g, b):
+            pg.set_pen(pg.create_pen(0, 0, 0))
+            pg.clear()
+            pg.set_font("bitmap6x8")
+            pg.set_pen(pg.create_pen(r, g, b))
+            x = max(0, (53 - len(text) * 7) // 2)
+            pg.text(text, x, 1, scale=1)
+            gu.update(pg)
+
+        ota_status("OTA MODE", 255, 220, 0)
+        import utime
+        utime.sleep(1)
+
+        try:
+            cfg = load_config()
+        except Exception as e:
+            ota_status("CONFIG ERR", 255, 0, 0)
+            raise SystemExit(str(e))
+
+        # Minimal WiFi connect for OTA (inline, no display.py dependency)
+        import network
+        ssid = cfg["wifi"]["ssid"]
+        password = cfg["wifi"]["password"]
+        wlan = network.WLAN(network.STA_IF)
+        wlan.active(True)
+        wlan.connect(ssid, password)
+        ota_status("CONNECTING", 255, 255, 255)
+        while not wlan.isconnected():
+            status = wlan.status()
+            if status < 0:
+                wlan.disconnect()
+                utime.sleep(1)
+                wlan.connect(ssid, password)
+            await asyncio.sleep(2)
+        wlan.config(pm=wlan.PM_NONE)
+        print(f"[ota] wifi connected, ip={wlan.ifconfig()[0]}")
+
+        from ota import ota_update, OTA_FILES
+
+        # Use ota_status as the display for OTA (duck-typed show_status)
+        class OtaDisplay:
+            def show_status(self, text, colour):
+                ota_status(text, *colour)
+
+        ota_update(cfg, OtaDisplay())
+        # ota_update reboots; if we get here, it failed
+        return
+
+    # Normal boot — now safe to import heavy modules
     from state import State
     from display import Display, display_task, COLOUR_GREEN, COLOUR_CYAN, COLOUR_YELLOW
     from wifi import connect as wifi_connect, watch as wifi_watch
@@ -27,14 +93,7 @@ async def boot():
     from race import race_task
 
     cfg = None
-    # Minimal display needed before config loads
-    try:
-        disp = Display(brightness=0.5)
-    except ImportError:
-        raise SystemExit("Not running on Galactic Unicorn firmware")
-
-    # Check for boot button press
-    boot_button = check_boot_buttons(disp._gu)
+    disp = Display(brightness=0.5)
 
     try:
         cfg = load_config()
@@ -53,16 +112,6 @@ async def boot():
         disp.show_status("2-LINE", COLOUR_CYAN)
         import utime
         utime.sleep(1)
-    elif boot_button == 'D':
-        # OTA update mode — connect WiFi then download latest code
-        disp.show_status("OTA MODE", COLOUR_YELLOW)
-        import utime
-        utime.sleep(1)
-        await wifi_connect(cfg, disp)
-        from ota import ota_update
-        ota_update(cfg, disp)
-        # ota_update reboots on completion; if we get here, it failed
-        return
 
     disp_configured = Display(
         brightness=cfg["display"].get("brightness", 0.5),
