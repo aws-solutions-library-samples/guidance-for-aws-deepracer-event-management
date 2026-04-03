@@ -487,14 +487,16 @@ async def display_task(display, state, config):
                     if _branding_index >= len(_branding_items):
                         idle_mode = "leaderboard"
                         _branding_index = 0
-        elif idle_timer >= IDLE_CYCLE_S * 1000:
-            idle_mode = "branding"
-            idle_timer = 0
-            _cur_text = ""
         else:
             if state.leaderboard:
                 text = build_leaderboard_string(state.leaderboard)
                 if text != _cur_text or display.scroll_complete():
+                    if display.scroll_complete():
+                        # Leaderboard has finished scrolling — switch to branding
+                        idle_mode = "branding"
+                        idle_timer = 0
+                        _cur_text = ""
+                        continue
                     display.set_text(text, COLOUR_CYAN)
                     _cur_text = text
                 display.tick()
