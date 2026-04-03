@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
+import Avatar from 'avataaars';
 import classnames from 'classnames';
 import { useTranslation } from 'react-i18next';
 import { useWindowSize } from '../hooks/useWindowSize';
@@ -8,6 +9,7 @@ import { convertMsToString } from '../support-functions/time';
 import { scrollTo } from '../utils';
 import { Flag } from './flag';
 import styles from './leaderboardTable.module.css';
+import { parseAvatarConfig } from './parseAvatarConfig';
 
 const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag }) => {
   const { t } = useTranslation();
@@ -44,6 +46,8 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
         timeValue = convertMsToString(entry.fastestAverageLap.avgTime);
       }
 
+      const avatarConfig = parseAvatarConfig(entry.avatarConfig);
+
       return (
         <div
           key={entry.username}
@@ -61,19 +65,38 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
           }}
         >
           <div className={styles.liPosition}>#{index + 1}</div>
+          {avatarConfig && entry.highlightColour && (
+            <div
+              className={styles.highlightBar}
+              style={{
+                background: `linear-gradient(to right, ${entry.highlightColour} 50%, transparent)`,
+              }}
+            />
+          )}
+          {(avatarConfig || (showFlag && entry.countryCode)) && (
+            <div className={styles.liIdentity}>
+              {avatarConfig ? (
+                <>
+                  <Avatar avatarStyle="Transparent" {...(avatarConfig as Record<string, string>)} />
+                  {showFlag && entry.countryCode && (
+                    <span className={styles.identityFlag}>
+                      <Flag countryCode={entry.countryCode} />
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className={styles.identityFlagOnly}>
+                  <Flag countryCode={entry.countryCode} />
+                </span>
+              )}
+            </div>
+          )}
           <div
             className={classnames(
               [0, 1, 2].includes(index) && styles.topThreeLiRacer,
               ![0, 1, 2].includes(index) && styles.liRacer
             )}
           >
-            {showFlag ? (
-              <span className={styles.racerCountryFlag}>
-                <Flag countryCode={entry.countryCode} />
-              </span>
-            ) : (
-              ''
-            )}
             {username}
             {entry.racedByProxy ? '*' : ''}
           </div>

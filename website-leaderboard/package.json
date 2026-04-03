@@ -6,6 +6,7 @@
   "dependencies": {
     "@cloudscape-design/components": "^3.0.1205",
     "@cloudscape-design/global-styles": "^1.0.50",
+    "avataaars": "^2.0.0",
     "aws-amplify": "^6.16.2",
     "aws-rum-web": "^1.25.0",
     "classnames": "^2.5.1",
@@ -21,10 +22,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "@types/jest": "^30.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.19.11",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
