@@ -29,13 +29,17 @@ Then edit it with your WiFi credentials, AppSync endpoint, API key, and event de
 
 Only two files are needed for initial setup. The bootstrap downloads everything else over WiFi:
 
-1. Download and install [Thonny](https://thonny.org/)
-2. Connect the Pico W to your computer via USB
-3. Open Thonny and select the Pico W as the interpreter
-4. Upload just two files to the root of the Pico:
-   - `bootstrap.py` → save as **`main.py`** on the Pico
-   - `config.json` (generate from the DREM admin page or copy from `config.json.example`)
-5. Power cycle the Pico — it will automatically connect to WiFi, download all code files, and reboot into the full app
+1. Generate a `config.json` from the DREM admin page (Device Management → Pico LED Display) or copy from `config.json.example`
+2. Connect the Pico W via USB and copy both files using mpremote:
+
+```bash
+mpremote cp pico-display/bootstrap.py :main.py
+mpremote cp pico-display/config.json :config.json
+```
+
+3. Power cycle the Pico — it will automatically connect to WiFi, download all code files, and reboot into the full app
+
+Alternatively, use [Thonny](https://thonny.org/) — upload `bootstrap.py` as `main.py` and `config.json` to the Pico root.
 
 ### Option 2: Full Manual Install
 
