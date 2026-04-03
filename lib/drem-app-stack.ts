@@ -64,6 +64,8 @@ export class DeepracerEventManagerStack extends cdk.Stack {
   public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
   public readonly tacWebsitedistributionId: cdk.CfnOutput;
   public readonly tacSourceBucketName: cdk.CfnOutput; // this is missing
+  public readonly dremWebsiteUrl: cdk.CfnOutput;
+  public readonly appsyncId: cdk.CfnOutput;
 
   constructor(scope: Construct, id: string, props: DeepracerEventManagerStackProps) {
     super(scope, id, props);
@@ -205,7 +207,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'DremWebsite', {
       value: 'https://' + props.cloudfrontDomainNames?.at(0) || props.cloudfrontDistribution.distributionDomainName,
     });
-    new cdk.CfnOutput(this, 'DremWebsiteDistributionDomainName', {
+    this.dremWebsiteUrl = new cdk.CfnOutput(this, 'DremWebsiteDistributionDomainName', {
       value: 'https://' + props.cloudfrontDistribution.distributionDomainName,
     });
     new cdk.CfnOutput(this, 'tacWebsite', {
@@ -287,7 +289,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       value: cwRumLeaderboardAppMonitor.config,
     });
 
-    new cdk.CfnOutput(this, 'appsyncId', { value: appsyncResources.api.apiId });
+    this.appsyncId = new cdk.CfnOutput(this, 'appsyncId', { value: appsyncResources.api.apiId });
 
     new cdk.CfnOutput(this, 'appsyncEndpoint', {
       value: appsyncResources.api.graphqlUrl,

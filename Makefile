@@ -75,11 +75,6 @@ manual.deploy.website: local.config
 	aws s3 sync website/build/ s3://$$(jq -r '.[] | select(.OutputKey=="sourceBucketName") | .OutputValue' cfn.outputs)/ --delete
 	aws cloudfront create-invalidation --distribution-id $$(jq -r '.[] | select(.OutputKey=="distributionId") | .OutputValue' cfn.outputs) --paths "/*"
 
-manual.deploy.website: local.config
-	cd website && npm run build
-	aws s3 sync website/build/ s3://$$(jq -r '.[] | select(.OutputKey=="sourceBucketName") | .OutputValue' cfn.outputs)/ --delete
-	aws cloudfront create-invalidation --distribution-id $$(jq -r '.[] | select(.OutputKey=="distributionId") | .OutputValue' cfn.outputs) --paths "/*"
-
 local.install:					## Install Javascript dependencies
 	npm install
 
@@ -127,12 +122,17 @@ local.config.docker:					## Setup local config based on branch
 
 ## Test targets
 
-.PHONY: test test.website
-test:						## Run all tests
+.PHONY: test test.cdk test.website test.leaderboard
+test: test.cdk test.website test.leaderboard	## Run all tests
+
+test.cdk:					## Run CDK tests
+	npm test
+
+test.website:					## Run website tests
 	cd website && npm test
 
-test.website:					## Run website schema conformance tests
-	cd website && npm test
+test.leaderboard:				## Run leaderboard tests
+	cd website-leaderboard && npm test
 
 local.config.python:		## Setup a Python .venv
 	python3 -m venv --prompt drem .venv

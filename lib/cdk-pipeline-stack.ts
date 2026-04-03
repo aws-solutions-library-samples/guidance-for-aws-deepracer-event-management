@@ -6,6 +6,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as pipelines from 'aws-cdk-lib/pipelines';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { BaseStack } from './base-stack';
 import { DeepracerEventManagerStack } from './drem-app-stack';
@@ -31,6 +32,8 @@ class InfrastructurePipelineStage extends Stage {
   public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
   public readonly termAndConditionsDistributionId: cdk.CfnOutput;
   public readonly termAndConditionsSourceBucketName: cdk.CfnOutput;
+  public readonly dremWebsiteUrl: cdk.CfnOutput;
+  public readonly appsyncId: cdk.CfnOutput;
 
   constructor(scope: Construct, id: string, props: InfrastructurePipelineStageProps) {
     super(scope, id, props);
@@ -68,6 +71,8 @@ class InfrastructurePipelineStage extends Stage {
     this.streamingOverlayDistributionId = stack.streamingOverlayDistributionId;
     this.termAndConditionsSourceBucketName = stack.tacSourceBucketName;
     this.termAndConditionsDistributionId = stack.tacWebsitedistributionId;
+    this.dremWebsiteUrl = stack.dremWebsiteUrl;
+    this.appsyncId = stack.appsyncId;
   }
 }
 export interface CdkPipelineStackProps extends cdk.StackProps {
@@ -125,22 +130,24 @@ export class CdkPipelineStack extends cdk.Stack {
         ],
         commands: [
           'npm install',
+          // Tests - run before synth so pipeline fails fast on test failure
+          'npm test',
+          'cd website && npm test && cd ..',
+          'cd website-leaderboard && npm test && cd ..',
           `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c label=${props.labelName}` +
             ` -c account=${props.env.account} -c region=${props.env.region}` +
             ` -c source_branch=${props.sourceBranchName} -c source_repo=${props.sourceRepo}` +
             (props.domainName ? ` -c domain_name=${props.domainName}` : ''),
         ],
-        // partialBuildSpec: codebuild.BuildSpec.fromObject(
-        //     {
-        //         "reports": {
-        //             "pytest_reports": {
-        //                 "files": ["unittest-report.xml"],
-        //                 "base-directory": "reports",
-        //                 "file-format": "JUNITXML",
-        //             }
-        //         }
-        //     }
-        // ),
+        partialBuildSpec: codebuild.BuildSpec.fromObject({
+          reports: {
+            jest_reports: {
+              files: ['junit-cdk.xml', 'junit-website.xml', 'junit-leaderboard.xml'],
+              'base-directory': 'reports',
+              'file-format': 'JUNITXML',
+            },
+          },
+        }),
         rolePolicyStatements: [
           new iam.PolicyStatement({
             actions: ['sts:AssumeRole'],
@@ -188,8 +195,7 @@ export class CdkPipelineStack extends cdk.Stack {
     ];
 
     // Main website Deploy to S3
-    infrastructure_stage.addPost(
-      new pipelines.CodeBuildStep('MainSiteDeployToS3', {
+    const mainSiteDeployStep = new pipelines.CodeBuildStep('MainSiteDeployToS3', {
         installCommands: [`npm install -g @aws-amplify/cli@${AMPLIFY_VERSION}`],
         buildEnvironment: {
           privileged: true,
@@ -222,8 +228,8 @@ export class CdkPipelineStack extends cdk.Stack {
           distributionId: infrastructure.distributionId,
         },
         rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
-      })
-    );
+    });
+    infrastructure_stage.addPost(mainSiteDeployStep);
 
     // Leaderboard website Deploy to S3
     infrastructure_stage.addPost(
@@ -322,7 +328,67 @@ export class CdkPipelineStack extends cdk.Stack {
       })
     );
 
+    // Post-deploy tests — run after MainSiteDeployToS3 completes
+    const postDeployStep = new pipelines.CodeBuildStep('PostDeployTests', {
+        buildEnvironment: {
+          computeType: codebuild.ComputeType.SMALL,
+        },
+        installCommands: [
+          `n ${NODE_VERSION}`,
+          'node --version',
+          'npx playwright install --with-deps chromium',
+        ],
+        commands: [
+          'npm install',
+          'aws appsync get-introspection-schema --api-id $appsyncId --format SDL website/src/graphql/schema.graphql',
+          'cd website && npm run test:post-deploy && cd ..',
+        ],
+        envFromCfnOutputs: {
+          appsyncId: infrastructure.appsyncId,
+          DREM_WEBSITE_URL: infrastructure.dremWebsiteUrl,
+        },
+        rolePolicyStatements: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: ['appsync:GetIntrospectionSchema'],
+            resources: ['*'],
+          }),
+        ],
+        partialBuildSpec: codebuild.BuildSpec.fromObject({
+          reports: {
+            post_deploy_reports: {
+              files: ['junit-post-deploy.xml'],
+              'base-directory': 'reports',
+              'file-format': 'JUNITXML',
+            },
+          },
+        }),
+    });
+    postDeployStep.addStepDependency(mainSiteDeployStep);
+    infrastructure_stage.addPost(postDeployStep);
+
     pipeline.buildPipeline();
+
+    // Suppress cdk-nag findings for CDK Pipelines-managed resources we don't control
+    NagSuppressions.addStackSuppressions(this, [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Wildcard permissions are managed by CDK Pipelines for CodeBuild and asset publishing roles',
+      },
+      {
+        id: 'AwsSolutions-CB4',
+        reason: 'KMS encryption for CodeBuild projects is managed by CDK Pipelines',
+      },
+      {
+        id: 'AwsSolutions-S1',
+        reason: 'Access logging for the pipeline artifacts bucket is managed by CDK Pipelines',
+      },
+      {
+        id: 'AwsSolutions-SNS3',
+        reason: 'SSL enforcement on the pipeline notification topic is not exposed by CDK Pipelines',
+      },
+    ]);
+
     const topic = new sns.Topic(this, 'PipelineTopic');
     topic.addSubscription(new subs.EmailSubscription(props.email));
     const rule = new notifications.NotificationRule(this, 'NotificationRule', {
