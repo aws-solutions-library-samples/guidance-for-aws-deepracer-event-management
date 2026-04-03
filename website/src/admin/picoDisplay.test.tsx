@@ -15,6 +15,8 @@ const FORM = {
   scrollSpeed: 40,
   topN: 5,
   raceDisplayLines: 1 as const,
+  branding1: 'DREM',
+  branding2: '>> This way towards victory >>',
   ssid: 'TestNetwork',
   wifiPassword: 'TestPassword',
   otaBaseUrl: 'https://example.com/pico-display/',
@@ -77,5 +79,11 @@ describe('generateConfig', () => {
   it('ota block includes base_url from form', () => {
     const cfg = generateConfig(CONNECTION, FORM);
     expect(cfg.ota.base_url).toBe('https://example.com/pico-display/');
+  });
+
+  it('branding fields written to display block', () => {
+    const cfg = generateConfig(CONNECTION, FORM);
+    expect(cfg.display.branding_1).toBe('DREM');
+    expect(cfg.display.branding_2).toBe('>> This way towards victory >>');
   });
 });
