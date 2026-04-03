@@ -219,7 +219,8 @@ export const RacePage = ({
   };
 
   const wsUrl = window.location.href.split('/', 3)[2] ?? 'localhost:8080';
-  const [autTimerIsConnected] = useWebsocket(`ws://${wsUrl}`, onMessageFromAutTimer);
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  const [autTimerIsConnected] = useWebsocket(`${wsProtocol}://${wsUrl}`, onMessageFromAutTimer);
 
   // handlers functions
   const actionHandler = (id) => {
