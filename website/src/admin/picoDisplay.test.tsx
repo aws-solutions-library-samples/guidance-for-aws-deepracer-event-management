@@ -16,7 +16,9 @@ const FORM = {
   topN: 5,
   raceDisplayLines: 1 as const,
   branding1: 'DREM',
+  branding1Colour: 'yellow',
   branding2: '>> This way towards victory >>',
+  branding2Colour: 'cyan',
   ssid: 'TestNetwork',
   wifiPassword: 'TestPassword',
   otaBaseUrl: 'https://example.com/pico-display/',
@@ -84,6 +86,8 @@ describe('generateConfig', () => {
   it('branding fields written to display block', () => {
     const cfg = generateConfig(CONNECTION, FORM);
     expect(cfg.display.branding_1).toBe('DREM');
+    expect(cfg.display.branding_1_colour).toBe('yellow');
     expect(cfg.display.branding_2).toBe('>> This way towards victory >>');
+    expect(cfg.display.branding_2_colour).toBe('cyan');
   });
 });

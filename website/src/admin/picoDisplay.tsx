@@ -41,7 +41,9 @@ export interface PicoFormValues {
   topN: number;
   raceDisplayLines: 1 | 2;
   branding1: string;
+  branding1Colour: string;
   branding2: string;
+  branding2Colour: string;
   ssid: string;
   wifiPassword: string;
   otaBaseUrl: string;
@@ -58,7 +60,9 @@ export interface PicoConfig {
     leaderboard_top_n: number;
     race_display_lines: 1 | 2;
     branding_1: string;
+    branding_1_colour: string;
     branding_2: string;
+    branding_2_colour: string;
   };
   ota: { base_url: string };
   debug: boolean;
@@ -90,7 +94,9 @@ export function generateConfig(conn: PicoConnection, form: PicoFormValues): Pico
       leaderboard_top_n: form.topN,
       race_display_lines: form.raceDisplayLines,
       branding_1: form.branding1,
+      branding_1_colour: form.branding1Colour,
       branding_2: form.branding2,
+      branding_2_colour: form.branding2Colour,
     },
     ota: {
       base_url: form.otaBaseUrl,
@@ -127,7 +133,9 @@ export const AdminPicoDisplay: React.FC = () => {
   const [topN, setTopN] = React.useState<string>('5');
   const [raceDisplayLines, setRaceDisplayLines] = React.useState<1 | 2>(1);
   const [branding1, setBranding1] = React.useState<string>('DREM');
+  const [branding1Colour, setBranding1Colour] = React.useState<string>('yellow');
   const [branding2, setBranding2] = React.useState<string>('>> This way towards victory >>');
+  const [branding2Colour, setBranding2Colour] = React.useState<string>('cyan');
   const [ssid, setSsid] = React.useState<string>('');
   const [wifiPassword, setWifiPassword] = React.useState<string>('');
   const [debug, setDebug] = React.useState<boolean>(false);
@@ -155,7 +163,9 @@ export const AdminPicoDisplay: React.FC = () => {
         topN: parseInt(topN, 10) || 5,
         raceDisplayLines,
         branding1,
+        branding1Colour,
         branding2,
+        branding2Colour,
         ssid,
         wifiPassword,
         otaBaseUrl,
@@ -322,12 +332,40 @@ export const AdminPicoDisplay: React.FC = () => {
               />
             </FormField>
 
-            <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+            <Grid gridDefinition={[{ colspan: 5 }, { colspan: 1 }, { colspan: 5 }, { colspan: 1 }]}>
               <FormField label={t('pico-display.branding-1-label')} description={t('pico-display.branding-1-description')}>
                 <Input value={branding1} onChange={({ detail }) => setBranding1(detail.value)} />
               </FormField>
+              <FormField label={t('pico-display.colour-label')}>
+                <Select
+                  selectedOption={{ label: branding1Colour, value: branding1Colour }}
+                  onChange={({ detail }) => setBranding1Colour(detail.selectedOption.value!)}
+                  options={[
+                    { label: 'yellow', value: 'yellow' },
+                    { label: 'cyan', value: 'cyan' },
+                    { label: 'green', value: 'green' },
+                    { label: 'white', value: 'white' },
+                    { label: 'orange', value: 'orange' },
+                    { label: 'red', value: 'red' },
+                  ]}
+                />
+              </FormField>
               <FormField label={t('pico-display.branding-2-label')} description={t('pico-display.branding-2-description')}>
                 <Input value={branding2} onChange={({ detail }) => setBranding2(detail.value)} />
+              </FormField>
+              <FormField label={t('pico-display.colour-label')}>
+                <Select
+                  selectedOption={{ label: branding2Colour, value: branding2Colour }}
+                  onChange={({ detail }) => setBranding2Colour(detail.selectedOption.value!)}
+                  options={[
+                    { label: 'yellow', value: 'yellow' },
+                    { label: 'cyan', value: 'cyan' },
+                    { label: 'green', value: 'green' },
+                    { label: 'white', value: 'white' },
+                    { label: 'orange', value: 'orange' },
+                    { label: 'red', value: 'red' },
+                  ]}
+                />
               </FormField>
             </Grid>
 
