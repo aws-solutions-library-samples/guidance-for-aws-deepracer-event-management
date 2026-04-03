@@ -320,15 +320,6 @@ async def display_task(display, state, config):
                 await asyncio.sleep_ms(2000)
 
             if _prev_status == "RACE_IN_PROGRESS":
-                # Resets checked first — flash yellow before green so the
-                # sequence reads "something went wrong" → "lap recorded"
-                # (AppSync often batches a reset + lap into one event)
-                if resets > _prev_resets:
-                    if dbg:
-                        print(f"[disp] reset {resets} - yellow flash")
-                    for _ in range(2):
-                        display.flash(COLOUR_YELLOW, 250)
-                        await asyncio.sleep_ms(100)
                 if laps > _prev_laps:
                     last = race.get("last_lap_ms")
                     best = race.get("fastest_lap_ms")
