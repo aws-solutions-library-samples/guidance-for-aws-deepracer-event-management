@@ -33,6 +33,7 @@ website/src/graphql/mutations.js
 website/src/graphql/queries.js
 website/src/graphql/subscriptions.js
 appsyncId.txt
+website/public/pico-display/
 
 
 lib/*.js
