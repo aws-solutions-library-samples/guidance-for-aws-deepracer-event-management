@@ -372,7 +372,8 @@ async def display_task(display, state, config):
                     last = race["last_lap_ms"]
                     best = race.get("fastest_lap_ms")
                     lap_colour = COLOUR_GREEN if (best is not None and last <= best) else COLOUR_YELLOW
-                    display.show_status(format_s(last), lap_colour)
+                    lap_text = _pad(laps, 2) + ": " + format_s(last)
+                    display.show_status(lap_text, lap_colour)
                 else:
                     display.show_status(format_ms(effective_time), timer_colour)
             continue
