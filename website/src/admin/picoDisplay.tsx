@@ -42,6 +42,7 @@ export interface PicoFormValues {
   raceDisplayLines: 1 | 2;
   ssid: string;
   wifiPassword: string;
+  otaBaseUrl: string;
   debug: boolean;
 }
 
@@ -55,6 +56,7 @@ export interface PicoConfig {
     leaderboard_top_n: number;
     race_display_lines: 1 | 2;
   };
+  ota: { base_url: string };
   debug: boolean;
 }
 
@@ -83,6 +85,9 @@ export function generateConfig(conn: PicoConnection, form: PicoFormValues): Pico
       scroll_speed: form.scrollSpeed,
       leaderboard_top_n: form.topN,
       race_display_lines: form.raceDisplayLines,
+    },
+    ota: {
+      base_url: form.otaBaseUrl,
     },
     debug: form.debug,
   };
@@ -126,6 +131,8 @@ export const AdminPicoDisplay: React.FC = () => {
     value: tr.trackId,
   }));
 
+  const otaBaseUrl = `${window.location.origin}/pico-display/`;
+
   const canDownload = Boolean(selectedEventId && selectedTrackId && endpoint && apiKey);
 
   const handleDownload = () => {
@@ -141,6 +148,7 @@ export const AdminPicoDisplay: React.FC = () => {
         raceDisplayLines,
         ssid,
         wifiPassword,
+        otaBaseUrl,
         debug,
       }
     );
@@ -314,6 +322,21 @@ export const AdminPicoDisplay: React.FC = () => {
             <Button variant="primary" disabled={!canDownload} onClick={handleDownload}>
               {t('pico-display.download-button')}
             </Button>
+          </SpaceBetween>
+        </Container>
+
+        <Container
+          header={
+            <Header variant="h2" description={t('pico-display.ota-description')}>
+              {t('pico-display.ota-title')}
+            </Header>
+          }
+        >
+          <SpaceBetween size="m">
+            {readOnlyField(t('pico-display.ota-url-label'), otaBaseUrl, 'otaBaseUrl')}
+            <Box variant="small" color="text-body-secondary">
+              {t('pico-display.ota-instructions')}
+            </Box>
           </SpaceBetween>
         </Container>
 
