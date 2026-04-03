@@ -228,7 +228,7 @@ export class CdkPipelineStack extends cdk.Stack {
 
         // Build leaderboard and overlays, copy into website/public/
         'docker run --rm -v $(pwd):/foo -w /foo/website/leaderboard' +
-          " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
+          " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache --legacy-peer-deps && npm run build'",
         'mkdir -p ./website/public/leaderboard && cp -r ./website/leaderboard/build/. ./website/public/leaderboard/',
         'docker run --rm -v $(pwd):/foo -w /foo/website/overlays' +
           " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
@@ -236,7 +236,7 @@ export class CdkPipelineStack extends cdk.Stack {
 
         // Build main site (sub-apps already in public/)
         'docker run --rm -v $(pwd):/foo -w /foo/website' +
-          " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
+          " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache --legacy-peer-deps && npm run build'",
 
         // Sync everything and invalidate
         'aws s3 sync ./website/build/ s3://$sourceBucketName/ --delete',
