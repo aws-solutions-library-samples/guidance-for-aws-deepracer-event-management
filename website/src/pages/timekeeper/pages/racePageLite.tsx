@@ -91,6 +91,7 @@ export const RacePage = ({
   const lapTimerRef = useRef();
   const raceTimerRef = useRef();
   const startTimeRef = useRef();
+  const lastAutLapTimestampMsRef = useRef(null);
   const [PublishOverlay] = usePublishOverlay();
 
   //populate the laps on page refresh, without this laps array in the overlay is empty
@@ -102,6 +103,7 @@ export const RacePage = ({
     actions: {
       readyToStart: (context, event) => {
         resetTimers();
+        lastAutLapTimestampMsRef.current = null;
         SetCurrentLap(defaultLap);
       },
       endRace: () => {
@@ -138,13 +140,14 @@ export const RacePage = ({
         const isLapValid = event.isValid && carResetCounter <= raceConfig.numberOfResetsPerLap;
 
         const lapId = raceInfo.laps.length;
+        const timerLapTimeMs = Number.isFinite(event?.timerLapTimeMs) ? event.timerLapTimeMs : null;
         const currentLapStats = {
           ...currentLap,
           resets: carResetCounter,
           lapId: lapId,
           modelId: raceInfo.currentModelId,
           carName: currentCar.ComputerName,
-          time: lapTimerRef.current.getCurrentTimeInMs(),
+          time: timerLapTimeMs ?? lapTimerRef.current.getCurrentTimeInMs(),
           isValid: isLapValid,
           autTimerConnected: autTimerIsConnected,
         };
@@ -215,7 +218,48 @@ export const RacePage = ({
 
   const onMessageFromAutTimer = (message) => {
     console.info('Automated timer sent message: ' + message);
-    send('CAPTURE_AUT_LAP', { isValid: true });
+
+    try {
+      const payload = JSON.parse(message);
+      if (payload?.event !== 'lap') {
+        console.debug('Ignoring non-lap timer event', payload?.event);
+        return;
+      }
+
+      const currentTimestampMs = Number(payload.timestamp);
+      if (!Number.isFinite(currentTimestampMs)) {
+        console.debug('Timer lap payload missing numeric timestamp', payload);
+        send('CAPTURE_AUT_LAP', { isValid: true });
+        return;
+      }
+
+      const receivedAtMs = Date.now();
+      const latencyMs = receivedAtMs - currentTimestampMs;
+      console.debug('Auto-timer latency', {
+        sentMs: currentTimestampMs,
+        receivedAtMs,
+        latencyMs,
+      });
+
+      let timerLapTimeMs = null;
+      if (lastAutLapTimestampMsRef.current !== null) {
+        const deltaMs = currentTimestampMs - lastAutLapTimestampMsRef.current;
+        if (deltaMs > 0) {
+          timerLapTimeMs = deltaMs;
+        }
+      }
+
+      lastAutLapTimestampMsRef.current = currentTimestampMs;
+      console.debug('Auto lap timing from timer', {
+        timestampMs: currentTimestampMs,
+        timerLapTimeMs,
+      });
+      send('CAPTURE_AUT_LAP', { isValid: true, timerLapTimeMs });
+    } catch (err) {
+      // Backward compatibility for legacy timer payloads that are plain strings.
+      console.debug('Failed to parse timer payload as JSON, using legacy lap trigger');
+      send('CAPTURE_AUT_LAP', { isValid: true });
+    }
   };
 
   const wsUrl = window.location.href.split('/', 3)[2] ?? 'localhost:8080';
@@ -422,10 +466,20 @@ export const RacePage = ({
               >
                 {t('timekeeper.undo-false-finish')}
               </button>
-              <button key="endrace" id={styles.endrace} onClick={() => send('END')} disabled={btnEndRace}>
+              <button
+                key="endrace"
+                id={styles.endrace}
+                onClick={() => send('END')}
+                disabled={btnEndRace}
+              >
                 {t('timekeeper.end-race')}
               </button>
-              <button key="startrace" id={styles.startrace} onClick={() => send('TOGGLE')} disabled={btnStartRace}>
+              <button
+                key="startrace"
+                id={styles.startrace}
+                onClick={() => send('TOGGLE')}
+                disabled={btnStartRace}
+              >
                 {startButtonText}
               </button>
             </Grid>
@@ -445,9 +499,9 @@ export const RacePage = ({
                         <nobr>{t('timekeeper.race-page.automated-timer-header')}</nobr>
                       </b>
                       <span key="auto-timer-value">
-                      {autTimerIsConnected
-                        ? t('timekeeper.race-page.automated-timer-connected')
-                        : t('timekeeper.race-page.automated-timer-not-connected')}{' '}
+                        {autTimerIsConnected
+                          ? t('timekeeper.race-page.automated-timer-connected')
+                          : t('timekeeper.race-page.automated-timer-not-connected')}{' '}
                       </span>
                     </Grid>
                   </ColumnLayout>
