@@ -45,12 +45,12 @@ def test_build_leaderboard_string():
         {"position": 2, "username": "ALICE", "fastest_lap_ms": 13_010},
     ]
     result = build_leaderboard_string(lb)
-    assert result == "#1 DAVE 12.450  ·  #2 ALICE 13.010"
+    assert result == "#1 DAVE: 12.450  ·  #2 ALICE: 13.010"
 
 def test_build_leaderboard_string_no_time():
     lb = [{"position": 1, "username": "BOB", "fastest_lap_ms": None}]
     result = build_leaderboard_string(lb)
-    assert result == "#1 BOB ---"
+    assert result == "#1 BOB: ---"
 
 # build_race_2line_bottom
 
