@@ -40,6 +40,8 @@ export interface PicoFormValues {
   scrollSpeed: number;
   topN: number;
   raceDisplayLines: 1 | 2;
+  branding1: string;
+  branding2: string;
   ssid: string;
   wifiPassword: string;
   otaBaseUrl: string;
@@ -55,6 +57,8 @@ export interface PicoConfig {
     scroll_speed: number;
     leaderboard_top_n: number;
     race_display_lines: 1 | 2;
+    branding_1: string;
+    branding_2: string;
   };
   ota: { base_url: string };
   debug: boolean;
@@ -85,6 +89,8 @@ export function generateConfig(conn: PicoConnection, form: PicoFormValues): Pico
       scroll_speed: form.scrollSpeed,
       leaderboard_top_n: form.topN,
       race_display_lines: form.raceDisplayLines,
+      branding_1: form.branding1,
+      branding_2: form.branding2,
     },
     ota: {
       base_url: form.otaBaseUrl,
@@ -120,6 +126,8 @@ export const AdminPicoDisplay: React.FC = () => {
   const [scrollSpeed, setScrollSpeed] = React.useState<string>('40');
   const [topN, setTopN] = React.useState<string>('5');
   const [raceDisplayLines, setRaceDisplayLines] = React.useState<1 | 2>(1);
+  const [branding1, setBranding1] = React.useState<string>('DREM');
+  const [branding2, setBranding2] = React.useState<string>('>> This way towards victory >>');
   const [ssid, setSsid] = React.useState<string>('');
   const [wifiPassword, setWifiPassword] = React.useState<string>('');
   const [debug, setDebug] = React.useState<boolean>(false);
@@ -146,6 +154,8 @@ export const AdminPicoDisplay: React.FC = () => {
         scrollSpeed: parseInt(scrollSpeed, 10) || 40,
         topN: parseInt(topN, 10) || 5,
         raceDisplayLines,
+        branding1,
+        branding2,
         ssid,
         wifiPassword,
         otaBaseUrl,
@@ -311,6 +321,15 @@ export const AdminPicoDisplay: React.FC = () => {
                 ]}
               />
             </FormField>
+
+            <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+              <FormField label={t('pico-display.branding-1-label')} description={t('pico-display.branding-1-description')}>
+                <Input value={branding1} onChange={({ detail }) => setBranding1(detail.value)} />
+              </FormField>
+              <FormField label={t('pico-display.branding-2-label')} description={t('pico-display.branding-2-description')}>
+                <Input value={branding2} onChange={({ detail }) => setBranding2(detail.value)} />
+              </FormField>
+            </Grid>
 
             <FormField label={t('pico-display.debug-label')} description={t('pico-display.debug-description')}>
               <Toggle checked={debug} onChange={({ detail }) => setDebug(detail.checked)}>
