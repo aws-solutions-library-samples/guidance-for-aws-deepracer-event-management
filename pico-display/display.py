@@ -177,15 +177,15 @@ class Display:
         self._pg.clear()
         self._pg.set_font("bitmap4x5")
 
-        # Top row — time and lap count
+        # Top row — time and lap count (y=-1 to offset font's 1px top padding)
         self._pg.set_pen(self._pg.create_pen(*(time_colour or COLOUR_YELLOW)))
-        self._pg.text(time_str, self._2LINE_TIME_X, 0, scale=1)
+        self._pg.text(time_str, self._2LINE_TIME_X, -1, scale=1)
         self._pg.set_pen(self._pg.create_pen(*COLOUR_CYAN))
-        self._pg.text(laps_str, self._2LINE_LAPS_X, 0, scale=1)
+        self._pg.text(laps_str, self._2LINE_LAPS_X, -1, scale=1)
 
         # Bottom row — scrolling racer info
         self._pg.set_pen(self._pg.create_pen(*self._bottom_colour))
-        self._pg.text(self._bottom_text, self._bottom_x, 6, scale=1)
+        self._pg.text(self._bottom_text, self._bottom_x, 5, scale=1)
 
         self._draw_status_pixel()
         self._gu.update(self._pg)
