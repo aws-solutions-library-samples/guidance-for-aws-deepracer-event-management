@@ -437,22 +437,37 @@ async def display_task(display, state, config):
             _prev_laps = 0
             _prev_resets = 0
 
-        if idle_timer >= IDLE_CYCLE_S * 1000:
-            if idle_mode == "branding":
-                _branding_index += 1
-                if _branding_index >= len(_branding_texts):
-                    idle_mode = "leaderboard"
-                    _branding_index = 0
-            else:
-                idle_mode = "branding"
-            idle_timer = 0
-            _cur_text = ""
-            if dbg:
-                print(f"[disp] idle mode -> {idle_mode} branding_index={_branding_index}")
-
         if idle_mode == "branding":
             text = _branding_texts[_branding_index % len(_branding_texts)]
-            display.show_status(text, COLOUR_YELLOW)
+            fits = len(text) * 7 <= Display.WIDTH  # bitmap6x8: ~7px per char
+            if fits:
+                # Short text — show static for IDLE_CYCLE_S then advance
+                if idle_timer >= IDLE_CYCLE_S * 1000:
+                    _branding_index += 1
+                    idle_timer = 0
+                    if _branding_index >= len(_branding_texts):
+                        idle_mode = "leaderboard"
+                        _branding_index = 0
+                        _cur_text = ""
+                else:
+                    display.show_status(text, COLOUR_YELLOW)
+            else:
+                # Long text — scroll it, advance when scroll finishes
+                if text != _cur_text:
+                    display.set_text(text, COLOUR_YELLOW)
+                    _cur_text = text
+                display.tick()
+                if display.scroll_complete():
+                    _branding_index += 1
+                    _cur_text = ""
+                    idle_timer = 0
+                    if _branding_index >= len(_branding_texts):
+                        idle_mode = "leaderboard"
+                        _branding_index = 0
+        elif idle_timer >= IDLE_CYCLE_S * 1000:
+            idle_mode = "branding"
+            idle_timer = 0
+            _cur_text = ""
         else:
             if state.leaderboard:
                 text = build_leaderboard_string(state.leaderboard)
