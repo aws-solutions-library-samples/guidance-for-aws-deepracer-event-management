@@ -17,6 +17,7 @@ const FORM = {
   raceDisplayLines: 1 as const,
   ssid: 'TestNetwork',
   wifiPassword: 'TestPassword',
+  otaBaseUrl: 'https://example.com/pico-display/',
   debug: false,
 };
 
@@ -71,5 +72,10 @@ describe('generateConfig', () => {
   it('race_display_lines 2 is written to display block', () => {
     const cfg = generateConfig(CONNECTION, { ...FORM, raceDisplayLines: 2 });
     expect(cfg.display.race_display_lines).toBe(2);
+  });
+
+  it('ota block includes base_url from form', () => {
+    const cfg = generateConfig(CONNECTION, FORM);
+    expect(cfg.ota.base_url).toBe('https://example.com/pico-display/');
   });
 });
