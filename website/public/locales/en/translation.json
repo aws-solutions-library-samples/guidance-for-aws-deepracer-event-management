@@ -577,6 +577,7 @@
     "branding-1-description": "First text shown during idle (e.g. event name or sponsor)",
     "branding-2-label": "Branding line 2",
     "branding-2-description": "Second text shown during idle (e.g. tagline or URL)",
+    "colour-label": "Colour",
     "debug-label": "Debug mode",
     "debug-description": "Enables verbose serial output \u2014 connect via Thonny to view logs",
     "debug-on": "On",
