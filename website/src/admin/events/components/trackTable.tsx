@@ -19,6 +19,10 @@ interface Config {
 
 const config = awsconfig as unknown as Config;
 
+const isLocalDev = window.location.hostname === 'localhost';
+const leaderboardBase = isLocalDev ? 'http://localhost:3001' : config.Urls?.leaderboardWebsite;
+const overlayBase = isLocalDev ? 'http://localhost:3002' : config.Urls?.streamingOverlayWebsite;
+
 /**
  * Extended track item with link components for table display
  */
@@ -48,27 +52,21 @@ export const TrackTable: React.FC<TrackTableProps> = ({ eventId, tracks, raceFor
           ...track,
           leaderboardLinks: (
             <EventLinksButtons
-              href={`${
-                config.Urls.leaderboardWebsite
-              }/leaderboard/${eventId.toString()}/?qr=header&scroll=true&track=${track.trackId.toString()}&format=${raceFormat}`}
+              href={`${leaderboardBase}/leaderboard/${eventId.toString()}/?qr=header&scroll=true&track=${track.trackId.toString()}&format=${raceFormat}`}
               linkTextPrimary={t('events.link-same-tab')}
               linkTextExternal={t('events.link-new-tab')}
             />
           ),
           streamingOverlayLinks: (
             <EventLinksButtons
-              href={`${
-                config.Urls.streamingOverlayWebsite
-              }/${eventId.toString()}?trackId=${track.trackId.toString()}&format=${raceFormat}`}
+              href={`${overlayBase}/${eventId.toString()}?trackId=${track.trackId.toString()}&format=${raceFormat}`}
               linkTextPrimary={t('events.link-same-tab')}
               linkTextExternal={t('events.link-new-tab')}
             />
           ),
           streamingOverlayChromaLinks: (
             <EventLinksButtons
-              href={`${
-                config.Urls.streamingOverlayWebsite
-              }/${eventId.toString()}?trackId=${track.trackId.toString()}&chroma=1&format=${raceFormat}`}
+              href={`${overlayBase}/${eventId.toString()}?trackId=${track.trackId.toString()}&chroma=1&format=${raceFormat}`}
               linkTextPrimary={t('events.link-same-tab')}
               linkTextExternal={t('events.link-new-tab')}
             />

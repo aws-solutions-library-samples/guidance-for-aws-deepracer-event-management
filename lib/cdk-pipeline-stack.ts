@@ -203,7 +203,7 @@ export class CdkPipelineStack extends cdk.Stack {
         'cd ../..',
         'docker run --rm -v $(pwd):/foo -w /foo' +
           " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
-          " --cache /tmp/empty-cache && npm run build'",
+          " --cache /tmp/empty-cache --legacy-peer-deps && npm run build'",
         'aws s3 sync ./build/ s3://$sourceBucketName/ --delete',
         'echo distributionId=$distributionId',
         "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'",
@@ -242,7 +242,7 @@ export class CdkPipelineStack extends cdk.Stack {
           'cd ../..',
           'docker run --rm -v $(pwd):/foo -w /foo' +
             " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
-            " --cache /tmp/empty-cache && npm run build'",
+            " --cache /tmp/empty-cache --legacy-peer-deps && npm run build'",
           'aws s3 sync ./build/ s3://$leaderboardSourceBucketName/ --delete',
           "aws cloudfront create-invalidation --distribution-id $leaderboardDistributionId --paths '/*'",
           'cd ..',
