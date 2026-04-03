@@ -116,10 +116,8 @@ class Display:
     SCROLL_RATE_HZ = 60         # ticks per second for the scroll loop
 
     # x positions for 2-line top row (bitmap4x5 font, ~5px per char)
-    # "MM:SS" (5 chars = 25px) · laps · resets
     _2LINE_TIME_X   = 0
-    _2LINE_LAPS_X   = 27
-    _2LINE_RST_X    = 40
+    _2LINE_LAPS_X   = 43   # right-aligned: 53 - (2 chars × 5px)
 
     def __init__(self, brightness=0.5, scroll_speed=40):
         from galactic import GalacticUnicorn
@@ -359,10 +357,22 @@ async def display_task(display, state, config):
                 timer_colour = COLOUR_WHITE
 
             if race_display_lines == 2:
-                bottom = build_race_2line_bottom(race)
-                if bottom != _cur_bottom_text or display.bottom_scroll_complete():
-                    display.set_bottom_text(bottom, COLOUR_WHITE)
-                    _cur_bottom_text = bottom
+                try:
+                    show_lap = _utime.ticks_diff(_lap_display_until_ms, _utime.ticks_ms()) > 0
+                except AttributeError:
+                    show_lap = int(_utime.time() * 1000) < _lap_display_until_ms
+                if show_lap and race.get("last_lap_ms") is not None:
+                    last = race["last_lap_ms"]
+                    best = race.get("fastest_lap_ms")
+                    lap_colour = COLOUR_GREEN if (best is not None and last <= best) else COLOUR_YELLOW
+                    lap_text = _pad(laps, 2) + ": " + format_s(last)
+                    display.set_bottom_text(lap_text, lap_colour)
+                    _cur_bottom_text = ""  # force refresh when reverting
+                else:
+                    bottom = build_race_2line_bottom(race)
+                    if bottom != _cur_bottom_text or display.bottom_scroll_complete():
+                        display.set_bottom_text(bottom, COLOUR_WHITE)
+                        _cur_bottom_text = bottom
                 display.tick_2line(format_ms(effective_time), _pad(laps, 2), timer_colour)
             else:
                 try:
