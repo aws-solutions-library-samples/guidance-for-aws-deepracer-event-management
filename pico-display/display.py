@@ -159,9 +159,9 @@ class Display:
         self._gu.update(self._pg)
         self._x_offset -= max(1, self._scroll_speed // self.SCROLL_RATE_HZ)
 
-    def tick_2line(self, time_str, laps_str, resets_str):
+    def tick_2line(self, time_str, laps_str, resets_str, time_colour=None):
         """One frame of 2-line race display.
-        Top row (bitmap4x5): time (yellow) · laps (cyan) · resets (orange).
+        Top row (bitmap4x5): time (colour) · laps (cyan) · resets (orange).
         Separator: dim line at y=5.
         Bottom row (bitmap4x5): scrolling racer info.
         """
@@ -170,7 +170,7 @@ class Display:
         self._pg.set_font("bitmap4x5")
 
         # Top row — three coloured elements at fixed x positions
-        self._pg.set_pen(self._pg.create_pen(*COLOUR_YELLOW))
+        self._pg.set_pen(self._pg.create_pen(*(time_colour or COLOUR_YELLOW)))
         self._pg.text(time_str, self._2LINE_TIME_X, 0, scale=1)
         self._pg.set_pen(self._pg.create_pen(*COLOUR_CYAN))
         self._pg.text(laps_str, self._2LINE_LAPS_X, 0, scale=1)
@@ -292,6 +292,13 @@ async def display_task(display, state, config):
             laps = len([l for l in (race.get("laps") or []) if l.get("isValid")])
             resets = race.get("resets", 0)
 
+            # First transition into RACE_IN_PROGRESS — show "GO GO GO"
+            if _prev_status != "RACE_IN_PROGRESS":
+                if dbg:
+                    print("[disp] GO GO GO")
+                display.show_status("GO GO GO", COLOUR_GREEN)
+                await asyncio.sleep_ms(2000)
+
             if _prev_status == "RACE_IN_PROGRESS":
                 # Resets checked first — flash yellow before green so the
                 # sequence reads "something went wrong" → "lap recorded"
@@ -332,12 +339,19 @@ async def display_task(display, state, config):
                 await asyncio.sleep_ms(400)
                 continue
 
+            if effective_time <= 10_000:
+                timer_colour = COLOUR_RED
+            elif effective_time <= 20_000:
+                timer_colour = COLOUR_YELLOW
+            else:
+                timer_colour = COLOUR_WHITE
+
             if race_display_lines == 2:
                 bottom = build_race_2line_bottom(race)
                 if bottom != _cur_bottom_text or display.bottom_scroll_complete():
                     display.set_bottom_text(bottom, COLOUR_WHITE)
                     _cur_bottom_text = bottom
-                display.tick_2line(format_ms(effective_time), str(laps), str(resets))
+                display.tick_2line(format_ms(effective_time), str(laps), str(resets), timer_colour)
             else:
                 try:
                     show_lap = _utime.ticks_diff(_lap_display_until_ms, _utime.ticks_ms()) > 0
@@ -346,7 +360,7 @@ async def display_task(display, state, config):
                 if show_lap and race.get("last_lap_ms") is not None:
                     display.show_status(format_s(race["last_lap_ms"]), COLOUR_GREEN)
                 else:
-                    display.show_status(format_ms(effective_time), COLOUR_WHITE)
+                    display.show_status(format_ms(effective_time), timer_colour)
             continue
 
         # ── RACE PAUSED ───────────────────────────────────────────────────────
