@@ -42,6 +42,8 @@
 .footerTop {
   background: linear-gradient(90deg, #551d8c 0%, #38176c 30%);
   padding: 1vmin;
+  display: flex;
+  align-items: center;
 }
 
 .footerBottom {
@@ -78,4 +80,40 @@
   100% {
     opacity: 1;
   }
+}
+
+.overlayIdentity {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  margin-left: 1vmin;
+  position: relative;
+}
+
+.overlayHighlightBar {
+  width: 30px;
+  align-self: stretch;
+  margin: -1vmin 0 -1vmin 0;
+  margin-right: -15px;
+  z-index: 0;
+}
+
+.overlayIdentityIcon {
+  width: 5vmin;
+  height: 5vmin;
+  position: relative;
+  z-index: 1;
+}
+
+.overlayIdentityIcon :global(svg) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.overlayIdentityFlag {
+  position: absolute;
+  bottom: -0.3vmin;
+  right: -0.3vmin;
+  font-size: 2vmin;
+  line-height: 1;
 }
