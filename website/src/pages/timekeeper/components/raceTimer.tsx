@@ -35,10 +35,15 @@ const RaceTimer = forwardRef<RaceTimerHandle, RaceTimerProps>((props, ref) => {
 
   const { onExpire } = props;
 
-  // Signal to parent that timer has expired
+  // Signal to parent that timer has expired — only fire once per expiry
+  const hasExpiredRef = React.useRef(false);
   useEffect(() => {
-    if (isExpired) {
+    if (isExpired && !hasExpiredRef.current) {
+      hasExpiredRef.current = true;
       onExpire();
+    }
+    if (!isExpired) {
+      hasExpiredRef.current = false;
     }
   }, [isExpired, onExpire]);
 
