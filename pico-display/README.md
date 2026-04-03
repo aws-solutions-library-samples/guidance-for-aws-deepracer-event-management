@@ -25,34 +25,28 @@ Then edit it with your WiFi credentials, AppSync endpoint, API key, and event de
 
 ## Installation
 
-### Option 1: Using Thonny (Recommended)
+### Option 1: Quick Start — 2 files (Recommended)
+
+Only two files are needed for initial setup. The bootstrap downloads everything else over WiFi:
 
 1. Download and install [Thonny](https://thonny.org/)
 2. Connect the Pico W to your computer via USB
 3. Open Thonny and select the Pico W as the interpreter
-4. Upload all `.py` files and `config.json` to the root of the Pico:
-   - `main.py`
-   - `config.py`
-   - `wifi.py`
-   - `race.py`
-   - `leaderboard.py`
-   - `display.py`
-   - `state.py`
-   - `ota.py`
-   - `config.json`
+4. Upload just two files to the root of the Pico:
+   - `bootstrap.py` → save as **`main.py`** on the Pico
+   - `config.json` (generate from the DREM admin page or copy from `config.json.example`)
+5. Power cycle the Pico — it will automatically connect to WiFi, download all code files, and reboot into the full app
 
-### Option 2: Using rshell
+### Option 2: Full Manual Install
 
-```bash
-rshell cp pico-display/*.py /pyboard/
-rshell cp pico-display/config.json /pyboard/
-```
+If you prefer to upload all files manually:
 
-After uploading, the app will start automatically on the next power-on.
+1. Upload all `.py` files and `config.json` to the root of the Pico using Thonny or rshell:
+   - `main.py`, `config.py`, `wifi.py`, `race.py`, `leaderboard.py`, `display.py`, `state.py`, `ota.py`, `config.json`
 
 ### Option 3: Over-the-Air (OTA) Update
 
-Once the Pico has `main.py`, `ota.py`, `wifi.py`, `config.py` and a valid `config.json` with WiFi credentials and an `ota.base_url`, you can update all Python files over WiFi:
+Once the app is running (via either option above), you can update all Python files over WiFi:
 
 1. Hold **button D** during power-up
 2. The display shows **OTA MODE**, connects to WiFi, then downloads each file
