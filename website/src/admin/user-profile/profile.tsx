@@ -7,6 +7,8 @@ import { PageLayout } from '../../components/pageLayout';
 import Container from '@cloudscape-design/components/container';
 import Header from '@cloudscape-design/components/header';
 
+import { AvatarBuilder } from './AvatarBuilder';
+
 import { graphqlMutate } from '../../graphql/graphqlHelpers';
 import * as mutations from '../../graphql/mutations';
 import { authChangePassword, authSignOut, getCurrentAuthUser } from '../../hooks/useAuth';
@@ -134,6 +136,9 @@ const ProfileHome: React.FC<ProfileHomeProps> = (props) => {
               <ValueWithLabel label={t('user-profile.settings.name')}>{username}</ValueWithLabel>
             </SpaceBetween>
           </Container>
+          <div></div>
+
+          <AvatarBuilder />
           <div></div>
 
           <Container
