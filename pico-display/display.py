@@ -330,10 +330,14 @@ async def display_task(display, state, config):
                         display.flash(COLOUR_YELLOW, 250)
                         await asyncio.sleep_ms(100)
                 if laps > _prev_laps:
+                    last = race.get("last_lap_ms")
+                    best = race.get("fastest_lap_ms")
+                    is_fastest = best is not None and last is not None and last <= best
+                    flash_colour = COLOUR_GREEN if is_fastest else COLOUR_YELLOW
                     if dbg:
-                        print(f"[disp] lap {laps} - green flash")
+                        print(f"[disp] lap {laps} - {'fastest' if is_fastest else 'slower'} flash")
                     for _ in range(2):
-                        display.flash(COLOUR_GREEN, 250)
+                        display.flash(flash_colour, 250)
                         await asyncio.sleep_ms(100)
                     _lap_display_until_ms = _utime.ticks_ms() + lap_time_display_ms
 
@@ -378,7 +382,10 @@ async def display_task(display, state, config):
                 except AttributeError:
                     show_lap = int(_utime.time() * 1000) < _lap_display_until_ms
                 if show_lap and race.get("last_lap_ms") is not None:
-                    display.show_status(format_s(race["last_lap_ms"]), COLOUR_GREEN)
+                    last = race["last_lap_ms"]
+                    best = race.get("fastest_lap_ms")
+                    lap_colour = COLOUR_GREEN if (best is not None and last <= best) else COLOUR_YELLOW
+                    display.show_status(format_s(last), lap_colour)
                 else:
                     display.show_status(format_ms(effective_time), timer_colour)
             continue
