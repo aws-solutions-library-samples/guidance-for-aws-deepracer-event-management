@@ -26,6 +26,13 @@ async def connect(config, display):
         if dbg:
             print(f"[wifi] attempt {attempt} status={status} ssid={ssid!r}")
         display.show_status("CONNECTING...", (255, 255, 255))
+        if status < 0:
+            # Connection failed — disconnect and retry
+            wlan.disconnect()
+            await asyncio.sleep(1)
+            wlan.connect(ssid, password)
+            await asyncio.sleep(2)
+            continue
         if wlan.isconnected():
             wlan.config(pm=wlan.PM_NONE)  # disable power management — prevents CYW43 sleep causing write timeouts
             ip = wlan.ifconfig()[0]
