@@ -117,7 +117,7 @@ class Display:
 
     # x positions for 2-line top row (bitmap4x5 font, ~5px per char)
     _2LINE_TIME_X   = 0
-    _2LINE_LAPS_X   = 43   # right-aligned: 53 - (2 chars × 5px)
+    _2LINE_LAPS_X   = 42   # right-aligned: 53 - (2 chars × 5px) - 1
 
     def __init__(self, brightness=0.5, scroll_speed=40):
         from galactic import GalacticUnicorn
