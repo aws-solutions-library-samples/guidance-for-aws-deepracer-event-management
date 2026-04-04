@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import i18next from '../i18n';
 import { formatAwsDateTime } from '../support-functions/time';
 import { Flag } from './flag';
+import { LazyRolesCell } from './LazyRolesCell';
 
 interface UserItem {
   Username?: string;
@@ -121,7 +122,7 @@ export const ColumnConfiguration = (): ColumnConfigurationReturn => {
       {
         id: 'Roles',
         header: i18next.t('users.role'),
-        cell: (item) => item.Roles || '-',
+        cell: (item) => <LazyRolesCell username={item.Username ?? ''} />,
         sortingField: 'Roles',
         width: 250,
         minWidth: 200,
