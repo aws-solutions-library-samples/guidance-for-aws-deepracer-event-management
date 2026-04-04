@@ -304,6 +304,16 @@ export const getRacerProfile = /* GraphQL */ `
         }
     }
 `;
+
+export const getUserRoles = /* GraphQL */ `
+    query GetUserRoles($username: String!) {
+        getUserRoles(username: $username) {
+            Username
+            Roles
+        }
+    }
+`;
+
 export const updateLeaderboardConfigs = /* GraphQL */ `
     query UpdateLeaderboardConfigs(
         $eventId: String!
