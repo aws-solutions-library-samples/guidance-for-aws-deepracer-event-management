@@ -152,6 +152,20 @@ local.config: | .venv/.installed				## Setup local config based on branch
 	cd $(current_dir)
 
 
+##@ Data seeding
+
+seed: | .venv/.installed				## Seed DREM with synthetic test data
+	$(VENV_PYTHON) scripts/seed.py --stack drem-backend-$(label)-infrastructure
+
+seed.dry-run: | .venv/.installed			## Preview seed without writing
+	$(VENV_PYTHON) scripts/seed.py --stack drem-backend-$(label)-infrastructure --dry-run
+
+seed.import: | .venv/.installed				## Seed DREM from an export.json file (usage: make seed.import FILE=export.json)
+	$(VENV_PYTHON) scripts/seed.py --stack drem-backend-$(label)-infrastructure --import-file $(FILE)
+
+seed.with-users: | .venv/.installed			## Seed DREM with synthetic data + Cognito users
+	$(VENV_PYTHON) scripts/seed.py --stack drem-backend-$(label)-infrastructure --create-users
+
 ##@ Tests
 
 .PHONY: test test.cdk test.website test.leaderboard
