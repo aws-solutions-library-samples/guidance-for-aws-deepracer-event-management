@@ -110,6 +110,7 @@ export class UserManager extends Construct {
           'cognito-idp:ListUsers',
           'cognito-idp:ListGroups',
           'cognito-idp:ListUsersInGroup',
+          'cognito-idp:AdminListGroupsForUser',
           'cognito-idp:AdminAddUserToGroup',
           'cognito-idp:AdminRemoveUserFromGroup',
         ],
@@ -231,7 +232,27 @@ export class UserManager extends Construct {
 
     props.appsyncApi.schema.addType(user_delete_object);
 
+    const user_roles_object = new ObjectType('UserRoles', {
+      definition: {
+        Username: GraphqlType.string({ isRequired: true }),
+        Roles: GraphqlType.string({ isList: true }),
+      },
+    });
+    props.appsyncApi.schema.addType(user_roles_object);
+
     // Event methods
+    props.appsyncApi.schema.addQuery(
+      'getUserRoles',
+      new ResolvableField({
+        args: {
+          username: GraphqlType.string({ isRequired: true }),
+        },
+        returnType: user_roles_object.attribute(),
+        dataSource: users_data_source,
+        directives: [Directive.iam(), Directive.cognito('admin', 'registration', 'operator')],
+      })
+    );
+
     props.appsyncApi.schema.addQuery(
       'listUsers',
       new ResolvableField({
