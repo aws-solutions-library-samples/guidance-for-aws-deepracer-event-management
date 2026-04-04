@@ -740,6 +740,12 @@
     "upload-to-car-status": "Upload status"
   },
   "upload.chose-file": "Upload model",
+  "upload.chose-files": "Upload models",
+  "upload.drop-file": "Drop model file here",
+  "upload.drop-files": "Drop model files here",
+  "upload.show-fewer": "Show fewer files",
+  "upload.show-more": "Show more files",
+  "upload.constraint": "Model files must be .tar.gz format (e.g. my-model.tar.gz)",
   "upload.header": "Upload models",
   "commentator": {
     "breadcrumb": "Commentator",
