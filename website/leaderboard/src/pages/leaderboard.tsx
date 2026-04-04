@@ -32,6 +32,7 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
   const [onUpdateSubscription, SetOnUpdateSubscription] = useState<any>();
   const [onDeleteSubscription, SetOnDeleteSubscription] = useState<any>();
 
+  const [highlightedUsername, setHighlightedUsername] = useState<string | null>(null);
   const [racSummaryFooterIsVisible, SetraceSummaryFooterIsVisible] = useState(false);
   const [raceSummaryData, SetRaceSummaryData] = useState({
     racerName: undefined,
@@ -206,6 +207,8 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
               const newEntry = data.onNewLeaderboardEntry;
               console.debug(newEntry);
               updateLeaderboardEntries(newEntry);
+              setHighlightedUsername(newEntry.username);
+              setTimeout(() => setHighlightedUsername(null), 12000);
               SetraceSummaryFooterIsVisible(true);
               setTimeout(() => {
                 SetraceSummaryFooterIsVisible(false);
@@ -229,6 +232,8 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
               console.debug('onUpdateLeaderboardEntry');
               const newEntry = data.onUpdateLeaderboardEntry;
               updateLeaderboardEntries(newEntry);
+              setHighlightedUsername(newEntry.username);
+              setTimeout(() => setHighlightedUsername(null), 12000);
             },
             error: (error: any) => console.warn(error),
           })
@@ -284,6 +289,7 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
               scrollEnabled={scrollEnabled}
               fastest={raceFormat === 'fastest'}
               showFlag={showFlag}
+              highlightedUsername={highlightedUsername}
             />
           </div>
           <FollowFooter

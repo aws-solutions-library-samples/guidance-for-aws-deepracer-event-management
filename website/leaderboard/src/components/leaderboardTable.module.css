@@ -191,3 +191,19 @@
     background-position: 200% center;
   }
 }
+
+.highlighted {
+  box-shadow: 0 0 1.5rem rgba(0, 255, 235, 0.6), inset 0 0 0 2px rgba(0, 255, 235, 0.8);
+  animation: highlightPulse 2s ease-in-out infinite;
+  transform: scale(1.1);
+  z-index: 200;
+}
+
+@keyframes highlightPulse {
+  0%, 100% {
+    box-shadow: 0 0 1.5rem rgba(0, 255, 235, 0.6), inset 0 0 0 2px rgba(0, 255, 235, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 2.5rem rgba(0, 255, 235, 0.9), inset 0 0 0 2px rgba(0, 255, 235, 1);
+  }
+}
