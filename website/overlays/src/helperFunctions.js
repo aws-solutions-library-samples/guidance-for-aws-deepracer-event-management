@@ -74,35 +74,63 @@ const GetFormattedLapTimeForRaceFormat = (leaderboardDataEntry, raceFormat, isMi
   }
 };
 
+function GetLeaderTime(entry, raceFormat) {
+  if (raceFormat === 'average') {
+    return entry.fastestAverageLap ? entry.fastestAverageLap.avgTime : null;
+  }
+  return entry.fastestLapTime || null;
+}
+
+function SetGapToLeader(elementId, gapMs) {
+  const leaderboardObj = d3.select(document.getElementById('leaderboard').contentDocument);
+  if (gapMs !== null && gapMs > 0) {
+    leaderboardObj.select('#' + elementId).text('+' + GetFormattedLapTime(gapMs, true));
+  } else {
+    leaderboardObj.select('#' + elementId).text('');
+  }
+}
+
 export function UpdateLeaderboard(leaderboardData, raceFormat) {
   SetFirstPlaceRacerNameAndTime('', '');
   SetSecondPlaceRacerNameAndTime('', '');
   SetThirdPlaceRacerNameAndTime('', '');
   SetFourthPlaceRacerNameAndTime('', '');
+  SetGapToLeader('SecondPlaceTimeToFirst', null);
+  SetGapToLeader('ThirdPlaceTimeToFirst', null);
+  SetGapToLeader('FourthPlaceTimeToFirst', null);
+
+  let leaderTime = null;
 
   if (leaderboardData.length > 0) {
-    const GetFormattedLapTime = SetFirstPlaceRacerNameAndTime(
+    SetFirstPlaceRacerNameAndTime(
       leaderboardData[0].username,
       GetFormattedLapTimeForRaceFormat(leaderboardData[0], raceFormat, true)
     );
+    leaderTime = GetLeaderTime(leaderboardData[0], raceFormat);
   }
   if (leaderboardData.length > 1) {
     SetSecondPlaceRacerNameAndTime(
       leaderboardData[1].username,
       GetFormattedLapTimeForRaceFormat(leaderboardData[1], raceFormat, true)
     );
+    const time = GetLeaderTime(leaderboardData[1], raceFormat);
+    if (leaderTime && time) SetGapToLeader('SecondPlaceTimeToFirst', time - leaderTime);
   }
   if (leaderboardData.length > 2) {
     SetThirdPlaceRacerNameAndTime(
       leaderboardData[2].username,
       GetFormattedLapTimeForRaceFormat(leaderboardData[2], raceFormat, true)
     );
+    const time = GetLeaderTime(leaderboardData[2], raceFormat);
+    if (leaderTime && time) SetGapToLeader('ThirdPlaceTimeToFirst', time - leaderTime);
   }
   if (leaderboardData.length > 3) {
     SetFourthPlaceRacerNameAndTime(
       leaderboardData[3].username,
       GetFormattedLapTimeForRaceFormat(leaderboardData[3], raceFormat, true)
     );
+    const time = GetLeaderTime(leaderboardData[3], raceFormat);
+    if (leaderTime && time) SetGapToLeader('FourthPlaceTimeToFirst', time - leaderTime);
   }
 }
 
