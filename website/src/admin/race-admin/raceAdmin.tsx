@@ -55,11 +55,20 @@ const RaceAdmin = (): JSX.Element => {
   const columnConfiguration = ColumnConfiguration();
   const filteringProperties = FilteringProperties();
 
-  // add user names to all races
+  // Build track lookup from selected event
+  const trackLookup: Record<string, string> = {};
+  if (selectedEvent?.tracks) {
+    for (const track of selectedEvent.tracks) {
+      trackLookup[track.trackId] = track.leaderBoardTitle || `Track ${track.trackId}`;
+    }
+  }
+
+  // add user names and track names to all races
   const enrichedRaces = races.map((race) => {
     return {
       ...race,
       username: getUserNameFromId(race.userId),
+      trackName: trackLookup[race.trackId] || `Track ${race.trackId}`,
     };
   });
 
