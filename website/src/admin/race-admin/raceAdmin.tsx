@@ -1,4 +1,4 @@
-import { Button, SpaceBetween } from '@cloudscape-design/components';
+import { Button, ButtonDropdown, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +16,7 @@ import { formatAwsDateTime } from '../../support-functions/time';
 import { Race } from '../../types/domain';
 import { LapsTable } from './components/lapsTable';
 import { MultiChoicePanelContent } from './components/multiChoicePanelContent';
+import { racesToCSV, racesToSummaryCSV, downloadCSV } from './support-functions/csvExport';
 import { ColumnConfiguration, FilteringProperties } from './support-functions/raceTableConfig';
 
 /**
@@ -111,11 +112,36 @@ const RaceAdmin = (): JSX.Element => {
     };
   }, [SelectedRacesInTable, dispatch, t]);
 
+  const getExportFilename = (suffix: string) => {
+    const eventSlug = (selectedEvent?.eventName || 'races').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+    const date = new Date().toISOString().slice(0, 10);
+    return `${eventSlug}-${suffix}-${date}.csv`;
+  };
+
+  const handleExport = ({ detail }: { detail: { id: string } }) => {
+    const racesToExport = SelectedRacesInTable.length > 0 ? SelectedRacesInTable : enrichedRaces;
+    if (detail.id === 'export-laps') {
+      downloadCSV(racesToCSV(racesToExport as any), getExportFilename('laps'));
+    } else if (detail.id === 'export-summary') {
+      downloadCSV(racesToSummaryCSV(racesToExport as any), getExportFilename('summary'));
+    }
+  };
+
   const HeaderActionButtons = (): JSX.Element => {
     const disableEditButton = SelectedRacesInTable.length === 0 || SelectedRacesInTable.length > 1;
     const disableDeleteButton = SelectedRacesInTable.length === 0;
     return (
       <SpaceBetween direction="horizontal" size="xs">
+        <ButtonDropdown
+          items={[
+            { id: 'export-laps', text: t('race-admin.export-laps') },
+            { id: 'export-summary', text: t('race-admin.export-summary') },
+          ]}
+          onItemClick={handleExport}
+          disabled={enrichedRaces.length === 0}
+        >
+          {t('race-admin.export-csv')}
+        </ButtonDropdown>
         <Button disabled={disableEditButton} onClick={editRaceHandler}>
           {t('button.edit')}
         </Button>
