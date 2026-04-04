@@ -8,6 +8,7 @@ import {
   TopNavigationProps,
 } from '@cloudscape-design/components';
 
+import { applyDensity, applyMode, Density, Mode } from '@cloudscape-design/global-styles';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Route, Routes, useLocation } from 'react-router-dom';
@@ -204,6 +205,20 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
       });
   }, []);
 
+  // Visual mode and density preferences — persisted in localStorage
+  const [darkMode, setDarkMode] = useState<boolean>(() => localStorage.getItem('DREM-dark-mode') === 'true');
+  const [compactDensity, setCompactDensity] = useState<boolean>(() => localStorage.getItem('DREM-compact-density') === 'true');
+
+  useEffect(() => {
+    applyMode(darkMode ? Mode.Dark : Mode.Light);
+    localStorage.setItem('DREM-dark-mode', String(darkMode));
+  }, [darkMode]);
+
+  useEffect(() => {
+    applyDensity(compactDensity ? Density.Compact : Density.Comfortable);
+    localStorage.setItem('DREM-compact-density', String(compactDensity));
+  }, [compactDensity]);
+
   useEffect(() => {
     if (windowSize.width && windowSize.width < 900) dispatch('SIDE_NAV_IS_OPEN', false);
     else if (windowSize.width && windowSize.width >= 900) dispatch('SIDE_NAV_IS_OPEN', true);
@@ -356,6 +371,10 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
   const handleItemClick = useCallback(({ detail }: { detail: { id: string } }) => {
     if (detail.id === 'signout' && signout) {
       signout();
+    } else if (detail.id === 'dark-mode') {
+      setDarkMode((prev) => !prev);
+    } else if (detail.id === 'compact-density') {
+      setCompactDensity((prev) => !prev);
     }
   }, [signout]);
 
@@ -378,6 +397,16 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
             id: 'user-profile',
             text: t('topnav.user-profile'),
             href: '/user/profile',
+          },
+          {
+            id: 'dark-mode',
+            text: darkMode ? t('topnav.light-mode') : t('topnav.dark-mode'),
+            iconName: darkMode ? 'status-positive' : undefined,
+          },
+          {
+            id: 'compact-density',
+            text: compactDensity ? t('topnav.comfortable-density') : t('topnav.compact-density'),
+            iconName: compactDensity ? 'status-positive' : undefined,
           },
           {
             id: 'signout',
@@ -405,7 +434,7 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
     }
 
     return items;
-  }, [user, userAvatarConfig, t, signout, selectedEvent?.eventName, selectedTrack, permissions.topNavItems.eventSelection, handleItemClick, handleEventSelectClick]);
+  }, [user, userAvatarConfig, t, signout, selectedEvent?.eventName, selectedTrack, permissions.topNavItems.eventSelection, handleItemClick, handleEventSelectClick, darkMode, compactDensity]);
 
   return (
     <div>
