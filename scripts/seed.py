@@ -58,7 +58,8 @@ LAP_TIME_PROFILES = {
     "ATOZ_SPEEDWAY": (14000, 2500),
 }
 
-EVENT_TYPES = ["OFFICIAL_TRACK_RACE", "COMMUNITY_RACE"]
+EVENT_TYPES = ["OFFICIAL_TRACK_RACE", "PRIVATE_TRACK_RACE", "PRIVATE_WORKSHOP",
+               "OFFICIAL_WORKSHOP", "OTHER"]
 
 
 # ---------------------------------------------------------------------------
@@ -209,7 +210,7 @@ def generate_event(index: int, track_type: str = None) -> dict:
         "sponsor": fake.company(),
         "raceConfig": {
             "trackType": track_type,
-            "rankingMethod": "FASTEST_LAP_TIME",
+            "rankingMethod": "BEST_LAP_TIME",
             "raceTimeInMin": 2,
             "numberOfResetsPerLap": 3,
             "averageLapsWindow": 3,
