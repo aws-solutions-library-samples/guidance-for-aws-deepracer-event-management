@@ -211,12 +211,6 @@ function App() {
         if (data.raceEndCondition === 'LAP_COUNT' && data.numberOfLaps) {
           const lapsDone = data.laps ? data.laps.length : 0;
           (helpers as any).SetRacerInfoTotalTime(`${lapsDone} / ${data.numberOfLaps}`);
-          helpers.SetLocalizedLowerThirdsLabels(
-            t('lower-thirds.racer-name'),
-            t('lower-thirds.laps'),
-            raceFormat === 'average' ? t('lower-thirds.fastest-avg-lap') : t('lower-thirds.fastest-lap'),
-            t('lower-thirds.previous-lap')
-          );
           currentTotalTimerMS = 0;
         } else {
           var timeLeft = data.timeLeftInMs;
