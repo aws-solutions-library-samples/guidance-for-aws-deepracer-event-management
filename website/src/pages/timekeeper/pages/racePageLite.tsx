@@ -414,9 +414,7 @@ export const RacePage = ({
                 {isLapCountRace ? (
                   <span key="lap-count">
                     <Header variant="h5">{t('timekeeper.lap-progress')}</Header>
-                    <div style={{ fontSize: '3rem', fontWeight: 'bold', textAlign: 'center' }}>
-                      {raceInfo.laps.length} / {targetLaps}
-                    </div>
+                    <Header variant="h3">{raceInfo.laps.length} / {targetLaps}</Header>
                   </span>
                 ) : (
                   <span key="time-left">
