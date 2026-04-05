@@ -134,6 +134,8 @@ export const RacePage = ({
       },
       endRace: () => {
         console.debug('Ending race state');
+        lapTimerRef.current?.pause();
+        raceTimerRef.current?.pause();
         if (currentCar?.InstanceId) {
           // Always signal "stopped" with the fixed white STOP_COLOUR — never
           // gated on stopColourRef. The wizard parent also sends STOP_COLOUR,
