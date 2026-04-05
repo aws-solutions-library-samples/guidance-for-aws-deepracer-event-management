@@ -110,6 +110,8 @@ export const RacePage = ({
       },
       endRace: () => {
         console.debug('Ending race state');
+        lapTimerRef.current?.pause();
+        raceTimerRef.current?.pause();
         setWarningModalVisible(true);
         // Buttons
         setBtnEndRace(true);
