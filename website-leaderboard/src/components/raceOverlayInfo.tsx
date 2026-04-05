@@ -170,7 +170,8 @@ const RaceOverlayInfo = ({
     const timePassedMs = Date.now() - lastDisplayUpdateTimestamp;
     setLastDisplayUpdateTimestamp(Date.now());
 
-    if (raceStatus === 'RACE_IN_PROGRESS') {
+    const lapCountComplete = raceEndCondition === 'LAP_COUNT' && numberOfLaps && laps && laps.length >= numberOfLaps;
+    if (raceStatus === 'RACE_IN_PROGRESS' && !lapCountComplete) {
       // times should never be negative
       setRemainingTimeMs(Math.max(0, remainingTimeMs - timePassedMs));
       setCurrentLapMs(Math.max(0, currentLapMs + timePassedMs));
