@@ -139,7 +139,7 @@ const DefaultRacingFooter: React.FC<DefaultRacingFooterProps> = ({
       >
         <Select
           selectedOption={GetNumberOfLapsOptionFromId(numberOfLaps) || null}
-          onChange={({ detail }) => onChange({ numberOfLaps: detail.selectedOption.value })}
+          onChange={({ detail }) => onChange({ numberOfLaps: parseInt(detail.selectedOption.value || '3') })}
           options={numberOfLapsOptions}
           selectedAriaLabel="Selected"
           disabled={!isLapCount}
@@ -210,12 +210,16 @@ export const RaceConfigPanel: React.FC<RaceConfigPanelProps> = ({ raceConfig, on
     <DefaultRacingFooter
       numberOfResetsPerLap={raceConfig.numberOfResetsPerLap}
       raceTimeInMin={raceConfig.raceTimeInMin}
+      numberOfLaps={raceConfig.numberOfLaps?.toString()}
       maxRunsPerRacer={raceConfig.maxRunsPerRacer}
       rankingMehtod={raceConfig.rankingMethod}
+      raceEndCondition={raceConfig.raceEndCondition}
       averageLapsWindow={raceConfig.averageLapsWindow}
       onChange={UpdateConfig}
       resetOptions={resetOptions}
       raceTimeOptions={raceTimeOptions}
+      raceEndConditionOptions={raceEndConditionOptions}
+      numberOfLapsOptions={numberOfLapsOptions}
       maxRunsPerRacerOptions={maxRunsPerRacerOptions}
       averageLapsWindowConfig={averageLapWindowConfig}
     />
