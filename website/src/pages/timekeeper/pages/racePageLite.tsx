@@ -186,9 +186,11 @@ export const RacePage = ({
             userId: raceInfo.userId,
             laps: lapsForOverlay.current,
             averageLaps: averageLapTimeInformationForOverlay.current,
-            timeLeftInMs: raceConfig.raceTimeInMin * 60 * 1000, // racetime in MS
+            timeLeftInMs: isLapCountRace ? 0 : raceConfig.raceTimeInMin * 60 * 1000,
             currentLapTimeInMs: 0,
             raceStatus: 'READY_TO_START',
+            raceEndCondition: raceConfig.raceEndCondition || 'TIME_BASED',
+            numberOfLaps: isLapCountRace ? targetLaps : null,
           };
         });
       },
@@ -202,9 +204,11 @@ export const RacePage = ({
             userId: raceInfo.userId,
             laps: lapsForOverlay.current,
             averageLaps: averageLapTimeInformationForOverlay.current,
-            timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
+            timeLeftInMs: isLapCountRace ? 0 : raceTimerRef.current?.getCurrentTimeInMs(),
             currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
             raceStatus: 'RACE_IN_PROGRESS',
+            raceEndCondition: raceConfig.raceEndCondition || 'TIME_BASED',
+            numberOfLaps: isLapCountRace ? targetLaps : null,
           };
         }, 2000);
       },
@@ -218,9 +222,11 @@ export const RacePage = ({
             userId: raceInfo.userId,
             laps: lapsForOverlay.current,
             averageLaps: averageLapTimeInformationForOverlay.current,
-            timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
+            timeLeftInMs: isLapCountRace ? 0 : raceTimerRef.current?.getCurrentTimeInMs(),
             currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
             raceStatus: 'RACE_PAUSED',
+            raceEndCondition: raceConfig.raceEndCondition || 'TIME_BASED',
+            numberOfLaps: isLapCountRace ? targetLaps : null,
           };
         });
       },

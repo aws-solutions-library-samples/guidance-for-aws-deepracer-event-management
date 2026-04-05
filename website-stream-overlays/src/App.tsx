@@ -200,7 +200,7 @@ function App() {
           }
         }
 
-        if (!timerState && data.running) {
+        if (!timerState && data.running && data.raceEndCondition !== 'LAP_COUNT') {
           timerState = true;
           startTimer();
         }
@@ -208,9 +208,21 @@ function App() {
         var racer = data.username;
         (helpers as any).SetRacerInfoName(racer);
 
-        var timeLeft = data.timeLeftInMs;
-        (helpers as any).SetRacerInfoTotalTime((helpers as any).GetFormattedTotalTime(timeLeft));
-        currentTotalTimerMS = timeLeft;
+        if (data.raceEndCondition === 'LAP_COUNT' && data.numberOfLaps) {
+          const lapsDone = data.laps ? data.laps.length : 0;
+          (helpers as any).SetRacerInfoTotalTime(`${lapsDone} / ${data.numberOfLaps}`);
+          helpers.SetLocalizedLowerThirdsLabels(
+            t('lower-thirds.racer-name'),
+            t('lower-thirds.laps'),
+            raceFormat === 'average' ? t('lower-thirds.fastest-avg-lap') : t('lower-thirds.fastest-lap'),
+            t('lower-thirds.previous-lap')
+          );
+          currentTotalTimerMS = 0;
+        } else {
+          var timeLeft = data.timeLeftInMs;
+          (helpers as any).SetRacerInfoTotalTime((helpers as any).GetFormattedTotalTime(timeLeft));
+          currentTotalTimerMS = timeLeft;
+        }
 
         if (data.laps) {
           var fastestLap
