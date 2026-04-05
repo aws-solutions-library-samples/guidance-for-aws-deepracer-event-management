@@ -198,6 +198,43 @@ export const GetRaceTypeNameFromId = (id: string | null | undefined, averageLaps
   return undefined;
 };
 
+// RACE END CONDITION OPTIONS (time-based vs lap-count)
+export const RaceEndConditionEnum = {
+  TIME_BASED: 'TIME_BASED',
+  LAP_COUNT: 'LAP_COUNT',
+} as const;
+
+export const RaceEndConditionConfig = (): ConfigOption[] => {
+  return [
+    { label: i18next.t('events.race.end-condition.time-based'), value: RaceEndConditionEnum.TIME_BASED },
+    { label: i18next.t('events.race.end-condition.lap-count'), value: RaceEndConditionEnum.LAP_COUNT },
+  ];
+};
+
+export const GetRaceEndConditionOptionFromId = (id: string | null | undefined): ConfigOption | undefined => {
+  if (id == null) return undefined;
+  const options = RaceEndConditionConfig();
+  return options.find((option) => option.value === id);
+};
+
+// NUMBER OF LAPS OPTIONS (for lap-count races)
+export const NumberOfLapsConfig = (): ConfigOption[] => {
+  return [
+    { label: '1', value: '1' },
+    { label: '2', value: '2' },
+    { label: '3', value: '3' },
+    { label: '4', value: '4' },
+    { label: '5', value: '5' },
+    { label: '10', value: '10' },
+  ];
+};
+
+export const GetNumberOfLapsOptionFromId = (id: string | number | null | undefined): ConfigOption | undefined => {
+  if (id == null) return undefined;
+  const options = NumberOfLapsConfig();
+  return options.find((option) => option.value.toString() === id.toString());
+};
+
 export const AverageLapWindowConfig = (): ConfigOption[] => {
   return [
     { label: '3', value: '3' },
