@@ -150,6 +150,11 @@ export class EventsManager extends Construct {
     });
     props.appsyncApi.schema.addType(raceRankingMethodEnum);
 
+    const raceEndConditionEnum = new EnumType('RaceEndCondition', {
+      definition: ['TIME_BASED', 'LAP_COUNT'],
+    });
+    props.appsyncApi.schema.addType(raceEndConditionEnum);
+
     const raceConfigObjectType = new ObjectType('RaceConfig', {
       definition: {
         raceTimeInMin: GraphqlType.int(),
@@ -158,6 +163,8 @@ export class EventsManager extends Construct {
         rankingMethod: raceRankingMethodEnum.attribute(),
         maxRunsPerRacer: GraphqlType.string(),
         averageLapsWindow: GraphqlType.int(),
+        raceEndCondition: raceEndConditionEnum.attribute(),
+        numberOfLaps: GraphqlType.int(),
       },
       directives: [Directive.cognito('admin', 'commentator', 'operator')],
     });
@@ -171,6 +178,8 @@ export class EventsManager extends Construct {
         rankingMethod: raceRankingMethodEnum.attribute(),
         maxRunsPerRacer: GraphqlType.string(),
         averageLapsWindow: GraphqlType.int(),
+        raceEndCondition: raceEndConditionEnum.attribute(),
+        numberOfLaps: GraphqlType.int(),
       },
       directives: [Directive.cognito('admin', 'operator')],
     });
