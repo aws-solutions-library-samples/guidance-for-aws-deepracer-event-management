@@ -6,7 +6,7 @@ import {
   Select,
   SpaceBetween,
 } from '@cloudscape-design/components';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RaceConfig } from '../../../types/domain';
 import {
@@ -206,58 +206,6 @@ export const RaceConfigPanel: React.FC<RaceConfigPanelProps> = ({ raceConfig, on
     [raceConfig, onChange]
   );
   
-  const [raceCustomizationsFooter, setRaceCustomizationsFooter] = useState<React.ReactNode>(
-    <DefaultRacingFooter
-      numberOfResetsPerLap={raceConfig.numberOfResetsPerLap}
-      raceTimeInMin={raceConfig.raceTimeInMin}
-      numberOfLaps={raceConfig.numberOfLaps?.toString()}
-      maxRunsPerRacer={raceConfig.maxRunsPerRacer}
-      rankingMehtod={raceConfig.rankingMethod}
-      raceEndCondition={raceConfig.raceEndCondition}
-      averageLapsWindow={raceConfig.averageLapsWindow}
-      onChange={UpdateConfig}
-      resetOptions={resetOptions}
-      raceTimeOptions={raceTimeOptions}
-      raceEndConditionOptions={raceEndConditionOptions}
-      numberOfLapsOptions={numberOfLapsOptions}
-      maxRunsPerRacerOptions={maxRunsPerRacerOptions}
-      averageLapsWindowConfig={averageLapWindowConfig}
-    />
-  );
-
-  // Select race customizations footer
-  useEffect(() => {
-    setRaceCustomizationsFooter(
-      <DefaultRacingFooter
-        numberOfResetsPerLap={raceConfig.numberOfResetsPerLap}
-        raceTimeInMin={raceConfig.raceTimeInMin}
-        numberOfLaps={raceConfig.numberOfLaps?.toString()}
-        maxRunsPerRacer={raceConfig.maxRunsPerRacer}
-        rankingMehtod={raceConfig.rankingMethod}
-        raceEndCondition={raceConfig.raceEndCondition}
-        averageLapsWindow={raceConfig.averageLapsWindow}
-        onChange={UpdateConfig}
-        resetOptions={resetOptions}
-        raceTimeOptions={raceTimeOptions}
-        raceEndConditionOptions={raceEndConditionOptions}
-        numberOfLapsOptions={numberOfLapsOptions}
-        maxRunsPerRacerOptions={maxRunsPerRacerOptions}
-        averageLapsWindowConfig={averageLapWindowConfig}
-      />
-    );
-  }, [
-    UpdateConfig,
-    raceConfig.numberOfResetsPerLap,
-    raceConfig.raceTimeInMin,
-    raceConfig.maxRunsPerRacer,
-    raceConfig.rankingMethod,
-    raceConfig.averageLapsWindow,
-    resetOptions,
-    raceTimeOptions,
-    maxRunsPerRacerOptions,
-    averageLapWindowConfig,
-  ]);
-
   // JSX
   return (
     <Container>
@@ -288,7 +236,24 @@ export const RaceConfigPanel: React.FC<RaceConfigPanelProps> = ({ raceConfig, on
           />
         </FormField>
 
-        <RaceCustomizationsFooter>{raceCustomizationsFooter}</RaceCustomizationsFooter>
+        <RaceCustomizationsFooter>
+          <DefaultRacingFooter
+            numberOfResetsPerLap={raceConfig.numberOfResetsPerLap}
+            raceTimeInMin={raceConfig.raceTimeInMin}
+            numberOfLaps={raceConfig.numberOfLaps?.toString()}
+            maxRunsPerRacer={raceConfig.maxRunsPerRacer}
+            rankingMehtod={raceConfig.rankingMethod}
+            raceEndCondition={raceConfig.raceEndCondition}
+            averageLapsWindow={raceConfig.averageLapsWindow}
+            onChange={UpdateConfig}
+            resetOptions={resetOptions}
+            raceTimeOptions={raceTimeOptions}
+            raceEndConditionOptions={raceEndConditionOptions}
+            numberOfLapsOptions={numberOfLapsOptions}
+            maxRunsPerRacerOptions={maxRunsPerRacerOptions}
+            averageLapsWindowConfig={averageLapWindowConfig}
+          />
+        </RaceCustomizationsFooter>
       </SpaceBetween>
     </Container>
   );
