@@ -348,6 +348,8 @@ export const onNewOverlayInfo = /* GraphQL */ `
       trackId
       userId
       username
+      raceEndCondition
+      numberOfLaps
       __typename
     }
   }

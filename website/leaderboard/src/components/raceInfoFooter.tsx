@@ -54,6 +54,8 @@ const RaceInfoFooter = ({ eventId, trackId, visible, raceFormat }: RaceInfoFoote
             laps: raceInfo.laps,
             currentLapTimeInMs: raceInfo.currentLapTimeInMs,
             averageLaps: raceInfo.averageLaps,
+            raceEndCondition: raceInfo.raceEndCondition,
+            numberOfLaps: raceInfo.numberOfLaps,
           });
           SetIsVisible(true);
         } else {
@@ -101,6 +103,8 @@ const RaceInfoFooter = ({ eventId, trackId, visible, raceFormat }: RaceInfoFoote
                 averageLaps={raceInfo.averageLaps}
                 currentLapTimeInMs={raceInfo.currentLapTimeInMs}
                 raceFormat={raceFormat}
+                raceEndCondition={raceInfo.raceEndCondition}
+                numberOfLaps={raceInfo.numberOfLaps}
               />
             </span>
           </div>
