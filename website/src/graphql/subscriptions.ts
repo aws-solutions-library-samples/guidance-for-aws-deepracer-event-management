@@ -54,6 +54,8 @@ export const onAddedEvent = /* GraphQL */ `
                 raceTimeInMin
                 rankingMethod
                 trackType
+                raceEndCondition
+                numberOfLaps
             }
             sponsor
             tracks {
@@ -392,6 +394,8 @@ export const onUpdatedEvent = /* GraphQL */ `
                 raceTimeInMin
                 rankingMethod
                 trackType
+                raceEndCondition
+                numberOfLaps
             }
             sponsor
             tracks {
