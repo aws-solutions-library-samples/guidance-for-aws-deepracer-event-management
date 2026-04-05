@@ -864,6 +864,8 @@ export const updateOverlayInfo = /* GraphQL */ `
         $trackId: ID
         $userId: String
         $username: String
+        $raceEndCondition: String
+        $numberOfLaps: Int
     ) {
         updateOverlayInfo(
             averageLaps: $averageLaps
@@ -877,6 +879,8 @@ export const updateOverlayInfo = /* GraphQL */ `
             trackId: $trackId
             userId: $userId
             username: $username
+            raceEndCondition: $raceEndCondition
+            numberOfLaps: $numberOfLaps
         ) {
             averageLaps {
                 avgTime
@@ -900,6 +904,8 @@ export const updateOverlayInfo = /* GraphQL */ `
             trackId
             userId
             username
+            raceEndCondition
+            numberOfLaps
         }
     }
 `;
