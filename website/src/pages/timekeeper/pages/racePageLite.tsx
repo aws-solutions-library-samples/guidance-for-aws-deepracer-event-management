@@ -311,20 +311,22 @@ export const RacePage = ({
   // support functions
   const startTimers = () => {
     lapTimerRef.current.start();
-    raceTimerRef.current.start();
+    raceTimerRef.current?.start();
   };
 
   const pauseTimers = () => {
     lapTimerRef.current.pause();
-    raceTimerRef.current.pause();
+    raceTimerRef.current?.pause();
   };
 
   const resetTimers = () => {
     pauseTimers();
-    if (raceConfig.raceTimeInMin) {
-      raceTimerRef.current.reset(raceConfig.raceTimeInMin * 60 * 1000);
-    } else {
-      raceTimerRef.current.reset(0 * 60 * 1000);
+    if (raceTimerRef.current) {
+      if (raceConfig.raceTimeInMin) {
+        raceTimerRef.current.reset(raceConfig.raceTimeInMin * 60 * 1000);
+      } else {
+        raceTimerRef.current.reset(0 * 60 * 1000);
+      }
     }
     lapTimerRef.current.reset();
   };
