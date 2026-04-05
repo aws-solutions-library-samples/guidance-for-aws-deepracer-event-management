@@ -428,6 +428,8 @@ export class RaceManager extends Construct {
         timeLeftInMs: GraphqlType.float(),
         currentLapTimeInMs: GraphqlType.float(),
         raceStatus: raceStatusEnum.attribute({ isRequired: true }),
+        raceEndCondition: GraphqlType.string(),
+        numberOfLaps: GraphqlType.int(),
       },
       directives: [Directive.apiKey(), Directive.iam(), Directive.cognito('admin', 'operator', 'commentator')],
     });
@@ -449,6 +451,8 @@ export class RaceManager extends Construct {
           timeLeftInMs: GraphqlType.float(),
           currentLapTimeInMs: GraphqlType.float(),
           raceStatus: raceStatusEnum.attribute({ isRequired: true }),
+          raceEndCondition: GraphqlType.string(),
+          numberOfLaps: GraphqlType.int(),
         },
         returnType: overlayObjectType.attribute(),
         dataSource: noneDataSource,
