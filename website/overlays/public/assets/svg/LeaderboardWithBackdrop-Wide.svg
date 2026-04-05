@@ -120,9 +120,9 @@
 		M1542.76,750.12H377.86c-8.9,0-16.12-7.22-16.12-16.12v-49.93c0-8.9,7.22-16.12,16.12-16.12h1164.9c8.9,0,16.12,7.22,16.12,16.12
 		V734C1558.88,742.91,1551.67,750.12,1542.76,750.12z"/>
 	<text id="FOURTH-PLACE-RANK-LABEL" transform="matrix(1 0 0 1 386.4957 724.0224)" class="st9 st10 st11 st12">#4</text>
-	<text id="FOURTH-PLACE-RACER-NAME-TEXT" transform="matrix(1 0 0 1 474.4322 720.6071)" class="st9 st10 st13 st12">DBro</text>
-	<text id="FOURTH-PLACE-LAP-TIME-TEXT" transform="matrix(1 0 0 1 1369.9014 720.9669)" class="st9 st6 st13 st12">00:09.167</text>
-	<text id="FourthPlaceTimeToFirst" transform="matrix(1 0 0 1 1247.3666 718.6078)" class="st14 st15 st7">+0.843</text>
+	<text id="FOURTH-PLACE-RACER-NAME-TEXT" transform="matrix(1 0 0 1 474.4322 720.6071)" class="st9 st10 st13 st12"></text>
+	<text id="FOURTH-PLACE-LAP-TIME-TEXT" transform="matrix(1 0 0 1 1369.9014 720.9669)" class="st9 st6 st13 st12"></text>
+	<text id="FourthPlaceTimeToFirst" transform="matrix(1 0 0 1 1247.3666 718.6078)" class="st14 st15 st7"></text>
 </g>
 <g id="ThirdPlace">
 	
@@ -147,9 +147,9 @@
 		M1542.13,638.96H377.23c-8.9,0-16.12-7.22-16.12-16.12v-49.93c0-8.9,7.22-16.12,16.12-16.12h1164.9c8.9,0,16.12,7.22,16.12,16.12
 		v49.93C1558.25,631.74,1551.03,638.96,1542.13,638.96z"/>
 	<text id="THIRD-PLACE-RANK-LABEL" transform="matrix(1 0 0 1 386.1277 612.4299)" class="st9 st10 st11 st12">#3</text>
-	<text id="THIRD-PLACE-RACER-NAME-TEXT" transform="matrix(1 0 0 1 474.0641 609.0146)" class="st9 st10 st13 st12">DoomBuggy</text>
-	<text id="THIRD-PLACE-LAP-TIME-TEXT" transform="matrix(1 0 0 1 1369.5333 609.3744)" class="st9 st6 st13 st12">00:08.985</text>
-	<text id="ThirdPlaceTimeToFirst" transform="matrix(1 0 0 1 1246.1659 607.015)" class="st14 st15 st7">+0.661</text>
+	<text id="THIRD-PLACE-RACER-NAME-TEXT" transform="matrix(1 0 0 1 474.0641 609.0146)" class="st9 st10 st13 st12"></text>
+	<text id="THIRD-PLACE-LAP-TIME-TEXT" transform="matrix(1 0 0 1 1369.5333 609.3744)" class="st9 st6 st13 st12"></text>
+	<text id="ThirdPlaceTimeToFirst" transform="matrix(1 0 0 1 1246.1659 607.015)" class="st14 st15 st7"></text>
 </g>
 <g id="SecondPlace">
 	
@@ -166,9 +166,9 @@
 		M1542.13,527.8H377.23c-8.9,0-16.12-7.22-16.12-16.12v-49.93c0-8.9,7.22-16.12,16.12-16.12h1164.9c8.9,0,16.12,7.22,16.12,16.12
 		v49.93C1558.25,520.58,1551.03,527.8,1542.13,527.8z"/>
 	<text id="SECOND-PLACE-RANK-LABEL" transform="matrix(1 0 0 1 386.1277 501.2682)" class="st9 st10 st11 st12">#2</text>
-	<text id="SECOND-PLACE-RACER-NAME-TEXT" transform="matrix(1 0 0 1 474.0641 497.8529)" class="st9 st10 st13 st12">JPMC-RogerRabbit</text>
-	<text id="SECOND-PLACE-LAP-TIME-TEXT" transform="matrix(1 0 0 1 1369.5333 498.2126)" class="st9 st6 st13 st12">00:08.730</text>
-	<text id="SecondPlaceTimeToFirst" transform="matrix(1 0 0 1 1244.9652 496.663)" class="st14 st15 st7">+0.406</text>
+	<text id="SECOND-PLACE-RACER-NAME-TEXT" transform="matrix(1 0 0 1 474.0641 497.8529)" class="st9 st10 st13 st12"></text>
+	<text id="SECOND-PLACE-LAP-TIME-TEXT" transform="matrix(1 0 0 1 1369.5333 498.2126)" class="st9 st6 st13 st12"></text>
+	<text id="SecondPlaceTimeToFirst" transform="matrix(1 0 0 1 1244.9652 496.663)" class="st14 st15 st7"></text>
 </g>
 <g id="FirstPlace">
 	
@@ -193,7 +193,7 @@
 		M1542.13,416.64H377.23c-8.9,0-16.12-7.22-16.12-16.12v-49.93c0-8.9,7.22-16.12,16.12-16.12h1164.9c8.9,0,16.12,7.22,16.12,16.12
 		v49.93C1558.25,409.42,1551.03,416.64,1542.13,416.64z"/>
 	<text id="FIRST-PLACE-RANK-LABEL" transform="matrix(1 0 0 1 386.1277 390.1065)" class="st10 st11 st12">#1</text>
-	<text id="FIRST-PLACE-LAP-TIME-TEXT" transform="matrix(1 0 0 1 1369.5333 387.0509)" class="st6 st13 st12">00:08.324</text>
-	<text id="FIRST-PLACE-RACER-NAME-TEXT" transform="matrix(1 0 0 1 474.0641 386.6912)" class="st10 st13 st12">PolishThunder</text>
+	<text id="FIRST-PLACE-LAP-TIME-TEXT" transform="matrix(1 0 0 1 1369.5333 387.0509)" class="st6 st13 st12"></text>
+	<text id="FIRST-PLACE-RACER-NAME-TEXT" transform="matrix(1 0 0 1 474.0641 386.6912)" class="st10 st13 st12"></text>
 </g>
 </svg>
