@@ -14,11 +14,16 @@ import {
   ConfigOption,
   GetAverageLapWindowFromId,
   GetMaxRunsPerRacerOptionFromId,
+  GetNumberOfLapsOptionFromId,
+  GetRaceEndConditionOptionFromId,
   GetRaceTimeOptionFromId,
   GetRankingOptionFromId,
   GetResetOptionFromId,
   GetTrackOptionFromId,
   MaxRunsPerRacerConfig,
+  NumberOfLapsConfig,
+  RaceEndConditionConfig,
+  RaceEndConditionEnum,
   RaceTimeConfig,
   RaceTypeConfig,
   RaceTypeEnum,
@@ -43,10 +48,14 @@ interface DefaultRacingFooterProps {
   averageLapsWindowConfig: ConfigOption[];
   averageLapsWindow?: string;
   rankingMehtod?: string;
+  raceEndCondition?: string;
   raceTimeInMin?: string;
+  numberOfLaps?: string;
   onChange: (attr: Partial<RaceConfig>) => void;
   raceTimeOptions: ConfigOption[];
   resetOptions: ConfigOption[];
+  raceEndConditionOptions: ConfigOption[];
+  numberOfLapsOptions: ConfigOption[];
 }
 
 /**
@@ -85,14 +94,32 @@ const DefaultRacingFooter: React.FC<DefaultRacingFooterProps> = ({
   averageLapsWindowConfig,
   averageLapsWindow,
   rankingMehtod,
+  raceEndCondition,
   raceTimeInMin,
+  numberOfLaps,
   onChange,
   raceTimeOptions,
   resetOptions,
+  raceEndConditionOptions,
+  numberOfLapsOptions,
 }) => {
   const { t } = useTranslation();
+  const isLapCount = raceEndCondition === RaceEndConditionEnum.LAP_COUNT;
+  const isAvgRanking = rankingMehtod === RaceTypeEnum.BEST_AVERAGE_LAP_TIME_X_LAP;
   return (
     <SpaceBetween size="l">
+      <FormField
+        label={t('events.race.end-condition.label')}
+        description={t('events.race.end-condition.description')}
+      >
+        <Select
+          selectedOption={GetRaceEndConditionOptionFromId(raceEndCondition || RaceEndConditionEnum.TIME_BASED) || null}
+          onChange={({ detail }) => onChange({ raceEndCondition: detail.selectedOption.value })}
+          options={raceEndConditionOptions}
+          selectedAriaLabel="Selected"
+          disabled={isAvgRanking}
+        />
+      </FormField>
       <FormField
         label={t('events.race.race-time')}
         description={t('events.race.race-time-description')}
@@ -103,6 +130,19 @@ const DefaultRacingFooter: React.FC<DefaultRacingFooterProps> = ({
           options={raceTimeOptions}
           selectedAriaLabel="Selected"
           filteringType="auto"
+          disabled={isLapCount}
+        />
+      </FormField>
+      <FormField
+        label={t('events.race.number-of-laps')}
+        description={t('events.race.number-of-laps-description')}
+      >
+        <Select
+          selectedOption={GetNumberOfLapsOptionFromId(numberOfLaps) || null}
+          onChange={({ detail }) => onChange({ numberOfLaps: detail.selectedOption.value })}
+          options={numberOfLapsOptions}
+          selectedAriaLabel="Selected"
+          disabled={!isLapCount}
         />
       </FormField>
       <FormField
@@ -153,6 +193,8 @@ export const RaceConfigPanel: React.FC<RaceConfigPanelProps> = ({ raceConfig, on
   const averageLapWindowConfig = AverageLapWindowConfig();
   const resetOptions = ResetConfig();
   const trackOptions = TrackTypeConfig();
+  const raceEndConditionOptions = RaceEndConditionConfig();
+  const numberOfLapsOptions = NumberOfLapsConfig();
   const { t } = useTranslation();
   
   const UpdateConfig = useCallback(
@@ -185,12 +227,16 @@ export const RaceConfigPanel: React.FC<RaceConfigPanelProps> = ({ raceConfig, on
       <DefaultRacingFooter
         numberOfResetsPerLap={raceConfig.numberOfResetsPerLap}
         raceTimeInMin={raceConfig.raceTimeInMin}
+        numberOfLaps={raceConfig.numberOfLaps?.toString()}
         maxRunsPerRacer={raceConfig.maxRunsPerRacer}
         rankingMehtod={raceConfig.rankingMethod}
+        raceEndCondition={raceConfig.raceEndCondition}
         averageLapsWindow={raceConfig.averageLapsWindow}
         onChange={UpdateConfig}
         resetOptions={resetOptions}
         raceTimeOptions={raceTimeOptions}
+        raceEndConditionOptions={raceEndConditionOptions}
+        numberOfLapsOptions={numberOfLapsOptions}
         maxRunsPerRacerOptions={maxRunsPerRacerOptions}
         averageLapsWindowConfig={averageLapWindowConfig}
       />
