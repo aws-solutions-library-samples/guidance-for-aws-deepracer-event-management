@@ -320,7 +320,7 @@ function App() {
       const leaderboardConfig = response.data.getLeaderboard.config;
       updateLeaderboard(response.data.getLeaderboard.entries);
 
-      (helpers as any).SetEventName(leaderboardConfig.leaderBoardTitle.toUpperCase());
+      (helpers as any).SetEventName(leaderboardConfig?.leaderBoardTitle?.toUpperCase() || '');
 
       // check if lower thirds is showing, if not, then show leaderboard.
       if (!lowerThirdStateIN && showLeaderboard === '1') {
