@@ -43,6 +43,7 @@ export interface RaceManagerProps {
 export class RaceManager extends Construct {
   public readonly distribution: Distribution;
   public readonly websiteBucket: Bucket;
+  public readonly raceTable: dynamodb.Table;
 
   constructor(scope: Construct, id: string, props: RaceManagerProps) {
     super(scope, id);
@@ -60,6 +61,7 @@ export class RaceManager extends Construct {
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
       pointInTimeRecovery: true,
     });
+    this.raceTable = raceTable;
 
     // BACKEND
     const raceLambda = new StandardLambdaPythonFunction(this, 'raceLambda', {
