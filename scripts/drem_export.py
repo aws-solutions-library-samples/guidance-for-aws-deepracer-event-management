@@ -29,7 +29,17 @@ def main():
     parser.add_argument("--skip-users", action="store_true", help="Skip Cognito user export")
     parser.add_argument("--events", help="Comma-separated event IDs to export (default: all)")
     parser.add_argument("--stack", help="Override stack label from build.config")
+    parser.add_argument("--api", action="store_true",
+                        help="Export via GraphQL API instead of DynamoDB (no AWS infra access needed)")
+    parser.add_argument("--endpoint", help="AppSync GraphQL endpoint URL (required with --api)")
+    parser.add_argument("--token", help="Cognito JWT token (required with --api)")
     args = parser.parse_args()
+
+    if args.api:
+        if not args.endpoint or not args.token:
+            parser.error("--api requires both --endpoint and --token")
+        _export_via_api(args)
+        return
 
     config = discover_config(stack_override=args.stack)
     tables = config["tables"]
@@ -137,6 +147,112 @@ def main():
         options={
             "skip_users": args.skip_users,
             "event_filter": list(event_filter) if event_filter else None,
+        },
+    )
+
+    print(f"Export complete → {output_dir}/")
+    print(f"  {counts}")
+
+
+def _export_via_api(args):
+    """Export via GraphQL API using JWT auth."""
+    from drem_data.api_client import DremApiClient
+
+    client = DremApiClient(args.endpoint, args.token)
+
+    if args.output:
+        output_dir = args.output.rstrip("/")
+    else:
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d-%H%M%S")
+        output_dir = f"drem-export-{timestamp}"
+    os.makedirs(output_dir, exist_ok=True)
+
+    event_filter = None
+    if args.events:
+        event_filter = set(e.strip() for e in args.events.split(","))
+
+    print(f"Endpoint: {args.endpoint}")
+    print(f"Output:   {output_dir}/\n")
+
+    counts = {}
+
+    # --- Events ---
+    print("Fetching events...")
+    events = client.get_events()
+    if event_filter:
+        events = [e for e in events if e["eventId"] in event_filter]
+    counts["events"] = len(events)
+    _write_json(output_dir, "events.json", events)
+    print(f"  {len(events)} events\n")
+
+    # --- Races ---
+    print("Fetching races...")
+    races_by_event = {}
+    total_races = 0
+    for event in events:
+        eid = event["eventId"]
+        races = client.get_races(eid)
+        if races:
+            races_by_event[eid] = races
+            total_races += len(races)
+            print(f"  {event.get('eventName', eid)}: {len(races)} races")
+    counts["races"] = total_races
+    _write_json(output_dir, "races.json", races_by_event)
+    print(f"  Total: {total_races} races\n")
+
+    # --- Leaderboard ---
+    print("Fetching leaderboards...")
+    all_leaderboard = []
+    for event in events:
+        eid = event["eventId"]
+        lb = client.get_leaderboard(eid)
+        entries = lb.get("entries") or []
+        for entry in entries:
+            entry["eventId"] = eid
+        all_leaderboard.extend(entries)
+    counts["leaderboard_entries"] = len(all_leaderboard)
+    _write_json(output_dir, "leaderboard.json", all_leaderboard)
+    print(f"  {len(all_leaderboard)} entries\n")
+
+    # --- Fleets ---
+    print("Fetching fleets...")
+    fleets = client.get_all_fleets()
+    counts["fleets"] = len(fleets)
+    _write_json(output_dir, "fleets.json", fleets)
+    print(f"  {len(fleets)} fleets\n")
+
+    # --- Landing Pages ---
+    # Landing page config is embedded in events from the API, extract it
+    landing_pages = []
+    for event in events:
+        lpc = event.get("landingPageConfig")
+        if lpc and lpc.get("links"):
+            landing_pages.append({"eventId": event["eventId"], **lpc})
+    counts["landing_pages"] = len(landing_pages)
+    _write_json(output_dir, "landing_pages.json", landing_pages)
+    print(f"  {len(landing_pages)} landing page configs\n")
+
+    # --- Users ---
+    if not args.skip_users:
+        print("Fetching users...")
+        users = client.list_users()
+        counts["users"] = len(users)
+        _write_json(output_dir, "users.json", users)
+        print(f"  {len(users)} users\n")
+    else:
+        print("Skipping users (--skip-users).\n")
+
+    # --- Manifest ---
+    write_manifest(
+        output_dir=output_dir,
+        source_stack=f"api:{args.endpoint}",
+        source_region="unknown",
+        source_user_pool_id="",
+        counts=counts,
+        options={
+            "skip_users": args.skip_users,
+            "event_filter": list(event_filter) if event_filter else None,
+            "export_mode": "api",
         },
     )
 
