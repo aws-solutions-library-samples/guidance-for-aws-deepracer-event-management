@@ -835,5 +835,27 @@
     "upload-time.header": "Upload times",
     "upload-time.x-title": "Time (UTC)",
     "upload-time.y-title": "Seconds"
-  }
+  },
+  "navigation.stats": "Statistics",
+  "stats.global-dashboard": "Global Racing Statistics",
+  "stats.total-events": "Total Events",
+  "stats.total-racers": "Total Racers",
+  "stats.total-laps": "Total Valid Laps",
+  "stats.total-countries": "Countries",
+  "stats.completion-ratio": "Lap Completion",
+  "stats.events-by-country": "Events by Country",
+  "stats.activity-over-time": "Activity Over Time",
+  "stats.event-type-breakdown": "Event Types",
+  "stats.fastest-laps-ever": "Fastest Laps Ever",
+  "stats.racer": "Racer",
+  "stats.event": "Event",
+  "stats.track": "Track",
+  "stats.lap-time": "Lap Time",
+  "stats.date": "Date",
+  "stats.events": "Events",
+  "stats.races": "Races",
+  "stats.country": "Country",
+  "stats.month": "Month",
+  "stats.count": "Count",
+  "stats.no-data": "No race data available yet. Statistics will appear after the first race is completed."
 }
