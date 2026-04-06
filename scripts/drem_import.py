@@ -93,6 +93,7 @@ def main():
         all_races = []
         for event_id, races in races_by_event.items():
             for race in races:
+                race = _ensure_race_ddb_fields(race, event_id)
                 if user_mapping:
                     race = remap_user_id_in_race(race, user_mapping)
                 all_races.append(race)
@@ -135,6 +136,22 @@ def main():
         print("Dry run complete — no changes made.")
     else:
         print("Import complete.")
+
+
+def _ensure_race_ddb_fields(race: dict, event_id: str) -> dict:
+    """
+    Ensure a race item has the DynamoDB fields (sk, type, eventId) needed
+    for writing to the race table. API exports don't include these.
+    """
+    race = dict(race)
+    race.setdefault("eventId", event_id)
+    race.setdefault("type", "race")
+    if "sk" not in race:
+        track_id = race.get("trackId", "unknown")
+        user_id = race.get("userId", "unknown")
+        race_id = race.get("raceId", "unknown")
+        race["sk"] = f"TRACK#{track_id}#USER#{user_id}#RACE#{race_id}"
+    return race
 
 
 def _read_json(path: str):
