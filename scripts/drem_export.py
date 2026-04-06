@@ -203,16 +203,23 @@ def _export_via_api(args):
     # --- Leaderboard ---
     print("Fetching leaderboards...")
     all_leaderboard = []
+    lb_errors = 0
     for event in events:
         eid = event["eventId"]
-        lb = client.get_leaderboard(eid)
-        entries = lb.get("entries") or []
-        for entry in entries:
-            entry["eventId"] = eid
-        all_leaderboard.extend(entries)
+        try:
+            lb = client.get_leaderboard(eid)
+            entries = lb.get("entries") or []
+            for entry in entries:
+                entry["eventId"] = eid
+            all_leaderboard.extend(entries)
+        except Exception:
+            lb_errors += 1
     counts["leaderboard_entries"] = len(all_leaderboard)
     _write_json(output_dir, "leaderboard.json", all_leaderboard)
-    print(f"  {len(all_leaderboard)} entries\n")
+    msg = f"  {len(all_leaderboard)} entries"
+    if lb_errors:
+        msg += f" ({lb_errors} events skipped due to errors)"
+    print(f"{msg}\n")
 
     # --- Fleets ---
     print("Fetching fleets...")
