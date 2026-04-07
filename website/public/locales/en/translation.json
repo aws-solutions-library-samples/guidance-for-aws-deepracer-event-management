@@ -347,6 +347,7 @@
     "type.official-workshop": "Public workshop",
     "type.private-track-race": "Private track race",
     "type.official-track-race": "Public track race",
+    "type.test-event": "Test event",
     "type.other": "Other",
     "leaderboard": {
       "header": "Header text",
