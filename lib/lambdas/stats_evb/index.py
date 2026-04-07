@@ -149,9 +149,15 @@ def _rebuild_global_stats():
     track_type_counts = {}
     fastest_laps = []
 
+    EXCLUDED_EVENT_TYPES = {"TEST_EVENT"}
+
     for event in events:
         event_id = event["eventId"]
         event_data = dynamo_helpers.replace_decimal_with_float(event)
+
+        if event_data.get("typeOfEvent") in EXCLUDED_EVENT_TYPES:
+            continue
+
         races = _get_all_races_for_event(event_id)
         if not races:
             continue
