@@ -202,7 +202,7 @@ export class EventsManager extends Construct {
     props.appsyncApi.schema.addType(trackInputType);
 
     const typeOfEventEnum = new EnumType('TypeOfEvent', {
-      definition: ['PRIVATE_WORKSHOP', 'PRIVATE_TRACK_RACE', 'OFFICIAL_WORKSHOP', 'OFFICIAL_TRACK_RACE', 'OTHER'],
+      definition: ['PRIVATE_WORKSHOP', 'PRIVATE_TRACK_RACE', 'OFFICIAL_WORKSHOP', 'OFFICIAL_TRACK_RACE', 'TEST_EVENT', 'OTHER'],
     });
     props.appsyncApi.schema.addType(typeOfEventEnum);
 
