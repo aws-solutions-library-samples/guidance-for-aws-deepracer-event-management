@@ -60,8 +60,8 @@ export class StandardLambdaPythonFunction extends lambdaPython.PythonFunction {
       architecture: lambda.Architecture.ARM_64,
       bundling:
         os.arch() === 'arm64'
-          ? { image: DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.13:latest-arm64') }
-          : { image: DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.13:latest') },
+          ? { image: DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest-arm64') }
+          : { image: DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest') },
       ...props,
       environment: {
         ...props.environment,
