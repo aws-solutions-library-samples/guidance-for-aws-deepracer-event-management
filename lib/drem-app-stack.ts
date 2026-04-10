@@ -311,16 +311,30 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       value: props.userPool.userPoolId,
     });
 
-    // CDK BucketDeployment singleton Lambda — runtime and role are CDK-managed, not user-configurable
+    // CDK BucketDeployment singleton Lambdas — runtime and role are CDK-managed, not user-configurable
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/AWS679f53fac002430cb0da5b7982bd2287/Resource`,
+      [
+        {
+          id: 'AwsSolutions-L1',
+          reason:
+            'CDK BucketDeployment singleton Lambda runtime is managed by CDK and cannot be configured by the application.',
+        },
+      ]
+    );
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C512MiB/Resource`,
+      [
+        {
+          id: 'AwsSolutions-L1',
+          reason:
+            'CDK BucketDeployment singleton Lambda runtime is managed by CDK and cannot be configured by the application.',
+        },
+      ]
+    );
     NagSuppressions.addStackSuppressions(this, [
-      {
-        id: 'AwsSolutions-L1', // Example: Lambda runtime check
-        reason: 'This Lambda is created internally by aws_s3_deployment and cannot be modified.',
-        appliesTo: [
-          'Resource::Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/Resource',
-          'Resource::Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/Resource',
-        ],
-      },
       {
         id: 'AwsSolutions-IAM4',
         reason:
