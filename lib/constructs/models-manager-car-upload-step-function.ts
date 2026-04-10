@@ -2,6 +2,7 @@ import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as stepFunctions from 'aws-cdk-lib/aws-stepfunctions';
 import * as stepFunctionsTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
@@ -208,14 +209,18 @@ export class CarUploadStepFunction extends Construct {
     // Definition
     const definition = startWait.next(mapToDynamo).next(mapToSsm);
 
+    const carStatusUpdateSMLogGroup = new logs.LogGroup(this, 'CarUploadSFNLogs', {
+      retention: logs.RetentionDays.SIX_MONTHS,
+    });
+
     this.stepFunction = new stepFunctions.StateMachine(this, 'CarStatusUpdater', {
       definitionBody: stepFunctions.DefinitionBody.fromChainable(definition),
       tracingEnabled: true,
       timeout: Duration.minutes(10),
-      /*logs: {
-        destination: car_status_update_SM_log_group,
+      logs: {
+        destination: carStatusUpdateSMLogGroup,
         level: stepFunctions.LogLevel.ALL,
-      },*/
+      },
     });
 
     // AppSync //

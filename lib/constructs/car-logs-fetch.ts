@@ -3,6 +3,7 @@ import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as batch from 'aws-cdk-lib/aws-batch';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as stepFunctions from 'aws-cdk-lib/aws-stepfunctions';
 import * as stepFunctionsTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
@@ -274,14 +275,18 @@ export class CarLogsFetchStepFunction extends Construct {
           .otherwise(failState)
       );
 
+    const fetchLogsSMLogGroup = new logs.LogGroup(this, 'FetchLogsSFNLogs', {
+      retention: logs.RetentionDays.SIX_MONTHS,
+    });
+
     this.stepFunction = new stepFunctions.StateMachine(this, 'StateMachine', {
       definitionBody: stepFunctions.DefinitionBody.fromChainable(definition),
       tracingEnabled: true,
       timeout: Duration.minutes(30),
-      /*logs: {
-      destination: car_status_update_SM_log_group,
-      level: stepFunctions.LogLevel.ALL,
-      },*/
+      logs: {
+        destination: fetchLogsSMLogGroup,
+        level: stepFunctions.LogLevel.ALL,
+      },
     });
 
     // AppSync //
