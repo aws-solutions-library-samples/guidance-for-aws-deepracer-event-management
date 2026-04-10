@@ -310,6 +310,22 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'userPoolId', {
       value: props.userPool.userPoolId,
     });
+
+    // CDK BucketDeployment singleton Lambda — runtime and role are CDK-managed, not user-configurable
+    NagSuppressions.addStackSuppressions(this, [
+      {
+        id: 'AwsSolutions-L1',
+        reason:
+          'The CDK BucketDeployment singleton Lambda (AWS679...) runtime is managed by CDK and cannot be configured by the application.',
+        appliesTo: [{ regex: '/^AWS679f53fac002430cb0da5b7982bd2287\/Resource$/g' }],
+      },
+      {
+        id: 'AwsSolutions-IAM4',
+        reason:
+          'AWSLambdaBasicExecutionRole on the CDK BucketDeployment singleton is managed by CDK and cannot be configured by the application.',
+        appliesTo: [{ regex: '/^AWS679f53fac002430cb0da5b7982bd2287\/ServiceRole\/Resource$/g' }],
+      },
+    ]);
   }
 
   lambdaLayers = (baseStackName: string) => {
@@ -397,30 +413,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         {
           id: 'AwsSolutions-IAM4',
           reason: 'AppSync Construct uses AWSAppSyncPushToCloudWatchLogs managed policy to push logs to CW Logs',
-        },
-      ]
-    );
-
-    // CDK BucketDeployment singleton Lambda — runtime and role are CDK-managed, not configurable
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      '/drem-backend-dev-infrastructure/AWS679f53fac002430cb0da5b7982bd2287/Resource',
-      [
-        {
-          id: 'AwsSolutions-L1',
-          reason:
-            'Runtime of the CDK BucketDeployment singleton Lambda is managed by CDK and cannot be configured by the application.',
-        },
-      ]
-    );
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      '/drem-backend-dev-infrastructure/AWS679f53fac002430cb0da5b7982bd2287/ServiceRole/Resource',
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason:
-            'AWSLambdaBasicExecutionRole on the CDK BucketDeployment singleton is managed by CDK and cannot be configured by the application.',
         },
       ]
     );
