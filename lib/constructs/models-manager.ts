@@ -1,4 +1,4 @@
-import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { CfnResource, DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as apig from 'aws-cdk-lib/aws-apigateway';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
@@ -23,6 +23,8 @@ import { StandardLambdaPythonFunction } from './standard-lambda-python-function'
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { CarUploadStepFunction } from './models-manager-car-upload-step-function';
+
+import { Stack } from 'aws-cdk-lib';
 
 export interface ModelsManagerProps {
   adminGroupRole: IRole;
@@ -705,6 +707,112 @@ export class ModelsManager extends Construct {
         dataSource: uploadModelToCarStatusDataSource,
         directives: [Directive.iam(), Directive.cognito('admin', 'operator')],
       })
+    );
+
+    const s3PrivatePrefixIam5 = [
+      'Action::s3:GetBucket*',
+      'Action::s3:GetObject*',
+      'Action::s3:List*',
+      `Resource::<${Stack.of(this).getLogicalId(modelsBucket.node.defaultChild as CfnResource)}.Arn>/private/*`,
+    ];
+    const modelsBucketLogicalId = Stack.of(this).getLogicalId(modelsBucket.node.defaultChild as CfnResource);
+    const uploadBucketLogicalId = Stack.of(this).getLogicalId(uploadBucket.node.defaultChild as CfnResource);
+    const modelsTableLogicalId = Stack.of(this).getLogicalId(modelsTable.node.defaultChild as CfnResource);
+
+    NagSuppressions.addResourceSuppressions(
+      uploadModelToCarFunctionLambda.role!,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'S3 grantRead with prefix produces wildcard actions and a prefix-scoped resource ARN; required for the Lambda to read model files from private/ in the models bucket.',
+          appliesTo: s3PrivatePrefixIam5,
+        },
+      ],
+      true
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      getModelsPolicy,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'Intentional s3:get* wildcard scoped to the models bucket/* to allow admin/operator roles to read all model objects.',
+          appliesTo: ['Action::s3:get*', `Resource::<${modelsBucketLogicalId}.Arn>/*`],
+        },
+      ],
+      true
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      modelsOnUploadHandler.role!,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'S3 grantReadWrite with private/* prefix produces wildcard actions and a prefix-scoped resource ARN; DDB grantReadWriteData produces index/* wildcard. Both are CDK-managed grants scoped to the required resources.',
+          appliesTo: [
+            'Action::s3:Abort*',
+            'Action::s3:DeleteObject*',
+            ...s3PrivatePrefixIam5,
+            `Resource::<${modelsTableLogicalId}.Arn>/index/*`,
+          ],
+        },
+      ],
+      true
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      modelsMd5Handler.role!,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'S3 grantRead with private/* prefix produces wildcard actions and a prefix-scoped resource ARN; required for the MD5 function to read uploaded model files.',
+          appliesTo: s3PrivatePrefixIam5,
+        },
+      ],
+      true
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      modelsOnDeleteHandler.role!,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'DDB grantReadWriteData produces an index/* wildcard; required for the delete handler to query all GSIs on the models table.',
+          appliesTo: [`Resource::<${modelsTableLogicalId}.Arn>/index/*`],
+        },
+      ],
+      true
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      ownModelsPolicy,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'The sub/* wildcard is intentional — Cognito identity-scoped access so each user can only access their own private/ prefix in the upload bucket.',
+          appliesTo: [`Resource::<${uploadBucketLogicalId}.Arn>/private/<cognito-identity.amazonaws.com:sub>/*`],
+        },
+      ],
+      true
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      modelsHandler.role!,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'S3 grantRead with private/* prefix produces wildcard actions and a prefix-scoped resource ARN; DDB grantReadWriteData produces index/* wildcard. Both are CDK-managed grants scoped to the required resources.',
+          appliesTo: [...s3PrivatePrefixIam5, `Resource::<${modelsTableLogicalId}.Arn>/index/*`],
+        },
+      ],
+      true
     );
   }
 }

@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import { Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { CfnResource, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as batch from 'aws-cdk-lib/aws-batch';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
@@ -80,6 +80,13 @@ export class CarLogsManager extends Construct {
       ],
     });
     sharedLambdaRole.attachInlinePolicy(cloudWatchLogsPermissionsPolicy);
+    NagSuppressions.addResourceSuppressions(cloudWatchLogsPermissionsPolicy, [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason:
+          'Wildcard suffix on the log group ARN is required to cover all Lambda function log groups under this construct, which share the construct id as a prefix.',
+      },
+    ]);
 
     // Use dedicated VPC
     this.vpc = new ec2.Vpc(this, 'LogsVPC', {
@@ -98,6 +105,13 @@ export class CarLogsManager extends Construct {
         },
       ],
     });
+    NagSuppressions.addResourceSuppressions(this.vpc, [
+      {
+        id: 'AwsSolutions-VPC7',
+        reason:
+          'VPC Flow Logs are not required for this internal Batch processing VPC; traffic is limited to ECS tasks fetching car logs.',
+      },
+    ]);
 
     // Create the upload bucket
     this.bagUploadBucket = new s3.Bucket(this, 'upload', {
@@ -203,11 +217,26 @@ export class CarLogsManager extends Construct {
       assumedBy: new iam.ServicePrincipal('batch.amazonaws.com'),
       managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSBatchServiceRole')],
     });
+    NagSuppressions.addResourceSuppressions(batchServiceRole, [
+      {
+        id: 'AwsSolutions-IAM4',
+        reason: 'AWSBatchServiceRole is the AWS-prescribed managed policy required for AWS Batch service role.',
+        appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSBatchServiceRole'],
+      },
+    ]);
 
     const taskExecutionRole = new iam.Role(this, 'TaskExecutionRole', {
       assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
       managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonECSTaskExecutionRolePolicy')],
     });
+    NagSuppressions.addResourceSuppressions(taskExecutionRole, [
+      {
+        id: 'AwsSolutions-IAM4',
+        reason:
+          'AmazonECSTaskExecutionRolePolicy is the AWS-prescribed managed policy required for ECS task execution.',
+        appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'],
+      },
+    ]);
 
     const taskLogGroup = new cdk.aws_logs.LogGroup(this, 'CarLogsProcessor', {
       retention: cdk.aws_logs.RetentionDays.SIX_MONTHS,
@@ -217,6 +246,14 @@ export class CarLogsManager extends Construct {
       assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
       managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonECSTaskExecutionRolePolicy')],
     });
+    NagSuppressions.addResourceSuppressions(taskRole, [
+      {
+        id: 'AwsSolutions-IAM4',
+        reason:
+          'AmazonECSTaskExecutionRolePolicy is the AWS-prescribed managed policy required for ECS task execution.',
+        appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'],
+      },
+    ]);
 
     taskRole.addToPolicy(
       new iam.PolicyStatement({
@@ -230,6 +267,34 @@ export class CarLogsManager extends Construct {
     this.carLogsBucket.grantReadWrite(taskRole);
     props.modelsBucket.grantRead(taskRole);
     props.appsyncApi.api.grantMutation(taskRole, 'addCarLogsAsset');
+
+    const carLogsBucketLogicalId = Stack.of(this).getLogicalId(this.carLogsBucket.node.defaultChild as CfnResource);
+    const bagUploadBucketLogicalId = Stack.of(this).getLogicalId(this.bagUploadBucket.node.defaultChild as CfnResource);
+    const assetsTableLogicalId = Stack.of(this).getLogicalId(this.assetsTable.node.defaultChild as CfnResource);
+    const modelsBucketLogicalId = Stack.of(this).getLogicalId(
+      (props.modelsBucket as s3.Bucket).node.defaultChild as CfnResource
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      taskRole,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'Wildcard actions and bucket/* resources are produced by CDK grantReadWrite/grantRead on S3 buckets and are scoped to the specific buckets used by this construct.',
+          appliesTo: [
+            'Action::s3:Abort*',
+            'Action::s3:DeleteObject*',
+            'Action::s3:GetBucket*',
+            'Action::s3:GetObject*',
+            'Action::s3:List*',
+            `Resource::<${carLogsBucketLogicalId}.Arn>/*`,
+            `Resource::<${modelsBucketLogicalId}.Arn>/*`,
+          ],
+        },
+      ],
+      true
+    );
 
     // Create Batch compute environment
     const computeEnv = new batch.CfnComputeEnvironment(this, 'ComputeEnv', {
@@ -332,6 +397,26 @@ export class CarLogsManager extends Construct {
     props.appsyncApi.api.grantQuery(sharedLambdaRole, 'getAllModels');
     props.appsyncApi.api.grantQuery(sharedLambdaRole, 'listUsers');
     props.appsyncApi.api.grantMutation(sharedLambdaRole, 'addCarLogsAsset');
+    NagSuppressions.addResourceSuppressions(
+      sharedLambdaRole,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'Wildcard actions and bucket/* resources are produced by CDK grantReadWrite on S3 buckets and are scoped to the specific buckets used by this construct.',
+          appliesTo: [
+            'Action::s3:Abort*',
+            'Action::s3:DeleteObject*',
+            'Action::s3:GetBucket*',
+            'Action::s3:GetObject*',
+            'Action::s3:List*',
+            `Resource::<${carLogsBucketLogicalId}.Arn>/*`,
+            `Resource::<${bagUploadBucketLogicalId}.Arn>/*`,
+          ],
+        },
+      ],
+      true
+    );
 
     // Grant permission to submit Batch jobs
     sharedLambdaRole.addToPolicy(
@@ -412,6 +497,24 @@ export class CarLogsManager extends Construct {
     });
     this.carLogsBucket.grantRead(carLogsAssetHandler);
     this.assetsTable.grantReadWriteData(carLogsAssetHandler);
+    NagSuppressions.addResourceSuppressions(
+      carLogsAssetHandler.role,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'Wildcard actions from CDK grantRead on S3 and bucket/* resource, plus DynamoDB index/* are scoped to the specific resources of this construct.',
+          appliesTo: [
+            'Action::s3:GetBucket*',
+            'Action::s3:GetObject*',
+            'Action::s3:List*',
+            `Resource::<${carLogsBucketLogicalId}.Arn>/*`,
+            `Resource::<${assetsTableLogicalId}.Arn>/index/*`,
+          ],
+        },
+      ],
+      true
+    );
 
     // Define the data source for the API
     const carLogsAssetDataSource = props.appsyncApi.api.addLambdaDataSource(

@@ -1,6 +1,6 @@
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import * as cdk from 'aws-cdk-lib';
-import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { CfnResource, DockerImage, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as awsEvents from 'aws-cdk-lib/aws-events';
@@ -159,6 +159,18 @@ export class CarManager extends Construct {
         level: stepFunctions.LogLevel.ALL,
       },
     });
+    NagSuppressions.addResourceSuppressions(
+      car_status_update_SM,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'CDK generates Lambda ARN:* to cover versions/aliases when a Step Function invokes a Lambda, and Resource::* is required for X-Ray tracing permissions.',
+          appliesTo: [{ regex: '/^Resource::(.+):\*$/g' }, 'Resource::*'],
+        },
+      ],
+      true
+    );
 
     new awsEvents.Rule(this, 'CarStatusUpdateRule', {
       eventPattern: {
@@ -194,6 +206,17 @@ export class CarManager extends Construct {
         ),
       ],
     });
+    NagSuppressions.addResourceSuppressions(ssmRunCommandRole, [
+      {
+        id: 'AwsSolutions-IAM4',
+        reason:
+          'AmazonSSMManagedInstanceCore and AmazonSSMDirectoryServiceAccess are the AWS-prescribed managed policies for EC2 managed instances and are required for SSM functionality.',
+        appliesTo: [
+          'Policy::arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore',
+          'Policy::arn:aws:iam::aws:policy/AmazonSSMDirectoryServiceAccess',
+        ],
+      },
+    ]);
 
     // Create an Association
     const ssmSWInventory = new ssm.CfnAssociation(this, 'SoftwareInventory', {
@@ -381,6 +404,19 @@ export class CarManager extends Construct {
     );
 
     carStatusTable.grantReadWriteData(cars_function_handler);
+    const carStatusTableLogicalId = Stack.of(this).getLogicalId(carStatusTable.node.defaultChild as CfnResource);
+    NagSuppressions.addResourceSuppressions(
+      cars_function_handler.role,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'DynamoDB index/* wildcard is produced by CDK grantReadWriteData and covers all GSIs on the cars status table.',
+          appliesTo: [`Resource::<${carStatusTableLogicalId}.Arn>/index/*`],
+        },
+      ],
+      true
+    );
 
     // Define the data source for the API
     const cars_data_source = props.appsyncApi.api.addLambdaDataSource('CarsDataSource', cars_function_handler);
@@ -598,5 +634,17 @@ export class CarManager extends Construct {
 
     this.carStatusDataHandlerLambda = labelPrinterDataFetchHandler;
     carStatusTable.grantReadData(labelPrinterDataFetchHandler);
+    NagSuppressions.addResourceSuppressions(
+      labelPrinterDataFetchHandler.role,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'DynamoDB index/* wildcard is produced by CDK grantReadData and covers all GSIs on the cars status table.',
+          appliesTo: [`Resource::<${carStatusTableLogicalId}.Arn>/index/*`],
+        },
+      ],
+      true
+    );
   }
 }

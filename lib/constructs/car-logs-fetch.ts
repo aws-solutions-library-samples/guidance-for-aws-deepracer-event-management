@@ -8,6 +8,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as stepFunctions from 'aws-cdk-lib/aws-stepfunctions';
 import * as stepFunctionsTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Directive, EnumType, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
@@ -288,6 +289,18 @@ export class CarLogsFetchStepFunction extends Construct {
         level: stepFunctions.LogLevel.ALL,
       },
     });
+    NagSuppressions.addResourceSuppressions(
+      this.stepFunction,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'CDK generates Lambda ARN:* to cover versions/aliases when a Step Function invokes a Lambda, and Resource::* is required for X-Ray tracing permissions.',
+          appliesTo: [{ regex: '/^Resource::(.+):\*$/g' }, 'Resource::*'],
+        },
+      ],
+      true
+    );
 
     // AppSync //
 
@@ -379,6 +392,18 @@ export class CarLogsFetchStepFunction extends Construct {
     const fetchFromCarDataSource = props.appsyncApi.api.addLambdaDataSource(
       'fetchFromCarDataSource',
       fetchLogsToCarAppSyncHandler
+    );
+    NagSuppressions.addResourceSuppressions(
+      fetchFromCarDataSource,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'CDK generates Lambda ARN:* to cover versions/aliases for AppSync Lambda data source invoke permissions.',
+          appliesTo: [{ regex: '/^Resource::(.+):\*$/g' }],
+        },
+      ],
+      true
     );
 
     props.appsyncApi.schema.addMutation(

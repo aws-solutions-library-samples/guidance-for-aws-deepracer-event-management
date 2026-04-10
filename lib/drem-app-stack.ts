@@ -342,6 +342,18 @@ export class DeepracerEventManagerStack extends cdk.Stack {
         appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
       },
     ]);
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'CDK LogRetention singleton uses Resource::* for log group management; this role is fully managed by CDK and cannot be scoped further.',
+        },
+      ]
+    );
   }
 
   lambdaLayers = (baseStackName: string) => {
