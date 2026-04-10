@@ -199,38 +199,38 @@ export class CdkPipelineStack extends cdk.Stack {
 
     // Main website Deploy to S3
     const mainSiteDeployStep = new pipelines.CodeBuildStep('MainSiteDeployToS3', {
-        installCommands: [`npm install -g @aws-amplify/cli@${AMPLIFY_VERSION}`],
-        buildEnvironment: {
-          privileged: true,
-          computeType: codebuild.ComputeType.LARGE,
-        },
-        commands: [
-          // configure and deploy DREM website
-          "echo 'Starting to deploy the DREM website'",
-          'echo website bucket= $sourceBucketName',
-          'aws cloudformation describe-stacks --stack-name ' +
-            `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
-          'python scripts/generate_amplify_config_cfn.py',
-          'appsyncId=`cat appsyncId.txt` && aws appsync' +
-            ' get-introspection-schema --api-id $appsyncId --format SDL' +
-            ' ./website/src/graphql/schema.graphql',
-          'cd ./website/src/graphql',
-          'amplify codegen', // this is on purpose
-          'amplify codegen', // I'm not repeating myself ;)
-          'cd ../..',
-          'docker run --rm -v $(pwd):/foo -w /foo' +
-            " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
-            " --cache /tmp/empty-cache && npm run build'",
-          'aws s3 sync ./build/ s3://$sourceBucketName/ --delete',
-          'echo distributionId=$distributionId',
-          "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'",
-          'cd ..',
-        ],
-        envFromCfnOutputs: {
-          sourceBucketName: infrastructure.sourceBucketName,
-          distributionId: infrastructure.distributionId,
-        },
-        rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
+      installCommands: [`npm install -g @aws-amplify/cli@${AMPLIFY_VERSION}`],
+      buildEnvironment: {
+        privileged: true,
+        computeType: codebuild.ComputeType.LARGE,
+      },
+      commands: [
+        // configure and deploy DREM website
+        "echo 'Starting to deploy the DREM website'",
+        'echo website bucket= $sourceBucketName',
+        'aws cloudformation describe-stacks --stack-name ' +
+          `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
+        'python scripts/generate_amplify_config_cfn.py',
+        'appsyncId=`cat appsyncId.txt` && aws appsync' +
+          ' get-introspection-schema --api-id $appsyncId --format SDL' +
+          ' ./website/src/graphql/schema.graphql',
+        'cd ./website/src/graphql',
+        'amplify codegen', // this is on purpose
+        'amplify codegen', // I'm not repeating myself ;)
+        'cd ../..',
+        'docker run --rm -v $(pwd):/foo -w /foo' +
+          " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
+          " --cache /tmp/empty-cache && npm run build'",
+        'aws s3 sync ./build/ s3://$sourceBucketName/ --delete',
+        'echo distributionId=$distributionId',
+        "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'",
+        'cd ..',
+      ],
+      envFromCfnOutputs: {
+        sourceBucketName: infrastructure.sourceBucketName,
+        distributionId: infrastructure.distributionId,
+      },
+      rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
     });
     infrastructure_stage.addPost(mainSiteDeployStep);
 
@@ -333,39 +333,35 @@ export class CdkPipelineStack extends cdk.Stack {
 
     // Post-deploy tests — run after MainSiteDeployToS3 completes
     const postDeployStep = new pipelines.CodeBuildStep('PostDeployTests', {
-        buildEnvironment: {
-          computeType: codebuild.ComputeType.SMALL,
-        },
-        installCommands: [
-          `n ${NODE_VERSION}`,
-          'node --version',
-          'npx playwright install --with-deps chromium',
-        ],
-        commands: [
-          'npm install',
-          'aws appsync get-introspection-schema --api-id $appsyncId --format SDL website/src/graphql/schema.graphql',
-          'cd website && npm run test:post-deploy && cd ..',
-        ],
-        envFromCfnOutputs: {
-          appsyncId: infrastructure.appsyncId,
-          DREM_WEBSITE_URL: infrastructure.dremWebsiteUrl,
-        },
-        rolePolicyStatements: [
-          new iam.PolicyStatement({
-            effect: iam.Effect.ALLOW,
-            actions: ['appsync:GetIntrospectionSchema'],
-            resources: ['*'],
-          }),
-        ],
-        partialBuildSpec: codebuild.BuildSpec.fromObject({
-          reports: {
-            post_deploy_reports: {
-              files: ['junit-post-deploy.xml'],
-              'base-directory': 'reports',
-              'file-format': 'JUNITXML',
-            },
-          },
+      buildEnvironment: {
+        computeType: codebuild.ComputeType.SMALL,
+      },
+      installCommands: [`n ${NODE_VERSION}`, 'node --version', 'npx playwright install --with-deps chromium'],
+      commands: [
+        'npm install',
+        'aws appsync get-introspection-schema --api-id $appsyncId --format SDL website/src/graphql/schema.graphql',
+        'cd website && npm run test:post-deploy && cd ..',
+      ],
+      envFromCfnOutputs: {
+        appsyncId: infrastructure.appsyncId,
+        DREM_WEBSITE_URL: infrastructure.dremWebsiteUrl,
+      },
+      rolePolicyStatements: [
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: ['appsync:GetIntrospectionSchema'],
+          resources: ['*'],
         }),
+      ],
+      partialBuildSpec: codebuild.BuildSpec.fromObject({
+        reports: {
+          post_deploy_reports: {
+            files: ['junit-post-deploy.xml'],
+            'base-directory': 'reports',
+            'file-format': 'JUNITXML',
+          },
+        },
+      }),
     });
     postDeployStep.addStepDependency(mainSiteDeployStep);
     infrastructure_stage.addPost(postDeployStep);
