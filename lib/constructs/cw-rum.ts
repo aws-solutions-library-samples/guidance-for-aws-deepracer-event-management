@@ -111,9 +111,14 @@ export class CwRumAppMonitor extends Construct {
                 physicalResourceId:
                     customResources.PhysicalResourceId.fromResponse('AppMonitor.Id'),
             },
-            policy: customResources.AwsCustomResourcePolicy.fromSdkCalls({
-                resources: customResources.AwsCustomResourcePolicy.ANY_RESOURCE,
-            }),
+            policy: customResources.AwsCustomResourcePolicy.fromStatements([
+                new iam.PolicyStatement({
+                    actions: ['rum:GetAppMonitor'],
+                    resources: [
+                        `arn:aws:rum:${stack.region}:${stack.account}:appmonitor/${cfn_app_monitor.ref}`,
+                    ],
+                }),
+            ]),
         });
 
         const appMonitorId = cwRumCr.getResponseField('AppMonitor.Id');

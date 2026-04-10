@@ -100,7 +100,13 @@ export class LabelPrinter extends Construct {
       },
     });
 
-    props.carStatusDataHandlerLambda.grantInvoke(printLabelLambdaFunction);
+    printLabelLambdaFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['lambda:InvokeFunction'],
+        resources: [props.carStatusDataHandlerLambda.functionArn],
+      })
+    );
 
     // Bucket permissions
     const printLabelLambdaFunctionAdditionalRolePolicyS3 = printLabelLambdaFunction.addAdditionalRolePolicy(

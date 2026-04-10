@@ -1,4 +1,5 @@
 import * as iam from 'aws-cdk-lib/aws-iam';
+import { NagSuppressions } from 'cdk-nag';
 
 import { Construct } from 'constructs';
 
@@ -25,6 +26,15 @@ export class SystemsManager extends Construct {
         cloudwatch_monitor_role.addManagedPolicy(
             iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchAgentServerPolicy')
         );
+
+        NagSuppressions.addResourceSuppressions(cloudwatch_monitor_role, [
+            {
+                id: 'AwsSolutions-IAM4',
+                reason:
+                    'AmazonSSMManagedInstanceCore and CloudWatchAgentServerPolicy are the AWS-prescribed ' +
+                    'managed policies for EC2 instances running the SSM agent and CloudWatch agent on DeepRacer cars.',
+            },
+        ]);
 
         // Create config in SSM Parameter store for CloudWatch
         // https://docs.aws.amazon.com/cdk/api/v1/python/aws_cdk.aws_ssm/README.html
