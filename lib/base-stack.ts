@@ -137,10 +137,10 @@ export class BaseStack extends cdk.Stack {
     // Lambda
     // Common Config
     const lambda_architecture = awsLambda.Architecture.ARM_64;
-    const lambda_runtime = awsLambda.Runtime.PYTHON_3_13;
-    var lambda_bundling_image = DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.13:latest');
+    const lambda_runtime = awsLambda.Runtime.PYTHON_3_12;
+    var lambda_bundling_image = DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest');
     if (os.arch() === 'arm64') {
-      lambda_bundling_image = DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.13:latest-arm64');
+      lambda_bundling_image = DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest-arm64');
     }
 
     // Layers

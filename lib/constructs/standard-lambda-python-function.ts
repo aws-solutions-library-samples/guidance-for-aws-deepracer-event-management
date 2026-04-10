@@ -120,6 +120,18 @@ export class StandardLambdaPythonFunction extends lambdaPython.PythonFunction {
       ],
       true
     );
+
+    NagSuppressions.addResourceSuppressions(
+      this,
+      [
+        {
+          id: 'AwsSolutions-L1',
+          reason:
+            'Python 3.12 is the actively maintained runtime used across this project. Upgrading to 3.14 requires full dependency and integration validation and is tracked as a separate work item.',
+        },
+      ],
+      true
+    );
   }
   public addAdditionalRolePolicy(id: string, PolicyStatement: iam.PolicyStatement): { resourcePath: string } {
     const suffix = '-AdditionalRolePolicy';
