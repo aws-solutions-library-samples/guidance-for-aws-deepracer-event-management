@@ -314,16 +314,18 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     // CDK BucketDeployment singleton Lambda — runtime and role are CDK-managed, not user-configurable
     NagSuppressions.addStackSuppressions(this, [
       {
-        id: 'AwsSolutions-L1',
-        reason:
-          'The CDK BucketDeployment singleton Lambda (AWS679...) runtime is managed by CDK and cannot be configured by the application.',
-        appliesTo: [{ regex: '/^AWS679f53fac002430cb0da5b7982bd2287\/Resource$/g' }],
+        id: 'AwsSolutions-L1', // Example: Lambda runtime check
+        reason: 'This Lambda is created internally by aws_s3_deployment and cannot be modified.',
+        appliesTo: [
+          'Resource::Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/Resource',
+          'Resource::Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/Resource',
+        ],
       },
       {
         id: 'AwsSolutions-IAM4',
         reason:
           'AWSLambdaBasicExecutionRole on the CDK BucketDeployment singleton is managed by CDK and cannot be configured by the application.',
-        appliesTo: [{ regex: '/^AWS679f53fac002430cb0da5b7982bd2287\/ServiceRole\/Resource$/g' }],
+        appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
       },
     ]);
   }
