@@ -28,8 +28,6 @@ export class BaseStack extends cdk.Stack {
   public readonly idp: Idp;
   public readonly cloudfrontDistribution: Distribution;
   public readonly cloudfrontDomainNames?: string[];
-  public readonly tacSourceBucket: s3.Bucket;
-  public readonly tacCloudfrontDistribution: Distribution;
   public readonly logsBucket: s3.Bucket;
   public readonly lambdaConfig: {
     runtime: awsLambda.Runtime;
@@ -107,6 +105,7 @@ export class BaseStack extends cdk.Stack {
       logsBucket: logsBucket,
       domainNames: siteDomain,
       certificate: certificate,
+      comment: 'DREM main website',
     });
     this.cloudfrontDistribution = cdn.distribution;
 
@@ -118,22 +117,6 @@ export class BaseStack extends cdk.Stack {
         zone: hostedZone,
       });
     }
-    // Terms And Conditions webpage
-    const tacWebsite = new Website(this, 'TermsNConditions', {
-      contentPath: './website-terms-and-conditions/',
-      pathPattern: '/terms-and-conditions.html',
-      logsBucket: logsBucket,
-      cdnDistribution: cdn.distribution,
-    });
-    this.tacSourceBucket = tacWebsite.sourceBucket;
-
-    // Terms And Conditions cloudfront Distribution
-    const tacCdn = new Cdn(this, 'tacCdn', {
-      defaultOrigin: tacWebsite.origin,
-      logsBucket: logsBucket,
-    });
-    this.tacCloudfrontDistribution = tacCdn.distribution;
-
     // Lambda
     // Common Config
     const lambda_architecture = awsLambda.Architecture.ARM_64;

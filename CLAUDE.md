@@ -80,3 +80,20 @@ pytest                        # Run Python tests
 ### Public Frontends
 - **Leaderboard** (`website-leaderboard/`) — unauthenticated, subscribes to AppSync via API key for live data; supports URL query params for display (lang, QR, track, format, flag)
 - **Stream Overlays** (`website-stream-overlays/`) — unauthenticated, API key auth; uses D3.js for animated visualisations; supports chroma key background for broadcast use
+
+### Cross-Stack Sharing Pattern
+
+`BaseStack` and `DeepracerEventManagerStack` share values exclusively via **SSM Parameter Store** — there are no CloudFormation `Fn::ImportValue` / `CfnOutput` cross-stack references between them. This means either stack can be updated independently and in any order without CloudFormation blocking on export dependencies.
+
+**How it works:**
+- `BaseStack` writes all shared resource identifiers to SSM under `/${stackName}/<key>` at the end of its constructor
+- `DeepracerEventManagerStack` reads them via `ssm.StringParameter.valueForStringParameter()` (resolved at CloudFormation deploy time, not synth time) and reconstructs CDK objects using `from*` static methods (`Role.fromRoleArn`, `EventBus.fromEventBusArn`, `Bucket.fromBucketName`, etc.)
+- `DeepracerEventManagerStack` only takes `baseStackName: string` as a cross-stack prop
+
+**When adding new resources to BaseStack that InfrastructureStack needs:**
+1. Write the resource identifier to SSM in `BaseStack` constructor
+2. Read it with `valueForStringParameter` in `DeepracerEventManagerStack` and reconstruct the CDK object
+3. Do NOT pass it as a constructor prop — this would recreate the `Fn::ImportValue` dependency
+
+**When removing resources from BaseStack:**
+Because there are no `Fn::ImportValue` dependencies, you can remove a resource from `BaseStack` and deploy in a single pipeline run without the "cannot delete export in use" error. Ensure `InfrastructureStack` no longer reads the corresponding SSM parameter in the same commit.

@@ -1,7 +1,7 @@
 import { DockerImage, Duration, RemovalPolicy, Size } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { Platform } from 'aws-cdk-lib/aws-ecr-assets';
-import { EventBus, Match, Rule, Schedule } from 'aws-cdk-lib/aws-events';
+import { IEventBus, Match, Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { EventBridgeDestination } from 'aws-cdk-lib/aws-lambda-destinations';
@@ -34,7 +34,7 @@ interface ClamscanServerlessProps {
       powerToolsLayer: lambda.ILayerVersion;
     };
   };
-  eventbus: EventBus;
+  eventbus: IEventBus;
 }
 
 export class ClamscanServerless extends Construct {

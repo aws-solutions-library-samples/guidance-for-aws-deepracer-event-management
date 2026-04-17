@@ -4,7 +4,7 @@ import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as awsEvents from 'aws-cdk-lib/aws-events';
-import { EventBus } from 'aws-cdk-lib/aws-events';
+import { IEventBus } from 'aws-cdk-lib/aws-events';
 import * as awsEventsTargets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { ManagedPolicy, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
@@ -36,7 +36,7 @@ export interface CarManagerProps {
       appsyncHelpersLayer: lambda.ILayerVersion;
     };
   };
-  eventbus: EventBus;
+  eventbus: IEventBus;
 }
 
 export class CarManager extends Construct {

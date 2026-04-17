@@ -30,8 +30,6 @@ class InfrastructurePipelineStage extends Stage {
   public readonly leaderboardSourceBucketName: cdk.CfnOutput;
   public readonly streamingOverlayDistributionId: cdk.CfnOutput;
   public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
-  public readonly termAndConditionsDistributionId: cdk.CfnOutput;
-  public readonly termAndConditionsSourceBucketName: cdk.CfnOutput;
   public readonly dremWebsiteUrl: cdk.CfnOutput;
   public readonly appsyncId: cdk.CfnOutput;
 
@@ -45,23 +43,12 @@ class InfrastructurePipelineStage extends Stage {
     });
     const stack = new DeepracerEventManagerStack(this, 'infrastructure', {
       baseStackName: baseStack.stackName,
-      cloudfrontDistribution: baseStack.cloudfrontDistribution,
-      cloudfrontDomainNames: baseStack.cloudfrontDomainNames,
-      tacCloudfrontDistribution: baseStack.tacCloudfrontDistribution,
-      tacSourceBucket: baseStack.tacSourceBucket,
-      logsBucket: baseStack.logsBucket,
-      lambdaConfig: baseStack.lambdaConfig,
-      adminGroupRole: baseStack.idp.adminGroupRole,
-      operatorGroupRole: baseStack.idp.operatorGroupRole,
-      commentatorGroupRole: baseStack.idp.commentatorGroupRole,
-      registrationGroupRole: baseStack.idp.registrationGroupRole,
-      authenticatedUserRole: baseStack.idp.authenticatedUserRole,
-      userPool: baseStack.idp.userPool,
-      identiyPool: baseStack.idp.identityPool,
-      userPoolClientWeb: baseStack.idp.userPoolClientWeb,
-      dremWebsiteBucket: baseStack.dremWebsitebucket,
-      eventbus: baseStack.eventbridge.eventbus,
     });
+    // MIGRATION: infrastructure deploys before base so infra can drop
+    // Fn::ImportValue references while base still exports them. SSM parameters
+    // already exist from PR 1 so infra can resolve them at changeset time.
+    // Revert to stack.addDependency(baseStack) after this PR is deployed.
+    baseStack.addDependency(stack);
 
     this.distributionId = stack.distributionId;
     this.sourceBucketName = stack.sourceBucketName;
@@ -69,8 +56,6 @@ class InfrastructurePipelineStage extends Stage {
     this.leaderboardDistributionId = stack.leaderboardDistributionId;
     this.streamingOverlaySourceBucketName = stack.streamingOverlaySourceBucketName;
     this.streamingOverlayDistributionId = stack.streamingOverlayDistributionId;
-    this.termAndConditionsSourceBucketName = stack.tacSourceBucketName;
-    this.termAndConditionsDistributionId = stack.tacWebsitedistributionId;
     this.dremWebsiteUrl = stack.dremWebsiteUrl;
     this.appsyncId = stack.appsyncId;
   }
@@ -301,28 +286,6 @@ export class CdkPipelineStack extends cdk.Stack {
         envFromCfnOutputs: {
           streamingOverlaySourceBucketName: infrastructure.streamingOverlaySourceBucketName,
           streamingOverlayDistributionId: infrastructure.streamingOverlayDistributionId,
-        },
-        rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
-      })
-    );
-
-    // Terms and Conditions website Deploy to S3
-    infrastructure_stage.addPost(
-      new pipelines.CodeBuildStep('TermsAndConditionsDeployToS3', {
-        buildEnvironment: {
-          privileged: false,
-          computeType: codebuild.ComputeType.LARGE,
-        },
-        commands: [
-          // configure and deploy Terms and Conditions website
-          "echo 'Starting to deploy the Terms and Conditions website'",
-          'echo website bucket= $sourceBucketName',
-          'aws s3 sync ./website-terms-and-conditions/ s3://$sourceBucketName/ --delete',
-          "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'",
-        ],
-        envFromCfnOutputs: {
-          sourceBucketName: infrastructure.termAndConditionsSourceBucketName,
-          distributionId: infrastructure.termAndConditionsDistributionId,
         },
         rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
       })
