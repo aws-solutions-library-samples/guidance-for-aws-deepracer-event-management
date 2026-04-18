@@ -344,6 +344,7 @@ export const getGlobalStats = /* GraphQL */ `
                 month
                 events
                 races
+                laps
             }
             eventTypeBreakdown {
                 typeOfEvent

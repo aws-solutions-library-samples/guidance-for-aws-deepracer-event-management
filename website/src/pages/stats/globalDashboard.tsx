@@ -96,33 +96,61 @@ export function GlobalDashboard() {
           />
         </Container>
 
-        {/* Events & Races Over Time */}
+        {/* Activity Over Time — three stacked charts so each series has its own scale */}
         <Container header={<Header variant="h2">{t('stats.activity-over-time')}</Header>}>
-          <LineChart
-            series={[
-              {
-                title: t('stats.events'),
-                type: 'line',
-                data: stats.eventsByMonth.map((m) => ({
-                  x: new Date(m.month + '-01'),
-                  y: m.events,
-                })),
-              },
-              {
-                title: t('stats.races'),
-                type: 'line',
-                data: stats.eventsByMonth.map((m) => ({
-                  x: new Date(m.month + '-01'),
-                  y: m.races,
-                })),
-              },
-            ]}
-            xScaleType="time"
-            xTitle={t('stats.month')}
-            yTitle={t('stats.count')}
-            hideFilter
-            height={300}
-          />
+          <SpaceBetween size="m">
+            <LineChart
+              series={[
+                {
+                  title: t('stats.events'),
+                  type: 'line',
+                  data: stats.eventsByMonth.map((m) => ({
+                    x: new Date(m.month + '-01'),
+                    y: m.events,
+                  })),
+                },
+              ]}
+              xScaleType="time"
+              xTitle={t('stats.month')}
+              yTitle={t('stats.events')}
+              hideFilter
+              height={180}
+            />
+            <LineChart
+              series={[
+                {
+                  title: t('stats.races'),
+                  type: 'line',
+                  data: stats.eventsByMonth.map((m) => ({
+                    x: new Date(m.month + '-01'),
+                    y: m.races,
+                  })),
+                },
+              ]}
+              xScaleType="time"
+              xTitle={t('stats.month')}
+              yTitle={t('stats.races')}
+              hideFilter
+              height={180}
+            />
+            <LineChart
+              series={[
+                {
+                  title: t('stats.laps'),
+                  type: 'line',
+                  data: stats.eventsByMonth.map((m) => ({
+                    x: new Date(m.month + '-01'),
+                    y: m.laps,
+                  })),
+                },
+              ]}
+              xScaleType="time"
+              xTitle={t('stats.month')}
+              yTitle={t('stats.laps')}
+              hideFilter
+              height={180}
+            />
+          </SpaceBetween>
         </Container>
 
         {/* Event Type Breakdown */}

@@ -170,6 +170,7 @@ export class Statistics extends Construct {
         month: GraphqlType.string({ isRequired: true }),
         events: GraphqlType.int({ isRequired: true }),
         races: GraphqlType.int({ isRequired: true }),
+        laps: GraphqlType.int({ isRequired: true }),
       },
       directives: [Directive.apiKey(), Directive.cognito('admin', 'operator', 'commentator')],
     });

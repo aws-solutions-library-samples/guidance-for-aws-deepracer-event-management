@@ -11,7 +11,7 @@ export interface GlobalStats {
   totalValidLaps: number;
   totalCountries: number;
   eventsByCountry: { countryCode: string; events: number; racers: number; laps: number }[];
-  eventsByMonth: { month: string; events: number; races: number }[];
+  eventsByMonth: { month: string; events: number; races: number; laps: number }[];
   eventTypeBreakdown: { typeOfEvent: string; count: number }[];
   trackTypeBreakdown: { trackType: string; count: number; bestLapMs: number | null }[];
   fastestLapsEver: {
