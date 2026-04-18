@@ -207,9 +207,9 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     new Statistics(this, 'Statistics', {
       appsyncApi: appsyncResources,
       lambdaConfig: lambdaConfig,
-      eventbus: props.eventbus,
-      userPoolId: props.userPool.userPoolId,
-      userPoolArn: props.userPool.userPoolArn,
+      eventbus: eventbus,
+      userPoolId: userPool.userPoolId,
+      userPoolArn: userPool.userPoolArn,
       raceTable: raceManager.raceTable,
       eventsTable: eventsManager.eventsTable,
     });
