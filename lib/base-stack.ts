@@ -9,7 +9,6 @@ import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
-import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import * as os from 'os';
 import { Cdn } from './constructs/cdn';
@@ -222,19 +221,6 @@ export class BaseStack extends cdk.Stack {
       parameterName: `/${this.stackName}/authenticatedUserRoleArn`,
       stringValue: this.idp.authenticatedUserRole.roleArn,
     });
-
-    // CDK BucketDeployment singleton Lambda — runtime is CDK-managed, not user-configurable
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/Resource`,
-      [
-        {
-          id: 'AwsSolutions-L1',
-          reason:
-            'CDK BucketDeployment singleton Lambda runtime is managed by CDK and cannot be configured by the application.',
-        },
-      ]
-    );
   }
 
   lambdaLayers = (
