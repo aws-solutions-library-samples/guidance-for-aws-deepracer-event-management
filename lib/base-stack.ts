@@ -235,19 +235,6 @@ export class BaseStack extends cdk.Stack {
         },
       ]
     );
-
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason:
-            'CDK BucketDeployment singleton service role uses AWSLambdaBasicExecutionRole; this role is fully managed by CDK and cannot be configured by the application.',
-          appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
-        },
-      ]
-    );
   }
 
   lambdaLayers = (
