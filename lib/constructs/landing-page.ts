@@ -1,7 +1,7 @@
 import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
+import { IEventBus, Rule } from 'aws-cdk-lib/aws-events';
 import { IRole } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
@@ -35,7 +35,7 @@ export interface LandingPageManagerProps {
             powerToolsLayer: lambda.ILayerVersion;
         };
     };
-    eventbus: EventBus;
+    eventbus: IEventBus;
 }
 export class LandingPageManager extends Construct {
     public readonly api: {
