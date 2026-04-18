@@ -1,6 +1,6 @@
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import * as cdk from 'aws-cdk-lib';
-import { CfnResource, DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
 import * as awsLambda from 'aws-cdk-lib/aws-lambda';
@@ -245,27 +245,6 @@ export class BaseStack extends cdk.Stack {
           reason:
             'CDK BucketDeployment singleton service role uses AWSLambdaBasicExecutionRole; this role is fully managed by CDK and cannot be configured by the application.',
           appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
-        },
-      ]
-    );
-
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/DefaultPolicy/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason:
-            'CDK BucketDeployment singleton service role DefaultPolicy uses wildcard S3 actions and bucket ARNs to read from the CDK staging bucket and write to destination buckets; fully managed by CDK and cannot be scoped further.',
-          appliesTo: [
-            'Action::s3:Abort*',
-            'Action::s3:DeleteObject*',
-            'Action::s3:GetBucket*',
-            'Action::s3:GetObject*',
-            'Action::s3:List*',
-            { regex: '/^Resource::arn:aws:s3:::cdk-hnb659fds-assets-.*$/g' },
-            `Resource::<${this.getLogicalId(tacWebsite.sourceBucket.node.defaultChild as CfnResource)}.Arn>/*`,
-          ],
         },
       ]
     );
