@@ -28,11 +28,13 @@ def lambda_handler(event, context):
 
 
 @app.resolver(type_name="Query", field_name="getLeaderboard")
-def getLeaderboard(eventId: str, trackId: str = "1"):
+def getLeaderboard(eventId: str, trackId: str = None):
     logger.info(f"eventId: {eventId}, trackId: {trackId}")
 
-    if trackId == "combined":
-        # return all entries for a combined leaderboard
+    # A missing or "combined" trackId returns every entry for the event.
+    # Treating None as combined avoids a DynamoDB ValidationException from
+    # begins_with(NULL) when AppSync passes a null argument through.
+    if trackId in (None, "combined"):
         response = ddbTable.query(KeyConditionExpression=Key("eventId").eq(eventId))
     else:
         # return entries for a single track
