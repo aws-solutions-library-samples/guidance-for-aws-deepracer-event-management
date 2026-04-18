@@ -178,9 +178,10 @@ def _rebuild_global_stats():
 
         month = (event_stats.event_date or "")[:7]
         if month:
-            events_by_month.setdefault(month, {"events": 0, "races": 0})
+            events_by_month.setdefault(month, {"events": 0, "races": 0, "laps": 0})
             events_by_month[month]["events"] += 1
             events_by_month[month]["races"] += event_stats.total_races
+            events_by_month[month]["laps"] += event_stats.total_valid_laps
 
         event_type = event_stats.event_type
         if event_type:
