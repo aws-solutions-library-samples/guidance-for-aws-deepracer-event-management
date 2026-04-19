@@ -1,0 +1,32 @@
+{# lib/lambdas/pdf_api/templates/_components.html #}
+{% macro kpi_box(label, value) %}
+<div class="kpi">
+  <div class="label">{{ label }}</div>
+  <div class="value">{{ value }}</div>
+</div>
+{% endmacro %}
+
+{% macro format_lap(time_ms) %}
+{% if time_ms is none %}—{% else %}{{ '%.3f'|format(time_ms / 1000) }}s{% endif %}
+{% endmacro %}
+
+{% macro racer_row(r) %}
+<tr>
+  <td>{{ r.rank }}</td>
+  <td>{{ r.username }}</td>
+  <td>{{ r.countryCode|default('') }}</td>
+  <td>{{ format_lap(r.fastestLapTime) }}</td>
+  <td>{{ format_lap(r.avgLapTime) }}</td>
+  <td>{{ r.numberOfValidLaps }}/{{ r.numberOfValidLaps + r.numberOfInvalidLaps }}</td>
+  <td>{{ r.mostConsecutiveLaps }}</td>
+</tr>
+{% endmacro %}
+
+{% macro podium_step(position, racer, height_mm) %}
+<div class="podium-step podium-{{ position }}" style="height: {{ height_mm }}mm;">
+  <div class="rank">{{ position }}</div>
+  <div class="name">{{ racer.username }}</div>
+  <div class="country">{{ racer.countryCode|default('') }}</div>
+  <div class="lap">{{ format_lap(racer.fastestLapTime) }}</div>
+</div>
+{% endmacro %}
