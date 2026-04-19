@@ -29,6 +29,17 @@ function formatLapTime(ms: number): string {
   return `${seconds.toFixed(3)}s`;
 }
 
+// Month abbreviations. January shows the full year for visual emphasis,
+// other months show the 3-letter abbreviation.
+const MONTH_LABELS = ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function formatMonthTick(date: Date): string {
+  const month = date.getMonth();
+  if (month === 0) {
+    return String(date.getFullYear());
+  }
+  return MONTH_LABELS[month - 1];
+}
+
 export function GlobalDashboard() {
   const { t } = useTranslation();
   const { globalStats, loading, error } = useStatsApi();
@@ -104,6 +115,7 @@ export function GlobalDashboard() {
                 {
                   title: t('stats.events'),
                   type: 'line',
+                  color: '#0972D3',
                   data: stats.eventsByMonth.map((m) => ({
                     x: new Date(m.month + '-01'),
                     y: m.events,
@@ -113,6 +125,7 @@ export function GlobalDashboard() {
               xScaleType="time"
               xTitle={t('stats.month')}
               yTitle={t('stats.events')}
+              xTickFormatter={formatMonthTick}
               hideFilter
               height={180}
             />
@@ -121,6 +134,7 @@ export function GlobalDashboard() {
                 {
                   title: t('stats.races'),
                   type: 'line',
+                  color: '#037F0C',
                   data: stats.eventsByMonth.map((m) => ({
                     x: new Date(m.month + '-01'),
                     y: m.races,
@@ -130,6 +144,7 @@ export function GlobalDashboard() {
               xScaleType="time"
               xTitle={t('stats.month')}
               yTitle={t('stats.races')}
+              xTickFormatter={formatMonthTick}
               hideFilter
               height={180}
             />
@@ -138,6 +153,7 @@ export function GlobalDashboard() {
                 {
                   title: t('stats.laps'),
                   type: 'line',
+                  color: '#B25C00',
                   data: stats.eventsByMonth.map((m) => ({
                     x: new Date(m.month + '-01'),
                     y: m.laps,
@@ -147,6 +163,7 @@ export function GlobalDashboard() {
               xScaleType="time"
               xTitle={t('stats.month')}
               yTitle={t('stats.laps')}
+              xTickFormatter={formatMonthTick}
               hideFilter
               height={180}
             />
