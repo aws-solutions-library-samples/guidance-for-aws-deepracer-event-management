@@ -41,6 +41,16 @@ ADMIN_GROUPS = {"admin", "operator", "commentator"}
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
 @tracer.capture_lambda_handler
 def lambda_handler(event, context):
+    # Diagnostic — log the dynamic-linker environment so we can see why
+    # dlopen can't find libpango even though the file is in /opt/lib.
+    try:
+        opt_lib_contents = sorted(os.listdir("/opt/lib"))[:30]
+    except Exception as e:
+        opt_lib_contents = [f"error: {e}"]
+    logger.info({
+        "diag_LD_LIBRARY_PATH": os.environ.get("LD_LIBRARY_PATH"),
+        "diag_opt_lib_first_30": opt_lib_contents,
+    })
     logger.info(event)
     return app.resolve(event, context)
 
