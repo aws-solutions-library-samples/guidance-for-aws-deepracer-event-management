@@ -32,6 +32,7 @@ import { RacerProfile } from './constructs/racer-profile';
 import { Statistics } from './constructs/statistics';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
+import { RaceResultsPdf } from './constructs/race-results-pdf';
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
   baseStackName: string;
@@ -245,6 +246,16 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       logsbucket: logsBucket,
       appsyncApi: appsyncResources,
       carStatusDataHandlerLambda: carManager.carStatusDataHandlerLambda,
+    });
+
+    new RaceResultsPdf(this, 'RaceResultsPdf', {
+      appsyncApi: appsyncResources,
+      lambdaConfig: lambdaConfig,
+      userPoolId: userPool.userPoolId,
+      userPoolArn: userPool.userPoolArn,
+      raceTable: raceManager.raceTable,
+      eventsTable: eventsManager.eventsTable,
+      logsBucket: logsBucket,
     });
 
     const cwRumAppMonitor = new CwRumAppMonitor(this, 'CwRumAppMonitor', {
