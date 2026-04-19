@@ -1,4 +1,4 @@
-import { Button, SpaceBetween } from '@cloudscape-design/components';
+import { Button, ButtonDropdown, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,7 @@ import { PageTable } from '../../components/pageTable';
 import { DrSplitPanel } from '../../components/split-panels/dr-split-panel';
 import { TableHeader } from '../../components/tableConfig';
 import useMutation from '../../hooks/useMutation';
+import { usePdfApi } from '../../hooks/usePdfApi';
 import { useUsers } from '../../hooks/useUsers';
 import { useSelectedEventContext } from '../../store/contexts/storeProvider';
 import { useStore } from '../../store/store';
@@ -34,6 +35,16 @@ const RaceAdmin = (): JSX.Element => {
   const [, usersIsLoading, getUserNameFromId] = useUsers();
 
   const navigate = useNavigate();
+  const { generate, generating } = usePdfApi();
+
+  const onDownloadPdf = async (type: 'ORGANISER_SUMMARY' | 'PODIUM' | 'RACER_CERTIFICATES_BULK') => {
+    if (!selectedEvent?.eventId) return;
+    const result = await generate({ eventId: selectedEvent.eventId, type });
+    if (result) {
+      window.open(result.downloadUrl, '_blank', 'noopener');
+    }
+  };
+
   const editRaceHandler = () => {
     navigate('/admin/races/edit', { state: SelectedRacesInTable[0] });
   };
@@ -113,6 +124,22 @@ const RaceAdmin = (): JSX.Element => {
         <Button disabled={disableDeleteButton} onClick={() => setDeleteModalVisible(true)}>
           {t('button.delete')}
         </Button>
+        <ButtonDropdown
+          loading={generating}
+          disabled={!selectedEvent?.eventId}
+          items={[
+            { id: 'summary', text: t('pdf.organiser-summary') },
+            { id: 'podium', text: t('pdf.podium') },
+            { id: 'certificates', text: t('pdf.bulk-certificates') },
+          ]}
+          onItemClick={({ detail }) => {
+            if (detail.id === 'summary') onDownloadPdf('ORGANISER_SUMMARY');
+            else if (detail.id === 'podium') onDownloadPdf('PODIUM');
+            else if (detail.id === 'certificates') onDownloadPdf('RACER_CERTIFICATES_BULK');
+          }}
+        >
+          {t('pdf.download-pdf')}
+        </ButtonDropdown>
       </SpaceBetween>
     );
   };
