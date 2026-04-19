@@ -18,7 +18,7 @@ Lives at `lib/constructs/race-results-pdf.ts`. Creates:
 
 - **PDF S3 bucket** (`drem-backend-{label}-pdfs-*`)
   - Encryption: AWS-managed
-  - Lifecycle rule: delete objects older than 7 days (PDFs are ephemeral)
+  - Lifecycle rule: expire objects after 1 day. Pre-signed URLs are valid for 1 hour, so anything older than that is unreachable anyway — the extra day is a safety margin for edge cases (clock drift, async debugging). Users who need a PDF after expiry re-trigger generation.
   - No public access; delivery via pre-signed URL only
 - **PDF Lambda** (`lib/lambdas/pdf_api/`) — Python 3.12 ARM64
   - Uses WeasyPrint + Jinja2 to render HTML templates to PDF
