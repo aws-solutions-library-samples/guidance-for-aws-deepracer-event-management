@@ -1068,3 +1068,18 @@ export const userCreated = /* GraphQL */ `
         }
     }
 `;
+
+export const generateRaceResultsPdf = /* GraphQL */ `
+    mutation GenerateRaceResultsPdf(
+        $eventId: ID!
+        $type: PdfType!
+        $userId: ID
+        $trackId: ID
+    ) {
+        generateRaceResultsPdf(eventId: $eventId, type: $type, userId: $userId, trackId: $trackId) {
+            downloadUrl
+            filename
+            expiresAt
+        }
+    }
+`;
