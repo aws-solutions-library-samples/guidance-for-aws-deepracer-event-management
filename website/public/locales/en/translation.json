@@ -824,6 +824,13 @@
       }
     }
   },
+  "pdf.download-pdf": "Download PDF",
+  "pdf.organiser-summary": "Organiser summary",
+  "pdf.podium": "Podium",
+  "pdf.bulk-certificates": "Certificates (all racers, zip)",
+  "pdf.certificate": "Certificate",
+  "pdf.generating": "Generating PDF…",
+  "pdf.generation-failed": "PDF generation failed. Please try again.",
   "upload-to-car-status": {
     "header": "Uploads to car status",
     "loading": "Loading",
