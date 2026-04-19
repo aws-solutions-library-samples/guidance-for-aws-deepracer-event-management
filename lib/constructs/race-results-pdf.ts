@@ -87,6 +87,12 @@ export class RaceResultsPdf extends Construct {
         USER_POOL_ID: props.userPoolId,
         URL_EXPIRY_SECONDS: '3600',
         POWERTOOLS_SERVICE_NAME: 'pdf_api',
+        // Force /opt/lib onto LD_LIBRARY_PATH. Lambda's python3.12 runtime
+        // is supposed to do this automatically but WeasyPrint's dlopen was
+        // failing to find libpango-1.0-0.so even though it's present in
+        // the layer — set it explicitly as a belt-and-braces fix.
+        LD_LIBRARY_PATH: '/opt/lib:/var/runtime:/var/task/lib:/usr/lib64:/lib64',
+        FONTCONFIG_PATH: '/opt/lib/fontconfig',
       },
     });
 
