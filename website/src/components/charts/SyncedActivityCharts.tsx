@@ -74,6 +74,18 @@ export function SyncedActivityCharts({
           titleColor: chartTheme.tickColor,
           bodyColor: chartTheme.tickColor,
           displayColors: false,
+          callbacks: {
+            // The default time-axis title renders as a full locale date/time —
+            // we only want "Mar 2025".
+            title(items) {
+              if (items.length === 0) return '';
+              const raw = items[0].parsed.x;
+              return new Date(raw).toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'short',
+              });
+            },
+          },
         },
       },
       scales: {
@@ -110,6 +122,13 @@ export function SyncedActivityCharts({
           grid: { color: chartTheme.gridColor },
           border: { color: chartTheme.axisColor },
           ticks: { color: chartTheme.tickColor },
+          // Force the Y axis to a fixed width so the plot areas of stacked
+          // charts line up even when label digits differ (10 vs 1,000 vs
+          // 6,000). Without this the charts left-edges drift and the
+          // synced crosshair looks misaligned between panels.
+          afterFit(scaleInstance) {
+            scaleInstance.width = 60;
+          },
         },
       },
     }),

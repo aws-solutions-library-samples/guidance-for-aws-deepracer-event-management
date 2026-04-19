@@ -3,7 +3,7 @@
  *
  * Registers the chart.js components we use and exposes a palette drawn from
  * CloudScape design tokens so our chart.js-based visualisations stay visually
- * consistent with the rest of the app (and auto-adapt when dark mode lands).
+ * consistent with the rest of the app.
  */
 import {
   ArcElement,
@@ -42,8 +42,22 @@ Chart.register(
   Tooltip
 );
 
-// Categorical palette from CloudScape design tokens.
-// Auto-adapts to dark mode when the dark-mode toggle lands (#179).
+/**
+ * CloudScape design tokens export colours as CSS var() expressions with a
+ * hex fallback, e.g. `"var(--color-charts-palette-categorical-1-xxx, #688AE8)"`.
+ * Chart.js renders to canvas and can't resolve CSS variables, so we pull the
+ * hex fallback out.
+ *
+ * TODO when dark mode ships (#179): replace with a runtime resolver that
+ * reads the CSS variable via getComputedStyle so colours adapt to the
+ * current theme. For now the hex fallback is the light-mode value.
+ */
+function resolveToken(tokenValue: string): string {
+  const match = /#[0-9a-fA-F]{3,8}/.exec(tokenValue);
+  return match ? match[0] : tokenValue;
+}
+
+// Categorical palette resolved from CloudScape design tokens.
 export const categoricalPalette: string[] = [
   tokens.colorChartsPaletteCategorical1,
   tokens.colorChartsPaletteCategorical2,
@@ -75,10 +89,12 @@ export const categoricalPalette: string[] = [
   tokens.colorChartsPaletteCategorical28,
   tokens.colorChartsPaletteCategorical29,
   tokens.colorChartsPaletteCategorical30,
-];
+].map(resolveToken);
 
 export const chartTheme = {
-  gridColor: tokens.colorChartsLineGrid,
-  axisColor: tokens.colorChartsLineAxis,
-  tickColor: tokens.colorChartsLineTick,
+  gridColor: resolveToken(tokens.colorChartsLineGrid),
+  axisColor: resolveToken(tokens.colorChartsLineAxis),
+  tickMarkColor: resolveToken(tokens.colorChartsLineTick),
+  tickColor: resolveToken(tokens.colorTextBodySecondary),
+  titleColor: resolveToken(tokens.colorTextHeadingDefault),
 } as const;
