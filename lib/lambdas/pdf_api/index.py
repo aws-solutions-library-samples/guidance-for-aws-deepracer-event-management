@@ -44,12 +44,15 @@ def lambda_handler(event, context):
     # Diagnostic — log the dynamic-linker environment so we can see why
     # dlopen can't find libpango even though the file is in /opt/lib.
     try:
-        opt_lib_contents = sorted(os.listdir("/opt/lib"))[:30]
+        opt_lib_contents = sorted(os.listdir("/opt/lib"))
+        pango_matches = [f for f in opt_lib_contents if "pango" in f]
     except Exception as e:
         opt_lib_contents = [f"error: {e}"]
+        pango_matches = []
     logger.info({
         "diag_LD_LIBRARY_PATH": os.environ.get("LD_LIBRARY_PATH"),
-        "diag_opt_lib_first_30": opt_lib_contents,
+        "diag_pango_in_opt_lib": pango_matches,
+        "diag_opt_lib_count": len(opt_lib_contents),
     })
     logger.info(event)
     return app.resolve(event, context)
