@@ -66,6 +66,8 @@ export class EventsManager extends Construct {
     });
     this.eventsTable = eventsTable;
 
+    this.eventsTable = eventsTable;
+
     const ddbstreamToEventBridgeFunction = new StandardLambdaPythonFunction(this, 'ddbStreamToEvbFunction', {
       entry: 'lib/lambdas/events_ddb_stream_to_evb_function/',
       description: 'Events - DDB stream to EVB',

@@ -84,6 +84,7 @@ export class RaceManager extends Construct {
         POWERTOOLS_SERVICE_NAME: 'race_handler',
       },
     });
+    this.raceTable = raceTable;
     raceTable.grantReadWriteData(raceLambda);
     props.eventbus.grantPutEventsTo(raceLambda);
     props.appsyncApi.api.grantMutation(raceLambda, 'addLeaderboardEntry');
