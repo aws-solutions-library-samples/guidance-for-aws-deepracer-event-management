@@ -1,0 +1,84 @@
+{# lib/lambdas/pdf_api/templates/podium.html #}
+{% extends "base.html" %}
+{% from "_components.html" import format_lap %}
+{% block content %}
+<style>
+  .podium-block {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2mm;
+    margin: 10mm 0;
+    height: 90mm;
+  }
+  .podium-step {
+    width: 52mm;
+    padding: 4mm;
+    text-align: center;
+    color: white;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .podium-step .rank { font-size: 22pt; }
+  .podium-step .name { font-size: 14pt; margin-top: 2mm; }
+  .podium-step .country { font-size: 10pt; opacity: 0.85; }
+  .podium-step .lap { font-size: 11pt; margin-top: 2mm; opacity: 0.95; }
+  .podium-1 { background: #D4AF37; order: 2; }
+  .podium-2 { background: #9AA4B2; order: 1; }
+  .podium-3 { background: #CD7F32; order: 3; }
+</style>
+
+<div class="header">
+  <img class="logo" src="{{ brand.logo_url }}" alt="logo">
+  <div>
+    <h1>{{ event.eventName }} — Podium</h1>
+    <div class="meta">{{ event.eventDate }}</div>
+  </div>
+</div>
+
+<div class="podium-block">
+  {% if podium|length > 1 %}
+    <div class="podium-step podium-2" style="height: 60mm;">
+      <div class="rank">2</div>
+      <div class="name">{{ podium[1].username }}</div>
+      <div class="country">{{ podium[1].countryCode|default('') }}</div>
+      <div class="lap">{{ format_lap(podium[1].fastestLapTime) }}</div>
+    </div>
+  {% endif %}
+  {% if podium|length > 0 %}
+    <div class="podium-step podium-1" style="height: 80mm;">
+      <div class="rank">1</div>
+      <div class="name">{{ podium[0].username }}</div>
+      <div class="country">{{ podium[0].countryCode|default('') }}</div>
+      <div class="lap">{{ format_lap(podium[0].fastestLapTime) }}</div>
+    </div>
+  {% endif %}
+  {% if podium|length > 2 %}
+    <div class="podium-step podium-3" style="height: 45mm;">
+      <div class="rank">3</div>
+      <div class="name">{{ podium[2].username }}</div>
+      <div class="country">{{ podium[2].countryCode|default('') }}</div>
+      <div class="lap">{{ format_lap(podium[2].fastestLapTime) }}</div>
+    </div>
+  {% endif %}
+</div>
+
+{% if runners_up %}
+  <h2>Positions 4–10</h2>
+  <table>
+    <thead><tr><th>#</th><th>Racer</th><th>Country</th><th>Fastest</th></tr></thead>
+    <tbody>
+      {% for r in runners_up %}
+        <tr>
+          <td>{{ r.rank }}</td>
+          <td>{{ r.username }}</td>
+          <td>{{ r.countryCode|default('') }}</td>
+          <td>{{ format_lap(r.fastestLapTime) }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}
