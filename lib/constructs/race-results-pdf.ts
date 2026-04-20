@@ -49,6 +49,15 @@ export class RaceResultsPdf extends Construct {
     });
     pdfBucket.addLifecycleRule({ enabled: true, expiration: Duration.days(1) });
 
+    // ---------- DynamoDB PdfJobs table ----------
+    const pdfJobsTable = new dynamodb.Table(this, 'PdfJobsTable', {
+      partitionKey: { name: 'jobId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      encryption: dynamodb.TableEncryption.AWS_MANAGED,
+      timeToLiveAttribute: 'ttl',
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
     // ---------- Lambda (container image) ----------
     // Shipped as a container image rather than a zip + layer because
     // WeasyPrint's native deps (cairo, pango, gdk-pixbuf) are painful to
