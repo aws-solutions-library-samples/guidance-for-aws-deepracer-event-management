@@ -189,10 +189,6 @@ export class RaceResultsPdf extends Construct {
       'PdfOrchestratorDataSource',
       orchestratorLambda
     );
-    const pdfJobsDdbDataSource = props.appsyncApi.api.addDynamoDbDataSource(
-      'PdfJobsDdbDataSource',
-      pdfJobsTable
-    );
 
     NagSuppressions.addResourceSuppressions(
       [orchestratorDataSource],
@@ -223,6 +219,9 @@ export class RaceResultsPdf extends Construct {
 
     // updatePdfJob — IAM-only. Worker calls this after render completes (or fails).
     // Triggers onPdfJobUpdated subscription via @aws_subscribe side effect.
+    // Served by the orchestrator Lambda (single handler for all PDF AppSync fields)
+    // rather than a dedicated DDB data source — the latter cost 3 CFN resources
+    // and we're close to the 500-resource stack cap.
     props.appsyncApi.schema.addMutation(
       'updatePdfJob',
       new ResolvableField({
@@ -234,9 +233,7 @@ export class RaceResultsPdf extends Construct {
           error: GraphqlType.string(),
         },
         returnType: pdfJobType.attribute(),
-        dataSource: pdfJobsDdbDataSource,
-        requestMappingTemplate: appsync.MappingTemplate.fromString(buildUpdatePdfJobRequestTemplate()),
-        responseMappingTemplate: appsync.MappingTemplate.fromString('$util.toJson($ctx.result)'),
+        dataSource: orchestratorDataSource,
         directives: [Directive.iam()],
       })
     );
@@ -287,46 +284,3 @@ function ecrAssetsPlatformFor(arch: lambda.Architecture) {
   return arch === lambda.Architecture.ARM_64 ? Platform.LINUX_ARM64 : Platform.LINUX_AMD64;
 }
 
-// Build the UpdateItem VTL for updatePdfJob.
-// The mutation args s3Key/filename/error are optional; only SET the ones provided.
-// Always SET status and completedAt.
-function buildUpdatePdfJobRequestTemplate(): string {
-  return `
-{
-  "version": "2018-05-29",
-  "operation": "UpdateItem",
-  "key": {
-    "jobId": $util.dynamodb.toDynamoDBJson($ctx.args.jobId)
-  },
-  "update": {
-    "expression": "SET #status = :status, #completedAt = :completedAt#if($ctx.args.s3Key), #s3Key = :s3Key#end#if($ctx.args.filename), #filename = :filename#end#if($ctx.args.error), #error = :error#end",
-    "expressionNames": {
-      "#status": "status",
-      "#completedAt": "completedAt"
-      #if($ctx.args.s3Key),
-      "#s3Key": "s3Key"
-      #end
-      #if($ctx.args.filename),
-      "#filename": "filename"
-      #end
-      #if($ctx.args.error),
-      "#error": "error"
-      #end
-    },
-    "expressionValues": {
-      ":status": $util.dynamodb.toDynamoDBJson($ctx.args.status),
-      ":completedAt": $util.dynamodb.toDynamoDBJson($util.time.nowISO8601())
-      #if($ctx.args.s3Key),
-      ":s3Key": $util.dynamodb.toDynamoDBJson($ctx.args.s3Key)
-      #end
-      #if($ctx.args.filename),
-      ":filename": $util.dynamodb.toDynamoDBJson($ctx.args.filename)
-      #end
-      #if($ctx.args.error),
-      ":error": $util.dynamodb.toDynamoDBJson($ctx.args.error)
-      #end
-    }
-  }
-}
-`;
-}
