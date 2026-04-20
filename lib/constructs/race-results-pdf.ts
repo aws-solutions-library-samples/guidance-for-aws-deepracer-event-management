@@ -72,6 +72,13 @@ export class RaceResultsPdf extends Construct {
         USER_POOL_ID: props.userPoolId,
         URL_EXPIRY_SECONDS: '3600',
         POWERTOOLS_SERVICE_NAME: 'pdf_api',
+        // Point fontconfig's cache at /tmp (Lambda's only writable dir). Without
+        // this it tries to write to /var/cache/fontconfig or $HOME/.cache —
+        // neither writable on Lambda — and re-scans every font on every render.
+        // First request pays the cache build cost (~1s), warm invocations reuse
+        // the cache from /tmp for the life of the container.
+        XDG_CACHE_HOME: '/tmp',
+        HOME: '/tmp',
       },
       tracing: lambda.Tracing.ACTIVE,
     });

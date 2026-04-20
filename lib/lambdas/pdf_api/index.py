@@ -235,9 +235,17 @@ def _render_certificate(event: dict, racer: dict, brand: dict, generated_at: str
 
 
 def _render_bulk_zip(event: dict, ranked: list[dict], brand: dict, generated_at: str) -> bytes:
+    """Render one certificate per unique racer who has at least one valid lap.
+
+    `ranked` is already one row per userId (see `_build_summaries`). We further
+    skip racers with fastestLapTime is None — no valid laps means no meaningful
+    certificate stats.
+    """
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         for racer in ranked:
+            if racer.get("fastestLapTime") is None:
+                continue
             pdf = _render_certificate(event, racer, brand, generated_at)
             zf.writestr(f"{racer['username']}.pdf", pdf)
     return buf.getvalue()
