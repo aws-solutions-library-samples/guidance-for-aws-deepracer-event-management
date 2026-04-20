@@ -58,50 +58,117 @@ export class RaceResultsPdf extends Construct {
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    // ---------- Lambda (container image) ----------
+    // ---------- Lambda container image (shared by 3 functions) ----------
     // Shipped as a container image rather than a zip + layer because
     // WeasyPrint's native deps (cairo, pango, gdk-pixbuf) are painful to
     // package as a Lambda layer — cffi's dlopen doesn't play nicely with
     // LD_LIBRARY_PATH for libraries that aren't registered with ldconfig.
     // A container image lets dnf install them normally, so the dynamic
     // linker just works.
-    const pdfLambda = new lambda.DockerImageFunction(this, 'pdfLambda', {
-      code: lambda.DockerImageCode.fromImageAsset('lib/lambdas/pdf_api', {
-        platform: ecrAssetsPlatformFor(props.lambdaConfig.architecture),
+    const imagePath = 'lib/lambdas/pdf_api';
+    const platform = ecrAssetsPlatformFor(props.lambdaConfig.architecture);
+
+    const sharedEnv = {
+      PDF_BUCKET: pdfBucket.bucketName,
+      RACE_TABLE: props.raceTable.tableName,
+      EVENTS_TABLE: props.eventsTable.tableName,
+      USER_POOL_ID: props.userPoolId,
+      URL_EXPIRY_SECONDS: '3600',
+      PDF_JOBS_TABLE: pdfJobsTable.tableName,
+      APPSYNC_ENDPOINT: props.appsyncApi.api.graphqlUrl,
+      APPSYNC_REGION: this.node.tryGetContext('region') ?? 'eu-west-1',
+      // Point fontconfig's cache at /tmp (Lambda's only writable dir). Without
+      // this it tries to write to /var/cache/fontconfig or $HOME/.cache —
+      // neither writable on Lambda — and re-scans every font on every render.
+      XDG_CACHE_HOME: '/tmp',
+      HOME: '/tmp',
+    };
+
+    // Worker: long-running renderer (invoked async by orchestrator)
+    const workerLambda = new lambda.DockerImageFunction(this, 'WorkerLambda', {
+      code: lambda.DockerImageCode.fromImageAsset(imagePath, {
+        platform,
+        cmd: ['worker.lambda_handler'],
       }),
       architecture: props.lambdaConfig.architecture,
-      timeout: Duration.minutes(5),
+      timeout: Duration.minutes(15),
       memorySize: 1024,
-      description: 'Race results PDF generator (container image with WeasyPrint)',
+      description: 'Race results PDF worker (async renderer)',
       logRetention: logs.RetentionDays.SIX_MONTHS,
       environment: {
-        PDF_BUCKET: pdfBucket.bucketName,
-        RACE_TABLE: props.raceTable.tableName,
-        EVENTS_TABLE: props.eventsTable.tableName,
-        USER_POOL_ID: props.userPoolId,
-        URL_EXPIRY_SECONDS: '3600',
-        POWERTOOLS_SERVICE_NAME: 'pdf_api',
-        // Point fontconfig's cache at /tmp (Lambda's only writable dir). Without
-        // this it tries to write to /var/cache/fontconfig or $HOME/.cache —
-        // neither writable on Lambda — and re-scans every font on every render.
-        // First request pays the cache build cost (~1s), warm invocations reuse
-        // the cache from /tmp for the life of the container.
-        XDG_CACHE_HOME: '/tmp',
-        HOME: '/tmp',
+        ...sharedEnv,
+        POWERTOOLS_SERVICE_NAME: 'pdf_worker',
       },
       tracing: lambda.Tracing.ACTIVE,
     });
 
-    pdfBucket.grantReadWrite(pdfLambda);
-    props.raceTable.grantReadData(pdfLambda);
-    props.eventsTable.grantReadData(pdfLambda);
-    pdfLambda.addToRolePolicy(
+    // Orchestrator: AppSync resolver for generateRaceResultsPdf
+    const orchestratorLambda = new lambda.DockerImageFunction(this, 'OrchestratorLambda', {
+      code: lambda.DockerImageCode.fromImageAsset(imagePath, {
+        platform,
+        cmd: ['index.lambda_handler'],
+      }),
+      architecture: props.lambdaConfig.architecture,
+      timeout: Duration.seconds(30),
+      memorySize: 512,
+      description: 'Race results PDF orchestrator (AppSync resolver)',
+      logRetention: logs.RetentionDays.SIX_MONTHS,
+      environment: {
+        ...sharedEnv,
+        WORKER_FUNCTION_NAME: workerLambda.functionName,
+        POWERTOOLS_SERVICE_NAME: 'pdf_orchestrator',
+      },
+      tracing: lambda.Tracing.ACTIVE,
+    });
+
+    // getPdfJob: resolver returning a fresh pre-signed URL per call
+    const getPdfJobLambda = new lambda.DockerImageFunction(this, 'GetPdfJobLambda', {
+      code: lambda.DockerImageCode.fromImageAsset(imagePath, {
+        platform,
+        cmd: ['get_pdf_job.lambda_handler'],
+      }),
+      architecture: props.lambdaConfig.architecture,
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+      description: 'Race results getPdfJob resolver',
+      logRetention: logs.RetentionDays.SIX_MONTHS,
+      environment: {
+        ...sharedEnv,
+        POWERTOOLS_SERVICE_NAME: 'pdf_get_job',
+      },
+      tracing: lambda.Tracing.ACTIVE,
+    });
+
+    // ---------- IAM grants ----------
+    // Orchestrator: PDF bucket R/W (future use), jobs table write, worker invoke
+    pdfBucket.grantReadWrite(orchestratorLambda);
+    pdfJobsTable.grantWriteData(orchestratorLambda);
+    workerLambda.grantInvoke(orchestratorLambda);
+
+    // Worker: PDF bucket R/W, jobs table read, race/events read, cognito lookup,
+    // appsync mutate updatePdfJob only
+    pdfBucket.grantReadWrite(workerLambda);
+    pdfJobsTable.grantReadData(workerLambda);
+    props.raceTable.grantReadData(workerLambda);
+    props.eventsTable.grantReadData(workerLambda);
+    workerLambda.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         actions: ['cognito-idp:ListUsers'],
         resources: [props.userPoolArn],
       })
     );
+    workerLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['appsync:GraphQL'],
+        resources: [`${props.appsyncApi.api.arn}/types/Mutation/fields/updatePdfJob`],
+      })
+    );
+
+    // getPdfJob: jobs table read, PDF bucket read (for presigned URL generation)
+    pdfBucket.grantRead(getPdfJobLambda);
+    pdfJobsTable.grantReadData(getPdfJobLambda);
 
     // ---------- AppSync schema ----------
     const pdfTypeEnum = new EnumType('PdfType', {
@@ -119,9 +186,23 @@ export class RaceResultsPdf extends Construct {
     });
     props.appsyncApi.schema.addType(pdfResultType);
 
-    const pdfDataSource = props.appsyncApi.api.addLambdaDataSource('PdfDataSource', pdfLambda);
+    // ---------- AppSync data sources ----------
+    const orchestratorDataSource = props.appsyncApi.api.addLambdaDataSource(
+      'PdfOrchestratorDataSource',
+      orchestratorLambda
+    );
+    const getPdfJobDataSource = props.appsyncApi.api.addLambdaDataSource(
+      'PdfGetJobDataSource',
+      getPdfJobLambda
+    );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const pdfJobsDdbDataSource = props.appsyncApi.api.addDynamoDbDataSource(
+      'PdfJobsDdbDataSource',
+      pdfJobsTable
+    );
+
     NagSuppressions.addResourceSuppressions(
-      pdfDataSource,
+      [orchestratorDataSource, getPdfJobDataSource],
       [
         {
           id: 'AwsSolutions-IAM5',
@@ -142,7 +223,7 @@ export class RaceResultsPdf extends Construct {
           trackId: GraphqlType.id(),
         },
         returnType: pdfResultType.attribute(),
-        dataSource: pdfDataSource,
+        dataSource: orchestratorDataSource,
         directives: [Directive.cognito('admin', 'operator', 'commentator', 'racer')],
       })
     );
