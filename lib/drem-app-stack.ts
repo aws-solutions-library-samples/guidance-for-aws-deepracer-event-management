@@ -243,7 +243,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
     new RaceResultsPdf(this, 'RaceResultsPdf', {
       appsyncApi: appsyncResources,
-      lambdaConfig: lambdaConfig,
+      lambdaConfig: { architecture: lambdaConfig.architecture },
       userPoolId: userPool.userPoolId,
       userPoolArn: userPool.userPoolArn,
       raceTable: raceManager.raceTable,

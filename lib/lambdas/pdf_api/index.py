@@ -10,7 +10,6 @@ import uuid
 import zipfile
 
 import boto3
-import dynamo_helpers
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import AppSyncResolver
 from aws_lambda_powertools.logging import correlation_paths
@@ -18,6 +17,23 @@ from boto3.dynamodb.conditions import Attr, Key
 
 from race_summary import calculate_racer_summary, rank_racers
 from render import render_pdf
+
+
+def _replace_decimal_with_float(obj):
+    """Recursively convert Decimal values to native Python floats/ints.
+    DynamoDB returns numbers as Decimal; templates + JSON serialisation expect
+    regular numeric types. Inlined here to avoid a runtime dependency on the
+    dremHelpers Lambda layer — this Lambda ships as a container image."""
+    import decimal
+    if isinstance(obj, decimal.Decimal):
+        if obj == int(obj):
+            return int(obj)
+        return float(obj)
+    if isinstance(obj, dict):
+        return {k: _replace_decimal_with_float(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_replace_decimal_with_float(i) for i in obj]
+    return obj
 
 tracer = Tracer()
 logger = Logger()
@@ -41,19 +57,6 @@ ADMIN_GROUPS = {"admin", "operator", "commentator"}
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
 @tracer.capture_lambda_handler
 def lambda_handler(event, context):
-    # Diagnostic — log the dynamic-linker environment so we can see why
-    # dlopen can't find libpango even though the file is in /opt/lib.
-    try:
-        opt_lib_contents = sorted(os.listdir("/opt/lib"))
-        pango_matches = [f for f in opt_lib_contents if "pango" in f]
-    except Exception as e:
-        opt_lib_contents = [f"error: {e}"]
-        pango_matches = []
-    logger.info({
-        "diag_LD_LIBRARY_PATH": os.environ.get("LD_LIBRARY_PATH"),
-        "diag_pango_in_opt_lib": pango_matches,
-        "diag_opt_lib_count": len(opt_lib_contents),
-    })
     logger.info(event)
     return app.resolve(event, context)
 
@@ -131,7 +134,7 @@ def _enforce_racer_self_service(requester: dict, target_user_id: str):
 
 def _get_event(event_id: str) -> dict | None:
     resp = _events_table.get_item(Key={"eventId": event_id})
-    return dynamo_helpers.replace_decimal_with_float(resp.get("Item")) if resp.get("Item") else None
+    return _replace_decimal_with_float(resp.get("Item")) if resp.get("Item") else None
 
 
 def _get_races(event_id: str, track_id: str | None) -> list[dict]:
@@ -148,7 +151,7 @@ def _get_races(event_id: str, track_id: str | None) -> list[dict]:
         kwargs["ExclusiveStartKey"] = resp["LastEvaluatedKey"]
         resp = _race_table.query(**kwargs)
         items.extend(resp["Items"])
-    return dynamo_helpers.replace_decimal_with_float(items)
+    return _replace_decimal_with_float(items)
 
 
 def _lookup_user(user_id: str) -> dict:
