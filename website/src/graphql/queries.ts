@@ -301,3 +301,23 @@ export const updateLeaderboardConfigs = /* GraphQL */ `
         }
     }
 `;
+
+export const getPdfJob = /* GraphQL */ `
+    query GetPdfJob($jobId: ID!) {
+        getPdfJob(jobId: $jobId) {
+            jobId
+            status
+            type
+            eventId
+            userId
+            trackId
+            filename
+            downloadUrl
+            error
+            createdBy
+            createdAt
+            completedAt
+        }
+    }
+`;
+

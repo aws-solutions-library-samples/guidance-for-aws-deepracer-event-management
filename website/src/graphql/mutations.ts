@@ -1061,9 +1061,14 @@ export const generateRaceResultsPdf = /* GraphQL */ `
         $trackId: ID
     ) {
         generateRaceResultsPdf(eventId: $eventId, type: $type, userId: $userId, trackId: $trackId) {
-            downloadUrl
-            filename
-            expiresAt
+            jobId
+            status
+            type
+            eventId
+            userId
+            trackId
+            createdBy
+            createdAt
         }
     }
 `;
