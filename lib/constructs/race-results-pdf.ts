@@ -61,8 +61,8 @@ export class RaceResultsPdf extends Construct {
         platform: ecrAssetsPlatformFor(props.lambdaConfig.architecture),
       }),
       architecture: props.lambdaConfig.architecture,
-      timeout: Duration.minutes(2),
-      memorySize: 512,
+      timeout: Duration.minutes(5),
+      memorySize: 1024,
       description: 'Race results PDF generator (container image with WeasyPrint)',
       logRetention: logs.RetentionDays.SIX_MONTHS,
       environment: {

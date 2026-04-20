@@ -18,7 +18,15 @@ RUN dnf install -y \
     libjpeg-turbo \
     libpng \
     harfbuzz \
+    dejavu-sans-fonts \
+    dejavu-serif-fonts \
     && dnf clean all
+
+# Pre-build the fontconfig cache at image build time so runtime doesn't have
+# to (Lambda's /var/task and /opt are read-only, so fontconfig can't write
+# its cache at runtime — it falls back to re-scanning every font on every
+# render, which makes bulk certificate generation drop dead slow).
+RUN fc-cache -f
 
 # Python dependencies (WeasyPrint, Jinja2, powertools, boto3).
 COPY requirements.txt ${LAMBDA_TASK_ROOT}/
