@@ -68,6 +68,34 @@ def generate_race_results_pdf(eventId: str, type: str, userId: str = None, track
     return {**item, "downloadUrl": None, "error": None, "completedAt": None, "filename": None}
 
 
+@app.resolver(type_name="Mutation", field_name="updatePdfJob")
+def update_pdf_job(jobId: str, status: str, s3Key: str = None, filename: str = None, error: str = None):  # noqa: A002
+    now_iso = dt.datetime.utcnow().isoformat() + "Z"
+    expr_parts = ["#status = :status", "#completedAt = :completedAt"]
+    names = {"#status": "status", "#completedAt": "completedAt"}
+    values = {":status": status, ":completedAt": now_iso}
+    if s3Key is not None:
+        expr_parts.append("#s3Key = :s3Key")
+        names["#s3Key"] = "s3Key"
+        values[":s3Key"] = s3Key
+    if filename is not None:
+        expr_parts.append("#filename = :filename")
+        names["#filename"] = "filename"
+        values[":filename"] = filename
+    if error is not None:
+        expr_parts.append("#error = :error")
+        names["#error"] = "error"
+        values[":error"] = error
+    resp = _jobs_table.update_item(
+        Key={"jobId": jobId},
+        UpdateExpression="SET " + ", ".join(expr_parts),
+        ExpressionAttributeNames=names,
+        ExpressionAttributeValues=values,
+        ReturnValues="ALL_NEW",
+    )
+    return shared.replace_decimal_with_float(resp.get("Attributes", {}))
+
+
 @app.resolver(type_name="Query", field_name="getPdfJob")
 def get_pdf_job(jobId: str):
     requester = shared.requester_identity((app.current_event.identity or {}))
