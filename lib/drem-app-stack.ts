@@ -243,7 +243,11 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
     new RaceResultsPdf(this, 'RaceResultsPdf', {
       appsyncApi: appsyncResources,
-      lambdaConfig: { architecture: lambdaConfig.architecture },
+      // x86_64 rather than ARM64 because this Lambda ships as a container
+      // image, and CodeBuild's x86_64 runners can't build ARM64 images
+      // without QEMU emulation set up. The cost / perf delta on a single
+      // on-demand PDF Lambda is negligible.
+      lambdaConfig: { architecture: lambda.Architecture.X86_64 },
       userPoolId: userPool.userPoolId,
       userPoolArn: userPool.userPoolArn,
       raceTable: raceManager.raceTable,
