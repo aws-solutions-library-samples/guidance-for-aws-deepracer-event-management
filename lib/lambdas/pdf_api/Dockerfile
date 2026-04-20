@@ -22,11 +22,12 @@ RUN dnf install -y \
     dejavu-serif-fonts \
     && dnf clean all
 
-# Pre-build the fontconfig cache at image build time so runtime doesn't have
-# to (Lambda's /var/task and /opt are read-only, so fontconfig can't write
-# its cache at runtime — it falls back to re-scanning every font on every
-# render, which makes bulk certificate generation drop dead slow).
-RUN fc-cache -f
+# Pre-build the fontconfig cache at image build time — `-s` writes the
+# cache into the font directories themselves (instead of ~/.cache/fontconfig
+# which is tied to the build user's HOME and invisible to Lambda's runtime
+# user). Without this, fontconfig re-scans every font on every render and
+# bulk certificate generation crawls.
+RUN fc-cache -sf
 
 # Python dependencies (WeasyPrint, Jinja2, powertools, boto3).
 COPY requirements.txt ${LAMBDA_TASK_ROOT}/
