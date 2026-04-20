@@ -4,32 +4,33 @@ os.environ.setdefault("RACE_TABLE", "test-race")
 os.environ.setdefault("EVENTS_TABLE", "test-events")
 os.environ.setdefault("USER_POOL_ID", "test-pool")
 os.environ.setdefault("PDF_JOBS_TABLE", "test-jobs")
+os.environ.setdefault("WORKER_FUNCTION_NAME", "test-worker")
 os.environ.setdefault("URL_EXPIRY_SECONDS", "3600")
 
 from unittest.mock import patch, MagicMock
 
 import pytest
 
-import get_pdf_job
+import index
 
 
 def _call_resolver(jobId, claims):
     """Invoke the resolver directly, mocking the AppSyncResolver state."""
     # Mock the app object's state with proper identity structure
-    get_pdf_job.app.current_event = MagicMock()
-    get_pdf_job.app.current_event.identity = {"claims": claims}
+    index.app.current_event = MagicMock()
+    index.app.current_event.identity = {"claims": claims}
 
-    return get_pdf_job.get_pdf_job(jobId)
+    return index.get_pdf_job(jobId)
 
 
 def test_returns_none_when_row_missing():
-    with patch.object(get_pdf_job, "_jobs_table") as t:
+    with patch.object(index, "_jobs_table") as t:
         t.get_item.return_value = {}
         assert _call_resolver("missing", {"sub": "u1", "cognito:groups": "racer"}) is None
 
 
 def test_raises_when_row_belongs_to_another_racer():
-    with patch.object(get_pdf_job, "_jobs_table") as t:
+    with patch.object(index, "_jobs_table") as t:
         t.get_item.return_value = {"Item": {
             "jobId": "j1", "createdBy": "other", "status": "PENDING",
             "type": "PODIUM", "eventId": "e1",
@@ -40,7 +41,7 @@ def test_raises_when_row_belongs_to_another_racer():
 
 
 def test_admin_can_read_any_row():
-    with patch.object(get_pdf_job, "_jobs_table") as t:
+    with patch.object(index, "_jobs_table") as t:
         t.get_item.return_value = {"Item": {
             "jobId": "j1", "createdBy": "other", "status": "PENDING",
             "type": "PODIUM", "eventId": "e1",
@@ -52,8 +53,8 @@ def test_admin_can_read_any_row():
 
 
 def test_success_row_gets_fresh_presigned_url():
-    with patch.object(get_pdf_job, "_jobs_table") as t, \
-         patch.object(get_pdf_job, "_s3") as s3:
+    with patch.object(index, "_jobs_table") as t, \
+         patch.object(index, "_s3") as s3:
         t.get_item.return_value = {"Item": {
             "jobId": "j1", "createdBy": "u1", "status": "SUCCESS",
             "type": "PODIUM", "eventId": "e1", "s3Key": "e1/podium-xyz.pdf",
@@ -70,7 +71,7 @@ def test_success_row_gets_fresh_presigned_url():
 
 
 def test_pending_row_has_no_url():
-    with patch.object(get_pdf_job, "_jobs_table") as t:
+    with patch.object(index, "_jobs_table") as t:
         t.get_item.return_value = {"Item": {
             "jobId": "j1", "createdBy": "u1", "status": "PENDING",
             "type": "PODIUM", "eventId": "e1",

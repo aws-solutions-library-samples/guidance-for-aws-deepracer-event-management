@@ -121,28 +121,13 @@ export class RaceResultsPdf extends Construct {
       tracing: lambda.Tracing.ACTIVE,
     });
 
-    // getPdfJob: resolver returning a fresh pre-signed URL per call
-    const getPdfJobLambda = new lambda.DockerImageFunction(this, 'GetPdfJobLambda', {
-      code: lambda.DockerImageCode.fromImageAsset(imagePath, {
-        platform,
-        cmd: ['get_pdf_job.lambda_handler'],
-      }),
-      architecture: props.lambdaConfig.architecture,
-      timeout: Duration.seconds(10),
-      memorySize: 256,
-      description: 'Race results getPdfJob resolver',
-      logRetention: logs.RetentionDays.SIX_MONTHS,
-      environment: {
-        ...sharedEnv,
-        POWERTOOLS_SERVICE_NAME: 'pdf_get_job',
-      },
-      tracing: lambda.Tracing.ACTIVE,
-    });
-
     // ---------- IAM grants ----------
-    // Orchestrator: PDF bucket R/W (future use), jobs table write, worker invoke
+    // Orchestrator: PDF bucket R/W (future use), jobs table read+write, worker invoke.
+    // Read on the jobs table is needed for the getPdfJob query resolver, which
+    // is served by the same Lambda (dispatched by AppSync field name).
     pdfBucket.grantReadWrite(orchestratorLambda);
     pdfJobsTable.grantWriteData(orchestratorLambda);
+    pdfJobsTable.grantReadData(orchestratorLambda);
     workerLambda.grantInvoke(orchestratorLambda);
 
     // Worker: PDF bucket R/W, jobs table read, race/events read, cognito lookup,
@@ -165,10 +150,6 @@ export class RaceResultsPdf extends Construct {
         resources: [`${props.appsyncApi.api.arn}/types/Mutation/fields/updatePdfJob`],
       })
     );
-
-    // getPdfJob: jobs table read, PDF bucket read (for presigned URL generation)
-    pdfBucket.grantRead(getPdfJobLambda);
-    pdfJobsTable.grantReadData(getPdfJobLambda);
 
     // ---------- AppSync schema ----------
     const pdfTypeEnum = new EnumType('PdfType', {
@@ -208,17 +189,13 @@ export class RaceResultsPdf extends Construct {
       'PdfOrchestratorDataSource',
       orchestratorLambda
     );
-    const getPdfJobDataSource = props.appsyncApi.api.addLambdaDataSource(
-      'PdfGetJobDataSource',
-      getPdfJobLambda
-    );
     const pdfJobsDdbDataSource = props.appsyncApi.api.addDynamoDbDataSource(
       'PdfJobsDdbDataSource',
       pdfJobsTable
     );
 
     NagSuppressions.addResourceSuppressions(
-      [orchestratorDataSource, getPdfJobDataSource],
+      [orchestratorDataSource],
       [
         {
           id: 'AwsSolutions-IAM5',
@@ -272,7 +249,7 @@ export class RaceResultsPdf extends Construct {
           jobId: GraphqlType.id({ isRequired: true }),
         },
         returnType: pdfJobType.attribute(),
-        dataSource: getPdfJobDataSource,
+        dataSource: orchestratorDataSource,
         directives: [Directive.cognito('admin', 'operator', 'commentator', 'racer')],
       })
     );
