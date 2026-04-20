@@ -1,8 +1,9 @@
-import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
 import {
@@ -15,7 +16,6 @@ import {
 } from 'awscdk-appsync-utils';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
-import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 export interface RaceResultsPdfProps {
   appsyncApi: {
@@ -24,14 +24,7 @@ export interface RaceResultsPdfProps {
     noneDataSource: appsync.NoneDataSource;
   };
   lambdaConfig: {
-    runtime: lambda.Runtime;
     architecture: lambda.Architecture;
-    bundlingImage: DockerImage;
-    layersConfig: {
-      powerToolsLogLevel: string;
-      helperFunctionsLayer: lambda.ILayerVersion;
-      powerToolsLayer: lambda.ILayerVersion;
-    };
   };
   userPoolId: string;
   userPoolArn: string;
@@ -56,30 +49,22 @@ export class RaceResultsPdf extends Construct {
     });
     pdfBucket.addLifecycleRule({ enabled: true, expiration: Duration.days(1) });
 
-    // ---------- WeasyPrint layer ----------
-    const weasyprintLayer = new lambda.LayerVersion(this, 'WeasyPrintLayer', {
-      code: lambda.Code.fromDockerBuild('lib/lambda_layers/weasyprint', { imagePath: '/asset-output' }),
-      compatibleArchitectures: [props.lambdaConfig.architecture],
-      compatibleRuntimes: [props.lambdaConfig.runtime],
-      description: 'WeasyPrint + native deps (cairo, pango, gdk-pixbuf) for PDF rendering',
-    });
-
-    // ---------- Lambda ----------
-    const pdfLambda = new StandardLambdaPythonFunction(this, 'pdfLambda', {
-      entry: 'lib/lambdas/pdf_api/',
-      description: 'Race results PDF generator',
-      index: 'index.py',
-      handler: 'lambda_handler',
-      timeout: Duration.minutes(2),
-      runtime: props.lambdaConfig.runtime,
-      memorySize: 512,
+    // ---------- Lambda (container image) ----------
+    // Shipped as a container image rather than a zip + layer because
+    // WeasyPrint's native deps (cairo, pango, gdk-pixbuf) are painful to
+    // package as a Lambda layer — cffi's dlopen doesn't play nicely with
+    // LD_LIBRARY_PATH for libraries that aren't registered with ldconfig.
+    // A container image lets dnf install them normally, so the dynamic
+    // linker just works.
+    const pdfLambda = new lambda.DockerImageFunction(this, 'pdfLambda', {
+      code: lambda.DockerImageCode.fromImageAsset('lib/lambdas/pdf_api', {
+        platform: ecrAssetsPlatformFor(props.lambdaConfig.architecture),
+      }),
       architecture: props.lambdaConfig.architecture,
-      bundling: { image: props.lambdaConfig.bundlingImage },
-      layers: [
-        weasyprintLayer,
-        props.lambdaConfig.layersConfig.helperFunctionsLayer,
-        props.lambdaConfig.layersConfig.powerToolsLayer,
-      ],
+      timeout: Duration.minutes(2),
+      memorySize: 512,
+      description: 'Race results PDF generator (container image with WeasyPrint)',
+      logRetention: logs.RetentionDays.SIX_MONTHS,
       environment: {
         PDF_BUCKET: pdfBucket.bucketName,
         RACE_TABLE: props.raceTable.tableName,
@@ -87,13 +72,8 @@ export class RaceResultsPdf extends Construct {
         USER_POOL_ID: props.userPoolId,
         URL_EXPIRY_SECONDS: '3600',
         POWERTOOLS_SERVICE_NAME: 'pdf_api',
-        // Force /opt/lib onto LD_LIBRARY_PATH. Lambda's python3.12 runtime
-        // is supposed to do this automatically but WeasyPrint's dlopen was
-        // failing to find libpango-1.0-0.so even though it's present in
-        // the layer — set it explicitly as a belt-and-braces fix.
-        LD_LIBRARY_PATH: '/opt/lib:/var/runtime:/var/task/lib:/usr/lib64:/lib64',
-        FONTCONFIG_PATH: '/opt/lib/fontconfig',
       },
+      tracing: lambda.Tracing.ACTIVE,
     });
 
     pdfBucket.grantReadWrite(pdfLambda);
@@ -151,4 +131,14 @@ export class RaceResultsPdf extends Construct {
       })
     );
   }
+}
+
+// Translate a CDK lambda.Architecture into the ecr-assets Platform string.
+// `lambda.DockerImageCode.fromImageAsset` needs `platform: Platform.LINUX_ARM64`
+// etc. but the CDK architecture enum uses `Architecture.ARM_64`.
+function ecrAssetsPlatformFor(arch: lambda.Architecture) {
+  // Lazy-import to keep the top of the file tidy.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Platform } = require('aws-cdk-lib/aws-ecr-assets');
+  return arch === lambda.Architecture.ARM_64 ? Platform.LINUX_ARM64 : Platform.LINUX_AMD64;
 }
