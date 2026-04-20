@@ -1,4 +1,4 @@
-import { Button, ButtonDropdown, SpaceBetween } from '@cloudscape-design/components';
+import { Button, ButtonDropdown, Flashbar, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ import { PageTable } from '../../components/pageTable';
 import { DrSplitPanel } from '../../components/split-panels/dr-split-panel';
 import { TableHeader } from '../../components/tableConfig';
 import useMutation from '../../hooks/useMutation';
-import { usePdfApi } from '../../hooks/usePdfApi';
+import { usePdfApi, type PdfType } from '../../hooks/usePdfApi';
 import { useUsers } from '../../hooks/useUsers';
 import { useSelectedEventContext } from '../../store/contexts/storeProvider';
 import { useStore } from '../../store/store';
@@ -35,15 +35,55 @@ const RaceAdmin = (): JSX.Element => {
   const [, usersIsLoading, getUserNameFromId] = useUsers();
 
   const navigate = useNavigate();
-  const { generate, generating } = usePdfApi();
+  const { generatePdf, jobs, isGenerating, dismissJob } = usePdfApi();
 
-  const onDownloadPdf = async (type: 'ORGANISER_SUMMARY' | 'PODIUM' | 'RACER_CERTIFICATES_BULK') => {
+  const onDownloadPdf = async (type: PdfType) => {
     if (!selectedEvent?.eventId) return;
-    const result = await generate({ eventId: selectedEvent.eventId, type });
-    if (result) {
-      window.open(result.downloadUrl, '_blank', 'noopener');
+    try {
+      await generatePdf({ eventId: selectedEvent.eventId, type });
+    } catch (err) {
+      console.error('Failed to kick off PDF generation', err);
     }
   };
+
+  // Aggregate in-flight state across the three PDF types on this page so the
+  // ButtonDropdown's single `loading` prop reflects any pending job.
+  const eventId = selectedEvent?.eventId;
+  const anyGenerating = eventId
+    ? (['ORGANISER_SUMMARY', 'PODIUM', 'RACER_CERTIFICATES_BULK'] as const).some((type) =>
+        isGenerating({ eventId, type })
+      )
+    : false;
+
+  const flashItems = Object.values(jobs).map((j) => {
+    const typeLabel = t(`pdf.type.${j.type}`);
+    if (j.status === 'PENDING') {
+      return {
+        id: j.jobId,
+        type: 'info' as const,
+        loading: true,
+        content: t('pdf.generating', { type: typeLabel }),
+        dismissible: true,
+        onDismiss: () => dismissJob(j.jobId),
+      };
+    }
+    if (j.status === 'SUCCESS') {
+      return {
+        id: j.jobId,
+        type: 'success' as const,
+        content: t('pdf.ready', { filename: j.filename ?? typeLabel }),
+        dismissible: true,
+        onDismiss: () => dismissJob(j.jobId),
+      };
+    }
+    return {
+      id: j.jobId,
+      type: 'error' as const,
+      content: t('pdf.failed', { error: j.error ?? '' }),
+      dismissible: true,
+      onDismiss: () => dismissJob(j.jobId),
+    };
+  });
 
   const editRaceHandler = () => {
     navigate('/admin/races/edit', { state: SelectedRacesInTable[0] });
@@ -125,7 +165,7 @@ const RaceAdmin = (): JSX.Element => {
           {t('button.delete')}
         </Button>
         <ButtonDropdown
-          loading={generating}
+          loading={anyGenerating}
           disabled={!selectedEvent?.eventId}
           items={[
             { id: 'summary', text: t('pdf.organiser-summary') },
@@ -164,6 +204,7 @@ const RaceAdmin = (): JSX.Element => {
         { text: t('race-admin.breadcrumb'), href: '#' },
       ]}
     >
+      {flashItems.length > 0 && <Flashbar items={flashItems} />}
       <PageTable
         selectedItems={SelectedRacesInTable}
         setSelectedItems={setSelectedRacesInTable}
