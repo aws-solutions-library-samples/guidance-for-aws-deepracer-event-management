@@ -4,7 +4,7 @@
 # play nicely with LD_LIBRARY_PATH on a stock AWS Lambda zip runtime).
 # The container image lets dnf install the libs normally, so ldconfig
 # builds the usual ld.so.cache and dlopen/find_library work as expected.
-FROM public.ecr.aws/lambda/python:3.12-arm64
+FROM public.ecr.aws/lambda/python:3.12
 
 # Native libraries WeasyPrint depends on. Installed via dnf exactly as you
 # would on any Linux box — no symlink gymnastics.
