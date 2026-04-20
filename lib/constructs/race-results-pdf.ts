@@ -176,15 +176,32 @@ export class RaceResultsPdf extends Construct {
     });
     props.appsyncApi.schema.addType(pdfTypeEnum);
 
-    const pdfResultType = new ObjectType('PdfGenerationResult', {
-      definition: {
-        downloadUrl: GraphqlType.string({ isRequired: true }),
-        filename: GraphqlType.string({ isRequired: true }),
-        expiresAt: GraphqlType.awsDateTime({ isRequired: true }),
-      },
-      directives: [Directive.cognito('admin', 'operator', 'commentator', 'racer')],
+    const pdfJobStatusEnum = new EnumType('PdfJobStatus', {
+      definition: ['PENDING', 'SUCCESS', 'FAILED'],
     });
-    props.appsyncApi.schema.addType(pdfResultType);
+    props.appsyncApi.schema.addType(pdfJobStatusEnum);
+
+    const pdfJobType = new ObjectType('PdfJob', {
+      definition: {
+        jobId: GraphqlType.id({ isRequired: true }),
+        status: pdfJobStatusEnum.attribute({ isRequired: true }),
+        type: pdfTypeEnum.attribute({ isRequired: true }),
+        eventId: GraphqlType.id({ isRequired: true }),
+        userId: GraphqlType.id(),
+        trackId: GraphqlType.id(),
+        filename: GraphqlType.string(),
+        downloadUrl: GraphqlType.string(),
+        error: GraphqlType.string(),
+        createdBy: GraphqlType.id({ isRequired: true }),
+        createdAt: GraphqlType.awsDateTime({ isRequired: true }),
+        completedAt: GraphqlType.awsDateTime(),
+      },
+      directives: [
+        Directive.cognito('admin', 'operator', 'commentator', 'racer'),
+        Directive.iam(),
+      ],
+    });
+    props.appsyncApi.schema.addType(pdfJobType);
 
     // ---------- AppSync data sources ----------
     const orchestratorDataSource = props.appsyncApi.api.addLambdaDataSource(
@@ -195,7 +212,6 @@ export class RaceResultsPdf extends Construct {
       'PdfGetJobDataSource',
       getPdfJobLambda
     );
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const pdfJobsDdbDataSource = props.appsyncApi.api.addDynamoDbDataSource(
       'PdfJobsDdbDataSource',
       pdfJobsTable
@@ -222,9 +238,63 @@ export class RaceResultsPdf extends Construct {
           userId: GraphqlType.id(),
           trackId: GraphqlType.id(),
         },
-        returnType: pdfResultType.attribute(),
+        returnType: pdfJobType.attribute(),
         dataSource: orchestratorDataSource,
         directives: [Directive.cognito('admin', 'operator', 'commentator', 'racer')],
+      })
+    );
+
+    // updatePdfJob — IAM-only. Worker calls this after render completes (or fails).
+    // Triggers onPdfJobUpdated subscription via @aws_subscribe side effect.
+    props.appsyncApi.schema.addMutation(
+      'updatePdfJob',
+      new ResolvableField({
+        args: {
+          jobId: GraphqlType.id({ isRequired: true }),
+          status: pdfJobStatusEnum.attribute({ isRequired: true }),
+          s3Key: GraphqlType.string(),
+          filename: GraphqlType.string(),
+          error: GraphqlType.string(),
+        },
+        returnType: pdfJobType.attribute(),
+        dataSource: pdfJobsDdbDataSource,
+        requestMappingTemplate: appsync.MappingTemplate.fromString(buildUpdatePdfJobRequestTemplate()),
+        responseMappingTemplate: appsync.MappingTemplate.fromString('$util.toJson($ctx.result)'),
+        directives: [Directive.iam()],
+      })
+    );
+
+    // ---------- AppSync schema: queries ----------
+    props.appsyncApi.schema.addQuery(
+      'getPdfJob',
+      new ResolvableField({
+        args: {
+          jobId: GraphqlType.id({ isRequired: true }),
+        },
+        returnType: pdfJobType.attribute(),
+        dataSource: getPdfJobDataSource,
+        directives: [Directive.cognito('admin', 'operator', 'commentator', 'racer')],
+      })
+    );
+
+    // ---------- AppSync schema: subscriptions ----------
+    props.appsyncApi.schema.addSubscription(
+      'onPdfJobUpdated',
+      new ResolvableField({
+        args: {
+          jobId: GraphqlType.id({ isRequired: true }),
+        },
+        returnType: pdfJobType.attribute(),
+        dataSource: props.appsyncApi.noneDataSource,
+        requestMappingTemplate: appsync.MappingTemplate.fromString(`{
+          "version": "2017-02-28",
+          "payload": $util.toJson($context.arguments.entry)
+        }`),
+        responseMappingTemplate: appsync.MappingTemplate.fromString('$util.toJson($context.result)'),
+        directives: [
+          Directive.subscribe('updatePdfJob'),
+          Directive.cognito('admin', 'operator', 'commentator', 'racer'),
+        ],
       })
     );
   }
@@ -238,4 +308,48 @@ function ecrAssetsPlatformFor(arch: lambda.Architecture) {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { Platform } = require('aws-cdk-lib/aws-ecr-assets');
   return arch === lambda.Architecture.ARM_64 ? Platform.LINUX_ARM64 : Platform.LINUX_AMD64;
+}
+
+// Build the UpdateItem VTL for updatePdfJob.
+// The mutation args s3Key/filename/error are optional; only SET the ones provided.
+// Always SET status and completedAt.
+function buildUpdatePdfJobRequestTemplate(): string {
+  return `
+{
+  "version": "2018-05-29",
+  "operation": "UpdateItem",
+  "key": {
+    "jobId": $util.dynamodb.toDynamoDBJson($ctx.args.jobId)
+  },
+  "update": {
+    "expression": "SET #status = :status, #completedAt = :completedAt#if($ctx.args.s3Key), #s3Key = :s3Key#end#if($ctx.args.filename), #filename = :filename#end#if($ctx.args.error), #error = :error#end",
+    "expressionNames": {
+      "#status": "status",
+      "#completedAt": "completedAt"
+      #if($ctx.args.s3Key),
+      "#s3Key": "s3Key"
+      #end
+      #if($ctx.args.filename),
+      "#filename": "filename"
+      #end
+      #if($ctx.args.error),
+      "#error": "error"
+      #end
+    },
+    "expressionValues": {
+      ":status": $util.dynamodb.toDynamoDBJson($ctx.args.status),
+      ":completedAt": $util.dynamodb.toDynamoDBJson($util.time.nowISO8601())
+      #if($ctx.args.s3Key),
+      ":s3Key": $util.dynamodb.toDynamoDBJson($ctx.args.s3Key)
+      #end
+      #if($ctx.args.filename),
+      ":filename": $util.dynamodb.toDynamoDBJson($ctx.args.filename)
+      #end
+      #if($ctx.args.error),
+      ":error": $util.dynamodb.toDynamoDBJson($ctx.args.error)
+      #end
+    }
+  }
+}
+`;
 }
