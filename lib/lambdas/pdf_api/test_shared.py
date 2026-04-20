@@ -26,6 +26,11 @@ def test_requester_identity_handles_missing_claims():
     assert requester_identity({}) == {"sub": "", "groups": set()}
 
 
+def test_requester_identity_empty_groups_string_yields_empty_set():
+    ev = {"claims": {"sub": "abc", "cognito:groups": ""}}
+    assert requester_identity(ev) == {"sub": "abc", "groups": set()}
+
+
 def test_enforce_racer_self_service_admin_passes():
     enforce_racer_self_service({"sub": "x", "groups": {"admin"}}, "y")  # no raise
 

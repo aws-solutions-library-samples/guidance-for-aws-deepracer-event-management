@@ -42,7 +42,12 @@ def replace_decimal_with_float(obj):
 
 
 def requester_identity(event_identity) -> dict:
-    """Extract { sub, groups } from AppSync context.identity."""
+    """Extract { sub, groups } from AppSync context.identity.
+
+    The empty-string filter in the comprehension is intentional: cognito claims
+    with no groups arrive as `""`, which would otherwise split into `[""]` and
+    produce a spurious `{""}` group. Filtering yields a clean `set()`.
+    """
     claims = (event_identity or {}).get("claims") or {}
     groups_raw = claims.get("cognito:groups") or ""
     groups = set(g for g in groups_raw.split(",") if g) if isinstance(groups_raw, str) else set(groups_raw)

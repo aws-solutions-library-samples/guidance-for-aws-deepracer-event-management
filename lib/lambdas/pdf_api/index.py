@@ -63,4 +63,4 @@ def generate_race_results_pdf(eventId: str, type: str, userId: str = None, track
         InvocationType="Event",
         Payload=json.dumps({"jobId": job_id}),
     )
-    return {**item, "downloadUrl": None, "error": None, "completedAt": None, "filename": None, "s3Key": None}
+    return {**item, "downloadUrl": None, "error": None, "completedAt": None, "filename": None}
