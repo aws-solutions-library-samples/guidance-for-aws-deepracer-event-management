@@ -565,3 +565,18 @@ export const onUserUpdated = /* GraphQL */ `
         }
     }
 `;
+
+export const onPdfJobUpdated = /* GraphQL */ `
+    subscription OnPdfJobUpdated($jobId: ID!) {
+        onPdfJobUpdated(jobId: $jobId) {
+            jobId
+            status
+            type
+            eventId
+            filename
+            error
+            completedAt
+        }
+    }
+`;
+
