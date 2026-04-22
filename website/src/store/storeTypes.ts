@@ -78,6 +78,7 @@ export interface Notification {
   content?: string;
   dismissible?: boolean;
   onDismiss?: () => void;
+  loading?: boolean;
 }
 
 export interface NotificationsState {
