@@ -1,4 +1,4 @@
-import { Button, ButtonDropdown, Flashbar, SpaceBetween } from '@cloudscape-design/components';
+import { Button, ButtonDropdown, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -35,7 +35,7 @@ const RaceAdmin = (): JSX.Element => {
   const [, usersIsLoading, getUserNameFromId] = useUsers();
 
   const navigate = useNavigate();
-  const { generatePdf, jobs, isGenerating, dismissJob } = usePdfApi();
+  const { generatePdf, isGenerating } = usePdfApi();
 
   const onDownloadPdf = async (type: PdfType) => {
     if (!selectedEvent?.eventId) return;
@@ -54,36 +54,6 @@ const RaceAdmin = (): JSX.Element => {
         isGenerating({ eventId, type })
       )
     : false;
-
-  const flashItems = Object.values(jobs).map((j) => {
-    const typeLabel = t(`pdf.type.${j.type}`);
-    if (j.status === 'PENDING') {
-      return {
-        id: j.jobId,
-        type: 'info' as const,
-        loading: true,
-        content: t('pdf.generating', { type: typeLabel }),
-        dismissible: true,
-        onDismiss: () => dismissJob(j.jobId),
-      };
-    }
-    if (j.status === 'SUCCESS') {
-      return {
-        id: j.jobId,
-        type: 'success' as const,
-        content: t('pdf.ready', { filename: j.filename ?? typeLabel }),
-        dismissible: true,
-        onDismiss: () => dismissJob(j.jobId),
-      };
-    }
-    return {
-      id: j.jobId,
-      type: 'error' as const,
-      content: t('pdf.failed', { error: j.error ?? '' }),
-      dismissible: true,
-      onDismiss: () => dismissJob(j.jobId),
-    };
-  });
 
   const editRaceHandler = () => {
     navigate('/admin/races/edit', { state: SelectedRacesInTable[0] });
@@ -204,7 +174,6 @@ const RaceAdmin = (): JSX.Element => {
         { text: t('race-admin.breadcrumb'), href: '#' },
       ]}
     >
-      {flashItems.length > 0 && <Flashbar items={flashItems} />}
       <PageTable
         selectedItems={SelectedRacesInTable}
         setSelectedItems={setSelectedRacesInTable}
