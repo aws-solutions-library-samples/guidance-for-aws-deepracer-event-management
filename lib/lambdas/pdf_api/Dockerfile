@@ -34,7 +34,11 @@ COPY requirements.txt ${LAMBDA_TASK_ROOT}/
 RUN pip install --no-cache-dir -r ${LAMBDA_TASK_ROOT}/requirements.txt -t ${LAMBDA_TASK_ROOT}
 
 # Lambda code + Jinja templates + the DeepRacer logo asset.
-COPY index.py race_summary.py render.py ${LAMBDA_TASK_ROOT}/
+# Three handlers share this image via CMD override (see CDK construct):
+#   - index.lambda_handler     — AppSync resolver (generateRaceResultsPdf, updatePdfJob, getPdfJob)
+#   - worker.lambda_handler    — async PDF renderer
+# All share shared.py helpers + appsync_iam.py for IAM-signed callbacks.
+COPY index.py worker.py shared.py appsync_iam.py race_summary.py render.py ${LAMBDA_TASK_ROOT}/
 COPY templates ${LAMBDA_TASK_ROOT}/templates
 
 CMD ["index.lambda_handler"]
