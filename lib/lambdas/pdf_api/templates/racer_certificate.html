@@ -3,15 +3,26 @@
 {% from "_components.html" import format_lap %}
 {% block content %}
 <style>
-  @page { size: A4 landscape; margin: 18mm; }
+  /* Full-bleed page with no base footer to leave room for the certificate border. */
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+    @bottom-left { content: ""; }
+    @bottom-right { content: ""; }
+  }
+  html, body { height: 100%; }
   .cert-border {
+    box-sizing: border-box;
     border: 3mm double var(--brand-accent);
-    padding: 18mm;
-    min-height: 170mm;
+    padding: 14mm 18mm;
+    height: 190mm;         /* A4 landscape inner height (210mm) minus 10mm top + 10mm bottom page margin. */
     text-align: center;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
-  .cert-logo { height: 20mm; margin-bottom: 8mm; }
+  .cert-logo { height: 20mm; margin-bottom: 6mm; }
   .cert-title {
     font-size: 30pt;
     font-weight: 700;
@@ -19,17 +30,22 @@
     letter-spacing: 2px;
     text-transform: uppercase;
   }
-  .cert-body { font-size: 14pt; margin-top: 10mm; color: var(--brand-text); }
-  .cert-name { font-size: 28pt; font-weight: 700; color: var(--brand-primary); margin: 6mm 0; }
+  .cert-body { font-size: 14pt; margin-top: 8mm; color: var(--brand-text); }
+  .cert-name { font-size: 28pt; font-weight: 700; color: var(--brand-primary); margin: 5mm 0; }
   .cert-stats {
-    margin-top: 14mm;
+    margin-top: auto;         /* push the stats block to the bottom of the flex column */
+    padding-top: 10mm;
     display: flex;
-    justify-content: center;
-    gap: 10mm;
+    justify-content: space-around;
+    width: 100%;
   }
-  .cert-stat { text-align: center; }
-  .cert-stat .label { color: var(--brand-muted); font-size: 9pt; text-transform: uppercase; }
-  .cert-stat .value { font-size: 20pt; font-weight: 700; color: var(--brand-primary); }
+  .cert-stat {
+    text-align: center;
+    padding: 4mm 8mm;
+    min-width: 60mm;
+  }
+  .cert-stat .label { color: var(--brand-muted); font-size: 9pt; text-transform: uppercase; letter-spacing: 1px; }
+  .cert-stat .value { font-size: 22pt; font-weight: 700; color: var(--brand-primary); margin-top: 2mm; }
 </style>
 
 <div class="cert-border">
