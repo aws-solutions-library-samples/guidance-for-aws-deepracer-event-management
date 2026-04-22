@@ -8,6 +8,15 @@ vi.mock('../graphql/graphqlHelpers', () => ({
     graphqlSubscribe: vi.fn(),
 }));
 
+const dispatchMock = vi.fn();
+vi.mock('../store/store', () => ({
+    useStore: () => [{}, dispatchMock],
+}));
+
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({ t: (k: string, opts?: Record<string, string>) => (opts ? `${k}:${JSON.stringify(opts)}` : k) }),
+}));
+
 import { graphqlMutate, graphqlQuery, graphqlSubscribe } from '../graphql/graphqlHelpers';
 import { usePdfApi } from './usePdfApi';
 
@@ -30,6 +39,7 @@ function fakeSubscription() {
 describe('usePdfApi', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        dispatchMock.mockClear();
     });
 
     test('success path — PENDING → SUCCESS, exposes downloadUrl, triggers download', async () => {

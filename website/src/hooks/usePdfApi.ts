@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { graphqlMutate, graphqlQuery, graphqlSubscribe } from '../graphql/graphqlHelpers';
 import { generateRaceResultsPdf } from '../graphql/mutations';
 import { getPdfJob as getPdfJobQuery } from '../graphql/queries';
 import { onPdfJobUpdated } from '../graphql/subscriptions';
+import { useStore } from '../store/store';
 
 export type PdfType =
     | 'ORGANISER_SUMMARY'
@@ -53,6 +55,8 @@ function triggerDownload(url: string, filename: string) {
 }
 
 export function usePdfApi() {
+    const { t } = useTranslation();
+    const [, dispatch] = useStore();
     const [jobs, setJobs] = useState<Record<string, PdfJob>>({});
     const subscriptions = useRef<Map<string, { unsubscribe: () => void }>>(new Map());
     const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -85,6 +89,39 @@ export function usePdfApi() {
         }
     }, []);
 
+    const pushNotification = useCallback(
+        (jobId: string, type: PdfType, phase: 'PENDING' | 'SUCCESS' | 'FAILED', extras: { filename?: string | null; error?: string | null }) => {
+            const typeLabel = t(`pdf.type.${type}`);
+            if (phase === 'PENDING') {
+                dispatch('ADD_NOTIFICATION', {
+                    id: `pdf-${jobId}`,
+                    type: 'info',
+                    header: t('pdf.generating', { type: typeLabel }),
+                    loading: true,
+                    dismissible: true,
+                    onDismiss: () => dispatch('DISMISS_NOTIFICATION', `pdf-${jobId}`),
+                });
+            } else if (phase === 'SUCCESS') {
+                dispatch('ADD_NOTIFICATION', {
+                    id: `pdf-${jobId}`,
+                    type: 'success',
+                    header: t('pdf.ready', { filename: extras.filename ?? typeLabel }),
+                    dismissible: true,
+                    onDismiss: () => dispatch('DISMISS_NOTIFICATION', `pdf-${jobId}`),
+                });
+            } else {
+                dispatch('ADD_NOTIFICATION', {
+                    id: `pdf-${jobId}`,
+                    type: 'error',
+                    header: t('pdf.failed', { error: extras.error ?? '' }),
+                    dismissible: true,
+                    onDismiss: () => dispatch('DISMISS_NOTIFICATION', `pdf-${jobId}`),
+                });
+            }
+        },
+        [dispatch, t],
+    );
+
     const generatePdf = useCallback(
         async (args: GeneratePdfArgs): Promise<PdfJob> => {
             const result = await graphqlMutate<{ generateRaceResultsPdf: PdfJob }>(
@@ -93,6 +130,7 @@ export function usePdfApi() {
             );
             const job = result.generateRaceResultsPdf;
             setJobs((prev) => ({ ...prev, [job.jobId]: job }));
+            pushNotification(job.jobId, job.type, 'PENDING', {});
 
             const sub = graphqlSubscribe<{ onPdfJobUpdated: Partial<PdfJob> | null }>(
                 onPdfJobUpdated,
@@ -121,6 +159,7 @@ export function usePdfApi() {
                                 downloadUrl: full.downloadUrl,
                                 completedAt: full.completedAt,
                             });
+                            pushNotification(job.jobId, job.type, 'SUCCESS', { filename: full.filename });
                             if (full.downloadUrl && full.filename) {
                                 triggerDownload(full.downloadUrl, full.filename);
                             }
@@ -130,31 +169,36 @@ export function usePdfApi() {
                                 error: full.error ?? 'Unknown error',
                                 completedAt: full.completedAt,
                             });
+                            pushNotification(job.jobId, job.type, 'FAILED', { error: full.error });
                         }
                         cleanupJob(job.jobId);
                     } catch (err) {
                         console.error('getPdfJob lookup failed:', err);
                         updateJob(job.jobId, { status: 'FAILED', error: 'Failed to fetch job status' });
+                        pushNotification(job.jobId, job.type, 'FAILED', { error: 'Failed to fetch job status' });
                         cleanupJob(job.jobId);
                     }
                 },
                 error: (err: unknown) => {
                     console.error('onPdfJobUpdated subscription error:', err);
                     updateJob(job.jobId, { status: 'FAILED', error: 'Subscription error' });
+                    pushNotification(job.jobId, job.type, 'FAILED', { error: 'Subscription error' });
                     cleanupJob(job.jobId);
                 },
             });
             subscriptions.current.set(job.jobId, sub);
 
             const timer = setTimeout(() => {
-                updateJob(job.jobId, { status: 'FAILED', error: 'PDF generation timed out — please try again' });
+                const msg = t('pdf.timedOut');
+                updateJob(job.jobId, { status: 'FAILED', error: msg });
+                pushNotification(job.jobId, job.type, 'FAILED', { error: msg });
                 cleanupJob(job.jobId);
             }, TIMEOUT_MS);
             timers.current.set(job.jobId, timer);
 
             return job;
         },
-        [updateJob, cleanupJob],
+        [updateJob, cleanupJob, pushNotification, t],
     );
 
     const isGenerating = useCallback(
@@ -168,13 +212,14 @@ export function usePdfApi() {
     const dismissJob = useCallback(
         (jobId: string) => {
             cleanupJob(jobId);
+            dispatch('DISMISS_NOTIFICATION', `pdf-${jobId}`);
             setJobs((prev) => {
                 const copy = { ...prev };
                 delete copy[jobId];
                 return copy;
             });
         },
-        [cleanupJob],
+        [cleanupJob, dispatch],
     );
 
     return { generatePdf, jobs, isGenerating, dismissJob };
