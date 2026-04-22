@@ -63,7 +63,7 @@ def _render_and_upload(job: dict) -> tuple[str, str]:
 
     t = job["type"]
     if t == "ORGANISER_SUMMARY":
-        pdf_bytes = shared.render_organiser(event, ranked, brand, generated_at)
+        pdf_bytes = shared.render_organiser(event, ranked, races, brand, generated_at)
         key, filename = shared.s3_key(job["eventId"], "organiser-summary"), "organiser-summary.pdf"
     elif t == "PODIUM":
         pdf_bytes = shared.render_podium(event, ranked, brand, generated_at)
