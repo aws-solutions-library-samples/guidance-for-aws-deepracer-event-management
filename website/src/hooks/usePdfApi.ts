@@ -94,41 +94,47 @@ export function usePdfApi() {
             const job = result.generateRaceResultsPdf;
             setJobs((prev) => ({ ...prev, [job.jobId]: job }));
 
-            const sub = graphqlSubscribe<{ onPdfJobUpdated: Partial<PdfJob> & { jobId: string; status: PdfJobStatus } }>(
+            const sub = graphqlSubscribe<{ onPdfJobUpdated: Partial<PdfJob> | null }>(
                 onPdfJobUpdated,
                 { jobId: job.jobId },
             ).subscribe({
-                next: async (event) => {
-                    const updated = event.value.data.onPdfJobUpdated;
-                    if (updated.status === 'SUCCESS') {
-                        try {
-                            const qResult = await graphqlQuery<{ getPdfJob: PdfJob | null }>(
-                                getPdfJobQuery,
-                                { jobId: job.jobId },
-                            );
-                            const full = qResult.getPdfJob;
-                            if (full) {
-                                updateJob(job.jobId, {
-                                    status: 'SUCCESS',
-                                    filename: full.filename,
-                                    downloadUrl: full.downloadUrl,
-                                    completedAt: full.completedAt,
-                                });
-                                if (full.downloadUrl && full.filename) {
-                                    triggerDownload(full.downloadUrl, full.filename);
-                                }
+                // The subscription is used only as a "something changed" signal. The
+                // authoritative state is fetched via getPdfJob, which re-reads the
+                // DDB row and (for SUCCESS) generates a fresh pre-signed URL. This
+                // makes us robust to the subscription payload being null (e.g., when
+                // AppSync's projection of the mutation output fails a scalar check).
+                next: async () => {
+                    try {
+                        const qResult = await graphqlQuery<{ getPdfJob: PdfJob | null }>(
+                            getPdfJobQuery,
+                            { jobId: job.jobId },
+                        );
+                        const full = qResult.getPdfJob;
+                        if (!full || full.status === 'PENDING') {
+                            // spurious event (or projection race) — ignore, keep waiting
+                            return;
+                        }
+                        if (full.status === 'SUCCESS') {
+                            updateJob(job.jobId, {
+                                status: 'SUCCESS',
+                                filename: full.filename,
+                                downloadUrl: full.downloadUrl,
+                                completedAt: full.completedAt,
+                            });
+                            if (full.downloadUrl && full.filename) {
+                                triggerDownload(full.downloadUrl, full.filename);
                             }
-                        } catch (err) {
-                            console.error('getPdfJob failed:', err);
-                            updateJob(job.jobId, { status: 'FAILED', error: 'Failed to fetch download URL' });
+                        } else {
+                            updateJob(job.jobId, {
+                                status: 'FAILED',
+                                error: full.error ?? 'Unknown error',
+                                completedAt: full.completedAt,
+                            });
                         }
                         cleanupJob(job.jobId);
-                    } else if (updated.status === 'FAILED') {
-                        updateJob(job.jobId, {
-                            status: 'FAILED',
-                            error: updated.error ?? 'Unknown error',
-                            completedAt: updated.completedAt ?? null,
-                        });
+                    } catch (err) {
+                        console.error('getPdfJob lookup failed:', err);
+                        updateJob(job.jobId, { status: 'FAILED', error: 'Failed to fetch job status' });
                         cleanupJob(job.jobId);
                     }
                 },
