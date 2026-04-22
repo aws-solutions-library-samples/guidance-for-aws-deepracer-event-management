@@ -3,49 +3,57 @@
 {% from "_components.html" import format_lap %}
 {% block content %}
 <style>
-  /* Full-bleed page with no base footer to leave room for the certificate border. */
+  /* Full-bleed page with no base footer so the certificate border can sit nicely. */
   @page {
     size: A4 landscape;
     margin: 10mm;
     @bottom-left { content: ""; }
     @bottom-right { content: ""; }
   }
-  html, body { height: 100%; }
   .cert-border {
     box-sizing: border-box;
     border: 3mm double var(--brand-accent);
-    padding: 14mm 18mm;
-    height: 190mm;         /* A4 landscape inner height (210mm) minus 10mm top + 10mm bottom page margin. */
+    padding: 12mm 20mm;
+    height: 190mm;         /* A4 landscape page height 210mm - 10mm*2 margins. */
     text-align: center;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
   }
-  .cert-logo { height: 20mm; margin-bottom: 6mm; }
+  .cert-logo { height: 22mm; margin-bottom: 4mm; }
   .cert-title {
     font-size: 30pt;
     font-weight: 700;
     color: var(--brand-primary);
     letter-spacing: 2px;
     text-transform: uppercase;
+    margin-bottom: 8mm;
   }
-  .cert-body { font-size: 14pt; margin-top: 8mm; color: var(--brand-text); }
-  .cert-name { font-size: 28pt; font-weight: 700; color: var(--brand-primary); margin: 5mm 0; }
+  .cert-body { font-size: 14pt; color: var(--brand-text); margin: 4mm 0; }
+  .cert-name { font-size: 28pt; font-weight: 700; color: var(--brand-primary); margin: 4mm 0; }
+  /* Table layout for stats — WeasyPrint 62.3's flexbox is unreliable for centered
+     column flow, so use a table which always lays out correctly. */
   .cert-stats {
-    margin-top: auto;         /* push the stats block to the bottom of the flex column */
-    padding-top: 10mm;
-    display: flex;
-    justify-content: space-around;
+    display: table;
     width: 100%;
+    table-layout: fixed;
+    margin-top: 18mm;
   }
   .cert-stat {
+    display: table-cell;
     text-align: center;
-    padding: 4mm 8mm;
-    min-width: 60mm;
+    padding: 0 6mm;
+    vertical-align: top;
   }
-  .cert-stat .label { color: var(--brand-muted); font-size: 9pt; text-transform: uppercase; letter-spacing: 1px; }
-  .cert-stat .value { font-size: 22pt; font-weight: 700; color: var(--brand-primary); margin-top: 2mm; }
+  .cert-stat .label {
+    color: var(--brand-muted);
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .cert-stat .value {
+    font-size: 22pt;
+    font-weight: 700;
+    color: var(--brand-primary);
+    margin-top: 3mm;
+  }
 </style>
 
 <div class="cert-border">
