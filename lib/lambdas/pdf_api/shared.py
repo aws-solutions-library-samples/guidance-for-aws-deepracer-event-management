@@ -131,13 +131,13 @@ def s3_key(event_id: str, name: str) -> str:
     return f"{event_id}/{name}-{ts}-{uid}{'.zip' if name == 'certificates' else '.pdf'}"
 
 
-def render_organiser(event: dict, ranked: list[dict], brand: dict, generated_at: str) -> bytes:
+def render_organiser(event: dict, ranked: list[dict], races: list[dict], brand: dict, generated_at: str) -> bytes:
     by_track: dict[str, list[dict]] = {}
     for r in ranked:
         by_track.setdefault("all", []).append(r)
     totals = {
         "racers": len(ranked),
-        "races": sum(1 for r in ranked),
+        "races": len(races),
         "validLaps": sum(r.get("numberOfValidLaps", 0) for r in ranked),
         "fastestLapFormatted": format_lap(
             min((r["fastestLapTime"] for r in ranked if r.get("fastestLapTime") is not None), default=None)
