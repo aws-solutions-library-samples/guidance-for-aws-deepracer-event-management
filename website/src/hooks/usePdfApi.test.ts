@@ -22,6 +22,8 @@ function fakeSubscription() {
         },
         emit: (data: unknown) =>
             handlers.forEach((h) => h.next({ value: { data: { onPdfJobUpdated: data } } })),
+        emitNull: () =>
+            handlers.forEach((h) => h.next({ value: { data: { onPdfJobUpdated: null } } })),
     };
 }
 
@@ -99,7 +101,7 @@ describe('usePdfApi', () => {
         removeSpy.mockRestore();
     });
 
-    test('failure path — FAILED status surfaces error', async () => {
+    test('failure path — FAILED status surfaces error (fetched via getPdfJob)', async () => {
         (graphqlMutate as any).mockResolvedValue({
             generateRaceResultsPdf: {
                 jobId: 'j-2',
@@ -112,6 +114,18 @@ describe('usePdfApi', () => {
         });
         const sub = fakeSubscription();
         (graphqlSubscribe as any).mockReturnValue(sub);
+        (graphqlQuery as any).mockResolvedValue({
+            getPdfJob: {
+                jobId: 'j-2',
+                status: 'FAILED',
+                error: 'Unknown eventId: e-1',
+                type: 'PODIUM',
+                eventId: 'e-1',
+                createdBy: 'u-1',
+                createdAt: '2026-04-20T00:00:00Z',
+                completedAt: '2026-04-20T00:00:05Z',
+            },
+        });
 
         const { result } = renderHook(() => usePdfApi());
         await act(async () => {
@@ -119,7 +133,8 @@ describe('usePdfApi', () => {
         });
 
         act(() => {
-            sub.emit({ jobId: 'j-2', status: 'FAILED', error: 'Unknown eventId: e-1' });
+            // Subscription fires — shape doesn't matter, the hook re-queries getPdfJob
+            sub.emit({ jobId: 'j-2', status: 'FAILED' });
         });
 
         await waitFor(() => {
@@ -127,6 +142,52 @@ describe('usePdfApi', () => {
                 Object.values(result.current.jobs).some(
                     (j) => j.status === 'FAILED' && j.error === 'Unknown eventId: e-1',
                 ),
+            ).toBe(true);
+        });
+    });
+
+    test('null subscription payload is tolerated — hook still queries getPdfJob', async () => {
+        (graphqlMutate as any).mockResolvedValue({
+            generateRaceResultsPdf: {
+                jobId: 'j-null',
+                status: 'PENDING',
+                type: 'PODIUM',
+                eventId: 'e-1',
+                createdBy: 'u-1',
+                createdAt: '2026-04-20T00:00:00Z',
+            },
+        });
+        const sub = fakeSubscription();
+        (graphqlSubscribe as any).mockReturnValue(sub);
+        (graphqlQuery as any).mockResolvedValue({
+            getPdfJob: {
+                jobId: 'j-null',
+                status: 'SUCCESS',
+                filename: 'podium.pdf',
+                downloadUrl: 'https://signed.example/podium.pdf',
+                type: 'PODIUM',
+                eventId: 'e-1',
+                createdBy: 'u-1',
+                createdAt: '2026-04-20T00:00:00Z',
+                completedAt: '2026-04-20T00:00:05Z',
+            },
+        });
+
+        const { result } = renderHook(() => usePdfApi());
+        await act(async () => {
+            await result.current.generatePdf({ eventId: 'e-1', type: 'PODIUM' });
+        });
+
+        act(() => {
+            sub.emitNull();
+        });
+
+        await waitFor(() => {
+            expect(graphqlQuery).toHaveBeenCalled();
+        });
+        await waitFor(() => {
+            expect(
+                Object.values(result.current.jobs).some((j) => j.status === 'SUCCESS'),
             ).toBe(true);
         });
     });
