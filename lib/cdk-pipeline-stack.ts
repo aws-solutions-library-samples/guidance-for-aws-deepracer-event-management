@@ -44,11 +44,9 @@ class InfrastructurePipelineStage extends Stage {
     const stack = new DeepracerEventManagerStack(this, 'infrastructure', {
       baseStackName: baseStack.stackName,
     });
-    // MIGRATION: infrastructure deploys before base so infra can drop
-    // Fn::ImportValue references while base still exports them. SSM parameters
-    // already exist from PR 1 so infra can resolve them at changeset time.
-    // Revert to stack.addDependency(baseStack) after this PR is deployed.
-    baseStack.addDependency(stack);
+    // Base deploys before infrastructure so SSM parameters exist when
+    // CloudFormation resolves them at changeset creation time.
+    stack.addDependency(baseStack);
 
     this.distributionId = stack.distributionId;
     this.sourceBucketName = stack.sourceBucketName;
