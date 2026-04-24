@@ -202,6 +202,49 @@ export class RaceResultsPdf extends Construct {
       true
     );
 
+    // The orchestrator + worker Lambdas both need broad S3 R/W on the PdfBucket
+    // (CDK's grantReadWrite expands to s3:GetObject*, PutObject*, GetBucket*,
+    // List*, DeleteObject*, Abort* with the bucket ARN + /*). Same pattern as
+    // other DREM Lambdas that own their bucket. Resource::* is the X-Ray-tracing
+    // default policy which requires it. Lambda-invoke wildcard covers versions/
+    // aliases of the worker function.
+    const lambdaIamSuppressions = [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Broad S3 actions scoped to the PdfBucket this construct owns',
+        appliesTo: [
+          'Action::s3:Abort*',
+          'Action::s3:DeleteObject*',
+          'Action::s3:GetBucket*',
+          'Action::s3:GetObject*',
+          'Action::s3:List*',
+          { regex: '/^Resource::<RaceResultsPdfPdfBucket[A-Z0-9]+\\.Arn>/\\*$/g' },
+        ],
+      },
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'X-Ray tracing needs Resource::* to write trace segments',
+        appliesTo: ['Resource::*'],
+      },
+    ];
+    NagSuppressions.addResourceSuppressions(
+      [orchestratorLambda, workerLambda],
+      lambdaIamSuppressions,
+      true
+    );
+    // The orchestrator also invokes the worker — IAM5 wildcard covers versions/aliases.
+    NagSuppressions.addResourceSuppressions(
+      orchestratorLambda,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Wildcard covers worker Lambda versions/aliases in the invoke permission',
+          appliesTo: [{ regex: '/^Resource::<RaceResultsPdfWorkerLambda[A-Z0-9]+\\.Arn>:\\*$/g' }],
+        },
+      ],
+      true
+    );
+
     props.appsyncApi.schema.addMutation(
       'generateRaceResultsPdf',
       new ResolvableField({
