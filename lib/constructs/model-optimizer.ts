@@ -1,4 +1,4 @@
-import { Duration, Size } from 'aws-cdk-lib';
+import { CfnResource, Duration, Size, Stack } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { Platform } from 'aws-cdk-lib/aws-ecr-assets';
 import { IEventBus, Match, Rule } from 'aws-cdk-lib/aws-events';
@@ -6,7 +6,7 @@ import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { CodeFirstSchema } from 'awscdk-appsync-utils';
-
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { StandardLambdaDockerImageFuncion } from './standard-lambda-docker-image-function';
 
@@ -66,5 +66,24 @@ export class ModelOptimizer extends Construct {
 
     props.modelsBucket.grantRead(modelOptimizer);
     props.modelsBucket.grantReadWrite(modelOptimizer);
+    NagSuppressions.addResourceSuppressions(
+      modelOptimizer.role,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'Wildcard actions and bucket/* resource from CDK grantRead/grantReadWrite on modelsBucket, scoped to the specific bucket.',
+          appliesTo: [
+            'Action::s3:Abort*',
+            'Action::s3:DeleteObject*',
+            'Action::s3:GetBucket*',
+            'Action::s3:GetObject*',
+            'Action::s3:List*',
+            `Resource::<${Stack.of(this).getLogicalId(props.modelsBucket.node.defaultChild as CfnResource)}.Arn>/*`,
+          ],
+        },
+      ],
+      true
+    );
   }
 }

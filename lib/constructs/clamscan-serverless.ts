@@ -1,4 +1,4 @@
-import { DockerImage, Duration, RemovalPolicy, Size } from 'aws-cdk-lib';
+import { CfnResource, DockerImage, Duration, RemovalPolicy, Size, Stack } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { Platform } from 'aws-cdk-lib/aws-ecr-assets';
 import { IEventBus, Match, Rule, Schedule } from 'aws-cdk-lib/aws-events';
@@ -7,6 +7,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { EventBridgeDestination } from 'aws-cdk-lib/aws-lambda-destinations';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { CodeFirstSchema } from 'awscdk-appsync-utils';
+import { NagSuppressions } from 'cdk-nag';
 
 import { Trigger } from 'aws-cdk-lib/triggers';
 import { Construct } from 'constructs';
@@ -167,5 +168,69 @@ export class ClamscanServerless extends Construct {
     props.uploadBucket.grantReadWrite(postLambda);
 
     props.scannedBucked.grantWrite(postLambda);
+
+    const libraryBucketLogicalId = Stack.of(this).getLogicalId(libraryBucket.node.defaultChild as CfnResource);
+    const uploadBucketLogicalId = Stack.of(this).getLogicalId(props.uploadBucket.node.defaultChild as CfnResource);
+    const scannedBucketLogicalId = Stack.of(this).getLogicalId(props.scannedBucked.node.defaultChild as CfnResource);
+
+    NagSuppressions.addResourceSuppressions(
+      updateLambda.role!,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'S3 grantReadWrite produces wildcard actions and bucket-level resource ARNs; required for the ClamAV update function to read and write virus definitions to the library bucket.',
+          appliesTo: [
+            'Action::s3:Abort*',
+            'Action::s3:DeleteObject*',
+            'Action::s3:GetBucket*',
+            'Action::s3:GetObject*',
+            'Action::s3:List*',
+            `Resource::<${libraryBucketLogicalId}.Arn>/*`,
+          ],
+        },
+      ],
+      true
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      scanLambda.role!,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'S3 grant methods (grantRead) produce wildcard actions and bucket-level resource ARNs; required for ClamAV to scan files in the library and upload buckets.',
+          appliesTo: [
+            'Action::s3:GetBucket*',
+            'Action::s3:GetObject*',
+            'Action::s3:List*',
+            `Resource::<${libraryBucketLogicalId}.Arn>/*`,
+            `Resource::<${uploadBucketLogicalId}.Arn>/*`,
+          ],
+        },
+      ],
+      true
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      postLambda.role!,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'S3 grant methods (grantReadWrite, grantWrite) produce wildcard actions and bucket-level resource ARNs; required for ClamAV post-scan function to move files between upload and scanned buckets.',
+          appliesTo: [
+            'Action::s3:Abort*',
+            'Action::s3:DeleteObject*',
+            'Action::s3:GetBucket*',
+            'Action::s3:GetObject*',
+            'Action::s3:List*',
+            `Resource::<${uploadBucketLogicalId}.Arn>/*`,
+            `Resource::<${scannedBucketLogicalId}.Arn>/*`,
+          ],
+        },
+      ],
+      true
+    );
   }
 }

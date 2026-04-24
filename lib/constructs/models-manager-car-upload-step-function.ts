@@ -1,11 +1,13 @@
-import { Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { CfnResource, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as stepFunctions from 'aws-cdk-lib/aws-stepfunctions';
 import * as stepFunctionsTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Directive, GraphqlType, InputType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
@@ -208,14 +210,18 @@ export class CarUploadStepFunction extends Construct {
     // Definition
     const definition = startWait.next(mapToDynamo).next(mapToSsm);
 
+    const carStatusUpdateSMLogGroup = new logs.LogGroup(this, 'CarUploadSFNLogs', {
+      retention: logs.RetentionDays.SIX_MONTHS,
+    });
+
     this.stepFunction = new stepFunctions.StateMachine(this, 'CarStatusUpdater', {
       definitionBody: stepFunctions.DefinitionBody.fromChainable(definition),
       tracingEnabled: true,
       timeout: Duration.minutes(10),
-      /*logs: {
-        destination: car_status_update_SM_log_group,
+      logs: {
+        destination: carStatusUpdateSMLogGroup,
         level: stepFunctions.LogLevel.ALL,
-      },*/
+      },
     });
 
     // AppSync //
@@ -411,6 +417,57 @@ export class CarUploadStepFunction extends Construct {
         responseMappingTemplate: appsync.MappingTemplate.fromString('$util.toJson($context.result)'),
         directives: [Directive.subscribe('updateUploadToCarDbEntry'), Directive.cognito('admin', 'operator')],
       })
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      uploadToCarSFNInvoke.role!,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'S3 grantRead with prefix produces wildcard actions and a prefix-scoped resource ARN; required for the Lambda to read model files from the private/ prefix of the models bucket.',
+          appliesTo: [
+            'Action::s3:GetBucket*',
+            'Action::s3:GetObject*',
+            'Action::s3:List*',
+            `Resource::<${Stack.of(this).getLogicalId(modelsBucket.node.defaultChild as CfnResource)}.Arn>/private/*`,
+          ],
+        },
+      ],
+      true
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      uploadToCarDataSource,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'AppSync Lambda data source generates ARN:* wildcard to cover Lambda versions/aliases; this is CDK-managed and cannot be avoided.',
+          appliesTo: [
+            `Resource::<${Stack.of(this).getLogicalId(uploadModelToCarAppSyncHandler.node.defaultChild as CfnResource)}.Arn>:*`,
+          ],
+        },
+      ],
+      true
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      this.stepFunction,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'CDK Step Functions generates ARN:* wildcards to cover Lambda versions/aliases, and Resource::* for X-Ray tracing; these are CDK-managed and cannot be avoided.',
+          appliesTo: [
+            `Resource::<${Stack.of(this).getLogicalId(uploadToCarSFNCreate.node.defaultChild as CfnResource)}.Arn>:*`,
+            `Resource::<${Stack.of(this).getLogicalId(uploadToCarSFNInvoke.node.defaultChild as CfnResource)}.Arn>:*`,
+            `Resource::<${Stack.of(this).getLogicalId(uploadToCarSFNStatus.node.defaultChild as CfnResource)}.Arn>:*`,
+            'Resource::*',
+          ],
+        },
+      ],
+      true
     );
   }
 }

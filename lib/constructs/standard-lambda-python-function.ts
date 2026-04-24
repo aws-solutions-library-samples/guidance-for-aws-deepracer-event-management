@@ -58,9 +58,10 @@ export class StandardLambdaPythonFunction extends lambdaPython.PythonFunction {
       tracing: lambda.Tracing.ACTIVE,
       memorySize: 128,
       architecture: lambda.Architecture.ARM_64,
-      bundling: os.arch() === 'arm64'
-        ? { image: DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest-arm64') }
-        : { image: DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest') },
+      bundling:
+        os.arch() === 'arm64'
+          ? { image: DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest-arm64') }
+          : { image: DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest') },
       ...props,
       environment: {
         ...props.environment,
@@ -115,6 +116,18 @@ export class StandardLambdaPythonFunction extends lambdaPython.PythonFunction {
           reason:
             "Suppress AwsSolutions-IAM5 'xray:PutTelemetryRecords' and 'xray:PutTraceSegments' on *, which is created when CDK enables tracing",
           appliesTo: ['Resource::*'],
+        },
+      ],
+      true
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      this,
+      [
+        {
+          id: 'AwsSolutions-L1',
+          reason:
+            'Python 3.12 is the actively maintained runtime used across this project. Upgrading to 3.14 requires full dependency and integration validation and is tracked as a separate work item.',
         },
       ],
       true

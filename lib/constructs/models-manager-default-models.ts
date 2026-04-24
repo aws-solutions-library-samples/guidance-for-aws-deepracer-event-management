@@ -1,7 +1,8 @@
-import { Stack } from 'aws-cdk-lib';
+import { CfnResource, Stack } from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 
 export interface ModelsManagerProps {
@@ -22,6 +23,27 @@ export class ModelsManagerDefaultModelsDeployment extends Construct {
 
     props.modelsBucket.grantReadWrite(defaultModelsDeploymentRole);
     props.uploadBucket.grantReadWrite(defaultModelsDeploymentRole);
+    NagSuppressions.addResourceSuppressions(
+      defaultModelsDeploymentRole,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'Wildcard actions and bucket/* resources from CDK grantReadWrite on S3 buckets, plus the CDK staging bucket access added by BucketDeployment, all scoped to the specific buckets used by this construct.',
+          appliesTo: [
+            'Action::s3:Abort*',
+            'Action::s3:DeleteObject*',
+            'Action::s3:GetBucket*',
+            'Action::s3:GetObject*',
+            'Action::s3:List*',
+            `Resource::<${Stack.of(this).getLogicalId(props.modelsBucket.node.defaultChild as CfnResource)}.Arn>/*`,
+            `Resource::<${Stack.of(this).getLogicalId(props.uploadBucket.node.defaultChild as CfnResource)}.Arn>/*`,
+            { regex: '/^Resource::arn:aws:s3:::cdk-.*/' },
+          ],
+        },
+      ],
+      true
+    );
     /* Deploy Default DeepRacer models. FOr the models to be properly index this needs to run
         after the antivirus deployment and lambda putting the models info into the models DDB table */
     new s3Deployment.BucketDeployment(this, 'ModelsDeploy', {

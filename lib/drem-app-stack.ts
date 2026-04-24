@@ -318,6 +318,50 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'userPoolId', {
       value: userPoolId,
     });
+
+    // CDK BucketDeployment singleton Lambdas — runtime and role are CDK-managed, not user-configurable
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/AWS679f53fac002430cb0da5b7982bd2287/Resource`,
+      [
+        {
+          id: 'AwsSolutions-L1',
+          reason:
+            'CDK BucketDeployment singleton Lambda runtime is managed by CDK and cannot be configured by the application.',
+        },
+      ]
+    );
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C512MiB/Resource`,
+      [
+        {
+          id: 'AwsSolutions-L1',
+          reason:
+            'CDK BucketDeployment singleton Lambda runtime is managed by CDK and cannot be configured by the application.',
+        },
+      ]
+    );
+    NagSuppressions.addStackSuppressions(this, [
+      {
+        id: 'AwsSolutions-IAM4',
+        reason:
+          'AWSLambdaBasicExecutionRole on the CDK BucketDeployment singleton is managed by CDK and cannot be configured by the application.',
+        appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
+      },
+    ]);
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'CDK LogRetention singleton uses Resource::* for log group management; this role is fully managed by CDK and cannot be scoped further.',
+        },
+      ]
+    );
   }
 
   lambdaLayers = (baseStackName: string) => {
