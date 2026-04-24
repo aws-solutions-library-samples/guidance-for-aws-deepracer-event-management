@@ -10,11 +10,11 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
-import * as os from 'os';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import { CodeFirstSchema } from 'awscdk-appsync-utils';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
+import * as os from 'os';
 import { CarLogsManager } from './constructs/car-logs-manager';
 import { CarManager } from './constructs/cars-manager';
 import { ClamscanServerless } from './constructs/clamscan-serverless';
@@ -68,8 +68,14 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     };
 
     // SSM reads — resolved by CloudFormation at deploy time, no cross-stack Fn::ImportValue
-    const cloudfrontDistributionId = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/cloudfrontDistributionId`);
-    const cloudfrontDistributionDomainName = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/cloudfrontDistributionDomainName`);
+    const cloudfrontDistributionId = ssm.StringParameter.valueForStringParameter(
+      this,
+      `${ssmBase}/cloudfrontDistributionId`
+    );
+    const cloudfrontDistributionDomainName = ssm.StringParameter.valueForStringParameter(
+      this,
+      `${ssmBase}/cloudfrontDistributionDomainName`
+    );
     const cloudfrontDomainName = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/cloudfrontDomainName`);
     const logsBucketName = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/logsBucketName`);
     const websiteBucketName = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/websiteBucketName`);
@@ -79,9 +85,18 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     const userPoolClientWebId = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/userPoolClientWebId`);
     const adminGroupRoleArn = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/adminGroupRoleArn`);
     const operatorGroupRoleArn = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/operatorGroupRoleArn`);
-    const commentatorGroupRoleArn = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/commentatorGroupRoleArn`);
-    const registrationGroupRoleArn = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/registrationGroupRoleArn`);
-    const authenticatedUserRoleArn = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/authenticatedUserRoleArn`);
+    const commentatorGroupRoleArn = ssm.StringParameter.valueForStringParameter(
+      this,
+      `${ssmBase}/commentatorGroupRoleArn`
+    );
+    const registrationGroupRoleArn = ssm.StringParameter.valueForStringParameter(
+      this,
+      `${ssmBase}/registrationGroupRoleArn`
+    );
+    const authenticatedUserRoleArn = ssm.StringParameter.valueForStringParameter(
+      this,
+      `${ssmBase}/authenticatedUserRoleArn`
+    );
 
     // Reconstruct CDK objects from SSM values
     const cloudfrontDistribution = Distribution.fromDistributionAttributes(this, 'ImportedDistribution', {
@@ -93,16 +108,21 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     const eventbus: IEventBus = EventBus.fromEventBusArn(this, 'ImportedEventBus', eventBusArn);
     const userPool: IUserPool = UserPool.fromUserPoolId(this, 'ImportedUserPool', userPoolId);
     const adminGroupRole = Role.fromRoleArn(this, 'ImportedAdminGroupRole', adminGroupRoleArn, { mutable: true });
-    const operatorGroupRole = Role.fromRoleArn(this, 'ImportedOperatorGroupRole', operatorGroupRoleArn, { mutable: true });
-    const commentatorGroupRole = Role.fromRoleArn(this, 'ImportedCommentatorGroupRole', commentatorGroupRoleArn, { mutable: true });
-    const registrationGroupRole = Role.fromRoleArn(this, 'ImportedRegistrationGroupRole', registrationGroupRoleArn, { mutable: true });
-    const authenticatedUserRole = Role.fromRoleArn(this, 'ImportedAuthenticatedUserRole', authenticatedUserRoleArn, { mutable: true });
+    const operatorGroupRole = Role.fromRoleArn(this, 'ImportedOperatorGroupRole', operatorGroupRoleArn, {
+      mutable: true,
+    });
+    const commentatorGroupRole = Role.fromRoleArn(this, 'ImportedCommentatorGroupRole', commentatorGroupRoleArn, {
+      mutable: true,
+    });
+    const registrationGroupRole = Role.fromRoleArn(this, 'ImportedRegistrationGroupRole', registrationGroupRoleArn, {
+      mutable: true,
+    });
+    const authenticatedUserRole = Role.fromRoleArn(this, 'ImportedAuthenticatedUserRole', authenticatedUserRoleArn, {
+      mutable: true,
+    });
 
     // Get the WAF Web ACL ARN from SSM, created in the base stack
-    const wafWebAclRegionalArn = ssm.StringParameter.valueForStringParameter(
-      this,
-      `${ssmBase}/regionalWafWebAclArn`
-    );
+    const wafWebAclRegionalArn = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/regionalWafWebAclArn`);
 
     // Appsync API
     const appsyncResources = this.appsyncApi(this.stackName, userPool, wafWebAclRegionalArn);
@@ -319,49 +339,26 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       value: userPoolId,
     });
 
-    // CDK BucketDeployment singleton Lambdas — runtime and role are CDK-managed, not user-configurable
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/AWS679f53fac002430cb0da5b7982bd2287/Resource`,
-      [
-        {
-          id: 'AwsSolutions-L1',
-          reason:
-            'CDK BucketDeployment singleton Lambda runtime is managed by CDK and cannot be configured by the application.',
-        },
-      ]
-    );
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C512MiB/Resource`,
-      [
-        {
-          id: 'AwsSolutions-L1',
-          reason:
-            'CDK BucketDeployment singleton Lambda runtime is managed by CDK and cannot be configured by the application.',
-        },
-      ]
-    );
+    // CDK BucketDeployment and LogRetention singleton Lambdas — runtime and role are CDK-managed.
+    // The singleton logical IDs vary between CDK versions, so we suppress at the stack level.
     NagSuppressions.addStackSuppressions(this, [
+      {
+        id: 'AwsSolutions-L1',
+        reason:
+          'CDK BucketDeployment singleton Lambda runtime is managed by CDK and cannot be configured by the application.',
+      },
       {
         id: 'AwsSolutions-IAM4',
         reason:
           'AWSLambdaBasicExecutionRole on the CDK BucketDeployment singleton is managed by CDK and cannot be configured by the application.',
         appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
       },
+      {
+        id: 'AwsSolutions-IAM5',
+        reason:
+          'CDK LogRetention singleton uses Resource::* for log group management; this role is fully managed by CDK and cannot be scoped further.',
+      },
     ]);
-
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason:
-            'CDK LogRetention singleton uses Resource::* for log group management; this role is fully managed by CDK and cannot be scoped further.',
-        },
-      ]
-    );
   }
 
   lambdaLayers = (baseStackName: string) => {
