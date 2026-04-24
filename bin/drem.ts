@@ -6,14 +6,7 @@ import { CdkPipelineStack } from '../lib/cdk-pipeline-stack';
 import { DeepracerEventManagerStack } from '../lib/drem-app-stack';
 
 const app = new App();
-// cdk-nag is enforced by the CodePipeline's CodeBuild synth stage. Locally,
-// the DREM stack has many pre-existing Error-level findings that block `cdk
-// synth`/`deploy`, which makes manual iteration (`make manual.deploy.*`)
-// unusable. Allow `SKIP_CDK_NAG=true` to bypass the Aspect for local work.
-// CI is unaffected — the pipeline never sets this env var.
-if (process.env['SKIP_CDK_NAG'] !== 'true') {
-  Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
-}
+Aspects.of(app).add(new AwsSolutionsChecks({ verbose: true }));
 
 let accountId = process.env['CDK_DEFAULT_ACCOUNT'];
 
