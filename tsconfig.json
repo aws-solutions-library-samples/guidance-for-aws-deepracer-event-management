@@ -2,9 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
-    "lib": [
-      "es2020"
-    ],
+    "lib": ["es2020"],
     "declaration": true,
     "strict": true,
     "noImplicitAny": true,
@@ -19,19 +17,8 @@
     "inlineSources": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
-    "typeRoots": [
-      "./node_modules/*",
-      "./node_modules/@types"
-    ],
-    "types": [
-      "node"
-    ]
+    "typeRoots": ["./node_modules/*", "./node_modules/@types"],
+    "types": ["jest", "node"]
   },
-  "exclude": [
-    "node_modules",
-    "cdk.out",
-    "website",
-    "website-leaderboard",
-    "website-stream-overlays"
-  ]
+  "exclude": ["node_modules", "cdk.out", "website", "website-leaderboard", "website-stream-overlays"]
 }
