@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:22-alpine
+FROM public.ecr.aws/docker/library/node:20-alpine
 
 # Install minimal system packages
 RUN apk update && apk add --update --no-cache \
@@ -9,9 +9,6 @@ RUN apk update && apk add --update --no-cache \
     openssh \
     wget \
     zip
-
-# Update NPM
-RUN npm update -g
 
 # NPM install
 WORKDIR /app
