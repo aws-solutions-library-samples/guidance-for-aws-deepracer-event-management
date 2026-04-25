@@ -161,6 +161,8 @@ export const getLeaderboard = /* GraphQL */ `
                 racedByProxy
                 trackId
                 username
+                avatarConfig
+                highlightColour
             }
         }
     }

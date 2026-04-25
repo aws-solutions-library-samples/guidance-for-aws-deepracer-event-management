@@ -90,10 +90,20 @@ export class Idp extends Construct {
         countryCode: new cognito.StringAttribute({
           mutable: true,
         }),
+        avatarConfig: new cognito.StringAttribute({
+          mutable: true,
+          minLen: 0,
+          maxLen: 2048,
+        }),
+        highlightColour: new cognito.StringAttribute({
+          mutable: true,
+          minLen: 0,
+          maxLen: 7,
+        }),
       },
       featurePlan: cognito.FeaturePlan.PLUS,
       mfa: cognito.Mfa.OPTIONAL,
-      standardThreatProtectionMode: cognito.StandardThreatProtectionMode.FULL_FUNCTION,
+      advancedSecurityMode: cognito.AdvancedSecurityMode.ENFORCED,
       selfSignUpEnabled: true,
       autoVerify: { email: true },
       removalPolicy: RemovalPolicy.DESTROY,

@@ -82,6 +82,42 @@
   animation-fill-mode: forwards;
 }
 
+.summaryIdentity {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin-right: 1vmin;
+  position: relative;
+  height: 1.5em;
+}
+
+.summaryHighlightBar {
+  width: 20px;
+  align-self: stretch;
+  margin-right: -20px;
+  z-index: 0;
+}
+
+.summaryIdentityIcon {
+  width: 1.5em;
+  height: 1.5em;
+  position: relative;
+  z-index: 1;
+}
+
+.summaryIdentityIcon :global(svg) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.summaryIdentityFlag {
+  position: absolute;
+  bottom: -0.3em;
+  right: -0.3em;
+  font-size: 0.4em;
+  line-height: 1;
+}
+
 @keyframes fadeInAnimation {
   0% {
     opacity: 0;

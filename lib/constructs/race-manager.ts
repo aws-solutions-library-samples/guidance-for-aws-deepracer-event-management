@@ -56,7 +56,7 @@ export class RaceManager extends Construct {
       sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
-      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
+      pointInTimeRecovery: true,
     });
 
     // BACKEND
@@ -340,6 +340,8 @@ export class RaceManager extends Construct {
         username: GraphqlType.string(),
         userId: GraphqlType.string(),
         countryCode: GraphqlType.string(),
+        avatarConfig: GraphqlType.awsJson({ isRequired: false }),
+        highlightColour: GraphqlType.string({ isRequired: false }),
         laps: lapObjectType.attribute({ isList: true }),
         averageLaps: averageLapObjectType.attribute({ isList: true }),
         timeLeftInMs: GraphqlType.float(),
@@ -360,6 +362,8 @@ export class RaceManager extends Construct {
           trackId: GraphqlType.id(),
           username: GraphqlType.string(),
           countryCode: GraphqlType.string(),
+          avatarConfig: GraphqlType.awsJson({ isRequired: false }),
+          highlightColour: GraphqlType.string({ isRequired: false }),
           userId: GraphqlType.string(),
           laps: lapInputObjectType.attribute({ isList: true }),
           averageLaps: averageLapInputObjectType.attribute({ isList: true }),
