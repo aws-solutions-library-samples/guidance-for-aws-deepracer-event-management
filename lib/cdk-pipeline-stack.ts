@@ -108,10 +108,12 @@ export class CdkPipelineStack extends cdk.Stack {
         ],
         commands: [
           'npm install',
-          // Tests - run before synth so pipeline fails fast on test failure
+          // Tests - run before synth so pipeline fails fast on test failure.
+          // The root postinstall is gated to skip on CodeBuild ($CODEBUILD_BUILD_ID
+          // is set), so each website subdir needs its own `npm install` first.
           'npm test',
-          'cd website && npm test && cd ..',
-          'cd website/leaderboard && npm test && cd ../..',
+          'cd website && npm install && npm test && cd ..',
+          'cd website/leaderboard && npm install && npm test && cd ../..',
           `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c label=${props.labelName}` +
             ` -c account=${props.env.account} -c region=${props.env.region}` +
             ` -c source_branch=${props.sourceBranchName} -c source_repo=${props.sourceRepo}` +
