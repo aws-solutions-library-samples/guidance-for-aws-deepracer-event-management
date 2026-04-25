@@ -1,4 +1,4 @@
-import { Button, SpaceBetween } from '@cloudscape-design/components';
+import { Button, ButtonDropdown, SpaceBetween } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,7 @@ import { PageTable } from '../../components/pageTable';
 import { DrSplitPanel } from '../../components/split-panels/dr-split-panel';
 import { TableHeader } from '../../components/tableConfig';
 import useMutation from '../../hooks/useMutation';
+import { usePdfApi, type PdfType } from '../../hooks/usePdfApi';
 import { useUsers } from '../../hooks/useUsers';
 import { useSelectedEventContext } from '../../store/contexts/storeProvider';
 import { useStore } from '../../store/store';
@@ -34,6 +35,26 @@ const RaceAdmin = (): JSX.Element => {
   const [, usersIsLoading, getUserNameFromId] = useUsers();
 
   const navigate = useNavigate();
+  const { generatePdf, isGenerating } = usePdfApi();
+
+  const onDownloadPdf = async (type: PdfType) => {
+    if (!selectedEvent?.eventId) return;
+    try {
+      await generatePdf({ eventId: selectedEvent.eventId, type });
+    } catch (err) {
+      console.error('Failed to kick off PDF generation', err);
+    }
+  };
+
+  // Aggregate in-flight state across the three PDF types on this page so the
+  // ButtonDropdown's single `loading` prop reflects any pending job.
+  const eventId = selectedEvent?.eventId;
+  const anyGenerating = eventId
+    ? (['ORGANISER_SUMMARY', 'PODIUM', 'RACER_CERTIFICATES_BULK'] as const).some((type) =>
+        isGenerating({ eventId, type })
+      )
+    : false;
+
   const editRaceHandler = () => {
     navigate('/admin/races/edit', { state: SelectedRacesInTable[0] });
   };
@@ -113,6 +134,22 @@ const RaceAdmin = (): JSX.Element => {
         <Button disabled={disableDeleteButton} onClick={() => setDeleteModalVisible(true)}>
           {t('button.delete')}
         </Button>
+        <ButtonDropdown
+          loading={anyGenerating}
+          disabled={!selectedEvent?.eventId}
+          items={[
+            { id: 'summary', text: t('pdf.organiser-summary') },
+            { id: 'podium', text: t('pdf.podium') },
+            { id: 'certificates', text: t('pdf.bulk-certificates') },
+          ]}
+          onItemClick={({ detail }) => {
+            if (detail.id === 'summary') onDownloadPdf('ORGANISER_SUMMARY');
+            else if (detail.id === 'podium') onDownloadPdf('PODIUM');
+            else if (detail.id === 'certificates') onDownloadPdf('RACER_CERTIFICATES_BULK');
+          }}
+        >
+          {t('pdf.download-pdf')}
+        </ButtonDropdown>
       </SpaceBetween>
     );
   };

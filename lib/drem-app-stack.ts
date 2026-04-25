@@ -31,6 +31,7 @@ import { RaceManager } from './constructs/race-manager';
 import { StreamingOverlay } from './constructs/streaming-overlay';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
+import { RaceResultsPdf } from './constructs/race-results-pdf';
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
   baseStackName: string;
@@ -177,7 +178,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       eventbus: eventbus,
     });
 
-    new RaceManager(this, 'RaceManager', {
+    const raceManager = new RaceManager(this, 'RaceManager', {
       appsyncApi: appsyncResources,
       lambdaConfig: lambdaConfig,
       eventbus: eventbus,
@@ -203,7 +204,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       eventbus: eventbus,
     });
 
-    new EventsManager(this, 'EventsManager', {
+    const eventsManager = new EventsManager(this, 'EventsManager', {
       appsyncApi: appsyncResources,
       lambdaConfig: lambdaConfig,
       leaderboardApi: leaderboard.api,
@@ -238,6 +239,20 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       logsbucket: logsBucket,
       appsyncApi: appsyncResources,
       carStatusDataHandlerLambda: carManager.carStatusDataHandlerLambda,
+    });
+
+    new RaceResultsPdf(this, 'RaceResultsPdf', {
+      appsyncApi: appsyncResources,
+      // x86_64 rather than ARM64 because this Lambda ships as a container
+      // image, and CodeBuild's x86_64 runners can't build ARM64 images
+      // without QEMU emulation set up. The cost / perf delta on a single
+      // on-demand PDF Lambda is negligible.
+      lambdaConfig: { architecture: lambda.Architecture.X86_64 },
+      userPoolId: userPool.userPoolId,
+      userPoolArn: userPool.userPoolArn,
+      raceTable: raceManager.raceTable,
+      eventsTable: eventsManager.eventsTable,
+      logsBucket: logsBucket,
     });
 
     const cwRumAppMonitor = new CwRumAppMonitor(this, 'CwRumAppMonitor', {

@@ -51,3 +51,6 @@ cdk.out
 # scratchpad notes
 scratch.txt
 build.log
+
+# Git worktrees
+.worktrees
