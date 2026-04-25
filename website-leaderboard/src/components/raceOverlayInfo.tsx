@@ -26,6 +26,8 @@ interface RaceOverlayInfoProps {
   averageLaps: any;
   currentLapTimeInMs: any;
   raceFormat: any;
+  raceEndCondition?: string;
+  numberOfLaps?: number;
 }
 
 const RaceOverlayInfo = ({
@@ -36,6 +38,8 @@ const RaceOverlayInfo = ({
   averageLaps,
   currentLapTimeInMs,
   raceFormat,
+  raceEndCondition,
+  numberOfLaps,
 }: RaceOverlayInfoProps) => {
   const { t } = useTranslation();
   // raw timing values
@@ -166,7 +170,8 @@ const RaceOverlayInfo = ({
     const timePassedMs = Date.now() - lastDisplayUpdateTimestamp;
     setLastDisplayUpdateTimestamp(Date.now());
 
-    if (raceStatus === 'RACE_IN_PROGRESS') {
+    const lapCountComplete = raceEndCondition === 'LAP_COUNT' && numberOfLaps && laps && laps.length >= numberOfLaps;
+    if (raceStatus === 'RACE_IN_PROGRESS' && !lapCountComplete) {
       // times should never be negative
       setRemainingTimeMs(Math.max(0, remainingTimeMs - timePassedMs));
       setCurrentLapMs(Math.max(0, currentLapMs + timePassedMs));
@@ -192,12 +197,15 @@ const RaceOverlayInfo = ({
     </span>
   );
 
+  const isLapCount = raceEndCondition === 'LAP_COUNT' && numberOfLaps;
+  const lapsDone = laps ? laps.length : 0;
+
   const htmlTable = (
     <table className={styles.tableRoot}>
       <thead>
         <tr>
           <th>
-            <span className={styles.footerItemText}>{t('leaderboard.race-info-footer.time-remaining')}</span>
+            <span className={styles.footerItemText}>{t('leaderboard.race-info-footer.remaining')}</span>
           </th>
           <th>
             <span className={styles.footerItemText}>
@@ -207,17 +215,23 @@ const RaceOverlayInfo = ({
             </span>
           </th>
           <th>
-            <span className={styles.footerItemText}>{t('leaderboard.race-info-footer.current-lap')}</span>
+            <span className={styles.footerItemText}>{t('leaderboard.race-info-footer.previous')}</span>
           </th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>
-            <span className={styles.footerItemDigits}>
-              {remainingTimeDisplayTime.minutes}:{remainingTimeDisplayTime.seconds}:
-              {remainingTimeDisplayTime.milliseconds.charAt(0)}
-            </span>
+            {isLapCount ? (
+              <span className={styles.footerItemDigits}>
+                {lapsDone} / {numberOfLaps}
+              </span>
+            ) : (
+              <span className={styles.footerItemDigits}>
+                {remainingTimeDisplayTime.minutes}:{remainingTimeDisplayTime.seconds}:
+                {remainingTimeDisplayTime.milliseconds.charAt(0)}
+              </span>
+            )}
           </td>
           <td>{raceFormat === 'average' ? bestAvgSpan : bestLaptimeSpan}</td>
           <td>
