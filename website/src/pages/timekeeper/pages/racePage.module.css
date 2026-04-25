@@ -163,3 +163,29 @@
   position: relative;
   top: 2px;
 }
+
+/* Dark mode adjustments */
+:global(.awsui-dark-mode) #dnf {
+  background-color: #5f6b7a;
+}
+:global(.awsui-dark-mode) #dnf:hover,
+:global(.awsui-dark-mode) #dnf:focus {
+  background-color: #4d5969;
+}
+:global(.awsui-dark-mode) #endrace {
+  background-color: #5f6b7a;
+}
+:global(.awsui-dark-mode) #endrace:hover,
+:global(.awsui-dark-mode) #endrace:focus {
+  background-color: #4d5969;
+}
+:global(.awsui-dark-mode) #dnf:disabled,
+:global(.awsui-dark-mode) #carreset:disabled,
+:global(.awsui-dark-mode) #capturelap:disabled,
+:global(.awsui-dark-mode) #undoreset:disabled,
+:global(.awsui-dark-mode) #undofalsefinish:disabled,
+:global(.awsui-dark-mode) #endrace:disabled,
+:global(.awsui-dark-mode) #startrace:disabled {
+  background-color: #354150;
+  color: #8d9bab;
+}
