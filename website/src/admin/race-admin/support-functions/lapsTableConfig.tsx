@@ -131,9 +131,11 @@ export const ColumnDefinitions = (): TableProps.ColumnDefinition<LapTableItem>[]
       id: 'autTimeConnected',
       header: i18next.t('race-admin.aut-timer-connected'),
       cell: (item) =>
-        item.autTimeConnected
+        item.autTimeConnected === true
           ? i18next.t('timekeeper.race-page.automated-timer-connected')
-          : i18next.t('timekeeper.race-page.automated-timer-not-connected'),
+          : item.autTimeConnected === false
+            ? i18next.t('timekeeper.race-page.automated-timer-not-connected')
+            : '-',
       sortingField: 'autTimeConnected',
     },
   ];
@@ -260,9 +262,11 @@ export const EditableColumnDefinitions = (): TableProps.ColumnDefinition<LapTabl
       id: 'autTimeConnected',
       header: i18next.t('race-admin.aut-timer-connected'),
       cell: (item) =>
-        item.autTimeConnected
+        item.autTimeConnected === true
           ? i18next.t('timekeeper.automated-timer-msg-connected')
-          : i18next.t('timekeeper.automated-timer-msg-not-connected'),
+          : item.autTimeConnected === false
+            ? i18next.t('timekeeper.automated-timer-msg-not-connected')
+            : '-',
       sortingField: 'autTimeConnected',
     },
   ];
