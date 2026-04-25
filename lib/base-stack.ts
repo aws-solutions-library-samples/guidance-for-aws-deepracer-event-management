@@ -9,6 +9,7 @@ import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import * as os from 'os';
 import { Cdn } from './constructs/cdn';
@@ -93,11 +94,37 @@ export class BaseStack extends cdk.Stack {
       });
 
       // Create a certificate for the domain (in us-east-1 for CloudFront)
-      certificate = new acm.DnsValidatedCertificate(this, 'SiteCertificate', {
+      const siteCertificate = new acm.DnsValidatedCertificate(this, 'SiteCertificate', {
         domainName: siteDomain[0],
         hostedZone: hostedZone,
         region: 'us-east-1', // CloudFront requires certificates in us-east-1
       });
+      certificate = siteCertificate;
+      // The DnsValidatedCertificate construct creates a CDK-managed Lambda custom resource
+      // for DNS validation. Its runtime, role, and permissions cannot be configured by the app.
+      NagSuppressions.addResourceSuppressions(
+        siteCertificate,
+        [
+          {
+            id: 'AwsSolutions-IAM4',
+            reason:
+              'AWSLambdaBasicExecutionRole on the DnsValidatedCertificate custom resource Lambda is managed by CDK and cannot be configured by the application.',
+            appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
+          },
+          {
+            id: 'AwsSolutions-IAM5',
+            reason:
+              'DnsValidatedCertificate custom resource Lambda requires wildcard permissions for Route53 DNS validation; this Lambda is fully managed by CDK.',
+            appliesTo: ['Resource::*'],
+          },
+          {
+            id: 'AwsSolutions-L1',
+            reason:
+              'DnsValidatedCertificate custom resource Lambda runtime is managed by CDK and cannot be configured by the application.',
+          },
+        ],
+        true // apply to children (ServiceRole, DefaultPolicy, etc.)
+      );
     }
     //  cloudfront Distribution
     const cdn = new Cdn(this, 'cdn', {
