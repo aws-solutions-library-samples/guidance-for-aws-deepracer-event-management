@@ -233,7 +233,9 @@ export class CdkPipelineStack extends cdk.Stack {
       commands: [
         'npm install',
         'aws appsync get-introspection-schema --api-id $appsyncId --format SDL website/src/graphql/schema.graphql',
-        'cd website && npm run test:post-deploy && cd ..',
+        // Root postinstall is gated to skip on CodeBuild ($CODEBUILD_BUILD_ID is set),
+        // so install website/ deps explicitly before running its npm scripts.
+        'cd website && npm install && npm run test:post-deploy && cd ..',
       ],
       envFromCfnOutputs: {
         appsyncId: infrastructure.appsyncId,
