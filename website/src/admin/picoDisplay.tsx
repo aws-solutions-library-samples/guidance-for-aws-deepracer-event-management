@@ -173,59 +173,76 @@ export const AdminPicoDisplay: React.FC = () => {
           }
         >
           <SpaceBetween size="m">
-            <FormField label={t('pico-display.event-label')}>
-              <Select
-                selectedOption={eventOptions.find((o) => o.value === selectedEventId) ?? null}
-                onChange={({ detail }) => {
-                  setSelectedEventId(detail.selectedOption.value ?? '');
-                  setSelectedTrackId('');
-                }}
-                options={eventOptions}
-                placeholder={t('pico-display.event-placeholder')}
-              />
-            </FormField>
+            <Grid
+              gridDefinition={[
+                { colspan: 12 },
+                { colspan: 12 },
+                { colspan: 12 },
+                { colspan: 12 },
+                { colspan: 12 },
+                { colspan: 4 },
+                { colspan: 4 },
+                { colspan: 4 },
+                { colspan: 12 },
+                { colspan: 8 },
+                { colspan: 4 },
+                { colspan: 8 },
+                { colspan: 4 },
+                { colspan: 12 },
+              ]}
+            >
+              <FormField label={t('pico-display.event-label')}>
+                <Select
+                  selectedOption={eventOptions.find((o) => o.value === selectedEventId) ?? null}
+                  onChange={({ detail }) => {
+                    setSelectedEventId(detail.selectedOption.value ?? '');
+                    setSelectedTrackId('');
+                  }}
+                  options={eventOptions}
+                  placeholder={t('pico-display.event-placeholder')}
+                />
+              </FormField>
 
-            <FormField label={t('pico-display.track-label')}>
-              <Select
-                selectedOption={trackOptions.find((o) => o.value === selectedTrackId) ?? null}
-                onChange={({ detail }) => setSelectedTrackId(detail.selectedOption.value ?? '')}
-                options={trackOptions}
-                disabled={!selectedEventId}
-                placeholder={t('pico-display.track-placeholder')}
-              />
-            </FormField>
+              <FormField label={t('pico-display.track-label')}>
+                <Select
+                  selectedOption={trackOptions.find((o) => o.value === selectedTrackId) ?? null}
+                  onChange={({ detail }) => setSelectedTrackId(detail.selectedOption.value ?? '')}
+                  options={trackOptions}
+                  disabled={!selectedEventId}
+                  placeholder={t('pico-display.track-placeholder')}
+                />
+              </FormField>
 
-            <FormField label={t('pico-display.race-format-label')}>
-              <Select
-                selectedOption={{
-                  label: raceFormat === 'fastest' ? t('pico-display.race-format-fastest') : t('pico-display.race-format-average'),
-                  value: raceFormat,
-                }}
-                onChange={({ detail }) => setRaceFormat(detail.selectedOption.value as 'fastest' | 'average')}
-                options={[
-                  { label: t('pico-display.race-format-fastest'), value: 'fastest' },
-                  { label: t('pico-display.race-format-average'), value: 'average' },
-                ]}
-              />
-            </FormField>
+              <FormField label={t('pico-display.race-format-label')}>
+                <Select
+                  selectedOption={{
+                    label: raceFormat === 'fastest' ? t('pico-display.race-format-fastest') : t('pico-display.race-format-average'),
+                    value: raceFormat,
+                  }}
+                  onChange={({ detail }) => setRaceFormat(detail.selectedOption.value as 'fastest' | 'average')}
+                  options={[
+                    { label: t('pico-display.race-format-fastest'), value: 'fastest' },
+                    { label: t('pico-display.race-format-average'), value: 'average' },
+                  ]}
+                />
+              </FormField>
 
-            <FormField label={t('pico-display.ssid-label')}>
-              <Input
-                value={ssid}
-                placeholder={t('pico-display.ssid-placeholder')}
-                onChange={({ detail }) => setSsid(detail.value)}
-              />
-            </FormField>
+              <FormField label={t('pico-display.ssid-label')}>
+                <Input
+                  value={ssid}
+                  placeholder={t('pico-display.ssid-placeholder')}
+                  onChange={({ detail }) => setSsid(detail.value)}
+                />
+              </FormField>
 
-            <FormField label={t('pico-display.wifi-password-label')}>
-              <Input
-                value={wifiPassword}
-                placeholder={t('pico-display.wifi-password-placeholder')}
-                onChange={({ detail }) => setWifiPassword(detail.value)}
-              />
-            </FormField>
+              <FormField label={t('pico-display.wifi-password-label')}>
+                <Input
+                  value={wifiPassword}
+                  placeholder={t('pico-display.wifi-password-placeholder')}
+                  onChange={({ detail }) => setWifiPassword(detail.value)}
+                />
+              </FormField>
 
-            <Grid gridDefinition={[{ colspan: 4 }, { colspan: 4 }, { colspan: 4 }]}>
               <FormField label={t('pico-display.brightness-label')}>
                 <Input value={brightness} onChange={({ detail }) => setBrightness(detail.value)} inputMode="decimal" />
               </FormField>
@@ -235,31 +252,29 @@ export const AdminPicoDisplay: React.FC = () => {
               <FormField label={t('pico-display.top-n-label')}>
                 <Input value={topN} onChange={({ detail }) => setTopN(detail.value)} inputMode="numeric" />
               </FormField>
-            </Grid>
 
-            <FormField
-              label={t('pico-display.race-display-lines-label')}
-              description={t('pico-display.race-display-lines-description')}
-            >
-              <Select
-                selectedOption={{
-                  label:
-                    raceDisplayLines === 1
-                      ? t('pico-display.race-display-lines-1')
-                      : t('pico-display.race-display-lines-2'),
-                  value: String(raceDisplayLines),
-                }}
-                onChange={({ detail }) =>
-                  setRaceDisplayLines(parseInt(detail.selectedOption.value!, 10) as 1 | 2)
-                }
-                options={[
-                  { label: t('pico-display.race-display-lines-1'), value: '1' },
-                  { label: t('pico-display.race-display-lines-2'), value: '2' },
-                ]}
-              />
-            </FormField>
+              <FormField
+                label={t('pico-display.race-display-lines-label')}
+                description={t('pico-display.race-display-lines-description')}
+              >
+                <Select
+                  selectedOption={{
+                    label:
+                      raceDisplayLines === 1
+                        ? t('pico-display.race-display-lines-1')
+                        : t('pico-display.race-display-lines-2'),
+                    value: String(raceDisplayLines),
+                  }}
+                  onChange={({ detail }) =>
+                    setRaceDisplayLines(parseInt(detail.selectedOption.value!, 10) as 1 | 2)
+                  }
+                  options={[
+                    { label: t('pico-display.race-display-lines-1'), value: '1' },
+                    { label: t('pico-display.race-display-lines-2'), value: '2' },
+                  ]}
+                />
+              </FormField>
 
-            <Grid gridDefinition={[{ colspan: 8 }, { colspan: 4 }]}>
               <FormField label={t('pico-display.branding-1-label')} description={t('pico-display.branding-1-description')}>
                 <Input value={branding1} onChange={({ detail }) => setBranding1(detail.value)} />
               </FormField>
@@ -280,9 +295,7 @@ export const AdminPicoDisplay: React.FC = () => {
                   ]}
                 />
               </FormField>
-            </Grid>
 
-            <Grid gridDefinition={[{ colspan: 8 }, { colspan: 4 }]}>
               <FormField label={t('pico-display.branding-2-label')} description={t('pico-display.branding-2-description')}>
                 <Input value={branding2} onChange={({ detail }) => setBranding2(detail.value)} />
               </FormField>
@@ -303,13 +316,13 @@ export const AdminPicoDisplay: React.FC = () => {
                   ]}
                 />
               </FormField>
-            </Grid>
 
-            <FormField label={t('pico-display.debug-label')} description={t('pico-display.debug-description')}>
-              <Toggle checked={debug} onChange={({ detail }) => setDebug(detail.checked)}>
-                {debug ? t('pico-display.debug-on') : t('pico-display.debug-off')}
-              </Toggle>
-            </FormField>
+              <FormField label={t('pico-display.debug-label')} description={t('pico-display.debug-description')}>
+                <Toggle checked={debug} onChange={({ detail }) => setDebug(detail.checked)}>
+                  {debug ? t('pico-display.debug-on') : t('pico-display.debug-off')}
+                </Toggle>
+              </FormField>
+            </Grid>
 
             <Button variant="primary" disabled={!canDownload} onClick={handleDownload}>
               {t('pico-display.download-button')}
