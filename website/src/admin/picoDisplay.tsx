@@ -259,7 +259,7 @@ export const AdminPicoDisplay: React.FC = () => {
               />
             </FormField>
 
-            <Grid gridDefinition={[{ colspan: 5 }, { colspan: 1 }, { colspan: 5 }, { colspan: 1 }]}>
+            <Grid gridDefinition={[{ colspan: 9 }, { colspan: 3 }]}>
               <FormField label={t('pico-display.branding-1-label')} description={t('pico-display.branding-1-description')}>
                 <Input value={branding1} onChange={({ detail }) => setBranding1(detail.value)} />
               </FormField>
@@ -280,6 +280,9 @@ export const AdminPicoDisplay: React.FC = () => {
                   ]}
                 />
               </FormField>
+            </Grid>
+
+            <Grid gridDefinition={[{ colspan: 9 }, { colspan: 3 }]}>
               <FormField label={t('pico-display.branding-2-label')} description={t('pico-display.branding-2-description')}>
                 <Input value={branding2} onChange={({ detail }) => setBranding2(detail.value)} />
               </FormField>
