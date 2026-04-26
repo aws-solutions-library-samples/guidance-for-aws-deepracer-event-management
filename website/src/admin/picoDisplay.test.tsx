@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateConfig } from './picoDisplay';
+import { generateConfig } from './picoDisplay.config';
 
 const CONNECTION = {
   endpoint: 'https://xxx.appsync-api.eu-west-1.amazonaws.com/graphql',
