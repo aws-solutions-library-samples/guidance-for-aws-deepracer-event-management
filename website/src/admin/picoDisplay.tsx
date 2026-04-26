@@ -263,7 +263,10 @@ export const AdminPicoDisplay: React.FC = () => {
               <FormField label={t('pico-display.branding-1-label')} description={t('pico-display.branding-1-description')}>
                 <Input value={branding1} onChange={({ detail }) => setBranding1(detail.value)} />
               </FormField>
-              <FormField label={t('pico-display.colour-label')}>
+              <FormField
+                label={t('pico-display.colour-label')}
+                description={t('pico-display.colour-description')}
+              >
                 <Select
                   selectedOption={{ label: branding1Colour, value: branding1Colour }}
                   onChange={({ detail }) => setBranding1Colour(detail.selectedOption.value!)}
@@ -280,7 +283,10 @@ export const AdminPicoDisplay: React.FC = () => {
               <FormField label={t('pico-display.branding-2-label')} description={t('pico-display.branding-2-description')}>
                 <Input value={branding2} onChange={({ detail }) => setBranding2(detail.value)} />
               </FormField>
-              <FormField label={t('pico-display.colour-label')}>
+              <FormField
+                label={t('pico-display.colour-label')}
+                description={t('pico-display.colour-description')}
+              >
                 <Select
                   selectedOption={{ label: branding2Colour, value: branding2Colour }}
                   onChange={({ detail }) => setBranding2Colour(detail.selectedOption.value!)}
