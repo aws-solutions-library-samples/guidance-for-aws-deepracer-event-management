@@ -259,10 +259,10 @@ export const AdminPicoDisplay: React.FC = () => {
               />
             </FormField>
 
-            <FormField label={t('pico-display.branding-1-label')} description={t('pico-display.branding-1-description')}>
-              <Input value={branding1} onChange={({ detail }) => setBranding1(detail.value)} />
-            </FormField>
-            <Grid gridDefinition={[{ colspan: 4 }, { colspan: 8 }]}>
+            <Grid gridDefinition={[{ colspan: 9 }, { colspan: 3 }]}>
+              <FormField label={t('pico-display.branding-1-label')} description={t('pico-display.branding-1-description')}>
+                <Input value={branding1} onChange={({ detail }) => setBranding1(detail.value)} />
+              </FormField>
               <FormField
                 label={t('pico-display.colour-label')}
                 description={t('pico-display.colour-description')}
@@ -282,10 +282,10 @@ export const AdminPicoDisplay: React.FC = () => {
               </FormField>
             </Grid>
 
-            <FormField label={t('pico-display.branding-2-label')} description={t('pico-display.branding-2-description')}>
-              <Input value={branding2} onChange={({ detail }) => setBranding2(detail.value)} />
-            </FormField>
-            <Grid gridDefinition={[{ colspan: 4 }, { colspan: 8 }]}>
+            <Grid gridDefinition={[{ colspan: 9 }, { colspan: 3 }]}>
+              <FormField label={t('pico-display.branding-2-label')} description={t('pico-display.branding-2-description')}>
+                <Input value={branding2} onChange={({ detail }) => setBranding2(detail.value)} />
+              </FormField>
               <FormField
                 label={t('pico-display.colour-label')}
                 description={t('pico-display.colour-description')}
