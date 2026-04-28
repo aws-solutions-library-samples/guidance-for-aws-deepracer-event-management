@@ -108,12 +108,12 @@ export class CdkPipelineStack extends cdk.Stack {
         ],
         commands: [
           'npm install',
-          // Tests - run before synth so pipeline fails fast on test failure.
-          // The root postinstall is gated to skip on CodeBuild ($CODEBUILD_BUILD_ID
-          // is set), so each website subdir needs its own `npm install` first.
+          // CDK infrastructure tests only — website tests run in a separate
+          // pipeline step (WebsiteTests) so the synth always produces cdk.out.
+          // This is critical for self-mutation: if website tests were here and
+          // failed (e.g. after a directory restructure), the pipeline could
+          // never update itself.
           'npm test',
-          'cd website && npm install && npm test && cd ..',
-          'cd website/leaderboard && npm install && npm test && cd ../..',
           `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c label=${props.labelName}` +
             ` -c account=${props.env.account} -c region=${props.env.region}` +
             ` -c source_branch=${props.sourceBranchName} -c source_repo=${props.sourceRepo}` +
@@ -122,7 +122,7 @@ export class CdkPipelineStack extends cdk.Stack {
         partialBuildSpec: codebuild.BuildSpec.fromObject({
           reports: {
             jest_reports: {
-              files: ['junit-cdk.xml', 'junit-website.xml', 'junit-leaderboard.xml'],
+              files: ['junit-cdk.xml'],
               'base-directory': 'reports',
               'file-format': 'JUNITXML',
             },
@@ -150,6 +150,32 @@ export class CdkPipelineStack extends cdk.Stack {
     const infrastructure_stage = pipeline.addStage(infrastructure, {
       pre: [new pipelines.ManualApprovalStep('DeployDREM')],
     });
+
+    // Website unit tests — run as a pre-deploy gate on the infrastructure stage.
+    // Kept separate from synth so directory restructures (e.g. website
+    // consolidation) can't block cdk.out generation and pipeline self-mutation.
+    const websiteTestStep = new pipelines.CodeBuildStep('WebsiteTests', {
+      buildEnvironment: {
+        buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2023_STANDARD_3_0,
+        computeType: codebuild.ComputeType.LARGE,
+      },
+      installCommands: [`n ${NODE_VERSION}`, 'node --version'],
+      commands: [
+        'npm install',
+        'cd website && npm install && npm test && cd ..',
+        'cd website/leaderboard && npm install && npm test && cd ../..',
+      ],
+      partialBuildSpec: codebuild.BuildSpec.fromObject({
+        reports: {
+          website_test_reports: {
+            files: ['junit-website.xml', 'junit-leaderboard.xml'],
+            'base-directory': 'reports',
+            'file-format': 'JUNITXML',
+          },
+        },
+      }),
+    });
+    infrastructure_stage.addPre(websiteTestStep);
 
     const rolePolicyStatementsForWebsiteDeployStages = [
       new iam.PolicyStatement({
