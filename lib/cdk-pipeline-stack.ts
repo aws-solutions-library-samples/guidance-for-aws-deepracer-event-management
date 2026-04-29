@@ -26,10 +26,6 @@ export interface InfrastructurePipelineStageProps extends cdk.StackProps {
 class InfrastructurePipelineStage extends Stage {
   public readonly distributionId: cdk.CfnOutput;
   public readonly sourceBucketName: cdk.CfnOutput;
-  public readonly leaderboardDistributionId: cdk.CfnOutput;
-  public readonly leaderboardSourceBucketName: cdk.CfnOutput;
-  public readonly streamingOverlayDistributionId: cdk.CfnOutput;
-  public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
   public readonly dremWebsiteUrl: cdk.CfnOutput;
   public readonly appsyncId: cdk.CfnOutput;
 
@@ -53,10 +49,6 @@ class InfrastructurePipelineStage extends Stage {
 
     this.distributionId = stack.distributionId;
     this.sourceBucketName = stack.sourceBucketName;
-    this.leaderboardSourceBucketName = stack.leaderboardSourceBucketName;
-    this.leaderboardDistributionId = stack.leaderboardDistributionId;
-    this.streamingOverlaySourceBucketName = stack.streamingOverlaySourceBucketName;
-    this.streamingOverlayDistributionId = stack.streamingOverlayDistributionId;
     this.dremWebsiteUrl = stack.dremWebsiteUrl;
     this.appsyncId = stack.appsyncId;
   }
@@ -116,10 +108,12 @@ export class CdkPipelineStack extends cdk.Stack {
         ],
         commands: [
           'npm install',
-          // Tests - run before synth so pipeline fails fast on test failure
+          // CDK infrastructure tests only — website tests run in a separate
+          // pipeline step (WebsiteTests) so the synth always produces cdk.out.
+          // This is critical for self-mutation: if website tests were here and
+          // failed (e.g. after a directory restructure), the pipeline could
+          // never update itself.
           'npm test',
-          'cd website && npm test && cd ..',
-          'cd website-leaderboard && npm test && cd ..',
           `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c label=${props.labelName}` +
             ` -c account=${props.env.account} -c region=${props.env.region}` +
             ` -c source_branch=${props.sourceBranchName} -c source_repo=${props.sourceRepo}` +
@@ -128,7 +122,7 @@ export class CdkPipelineStack extends cdk.Stack {
         partialBuildSpec: codebuild.BuildSpec.fromObject({
           reports: {
             jest_reports: {
-              files: ['junit-cdk.xml', 'junit-website.xml', 'junit-leaderboard.xml'],
+              files: ['junit-cdk.xml'],
               'base-directory': 'reports',
               'file-format': 'JUNITXML',
             },
@@ -157,6 +151,32 @@ export class CdkPipelineStack extends cdk.Stack {
       pre: [new pipelines.ManualApprovalStep('DeployDREM')],
     });
 
+    // Website unit tests — run as a pre-deploy gate on the infrastructure stage.
+    // Kept separate from synth so directory restructures (e.g. website
+    // consolidation) can't block cdk.out generation and pipeline self-mutation.
+    const websiteTestStep = new pipelines.CodeBuildStep('WebsiteTests', {
+      buildEnvironment: {
+        buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2023_STANDARD_3_0,
+        computeType: codebuild.ComputeType.LARGE,
+      },
+      installCommands: [`n ${NODE_VERSION}`, 'node --version'],
+      commands: [
+        'npm install',
+        'cd website && npm install && npm test && cd ..',
+        'cd website/leaderboard && npm install && npm test && cd ../..',
+      ],
+      partialBuildSpec: codebuild.BuildSpec.fromObject({
+        reports: {
+          website_test_reports: {
+            files: ['junit-website.xml', 'junit-leaderboard.xml'],
+            'base-directory': 'reports',
+            'file-format': 'JUNITXML',
+          },
+        },
+      }),
+    });
+    infrastructure_stage.addPre(websiteTestStep);
+
     const rolePolicyStatementsForWebsiteDeployStages = [
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
@@ -180,34 +200,51 @@ export class CdkPipelineStack extends cdk.Stack {
       }),
     ];
 
-    // Main website Deploy to S3
-    const mainSiteDeployStep = new pipelines.CodeBuildStep('MainSiteDeployToS3', {
+    // Deploy all three websites (main + leaderboard + overlays) to S3 in a single step.
+    // Kept as a const so the post-deploy test step can take a dependency on it.
+    const websiteDeployStep = new pipelines.CodeBuildStep('WebsiteDeployToS3', {
       installCommands: [`npm install -g @aws-amplify/cli@${AMPLIFY_VERSION}`],
       buildEnvironment: {
         privileged: true,
         computeType: codebuild.ComputeType.LARGE,
       },
       commands: [
-        // configure and deploy DREM website
-        "echo 'Starting to deploy the DREM website'",
-        'echo website bucket= $sourceBucketName',
         'aws cloudformation describe-stacks --stack-name ' +
           `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`,
+
+        // Generate Amplify configs for all three apps
         'python scripts/generate_amplify_config_cfn.py',
-        'appsyncId=`cat appsyncId.txt` && aws appsync' +
-          ' get-introspection-schema --api-id $appsyncId --format SDL' +
-          ' ./website/src/graphql/schema.graphql',
-        'cd ./website/src/graphql',
-        'amplify codegen', // this is on purpose
-        'amplify codegen', // I'm not repeating myself ;)
-        'cd ../..',
-        'docker run --rm -v $(pwd):/foo -w /foo' +
-          " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
-          " --cache /tmp/empty-cache && npm run build'",
-        'aws s3 sync ./build/ s3://$sourceBucketName/ --delete',
-        'echo distributionId=$distributionId',
+        'python scripts/generate_leaderboard_amplify_config_cfn.py',
+        'python scripts/generate_stream_overlays_amplify_config_cfn.py',
+
+        // Fetch GraphQL schema and run codegen for all three apps
+        'appsyncId=`cat appsyncId.txt`',
+        'aws appsync get-introspection-schema --api-id $appsyncId --format SDL ./website/src/graphql/schema.graphql',
+        'cd ./website/src/graphql && amplify codegen && amplify codegen && cd ../../..',
+        'aws appsync get-introspection-schema --api-id $appsyncId --format SDL ./website/leaderboard/src/graphql/schema.graphql',
+        'cd ./website/leaderboard/src/graphql && amplify codegen && amplify codegen && cd ../../../..',
+        'aws appsync get-introspection-schema --api-id $appsyncId --format SDL ./website/overlays/src/graphql/schema.graphql',
+        'cd ./website/overlays/src/graphql && amplify codegen && amplify codegen && cd ../../../..',
+
+        // Build leaderboard and overlays, copy into website/public/
+        'docker run --rm -v $(pwd):/foo -w /foo/website/leaderboard' +
+          " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
+        'mkdir -p ./website/public/leaderboard && cp -r ./website/leaderboard/build/. ./website/public/leaderboard/',
+        'docker run --rm -v $(pwd):/foo -w /foo/website/overlays' +
+          " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
+        'mkdir -p ./website/public/overlays && cp -r ./website/overlays/build/. ./website/public/overlays/',
+
+        // Copy pico-display Python files to website/public/ for OTA
+        'mkdir -p ./website/public/pico-display',
+        'cp pico-display/main.py pico-display/config.py pico-display/display.py pico-display/leaderboard.py pico-display/race.py pico-display/state.py pico-display/wifi.py pico-display/ota.py ./website/public/pico-display/',
+
+        // Build main site (sub-apps already in public/)
+        'docker run --rm -v $(pwd):/foo -w /foo/website' +
+          " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
+
+        // Sync everything and invalidate
+        'aws s3 sync ./website/build/ s3://$sourceBucketName/ --delete',
         "aws cloudfront create-invalidation --distribution-id $distributionId --paths '/*'",
-        'cd ..',
       ],
       envFromCfnOutputs: {
         sourceBucketName: infrastructure.sourceBucketName,
@@ -215,82 +252,7 @@ export class CdkPipelineStack extends cdk.Stack {
       },
       rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
     });
-    infrastructure_stage.addPost(mainSiteDeployStep);
-
-    // Leaderboard website Deploy to S3
-    infrastructure_stage.addPost(
-      new pipelines.CodeBuildStep('LeaderboardDeployToS3', {
-        installCommands: [`npm install -g @aws-amplify/cli@${AMPLIFY_VERSION}`],
-        buildEnvironment: {
-          privileged: true,
-          computeType: codebuild.ComputeType.LARGE,
-        },
-        commands: [
-          // configure and deploy Leaderboard website
-          "echo 'Starting to deploy the Leaderboard website'",
-          'echo website bucket= $leaderboardSourceBucketName',
-          'aws cloudformation describe-stacks --stack-name ' +
-            `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
-          'python scripts/generate_amplify_config_cfn.py',
-          'python scripts/generate_leaderboard_amplify_config_cfn.py',
-          'appsyncId=`cat appsyncId.txt` && aws appsync' +
-            ' get-introspection-schema --api-id $appsyncId --format SDL' +
-            ' ./website-leaderboard/src/graphql/schema.graphql',
-          'cd ./website-leaderboard/src/graphql',
-          'amplify codegen', // this is on purpose
-          'amplify codegen', // I'm not repeating myself ;)
-          'cd ../..',
-          'docker run --rm -v $(pwd):/foo -w /foo' +
-            " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
-            " --cache /tmp/empty-cache && npm run build'",
-          'aws s3 sync ./build/ s3://$leaderboardSourceBucketName/ --delete',
-          "aws cloudfront create-invalidation --distribution-id $leaderboardDistributionId --paths '/*'",
-          'cd ..',
-        ],
-        envFromCfnOutputs: {
-          leaderboardSourceBucketName: infrastructure.leaderboardSourceBucketName,
-          leaderboardDistributionId: infrastructure.leaderboardDistributionId,
-        },
-        rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
-      })
-    );
-
-    // Streaming overlay website Deploy to S3
-    infrastructure_stage.addPost(
-      new pipelines.CodeBuildStep('StreamingOverlayDeployToS3', {
-        installCommands: [`npm install -g @aws-amplify/cli@${AMPLIFY_VERSION}`],
-        buildEnvironment: {
-          privileged: true,
-          computeType: codebuild.ComputeType.LARGE,
-        },
-        commands: [
-          // configure and deploy Streaming overlay website
-          "echo 'Starting to deploy the Streaming overlay website'",
-          'echo website bucket= $streamingOverlaySourceBucketName',
-          'aws cloudformation describe-stacks --stack-name ' +
-            `drem-backend-${props.labelName}-infrastructure --query 'Stacks[0].Outputs' > cfn.outputs`, // TODO add when paralazing the website deployments
-          'python scripts/generate_amplify_config_cfn.py',
-          'python scripts/generate_stream_overlays_amplify_config_cfn.py',
-          'appsyncId=`cat appsyncId.txt` && aws appsync' +
-            ' get-introspection-schema --api-id $appsyncId --format SDL' +
-            ' ./website-stream-overlays/src/graphql/schema.graphql',
-          'cd ./website-stream-overlays/src/graphql',
-          'amplify codegen', // this is on purpose
-          'amplify codegen', // I'm not repeating myself ;)
-          'cd ../..',
-          'docker run --rm -v $(pwd):/foo -w /foo' +
-            " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install" +
-            " --cache /tmp/empty-cache && npm run build'",
-          'aws s3 sync ./build/ s3://$streamingOverlaySourceBucketName/ --delete',
-          "aws cloudfront create-invalidation --distribution-id $streamingOverlayDistributionId --paths '/*'",
-        ],
-        envFromCfnOutputs: {
-          streamingOverlaySourceBucketName: infrastructure.streamingOverlaySourceBucketName,
-          streamingOverlayDistributionId: infrastructure.streamingOverlayDistributionId,
-        },
-        rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
-      })
-    );
+    infrastructure_stage.addPost(websiteDeployStep);
 
     // Post-deploy tests — run after MainSiteDeployToS3 completes
     const postDeployStep = new pipelines.CodeBuildStep('PostDeployTests', {
@@ -301,7 +263,9 @@ export class CdkPipelineStack extends cdk.Stack {
       commands: [
         'npm install',
         'aws appsync get-introspection-schema --api-id $appsyncId --format SDL website/src/graphql/schema.graphql',
-        'cd website && npm run test:post-deploy && cd ..',
+        // Root postinstall is gated to skip on CodeBuild ($CODEBUILD_BUILD_ID is set),
+        // so install website/ deps explicitly before running its npm scripts.
+        'cd website && npm install && npm run test:post-deploy && cd ..',
       ],
       envFromCfnOutputs: {
         appsyncId: infrastructure.appsyncId,
@@ -324,7 +288,7 @@ export class CdkPipelineStack extends cdk.Stack {
         },
       }),
     });
-    postDeployStep.addStepDependency(mainSiteDeployStep);
+    postDeployStep.addStepDependency(websiteDeployStep);
     infrastructure_stage.addPost(postDeployStep);
 
     pipeline.buildPipeline();

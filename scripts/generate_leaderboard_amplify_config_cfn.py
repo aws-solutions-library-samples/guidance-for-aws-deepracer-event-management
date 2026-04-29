@@ -12,14 +12,6 @@ with open("cfn.outputs") as json_file:
             appsyncId = key["OutputValue"]
         if key["OutputKey"] == "appsyncApiKey":
             appsyncApiKey = key["OutputValue"]
-        if key["OutputKey"] == "DremWebsite":
-            DremWebsite = key["OutputValue"]
-        if key["OutputKey"] == "cwRumLeaderboardAppMonitorId":
-            cwRumLeaderboardAppMonitorId = key["OutputValue"]
-        if key["OutputKey"] == "cwRumLeaderboardAppMonitorRegion":
-            cwRumLeaderboardAppMonitorRegion = key["OutputValue"]            
-        if key["OutputKey"] == "cwRumLeaderboardAppMonitorConfig":
-            cwRumLeaderboardAppMonitorConfig = key["OutputValue"]
 
     output_data = {
         "API": {
@@ -28,21 +20,9 @@ with open("cfn.outputs") as json_file:
             "aws_appsync_authenticationType": "API_KEY",
             "aws_appsync_apiKey": appsyncApiKey,
         },
-        "Urls": {
-            "drem": DremWebsite,
-        },
-        "Rum": {
-            "leaderboard": {
-                "id": cwRumLeaderboardAppMonitorId,
-                "region": cwRumLeaderboardAppMonitorRegion,
-                "config": cwRumLeaderboardAppMonitorConfig,
-            },
-        },
     }
 
     print(json.dumps(output_data, indent=4))
 
-    with open("website-leaderboard/src/config.json", "w") as outfile:
+    with open("website/leaderboard/src/config.json", "w") as outfile:
         json.dump(output_data, outfile, indent=4)
-
-#

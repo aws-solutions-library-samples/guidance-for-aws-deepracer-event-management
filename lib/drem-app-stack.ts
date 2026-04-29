@@ -28,7 +28,6 @@ import { ModelOptimizer } from './constructs/model-optimizer';
 import { ModelsManager } from './constructs/models-manager';
 import { ModelsManagerDefaultModelsDeployment } from './constructs/models-manager-default-models';
 import { RaceManager } from './constructs/race-manager';
-import { StreamingOverlay } from './constructs/streaming-overlay';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
 
@@ -39,10 +38,6 @@ export interface DeepracerEventManagerStackProps extends cdk.StackProps {
 export class DeepracerEventManagerStack extends cdk.Stack {
   public readonly distributionId: cdk.CfnOutput;
   public readonly sourceBucketName: cdk.CfnOutput;
-  public readonly leaderboardDistributionId: cdk.CfnOutput;
-  public readonly leaderboardSourceBucketName: cdk.CfnOutput;
-  public readonly streamingOverlayDistributionId: cdk.CfnOutput;
-  public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
   public readonly dremWebsiteUrl: cdk.CfnOutput;
   public readonly appsyncId: cdk.CfnOutput;
 
@@ -192,9 +187,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       eventbus: eventbus,
     });
 
-    const cwRumLeaderboardAppMonitor = new CwRumAppMonitor(this, 'CwRumLeaderboardAppMonitor', {
-      domainName: leaderboard.distribution.distributionDomainName,
-    });
 
     const landingPage = new LandingPageManager(this, 'LandingPageManager', {
       adminGroupRole: adminGroupRole,
@@ -216,10 +208,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       lambdaConfig: lambdaConfig,
       userPoolId: userPool.userPoolId,
       eventbus: eventbus,
-    });
-
-    const streamingOverlay = new StreamingOverlay(this, 'streamingOverlay', {
-      logsBucket: logsBucket,
     });
 
     new SystemsManager(this, 'SystemManager');
@@ -259,26 +247,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       value: dremWebsiteBucket.bucketName,
     });
 
-    new cdk.CfnOutput(this, 'LeaderboardWebsite', {
-      value: 'https://' + leaderboard.distribution.distributionDomainName,
-    });
-    this.leaderboardDistributionId = new cdk.CfnOutput(this, 'leaderboardDistributionId', {
-      value: leaderboard.distribution.distributionId,
-    });
-    this.leaderboardSourceBucketName = new cdk.CfnOutput(this, 'leaderboardSourceBucketName', {
-      value: leaderboard.websiteBucket.bucketName,
-    });
-
-    new cdk.CfnOutput(this, 'streamingOverlayWebsite', {
-      value: 'https://' + streamingOverlay.distribution.distributionDomainName,
-    });
-    this.streamingOverlayDistributionId = new cdk.CfnOutput(this, 'streamingOverlayDistributionId', {
-      value: streamingOverlay.distribution.distributionId,
-    });
-    this.streamingOverlaySourceBucketName = new cdk.CfnOutput(this, 'streamingOverlaySourceBucketName', {
-      value: streamingOverlay.websiteBucket.bucketName,
-    });
-
     new cdk.CfnOutput(this, 'uploadBucketName', {
       value: modelsManager.uploadBucket.bucketName,
     });
@@ -303,18 +271,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'cwRumAppMonitorConfig', {
       value: cwRumAppMonitor.config,
-    });
-
-    new cdk.CfnOutput(this, 'cwRumLeaderboardAppMonitorId', {
-      value: cwRumLeaderboardAppMonitor.id,
-    });
-
-    new cdk.CfnOutput(this, 'cwRumLeaderboardAppMonitorRegion', {
-      value: cwRumLeaderboardAppMonitor.region,
-    });
-
-    new cdk.CfnOutput(this, 'cwRumLeaderboardAppMonitorConfig', {
-      value: cwRumLeaderboardAppMonitor.config,
     });
 
     this.appsyncId = new cdk.CfnOutput(this, 'appsyncId', { value: appsyncResources.api.apiId });
