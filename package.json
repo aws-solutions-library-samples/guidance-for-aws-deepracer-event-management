@@ -9,7 +9,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "postinstall": "[ -n \"$CODEBUILD_BUILD_ID\" ] && exit 0; (cd website/leaderboard && npm install); (cd website/overlays && npm install); (cd website && npm install)"
+    "postinstall": "(cd website && npm install) || true; (cd website/leaderboard && npm install) || true; (cd website/overlays && npm install) || true"
   },
   "eslintConfig": {
     "extends": [
