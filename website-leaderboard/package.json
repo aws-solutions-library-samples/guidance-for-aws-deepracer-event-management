@@ -1,0 +1,9 @@
+{
+  "name": "website-leaderboard-shim",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Backward-compatibility shim for pipeline self-mutation. The v3.0.3a buildspec (baked into the existing CodeBuild project) runs `cd website-leaderboard && npm test` against the new source tree, where the directory has been renamed to website/leaderboard/. This shim lets that command succeed harmlessly so the pipeline can produce cdk.out and self-mutate. Safe to remove once all deployments are upgraded past v3.0.4.",
+  "scripts": {
+    "test": "echo 'Shim: tests moved to website/leaderboard' && exit 0"
+  }
+}
