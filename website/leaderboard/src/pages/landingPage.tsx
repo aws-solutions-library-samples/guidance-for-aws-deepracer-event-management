@@ -4,7 +4,6 @@ import Cards from '@cloudscape-design/components/cards';
 import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import Logo from '../assets/logo512.png';
-import awsconfig from '../config.json';
 import styles from './landingPage.module.css';
 
 export function LandingPage() {
@@ -35,7 +34,7 @@ export function LandingPage() {
     {
       linkName: 'Upload your own model and race',
       linkDescription: 'Upload your own autonomous racing model here and get started racing!',
-      linkHref: awsconfig.Urls.drem,
+      linkHref: window.location.origin,
     },
   ];
 

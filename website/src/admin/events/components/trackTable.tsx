@@ -48,27 +48,21 @@ export const TrackTable: React.FC<TrackTableProps> = ({ eventId, tracks, raceFor
           ...track,
           leaderboardLinks: (
             <EventLinksButtons
-              href={`${
-                config.Urls.leaderboardWebsite
-              }/leaderboard/${eventId.toString()}/?qr=header&scroll=true&track=${track.trackId.toString()}&format=${raceFormat}`}
+              href={`${window.location.origin}/leaderboard/${eventId.toString()}/?qr=header&scroll=true&track=${track.trackId.toString()}&format=${raceFormat}`}
               linkTextPrimary={t('events.link-same-tab')}
               linkTextExternal={t('events.link-new-tab')}
             />
           ),
           streamingOverlayLinks: (
             <EventLinksButtons
-              href={`${
-                config.Urls.streamingOverlayWebsite
-              }/${eventId.toString()}?trackId=${track.trackId.toString()}&format=${raceFormat}`}
+              href={`${window.location.origin}/overlays/${eventId.toString()}?trackId=${track.trackId.toString()}&format=${raceFormat}`}
               linkTextPrimary={t('events.link-same-tab')}
               linkTextExternal={t('events.link-new-tab')}
             />
           ),
           streamingOverlayChromaLinks: (
             <EventLinksButtons
-              href={`${
-                config.Urls.streamingOverlayWebsite
-              }/${eventId.toString()}?trackId=${track.trackId.toString()}&chroma=1&format=${raceFormat}`}
+              href={`${window.location.origin}/overlays/${eventId.toString()}?trackId=${track.trackId.toString()}&chroma=1&format=${raceFormat}`}
               linkTextPrimary={t('events.link-same-tab')}
               linkTextExternal={t('events.link-new-tab')}
             />

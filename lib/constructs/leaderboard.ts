@@ -1,19 +1,16 @@
 import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
-import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { IEventBus, Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import { Bucket, IBucket } from 'aws-cdk-lib/aws-s3';
+import { IBucket } from 'aws-cdk-lib/aws-s3';
 import { CodeFirstSchema, Directive, GraphqlType, InputType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
 import { NagSuppressions } from 'cdk-nag';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
 import { Construct } from 'constructs';
-import { Cdn } from './cdn';
-import { Website } from './website';
 
 export interface LeaderboardProps {
   userPoolId: string;
@@ -39,8 +36,6 @@ export interface LeaderboardProps {
 }
 
 export class Leaderboard extends Construct {
-  public readonly distribution: Distribution;
-  public readonly websiteBucket: Bucket;
   public readonly api: {
     leaderboardConfigObjectType: ObjectType;
     leaderboardConfigInputype: InputType;
@@ -61,19 +56,6 @@ export class Leaderboard extends Construct {
       removalPolicy: RemovalPolicy.DESTROY,
       pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
     });
-
-    // WEBSITE
-    const websiteHosting = new Website(this, 'websiteHosting', {
-      logsBucket: props.logsBucket,
-    });
-
-    const cdn = new Cdn(this, 'cdn', {
-      defaultOrigin: websiteHosting.origin,
-      logsBucket: props.logsBucket,
-      comment: 'DREM leaderboard',
-    });
-    this.distribution = cdn.distribution;
-    this.websiteBucket = websiteHosting.sourceBucket;
 
     // BACKEND
     // Event bridge integration

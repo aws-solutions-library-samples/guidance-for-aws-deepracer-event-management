@@ -37,9 +37,10 @@ const RaceInfoFooter = ({ eventId, trackId, visible, raceFormat }: RaceInfoFoote
   const aspectRatio = (windowSize.width ?? 0) / (windowSize.height ?? 1);
 
   useEffect(() => {
+    const subscriptionTrackId = trackId === 'combined' ? undefined : trackId;
     const observable = client.graphql({
       query: onNewOverlayInfo,
-      variables: { eventId: eventId, trackId: trackId },
+      variables: { eventId: eventId, trackId: subscriptionTrackId },
     }) as any;
 
     const subscription = observable.subscribe({
