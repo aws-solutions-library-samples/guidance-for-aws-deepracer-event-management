@@ -28,6 +28,7 @@ import { ModelOptimizer } from './constructs/model-optimizer';
 import { ModelsManager } from './constructs/models-manager';
 import { ModelsManagerDefaultModelsDeployment } from './constructs/models-manager-default-models';
 import { RaceManager } from './constructs/race-manager';
+import { Statistics } from './constructs/statistics';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
 
@@ -172,7 +173,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       eventbus: eventbus,
     });
 
-    new RaceManager(this, 'RaceManager', {
+    const raceManager = new RaceManager(this, 'RaceManager', {
       appsyncApi: appsyncResources,
       lambdaConfig: lambdaConfig,
       eventbus: eventbus,
@@ -195,12 +196,22 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       eventbus: eventbus,
     });
 
-    new EventsManager(this, 'EventsManager', {
+    const eventsManager = new EventsManager(this, 'EventsManager', {
       appsyncApi: appsyncResources,
       lambdaConfig: lambdaConfig,
       leaderboardApi: leaderboard.api,
       landingPageApi: landingPage.api,
       eventbus: eventbus,
+    });
+
+    new Statistics(this, 'Statistics', {
+      appsyncApi: appsyncResources,
+      lambdaConfig: lambdaConfig,
+      eventbus: eventbus,
+      userPoolId: userPool.userPoolId,
+      userPoolArn: userPool.userPoolArn,
+      raceTable: raceManager.raceTable,
+      eventsTable: eventsManager.eventsTable,
     });
 
     new FleetsManager(this, 'FleetsManager', {

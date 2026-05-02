@@ -301,3 +301,42 @@ export const updateLeaderboardConfigs = /* GraphQL */ `
         }
     }
 `;
+export const getGlobalStats = /* GraphQL */ `
+    query GetGlobalStats {
+        getGlobalStats {
+            totalEvents
+            totalRacers
+            totalLaps
+            totalValidLaps
+            totalCountries
+            eventsByCountry {
+                countryCode
+                events
+                racers
+                laps
+            }
+            eventsByMonth {
+                month
+                events
+                races
+                laps
+            }
+            eventTypeBreakdown {
+                typeOfEvent
+                count
+            }
+            trackTypeBreakdown {
+                trackType
+                count
+                bestLapMs
+            }
+            fastestLapsEver {
+                username
+                eventName
+                trackType
+                lapTimeMs
+                eventDate
+            }
+        }
+    }
+`;
