@@ -87,8 +87,8 @@ export const ColumnConfiguration = (): TableConfiguration => {
       },
       {
         id: 'trackId',
-        header: i18next.t('race-admin.track-id'),
-        cell: (item) => item.trackId || '-',
+        header: i18next.t('race-admin.track'),
+        cell: (item) => (item as any).trackName || item.trackId || '-',
         sortingField: 'trackId',
       },
       {
@@ -122,8 +122,8 @@ export const FilteringProperties = (): FilteringProperty[] => {
       operators: [':', '!:', '=', '!='],
     },
     {
-      key: 'trackId',
-      propertyLabel: i18next.t('race-admin.track-id'),
+      key: 'trackName',
+      propertyLabel: i18next.t('race-admin.track'),
       operators: [':', '!:', '=', '!='],
     },
   ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
