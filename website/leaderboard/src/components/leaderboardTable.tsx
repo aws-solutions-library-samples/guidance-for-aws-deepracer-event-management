@@ -9,7 +9,7 @@ import { scrollTo } from '../utils';
 import { Flag } from './flag';
 import styles from './leaderboardTable.module.css';
 
-const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag }) => {
+const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag, highlightedUsername = null }) => {
   const { t } = useTranslation();
   const [leaderboardListItems, SetLeaderboardListItems] = useState(<div></div>);
   const entriesRef = useRef(null);
@@ -44,17 +44,21 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
         timeValue = convertMsToString(entry.fastestAverageLap.avgTime);
       }
 
+      const isHighlighted = highlightedUsername && entry.username === highlightedUsername;
+
       return (
         <div
           key={entry.username}
           id={index}
+          data-username={entry.username}
           className={classnames(
             styles.listEntry,
             styles.row,
             styles.row,
             index === 0 && styles.gold,
             index === 1 && styles.silver,
-            index === 2 && styles.bronze
+            index === 2 && styles.bronze,
+            isHighlighted && styles.highlighted
           )}
           style={{
             marginTop: `calc(${positionRank(index)}vmin)`,
@@ -82,7 +86,19 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
       );
     });
     SetLeaderboardListItems(items);
-  }, [leaderboardEntries, aspectRatio]);
+  }, [leaderboardEntries, aspectRatio, highlightedUsername]);
+
+  // Scroll to highlighted entry when it changes
+  useEffect(() => {
+    if (highlightedUsername && entriesRef.current) {
+      const el = (entriesRef.current as HTMLElement).querySelector(
+        `[data-username="${highlightedUsername}"]`
+      );
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [highlightedUsername, leaderboardListItems]);
 
   /* optional hide the scrollbar, but then lose visuals of progress */
   useEffect(() => {
