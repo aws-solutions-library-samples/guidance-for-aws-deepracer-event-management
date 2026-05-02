@@ -46,6 +46,8 @@ export interface EventsManagerProps {
   eventbus: IEventBus;
 }
 export class EventsManager extends Construct {
+  public readonly eventsTable: dynamodb.Table;
+
   constructor(scope: Construct, id: string, props: EventsManagerProps) {
     super(scope, id);
 
@@ -62,6 +64,8 @@ export class EventsManager extends Construct {
       stream: dynamodb.StreamViewType.NEW_IMAGE,
       pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
     });
+
+    this.eventsTable = eventsTable;
 
     const ddbstreamToEventBridgeFunction = new StandardLambdaPythonFunction(this, 'ddbStreamToEvbFunction', {
       entry: 'lib/lambdas/events_ddb_stream_to_evb_function/',
@@ -199,7 +203,7 @@ export class EventsManager extends Construct {
     props.appsyncApi.schema.addType(trackInputType);
 
     const typeOfEventEnum = new EnumType('TypeOfEvent', {
-      definition: ['PRIVATE_WORKSHOP', 'PRIVATE_TRACK_RACE', 'OFFICIAL_WORKSHOP', 'OFFICIAL_TRACK_RACE', 'OTHER'],
+      definition: ['PRIVATE_WORKSHOP', 'PRIVATE_TRACK_RACE', 'OFFICIAL_WORKSHOP', 'OFFICIAL_TRACK_RACE', 'TEST_EVENT', 'OTHER'],
     });
     props.appsyncApi.schema.addType(typeOfEventEnum);
 
