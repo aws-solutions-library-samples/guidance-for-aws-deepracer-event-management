@@ -15,7 +15,7 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <Router>
+    <Router basename="/overlays">
       <Routes>
         <Route path="/:eventId" element={<App />} />
       </Routes>

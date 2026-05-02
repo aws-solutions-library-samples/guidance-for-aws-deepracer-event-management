@@ -5,7 +5,7 @@ import Logo from '../assets/logo1024.png';
 
 const QrCode = ({ eventId, trackId, raceFormat }) => {
   function createLandingPageHref() {
-    const href = `${window.location.origin}/landing-page/${eventId.toString()}/?scroll=false&track=${trackId}&format=${raceFormat}`; // 
+    const href = `${window.location.origin}/leaderboard/landing-page/${eventId.toString()}/?scroll=false&track=${trackId}&format=${raceFormat}`;
     console.debug(href);
     return href;
   }

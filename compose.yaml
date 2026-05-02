@@ -16,36 +16,6 @@ services:
       - ./website:/app
       - /app/node_modules
 
-  leaderboard:
-    build:
-      context: ./website-leaderboard
-      dockerfile: Dockerfile
-    networks:
-      - drem
-    restart: unless-stopped
-    ports:
-      - 3001:3000
-    environment:
-      - WDS_SOCKET_PORT=3001
-    volumes:
-      - ./website-leaderboard:/app
-      - /app/node_modules
-
-  overlays:
-    build:
-      context: ./website-stream-overlays
-      dockerfile: Dockerfile
-    networks:
-      - drem
-    restart: unless-stopped
-    ports:
-      - 3002:3000
-    environment:
-      - WDS_SOCKET_PORT=3002
-    volumes:
-      - ./website-stream-overlays:/app
-      - /app/node_modules
-
 #     environment:
 #       - BUCKET=${BUCKET}
 #       - REGION=${REGION}
