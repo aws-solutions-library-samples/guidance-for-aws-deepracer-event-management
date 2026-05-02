@@ -13,14 +13,11 @@ const configureStore = (): void => {
     UPDATE_EVENT: (curState: GlobalState, event: Event): Partial<GlobalState> => {
       console.debug('UPDATE_EVENT DISPATCH FUNCTION');
       const currentEvents = curState.events?.events || [];
-      const updatedEvents: EventsState = { ...(curState.events || { events: [], isLoading: false }) };
       const eventIndex = currentEvents.findIndex((e) => e.eventId === event.eventId);
-      if (eventIndex === -1) {
-        updatedEvents.events.push(event);
-      } else {
-        updatedEvents.events[eventIndex] = event;
-      }
-      return { events: updatedEvents };
+      const newEvents = eventIndex === -1
+        ? [...currentEvents, event]
+        : currentEvents.map((e, i) => i === eventIndex ? event : e);
+      return { events: { ...(curState.events || { events: [], isLoading: false }), events: newEvents } };
     },
     DELETE_EVENTS: (curState: GlobalState, eventIdsToDelete: string[]): Partial<GlobalState> => {
       console.debug('DELETE_EVENT DISPATCH FUNCTION');

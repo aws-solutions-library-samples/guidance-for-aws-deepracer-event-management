@@ -361,8 +361,15 @@
     "race": {
       "ranking-method": "Ranking method",
       "ranking-method-description": "Define how the racers shall be ranked in the leaderboard",
+      "end-condition.label": "Race type",
+      "end-condition.description": "Choose whether races are timed or limited by number of laps. Lap count is only available with Best Lap Time ranking.",
+      "end-condition.time-based": "Time based race",
+      "end-condition.lap-count": "Lap count race",
       "race-time": "Race time (min)",
       "race-time-description": "We suggest 2-4 minutes per racer depending on the complexity of track and potential number of racers.",
+      "number-of-laps": "Number of laps",
+      "number-of-laps-description": "Number of laps each racer gets to set their fastest time.",
+      "laps": "laps",
       "resets-per-lap": "Resets per lap",
       "resets-per-lap-description": "Defines how many times the car may go of track during a lap before the lap is disqualified.",
       "unlimited": "Unlimited",
@@ -688,6 +695,7 @@
     "resets": "Resets",
     "start-race": "Start race",
     "time-left": "Time left",
+    "lap-progress": "Lap progress",
     "undo-false-finish": "Undo false finish",
     "wizard": {
       "select-racer": "Select racer",

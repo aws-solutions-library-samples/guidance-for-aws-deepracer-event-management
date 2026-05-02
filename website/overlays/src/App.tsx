@@ -200,7 +200,7 @@ function App() {
           }
         }
 
-        if (!timerState && data.running) {
+        if (!timerState && data.running && data.raceEndCondition !== 'LAP_COUNT') {
           timerState = true;
           startTimer();
         }
@@ -208,9 +208,15 @@ function App() {
         var racer = data.username;
         (helpers as any).SetRacerInfoName(racer);
 
-        var timeLeft = data.timeLeftInMs;
-        (helpers as any).SetRacerInfoTotalTime((helpers as any).GetFormattedTotalTime(timeLeft));
-        currentTotalTimerMS = timeLeft;
+        if (data.raceEndCondition === 'LAP_COUNT' && data.numberOfLaps) {
+          const lapsDone = data.laps ? data.laps.length : 0;
+          (helpers as any).SetRacerInfoTotalTime(`${lapsDone} / ${data.numberOfLaps}`);
+          currentTotalTimerMS = 0;
+        } else {
+          var timeLeft = data.timeLeftInMs;
+          (helpers as any).SetRacerInfoTotalTime((helpers as any).GetFormattedTotalTime(timeLeft));
+          currentTotalTimerMS = timeLeft;
+        }
 
         if (data.laps) {
           var fastestLap
@@ -314,7 +320,7 @@ function App() {
       const leaderboardConfig = response.data.getLeaderboard.config;
       updateLeaderboard(response.data.getLeaderboard.entries);
 
-      (helpers as any).SetEventName(leaderboardConfig.leaderBoardTitle.toUpperCase());
+      (helpers as any).SetEventName(leaderboardConfig?.leaderBoardTitle?.toUpperCase() || '');
 
       // check if lower thirds is showing, if not, then show leaderboard.
       if (!lowerThirdStateIN && showLeaderboard === '1') {
