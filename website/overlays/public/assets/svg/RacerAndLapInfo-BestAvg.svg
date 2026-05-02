@@ -40831,11 +40831,11 @@ gg==" transform="matrix(0.1514 0 0 0.1514 0 5.9513)">
 	</image>
 </g>
 <text id="EVENT-NAME-TEXT" transform="matrix(0.9458 0 0 1 274.6509 96.9823)" font-family="AmazonEmber-Heavy" font-size="25.4626px" letter-spacing="2.11">RACE NAME</text>
-<text id="REMAINING-LABEL" transform="matrix(1 0 0 1 301.0049 214.9676)" fill="#FFFFFF" font-family="AmazonEmber-Regular" font-size="30px">REMAINING</text>
-<text id="TOTAL-TIME-REMAINING-TEXT" transform="matrix(1 0 0 1 472.7593 216.6987)" fill="#FFFFFF" font-family="AmazonEmber-Heavy" font-size="36px">03:00:00</text>
-<text id="FASTEST-LABEL" transform="matrix(1 0 0 1 656.2894 215.3265)" fill="#FFFFFF" font-family="AmazonEmber-Regular" font-size="30px">BEST AVG</text>
-<text id="FASTEST-LAP-TIME-TEXT" transform="matrix(1 0 0 1 805.1996 217.2383)" fill="#FFFFFF" font-family="AmazonEmber-Heavy" font-size="36px">00:00</text>
-<text id="PREVIOUS-LABEL" transform="matrix(1 0 0 1 942.8495 215.6984)" fill="#FFFFFF" font-family="AmazonEmber-Regular" font-size="30px">PREVIOUS</text>
-<text id="PREVIOUS-LAP-TIME-TEXT" transform="matrix(1 0 0 1 1099.5151 217.7786)" fill="#FFFFFF" font-family="AmazonEmber-Heavy" font-size="36px">00:00</text>
+<text id="REMAINING-LABEL" transform="matrix(1 0 0 1 301.0049 215.5)" fill="#FFFFFF" font-family="AmazonEmber-Regular" font-size="30px">REMAINING</text>
+<text id="TOTAL-TIME-REMAINING-TEXT" transform="matrix(1 0 0 1 472.7593 215.5)" fill="#FFFFFF" font-family="AmazonEmber-Heavy" font-size="36px">03:00:00</text>
+<text id="FASTEST-LABEL" transform="matrix(1 0 0 1 656.2894 215.5)" fill="#FFFFFF" font-family="AmazonEmber-Regular" font-size="30px">BEST AVG</text>
+<text id="FASTEST-LAP-TIME-TEXT" transform="matrix(1 0 0 1 805.1996 215.5)" fill="#FFFFFF" font-family="AmazonEmber-Heavy" font-size="36px">00:00</text>
+<text id="PREVIOUS-LABEL" transform="matrix(1 0 0 1 942.8495 215.5)" fill="#FFFFFF" font-family="AmazonEmber-Regular" font-size="30px">PREVIOUS</text>
+<text id="PREVIOUS-LAP-TIME-TEXT" transform="matrix(1 0 0 1 1099.5151 215.5)" fill="#FFFFFF" font-family="AmazonEmber-Heavy" font-size="36px">00:00</text>
 <text id="RACER-NAME-TEXT" transform="matrix(1 0 0 1 466.692 171.8873)" fill="#FFFFFF" font-family="AmazonEmber-HeavyItalic" font-size="39.642px">RACER NAME</text>
 </svg>
