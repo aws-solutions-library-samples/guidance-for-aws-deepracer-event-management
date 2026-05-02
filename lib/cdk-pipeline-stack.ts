@@ -60,6 +60,7 @@ export interface CdkPipelineStackProps extends cdk.StackProps {
   email: string;
   env: Environment;
   domainName?: string;
+  requireApproval?: boolean;
 }
 
 export class CdkPipelineStack extends cdk.Stack {
@@ -117,7 +118,8 @@ export class CdkPipelineStack extends cdk.Stack {
           `npx cdk@${CDK_VERSION} synth --all -c email=${props.email} -c label=${props.labelName}` +
             ` -c account=${props.env.account} -c region=${props.env.region}` +
             ` -c source_branch=${props.sourceBranchName} -c source_repo=${props.sourceRepo}` +
-            (props.domainName ? ` -c domain_name=${props.domainName}` : ''),
+            (props.domainName ? ` -c domain_name=${props.domainName}` : '') +
+            (props.requireApproval === false ? ` -c require_approval=false` : ''),
         ],
         partialBuildSpec: codebuild.BuildSpec.fromObject({
           reports: {
@@ -147,8 +149,9 @@ export class CdkPipelineStack extends cdk.Stack {
 
     const infrastructure = new InfrastructurePipelineStage(this, `drem-backend-${props.labelName}`, { ...props });
 
+    const requireApproval = props.requireApproval !== false; // default: true
     const infrastructure_stage = pipeline.addStage(infrastructure, {
-      pre: [new pipelines.ManualApprovalStep('DeployDREM')],
+      ...(requireApproval ? { pre: [new pipelines.ManualApprovalStep('DeployDREM')] } : {}),
     });
 
     // Website unit tests — run as a pre-deploy gate on the infrastructure stage.
