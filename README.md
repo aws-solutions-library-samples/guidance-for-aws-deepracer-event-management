@@ -38,7 +38,7 @@ The deployment requires the following tools:
 - [AWS CLI](https://aws.amazon.com/cli) <span style="color:orange">\*</span>
 - [AWS CDK](https://aws.amazon.com/cdk/) with Typescript support (Tested with 2.6.0) <span style="color:orange">\*</span>
 - [Node.js](https://nodejs.org) version 18.x <span style="color:orange">\*</span>
-- (Optional) [Make](https://www.gnu.org/software/make/) buildtool. We provide a Makefile with all required targets for easy use. We recommend installing Make. <span style="color:orange">\*</span>
+- (Optional) [Make](https://www.gnu.org/software/make/) buildtool. We provide a Makefile with all required targets for easy use. We recommend installing Make. Run `make help` to see grouped, colourised help for every target. <span style="color:orange">\*</span>
 
 <span style="color:orange">\* Included if you use docker compose</span>
 
@@ -245,7 +245,7 @@ As per the deployment prerequisites with the following additional tools
 
 A number of plugins are recommended when contributing code to DREM. VSCode will prompt you to install these plugins when you open the source code for the first time.
 
-We recommend that you use the Makefile based commands to simplify the steps required when developing code for DREM.
+We recommend that you use the Makefile based commands to simplify the steps required when developing code for DREM. The Makefile groups its targets into sections — run `make help` at any time to see what's available.
 
 If you plan to help develop DREM and contribute code, the initial deployment of DREM is the same as above. Once DREM has deployed, to make the deployed DREM stack available for local development, run the following commands, alternatively the stack can be run using docker compose:
 
