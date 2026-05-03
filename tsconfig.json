@@ -20,5 +20,5 @@
     "typeRoots": ["./node_modules/*", "./node_modules/@types"],
     "types": ["jest", "node"]
   },
-  "exclude": ["node_modules", "cdk.out", "website", "website-leaderboard", "website-stream-overlays"]
+  "exclude": ["node_modules", "cdk.out", "website"]
 }
