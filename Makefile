@@ -129,7 +129,7 @@ test.website:					## Run website tests
 	cd website && npm test
 
 test.leaderboard:				## Run leaderboard tests
-	cd website-leaderboard && npm test
+	cd website/leaderboard && npm test
 
 
 .venv/.installed: pyproject.toml		## (internal) create venv when pyproject.toml changes
