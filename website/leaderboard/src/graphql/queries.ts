@@ -190,6 +190,8 @@ export const getLeaderboard = /* GraphQL */ `
         racedByProxy
         trackId
         username
+        avatarConfig
+        highlightColour
         __typename
       }
       __typename

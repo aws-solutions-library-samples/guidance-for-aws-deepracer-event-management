@@ -1,7 +1,9 @@
+import Avatar from 'avataaars';
 import { useTranslation } from 'react-i18next';
 import { useWindowSize } from '../hooks/useWindowSize';
 import { convertMsToString } from '../support-functions/time';
 import { Flag } from './flag';
+import { parseAvatarConfig } from './parseAvatarConfig';
 import styles from './raceSummaryFooter.module.css';
 
 const RaceSummaryFooter = (params: any) => {
@@ -13,17 +15,21 @@ const RaceSummaryFooter = (params: any) => {
   const {
     avgLapTime,
     avgLapsPerAttempt,
+    avatarConfig,
     consistency,
     countryCode,
     fastestAverageLap,
     fastestLapTime,
     gapToFastest,
+    highlightColour,
     lapCompletionRatio,
     mostConcecutiveLaps,
     overallRank,
     visible,
     raceFormat,
   } = params;
+
+  const parsedAvatar = parseAvatarConfig(avatarConfig);
 
   let username = params['username'];
 
@@ -98,9 +104,32 @@ const RaceSummaryFooter = (params: any) => {
           <div>
             <div className={styles.footerBigHeader}>{t('leaderboard.summary-footer.finsiher')}</div>
             <div className={styles.footerNormalText}>
-              <span className={styles.racerCountryFlag}>
-                <Flag countryCode={countryCode} />
-              </span>
+              {(parsedAvatar || countryCode) && (
+                <span className={styles.summaryIdentity}>
+                  {parsedAvatar && highlightColour && (
+                    <span
+                      className={styles.summaryHighlightBar}
+                      style={{
+                        background: `linear-gradient(to right, ${highlightColour} 50%, transparent)`,
+                      }}
+                    />
+                  )}
+                  <span className={styles.summaryIdentityIcon}>
+                    {parsedAvatar ? (
+                      <>
+                        <Avatar avatarStyle="Transparent" {...(parsedAvatar as Record<string, string>)} />
+                        {countryCode && (
+                          <span className={styles.summaryIdentityFlag}>
+                            <Flag countryCode={countryCode} />
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <Flag countryCode={countryCode} />
+                    )}
+                  </span>
+                </span>
+              )}
               <span>{username.length < 18 ? username : username.substr(0, 18) + '...'}</span>
             </div>
           </div>
