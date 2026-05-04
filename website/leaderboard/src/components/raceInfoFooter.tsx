@@ -30,6 +30,9 @@ const RaceInfoFooter = ({ eventId, trackId, visible, raceFormat }: RaceInfoFoote
     laps: [],
     currentLapTimeInMs: null,
     averageLaps: [],
+    countryCode: '',
+    avatarConfig: null,
+    highlightColour: null,
   });
   const [isVisible, SetIsVisible] = useState(false);
 
@@ -54,6 +57,9 @@ const RaceInfoFooter = ({ eventId, trackId, visible, raceFormat }: RaceInfoFoote
             laps: raceInfo.laps,
             currentLapTimeInMs: raceInfo.currentLapTimeInMs,
             averageLaps: raceInfo.averageLaps,
+            countryCode: raceInfo.countryCode || '',
+            avatarConfig: raceInfo.avatarConfig || null,
+            highlightColour: raceInfo.highlightColour || null,
           });
           SetIsVisible(true);
         } else {
@@ -64,6 +70,9 @@ const RaceInfoFooter = ({ eventId, trackId, visible, raceFormat }: RaceInfoFoote
             laps: [],
             currentLapTimeInMs: null,
             averageLaps: [],
+            countryCode: '',
+            avatarConfig: null,
+            highlightColour: null,
           });
           SetIsVisible(false);
         }
@@ -101,6 +110,9 @@ const RaceInfoFooter = ({ eventId, trackId, visible, raceFormat }: RaceInfoFoote
                 averageLaps={raceInfo.averageLaps}
                 currentLapTimeInMs={raceInfo.currentLapTimeInMs}
                 raceFormat={raceFormat}
+                countryCode={raceInfo.countryCode}
+                avatarConfig={raceInfo.avatarConfig}
+                highlightColour={raceInfo.highlightColour}
               />
             </span>
           </div>

@@ -32,6 +32,14 @@ website/src/graphql/schema.graphql
 website/src/graphql/mutations.js
 website/src/graphql/queries.js
 website/src/graphql/subscriptions.js
+website-leaderboard/src/graphql/schema.graphql
+website-leaderboard/src/graphql/mutations.js
+website-leaderboard/src/graphql/queries.js
+website-leaderboard/src/graphql/subscriptions.js
+website-stream-overlays/src/graphql/schema.graphql
+website-stream-overlays/src/graphql/mutations.js
+website-stream-overlays/src/graphql/queries.js
+website-stream-overlays/src/graphql/subscriptions.js
 appsyncId.txt
 website/public/pico-display/
 

@@ -54,7 +54,7 @@ export class Leaderboard extends Construct {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
       removalPolicy: RemovalPolicy.DESTROY,
-      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
+      pointInTimeRecovery: true,
     });
 
     // BACKEND
@@ -212,6 +212,8 @@ export class Leaderboard extends Construct {
         avgLapsPerAttempt: GraphqlType.float(),
         countryCode: GraphqlType.string(),
         mostConcecutiveLaps: GraphqlType.int(),
+        avatarConfig: GraphqlType.awsJson({ isRequired: false }),
+        highlightColour: GraphqlType.string({ isRequired: false }),
       },
       directives: [Directive.apiKey(), Directive.iam(), Directive.cognito('admin', 'operator', 'commentator')],
     });
@@ -230,6 +232,8 @@ export class Leaderboard extends Construct {
       avgLapsPerAttempt: GraphqlType.float(),
       countryCode: GraphqlType.string(),
       mostConcecutiveLaps: GraphqlType.int(),
+      avatarConfig: GraphqlType.awsJson({ isRequired: false }),
+      highlightColour: GraphqlType.string({ isRequired: false }),
     };
 
     props.appsyncApi.schema.addType(leaderboardEntryObjectType);

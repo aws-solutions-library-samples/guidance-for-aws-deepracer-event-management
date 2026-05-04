@@ -874,6 +874,25 @@
       }
     }
   },
+  "avatar-builder": {
+    "header": "Your Avatar",
+    "description": "Build your racer avatar — it will appear on the leaderboard.",
+    "save": "Save avatar",
+    "saved": "Avatar saved",
+    "save-error": "Error saving avatar, please try again",
+    "top": "Hair / Hat",
+    "accessories": "Accessories",
+    "hair-color": "Hair colour",
+    "facial-hair": "Facial hair",
+    "facial-hair-color": "Facial hair colour",
+    "clothes": "Clothes",
+    "clothes-color": "Clothes colour",
+    "eyes": "Eyes",
+    "eyebrows": "Eyebrows",
+    "mouth": "Mouth",
+    "skin": "Skin",
+    "highlight-colour": "Car highlight colour"
+  },
   "upload-to-car-status": {
     "header": "Uploads to car status",
     "loading": "Loading",

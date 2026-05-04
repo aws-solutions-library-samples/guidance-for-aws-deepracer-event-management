@@ -1,4 +1,4 @@
-import { fetchAuthSession, getCurrentUser, signOut, updatePassword } from 'aws-amplify/auth';
+import { fetchAuthSession, fetchUserAttributes, getCurrentUser, signOut, updatePassword } from 'aws-amplify/auth';
 
 /**
  * Authenticated user information returned by the Auth helpers.
@@ -45,6 +45,15 @@ export const getCurrentAuthUser = async (): Promise<AuthUser> => {
  */
 export const authSignOut = async (): Promise<void> => {
     await signOut();
+};
+
+/**
+ * Fetch the current user's Cognito custom attributes.
+ * Returns the raw attributes map from Amplify v6.
+ */
+export const getCurrentUserAttributes = async (): Promise<Record<string, string>> => {
+    const attributes = await fetchUserAttributes();
+    return attributes as Record<string, string>;
 };
 
 /**
