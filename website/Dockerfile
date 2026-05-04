@@ -13,9 +13,6 @@ RUN apk update && apk add --update --no-cache \
     zip
 RUN apk --no-cache add --virtual builds-deps build-base python3
 
-# Update NPM
-RUN npm update -g
-
 # Install cdk
 RUN npm install -g aws-cdk
 

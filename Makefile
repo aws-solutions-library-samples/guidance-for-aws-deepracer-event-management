@@ -144,12 +144,12 @@ venv: .venv/.installed				## Create Python virtual environment
 local.config.python: venv			## Setup a Python .venv
 
 local.build.leaderboard:
-	cd website/leaderboard && npm install && npm run build
+	cd website/leaderboard && npm install --legacy-peer-deps && npm run build
 	rm -rf website/public/leaderboard
 	cp -r website/leaderboard/build website/public/leaderboard
 
 local.build.overlays:
-	cd website/overlays && npm install && npm run build
+	cd website/overlays && npm install --legacy-peer-deps && npm run build
 	rm -rf website/public/overlays
 	cp -r website/overlays/build website/public/overlays
 

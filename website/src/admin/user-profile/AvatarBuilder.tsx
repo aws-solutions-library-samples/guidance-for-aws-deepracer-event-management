@@ -1,4 +1,3 @@
-import Avatar from 'avataaars';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -10,6 +9,7 @@ import FormField from '@cloudscape-design/components/form-field';
 import Select, { SelectProps } from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 
+import { AvatarDisplay } from '../../components/AvatarDisplay';
 import { graphqlMutate } from '../../graphql/graphqlHelpers';
 import * as mutations from '../../graphql/mutations';
 import { getCurrentAuthUser, getCurrentUserAttributes } from '../../hooks/useAuth';
@@ -29,7 +29,7 @@ export interface AvatarConfig {
 }
 
 const DEFAULT_CONFIG: AvatarConfig = {
-    topType: 'ShortHairShortFlat',
+    topType: 'NoHair',
     accessoriesType: 'Blank',
     hairColor: 'Brown',
     facialHairType: 'Blank',
@@ -38,8 +38,8 @@ const DEFAULT_CONFIG: AvatarConfig = {
     clotheColor: 'Blue03',
     eyeType: 'Default',
     eyebrowType: 'Default',
-    mouthType: 'Smile',
-    skinColor: 'Light',
+    mouthType: 'Default',
+    skinColor: 'Yellow',
 };
 
 // Options derived from the avataaars library's supported values
@@ -87,6 +87,7 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
     const [username, setUsername] = useState<string>('');
     const [config, setConfig] = useState<AvatarConfig>(DEFAULT_CONFIG);
     const [highlightColour, setHighlightColour] = useState<string>('');
+    const [isConfigured, setIsConfigured] = useState<boolean>(false);
     const [saving, setSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
 
@@ -101,6 +102,7 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
             if (raw) {
                 try {
                     setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(raw) });
+                    setIsConfigured(true);
                 } catch {
                     // invalid JSON in attribute — use defaults
                 }
@@ -125,6 +127,7 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
                 avatarConfig: JSON.stringify(config),
                 highlightColour: highlightColour || null,
             });
+            setIsConfigured(true);
             setSaveMessage(t('avatar-builder.saved'));
         } catch (err) {
             setSaveMessage(t('avatar-builder.save-error'));
@@ -143,11 +146,24 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
         </FormField>
     );
 
+    // Header with inline avatar preview (visible when collapsed)
+    const headerContent = (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <AvatarDisplay
+                avatarConfig={isConfigured ? (config as unknown as Record<string, string>) : null}
+                size={40}
+            />
+            <div>
+                <Box variant="h2" padding="n">{t('avatar-builder.header')}</Box>
+                <Box variant="small" color="text-body-secondary">{t('avatar-builder.description')}</Box>
+            </div>
+        </div>
+    );
+
     return (
         <ExpandableSection
             variant="container"
-            headerText={t('avatar-builder.header')}
-            headerDescription={t('avatar-builder.description')}
+            header={headerContent}
         >
             <SpaceBetween size="l">
                 <ColumnLayout columns={2}>
@@ -167,20 +183,9 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
                         </SpaceBetween>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                        <Avatar
-                            avatarStyle="Circle"
-                            style={{ width: 200, height: 200 }}
-                            topType={config.topType}
-                            accessoriesType={config.accessoriesType}
-                            hairColor={config.hairColor}
-                            facialHairType={config.facialHairType}
-                            facialHairColor={config.facialHairColor}
-                            clotheType={config.clotheType}
-                            clotheColor={config.clotheColor}
-                            eyeType={config.eyeType}
-                            eyebrowType={config.eyebrowType}
-                            mouthType={config.mouthType}
-                            skinColor={config.skinColor}
+                        <AvatarDisplay
+                            avatarConfig={config as unknown as Record<string, string>}
+                            size={200}
                         />
                     </div>
                 </ColumnLayout>
