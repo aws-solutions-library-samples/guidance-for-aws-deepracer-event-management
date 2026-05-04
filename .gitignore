@@ -41,6 +41,7 @@ website-stream-overlays/src/graphql/mutations.js
 website-stream-overlays/src/graphql/queries.js
 website-stream-overlays/src/graphql/subscriptions.js
 appsyncId.txt
+website/public/pico-display/
 
 
 lib/*.js
