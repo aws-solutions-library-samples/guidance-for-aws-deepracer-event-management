@@ -147,13 +147,11 @@ export class CdkPipelineStack extends cdk.Stack {
 
     const infrastructure = new InfrastructurePipelineStage(this, `drem-backend-${props.labelName}`, { ...props });
 
-    const infrastructure_stage = pipeline.addStage(infrastructure, {
-      pre: [new pipelines.ManualApprovalStep('DeployDREM')],
-    });
-
     // Website unit tests — run as a pre-deploy gate on the infrastructure stage.
     // Kept separate from synth so directory restructures (e.g. website
     // consolidation) can't block cdk.out generation and pipeline self-mutation.
+    // `--legacy-peer-deps` is required because avataaars@2 declares a React 17
+    // peer while DREM uses React 18.
     const websiteTestStep = new pipelines.CodeBuildStep('WebsiteTests', {
       buildEnvironment: {
         buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2023_STANDARD_3_0,
@@ -162,8 +160,8 @@ export class CdkPipelineStack extends cdk.Stack {
       installCommands: [`n ${NODE_VERSION}`, 'node --version'],
       commands: [
         'npm install',
-        'cd website && npm install && npm test && cd ..',
-        'cd website/leaderboard && npm install && npm test && cd ../..',
+        'cd website && npm install --legacy-peer-deps && npm test && cd ..',
+        'cd website/leaderboard && npm install --legacy-peer-deps && npm test && cd ../..',
       ],
       partialBuildSpec: codebuild.BuildSpec.fromObject({
         reports: {
@@ -175,7 +173,16 @@ export class CdkPipelineStack extends cdk.Stack {
         },
       }),
     });
-    infrastructure_stage.addPre(websiteTestStep);
+
+    // Manual approval depends on WebsiteTests so the approval notification
+    // doesn't appear until tests pass — otherwise the two ran in parallel and
+    // a deploy could be approved before tests had even started.
+    const approvalStep = new pipelines.ManualApprovalStep('DeployDREM');
+    approvalStep.addStepDependency(websiteTestStep);
+
+    const infrastructure_stage = pipeline.addStage(infrastructure, {
+      pre: [websiteTestStep, approvalStep],
+    });
 
     const rolePolicyStatementsForWebsiteDeployStages = [
       new iam.PolicyStatement({
@@ -261,7 +268,8 @@ export class CdkPipelineStack extends cdk.Stack {
         'aws appsync get-introspection-schema --api-id $appsyncId --format SDL website/src/graphql/schema.graphql',
         // Root postinstall is gated to skip on CodeBuild ($CODEBUILD_BUILD_ID is set),
         // so install website/ deps explicitly before running its npm scripts.
-        'cd website && npm install && npm run test:post-deploy && cd ..',
+        // `--legacy-peer-deps` for the avataaars@2 React 17 peer.
+        'cd website && npm install --legacy-peer-deps && npm run test:post-deploy && cd ..',
       ],
       envFromCfnOutputs: {
         appsyncId: infrastructure.appsyncId,
