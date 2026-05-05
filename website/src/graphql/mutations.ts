@@ -854,7 +854,6 @@ export const updateModel = /* GraphQL */ `
 export const updateOverlayInfo = /* GraphQL */ `
     mutation UpdateOverlayInfo(
         $averageLaps: [AverageLapInput]
-        $avatarConfig: AWSJSON
         $countryCode: String
         $currentLapTimeInMs: Float
         $eventId: ID!
@@ -868,7 +867,6 @@ export const updateOverlayInfo = /* GraphQL */ `
     ) {
         updateOverlayInfo(
             averageLaps: $averageLaps
-            avatarConfig: $avatarConfig
             countryCode: $countryCode
             currentLapTimeInMs: $currentLapTimeInMs
             eventId: $eventId
@@ -885,12 +883,15 @@ export const updateOverlayInfo = /* GraphQL */ `
                 endLapId
                 startLapId
             }
-            avatarConfig
             countryCode
             currentLapTimeInMs
             eventId
             eventName
-            highlightColour
+            profile {
+                username
+                avatarConfig
+                highlightColour
+            }
             laps {
                 autTimerConnected
                 carName
