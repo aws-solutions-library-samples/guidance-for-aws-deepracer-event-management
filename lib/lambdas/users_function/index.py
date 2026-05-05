@@ -187,28 +187,6 @@ def create_user(username: str, email: str, countryCode: str):
         }
 
 
-@app.resolver(type_name="Mutation", field_name="updateUserProfile")
-def update_user_profile(username: str, avatarConfig: str = None, highlightColour: str = None):
-    caller = (app.current_event.get("identity") or {}).get("username")
-    if caller != username:
-        raise Exception("Not authorized to update another user's profile")
-    attrs = []
-    if avatarConfig is not None:
-        attrs.append({"Name": "custom:avatarConfig", "Value": json.dumps(avatarConfig) if isinstance(avatarConfig, dict) else avatarConfig})
-    if highlightColour is not None:
-        attrs.append({"Name": "custom:highlightColour", "Value": highlightColour})
-    if attrs:
-        cognito_client.admin_update_user_attributes(
-            UserPoolId=user_pool_id,
-            Username=username,
-            UserAttributes=attrs,
-        )
-    user = __get_user(username)
-    user["avatarConfig"] = __extract_user_attribute(user.get("Attributes", []), "custom:avatarConfig")
-    user["highlightColour"] = __extract_user_attribute(user.get("Attributes", []), "custom:highlightColour")
-    return user
-
-
 @app.resolver(type_name="Mutation", field_name="updateUser")
 def updateUser(username: str, roles: list):
     all_groups = []

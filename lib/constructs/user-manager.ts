@@ -112,7 +112,6 @@ export class UserManager extends Construct {
           'cognito-idp:ListUsersInGroup',
           'cognito-idp:AdminAddUserToGroup',
           'cognito-idp:AdminRemoveUserFromGroup',
-          'cognito-idp:AdminUpdateUserAttributes',
           'cognito-idp:AdminGetUser',
         ],
         resources: [props.userPoolArn],
@@ -216,8 +215,6 @@ export class UserManager extends Construct {
         UserStatus: GraphqlType.string(),
         MFAOptions: user_object_mfa_options.attribute({ isList: true, isRequired: false }),
         sub: GraphqlType.id({ isRequired: false }),
-        avatarConfig: GraphqlType.awsJson({ isRequired: false }),
-        highlightColour: GraphqlType.string({ isRequired: false }),
       },
       directives: [Directive.cognito('admin', 'registration', 'operator'), Directive.iam()],
     });
@@ -300,20 +297,6 @@ export class UserManager extends Construct {
       })
     );
 
-    props.appsyncApi.schema.addMutation(
-      'updateUserProfile',
-      new ResolvableField({
-        args: {
-          username: GraphqlType.string({ isRequired: true }),
-          avatarConfig: GraphqlType.awsJson({ isRequired: false }),
-          highlightColour: GraphqlType.string({ isRequired: false }),
-        },
-        returnType: user_object.attribute(),
-        dataSource: users_data_source,
-        directives: [Directive.cognito('racer', 'admin', 'operator', 'registration', 'commentator')],
-      })
-    );
-
     props.appsyncApi.schema.addSubscription(
       'onUserUpdated',
       new ResolvableField({
@@ -383,7 +366,6 @@ export class UserManager extends Construct {
           actions: ['appsync:GraphQL'],
           resources: [
             `${props.appsyncApi.api.arn}/types/Mutation/fields/deleteUser`,
-            `${props.appsyncApi.api.arn}/types/Mutation/fields/updateUserProfile`,
           ],
         }),
       ],

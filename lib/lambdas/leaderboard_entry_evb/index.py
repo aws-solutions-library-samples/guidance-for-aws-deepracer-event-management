@@ -28,18 +28,18 @@ def lambda_handler(evbEvent, context):
     detail_type = evbEvent["detail-type"]
     detail = evbEvent["detail"]
     if "raceSummaryAdded" in detail_type:
-        username, countryCode, avatarConfig, highlightColour = __get_username_by_user_id(detail["userId"])
-        detail = {**detail, "username": username, "countryCode": countryCode, "avatarConfig": avatarConfig, "highlightColour": highlightColour}
+        username, countryCode = __get_username_by_user_id(detail["userId"])
+        detail = {**detail, "username": username, "countryCode": countryCode}
         __store_leaderboard_entry(detail)
         __add_to_leaderboard(detail)
     elif "raceSummaryUpdated" in detail_type:
-        username, countryCode, avatarConfig, highlightColour = __get_username_by_user_id(detail["userId"])
-        leaderboard_entry = {"username": username, "countryCode": countryCode, "avatarConfig": avatarConfig, "highlightColour": highlightColour, **detail}
+        username, countryCode = __get_username_by_user_id(detail["userId"])
+        leaderboard_entry = {"username": username, "countryCode": countryCode, **detail}
         __store_leaderboard_entry(leaderboard_entry)
         __update_entry_on_leaderboard(leaderboard_entry)
     elif "raceSummaryDeleted" in detail_type:
-        username, countryCode, avatarConfig, highlightColour = __get_username_by_user_id(detail["userId"])
-        leaderboard_entry = {"username": username, "countryCode": countryCode, "avatarConfig": avatarConfig, "highlightColour": highlightColour, **detail}
+        username, countryCode = __get_username_by_user_id(detail["userId"])
+        leaderboard_entry = {"username": username, "countryCode": countryCode, **detail}
         __delete_leaderboard_entry(detail)
         __delete_from_leaderboard(leaderboard_entry)
 
@@ -48,7 +48,8 @@ def lambda_handler(evbEvent, context):
     return
 
 
-def __get_username_by_user_id(userId):
+def __get_username_by_user_id(userId: str) -> tuple:
+    """Read Cognito username and countryCode for the given userId."""
     logger.info(f"userId = {userId}")
     response = cognito_client.list_users(
         UserPoolId=USER_POOL_ID,
@@ -57,20 +58,14 @@ def __get_username_by_user_id(userId):
     logger.info(response)
     user = response["Users"][0]
     username = user["Username"]
-    countryCode = ""
-    avatarConfig = None
-    highlightColour = None
+    countryCode = None
     for attributes in user["Attributes"]:
         if attributes["Name"] == "custom:countryCode":
             countryCode = attributes["Value"]
-        elif attributes["Name"] == "custom:avatarConfig":
-            avatarConfig = attributes["Value"]
-        elif attributes["Name"] == "custom:highlightColour":
-            highlightColour = attributes["Value"]
 
     logger.info(username)
     logger.info(countryCode)
-    return username, countryCode, avatarConfig, highlightColour
+    return username, countryCode
 
 
 # def __get_username_from_entry(item):
@@ -119,8 +114,6 @@ def __add_to_leaderboard(variables):
             $racedByProxy: Boolean!
             $countryCode: String!
             $mostConcecutiveLaps: Int!
-            $avatarConfig: AWSJSON
-            $highlightColour: String
         ) {
             addLeaderboardEntry(
                 avgLapTime: $avgLapTime
@@ -136,8 +129,6 @@ def __add_to_leaderboard(variables):
                 racedByProxy: $racedByProxy
                 countryCode: $countryCode
                 mostConcecutiveLaps: $mostConcecutiveLaps
-                avatarConfig: $avatarConfig
-                highlightColour: $highlightColour
             ) {
             avgLapTime
             avgLapsPerAttempt
@@ -156,8 +147,6 @@ def __add_to_leaderboard(variables):
             racedByProxy
             countryCode
             mostConcecutiveLaps
-            avatarConfig
-            highlightColour
             }
         }
         """
@@ -181,8 +170,6 @@ def __update_entry_on_leaderboard(variables):
             $username: String!
             $racedByProxy: Boolean!
             $countryCode: String
-            $avatarConfig: AWSJSON
-            $highlightColour: String
         ) {
             updateLeaderboardEntry(
                 avgLapTime: $avgLapTime
@@ -197,8 +184,6 @@ def __update_entry_on_leaderboard(variables):
                 username: $username
                 racedByProxy: $racedByProxy
                 countryCode: $countryCode
-                avatarConfig: $avatarConfig
-                highlightColour: $highlightColour
             ) {
             avgLapTime
             avgLapsPerAttempt
@@ -216,8 +201,6 @@ def __update_entry_on_leaderboard(variables):
             username
             racedByProxy
             countryCode
-            avatarConfig
-            highlightColour
             }
         }
         """
