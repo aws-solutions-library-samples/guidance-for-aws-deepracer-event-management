@@ -36,6 +36,8 @@ export interface RaceManagerProps {
     };
   };
   eventbus: IEventBus;
+  racerProfileObjectType: ObjectType;
+  racerProfileTable: dynamodb.ITable;
 }
 
 export class RaceManager extends Construct {
@@ -340,8 +342,7 @@ export class RaceManager extends Construct {
         username: GraphqlType.string(),
         userId: GraphqlType.string(),
         countryCode: GraphqlType.string(),
-        avatarConfig: GraphqlType.awsJson({ isRequired: false }),
-        highlightColour: GraphqlType.string({ isRequired: false }),
+        profile: props.racerProfileObjectType.attribute(),
         laps: lapObjectType.attribute({ isList: true }),
         averageLaps: averageLapObjectType.attribute({ isList: true }),
         timeLeftInMs: GraphqlType.float(),
@@ -362,8 +363,6 @@ export class RaceManager extends Construct {
           trackId: GraphqlType.id(),
           username: GraphqlType.string(),
           countryCode: GraphqlType.string(),
-          avatarConfig: GraphqlType.awsJson({ isRequired: false }),
-          highlightColour: GraphqlType.string({ isRequired: false }),
           userId: GraphqlType.string(),
           laps: lapInputObjectType.attribute({ isList: true }),
           averageLaps: averageLapInputObjectType.attribute({ isList: true }),
@@ -408,5 +407,28 @@ export class RaceManager extends Construct {
         ],
       })
     );
+
+    // Field resolver: Overlay.profile — live-join from RacerProfile table
+    const racerProfileDataSource = props.appsyncApi.api.addDynamoDbDataSource(
+      'RaceManagerRacerProfileDataSource',
+      props.racerProfileTable
+    );
+
+    new appsync.Resolver(this, 'OverlayProfileResolver', {
+      api: props.appsyncApi.api,
+      typeName: 'Overlay',
+      fieldName: 'profile',
+      dataSource: racerProfileDataSource,
+      requestMappingTemplate: appsync.MappingTemplate.fromString(`
+{
+  "version": "2018-05-29",
+  "operation": "GetItem",
+  "key": {
+    "username": $util.dynamodb.toDynamoDBJson($context.source.username)
+  }
+}
+`),
+      responseMappingTemplate: appsync.MappingTemplate.fromString('$util.toJson($context.result)'),
+    });
   }
 }

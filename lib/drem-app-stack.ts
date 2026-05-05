@@ -173,14 +173,16 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       eventbus: eventbus,
     });
 
+    const racerProfile = new RacerProfile(this, 'RacerProfile', {
+      appsyncApi: appsyncResources,
+    });
+
     new RaceManager(this, 'RaceManager', {
       appsyncApi: appsyncResources,
       lambdaConfig: lambdaConfig,
       eventbus: eventbus,
-    });
-
-    const racerProfile = new RacerProfile(this, 'RacerProfile', {
-      appsyncApi: appsyncResources,
+      racerProfileObjectType: racerProfile.profileObjectType,
+      racerProfileTable: racerProfile.table,
     });
 
     const leaderboard = new Leaderboard(this, 'Leaderboard', {

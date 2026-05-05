@@ -358,8 +358,11 @@ export const onNewOverlayInfo = /* GraphQL */ `
       trackId
       userId
       username
-      avatarConfig
-      highlightColour
+      profile {
+        username
+        avatarConfig
+        highlightColour
+      }
       __typename
     }
   }

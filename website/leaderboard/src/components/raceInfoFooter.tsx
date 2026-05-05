@@ -58,8 +58,8 @@ const RaceInfoFooter = ({ eventId, trackId, visible, raceFormat }: RaceInfoFoote
             currentLapTimeInMs: raceInfo.currentLapTimeInMs,
             averageLaps: raceInfo.averageLaps,
             countryCode: raceInfo.countryCode || '',
-            avatarConfig: raceInfo.avatarConfig || null,
-            highlightColour: raceInfo.highlightColour || null,
+            avatarConfig: raceInfo.profile?.avatarConfig || null,
+            highlightColour: raceInfo.profile?.highlightColour || null,
           });
           SetIsVisible(true);
         } else {
