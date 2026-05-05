@@ -292,8 +292,6 @@ const LocalTimekeeperWizard = () => {
       username: race.username,
       userId: race.userId,
       countryCode: race.countryCode,
-      avatarConfig: race.avatarConfig,
-      highlightColour: race.highlightColour,
       laps: race.laps,
       averageLaps: race.averageLaps,
       timeLeftInMs: 0,

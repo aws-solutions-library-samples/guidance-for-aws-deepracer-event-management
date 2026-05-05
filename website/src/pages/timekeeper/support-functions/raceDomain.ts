@@ -18,8 +18,6 @@ export interface Race {
   userId: string | null;
   username: string | null;
   countryCode?: string;
-  avatarConfig?: string;
-  highlightColour?: string;
   laps: Lap[];
   averageLaps: AverageLap[];
   trackId: number;

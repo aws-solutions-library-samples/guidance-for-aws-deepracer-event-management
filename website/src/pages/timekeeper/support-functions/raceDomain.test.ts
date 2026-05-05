@@ -4,8 +4,6 @@ import { extractUserAttribute } from './raceDomain';
 describe('extractUserAttribute', () => {
   const attributes = [
     { Name: 'custom:countryCode', Value: 'GB' },
-    { Name: 'custom:avatarConfig', Value: '{"topType":"ShortHairShortFlat"}' },
-    { Name: 'custom:highlightColour', Value: '#FF0000' },
     { Name: 'email', Value: 'test@example.com' },
   ];
 

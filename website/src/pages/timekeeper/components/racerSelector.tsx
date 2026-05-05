@@ -8,8 +8,6 @@ interface RaceConfig {
   userId?: string;
   username?: string;
   countryCode?: string;
-  avatarConfig?: string;
-  highlightColour?: string;
 }
 
 interface RacerValidation {
@@ -70,11 +68,6 @@ export const RacerSelector: React.FC<RacerSelectorProps> = ({
               userId: detail.selectedOption.value,
               username: detail.selectedOption.label,
               countryCode: extractUserAttribute(selectedUser?.Attributes, 'custom:countryCode'),
-              avatarConfig: extractUserAttribute(selectedUser?.Attributes, 'custom:avatarConfig'),
-              highlightColour: extractUserAttribute(
-                selectedUser?.Attributes,
-                'custom:highlightColour'
-              ),
             });
           }}
           options={userOptions}
