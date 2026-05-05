@@ -30,7 +30,9 @@ import { ProfileHome } from '../admin/user-profile/profile';
 import { CreateUser } from '../admin/users/createUser';
 import { CommentatorStats } from '../commentator/commentator-stats';
 import { Home } from '../home';
-import { getCurrentUserAttributes } from '../hooks/useAuth';
+import { getCurrentAuthUser } from '../hooks/useAuth';
+import { graphqlQuery } from '../graphql/graphqlHelpers';
+import { getRacerProfile } from '../graphql/queries';
 import { useCarLogsApi } from '../hooks/useCarLogsApi';
 import { useCarsApi } from '../hooks/useCarsApi';
 import { useEventsApi } from '../hooks/useEventsApi';
@@ -186,9 +188,15 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
 
   // Load user's avatar config for the top-nav mini avatar
   useEffect(() => {
-    getCurrentUserAttributes()
-      .then((attrs) => {
-        const raw = attrs['custom:avatarConfig'];
+    getCurrentAuthUser()
+      .then((authUser) =>
+        graphqlQuery<{ getRacerProfile: { avatarConfig?: string } | null }>(
+          getRacerProfile,
+          { username: authUser.username }
+        )
+      )
+      .then((data) => {
+        const raw = data?.getRacerProfile?.avatarConfig;
         if (raw) setUserAvatarConfig(raw);
       })
       .catch(() => {

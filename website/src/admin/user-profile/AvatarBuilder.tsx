@@ -10,9 +10,10 @@ import Select, { SelectProps } from '@cloudscape-design/components/select';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 
 import { AvatarDisplay } from '../../components/AvatarDisplay';
-import { graphqlMutate } from '../../graphql/graphqlHelpers';
-import * as mutations from '../../graphql/mutations';
-import { getCurrentAuthUser, getCurrentUserAttributes } from '../../hooks/useAuth';
+import { graphqlMutate, graphqlQuery } from '../../graphql/graphqlHelpers';
+import { updateRacerProfile } from '../../graphql/mutations';
+import { getRacerProfile } from '../../graphql/queries';
+import { getCurrentAuthUser } from '../../hooks/useAuth';
 
 export interface AvatarConfig {
     topType: string;
@@ -73,7 +74,7 @@ function toSelectOptions(values: string[]): SelectProps.Option[] {
 }
 
 interface AvatarBuilderProps {
-    // no external props needed — reads/writes its own Cognito attribute
+    // no external props needed — reads/writes from RacerProfile table via AppSync
 }
 
 // DeepRacer tail light colour palette (confirmed from car console)
@@ -84,7 +85,6 @@ const TAIL_LIGHT_COLOURS = [
 
 export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
     const { t } = useTranslation();
-    const [username, setUsername] = useState<string>('');
     const [config, setConfig] = useState<AvatarConfig>(DEFAULT_CONFIG);
     const [highlightColour, setHighlightColour] = useState<string>('');
     const [isConfigured, setIsConfigured] = useState<boolean>(false);
@@ -93,22 +93,22 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
 
     useEffect(() => {
         const load = async () => {
-            const [authUser, attrs] = await Promise.all([
-                getCurrentAuthUser(),
-                getCurrentUserAttributes(),
-            ]);
-            setUsername(authUser.username);
-            const raw = attrs['custom:avatarConfig'];
-            if (raw) {
+            const authUser = await getCurrentAuthUser();
+            const data = await graphqlQuery<{ getRacerProfile: { avatarConfig?: string; highlightColour?: string } | null }>(
+                getRacerProfile,
+                { username: authUser.username }
+            );
+            const profile = data?.getRacerProfile;
+            if (profile?.avatarConfig) {
                 try {
-                    setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(raw) });
+                    setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(profile.avatarConfig) });
                     setIsConfigured(true);
                 } catch {
-                    // invalid JSON in attribute — use defaults
+                    // invalid JSON in profile — use defaults
                 }
             }
-            if (attrs['custom:highlightColour']) {
-                setHighlightColour(attrs['custom:highlightColour']);
+            if (profile?.highlightColour) {
+                setHighlightColour(profile.highlightColour);
             }
         };
         load();
@@ -122,10 +122,11 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await graphqlMutate(mutations.updateUserProfile, {
-                username,
-                avatarConfig: JSON.stringify(config),
-                highlightColour: highlightColour || null,
+            await graphqlMutate(updateRacerProfile, {
+                input: {
+                    avatarConfig: JSON.stringify(config),
+                    highlightColour: highlightColour || null,
+                },
             });
             setIsConfigured(true);
             setSaveMessage(t('avatar-builder.saved'));

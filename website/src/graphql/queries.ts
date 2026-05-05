@@ -291,6 +291,16 @@ export const listUsers = /* GraphQL */ `
         }
     }
 `;
+export const getRacerProfile = /* GraphQL */ `
+    query GetRacerProfile($username: String!) {
+        getRacerProfile(username: $username) {
+            username
+            avatarConfig
+            highlightColour
+            updatedAt
+        }
+    }
+`;
 export const updateLeaderboardConfigs = /* GraphQL */ `
     query UpdateLeaderboardConfigs(
         $eventId: String!

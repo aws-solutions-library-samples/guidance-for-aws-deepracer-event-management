@@ -1007,22 +1007,13 @@ export const updateUser = /* GraphQL */ `
     }
 `;
 
-export const updateUserProfile = /* GraphQL */ `
-    mutation UpdateUserProfile($username: String!, $avatarConfig: AWSJSON, $highlightColour: String) {
-        updateUserProfile(username: $username, avatarConfig: $avatarConfig, highlightColour: $highlightColour) {
-            Attributes {
-                Name
-                Value
-            }
-            Enabled
-            Roles
-            UserCreateDate
-            UserLastModifiedDate
-            UserStatus
-            Username
-            sub
+export const updateRacerProfile = /* GraphQL */ `
+    mutation UpdateRacerProfile($input: RacerProfileInput!) {
+        updateRacerProfile(input: $input) {
+            username
             avatarConfig
             highlightColour
+            updatedAt
         }
     }
 `;
