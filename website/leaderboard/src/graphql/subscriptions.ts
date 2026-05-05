@@ -161,8 +161,11 @@ export const onDeleteLeaderboardEntry = /* GraphQL */ `
       racedByProxy
       trackId
       username
-      avatarConfig
-      highlightColour
+      profile {
+        username
+        avatarConfig
+        highlightColour
+      }
       __typename
     }
   }
@@ -319,8 +322,11 @@ export const onNewLeaderboardEntry = /* GraphQL */ `
       racedByProxy
       trackId
       username
-      avatarConfig
-      highlightColour
+      profile {
+        username
+        avatarConfig
+        highlightColour
+      }
       __typename
     }
   }
@@ -379,8 +385,11 @@ export const onUpdateLeaderboardEntry = /* GraphQL */ `
       racedByProxy
       trackId
       username
-      avatarConfig
-      highlightColour
+      profile {
+        username
+        avatarConfig
+        highlightColour
+      }
       __typename
     }
   }

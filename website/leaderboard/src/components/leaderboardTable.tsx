@@ -46,7 +46,7 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
         timeValue = convertMsToString(entry.fastestAverageLap.avgTime);
       }
 
-      const avatarConfig = parseAvatarConfig(entry.avatarConfig);
+      const avatarConfig = parseAvatarConfig(entry.profile?.avatarConfig);
 
       return (
         <div
@@ -65,11 +65,11 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
           }}
         >
           <div className={styles.liPosition}>#{index + 1}</div>
-          {avatarConfig && entry.highlightColour && (
+          {avatarConfig && entry.profile?.highlightColour && (
             <div
               className={styles.highlightBar}
               style={{
-                background: `linear-gradient(to right, ${entry.highlightColour} 50%, transparent)`,
+                background: `linear-gradient(to right, ${entry.profile?.highlightColour} 50%, transparent)`,
               }}
             />
           )}

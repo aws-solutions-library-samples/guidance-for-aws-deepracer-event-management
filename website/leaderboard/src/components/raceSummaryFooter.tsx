@@ -15,21 +15,21 @@ const RaceSummaryFooter = (params: any) => {
   const {
     avgLapTime,
     avgLapsPerAttempt,
-    avatarConfig,
     consistency,
     countryCode,
     fastestAverageLap,
     fastestLapTime,
     gapToFastest,
-    highlightColour,
     lapCompletionRatio,
     mostConcecutiveLaps,
     overallRank,
+    profile,
     visible,
     raceFormat,
   } = params;
 
-  const parsedAvatar = parseAvatarConfig(avatarConfig);
+  const parsedAvatar = parseAvatarConfig(profile?.avatarConfig);
+  const highlightColour = profile?.highlightColour;
 
   let username = params['username'];
 
