@@ -179,6 +179,10 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       eventbus: eventbus,
     });
 
+    const racerProfile = new RacerProfile(this, 'RacerProfile', {
+      appsyncApi: appsyncResources,
+    });
+
     const leaderboard = new Leaderboard(this, 'Leaderboard', {
       logsBucket: logsBucket,
       appsyncApi: appsyncResources,
@@ -186,11 +190,8 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       userPoolId: userPool.userPoolId,
       userPoolArn: userPool.userPoolArn,
       eventbus: eventbus,
-    });
-
-
-    const racerProfile = new RacerProfile(this, 'RacerProfile', {
-      appsyncApi: appsyncResources,
+      racerProfileObjectType: racerProfile.profileObjectType,
+      racerProfileTable: racerProfile.table,
     });
 
     const landingPage = new LandingPageManager(this, 'LandingPageManager', {

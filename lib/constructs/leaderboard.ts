@@ -33,6 +33,8 @@ export interface LeaderboardProps {
     };
   };
   eventbus: IEventBus;
+  racerProfileObjectType: ObjectType;
+  racerProfileTable: dynamodb.ITable;
 }
 
 export class Leaderboard extends Construct {
@@ -212,8 +214,7 @@ export class Leaderboard extends Construct {
         avgLapsPerAttempt: GraphqlType.float(),
         countryCode: GraphqlType.string(),
         mostConcecutiveLaps: GraphqlType.int(),
-        avatarConfig: GraphqlType.awsJson({ isRequired: false }),
-        highlightColour: GraphqlType.string({ isRequired: false }),
+        profile: props.racerProfileObjectType.attribute(),
       },
       directives: [Directive.apiKey(), Directive.iam(), Directive.cognito('admin', 'operator', 'commentator')],
     });
@@ -232,11 +233,31 @@ export class Leaderboard extends Construct {
       avgLapsPerAttempt: GraphqlType.float(),
       countryCode: GraphqlType.string(),
       mostConcecutiveLaps: GraphqlType.int(),
-      avatarConfig: GraphqlType.awsJson({ isRequired: false }),
-      highlightColour: GraphqlType.string({ isRequired: false }),
     };
 
     props.appsyncApi.schema.addType(leaderboardEntryObjectType);
+
+    const racerProfileDataSource = props.appsyncApi.api.addDynamoDbDataSource(
+      'LeaderboardRacerProfileDataSource',
+      props.racerProfileTable
+    );
+
+    new appsync.Resolver(this, 'LeaderBoardEntryProfileResolver', {
+      api: props.appsyncApi.api,
+      typeName: 'LeaderBoardEntry',
+      fieldName: 'profile',
+      dataSource: racerProfileDataSource,
+      requestMappingTemplate: appsync.MappingTemplate.fromString(`
+{
+  "version": "2018-05-29",
+  "operation": "GetItem",
+  "key": {
+    "username": $util.dynamodb.toDynamoDBJson($context.source.username)
+  }
+}
+`),
+      responseMappingTemplate: appsync.MappingTemplate.fromString('$util.toJson($context.result)'),
+    });
 
     const leaderboardConfigObjectType = new ObjectType('LeaderBoardConfig', {
       definition: {
