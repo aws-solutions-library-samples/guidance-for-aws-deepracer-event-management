@@ -147,6 +147,11 @@ def __add_to_leaderboard(variables):
             racedByProxy
             countryCode
             mostConcecutiveLaps
+            profile {
+                username
+                avatarConfig
+                highlightColour
+            }
             }
         }
         """
@@ -201,6 +206,11 @@ def __update_entry_on_leaderboard(variables):
             username
             racedByProxy
             countryCode
+            profile {
+                username
+                avatarConfig
+                highlightColour
+            }
             }
         }
         """
