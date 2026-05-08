@@ -19,12 +19,14 @@ PDF_BUCKET = os.environ["PDF_BUCKET"]
 RACE_TABLE = os.environ["RACE_TABLE"]
 EVENTS_TABLE = os.environ["EVENTS_TABLE"]
 USER_POOL_ID = os.environ["USER_POOL_ID"]
+RACER_PROFILE_TABLE = os.environ.get("RACER_PROFILE_TABLE")
 
 _dynamodb = boto3.resource("dynamodb")
 _s3 = boto3.client("s3")
 _cognito = boto3.client("cognito-idp")
 _race_table = _dynamodb.Table(RACE_TABLE)
 _events_table = _dynamodb.Table(EVENTS_TABLE)
+_racer_profile_table = _dynamodb.Table(RACER_PROFILE_TABLE) if RACER_PROFILE_TABLE else None
 
 ADMIN_GROUPS = {"admin", "operator", "commentator"}
 
@@ -84,19 +86,56 @@ def get_races(event_id: str, track_id: str | None) -> list[dict]:
 
 
 def lookup_user(user_id: str) -> dict:
+    """Resolve a Cognito sub to {username, countryCode, avatarConfig, highlightColour}.
+
+    avatarConfig and highlightColour come from the RacerProfile DynamoDB table
+    keyed by username (added in the post-#171 RacerProfile rework). They are
+    None if the racer has never set a profile.
+    """
     try:
         resp = _cognito.list_users(UserPoolId=USER_POOL_ID, Filter=f'sub = "{user_id}"')
         if not resp["Users"]:
-            return {"username": user_id[:8], "countryCode": ""}
+            return {"username": user_id[:8], "countryCode": "", "avatarConfig": None, "highlightColour": None}
         u = resp["Users"][0]
         attrs = {a["Name"]: a["Value"] for a in u["Attributes"]}
-        return {"username": u["Username"], "countryCode": attrs.get("custom:countryCode", "")}
+        username = u["Username"]
     except Exception as e:
         logger.warning(f"Cognito lookup failed for {user_id}: {e}")
-        return {"username": user_id[:8], "countryCode": ""}
+        return {"username": user_id[:8], "countryCode": "", "avatarConfig": None, "highlightColour": None}
+
+    profile = _lookup_racer_profile(username)
+    return {
+        "username": username,
+        "countryCode": attrs.get("custom:countryCode", ""),
+        "avatarConfig": profile.get("avatarConfig"),
+        "highlightColour": profile.get("highlightColour"),
+    }
+
+
+def _lookup_racer_profile(username: str) -> dict:
+    """Read avatarConfig + highlightColour from the RacerProfile DDB table.
+
+    Returns {} if the table isn't configured (older deployments without the
+    rework), the row doesn't exist, or the read fails — callers degrade
+    gracefully to the silhouette + no highlight.
+    """
+    if _racer_profile_table is None:
+        return {}
+    try:
+        resp = _racer_profile_table.get_item(Key={"username": username})
+        item = resp.get("Item") or {}
+        return {
+            "avatarConfig": item.get("avatarConfig"),
+            "highlightColour": item.get("highlightColour"),
+        }
+    except Exception as e:
+        logger.warning(f"RacerProfile lookup failed for {username}: {e}")
+        return {}
 
 
 def build_summaries(races: list[dict], user_map: dict[str, dict]) -> list[dict]:
+    from avatar import render_avatar_svg
+
     races_by_user: dict[str, list[dict]] = {}
     for r in races:
         races_by_user.setdefault(r["userId"], []).append(r)
@@ -106,6 +145,8 @@ def build_summaries(races: list[dict], user_map: dict[str, dict]) -> list[dict]:
         u = user_map.get(uid, {})
         s["username"] = u.get("username", uid[:8])
         s["countryCode"] = u.get("countryCode", "")
+        s["highlightColour"] = u.get("highlightColour") or None
+        s["avatarSvg"] = render_avatar_svg(u.get("avatarConfig"))
         summaries.append(s)
     return summaries
 

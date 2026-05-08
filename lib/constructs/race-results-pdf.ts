@@ -30,6 +30,7 @@ export interface RaceResultsPdfProps {
   userPoolArn: string;
   raceTable: dynamodb.ITable;
   eventsTable: dynamodb.ITable;
+  racerProfileTable: dynamodb.ITable;
   logsBucket: IBucket;
 }
 
@@ -72,6 +73,7 @@ export class RaceResultsPdf extends Construct {
       PDF_BUCKET: pdfBucket.bucketName,
       RACE_TABLE: props.raceTable.tableName,
       EVENTS_TABLE: props.eventsTable.tableName,
+      RACER_PROFILE_TABLE: props.racerProfileTable.tableName,
       USER_POOL_ID: props.userPoolId,
       URL_EXPIRY_SECONDS: '3600',
       PDF_JOBS_TABLE: pdfJobsTable.tableName,
@@ -136,6 +138,7 @@ export class RaceResultsPdf extends Construct {
     pdfJobsTable.grantReadData(workerLambda);
     props.raceTable.grantReadData(workerLambda);
     props.eventsTable.grantReadData(workerLambda);
+    props.racerProfileTable.grantReadData(workerLambda);
     workerLambda.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,

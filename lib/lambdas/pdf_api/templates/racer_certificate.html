@@ -18,6 +18,19 @@
     text-align: center;
   }
   .cert-logo { height: 22mm; margin-bottom: 4mm; }
+  .cert-avatar {
+    width: 38mm;
+    height: 38mm;
+    margin: 0 auto 4mm auto;
+    border-radius: 50%;
+    border: 1.5mm solid var(--brand-primary);
+    background: #fff;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cert-avatar svg { width: 100%; height: 100%; display: block; }
   .cert-title {
     font-size: 30pt;
     font-weight: 700;
@@ -56,9 +69,10 @@
   }
 </style>
 
-<div class="cert-border">
+<div class="cert-border" {% if racer.highlightColour %}style="border-color: {{ racer.highlightColour }};"{% endif %}>
   <img class="cert-logo" src="{{ brand.logo_url }}" alt="logo">
   <div class="cert-title">Certificate of Achievement</div>
+  {% if racer.avatarSvg %}<div class="cert-avatar" {% if racer.highlightColour %}style="border-color: {{ racer.highlightColour }};"{% endif %}>{{ racer.avatarSvg|safe }}</div>{% endif %}
   <div class="cert-body">This certificate is proudly presented to</div>
   <div class="cert-name">{{ racer.username }}</div>
   <div class="cert-body">

@@ -28,6 +28,19 @@
   .podium-1 { background: #D4AF37; order: 2; }
   .podium-2 { background: #9AA4B2; order: 1; }
   .podium-3 { background: #CD7F32; order: 3; }
+  .podium-step .avatar {
+    width: 28mm;
+    height: 28mm;
+    margin: 0 auto 2mm auto;
+    border-radius: 50%;
+    border: 1.2mm solid rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.18);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .podium-step .avatar svg { width: 100%; height: 100%; display: block; }
 </style>
 
 <div class="header">
@@ -40,7 +53,8 @@
 
 <div class="podium-block">
   {% if podium|length > 1 %}
-    <div class="podium-step podium-2" style="height: 60mm;">
+    <div class="podium-step podium-2" style="height: 60mm; {% if podium[1].highlightColour %}border-bottom: 2.5mm solid {{ podium[1].highlightColour }};{% endif %}">
+      {% if podium[1].avatarSvg %}<div class="avatar">{{ podium[1].avatarSvg|safe }}</div>{% endif %}
       <div class="rank">2</div>
       <div class="name">{{ podium[1].username }}</div>
       <div class="country">{{ podium[1].countryCode|default('') }}</div>
@@ -48,7 +62,8 @@
     </div>
   {% endif %}
   {% if podium|length > 0 %}
-    <div class="podium-step podium-1" style="height: 80mm;">
+    <div class="podium-step podium-1" style="height: 80mm; {% if podium[0].highlightColour %}border-bottom: 2.5mm solid {{ podium[0].highlightColour }};{% endif %}">
+      {% if podium[0].avatarSvg %}<div class="avatar">{{ podium[0].avatarSvg|safe }}</div>{% endif %}
       <div class="rank">1</div>
       <div class="name">{{ podium[0].username }}</div>
       <div class="country">{{ podium[0].countryCode|default('') }}</div>
@@ -56,7 +71,8 @@
     </div>
   {% endif %}
   {% if podium|length > 2 %}
-    <div class="podium-step podium-3" style="height: 45mm;">
+    <div class="podium-step podium-3" style="height: 45mm; {% if podium[2].highlightColour %}border-bottom: 2.5mm solid {{ podium[2].highlightColour }};{% endif %}">
+      {% if podium[2].avatarSvg %}<div class="avatar">{{ podium[2].avatarSvg|safe }}</div>{% endif %}
       <div class="rank">3</div>
       <div class="name">{{ podium[2].username }}</div>
       <div class="country">{{ podium[2].countryCode|default('') }}</div>

@@ -259,6 +259,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       userPoolArn: userPool.userPoolArn,
       raceTable: raceManager.raceTable,
       eventsTable: eventsManager.eventsTable,
+      racerProfileTable: racerProfile.table,
       logsBucket: logsBucket,
     });
 
