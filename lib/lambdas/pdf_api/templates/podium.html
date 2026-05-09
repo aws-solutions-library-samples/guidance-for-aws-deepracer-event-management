@@ -3,22 +3,26 @@
 {% from "_components.html" import format_lap, avatar_silhouette %}
 {% block content %}
 <style>
-  /* Each column = avatar above + step below. Bottom-align the columns so the
-     coloured steps still form the classic 1st-tallest podium silhouette while
-     the avatars track the same heights — the avatars themselves stay a fixed
-     28mm so position 3's avatar isn't squashed by the shorter step. */
+  /* Each column is a fixed 112mm tall (= 28mm avatar + 4mm gap + 80mm tallest
+     step) with avatar pinned to the top and step pinned to the bottom via
+     `justify-content: space-between`. This makes the visible step bottoms
+     line up reliably across cols regardless of step height — earlier the
+     `align-items: flex-end` approach on variable-height cols sometimes
+     drifted on the Lambda WeasyPrint runtime and #3 ended up below #1/#2. */
   .podium-block {
     display: flex;
-    align-items: flex-end;
+    align-items: stretch;
     justify-content: center;
     gap: 2mm;
     margin: 10mm 0;
   }
   .podium-col {
     width: 52mm;
+    height: 112mm;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: space-between;
   }
   .podium-col .avatar {
     width: 28mm;

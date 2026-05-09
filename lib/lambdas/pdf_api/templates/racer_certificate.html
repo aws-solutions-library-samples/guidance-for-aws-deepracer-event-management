@@ -42,7 +42,9 @@
     margin-bottom: 8mm;
   }
   .cert-body { font-size: 14pt; color: var(--brand-text); margin: 4mm 0; }
-  .cert-name { font-size: 28pt; font-weight: 700; color: var(--brand-primary); margin: 4mm 0; }
+  .cert-name { font-size: 28pt; font-weight: 700; color: var(--brand-primary); margin: 4mm 0 1mm 0; }
+  .cert-country { font-size: 12pt; color: var(--brand-muted); margin: 0 0 4mm 0; letter-spacing: 0.5px; }
+  .cert-country .flag { height: 5mm; vertical-align: middle; margin-right: 2mm; border-radius: 0.5mm; }
   /* Table layout for stats — WeasyPrint 62.3's flexbox is unreliable for centered
      column flow, so use a table which always lays out correctly. */
   .cert-stats {
@@ -79,6 +81,11 @@
   </div>
   <div class="cert-body">This certificate is proudly presented to</div>
   <div class="cert-name">{{ racer.username }}</div>
+  {% if racer.countryCode %}
+    <div class="cert-country">
+      {% if racer.flagUrl %}<img class="flag" src="{{ racer.flagUrl }}" alt="">{% endif %}{{ racer.countryCode }}
+    </div>
+  {% endif %}
   <div class="cert-body">
     for participation in <strong>{{ event.eventName }}</strong>
     {% if event.eventDate %} on {{ event.eventDate }}{% endif %}.
