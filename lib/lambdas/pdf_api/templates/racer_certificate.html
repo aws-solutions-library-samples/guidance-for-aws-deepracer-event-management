@@ -18,6 +18,10 @@
     text-align: center;
   }
   .cert-logo { height: 22mm; margin-bottom: 4mm; }
+  /* Plain block container, no flex — flex sizing of <img> is unreliable in
+     WeasyPrint 62.3 on the Lambda runtime (the image kept its intrinsic
+     280px ≈ 74mm size and broke both the size and the margin: 0 auto
+     centring). The img simply fills the 38mm box via width/height: 100%. */
   .cert-avatar {
     width: 38mm;
     height: 38mm;
@@ -26,12 +30,9 @@
     border: 1.5mm solid var(--brand-primary);
     background: #fff;
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   .cert-avatar svg,
-  .cert-avatar img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  .cert-avatar img { width: 100%; height: 100%; display: block; }
   .cert-title {
     font-size: 30pt;
     font-weight: 700;
