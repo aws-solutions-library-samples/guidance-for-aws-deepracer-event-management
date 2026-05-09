@@ -1,12 +1,21 @@
-"""Render an avataaars JSON config to SVG for embedding in PDF templates.
+"""Render an avataaars JSON config to a PNG data URI for PDF templates.
 
 The avatar JSON in the RacerProfile table uses the React `avataaars` library's
 key/value vocabulary (camelCase + UpperCamel values like `ShortHairShortFlat`).
 `py-avataaars` is a Python port that takes the same shape but as Python enums
 named in SCREAMING_SNAKE_CASE. This module bridges the two.
 
+We render to PNG (via py-avataaars's CairoSVG-backed render_png) rather than
+inline SVG: avataaars composes the figure with heavy use of <mask> + <clipPath>,
+and WeasyPrint 62.3's SVG renderer renders those incorrectly — skin layers
+disappear and underlying hair-colour fills bleed through, producing a
+brown-blob-with-sunglasses instead of the actual avatar. Cairo handles the
+masks correctly, so a Cairo-rasterised PNG embedded as a data URI sidesteps
+the WeasyPrint SVG limitation entirely.
+
 Anything unmappable returns None and the caller falls back to the silhouette.
 """
+import base64
 import json
 import re
 from typing import Optional
@@ -50,8 +59,8 @@ def _to_screaming_snake(camel: str) -> str:
     return out.upper()
 
 
-def render_avatar_svg(config) -> Optional[str]:
-    """Convert an avataaars JSON config into an SVG string.
+def render_avatar_data_uri(config) -> Optional[str]:
+    """Convert an avataaars JSON config into a `data:image/png;base64,…` URI.
 
     Accepts a dict, a JSON string, or None. Returns None on any failure so
     callers can fall back to a silhouette without special-casing.
@@ -92,7 +101,8 @@ def render_avatar_svg(config) -> Optional[str]:
             continue
 
     try:
-        return py_avataaars.PyAvataaar(**kwargs).render_svg()
+        png_bytes = py_avataaars.PyAvataaar(**kwargs).render_png()
     except Exception:
         logger.exception("py-avataaars render failed")
         return None
+    return "data:image/png;base64," + base64.b64encode(png_bytes).decode("ascii")

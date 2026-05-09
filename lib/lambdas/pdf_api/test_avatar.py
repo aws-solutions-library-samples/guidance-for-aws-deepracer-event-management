@@ -1,4 +1,5 @@
-"""Tests for avatar.py — the avataaars JSON → SVG bridge."""
+"""Tests for avatar.py — the avataaars JSON → PNG-data-URI bridge."""
+import base64
 import sys
 import types
 
@@ -16,19 +17,19 @@ except ImportError:
     _PY_AVATAAARS_AVAILABLE = False
 
 
-def test_render_avatar_svg_returns_none_for_falsy():
-    assert avatar.render_avatar_svg(None) is None
-    assert avatar.render_avatar_svg("") is None
-    assert avatar.render_avatar_svg({}) is None
+def test_returns_none_for_falsy():
+    assert avatar.render_avatar_data_uri(None) is None
+    assert avatar.render_avatar_data_uri("") is None
+    assert avatar.render_avatar_data_uri({}) is None
 
 
-def test_render_avatar_svg_returns_none_for_invalid_json_string():
-    assert avatar.render_avatar_svg("not json {{{") is None
+def test_returns_none_for_invalid_json_string():
+    assert avatar.render_avatar_data_uri("not json {{{") is None
 
 
-def test_render_avatar_svg_returns_none_for_non_dict():
-    assert avatar.render_avatar_svg([1, 2, 3]) is None
-    assert avatar.render_avatar_svg(42) is None
+def test_returns_none_for_non_dict():
+    assert avatar.render_avatar_data_uri([1, 2, 3]) is None
+    assert avatar.render_avatar_data_uri(42) is None
 
 
 def test_to_screaming_snake_basic():
@@ -57,31 +58,19 @@ def test_to_screaming_snake_two_digit_suffix_inserts_separator():
     assert avatar._to_screaming_snake("ShortHairDreads01") == "SHORT_HAIR_DREADS_01"
 
 
-def test_render_avatar_svg_returns_none_when_py_avataaars_missing(monkeypatch):
+def test_returns_none_when_py_avataaars_missing(monkeypatch):
     """If py_avataaars isn't importable, the function should return None gracefully
     so the templates fall back to the silhouette / no-avatar path."""
-    # Simulate the package being absent
     monkeypatch.setitem(sys.modules, "py_avataaars", None)
-    assert avatar.render_avatar_svg({"topType": "ShortHairShortFlat"}) is None
+    assert avatar.render_avatar_data_uri({"topType": "ShortHairShortFlat"}) is None
 
 
-def test_render_avatar_svg_with_stub_py_avataaars(monkeypatch):
-    """When py_avataaars is present, the function should pass the mapped enums
-    to PyAvataaar(...) and return the SVG string from .render_svg().
-
-    We stub the package to avoid pulling in cairo/pillow native deps just for
-    this test."""
-    captured_kwargs = {}
-
+def _make_fake_py_avataaars(captured_kwargs, png_bytes=b"\x89PNG\r\n\x1a\nfake"):
+    """Build a stub py_avataaars module that records constructor kwargs and
+    returns canned PNG bytes from render_png()."""
     class FakeEnum:
         def __init__(self, name):
             self.name = name
-
-        def __class_getitem__(cls, key):
-            return FakeEnum(key)
-
-        def __getitem__(self, key):
-            return FakeEnum(key)
 
     class FakeEnumClass:
         def __class_getitem__(cls, key):
@@ -91,22 +80,29 @@ def test_render_avatar_svg_with_stub_py_avataaars(monkeypatch):
         def __init__(self, **kwargs):
             captured_kwargs.update(kwargs)
 
-        def render_svg(self):
-            return "<svg>fake</svg>"
+        def render_png(self):
+            return png_bytes
 
-    fake_module = types.ModuleType("py_avataaars")
-    fake_module.PyAvataaar = FakePyAvataaar
-    fake_module.AvatarStyle = types.SimpleNamespace(TRANSPARENT="TRANSPARENT")
+    module = types.ModuleType("py_avataaars")
+    module.PyAvataaar = FakePyAvataaar
+    module.AvatarStyle = types.SimpleNamespace(TRANSPARENT="TRANSPARENT")
     for cls_name in [
         "TopType", "AccessoriesType", "HairColor", "FacialHairType",
         "ClotheType", "Color", "EyesType",
         "EyebrowType", "MouthType", "SkinColor",
     ]:
-        setattr(fake_module, cls_name, FakeEnumClass)
+        setattr(module, cls_name, FakeEnumClass)
+    return module
 
-    monkeypatch.setitem(sys.modules, "py_avataaars", fake_module)
 
-    out = avatar.render_avatar_svg({
+def test_passes_correct_enums_and_returns_data_uri(monkeypatch):
+    """When py_avataaars is present, the function should pass mapped enums to
+    PyAvataaar(...) and base64-encode render_png() into a data URI."""
+    captured_kwargs = {}
+    fake = _make_fake_py_avataaars(captured_kwargs, png_bytes=b"\x89PNG_payload")
+    monkeypatch.setitem(sys.modules, "py_avataaars", fake)
+
+    out = avatar.render_avatar_data_uri({
         "topType": "ShortHairShortFlat",
         "skinColor": "Pale",
         "hairColor": "Brown",
@@ -115,7 +111,8 @@ def test_render_avatar_svg_with_stub_py_avataaars(monkeypatch):
         "facialHairType": "BeardLight",
         "facialHairColor": "Black",
     })
-    assert out == "<svg>fake</svg>"
+    expected = "data:image/png;base64," + base64.b64encode(b"\x89PNG_payload").decode("ascii")
+    assert out == expected
     assert captured_kwargs["style"] == "TRANSPARENT"
     assert captured_kwargs["top_type"].name == "SHORT_HAIR_SHORT_FLAT"
     assert captured_kwargs["skin_color"].name == "PALE"
@@ -128,36 +125,19 @@ def test_render_avatar_svg_with_stub_py_avataaars(monkeypatch):
     assert captured_kwargs["facial_hair_color"].name == "BLACK"
 
 
-def test_render_avatar_svg_accepts_json_string(monkeypatch):
+def test_accepts_json_string(monkeypatch):
     """AppSync sometimes returns AWSJSON as a string — accept it and parse."""
-    class FakePyAvataaar:
-        def __init__(self, **kwargs):
-            pass
+    captured_kwargs = {}
+    fake = _make_fake_py_avataaars(captured_kwargs)
+    monkeypatch.setitem(sys.modules, "py_avataaars", fake)
 
-        def render_svg(self):
-            return "<svg>parsed</svg>"
-
-    class FakeEnumClass:
-        def __class_getitem__(cls, key):
-            return cls
-
-    fake_module = types.ModuleType("py_avataaars")
-    fake_module.PyAvataaar = FakePyAvataaar
-    fake_module.AvatarStyle = types.SimpleNamespace(TRANSPARENT="T")
-    for cls_name in [
-        "TopType", "AccessoriesType", "HairColor", "FacialHairType",
-        "ClotheType", "Color", "EyesType",
-        "EyebrowType", "MouthType", "SkinColor",
-    ]:
-        setattr(fake_module, cls_name, FakeEnumClass)
-    monkeypatch.setitem(sys.modules, "py_avataaars", fake_module)
-
-    out = avatar.render_avatar_svg('{"topType": "ShortHair", "skinColor": "Light"}')
-    assert out == "<svg>parsed</svg>"
+    out = avatar.render_avatar_data_uri('{"topType": "ShortHair", "skinColor": "Light"}')
+    assert out is not None
+    assert out.startswith("data:image/png;base64,")
 
 
 @pytest.mark.skipif(not _PY_AVATAAARS_AVAILABLE, reason="py-avataaars not installed")
-def test_render_avatar_svg_real_library_smoke():
+def test_real_library_smoke():
     """End-to-end render against the actual py-avataaars library.
 
     Uses values that exercise the previously-broken paths: `eyeType`
@@ -181,7 +161,10 @@ def test_render_avatar_svg_real_library_smoke():
         "mouthType": "Smile",
         "skinColor": "Light",
     }
-    out = avatar.render_avatar_svg(config)
-    assert out is not None, "real py-avataaars should produce SVG for a valid config"
-    assert out.lstrip().startswith("<?xml") or out.lstrip().startswith("<svg"), \
-        f"output should be SVG, got: {out[:80]!r}"
+    out = avatar.render_avatar_data_uri(config)
+    assert out is not None, "real py-avataaars should produce a data URI for a valid config"
+    assert out.startswith("data:image/png;base64,"), \
+        f"output should be a PNG data URI, got: {out[:80]!r}"
+    # Confirm the payload decodes to a real PNG (8-byte signature).
+    payload = base64.b64decode(out.split(",", 1)[1])
+    assert payload[:8] == b"\x89PNG\r\n\x1a\n", "decoded payload is not a PNG"

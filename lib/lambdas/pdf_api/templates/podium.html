@@ -40,7 +40,8 @@
     align-items: center;
     justify-content: center;
   }
-  .podium-step .avatar svg { width: 100%; height: 100%; display: block; }
+  .podium-step .avatar svg,
+  .podium-step .avatar img { width: 100%; height: 100%; display: block; object-fit: cover; }
 </style>
 
 <div class="header">
@@ -54,7 +55,7 @@
 <div class="podium-block">
   {% if podium|length > 1 %}
     <div class="podium-step podium-2" style="height: 60mm; {% if podium[1].highlightColour %}border-bottom: 2.5mm solid {{ podium[1].highlightColour }};{% endif %}">
-      <div class="avatar">{% if podium[1].avatarSvg %}{{ podium[1].avatarSvg|safe }}{% else %}{{ avatar_silhouette() }}{% endif %}</div>
+      <div class="avatar">{% if podium[1].avatarUrl %}<img src="{{ podium[1].avatarUrl }}" alt="">{% else %}{{ avatar_silhouette() }}{% endif %}</div>
       <div class="rank">2</div>
       <div class="name">{{ podium[1].username }}</div>
       <div class="country">{{ podium[1].countryCode|default('') }}</div>
@@ -63,7 +64,7 @@
   {% endif %}
   {% if podium|length > 0 %}
     <div class="podium-step podium-1" style="height: 80mm; {% if podium[0].highlightColour %}border-bottom: 2.5mm solid {{ podium[0].highlightColour }};{% endif %}">
-      <div class="avatar">{% if podium[0].avatarSvg %}{{ podium[0].avatarSvg|safe }}{% else %}{{ avatar_silhouette() }}{% endif %}</div>
+      <div class="avatar">{% if podium[0].avatarUrl %}<img src="{{ podium[0].avatarUrl }}" alt="">{% else %}{{ avatar_silhouette() }}{% endif %}</div>
       <div class="rank">1</div>
       <div class="name">{{ podium[0].username }}</div>
       <div class="country">{{ podium[0].countryCode|default('') }}</div>
@@ -72,7 +73,7 @@
   {% endif %}
   {% if podium|length > 2 %}
     <div class="podium-step podium-3" style="height: 45mm; {% if podium[2].highlightColour %}border-bottom: 2.5mm solid {{ podium[2].highlightColour }};{% endif %}">
-      <div class="avatar">{% if podium[2].avatarSvg %}{{ podium[2].avatarSvg|safe }}{% else %}{{ avatar_silhouette() }}{% endif %}</div>
+      <div class="avatar">{% if podium[2].avatarUrl %}<img src="{{ podium[2].avatarUrl }}" alt="">{% else %}{{ avatar_silhouette() }}{% endif %}</div>
       <div class="rank">3</div>
       <div class="name">{{ podium[2].username }}</div>
       <div class="country">{{ podium[2].countryCode|default('') }}</div>
