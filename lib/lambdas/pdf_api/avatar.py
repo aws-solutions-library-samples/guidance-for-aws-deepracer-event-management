@@ -59,7 +59,9 @@ def render_avatar_svg(config) -> Optional[str]:
         logger.warning("py-avataaars not installed; skipping avatar render")
         return None
 
-    kwargs = {"style": py_avataaars.AvatarStyle.Transparent}
+    # py-avataaars 1.1.2's AvatarStyle uses SCREAMING_SNAKE values (TRANSPARENT,
+    # CIRCLE) — the README's mixed-case examples are out of date.
+    kwargs = {"style": py_avataaars.AvatarStyle.TRANSPARENT}
     for json_key, enum_name, arg_name in _ENUM_FIELDS:
         val = config.get(json_key)
         if not val or not isinstance(val, str):

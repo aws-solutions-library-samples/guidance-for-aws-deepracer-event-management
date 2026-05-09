@@ -6,6 +6,15 @@ import pytest
 
 import avatar
 
+# Detect whether the real py_avataaars package is available — if so the smoke
+# test at the bottom uses it. The Lambda image always has it; local dev may
+# or may not.
+try:
+    import py_avataaars  # type: ignore[import-not-found]  # noqa: F401
+    _PY_AVATAAARS_AVAILABLE = True
+except ImportError:
+    _PY_AVATAAARS_AVAILABLE = False
+
 
 def test_render_avatar_svg_returns_none_for_falsy():
     assert avatar.render_avatar_svg(None) is None
@@ -67,7 +76,7 @@ def test_render_avatar_svg_with_stub_py_avataaars(monkeypatch):
 
     fake_module = types.ModuleType("py_avataaars")
     fake_module.PyAvataaar = FakePyAvataaar
-    fake_module.AvatarStyle = types.SimpleNamespace(Transparent="TRANSPARENT")
+    fake_module.AvatarStyle = types.SimpleNamespace(TRANSPARENT="TRANSPARENT")
     for cls_name in [
         "TopType", "AccessoriesType", "HairColor", "FacialHairType",
         "FacialHairColor", "ClotheType", "ClotheColor", "EyeType",
@@ -104,7 +113,7 @@ def test_render_avatar_svg_accepts_json_string(monkeypatch):
 
     fake_module = types.ModuleType("py_avataaars")
     fake_module.PyAvataaar = FakePyAvataaar
-    fake_module.AvatarStyle = types.SimpleNamespace(Transparent="T")
+    fake_module.AvatarStyle = types.SimpleNamespace(TRANSPARENT="T")
     for cls_name in [
         "TopType", "AccessoriesType", "HairColor", "FacialHairType",
         "FacialHairColor", "ClotheType", "ClotheColor", "EyeType",
@@ -115,3 +124,29 @@ def test_render_avatar_svg_accepts_json_string(monkeypatch):
 
     out = avatar.render_avatar_svg('{"topType": "ShortHair", "skinColor": "Light"}')
     assert out == "<svg>parsed</svg>"
+
+
+@pytest.mark.skipif(not _PY_AVATAAARS_AVAILABLE, reason="py-avataaars not installed")
+def test_render_avatar_svg_real_library_smoke():
+    """End-to-end render against the actual py-avataaars library.
+
+    Catches the class of bug where AvatarStyle / enum naming drifts from
+    the README — the stubbed tests above can't see that. The Lambda
+    container ships py-avataaars so this path always runs in CI.
+    """
+    config = {
+        "topType": "ShortHairShortFlat",
+        "accessoriesType": "Blank",
+        "hairColor": "Brown",
+        "facialHairType": "Blank",
+        "clotheType": "Hoodie",
+        "clotheColor": "Red",
+        "eyeType": "Default",
+        "eyebrowType": "Default",
+        "mouthType": "Default",
+        "skinColor": "Light",
+    }
+    out = avatar.render_avatar_svg(config)
+    assert out is not None, "real py-avataaars should produce SVG for a valid config"
+    assert out.lstrip().startswith("<?xml") or out.lstrip().startswith("<svg"), \
+        f"output should be SVG, got: {out[:80]!r}"
