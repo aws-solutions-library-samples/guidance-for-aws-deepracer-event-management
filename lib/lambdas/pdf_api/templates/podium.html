@@ -38,13 +38,26 @@
     color: white;
     font-weight: 600;
     box-sizing: border-box;
+    /* Anchor content to the top of each step so rank labels sit at consistent
+       distance from the avatar across all three positions. With justify-center,
+       3rd place's content floated mid-step which made the 45mm tall #3 look
+       weirdly empty above the rank label. */
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
   }
   .podium-step .rank { font-size: 22pt; }
   .podium-step .name { font-size: 14pt; margin-top: 2mm; }
-  .podium-step .country { font-size: 10pt; opacity: 0.85; }
+  .podium-step .country { font-size: 10pt; opacity: 0.85; margin-top: 1mm; }
+  .podium-step .country .flag {
+    height: 4mm;
+    vertical-align: middle;
+    margin-right: 1.5mm;
+    border-radius: 0.4mm;
+    /* flagcdn's PNGs have flat colour edges that look jagged when scaled; a
+       1px white outline softens the edge without affecting flag colours. */
+    box-shadow: 0 0 0 0.15mm rgba(255, 255, 255, 0.7);
+  }
   .podium-step .lap { font-size: 11pt; margin-top: 2mm; opacity: 0.95; }
   .podium-1 { background: #D4AF37; }
   .podium-2 { background: #9AA4B2; }
@@ -69,7 +82,7 @@
       <div class="podium-step podium-2" style="height: 60mm; {% if podium[1].highlightColour %}border-bottom: 2.5mm solid {{ podium[1].highlightColour }};{% endif %}">
         <div class="rank">2</div>
         <div class="name">{{ podium[1].username }}</div>
-        <div class="country">{{ podium[1].countryCode|default('') }}</div>
+        <div class="country">{% if podium[1].flagUrl %}<img class="flag" src="{{ podium[1].flagUrl }}" alt="">{% endif %}{{ podium[1].countryCode|default('') }}</div>
         <div class="lap">{{ format_lap(podium[1].fastestLapTime) }}</div>
       </div>
     </div>
@@ -80,7 +93,7 @@
       <div class="podium-step podium-1" style="height: 80mm; {% if podium[0].highlightColour %}border-bottom: 2.5mm solid {{ podium[0].highlightColour }};{% endif %}">
         <div class="rank">1</div>
         <div class="name">{{ podium[0].username }}</div>
-        <div class="country">{{ podium[0].countryCode|default('') }}</div>
+        <div class="country">{% if podium[0].flagUrl %}<img class="flag" src="{{ podium[0].flagUrl }}" alt="">{% endif %}{{ podium[0].countryCode|default('') }}</div>
         <div class="lap">{{ format_lap(podium[0].fastestLapTime) }}</div>
       </div>
     </div>
@@ -91,7 +104,7 @@
       <div class="podium-step podium-3" style="height: 45mm; {% if podium[2].highlightColour %}border-bottom: 2.5mm solid {{ podium[2].highlightColour }};{% endif %}">
         <div class="rank">3</div>
         <div class="name">{{ podium[2].username }}</div>
-        <div class="country">{{ podium[2].countryCode|default('') }}</div>
+        <div class="country">{% if podium[2].flagUrl %}<img class="flag" src="{{ podium[2].flagUrl }}" alt="">{% endif %}{{ podium[2].countryCode|default('') }}</div>
         <div class="lap">{{ format_lap(podium[2].fastestLapTime) }}</div>
       </div>
     </div>
@@ -107,7 +120,7 @@
         <tr>
           <td>{{ r.rank }}</td>
           <td>{{ r.username }}</td>
-          <td>{{ r.countryCode|default('') }}</td>
+          <td>{% if r.flagUrl %}<img class="flag" src="{{ r.flagUrl }}" alt="">{% endif %}{{ r.countryCode|default('') }}</td>
           <td>{{ format_lap(r.fastestLapTime) }}</td>
         </tr>
       {% endfor %}

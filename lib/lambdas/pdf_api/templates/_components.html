@@ -25,7 +25,7 @@
 <tr>
   <td>{{ r.rank }}</td>
   <td>{{ r.username }}</td>
-  <td>{{ r.countryCode|default('') }}</td>
+  <td>{% if r.flagUrl %}<img class="flag" src="{{ r.flagUrl }}" alt="">{% endif %}{{ r.countryCode|default('') }}</td>
   <td>{{ format_lap(r.fastestLapTime) }}</td>
   <td>{{ format_lap(r.avgLapTime) }}</td>
   <td>{{ r.numberOfValidLaps }}/{{ r.numberOfValidLaps + r.numberOfInvalidLaps }}</td>

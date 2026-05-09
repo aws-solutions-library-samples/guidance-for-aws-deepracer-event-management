@@ -37,6 +37,9 @@
   table { width: 100%; border-collapse: collapse; margin-top: 4mm; }
   th, td { padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--brand-line); font-size: 9pt; }
   th { background: var(--brand-primary); color: white; font-weight: 600; }
+  /* Inline country flag (rendered via flag.py → flagcdn data URI). The 1px
+     soft outline hides flagcdn's slightly fuzzy edges at small sizes. */
+  td .flag { height: 3.5mm; vertical-align: middle; margin-right: 1.5mm; border-radius: 0.4mm; }
   .header { display: flex; align-items: center; gap: 12mm; border-bottom: 2px solid var(--brand-accent); padding-bottom: 4mm; }
   .header img.logo { height: 14mm; }
   .header .meta { color: var(--brand-muted); font-size: 9pt; }

@@ -135,6 +135,7 @@ def _lookup_racer_profile(username: str) -> dict:
 
 def build_summaries(races: list[dict], user_map: dict[str, dict]) -> list[dict]:
     from avatar import render_avatar_data_uri
+    from flag import flag_data_uri
 
     races_by_user: dict[str, list[dict]] = {}
     for r in races:
@@ -147,6 +148,7 @@ def build_summaries(races: list[dict], user_map: dict[str, dict]) -> list[dict]:
         s["countryCode"] = u.get("countryCode", "")
         s["highlightColour"] = u.get("highlightColour") or None
         s["avatarUrl"] = render_avatar_data_uri(u.get("avatarConfig"))
+        s["flagUrl"] = flag_data_uri(s["countryCode"])
         summaries.append(s)
     return summaries
 
