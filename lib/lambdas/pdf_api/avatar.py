@@ -15,16 +15,20 @@ from aws_lambda_powertools import Logger
 
 logger = Logger()
 
-# Config-key → (py-avataaars enum class name, constructor arg name).
+# Config-key → (py-avataaars enum class name, constructor arg name). The class
+# names don't always match the React avataaars vocabulary one-for-one:
+#   - eye uses `EyesType` (note the S)
+#   - both clothe colour and hat colour share a single `Color` enum
+#   - facial hair colour reuses the `HairColor` enum
 _ENUM_FIELDS = [
     ("topType", "TopType", "top_type"),
     ("accessoriesType", "AccessoriesType", "accessories_type"),
     ("hairColor", "HairColor", "hair_color"),
     ("facialHairType", "FacialHairType", "facial_hair_type"),
-    ("facialHairColor", "FacialHairColor", "facial_hair_color"),
+    ("facialHairColor", "HairColor", "facial_hair_color"),
     ("clotheType", "ClotheType", "clothe_type"),
-    ("clotheColor", "ClotheColor", "clothe_color"),
-    ("eyeType", "EyeType", "eye_type"),
+    ("clotheColor", "Color", "clothe_color"),
+    ("eyeType", "EyesType", "eye_type"),
     ("eyebrowType", "EyebrowType", "eyebrow_type"),
     ("mouthType", "MouthType", "mouth_type"),
     ("skinColor", "SkinColor", "skin_color"),
@@ -32,8 +36,18 @@ _ENUM_FIELDS = [
 
 
 def _to_screaming_snake(camel: str) -> str:
-    """ShortHairShortFlat → SHORT_HAIR_SHORT_FLAT."""
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", camel).upper()
+    """ShortHairShortFlat → SHORT_HAIR_SHORT_FLAT.
+
+    Two-digit numeric suffixes get an underscore separator so React values like
+    `Prescription01`, `Blue01`, `ShortHairDreads01` map to py-avataaars's
+    `PRESCRIPTION_01`, `BLUE_01`, `SHORT_HAIR_DREADS_01`. Single-digit suffixes
+    don't get a separator (`WinterHat1` → `WINTER_HAT1`,
+    `LongHairStraight2` → `LONG_HAIR_STRAIGHT2`) — py-avataaars is inconsistent
+    here and we follow what the actual enum members are named.
+    """
+    out = re.sub(r"(?<!^)(?=[A-Z])", "_", camel)
+    out = re.sub(r"(?<=[A-Za-z])(?=\d{2,})", "_", out)
+    return out.upper()
 
 
 def render_avatar_svg(config) -> Optional[str]:

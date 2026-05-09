@@ -34,7 +34,27 @@ def test_render_avatar_svg_returns_none_for_non_dict():
 def test_to_screaming_snake_basic():
     assert avatar._to_screaming_snake("ShortHairShortFlat") == "SHORT_HAIR_SHORT_FLAT"
     assert avatar._to_screaming_snake("Pale") == "PALE"
+
+
+def test_to_screaming_snake_single_digit_suffix_has_no_separator():
+    """py-avataaars uses WINTER_HAT1, LONG_HAIR_STRAIGHT2 (no underscore
+    before single digits) — our converter must match."""
+    assert avatar._to_screaming_snake("WinterHat1") == "WINTER_HAT1"
     assert avatar._to_screaming_snake("WinterHat2") == "WINTER_HAT2"
+    assert avatar._to_screaming_snake("LongHairStraight2") == "LONG_HAIR_STRAIGHT2"
+
+
+def test_to_screaming_snake_two_digit_suffix_inserts_separator():
+    """py-avataaars uses PRESCRIPTION_01, BLUE_01, SHORT_HAIR_DREADS_01
+    (underscore before two-digit suffixes) — without this rule, accessories
+    like sunglasses-with-prescription and any color-01/02 variant silently
+    fall back to defaults."""
+    assert avatar._to_screaming_snake("Prescription01") == "PRESCRIPTION_01"
+    assert avatar._to_screaming_snake("Prescription02") == "PRESCRIPTION_02"
+    assert avatar._to_screaming_snake("Blue01") == "BLUE_01"
+    assert avatar._to_screaming_snake("Blue02") == "BLUE_02"
+    assert avatar._to_screaming_snake("Gray01") == "GRAY_01"
+    assert avatar._to_screaming_snake("ShortHairDreads01") == "SHORT_HAIR_DREADS_01"
 
 
 def test_render_avatar_svg_returns_none_when_py_avataaars_missing(monkeypatch):
@@ -79,7 +99,7 @@ def test_render_avatar_svg_with_stub_py_avataaars(monkeypatch):
     fake_module.AvatarStyle = types.SimpleNamespace(TRANSPARENT="TRANSPARENT")
     for cls_name in [
         "TopType", "AccessoriesType", "HairColor", "FacialHairType",
-        "FacialHairColor", "ClotheType", "ClotheColor", "EyeType",
+        "ClotheType", "Color", "EyesType",
         "EyebrowType", "MouthType", "SkinColor",
     ]:
         setattr(fake_module, cls_name, FakeEnumClass)
@@ -90,12 +110,22 @@ def test_render_avatar_svg_with_stub_py_avataaars(monkeypatch):
         "topType": "ShortHairShortFlat",
         "skinColor": "Pale",
         "hairColor": "Brown",
+        "eyeType": "Happy",
+        "clotheColor": "Blue01",
+        "facialHairType": "BeardLight",
+        "facialHairColor": "Black",
     })
     assert out == "<svg>fake</svg>"
     assert captured_kwargs["style"] == "TRANSPARENT"
     assert captured_kwargs["top_type"].name == "SHORT_HAIR_SHORT_FLAT"
     assert captured_kwargs["skin_color"].name == "PALE"
     assert captured_kwargs["hair_color"].name == "BROWN"
+    # These three were silently dropped before — eye_type was looking up a
+    # non-existent EyeType class, clothe_color was looking up ClotheColor,
+    # and facial_hair_color was looking up FacialHairColor.
+    assert captured_kwargs["eye_type"].name == "HAPPY"
+    assert captured_kwargs["clothe_color"].name == "BLUE_01"
+    assert captured_kwargs["facial_hair_color"].name == "BLACK"
 
 
 def test_render_avatar_svg_accepts_json_string(monkeypatch):
@@ -116,7 +146,7 @@ def test_render_avatar_svg_accepts_json_string(monkeypatch):
     fake_module.AvatarStyle = types.SimpleNamespace(TRANSPARENT="T")
     for cls_name in [
         "TopType", "AccessoriesType", "HairColor", "FacialHairType",
-        "FacialHairColor", "ClotheType", "ClotheColor", "EyeType",
+        "ClotheType", "Color", "EyesType",
         "EyebrowType", "MouthType", "SkinColor",
     ]:
         setattr(fake_module, cls_name, FakeEnumClass)
@@ -130,20 +160,25 @@ def test_render_avatar_svg_accepts_json_string(monkeypatch):
 def test_render_avatar_svg_real_library_smoke():
     """End-to-end render against the actual py-avataaars library.
 
-    Catches the class of bug where AvatarStyle / enum naming drifts from
-    the README — the stubbed tests above can't see that. The Lambda
-    container ships py-avataaars so this path always runs in CI.
+    Uses values that exercise the previously-broken paths: `eyeType`
+    (EyesType, not EyeType), `clotheColor` (Color, not ClotheColor),
+    `facialHairColor` (HairColor, not FacialHairColor), and a two-digit
+    suffix value (`Blue01` → `BLUE_01`). The stubbed tests above can't
+    see drift between our enum class names and py-avataaars's; this test
+    can. The Lambda container ships py-avataaars so this path always
+    runs in CI.
     """
     config = {
         "topType": "ShortHairShortFlat",
-        "accessoriesType": "Blank",
+        "accessoriesType": "Prescription01",
         "hairColor": "Brown",
-        "facialHairType": "Blank",
+        "facialHairType": "BeardLight",
+        "facialHairColor": "BrownDark",
         "clotheType": "Hoodie",
-        "clotheColor": "Red",
-        "eyeType": "Default",
+        "clotheColor": "Blue01",
+        "eyeType": "Happy",
         "eyebrowType": "Default",
-        "mouthType": "Default",
+        "mouthType": "Smile",
         "skinColor": "Light",
     }
     out = avatar.render_avatar_svg(config)

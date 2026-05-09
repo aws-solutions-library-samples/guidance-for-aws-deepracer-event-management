@@ -1,6 +1,6 @@
 {# lib/lambdas/pdf_api/templates/podium.html #}
 {% extends "base.html" %}
-{% from "_components.html" import format_lap %}
+{% from "_components.html" import format_lap, avatar_silhouette %}
 {% block content %}
 <style>
   .podium-block {
@@ -54,7 +54,7 @@
 <div class="podium-block">
   {% if podium|length > 1 %}
     <div class="podium-step podium-2" style="height: 60mm; {% if podium[1].highlightColour %}border-bottom: 2.5mm solid {{ podium[1].highlightColour }};{% endif %}">
-      {% if podium[1].avatarSvg %}<div class="avatar">{{ podium[1].avatarSvg|safe }}</div>{% endif %}
+      <div class="avatar">{% if podium[1].avatarSvg %}{{ podium[1].avatarSvg|safe }}{% else %}{{ avatar_silhouette() }}{% endif %}</div>
       <div class="rank">2</div>
       <div class="name">{{ podium[1].username }}</div>
       <div class="country">{{ podium[1].countryCode|default('') }}</div>
@@ -63,7 +63,7 @@
   {% endif %}
   {% if podium|length > 0 %}
     <div class="podium-step podium-1" style="height: 80mm; {% if podium[0].highlightColour %}border-bottom: 2.5mm solid {{ podium[0].highlightColour }};{% endif %}">
-      {% if podium[0].avatarSvg %}<div class="avatar">{{ podium[0].avatarSvg|safe }}</div>{% endif %}
+      <div class="avatar">{% if podium[0].avatarSvg %}{{ podium[0].avatarSvg|safe }}{% else %}{{ avatar_silhouette() }}{% endif %}</div>
       <div class="rank">1</div>
       <div class="name">{{ podium[0].username }}</div>
       <div class="country">{{ podium[0].countryCode|default('') }}</div>
@@ -72,7 +72,7 @@
   {% endif %}
   {% if podium|length > 2 %}
     <div class="podium-step podium-3" style="height: 45mm; {% if podium[2].highlightColour %}border-bottom: 2.5mm solid {{ podium[2].highlightColour }};{% endif %}">
-      {% if podium[2].avatarSvg %}<div class="avatar">{{ podium[2].avatarSvg|safe }}</div>{% endif %}
+      <div class="avatar">{% if podium[2].avatarSvg %}{{ podium[2].avatarSvg|safe }}{% else %}{{ avatar_silhouette() }}{% endif %}</div>
       <div class="rank">3</div>
       <div class="name">{{ podium[2].username }}</div>
       <div class="country">{{ podium[2].countryCode|default('') }}</div>
