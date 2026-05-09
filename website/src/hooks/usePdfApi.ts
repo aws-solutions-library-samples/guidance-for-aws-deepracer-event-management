@@ -124,10 +124,32 @@ export function usePdfApi() {
 
     const generatePdf = useCallback(
         async (args: GeneratePdfArgs): Promise<PdfJob> => {
-            const result = await graphqlMutate<{ generateRaceResultsPdf: PdfJob }>(
-                generateRaceResultsPdf,
-                args,
-            );
+            // Push a placeholder notification immediately so the user sees feedback
+            // straight away — the generateRaceResultsPdf mutation can take ~5s
+            // before returning a real jobId, and without this the click looks
+            // unresponsive. We swap it for the real jobId-keyed notification once
+            // the mutation resolves (or dismiss it on failure).
+            const pendingId = `pdf-pending-${dedupKey(args)}`;
+            const typeLabel = t(`pdf.type.${args.type}`);
+            dispatch('ADD_NOTIFICATION', {
+                id: pendingId,
+                type: 'info',
+                header: t('pdf.generating', { type: typeLabel }),
+                loading: true,
+                dismissible: false,
+            });
+
+            let result: { generateRaceResultsPdf: PdfJob };
+            try {
+                result = await graphqlMutate<{ generateRaceResultsPdf: PdfJob }>(
+                    generateRaceResultsPdf,
+                    args,
+                );
+            } catch (err) {
+                dispatch('DISMISS_NOTIFICATION', pendingId);
+                throw err;
+            }
+            dispatch('DISMISS_NOTIFICATION', pendingId);
             const job = result.generateRaceResultsPdf;
             setJobs((prev) => ({ ...prev, [job.jobId]: job }));
             pushNotification(job.jobId, job.type, 'PENDING', {});
@@ -198,7 +220,7 @@ export function usePdfApi() {
 
             return job;
         },
-        [updateJob, cleanupJob, pushNotification, t],
+        [dispatch, updateJob, cleanupJob, pushNotification, t],
     );
 
     const isGenerating = useCallback(

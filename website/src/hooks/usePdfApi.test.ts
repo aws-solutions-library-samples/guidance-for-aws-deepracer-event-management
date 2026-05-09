@@ -224,6 +224,84 @@ describe('usePdfApi', () => {
         expect(result.current.isGenerating({ eventId: 'e-1', type: 'ORGANISER_SUMMARY' })).toBe(false);
     });
 
+    test('immediate placeholder notification — pushed before mutation resolves, then swapped for jobId-keyed one', async () => {
+        // Hold the mutation in a pending state so we can assert the pre-mutation
+        // notification arrives synchronously. The 5-second roundtrip on the real
+        // backend is exactly the gap this placeholder is meant to bridge.
+        let resolveMutate!: (value: unknown) => void;
+        (graphqlMutate as any).mockImplementation(
+            () =>
+                new Promise((resolve) => {
+                    resolveMutate = resolve;
+                }),
+        );
+        (graphqlSubscribe as any).mockReturnValue(fakeSubscription());
+
+        const { result } = renderHook(() => usePdfApi());
+        let pending: Promise<unknown>;
+        act(() => {
+            pending = result.current.generatePdf({ eventId: 'e-1', type: 'ORGANISER_SUMMARY' });
+        });
+
+        // Before the mutation resolves we should already have dispatched the
+        // placeholder ADD_NOTIFICATION with the loading flag.
+        const placeholderCall = dispatchMock.mock.calls.find(
+            ([action, payload]) =>
+                action === 'ADD_NOTIFICATION' &&
+                typeof payload === 'object' &&
+                payload?.id?.startsWith('pdf-pending-') &&
+                payload?.loading === true,
+        );
+        expect(placeholderCall).toBeDefined();
+        const placeholderId = placeholderCall![1].id;
+
+        await act(async () => {
+            resolveMutate({
+                generateRaceResultsPdf: {
+                    jobId: 'j-imm',
+                    status: 'PENDING',
+                    type: 'ORGANISER_SUMMARY',
+                    eventId: 'e-1',
+                    createdBy: 'u-1',
+                    createdAt: '2026-04-20T00:00:00Z',
+                },
+            });
+            await pending;
+        });
+
+        // After the mutation resolves the placeholder should have been dismissed
+        // and a real jobId-keyed notification dispatched.
+        expect(dispatchMock).toHaveBeenCalledWith('DISMISS_NOTIFICATION', placeholderId);
+        expect(
+            dispatchMock.mock.calls.some(
+                ([action, payload]) =>
+                    action === 'ADD_NOTIFICATION' && payload?.id === 'pdf-j-imm',
+            ),
+        ).toBe(true);
+    });
+
+    test('placeholder notification is dismissed when the mutation throws', async () => {
+        (graphqlMutate as any).mockRejectedValue(new Error('AppSync 500'));
+
+        const { result } = renderHook(() => usePdfApi());
+        await act(async () => {
+            await expect(
+                result.current.generatePdf({ eventId: 'e-1', type: 'PODIUM' }),
+            ).rejects.toThrow('AppSync 500');
+        });
+
+        const placeholderAdds = dispatchMock.mock.calls.filter(
+            ([action, payload]) =>
+                action === 'ADD_NOTIFICATION' && payload?.id?.startsWith('pdf-pending-'),
+        );
+        const placeholderDismisses = dispatchMock.mock.calls.filter(
+            ([action, payload]) =>
+                action === 'DISMISS_NOTIFICATION' && payload?.startsWith?.('pdf-pending-'),
+        );
+        expect(placeholderAdds).toHaveLength(1);
+        expect(placeholderDismisses).toHaveLength(1);
+    });
+
     test('dismissJob removes the entry from jobs state', async () => {
         (graphqlMutate as any).mockResolvedValue({
             generateRaceResultsPdf: {
