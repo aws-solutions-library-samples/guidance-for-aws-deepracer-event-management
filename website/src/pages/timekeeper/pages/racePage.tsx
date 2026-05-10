@@ -498,50 +498,45 @@ export const RacePage = ({
               </button>
             </Grid>
           </Container>
-          <div>
-            <SpaceBetween size="m" direction="horizontal">
-              <Container>
-                <SpaceBetween size="m" direction="horizontal">
-                  <ColumnLayout columns={2}>
-                    <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-                      <b key="race-format-label">{t('timekeeper.race-page.race-format-header')}</b>
-                      <span key="race-format-value">{raceType}</span>
-                    </Grid>
-
-                    <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
-                      <b key="auto-timer-label">
-                        <nobr>{t('timekeeper.race-page.automated-timer-header')}</nobr>
-                      </b>
-                      <span key="auto-timer-value">
-                        {autTimerIsConnected
-                          ? t('timekeeper.race-page.automated-timer-connected')
-                          : t('timekeeper.race-page.automated-timer-not-connected')}{' '}
-                      </span>
-                    </Grid>
-                  </ColumnLayout>
-                </SpaceBetween>
-              </Container>
-              <Container>
-                <SpaceBetween size="m" direction="horizontal">
-                  <LapTable
-                    variant="embedded"
-                    header={t('timekeeper.fastest-lap')}
-                    laps={fastestLap}
-                    onAction={actionHandler}
-                  />
-                  {fastestAverageLapInformation}
-                  <LapTable
-                    variant="embedded"
-                    header={t('timekeeper.recorded-laps')}
-                    laps={raceInfo.laps}
-                    averageLapInformation={raceInfo.averageLaps}
-                    rankingMethod={raceConfig.rankingMethod}
-                    onAction={actionHandler}
-                  />
-                </SpaceBetween>
-              </Container>
-            </SpaceBetween>
-          </div>
+          <SpaceBetween size="m">
+            <Container>
+              <ColumnLayout columns={2}>
+                <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+                  <b key="race-format-label">{t('timekeeper.race-page.race-format-header')}</b>
+                  <span key="race-format-value">{raceType}</span>
+                </Grid>
+                <Grid gridDefinition={[{ colspan: 6 }, { colspan: 6 }]}>
+                  <b key="auto-timer-label">
+                    <nobr>{t('timekeeper.race-page.automated-timer-header')}</nobr>
+                  </b>
+                  <span key="auto-timer-value">
+                    {autTimerIsConnected
+                      ? t('timekeeper.race-page.automated-timer-connected')
+                      : t('timekeeper.race-page.automated-timer-not-connected')}{' '}
+                  </span>
+                </Grid>
+              </ColumnLayout>
+            </Container>
+            <Container>
+              <SpaceBetween size="m">
+                <LapTable
+                  variant="embedded"
+                  header={t('timekeeper.fastest-lap')}
+                  laps={fastestLap}
+                  onAction={actionHandler}
+                />
+                {fastestAverageLapInformation}
+                <LapTable
+                  variant="embedded"
+                  header={t('timekeeper.recorded-laps')}
+                  laps={raceInfo.laps}
+                  averageLapInformation={raceInfo.averageLaps}
+                  rankingMethod={raceConfig.rankingMethod}
+                  onAction={actionHandler}
+                />
+              </SpaceBetween>
+            </Container>
+          </SpaceBetween>
         </ColumnLayout>
       </SpaceBetween>
       {warningModal}
