@@ -24,7 +24,7 @@ interface LeaderboardTableProps {
 // for 12s (parent owns that timer). After a longer interval we scroll back to
 // the top so the broadcast view doesn't sit showing mid-table for the next
 // 10-minute auto-scroll cycle.
-const SCROLL_BACK_TO_TOP_MS = 120_000;
+const SCROLL_BACK_TO_TOP_MS = 60_000;
 
 const LeaderboardTable = ({
   leaderboardEntries,
@@ -37,6 +37,7 @@ const LeaderboardTable = ({
   const { t } = useTranslation();
   const [leaderboardListItems, SetLeaderboardListItems] = useState<React.ReactNode>(<div></div>);
   const entriesRef = useRef<HTMLDivElement | null>(null);
+  const backToTopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const windowSize = useWindowSize();
   const aspectRatio = (windowSize.width ?? 0) / (windowSize.height ?? 1);
 
@@ -132,9 +133,11 @@ const LeaderboardTable = ({
     SetLeaderboardListItems(items);
   }, [leaderboardEntries, aspectRatio, highlightedUsername]);
 
-  // Scroll to highlighted entry when it changes; schedule a return scroll to
-  // the top of the leaderboard after SCROLL_BACK_TO_TOP_MS so the view doesn't
-  // sit on mid-table once the highlight has faded.
+  // Scroll to the highlighted entry whenever the highlight or the list items
+  // change. The list-items dep is required: a brand-new finisher is added to
+  // the entries state in the same React batch as the highlight, but the row
+  // doesn't exist in the DOM until items render — re-running the effect on
+  // leaderboardListItems lets us find it on that second pass.
   useEffect(() => {
     if (!highlightedUsername || !entriesRef.current) return;
 
@@ -142,13 +145,30 @@ const LeaderboardTable = ({
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-
-    const backToTop = setTimeout(() => {
-      entriesRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-    }, SCROLL_BACK_TO_TOP_MS);
-
-    return () => clearTimeout(backToTop);
   }, [highlightedUsername, leaderboardListItems]);
+
+  // Schedule the back-to-top scroll in a separate effect on highlightedUsername
+  // alone, with the timer held in a ref. This is intentional: the previous
+  // implementation hung the timer off the scroll-to-highlight effect's
+  // cleanup, which fired (and cancelled the timer) every time the highlight
+  // ended at 12s or the items list re-rendered — so the back-to-top never ran.
+  // The timer should restart only when a new highlight begins.
+  useEffect(() => {
+    if (!highlightedUsername) return;
+
+    if (backToTopTimerRef.current) clearTimeout(backToTopTimerRef.current);
+    backToTopTimerRef.current = setTimeout(() => {
+      entriesRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      backToTopTimerRef.current = null;
+    }, SCROLL_BACK_TO_TOP_MS);
+  }, [highlightedUsername]);
+
+  useEffect(
+    () => () => {
+      if (backToTopTimerRef.current) clearTimeout(backToTopTimerRef.current);
+    },
+    []
+  );
 
   /* optional hide the scrollbar, but then lose visuals of progress */
   useEffect(() => {
