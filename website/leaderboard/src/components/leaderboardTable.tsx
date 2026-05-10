@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import Avatar from 'avataaars';
 import classnames from 'classnames';
@@ -11,10 +11,30 @@ import { Flag } from './flag';
 import styles from './leaderboardTable.module.css';
 import { parseAvatarConfig } from './parseAvatarConfig';
 
-const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag, highlightedUsername = null }) => {
+interface LeaderboardTableProps {
+  leaderboardEntries: any[];
+  scrollEnabled: boolean;
+  fastest: boolean;
+  showFlag: boolean;
+  highlightedUsername?: string | null;
+}
+
+// After a race submission, the table scrolls to the racer and highlights them
+// for 12s (parent owns that timer). After a longer interval we scroll back to
+// the top so the broadcast view doesn't sit showing mid-table for the next
+// 10-minute auto-scroll cycle.
+const SCROLL_BACK_TO_TOP_MS = 120_000;
+
+const LeaderboardTable = ({
+  leaderboardEntries,
+  scrollEnabled,
+  fastest,
+  showFlag,
+  highlightedUsername = null,
+}: LeaderboardTableProps) => {
   const { t } = useTranslation();
-  const [leaderboardListItems, SetLeaderboardListItems] = useState(<div></div>);
-  const entriesRef = useRef(null);
+  const [leaderboardListItems, SetLeaderboardListItems] = useState<React.ReactNode>(<div></div>);
+  const entriesRef = useRef<HTMLDivElement | null>(null);
   const windowSize = useWindowSize();
   const aspectRatio = (windowSize.width ?? 0) / (windowSize.height ?? 1);
 
@@ -52,7 +72,7 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
       return (
         <div
           key={entry.username}
-          id={index}
+          id={String(index)}
           data-username={entry.username}
           className={classnames(
             styles.listEntry,
@@ -110,16 +130,22 @@ const LeaderboardTable = ({ leaderboardEntries, scrollEnabled, fastest, showFlag
     SetLeaderboardListItems(items);
   }, [leaderboardEntries, aspectRatio, highlightedUsername]);
 
-  // Scroll to highlighted entry when it changes
+  // Scroll to highlighted entry when it changes; schedule a return scroll to
+  // the top of the leaderboard after SCROLL_BACK_TO_TOP_MS so the view doesn't
+  // sit on mid-table once the highlight has faded.
   useEffect(() => {
-    if (highlightedUsername && entriesRef.current) {
-      const el = (entriesRef.current as HTMLElement).querySelector(
-        `[data-username="${highlightedUsername}"]`
-      );
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+    if (!highlightedUsername || !entriesRef.current) return;
+
+    const el = entriesRef.current.querySelector(`[data-username="${highlightedUsername}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+
+    const backToTop = setTimeout(() => {
+      entriesRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    }, SCROLL_BACK_TO_TOP_MS);
+
+    return () => clearTimeout(backToTop);
   }, [highlightedUsername, leaderboardListItems]);
 
   /* optional hide the scrollbar, but then lose visuals of progress */
