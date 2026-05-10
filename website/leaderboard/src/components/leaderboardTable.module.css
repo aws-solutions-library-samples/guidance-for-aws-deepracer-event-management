@@ -47,12 +47,15 @@
   height: calc(100vh - 32vmin);
   position: relative;
   margin-top: 0;
-  transition: height 0.6s ease;
 }
 
 /* When the new-finisher summary overlay is shown it sits fixed at the bottom
    and obscures the bottom of the leaderboard. Shrink the scroll area so the
-   last visible entry (and any entry we scroll into view) clears the overlay. */
+   last visible entry (and any entry we scroll into view) clears the overlay.
+   No transition: scrollIntoView in LeaderboardTable runs in the same effect
+   tick as this class is applied, and a transition would leave it calculating
+   against the old (taller) height — landing the highlighted entry below the
+   new visible area. Snap the height so the geometry is correct immediately. */
 .entriesWithFooter {
   height: calc(100vh - 52vmin);
 }
