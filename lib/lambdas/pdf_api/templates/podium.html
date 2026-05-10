@@ -16,20 +16,17 @@
   }
   .podium-col {
     width: 52mm;
-    display: flex;
-    flex-direction: column;
-    /* `stretch` (the default) so the step + stripe fill the column's full
-       52mm width. Earlier `align-items: center` shrunk them to their
-       intrinsic content width on the Lambda WeasyPrint runtime, which left
-       the bars looking thin and the stripe rendering as a tiny mark. */
-    align-items: stretch;
+    /* Plain block layout. Tried flex with various align-items values; both
+       `center` and `stretch` produced sizing surprises on the Lambda
+       WeasyPrint runtime (bars too narrow, or the silhouette SVG ignoring
+       its container's width). Block layout is simpler and predictable —
+       avatar centred via margin auto, step + stripe fill 52mm. */
   }
   .podium-col .avatar {
-    /* Avatar stays 28mm, centred horizontally inside the 52mm column. */
-    align-self: center;
     width: 28mm;
     height: 28mm;
-    margin: 0 0 2mm 0;
+    /* `0 auto` centres the avatar horizontally inside the 52mm column. */
+    margin: 0 auto 2mm auto;
     border-radius: 50%;
     /* Default border colour is the brand primary; inline
        `border-color: <highlightColour>` overrides for racers who set one. */
@@ -41,7 +38,7 @@
   .podium-col .avatar img,
   .podium-col .avatar svg { width: 100%; height: 100%; display: block; }
   .podium-col .podium-step {
-    /* width fills the column via align-items: stretch on the parent */
+    width: 100%;
     /* height set inline */
     padding: 4mm;
     text-align: center;
@@ -55,8 +52,9 @@
     justify-content: flex-start;
   }
   /* Highlight stripe — sibling div below the step, in normal flow at the
-     very bottom of the column stack. Width comes from align-items: stretch. */
+     very bottom of the column stack. */
   .podium-col .stripe {
+    width: 100%;
     height: 2.5mm;
   }
   .podium-step .rank { font-size: 22pt; }
