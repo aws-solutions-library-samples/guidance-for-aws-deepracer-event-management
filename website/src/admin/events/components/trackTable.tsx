@@ -55,14 +55,14 @@ export const TrackTable: React.FC<TrackTableProps> = ({ eventId, tracks, raceFor
           ),
           streamingOverlayLinks: (
             <EventLinksButtons
-              href={`${window.location.origin}/overlays/${eventId.toString()}?trackId=${track.trackId.toString()}&format=${raceFormat}`}
+              href={`${window.location.origin}/overlays/${eventId.toString()}?trackId=${track.trackId.toString()}&format=${raceFormat}&gapToLeader=true`}
               linkTextPrimary={t('events.link-same-tab')}
               linkTextExternal={t('events.link-new-tab')}
             />
           ),
           streamingOverlayChromaLinks: (
             <EventLinksButtons
-              href={`${window.location.origin}/overlays/${eventId.toString()}?trackId=${track.trackId.toString()}&chroma=1&format=${raceFormat}`}
+              href={`${window.location.origin}/overlays/${eventId.toString()}?trackId=${track.trackId.toString()}&chroma=1&format=${raceFormat}&gapToLeader=true`}
               linkTextPrimary={t('events.link-same-tab')}
               linkTextExternal={t('events.link-new-tab')}
             />

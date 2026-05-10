@@ -81,23 +81,32 @@ function GetLeaderTime(entry, raceFormat) {
   return entry.fastestLapTime || null;
 }
 
-function SetGapToLeader(elementId, gapMs) {
+// The leaderboard SVG hides the gap-to-leader text elements (.st14 sets
+// `display: none` on `SecondPlaceTimeToFirst` etc. by default). Toggling
+// display in JS — instead of relying on the SVG class — keeps the feature
+// gated behind the `gapToLeader` URL param so broadcast operators can opt
+// out without editing the SVG.
+function SetGapToLeader(elementId, gapMs, show) {
   const leaderboardObj = d3.select(document.getElementById('leaderboard').contentDocument);
-  if (gapMs !== null && gapMs > 0) {
-    leaderboardObj.select('#' + elementId).text('+' + GetFormattedLapTime(gapMs, true));
+  const node = leaderboardObj.select('#' + elementId);
+  if (show && gapMs !== null && gapMs > 0) {
+    // Seconds-only format (`+01.336`). The SVG placeholder isn't wide
+    // enough for the minutes form (`+00:01.336`), which overlapped the
+    // adjacent lap-time text.
+    node.text('+' + GetFormattedLapTime(gapMs, false)).style('display', 'inline');
   } else {
-    leaderboardObj.select('#' + elementId).text('');
+    node.text('').style('display', 'none');
   }
 }
 
-export function UpdateLeaderboard(leaderboardData, raceFormat) {
+export function UpdateLeaderboard(leaderboardData, raceFormat, gapToLeader = true) {
   SetFirstPlaceRacerNameAndTime('', '');
   SetSecondPlaceRacerNameAndTime('', '');
   SetThirdPlaceRacerNameAndTime('', '');
   SetFourthPlaceRacerNameAndTime('', '');
-  SetGapToLeader('SecondPlaceTimeToFirst', null);
-  SetGapToLeader('ThirdPlaceTimeToFirst', null);
-  SetGapToLeader('FourthPlaceTimeToFirst', null);
+  SetGapToLeader('SecondPlaceTimeToFirst', null, gapToLeader);
+  SetGapToLeader('ThirdPlaceTimeToFirst', null, gapToLeader);
+  SetGapToLeader('FourthPlaceTimeToFirst', null, gapToLeader);
 
   let leaderTime = null;
 
@@ -114,7 +123,7 @@ export function UpdateLeaderboard(leaderboardData, raceFormat) {
       GetFormattedLapTimeForRaceFormat(leaderboardData[1], raceFormat, true)
     );
     const time = GetLeaderTime(leaderboardData[1], raceFormat);
-    if (leaderTime && time) SetGapToLeader('SecondPlaceTimeToFirst', time - leaderTime);
+    if (leaderTime && time) SetGapToLeader('SecondPlaceTimeToFirst', time - leaderTime, gapToLeader);
   }
   if (leaderboardData.length > 2) {
     SetThirdPlaceRacerNameAndTime(
@@ -122,7 +131,7 @@ export function UpdateLeaderboard(leaderboardData, raceFormat) {
       GetFormattedLapTimeForRaceFormat(leaderboardData[2], raceFormat, true)
     );
     const time = GetLeaderTime(leaderboardData[2], raceFormat);
-    if (leaderTime && time) SetGapToLeader('ThirdPlaceTimeToFirst', time - leaderTime);
+    if (leaderTime && time) SetGapToLeader('ThirdPlaceTimeToFirst', time - leaderTime, gapToLeader);
   }
   if (leaderboardData.length > 3) {
     SetFourthPlaceRacerNameAndTime(
@@ -130,7 +139,7 @@ export function UpdateLeaderboard(leaderboardData, raceFormat) {
       GetFormattedLapTimeForRaceFormat(leaderboardData[3], raceFormat, true)
     );
     const time = GetLeaderTime(leaderboardData[3], raceFormat);
-    if (leaderTime && time) SetGapToLeader('FourthPlaceTimeToFirst', time - leaderTime);
+    if (leaderTime && time) SetGapToLeader('FourthPlaceTimeToFirst', time - leaderTime, gapToLeader);
   }
 }
 

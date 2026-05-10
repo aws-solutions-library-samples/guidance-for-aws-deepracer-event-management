@@ -81,6 +81,12 @@ function App() {
     raceFormat = "fastest";
   }
 
+  // Show the gap-to-leader column on the wide leaderboard overlay. Defaults
+  // on; broadcast ops can disable with `?gapToLeader=false` if the SVG layout
+  // doesn't fit (e.g. very long racer names). Anything other than the literal
+  // string "false" enables the feature.
+  const gapToLeader = searchParams.get("gapToLeader") !== "false";
+
   const startTimer = () => {
     if (!timerState || isPaused) {
       return;
@@ -138,7 +144,7 @@ function App() {
 
   const updateLeaderboard = (leaderboardEntries: any[]) => {
     const leaderboardData = (helpers as any).GetLeaderboardDataSorted(leaderboardEntries, raceFormat);
-    helpers.UpdateLeaderboard(leaderboardData, raceFormat);
+    helpers.UpdateLeaderboard(leaderboardData, raceFormat, gapToLeader);
   }
 
   function onMessageReceived(message: any) {
@@ -388,7 +394,7 @@ function App() {
           // once leaderboard data is set, update the leaderboard SVG.
           (apiResponse as Promise<any>).then((response: any) => {
             const leaderboardData = (helpers as any).GetLeaderboardDataSorted(response.data.getLeaderboard.entries);
-            (helpers as any).UpdateLeaderboard(leaderboardData);
+            (helpers as any).UpdateLeaderboard(leaderboardData, raceFormat, gapToLeader);
           });
         },
         error: (error: any) => console.error(error),
