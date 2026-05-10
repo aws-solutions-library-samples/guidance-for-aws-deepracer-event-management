@@ -18,9 +18,15 @@
     width: 52mm;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    /* `stretch` (the default) so the step + stripe fill the column's full
+       52mm width. Earlier `align-items: center` shrunk them to their
+       intrinsic content width on the Lambda WeasyPrint runtime, which left
+       the bars looking thin and the stripe rendering as a tiny mark. */
+    align-items: stretch;
   }
   .podium-col .avatar {
+    /* Avatar stays 28mm, centred horizontally inside the 52mm column. */
+    align-self: center;
     width: 28mm;
     height: 28mm;
     margin: 0 0 2mm 0;
@@ -35,7 +41,7 @@
   .podium-col .avatar img,
   .podium-col .avatar svg { width: 100%; height: 100%; display: block; }
   .podium-col .podium-step {
-    width: 100%;
+    /* width fills the column via align-items: stretch on the parent */
     /* height set inline */
     padding: 4mm;
     text-align: center;
@@ -49,22 +55,18 @@
     justify-content: flex-start;
   }
   /* Highlight stripe — sibling div below the step, in normal flow at the
-     very bottom of the column stack. */
+     very bottom of the column stack. Width comes from align-items: stretch. */
   .podium-col .stripe {
-    width: 100%;
     height: 2.5mm;
   }
   .podium-step .rank { font-size: 22pt; }
   .podium-step .name { font-size: 14pt; margin-top: 2mm; }
   .podium-step .country { font-size: 11pt; opacity: 0.9; margin-top: 1mm; }
   .podium-step .country .flag {
-    height: 5mm;
+    height: 4mm;
     vertical-align: middle;
     margin-right: 1.5mm;
     border-radius: 0.4mm;
-    /* flagcdn's PNGs have flat colour edges that look jagged when scaled; a
-       1px white outline softens the edge without affecting flag colours. */
-    box-shadow: 0 0 0 0.15mm rgba(255, 255, 255, 0.7);
   }
   .podium-step .lap { font-size: 13pt; margin-top: 2mm; opacity: 0.95; }
   .podium-1 { background: #D4AF37; }
