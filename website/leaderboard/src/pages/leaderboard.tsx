@@ -290,6 +290,7 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
               fastest={raceFormat === 'fastest'}
               showFlag={showFlag}
               highlightedUsername={highlightedUsername}
+              summaryFooterVisible={racSummaryFooterIsVisible}
             />
           </div>
           <FollowFooter

@@ -17,6 +17,7 @@ interface LeaderboardTableProps {
   fastest: boolean;
   showFlag: boolean;
   highlightedUsername?: string | null;
+  summaryFooterVisible?: boolean;
 }
 
 // After a race submission, the table scrolls to the racer and highlights them
@@ -31,6 +32,7 @@ const LeaderboardTable = ({
   fastest,
   showFlag,
   highlightedUsername = null,
+  summaryFooterVisible = false,
 }: LeaderboardTableProps) => {
   const { t } = useTranslation();
   const [leaderboardListItems, SetLeaderboardListItems] = useState<React.ReactNode>(<div></div>);
@@ -175,7 +177,10 @@ const LeaderboardTable = ({
         <div className={styles.racerTitle}>{t('leaderboard.racer')}</div>
         <div className={styles.timeTitle}>{t(fastest ? 'leaderboard.time' : 'leaderboard.average')}</div>
       </div>
-      <div ref={entriesRef} className={styles.entries}>
+      <div
+        ref={entriesRef}
+        className={classnames(styles.entries, summaryFooterVisible && styles.entriesWithFooter)}
+      >
         <div id="entries" className={styles.entry}>
           {leaderboardListItems}
         </div>
