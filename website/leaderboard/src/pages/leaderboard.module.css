@@ -8,6 +8,10 @@
 .pageRoot {
   display: flex;
   justify-content: center;
+  /* leaderboardTable .entries uses negative horizontal margin so the
+     highlighted entry can render past .leaderboardRoot's edges; clip
+     here to keep that overflow from triggering a page scrollbar. */
+  overflow-x: hidden;
 }
 .leaderboardRoot {
   display: flex;

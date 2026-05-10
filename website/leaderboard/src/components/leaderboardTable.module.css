@@ -46,7 +46,14 @@
   overflow: scroll;
   height: calc(100vh - 32vmin);
   position: relative;
-  margin-top: 0;
+  /* Negative horizontal margin + matching padding extends the scroll box
+     past .leaderboardRoot's 90% width so the highlighted entry's
+     transform: scale(1.1) and cyan glow can render past the leaderboard's
+     visible "borders" without being clipped. The inner .entry width is
+     unchanged. .pageRoot has overflow-x: hidden to absorb any sliver
+     poking past the viewport. */
+  margin: 0 -10vmin;
+  padding: 0 10vmin;
 }
 
 /* When the new-finisher summary overlay is shown it sits fixed at the bottom
