@@ -17,7 +17,7 @@
     height: 190mm;         /* A4 landscape page height 210mm - 10mm*2 margins. */
     text-align: center;
   }
-  .cert-logo { height: 22mm; margin-bottom: 4mm; }
+  .cert-logo { height: 32mm; margin-bottom: 2mm; }
   /* Plain block container, no flex — flex sizing of <img> is unreliable in
      WeasyPrint 62.3 on the Lambda runtime (the image kept its intrinsic
      280px ≈ 74mm size and broke both the size and the margin: 0 auto
@@ -39,9 +39,9 @@
     color: var(--brand-primary);
     letter-spacing: 2px;
     text-transform: uppercase;
-    margin-bottom: 8mm;
+    margin-bottom: 4mm;
   }
-  .cert-body { font-size: 14pt; color: var(--brand-text); margin: 4mm 0; }
+  .cert-body { font-size: 14pt; color: var(--brand-text); margin: 3mm 0; }
   .cert-name { font-size: 28pt; font-weight: 700; color: var(--brand-primary); margin: 4mm 0 1mm 0; }
   .cert-country { font-size: 12pt; color: var(--brand-muted); margin: 0 0 4mm 0; letter-spacing: 0.5px; }
   .cert-country .flag { height: 5mm; vertical-align: middle; margin-right: 2mm; border-radius: 0.5mm; }
@@ -51,7 +51,9 @@
     display: table;
     width: 100%;
     table-layout: fixed;
-    margin-top: 18mm;
+    /* Pulled up off the bottom border so the stats float in their own space
+       above the certificate edge instead of feeling cramped against it. */
+    margin-top: 8mm;
   }
   .cert-stat {
     display: table-cell;
@@ -69,7 +71,7 @@
     font-size: 22pt;
     font-weight: 700;
     color: var(--brand-primary);
-    margin-top: 3mm;
+    margin-top: 1mm;
   }
 </style>
 
