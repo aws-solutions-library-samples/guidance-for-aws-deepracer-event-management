@@ -3,76 +3,62 @@
 {% from "_components.html" import format_lap, avatar_silhouette %}
 {% block content %}
 <style>
-  /* Layout: each column is a fixed-size positioning context. Avatar is
-     absolutely positioned at the top, step at the bottom. This is far more
-     reliable than flex on the Lambda WeasyPrint runtime — flex's
-     `box-sizing: border-box` interaction with explicit `height` was being
-     ignored, so 1st place's step rendered ~12mm taller than configured and
-     dropped below the others. With absolute positioning, the step's bottom
-     edge always aligns with the column's bottom edge regardless of how
-     box-sizing is interpreted. */
+  /* Layout: avatar + step + optional highlight stripe stacked top-to-bottom
+     in normal flow inside each column. `align-items: flex-end` on the parent
+     bottom-aligns the columns so the very bottom of every stack — the stripe
+     where present, the step where not — lands on the same baseline. */
   .podium-block {
     display: flex;
     justify-content: center;
     align-items: flex-end;
     gap: 2mm;
     margin: 10mm 0;
-    height: 112mm;
   }
   .podium-col {
     width: 52mm;
-    height: 112mm;
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   .podium-col .avatar {
-    position: absolute;
-    top: 0;
-    left: 12mm;       /* (52 - 28) / 2 — keeps avatar centred */
     width: 28mm;
     height: 28mm;
+    margin: 0 0 2mm 0;
     border-radius: 50%;
-    border: 1.2mm solid #ffffff;
+    /* Default border colour is the brand primary; inline
+       `border-color: <highlightColour>` overrides for racers who set one. */
+    border: 1.2mm solid var(--brand-primary);
     overflow: hidden;
     background: #ffffff;
     box-sizing: content-box;
-    z-index: 2;       /* above the step, in case the step ever extends up */
   }
   .podium-col .avatar img,
   .podium-col .avatar svg { width: 100%; height: 100%; display: block; }
   .podium-col .podium-step {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    width: 100%;
     /* height set inline */
     padding: 4mm;
     text-align: center;
     color: white;
     font-weight: 600;
     box-sizing: border-box;
-    /* Anchor rank labels to the top of each step so "1"/"2"/"3" sit at the
-       same distance from the avatar across all three positions. */
+    /* Anchor rank labels to the top so "1"/"2"/"3" sit at consistent
+       distance from the avatar across all three positions. */
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
   }
-  /* Highlight stripe — separate element pinned to the bottom of the step so
-     it doesn't perturb the step's box height. Previously this was a
-     `border-bottom: 2.5mm` set inline, but combined with `box-sizing:
-     border-box` and `height: NNmm`, WeasyPrint on the Lambda runtime
-     rendered the box ~12mm taller than configured, breaking baseline align. */
+  /* Highlight stripe — sibling div below the step, in normal flow at the
+     very bottom of the column stack. */
   .podium-col .stripe {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    width: 100%;
     height: 2.5mm;
   }
   .podium-step .rank { font-size: 22pt; }
   .podium-step .name { font-size: 14pt; margin-top: 2mm; }
-  .podium-step .country { font-size: 10pt; opacity: 0.85; margin-top: 1mm; }
+  .podium-step .country { font-size: 11pt; opacity: 0.9; margin-top: 1mm; }
   .podium-step .country .flag {
-    height: 4mm;
+    height: 5mm;
     vertical-align: middle;
     margin-right: 1.5mm;
     border-radius: 0.4mm;
@@ -80,7 +66,7 @@
        1px white outline softens the edge without affecting flag colours. */
     box-shadow: 0 0 0 0.15mm rgba(255, 255, 255, 0.7);
   }
-  .podium-step .lap { font-size: 11pt; margin-top: 2mm; opacity: 0.95; }
+  .podium-step .lap { font-size: 13pt; margin-top: 2mm; opacity: 0.95; }
   .podium-1 { background: #D4AF37; }
   .podium-2 { background: #9AA4B2; }
   .podium-3 { background: #CD7F32; }
@@ -100,7 +86,7 @@
 <div class="podium-block">
   {% if podium|length > 1 %}
     <div class="podium-col col-2">
-      <div class="avatar">{% if podium[1].avatarUrl %}<img src="{{ podium[1].avatarUrl }}" alt="">{% else %}{{ avatar_silhouette() }}{% endif %}</div>
+      <div class="avatar" {% if podium[1].highlightColour %}style="border-color: {{ podium[1].highlightColour }};"{% endif %}>{% if podium[1].avatarUrl %}<img src="{{ podium[1].avatarUrl }}" alt="">{% else %}{{ avatar_silhouette() }}{% endif %}</div>
       <div class="podium-step podium-2" style="height: 60mm;">
         <div class="rank">2</div>
         <div class="name">{{ podium[1].username }}</div>
@@ -112,7 +98,7 @@
   {% endif %}
   {% if podium|length > 0 %}
     <div class="podium-col col-1">
-      <div class="avatar">{% if podium[0].avatarUrl %}<img src="{{ podium[0].avatarUrl }}" alt="">{% else %}{{ avatar_silhouette() }}{% endif %}</div>
+      <div class="avatar" {% if podium[0].highlightColour %}style="border-color: {{ podium[0].highlightColour }};"{% endif %}>{% if podium[0].avatarUrl %}<img src="{{ podium[0].avatarUrl }}" alt="">{% else %}{{ avatar_silhouette() }}{% endif %}</div>
       <div class="podium-step podium-1" style="height: 80mm;">
         <div class="rank">1</div>
         <div class="name">{{ podium[0].username }}</div>
@@ -124,7 +110,7 @@
   {% endif %}
   {% if podium|length > 2 %}
     <div class="podium-col col-3">
-      <div class="avatar">{% if podium[2].avatarUrl %}<img src="{{ podium[2].avatarUrl }}" alt="">{% else %}{{ avatar_silhouette() }}{% endif %}</div>
+      <div class="avatar" {% if podium[2].highlightColour %}style="border-color: {{ podium[2].highlightColour }};"{% endif %}>{% if podium[2].avatarUrl %}<img src="{{ podium[2].avatarUrl }}" alt="">{% else %}{{ avatar_silhouette() }}{% endif %}</div>
       <div class="podium-step podium-3" style="height: 45mm;">
         <div class="rank">3</div>
         <div class="name">{{ podium[2].username }}</div>
