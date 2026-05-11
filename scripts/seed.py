@@ -61,6 +61,38 @@ LAP_TIME_PROFILES = {
 EVENT_TYPES = ["OFFICIAL_TRACK_RACE", "PRIVATE_TRACK_RACE", "PRIVATE_WORKSHOP",
                "OFFICIAL_WORKSHOP", "OTHER"]
 
+# avataaars option pools (mirrors website/src/admin/user-profile/AvatarBuilder.tsx)
+AVATAR_OPTIONS = {
+    "topType": [
+        "NoHair", "Eyepatch", "Hat", "Hijab", "Turban",
+        "WinterHat1", "WinterHat2", "WinterHat3", "WinterHat4",
+        "LongHairBigHair", "LongHairBob", "LongHairBun", "LongHairCurly",
+        "LongHairCurvy", "LongHairDreads", "LongHairFrida", "LongHairFro",
+        "LongHairFroBand", "LongHairNotTooLong", "LongHairShavedSides",
+        "LongHairMiaWallace", "LongHairStraight", "LongHairStraight2",
+        "LongHairStraightStrand", "ShortHairDreads01", "ShortHairDreads02",
+        "ShortHairFrizzle", "ShortHairShaggyMullet", "ShortHairShortCurly",
+        "ShortHairShortFlat", "ShortHairShortRound", "ShortHairShortWaved",
+        "ShortHairSides", "ShortHairTheCaesar", "ShortHairTheCaesarSidePart",
+    ],
+    "accessoriesType": ["Blank", "Kurt", "Prescription01", "Prescription02", "Round", "Sunglasses", "Wayfarers"],
+    "hairColor": ["Auburn", "Black", "Blonde", "BlondeGolden", "Brown", "BrownDark", "PastelPink", "Platinum", "Red", "SilverGray"],
+    "facialHairType": ["Blank", "BeardMedium", "BeardLight", "BeardMajestic", "MoustacheFancy", "MoustacheMagnum"],
+    "facialHairColor": ["Auburn", "Black", "Blonde", "BlondeGolden", "Brown", "BrownDark", "Platinum", "Red"],
+    "clotheType": ["BlazerShirt", "BlazerSweater", "CollarSweater", "GraphicShirt", "Hoodie", "Overall", "ShirtCrewNeck", "ShirtScoopNeck", "ShirtVNeck"],
+    "clotheColor": ["Black", "Blue01", "Blue02", "Blue03", "Gray01", "Gray02", "Heather", "PastelBlue", "PastelGreen", "PastelOrange", "PastelRed", "PastelYellow", "Pink", "Red", "White"],
+    "eyeType": ["Close", "Cry", "Default", "Dizzy", "EyeRoll", "Happy", "Hearts", "Side", "Squint", "Surprised", "Wink", "WinkWacky"],
+    "eyebrowType": ["Angry", "AngryNatural", "Default", "DefaultNatural", "FlatNatural", "RaisedExcited", "RaisedExcitedNatural", "SadConcerned", "SadConcernedNatural", "UnibrowNatural", "UpDown", "UpDownNatural"],
+    "mouthType": ["Concerned", "Default", "Disbelief", "Eating", "Grimace", "Sad", "ScreamOpen", "Serious", "Smile", "Tongue", "Twinkle", "Vomit"],
+    "skinColor": ["Tanned", "Yellow", "Pale", "Light", "Brown", "DarkBrown", "Black"],
+}
+
+# DeepRacer car tail-light colour palette (mirrors AvatarBuilder.tsx)
+TAIL_LIGHT_COLOURS = [
+    "#0000FF", "#1E8FFF", "#800080", "#673ab7", "#FF00FF", "#e91e63",
+    "#FF0090", "#FF0000", "#FF8200", "#FFFF00", "#00FF00", "#417505", "#FFFFFF",
+]
+
 
 # ---------------------------------------------------------------------------
 # Table discovery (from drem-api-stats/import_to_drem.py)
@@ -107,6 +139,20 @@ def discover_tables(stack_name: str) -> dict:
         elif "leaderboard" in fn_lower and "leaderboard" not in tables:
             tables["leaderboard"] = table
 
+    # RacerProfile has no Lambda — direct DDB JS resolvers via AppSync.
+    # Find its table by CFN logical ID instead.
+    try:
+        cf = boto3.client("cloudformation")
+        paginator = cf.get_paginator("list_stack_resources")
+        for page in paginator.paginate(StackName=stack_name):
+            for r in page["StackResourceSummaries"]:
+                if (r["ResourceType"] == "AWS::DynamoDB::Table"
+                        and "RacerProfile" in r["LogicalResourceId"]
+                        and "racer_profile" not in tables):
+                    tables["racer_profile"] = r["PhysicalResourceId"]
+    except Exception:
+        pass
+
     return tables
 
 
@@ -147,6 +193,11 @@ def generate_lap_time(track_type: str, skill: float) -> float:
 # Synthetic data generation
 # ---------------------------------------------------------------------------
 
+def generate_avatar_config() -> dict:
+    """Pick a random value from each avataaars option pool."""
+    return {key: random.choice(values) for key, values in AVATAR_OPTIONS.items()}
+
+
 def generate_racer_username() -> str:
     """Generate a DeepRacer-style username using Faker."""
     styles = [
@@ -177,6 +228,8 @@ def generate_racers(count: int) -> list:
             "email": fake.email(),
             "countryCode": country,
             "skill": random.uniform(0.2, 1.0),  # internal: determines lap time quality
+            "avatarConfig": generate_avatar_config(),
+            "highlightColour": random.choice(TAIL_LIGHT_COLOURS),
         })
     return racers
 
@@ -422,6 +475,32 @@ def write_leaderboard(table, entries: list, dry_run: bool) -> int:
     return count
 
 
+def write_racer_profiles(table, racers: list, dry_run: bool) -> int:
+    """Write avatar + highlight colour to the RacerProfile DDB table, keyed by
+    username. Only writes for racers that have avatarConfig set (the import
+    path won't have one)."""
+    count = 0
+    now = datetime.now(timezone.utc).isoformat()
+    batch_ctx = table.batch_writer() if not dry_run else NullBatch()
+    with batch_ctx as batch:
+        for racer in racers:
+            avatar = racer.get("avatarConfig")
+            if not avatar:
+                continue
+            item = {
+                "username": racer["username"],
+                "avatarConfig": json.dumps(avatar),  # column is AWSJSON
+                "highlightColour": racer.get("highlightColour") or "",
+                "updatedAt": now,
+            }
+            if dry_run:
+                print(f"  [DRY] profile: {racer['username']} highlight={item['highlightColour']}")
+            else:
+                batch.put_item(Item=to_decimal(item))
+            count += 1
+    return count
+
+
 def create_cognito_users(user_pool_id: str, racers: list, dry_run: bool) -> int:
     """Create Cognito users in FORCE_CHANGE_PASSWORD state."""
     cognito = boto3.client("cognito-idp")
@@ -531,7 +610,9 @@ Examples:
             "races": export["races"],
             "users": export["users"],
             "racers": [{"userId": uid, "username": uname, "email": f"{uname.lower()}@example.com",
-                        "countryCode": ""}
+                        "countryCode": "",
+                        "avatarConfig": generate_avatar_config(),
+                        "highlightColour": random.choice(TAIL_LIGHT_COLOURS)}
                        for uid, uname in export["users"].items()],
         }
         print(f"  Events: {len(data['events'])}")
@@ -593,6 +674,12 @@ Examples:
 
         n = write_leaderboard(ddb.Table(tables["leaderboard"]), entries, args.dry_run)
         print(f"  {'Would write' if args.dry_run else 'Wrote'} {n} leaderboard entries.\n")
+
+    # --- Write racer profiles (avatar + highlight colour) ---
+    if "racer_profile" in tables:
+        print(f"Writing racer profiles → {tables['racer_profile']}")
+        n = write_racer_profiles(ddb.Table(tables["racer_profile"]), data["racers"], args.dry_run)
+        print(f"  {'Would write' if args.dry_run else 'Wrote'} {n} racer profiles.\n")
 
     # --- Create Cognito users ---
     if args.create_users:
