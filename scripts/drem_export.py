@@ -261,22 +261,38 @@ def _export_via_api(args):
         print("Skipping users (--skip-users).\n")
 
     # --- Racer Profiles ---
-    # No listRacerProfiles query; iterate getRacerProfile per known username.
+    # No listRacerProfiles query; query getRacerProfile per known username.
     # Fall back to usernames seen on leaderboard entries when users are skipped.
+    # Parallelised: serial round-trips at ~200ms each would be ~30 min for a
+    # 9k-user export, easily blowing past a 1-hour JWT. AppSync handles dozens
+    # of concurrent queries comfortably for read-only ops on a single key.
     print("Fetching racer profiles...")
-    usernames = {u["username"] for u in users if u.get("username")}
-    usernames.update(e["username"] for e in all_leaderboard if e.get("username"))
+    usernames = sorted({u["username"] for u in users if u.get("username")}
+                       | {e["username"] for e in all_leaderboard if e.get("username")})
     profiles = []
-    for uname in sorted(usernames):
-        try:
-            p = client.get_racer_profile(uname)
-        except Exception:
-            continue
-        if p:
-            profiles.append(p)
+    total = len(usernames)
+    if total:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        def _fetch(uname):
+            try:
+                return client.get_racer_profile(uname)
+            except Exception:
+                return None
+
+        done = 0
+        with ThreadPoolExecutor(max_workers=20) as pool:
+            futures = {pool.submit(_fetch, u): u for u in usernames}
+            for fut in as_completed(futures):
+                done += 1
+                if done % 500 == 0 or done == total:
+                    print(f"    {done}/{total} usernames queried...")
+                p = fut.result()
+                if p:
+                    profiles.append(p)
     counts["racer_profiles"] = len(profiles)
     _write_json(output_dir, "racer_profiles.json", profiles)
-    print(f"  {len(profiles)} profiles (queried {len(usernames)} usernames)\n")
+    print(f"  {len(profiles)} profiles (queried {total} usernames)\n")
 
     # --- Manifest ---
     write_manifest(
