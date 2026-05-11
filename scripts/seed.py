@@ -3,8 +3,10 @@
 seed.py — Seed a DREM deployment with test data.
 
 Two modes:
-  1. Synthetic: generate fake events, racers, races, and leaderboard entries
-  2. Import: load from an export.json file (produced by drem-api-stats/export.py)
+  1. Synthetic: generate fake events, racers, races, leaderboard entries,
+     and a RacerProfile per racer (random avataaars + tail-light highlight)
+  2. Import: load from an export.json file (produced by drem-api-stats/export.py);
+     RacerProfile entries are synthesised for each imported racer.
 
 Usage:
     # Synthetic seed with defaults (2 events, 10 racers, 5 races per racer)
