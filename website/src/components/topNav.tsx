@@ -351,7 +351,7 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
     },
   ];
 
-  const SideNavItems = (): SideNavigationProps.Item[] => {
+  const sideNavItems = useMemo((): SideNavigationProps.Item[] => {
     let items: SideNavigationProps.Item[] = defaultSideNavItems as SideNavigationProps.Item[];
     if (permissions.sideNavItems.registration) {
       items = items.concat(registrationSideNavItems as SideNavigationProps.Item[]);
@@ -366,7 +366,7 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
       items = items.concat(adminSideNavItems as SideNavigationProps.Item[]);
     }
     return items;
-  };
+  }, [permissions, t]);
 
   const handleItemClick = useCallback(({ detail }: { detail: { id: string } }) => {
     if (detail.id === 'signout' && signout) {
@@ -478,7 +478,7 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
           <SideNavigation
             activeHref={window.location.pathname}
             onFollow={handleFollow}
-            items={SideNavItems()}
+            items={sideNavItems}
           />
         }
         contentType="table"
