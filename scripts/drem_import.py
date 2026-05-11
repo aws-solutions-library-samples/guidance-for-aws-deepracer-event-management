@@ -21,6 +21,7 @@ from drem_data.tables import (
     remap_user_id_in_race,
     remap_user_id_in_leaderboard,
     remap_created_by,
+    ensure_leaderboard_ddb_fields,
 )
 from drem_data.cognito import import_users
 from drem_data.manifest import read_manifest, update_manifest
@@ -33,6 +34,11 @@ def main():
     parser.add_argument("--skip-leaderboard", action="store_true", help="Skip leaderboard import")
     parser.add_argument("--dry-run", action="store_true", help="Preview without writing")
     parser.add_argument("--stack", help="Override stack label from build.config")
+    parser.add_argument("--reuse-user-mapping", action="store_true",
+                        help="Skip Cognito user creation and load the existing "
+                             "old_sub→new_sub mapping from manifest.json "
+                             "(use when resuming an import where users already "
+                             "exist in the target pool)")
     args = parser.parse_args()
 
     input_dir = args.input.rstrip("/")
@@ -56,7 +62,14 @@ def main():
     user_mapping = {}
 
     # --- Cognito Users ---
-    if not args.skip_users:
+    if args.reuse_user_mapping:
+        user_mapping = manifest.get("import_user_mapping") or {}
+        if not user_mapping:
+            sys.exit("--reuse-user-mapping requested but manifest.json has no "
+                     "import_user_mapping. Run the full import once to populate it.")
+        print(f"Reusing existing user mapping from manifest: "
+              f"{len(user_mapping)} subs (skipping Cognito recreate).\n")
+    elif not args.skip_users:
         users_file = os.path.join(input_dir, "users.json")
         if os.path.exists(users_file):
             users = _read_json(users_file)
@@ -75,6 +88,18 @@ def main():
             print("No users.json found, skipping users.\n")
     else:
         print("Skipping Cognito users (--skip-users).\n")
+
+    # Build username → new_sub map from users.json + user_mapping. Needed
+    # because API-mode leaderboard exports key entries by username (the
+    # GraphQL view doesn't surface userId), so we have to look up the new
+    # Cognito sub from the username to synthesise the DDB sort key.
+    username_to_sub = {}
+    users_file = os.path.join(input_dir, "users.json")
+    if user_mapping and os.path.exists(users_file):
+        for u in _read_json(users_file):
+            new_sub = user_mapping.get(u.get("sub"))
+            if new_sub and u.get("username"):
+                username_to_sub[u["username"]] = new_sub
 
     # --- Events ---
     events_file = os.path.join(input_dir, "events.json")
@@ -106,8 +131,19 @@ def main():
         lb_file = os.path.join(input_dir, "leaderboard.json")
         if os.path.exists(lb_file) and "leaderboard" in tables:
             leaderboard = _read_json(lb_file)
+            # Synthesise the DDB key fields for API-mode entries (they're
+            # missing sk, userId, type). DDB-mode entries already have them
+            # so ensure_leaderboard_ddb_fields is a no-op there.
+            leaderboard = [ensure_leaderboard_ddb_fields(e, username_to_sub) for e in leaderboard]
             if user_mapping:
                 leaderboard = [remap_user_id_in_leaderboard(e, user_mapping) for e in leaderboard]
+            # Drop any entries we couldn't reconstruct (username not in the
+            # mapping — usually orphaned references to deleted users).
+            before = len(leaderboard)
+            leaderboard = [e for e in leaderboard if "sk" in e]
+            dropped = before - len(leaderboard)
+            if dropped:
+                print(f"  Skipping {dropped} orphaned entries (no matching user).")
             print(f"Importing {len(leaderboard)} leaderboard entries → {tables['leaderboard']}")
             n = batch_write_items(tables["leaderboard"], region, leaderboard, dry_run=args.dry_run)
             print(f"  {'Would write' if args.dry_run else 'Wrote'} {n} entries.\n")

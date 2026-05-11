@@ -83,6 +83,28 @@ def remap_user_id_in_leaderboard(item: dict, mapping: dict) -> dict:
     return item
 
 
+def ensure_leaderboard_ddb_fields(item: dict, username_to_sub: dict) -> dict:
+    """
+    API-mode exports of getLeaderboard.entries don't surface the DDB key
+    fields (sk, userId) or the discriminator (type) — only the GraphQL view.
+    Synthesise the missing fields from the username → sub mapping so the
+    item is writable to the leaderboard table. Matches the format produced
+    by lib/lambdas/leaderboard_entry_evb/index.py:
+        sk   = "<trackId>#<userId>"
+        type = "leaderboard_entry"
+    """
+    item = dict(item)
+    item.setdefault("type", "leaderboard_entry")
+    if "userId" not in item:
+        username = item.get("username", "")
+        sub = username_to_sub.get(username)
+        if sub:
+            item["userId"] = sub
+    if "sk" not in item and item.get("trackId") and item.get("userId"):
+        item["sk"] = f"{item['trackId']}#{item['userId']}"
+    return item
+
+
 def remap_created_by(item: dict, mapping: dict) -> dict:
     """Remap createdBy field. Returns a new dict."""
     item = dict(item)
