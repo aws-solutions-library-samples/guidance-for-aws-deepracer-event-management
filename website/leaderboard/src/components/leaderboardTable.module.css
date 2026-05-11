@@ -125,6 +125,11 @@
   align-self: center;
   position: relative;
   z-index: 1;
+  /* .entry sets line-height: 4em; positions 1-3 mask the resulting
+     vertical offset with their larger font, but positions 4+ render
+     the avatar too low. Reset line-height so the flex item sizes to
+     content. */
+  line-height: 1;
 }
 
 .liIdentity :global(svg) {
