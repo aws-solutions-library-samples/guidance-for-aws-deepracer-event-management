@@ -47,7 +47,7 @@ def batch_write_items(table_name: str, region: str, items: list[dict], dry_run: 
     """Write items to a DynamoDB table using batch_writer. Returns count written."""
     if dry_run:
         for item in items:
-            pk_field = next((k for k in ["eventId", "fleetId", "pk"] if k in item), "?")
+            pk_field = next((k for k in ["eventId", "fleetId", "username", "pk"] if k in item), "?")
             print(f"  [DRY] PUT {pk_field}={item.get(pk_field, '?')}")
         return len(items)
 

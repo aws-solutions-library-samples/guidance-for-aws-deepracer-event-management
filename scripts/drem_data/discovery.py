@@ -14,6 +14,7 @@ TABLE_LOGICAL_ID_MAP = {
     "FleetsManagerFleetsTable": "fleets",
     "LandingPageManagerlandingPageConfigsTable": "landing_pages",
     "StatisticsStatsTable": "stats",
+    "RacerProfileRacerProfileTable": "racer_profile",
 }
 
 

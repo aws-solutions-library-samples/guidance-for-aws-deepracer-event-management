@@ -132,6 +132,16 @@ def main():
         n = batch_write_items(tables["landing_pages"], region, landing_pages, dry_run=args.dry_run)
         print(f"  {'Would write' if args.dry_run else 'Wrote'} {n} configs.\n")
 
+    # --- Racer Profiles ---
+    # No userId remapping needed: RacerProfile is keyed by username, and
+    # Cognito user recreation preserves usernames.
+    rp_file = os.path.join(input_dir, "racer_profiles.json")
+    if os.path.exists(rp_file) and "racer_profile" in tables:
+        profiles = _read_json(rp_file)
+        print(f"Importing {len(profiles)} racer profiles → {tables['racer_profile']}")
+        n = batch_write_items(tables["racer_profile"], region, profiles, dry_run=args.dry_run)
+        print(f"  {'Would write' if args.dry_run else 'Wrote'} {n} profiles.\n")
+
     if args.dry_run:
         print("Dry run complete — no changes made.")
     else:

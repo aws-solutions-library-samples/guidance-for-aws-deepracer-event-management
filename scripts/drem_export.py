@@ -125,6 +125,16 @@ def main():
     else:
         print("WARNING: Landing pages table not found, skipping.\n")
 
+    # --- Racer Profiles (avatar + highlight colour) ---
+    if "racer_profile" in tables:
+        print("Exporting racer profiles...")
+        profiles = scan_table(tables["racer_profile"], region)
+        counts["racer_profiles"] = len(profiles)
+        _write_json(output_dir, "racer_profiles.json", profiles)
+        print(f"  {len(profiles)} profiles\n")
+    else:
+        print("WARNING: RacerProfile table not found, skipping.\n")
+
     # --- Cognito Users ---
     if not args.skip_users and config["user_pool_id"]:
         print("Exporting Cognito users...")
@@ -247,7 +257,26 @@ def _export_via_api(args):
         _write_json(output_dir, "users.json", users)
         print(f"  {len(users)} users\n")
     else:
+        users = []
         print("Skipping users (--skip-users).\n")
+
+    # --- Racer Profiles ---
+    # No listRacerProfiles query; iterate getRacerProfile per known username.
+    # Fall back to usernames seen on leaderboard entries when users are skipped.
+    print("Fetching racer profiles...")
+    usernames = {u["username"] for u in users if u.get("username")}
+    usernames.update(e["username"] for e in all_leaderboard if e.get("username"))
+    profiles = []
+    for uname in sorted(usernames):
+        try:
+            p = client.get_racer_profile(uname)
+        except Exception:
+            continue
+        if p:
+            profiles.append(p)
+    counts["racer_profiles"] = len(profiles)
+    _write_json(output_dir, "racer_profiles.json", profiles)
+    print(f"  {len(profiles)} profiles (queried {len(usernames)} usernames)\n")
 
     # --- Manifest ---
     write_manifest(

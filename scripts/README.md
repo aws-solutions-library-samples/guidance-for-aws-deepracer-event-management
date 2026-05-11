@@ -1,6 +1,6 @@
 # DREM Data Export/Import Tools
 
-Export and import DREM instance data — events, races, leaderboard entries, fleets, landing page configs, and Cognito users. Useful for migrating data between environments, seeding dev instances, or backing up production data.
+Export and import DREM instance data — events, races, leaderboard entries, fleets, landing page configs, racer profiles (avatar + highlight colour), and Cognito users. Useful for migrating data between environments, seeding dev instances, or backing up production data.
 
 ## Prerequisites
 
@@ -49,7 +49,7 @@ To get the endpoint URL: open the DREM website in a browser, open DevTools, filt
 
 To get the token: log in to DREM as an admin user, open DevTools, find the `Authorization` header on any GraphQL request, and copy the JWT value.
 
-**Note:** Tokens expire after 1 hour. The API mode may not export leaderboard data if the remote instance has events with missing track configuration (a known server-side bug).
+**Note:** Tokens expire after 1 hour. The API mode may not export leaderboard data if the remote instance has events with missing track configuration (a known server-side bug). Racer profiles in API mode are fetched per-username (no list query exists), so export time scales with the user count — DDB mode is faster for full backups.
 
 ### Export directory structure
 
@@ -61,6 +61,7 @@ drem-export-YYYY-MM-DD-HHMMSS/
   leaderboard.json       # pre-computed leaderboard entries
   fleets.json            # fleet-to-car mappings
   landing_pages.json     # per-event landing page configs
+  racer_profiles.json    # avatar config + highlight colour per username
   users.json             # Cognito user records with group memberships
 ```
 
@@ -107,6 +108,7 @@ When user mapping is active, these fields are rewritten during import:
 | Leaderboard | `userId`, `sk` (contains `{trackId}#{userId}`) |
 | Events | `createdBy` |
 | Fleets | `createdBy` |
+| RacerProfile | _none — keyed by `username`, which Cognito preserves on user recreation_ |
 
 ## Rebuild Statistics
 

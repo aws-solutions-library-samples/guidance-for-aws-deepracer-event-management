@@ -97,6 +97,17 @@ class DremApiClient:
         """
         return self._gql(query)["getAllFleets"] or []
 
+    def get_racer_profile(self, username: str) -> dict | None:
+        """Fetch a racer profile by username. Returns None if not set."""
+        query = """
+        query GetRacerProfile($username: String!) {
+          getRacerProfile(username: $username) {
+            username avatarConfig highlightColour updatedAt
+          }
+        }
+        """
+        return self._gql(query, {"username": username})["getRacerProfile"]
+
     def list_users(self) -> list[dict]:
         """
         Fetch all users via the listUsers query.
