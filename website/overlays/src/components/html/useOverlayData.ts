@@ -54,6 +54,24 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
   const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
   const [showLowerThird, setShowLowerThird] = useState<boolean>(false);
   const [currentRacer, setCurrentRacer] = useState<CurrentRacer | null>(null);
+  const [raceStatus, setRaceStatus] = useState<string | null>(null);
+
+  const hasRacer = currentRacer != null;
+  const timeHasRunOut = currentRacer != null && currentRacer.timeLeftMs <= 0;
+
+  useEffect(() => {
+    if (raceStatus !== 'RACE_IN_PROGRESS') return;
+    if (!hasRacer || timeHasRunOut) return;
+
+    const interval = setInterval(() => {
+      setCurrentRacer((prev) => {
+        if (!prev || prev.timeLeftMs <= 0) return prev;
+        return { ...prev, timeLeftMs: Math.max(0, prev.timeLeftMs - 100) };
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [raceStatus, hasRacer, timeHasRunOut]);
 
   useEffect(() => {
     const client = generateClient();
@@ -87,6 +105,8 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
         if (info.eventName) {
           setEventName(info.eventName);
         }
+
+        setRaceStatus(info.raceStatus ?? null);
 
         if (info.raceStatus === 'RACE_SUBMITTED') {
           return;

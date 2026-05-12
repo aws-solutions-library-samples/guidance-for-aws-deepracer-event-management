@@ -132,4 +132,77 @@ describe('useOverlayData', () => {
       expect(result.current.showLeaderboard).toBe(true);
     });
   });
+
+  test('local timer ticks down by 100ms between subscription messages when race is running', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { result } = renderHook(() =>
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+      );
+      await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
+
+      const overlaySub = mockSubscribers.find((s) => s.query.name === 'onNewOverlayInfo')!;
+      act(() => {
+        overlaySub.next({
+          data: {
+            onNewOverlayInfo: {
+              username: 'racer1',
+              timeLeftInMs: 10000,
+              raceStatus: 'RACE_IN_PROGRESS',
+              laps: [],
+            },
+          },
+        });
+      });
+      await vi.waitFor(() => expect(result.current.currentRacer?.timeLeftMs).toBe(10000));
+
+      // Advance 500ms — expect 5 ticks of 100ms each → 9500ms remaining
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500);
+      });
+      expect(result.current.currentRacer?.timeLeftMs).toBe(9500);
+
+      // Advance another 1000ms — expect 8500ms remaining
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+      expect(result.current.currentRacer?.timeLeftMs).toBe(8500);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('local timer stops when race is not in progress', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { result } = renderHook(() =>
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+      );
+      await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
+
+      const overlaySub = mockSubscribers.find((s) => s.query.name === 'onNewOverlayInfo')!;
+      // Send a paused race
+      act(() => {
+        overlaySub.next({
+          data: {
+            onNewOverlayInfo: {
+              username: 'racer1',
+              timeLeftInMs: 10000,
+              raceStatus: 'RACE_PAUSED',
+              laps: [],
+            },
+          },
+        });
+      });
+      await vi.waitFor(() => expect(result.current.currentRacer?.timeLeftMs).toBe(10000));
+
+      // Advance 1000ms — paused, so still 10000ms
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+      expect(result.current.currentRacer?.timeLeftMs).toBe(10000);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
