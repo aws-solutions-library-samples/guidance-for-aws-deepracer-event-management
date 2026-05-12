@@ -47,29 +47,3 @@ export function LeaderboardFadeOut() {
       .style('opacity', 0)
   );
 }
-
-export function DidYouKnowFadeIn() {
-  return (
-    d3
-      .select('#did-you-know')
-      .transition()
-      .ease(d3.easeExpInOut)
-      // .delay(1000)
-      // .ease(d3.easeLinear)
-      .duration(1000)
-      .style('opacity', 1)
-  );
-}
-
-export function DidYouKnowFadeOut() {
-  return (
-    d3
-      .select('#did-you-know')
-      .transition()
-      .ease(d3.easeExpInOut)
-      // .delay(1000)
-      // .ease(d3.easeLinear)
-      .duration(1000)
-      .style('opacity', 0)
-  );
-}

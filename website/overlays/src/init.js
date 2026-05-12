@@ -79,11 +79,6 @@ function SetRacerInfoTotalTime(totalTimeRemaining) {
   racerAndLapInfoObj.select('#TOTAL_x5F_TIME_x5F_REMAINING').text(totalTimeRemaining);
 }
 
-function SetDRCarPosition(x, y) {
-  const trackOverlay = d3.select(document.getElementById('track-overlay').contentDocument);
-  trackOverlay.select('#DR_x5F_CAR').attr('cx', x).attr('cy', y);
-}
-
 function getLeaderboardData(entries) {
   let leaderboardEntries = entries.split('\n');
   let leaderboardTempData = [];

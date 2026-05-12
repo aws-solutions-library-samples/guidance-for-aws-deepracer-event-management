@@ -17,26 +17,6 @@
   opacity: 0;
 }
 
-#did-you-know-frame {
-  width: 1920px;
-  height: 1080px;
-  position: fixed;
-  top: 0px;
-  left: 0px;
-}
-
-#did-you-know-frame #did-you-know {
-  opacity: 0;
-}
-
-#track-overlay-frame {
-  width: 350px;
-  position: fixed;
-  top: 30px;
-  left: 1540px;
-  opacity: 0;
-}
-
 #chromaBg {
   position: absolute;
   top: 0;
