@@ -12,6 +12,7 @@ import * as transitions from './transitions.js';
 import './i18n';
 
 import { useTranslation } from 'react-i18next';
+import { ChromaBg } from './components/ChromaBg';
 
 import './App.css';
 import awsExports from './config.json';
@@ -56,8 +57,6 @@ function App() {
   var currentTotalTimer: string;
   var leaderBoardStateIN: boolean = false;
   var lowerThirdStateIN: boolean = false;
-  var shouldShowChromaBackground: boolean = false;
-  var chromaBgColor: string = '00ff00';
 
   const { t, i18n } = useTranslation();
 
@@ -281,22 +280,6 @@ function App() {
     }
   }
 
-  // react component to show/hide based on query string "chroma=1" being present.
-  function ChromaBG(props: any) {
-    shouldShowChromaBackground = searchParams.get("chroma") === "1" ? true : false;
-    chromaBgColor = searchParams.get("chromaColor") || '00ff00';
-    if (chromaBgColor.length > 6) {
-      chromaBgColor = '00ff00'; // someone tries to cross-site script, override with default green.
-    }
-
-    if (shouldShowChromaBackground) {
-      return <div id="chromaBg" style={{ backgroundColor: `#${chromaBgColor}` }}></div>
-    }
-    else {
-      return <div />
-    }
-  }
-
   useEffect(() => {
 
     // set desired language
@@ -415,7 +398,7 @@ function App() {
 
   return (
     <div className="App">
-      <ChromaBG />
+      <ChromaBg />
       <div id="racerAndInfo">
         <object type="image/svg+xml" data={ raceFormat === "fastest" ? `${import.meta.env.BASE_URL}assets/svg/RacerAndLapInfo-Localized.svg` : `${import.meta.env.BASE_URL}assets/svg/RacerAndLapInfo-BestAvg.svg` }id="lower-third-racer-and-lap-info">Lower Thirds SVG</object>
       </div>
