@@ -1,0 +1,64 @@
+.lowerThird {
+  position: fixed;
+  bottom: 60px;
+  left: 60px;
+  width: 1700px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 32px;
+  padding: 32px 48px;
+  background: linear-gradient(135deg, rgba(16, 24, 40, 0.94), rgba(28, 38, 64, 0.88));
+  border-radius: 16px;
+  color: #ffffff;
+  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+  transform: translateX(-110%);
+  transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1);
+  pointer-events: none;
+}
+
+.visible {
+  transform: translateX(0);
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.racerLabel,
+.statLabel {
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.racerName {
+  font-size: 48px;
+  font-weight: 700;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.statValue {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 42px;
+  font-weight: 600;
+}
+
+.eventName {
+  grid-column: 1 / -1;
+  text-align: right;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 8px;
+}
