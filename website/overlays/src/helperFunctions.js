@@ -185,72 +185,13 @@ export function getLeaderboardData(entries) {
   return leaderboardTempData;
 }
 
-export function GetLeaderboardDataSorted(entries, raceFormat) {
-  if (raceFormat === 'average') {
-    entries.sort(function (a, b) {
-      if (!a.fastestAverageLap && !b.fastestAverageLap) return 0;
-      if (!a.fastestAverageLap) return 1;
-      if (!b.fastestAverageLap) return -1;
-      return a.fastestAverageLap.avgTime - b.fastestAverageLap.avgTime;
-    });
-  } else {
-    entries.sort(function (a, b) {
-      return a.fastestLapTime > b.fastestLapTime ? 1 : b.fastestLapTime > a.fastestLapTime ? -1 : 0;
-    });
-  }
-
-  return entries;
-}
-
-export function GetFormattedTotalTime(timeInMS) {
-  // console.debug(timeInMS)
-  if (timeInMS < 0) {
-    return '00:00.0';
-  }
-
-  var min = Math.floor(timeInMS / 1000 / 60);
-  var sec = Math.floor(timeInMS / 1000 - min * 60);
-  var ms = timeInMS - (min * 60 * 1000 + sec * 1000);
-  return `${PadZero(min)}:${PadZero(sec)}.${String(ms).slice(0, 1)}`;
-}
-
-export function GetFormattedLapTime(timeInMS, showMinutes = false) {
-  if (timeInMS === 999999999) return '00.000';
-  var sec = 0;
-  var ms = 0;
-
-  if (showMinutes) {
-    var min = Math.floor(timeInMS / 1000 / 60);
-    sec = Math.floor(timeInMS / 1000) - min * 60; // - (min * 60));
-    ms = String(timeInMS - (min * 60 * 1000 + sec * 1000));
-    //    return `${PadZero(min)}:${PadZero(sec)}:${ms}`
-    return `${PadZero(min)}:${PadZero(sec)}.${PadZeroMS(ms).slice(0, 3)}`;
-  } else {
-    //    var min = Math.floor(timeInMS / 1000 / 60);
-    sec = Math.floor(timeInMS / 1000); // - (min * 60));
-    ms = String(timeInMS - sec * 1000); //((min * 60 * 1000) + (sec * 1000)));
-    //    return `${PadZero(min)}:${PadZero(sec)}:${ms}`
-    return `${PadZero(sec)}.${PadZeroMS(ms).slice(0, 3)}`;
-  }
-}
-
-export function PadZero(number) {
-  if (number < 10) {
-    return `0${number}`;
-  } else {
-    return number;
-  }
-}
-
-export function PadZeroMS(number) {
-  if (number < 10) {
-    return `00${number}`;
-  } else if (number < 100) {
-    return `0${number}`;
-  } else {
-    return number;
-  }
-}
+export {
+  GetFormattedLapTime,
+  GetFormattedTotalTime,
+  GetLeaderboardDataSorted,
+  PadZero,
+  PadZeroMS,
+} from './format';
 
 export function checkMin(min) {
   if (min < 10 && min >= 0) {
