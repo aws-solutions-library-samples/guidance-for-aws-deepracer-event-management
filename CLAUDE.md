@@ -104,3 +104,34 @@ pytest                        # Run Python tests
 
 **When removing resources from BaseStack:**
 Because there are no `Fn::ImportValue` dependencies, you can remove a resource from `BaseStack` and deploy in a single pipeline run without the "cannot delete export in use" error. Ensure `InfrastructureStack` no longer reads the corresponding SSM parameter in the same commit.
+
+### Nested Stacks for new features
+
+The infrastructure stack runs close to CloudFormation's per-stack resource quota (currently 500 in `eu-west-1`; AWS has been rolling out a 1000 default but it isn't universal). The `Statistics` and `RaceResultsPdf` constructs are already wrapped in `NestedStack` to free up headroom in the parent.
+
+**New features should default to a `NestedStack` wrapper** unless they're trivially small (a few resources) or tightly coupled to existing parent-stack resources.
+
+**Pattern:**
+```ts
+import { NestedStack, NestedStackProps } from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+
+export interface MyFeatureProps extends NestedStackProps {
+  // ... your props
+}
+
+export class MyFeature extends NestedStack {
+  constructor(scope: Construct, id: string, props: MyFeatureProps) {
+    super(scope, id, props);
+    // ... resources
+  }
+}
+```
+
+The call site in `drem-app-stack.ts` is unchanged (`new MyFeature(this, 'MyFeature', { ... })`).
+
+**Things to know about NestedStack:**
+- Cross-stack references to the parent (e.g. the AppSync API, DynamoDB tables passed in via props) are handled automatically by CDK — they become CFN parameters of the nested stack at deploy time.
+- The nested stack counts as **1 resource** in the parent, regardless of how many it contains internally.
+- AppSync schema mutations (`props.appsyncApi.schema.addType(...)`) still work — the schema lives in the parent and is rendered there; only resolvers and data sources land in the nested stack.
+- **Don't retrofit existing constructs that own stateful resources** (S3 buckets, DynamoDB tables with data) without a proper resource-import procedure — the migration would destroy and recreate those resources, losing data. `RemovalPolicy.RETAIN` + manual CFN resource import is required for that case.

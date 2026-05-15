@@ -1,4 +1,4 @@
-import { Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { Duration, NestedStack, NestedStackProps, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -17,7 +17,7 @@ import {
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 
-export interface RaceResultsPdfProps {
+export interface RaceResultsPdfProps extends NestedStackProps {
   appsyncApi: {
     schema: CodeFirstSchema;
     api: appsync.GraphqlApi;
@@ -34,9 +34,9 @@ export interface RaceResultsPdfProps {
   logsBucket: IBucket;
 }
 
-export class RaceResultsPdf extends Construct {
+export class RaceResultsPdf extends NestedStack {
   constructor(scope: Construct, id: string, props: RaceResultsPdfProps) {
-    super(scope, id);
+    super(scope, id, props);
 
     // ---------- S3 bucket ----------
     const pdfBucket = new s3.Bucket(this, 'PdfBucket', {

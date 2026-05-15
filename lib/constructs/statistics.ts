@@ -1,4 +1,4 @@
-import { Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { Duration, NestedStack, NestedStackProps, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { IEventBus, Rule } from 'aws-cdk-lib/aws-events';
@@ -17,7 +17,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
-export interface StatisticsProps {
+export interface StatisticsProps extends NestedStackProps {
   appsyncApi: {
     schema: CodeFirstSchema;
     api: appsync.GraphqlApi;
@@ -40,9 +40,9 @@ export interface StatisticsProps {
   eventsTable: dynamodb.ITable;
 }
 
-export class Statistics extends Construct {
+export class Statistics extends NestedStack {
   constructor(scope: Construct, id: string, props: StatisticsProps) {
-    super(scope, id);
+    super(scope, id, props);
 
     // STORAGE
     const statsTable = new dynamodb.Table(this, 'StatsTable', {
