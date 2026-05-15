@@ -12,13 +12,17 @@ const makeApp = () =>
   new cdk.App({
     context: {
       'aws:cdk:bundling-stacks': [],
+      // Match the cdk.json setting — CloudFormation's modern quota is 1000.
+      // Without this the test uses CDK's hard-coded default of 500 even
+      // though real synths (which load cdk.json) allow up to 1000.
+      '@aws-cdk/core:stackResourceLimit': 1000,
     },
   });
 
 const ENV = { account: '123456789012', region: 'eu-west-1' };
 
 test('Pipeline stack synthesizes with a CodePipeline resource', () => {
-  const app = new cdk.App();
+  const app = makeApp();
   const stack = new CdkPipelineStack(app, 'TestPipelineStack', {
     labelName: 'test',
     sourceRepo: 'aws-solutions-library-samples/guidance-for-aws-deepracer-event-management',
