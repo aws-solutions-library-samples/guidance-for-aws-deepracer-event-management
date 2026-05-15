@@ -80,6 +80,7 @@ export function SyncedActivityCharts({
             title(items) {
               if (items.length === 0) return '';
               const raw = items[0].parsed.x;
+              if (raw == null) return '';
               return new Date(raw).toLocaleDateString(undefined, {
                 year: 'numeric',
                 month: 'short',
