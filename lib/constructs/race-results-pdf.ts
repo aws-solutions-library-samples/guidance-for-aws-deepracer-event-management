@@ -38,6 +38,26 @@ export class RaceResultsPdf extends NestedStack {
   constructor(scope: Construct, id: string, props: RaceResultsPdfProps) {
     super(scope, id, props);
 
+    // Inherit the parent stack's CDK-singleton suppressions — when this construct
+    // moves into a NestedStack the parent's stack-level suppressions stop applying
+    // because nag scans each stack independently. Keep these in sync with
+    // `addStackSuppressions(this, ...)` in `lib/drem-app-stack.ts`.
+    NagSuppressions.addStackSuppressions(this, [
+      {
+        id: 'AwsSolutions-L1',
+        reason: 'CDK singleton Lambdas (LogRetention, BucketDeployment) — runtime managed by CDK.',
+      },
+      {
+        id: 'AwsSolutions-IAM4',
+        reason: 'CDK singleton service roles use AWSLambdaBasicExecutionRole, managed by CDK.',
+        appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
+      },
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'CDK LogRetention singleton uses Resource::* for log group management; cannot be scoped further.',
+      },
+    ]);
+
     // ---------- S3 bucket ----------
     const pdfBucket = new s3.Bucket(this, 'PdfBucket', {
       encryption: s3.BucketEncryption.S3_MANAGED,
