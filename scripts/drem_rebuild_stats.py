@@ -17,22 +17,22 @@ import sys
 import boto3
 
 sys.path.insert(0, os.path.dirname(__file__))
-from drem_data.discovery import discover_config
+from drem_data.discovery import discover_config, iter_stack_resources
 
 
-LAMBDA_LOGICAL_PREFIX = "StatisticsevbLambda"
+# Match either the pre-#216 prefix (when Statistics was in the parent stack)
+# or the post-#216 bare logical ID (inside the Statistics NestedStack the
+# construct-prefix is dropped).
+LAMBDA_LOGICAL_PREFIXES = ("StatisticsevbLambda", "evbLambda")
 
 
 def find_stats_lambda(stack_name: str, region: str) -> str | None:
     """Find the Stats EVB Lambda function name from CloudFormation."""
-    cf = boto3.client("cloudformation", region_name=region)
     try:
-        paginator = cf.get_paginator("list_stack_resources")
-        for page in paginator.paginate(StackName=stack_name):
-            for r in page["StackResourceSummaries"]:
-                if (r["ResourceType"] == "AWS::Lambda::Function"
-                        and r["LogicalResourceId"].startswith(LAMBDA_LOGICAL_PREFIX)):
-                    return r["PhysicalResourceId"]
+        for r in iter_stack_resources(stack_name, region):
+            if (r["ResourceType"] == "AWS::Lambda::Function"
+                    and r["LogicalResourceId"].startswith(LAMBDA_LOGICAL_PREFIXES)):
+                return r["PhysicalResourceId"]
     except Exception as e:
         print(f"ERROR: Could not discover Lambda: {e}")
     return None

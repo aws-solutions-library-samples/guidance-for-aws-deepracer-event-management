@@ -13,9 +13,32 @@ TABLE_LOGICAL_ID_MAP = {
     "LeaderboardTable": "leaderboard",
     "FleetsManagerFleetsTable": "fleets",
     "LandingPageManagerlandingPageConfigsTable": "landing_pages",
+    # The stats table moved into a NestedStack (#216) — inside the nested
+    # template the construct-prefix is dropped and the logical ID becomes
+    # bare `StatsTable...`. Keep both forms so discovery works on stacks
+    # before and after the migration.
     "StatisticsStatsTable": "stats",
+    "StatsTable": "stats",
     "RacerProfileRacerProfileTable": "racer_profile",
 }
+
+
+def iter_stack_resources(stack_name: str, region: str):
+    """
+    Yield resource summaries from `stack_name`, recursing into any nested
+    stacks. Required since #216 wrapped `Statistics` and `RaceResultsPdf`
+    in `NestedStack` — `list_stack_resources` on the parent only returns
+    the `AWS::CloudFormation::Stack` placeholder, not the resources inside.
+    """
+    cf = boto3.client("cloudformation", region_name=region)
+    paginator = cf.get_paginator("list_stack_resources")
+    for page in paginator.paginate(StackName=stack_name):
+        for r in page["StackResourceSummaries"]:
+            yield r
+            if r["ResourceType"] == "AWS::CloudFormation::Stack":
+                nested_name = r.get("PhysicalResourceId")
+                if nested_name:
+                    yield from iter_stack_resources(nested_name, region)
 
 
 def parse_build_config(path: str = "build.config") -> dict:
@@ -49,23 +72,21 @@ def parse_cfn_outputs(path: str = "cfn.outputs") -> dict:
 def discover_tables(stack_name: str, region: str) -> dict:
     """
     Find DynamoDB table physical names by listing CloudFormation stack resources
-    and matching logical IDs against TABLE_LOGICAL_ID_MAP.
+    (including those in nested stacks) and matching logical IDs against
+    TABLE_LOGICAL_ID_MAP.
 
     Returns: {"race": "physical-table-name", "events": "...", ...}
     """
-    cf = boto3.client("cloudformation", region_name=region)
     tables = {}
     try:
-        paginator = cf.get_paginator("list_stack_resources")
-        for page in paginator.paginate(StackName=stack_name):
-            for r in page["StackResourceSummaries"]:
-                if r["ResourceType"] != "AWS::DynamoDB::Table":
-                    continue
-                logical_id = r["LogicalResourceId"]
-                for prefix, friendly_name in TABLE_LOGICAL_ID_MAP.items():
-                    if logical_id.startswith(prefix):
-                        tables[friendly_name] = r["PhysicalResourceId"]
-                        break
+        for r in iter_stack_resources(stack_name, region):
+            if r["ResourceType"] != "AWS::DynamoDB::Table":
+                continue
+            logical_id = r["LogicalResourceId"]
+            for prefix, friendly_name in TABLE_LOGICAL_ID_MAP.items():
+                if logical_id.startswith(prefix):
+                    tables[friendly_name] = r["PhysicalResourceId"]
+                    break
     except Exception as e:
         print(f"WARNING: CloudFormation discovery failed: {e}")
     return tables
