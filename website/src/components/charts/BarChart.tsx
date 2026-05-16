@@ -6,10 +6,15 @@
 import { ChartOptions } from 'chart.js';
 import { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { categoricalPalette, chartTheme } from './chartDefaults';
+import { categoricalPalette, useChartTheme } from './chartDefaults';
 
 export interface BarChartProps {
-  labels: string[];
+  /**
+   * Tick labels. Each element can be a string (single-line tick) or a
+   * string[] (multi-line tick, one entry per line — chart.js renders each
+   * inner string on its own line).
+   */
+  labels: (string | string[])[];
   values: number[];
   seriesLabel?: string;
   yTitle?: string;
@@ -27,6 +32,7 @@ export function BarChart({
   height = 300,
   color = categoricalPalette[0],
 }: BarChartProps) {
+  const chartTheme = useChartTheme();
   const options = useMemo<ChartOptions<'bar'>>(
     () => ({
       responsive: true,
@@ -58,7 +64,7 @@ export function BarChart({
         },
       },
     }),
-    [xTitle, yTitle]
+    [xTitle, yTitle, chartTheme]
   );
 
   return (

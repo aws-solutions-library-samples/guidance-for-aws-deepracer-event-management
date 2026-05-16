@@ -6,7 +6,7 @@
 import { ChartOptions } from 'chart.js';
 import { useMemo } from 'react';
 import { Pie } from 'react-chartjs-2';
-import { categoricalPalette, chartTheme } from './chartDefaults';
+import { categoricalPalette, useChartTheme } from './chartDefaults';
 
 export interface PieSegment {
   label: string;
@@ -19,6 +19,7 @@ export interface PieChartProps {
 }
 
 export function PieChart({ data, height = 320 }: PieChartProps) {
+  const chartTheme = useChartTheme();
   const colors = useMemo(
     () => data.map((_, i) => categoricalPalette[i % categoricalPalette.length]),
     [data]
@@ -42,7 +43,7 @@ export function PieChart({ data, height = 320 }: PieChartProps) {
         },
       },
     }),
-    []
+    [chartTheme]
   );
 
   return (
