@@ -71,6 +71,57 @@ function resolveToken(tokenValue: string): string {
   return hexMatch ? hexMatch[0] : tokenValue;
 }
 
+/**
+ * Resolve a single CloudScape design-token CSS-var expression to its live
+ * value, theme-reactive in the same way `useChartTheme` is. Useful for
+ * colours not part of the standard chart theme (e.g. the per-lap status
+ * colours in the commentator race-stats chart).
+ */
+export function useResolvedToken(tokenValue: string): string {
+  const [value, setValue] = useState<string>(() => resolveToken(tokenValue));
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const refresh = () => setValue(resolveToken(tokenValue));
+    const observer = new MutationObserver(refresh);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-mode', 'style'],
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class', 'data-mode', 'style'],
+    });
+    refresh();
+    return () => observer.disconnect();
+  }, [tokenValue]);
+
+  return value;
+}
+
+/**
+ * Status colours for the per-lap colour-coding in the commentator race
+ * statistics chart. Theme-reactive — flips with dark mode like the rest of
+ * the chart theme.
+ */
+export interface LapStatusColors {
+  invalid: string;
+  valid: string;
+  fastestOfRace: string;
+  fastestOfEvent: string;
+  threshold: string;
+}
+
+export function useLapStatusColors(): LapStatusColors {
+  return {
+    invalid: useResolvedToken(tokens.colorChartsStatusCritical),
+    valid: useResolvedToken(tokens.colorChartsYellow300),
+    fastestOfRace: useResolvedToken(tokens.colorChartsGreen400),
+    fastestOfEvent: useResolvedToken(tokens.colorChartsPurple600),
+    threshold: useResolvedToken(tokens.colorChartsPaletteCategorical25),
+  };
+}
+
 // Categorical palette resolved from CloudScape design tokens.
 export const categoricalPalette: string[] = [
   tokens.colorChartsPaletteCategorical1,
