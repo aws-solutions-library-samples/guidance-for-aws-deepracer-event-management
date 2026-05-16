@@ -4,10 +4,19 @@ export interface AverageLap {
   endLapId?: number;
 }
 
+/** Subset of the RacerProfile join exposed on getLeaderboard.entries.profile. */
+export interface RacerProfileLite {
+  username?: string;
+  avatarConfig?: string | null;
+  highlightColour?: string | null;
+}
+
 export interface LeaderboardEntry {
   username: string;
   fastestLapTime?: number | null;
   fastestAverageLap?: AverageLap | null;
+  countryCode?: string | null;
+  profile?: RacerProfileLite | null;
 }
 
 export function PadZero(n: number): string {

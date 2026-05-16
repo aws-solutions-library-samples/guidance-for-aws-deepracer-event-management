@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "avataaars": "^2.0.0",
     "aws-amplify": "^6.16.2",
     "d3": "^7.9.0",
     "i18n-iso-countries": "^7.14.0",

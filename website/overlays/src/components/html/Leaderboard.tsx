@@ -1,5 +1,8 @@
+import Avatar from 'avataaars';
 import { GetFormattedLapTime, GetLeaderboardDataSorted } from '../../format';
 import type { LeaderboardEntry } from '../../format';
+import { Flag } from '../Flag';
+import { parseAvatarConfig } from '../parseAvatarConfig';
 import styles from './Leaderboard.module.css';
 
 export interface LeaderboardLabels {
@@ -67,14 +70,51 @@ export function Leaderboard({
         {rows.map(({ rank, entry, rankLabel }) => {
           const time = entry ? entryTime(entry, raceFormat) : null;
           const gap = rank > 1 && leaderTime != null && time != null ? time - leaderTime : null;
+          const avatarConfig = entry ? parseAvatarConfig(entry.profile?.avatarConfig) : null;
+          const highlightColour = entry?.profile?.highlightColour ?? null;
           return (
-            <li key={rank} className={`${styles.row} ${styles[`rank${rank}` as keyof typeof styles]}`}>
+            <li
+              key={rank}
+              className={`${styles.row} ${styles[`rank${rank}` as keyof typeof styles]}`}
+              style={
+                highlightColour
+                  ? ({
+                      // Expose the racer's personal colour as a CSS custom
+                      // property — `.row::before` paints the gradient bar
+                      // from this var (and stays transparent if unset, so
+                      // racers without a profile colour look unchanged).
+                      '--racer-highlight': highlightColour,
+                    } as React.CSSProperties)
+                  : undefined
+              }
+            >
               <span className={styles.rank}>{rankLabel}</span>
+              {avatarConfig ? (
+                <span className={styles.avatar}>
+                  <Avatar
+                    avatarStyle="Transparent"
+                    {...(avatarConfig as Record<string, string>)}
+                  />
+                  {entry?.countryCode ? (
+                    <Flag countryCode={entry.countryCode} className={styles.flagOverlay} />
+                  ) : null}
+                </span>
+              ) : entry?.countryCode ? (
+                <Flag countryCode={entry.countryCode} className={styles.flagSolo} />
+              ) : (
+                <span className={styles.avatarPlaceholder} />
+              )}
               <span className={styles.name}>{entry ? entry.username : ''}</span>
+              {/* Gap-to-leader rendered BEFORE lap time so the time always
+                  sits at the right edge of the row. The span is rendered
+                  even when there is no gap (P1, gapToLeader off, no time
+                  data) so the grid keeps its column alignment. */}
+              <span className={styles.gap}>
+                {gapToLeader && gap != null && gap > 0
+                  ? `+${GetFormattedLapTime(gap)}`
+                  : ''}
+              </span>
               <span className={styles.time}>{formatTime(entry, raceFormat)}</span>
-              {gapToLeader && gap != null && gap > 0 ? (
-                <span className={styles.gap}>+{GetFormattedLapTime(gap)}</span>
-              ) : null}
             </li>
           );
         })}

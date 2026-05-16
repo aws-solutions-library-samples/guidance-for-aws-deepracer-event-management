@@ -35,15 +35,21 @@
 }
 
 .row {
+  position: relative;
   display: grid;
-  grid-template-columns: 80px 1fr auto auto;
+  /* rank | avatar | name | gap | time. Each cell is its own grid column so
+     the avataaars SVG can't expand the row — the avatar column is fixed at
+     48px and clips. */
+  grid-template-columns: 80px 48px 1fr auto auto;
   align-items: center;
   gap: 16px;
-  padding: 16px 24px;
+  padding: 12px 24px;
   background: rgba(255, 255, 255, 0.04);
   border-left: 6px solid transparent;
   border-radius: 8px;
   font-size: 28px;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .rank1 {
@@ -61,8 +67,96 @@
   background: linear-gradient(90deg, rgba(205, 127, 50, 0.16), rgba(255, 255, 255, 0.04));
 }
 
+/*
+ * Racer's personal highlight colour — drawn as a left-to-right gradient
+ * BEHIND the row content. `::before` keeps it out of grid auto-placement
+ * entirely (a real DOM child with `position: absolute` was getting its
+ * positioning overridden by a sibling rule and ended up taking a grid
+ * cell, pushing the time to a second visual line for racers with a
+ * profile colour set). When `--racer-highlight` isn't set, the gradient
+ * resolves to fully transparent and the pseudo-element is invisible —
+ * so non-highlighted rows look unchanged.
+ */
+.row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    var(--racer-highlight, transparent) 0%,
+    transparent 40%
+  );
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.row > * {
+  position: relative;
+  z-index: 1;
+}
+
 .rank {
   font-weight: 700;
+}
+
+.avatar {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/*
+ * Avataaars renders an SVG with explicit `width`/`height` attributes
+ * (264×280) — those need `!important` to override consistently. Without
+ * this the SVG spills out of the row and breaks the grid layout for any
+ * row that has a real avatar set. Same approach as the public leaderboard.
+ */
+.avatar :global(svg) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.avatarPlaceholder {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+/*
+ * Country flag emoji shown in a small circle pinned to the bottom-right of
+ * the avatar. Matches the pattern used by the public leaderboard.
+ */
+.flagOverlay {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 18px;
+  line-height: 1;
+  background: rgba(16, 24, 40, 0.95);
+  border-radius: 50%;
+  padding: 1px 2px;
+}
+
+/* No avatar but we do have a flag: render it as the identity icon. */
+.flagSolo {
+  font-size: 36px;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 48px;
+  min-width: 48px;
+  text-align: center;
 }
 
 .name {
