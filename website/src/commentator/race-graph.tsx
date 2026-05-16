@@ -20,10 +20,8 @@ import { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { useTranslation } from 'react-i18next';
 import { RaceTypeEnum } from '../admin/events/support-functions/raceConfig';
-import {
-  useChartTheme,
-  useLapStatusColors,
-} from '../components/charts/chartDefaults';
+import { useChartTheme } from '../components/charts/chartDefaults';
+import { racingStatusColors } from '../theme/racing-status-colors';
 import { convertMsToString } from '../support-functions/time';
 
 interface RaceGraphProps {
@@ -102,7 +100,7 @@ const RaceGraph = ({
 }: RaceGraphProps): JSX.Element => {
   const { t } = useTranslation(['translation', 'help-race-stats']);
   const chartTheme = useChartTheme();
-  const statusColors = useLapStatusColors();
+  const statusColors = racingStatusColors;
 
   // Threshold value — what the dashed horizontal line marks. For avg format
   // it's the event-wide fastest avg-window time, otherwise the event-wide
@@ -148,16 +146,24 @@ const RaceGraph = ({
       buckets[p.category][i] = p.time;
     });
     const isAvgFormat = raceFormat === RaceTypeEnum.BEST_AVERAGE_LAP_TIME_X_LAP;
+    // Cap the bar width so a 1-lap race doesn't render a single bar across
+    // the whole chart. Chart.js auto-sizes bars to fill the category — with
+    // few laps that looks comically wide. 60px reads as "racing bar" on a
+    // typical 800px-ish chart for races with 1–25 laps, then chart.js
+    // shrinks them automatically when more laps are added.
+    const maxBarThickness = 60;
     return [
       {
         label: t('commentator.race.graph.invalidLaps'),
         data: buckets.invalid,
         backgroundColor: statusColors.invalid,
+        maxBarThickness,
       },
       {
         label: t('commentator.race.graph.validLaps'),
         data: buckets.valid,
         backgroundColor: statusColors.valid,
+        maxBarThickness,
       },
       {
         label: isAvgFormat
@@ -165,6 +171,7 @@ const RaceGraph = ({
           : t('commentator.race.graph.fastestRaceLap'),
         data: buckets.fastestOfRace,
         backgroundColor: statusColors.fastestOfRace,
+        maxBarThickness,
       },
       {
         label: isAvgFormat
@@ -172,6 +179,7 @@ const RaceGraph = ({
           : t('commentator.race.graph.fastestOfEventRaceLap'),
         data: buckets.fastestOfEvent,
         backgroundColor: statusColors.fastestOfEvent,
+        maxBarThickness,
       },
     ];
   }, [classified, raceFormat, statusColors, t]);
@@ -216,11 +224,10 @@ const RaceGraph = ({
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          display: true,
-          position: 'top',
-          labels: { color: chartTheme.tickColor, boxWidth: 12 },
-        },
+        // Legend is rendered outside the chart canvas — see `RaceGraphLegend`
+        // below — so it stays visible even before any bars are drawn and can
+        // span the full width above the laps table + chart.
+        legend: { display: false },
         tooltip: {
           backgroundColor: 'rgba(255, 255, 255, 0.96)',
           borderColor: chartTheme.axisColor,
@@ -256,7 +263,7 @@ const RaceGraph = ({
           max: top + 500,
           title: {
             display: true,
-            text: thresholdLabel,
+            text: t('commentator.race.graph.lapTimeAxis', { defaultValue: 'Lap time' }),
             color: chartTheme.tickColor,
           },
           grid: { color: chartTheme.gridColor },
@@ -287,4 +294,86 @@ const RaceGraph = ({
   );
 };
 
-export { RaceGraph };
+interface RaceGraphLegendProps {
+  raceFormat?: string;
+}
+
+/**
+ * Legend for the race-statistics view. Lives outside the chart canvas so
+ * it's visible immediately (before any bars are rendered) and can span the
+ * full width above the laps table + chart, instead of being squeezed into
+ * the chart container.
+ */
+const RaceGraphLegend = ({ raceFormat }: RaceGraphLegendProps): JSX.Element => {
+  const { t } = useTranslation();
+  const chartTheme = useChartTheme();
+  const statusColors = racingStatusColors;
+  const isAvgFormat = raceFormat === RaceTypeEnum.BEST_AVERAGE_LAP_TIME_X_LAP;
+
+  const items: Array<{ label: string; color: string; dashed?: boolean }> = [
+    { label: t('commentator.race.graph.invalidLaps'), color: statusColors.invalid },
+    { label: t('commentator.race.graph.validLaps'), color: statusColors.valid },
+    {
+      label: isAvgFormat
+        ? t('commentator.race.graph.fastestAvgWindow')
+        : t('commentator.race.graph.fastestRaceLap'),
+      color: statusColors.fastestOfRace,
+    },
+    {
+      label: isAvgFormat
+        ? t('commentator.race.graph.fastestOfEventAvgWindow')
+        : t('commentator.race.graph.fastestOfEventRaceLap'),
+      color: statusColors.fastestOfEvent,
+    },
+    {
+      label: isAvgFormat
+        ? t('commentator.race.graph.fastestAvgLap')
+        : t('commentator.race.graph.fastestLap'),
+      color: statusColors.threshold,
+      dashed: true,
+    },
+  ];
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '8px 24px',
+        padding: '8px 12px',
+        color: chartTheme.tickColor,
+        fontSize: 13,
+      }}
+    >
+      {items.map((it) => (
+        <div key={it.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {it.dashed ? (
+            // Render the threshold marker as a short dashed line so it's
+            // distinguishable from the solid colour swatches.
+            <span
+              style={{
+                width: 18,
+                height: 0,
+                borderTop: `2px dashed ${it.color}`,
+                display: 'inline-block',
+              }}
+            />
+          ) : (
+            <span
+              style={{
+                width: 12,
+                height: 12,
+                background: it.color,
+                borderRadius: 2,
+                display: 'inline-block',
+              }}
+            />
+          )}
+          <span>{it.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export { RaceGraph, RaceGraphLegend };

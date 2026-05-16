@@ -99,29 +99,6 @@ export function useResolvedToken(tokenValue: string): string {
   return value;
 }
 
-/**
- * Status colours for the per-lap colour-coding in the commentator race
- * statistics chart. Theme-reactive — flips with dark mode like the rest of
- * the chart theme.
- */
-export interface LapStatusColors {
-  invalid: string;
-  valid: string;
-  fastestOfRace: string;
-  fastestOfEvent: string;
-  threshold: string;
-}
-
-export function useLapStatusColors(): LapStatusColors {
-  return {
-    invalid: useResolvedToken(tokens.colorChartsStatusCritical),
-    valid: useResolvedToken(tokens.colorChartsYellow300),
-    fastestOfRace: useResolvedToken(tokens.colorChartsGreen400),
-    fastestOfEvent: useResolvedToken(tokens.colorChartsPurple600),
-    threshold: useResolvedToken(tokens.colorChartsPaletteCategorical25),
-  };
-}
-
 // Categorical palette resolved from CloudScape design tokens.
 export const categoricalPalette: string[] = [
   tokens.colorChartsPaletteCategorical1,

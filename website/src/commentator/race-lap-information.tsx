@@ -1,9 +1,9 @@
-import { Grid } from '@cloudscape-design/components';
+import { Grid, SpaceBetween } from '@cloudscape-design/components';
 import Container from '@cloudscape-design/components/container';
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LapTable } from '../pages/timekeeper/components/lapTable';
-import { RaceGraph } from './race-graph';
+import { RaceGraph, RaceGraphLegend } from './race-graph';
 import { getFacestAvgFromOverlayInfo } from './support-functions';
 
 interface Lap {
@@ -85,27 +85,32 @@ const RaceLapInformation: React.FC<RaceLapInformationProps> = ({
   }, [overlayInformation]);
 
   return (
-    <Grid gridDefinition={[{ colspan: 4 }, { colspan: 8 }]}>
-      <Container>
-        <LapTable
-          variant="embedded"
-          header={t('timekeeper.recorded-laps')}
-          laps={Object.values(laps).map(lap => ({ ...lap, time: lap.lapTime ?? lap.time ?? 0, isValid: true }))}
-          averageLapInformation={overlayInformation?.averageLaps}
-          rankingMethod={selectedEvent.raceConfig.rankingMethod}
-          readonly={true}
-        />
+    <SpaceBetween size="s">
+      <Container disableContentPaddings>
+        <RaceGraphLegend raceFormat={selectedEvent.raceConfig.rankingMethod} />
       </Container>
-      <Container>
-        <RaceGraph
-          laps={Object.values(laps).map(lap => ({ ...lap, time: lap.lapTime ?? lap.time ?? 0, isValid: true }))}
-          fastestEventLapTime={thresholds.fastestLapTime}
-          fastestEventAvgLap={thresholds.fastestAverageLap}
-          raceFormat={selectedEvent.raceConfig.rankingMethod}
-          fastestRaceAvgLap={fastestRaceAvgLap.avgTime !== undefined ? fastestRaceAvgLap as AverageLap : undefined}
-        ></RaceGraph>
-      </Container>
-    </Grid>
+      <Grid gridDefinition={[{ colspan: 4 }, { colspan: 8 }]}>
+        <Container>
+          <LapTable
+            variant="embedded"
+            header={t('timekeeper.recorded-laps')}
+            laps={Object.values(laps).map(lap => ({ ...lap, time: lap.lapTime ?? lap.time ?? 0, isValid: true }))}
+            averageLapInformation={overlayInformation?.averageLaps}
+            rankingMethod={selectedEvent.raceConfig.rankingMethod}
+            readonly={true}
+          />
+        </Container>
+        <Container>
+          <RaceGraph
+            laps={Object.values(laps).map(lap => ({ ...lap, time: lap.lapTime ?? lap.time ?? 0, isValid: true }))}
+            fastestEventLapTime={thresholds.fastestLapTime}
+            fastestEventAvgLap={thresholds.fastestAverageLap}
+            raceFormat={selectedEvent.raceConfig.rankingMethod}
+            fastestRaceAvgLap={fastestRaceAvgLap.avgTime !== undefined ? fastestRaceAvgLap as AverageLap : undefined}
+          ></RaceGraph>
+        </Container>
+      </Grid>
+    </SpaceBetween>
   );
 };
 
