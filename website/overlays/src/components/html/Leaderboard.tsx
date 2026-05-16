@@ -18,6 +18,12 @@ export interface LeaderboardProps {
   raceFormat: string;
   gapToLeader: boolean;
   eventName: string;
+  /**
+   * Bottom-right brand text — defaults to the operator-configured
+   * `leaderBoardFooter` (typically the race / event name). Falls back to
+   * the rank-label footer (`labels.footer`) when empty.
+   */
+  raceName?: string;
   labels: LeaderboardLabels;
   visible: boolean;
 }
@@ -50,6 +56,7 @@ export function Leaderboard({
   raceFormat,
   gapToLeader,
   eventName,
+  raceName,
   labels,
   visible,
 }: LeaderboardProps) {
@@ -119,7 +126,7 @@ export function Leaderboard({
           );
         })}
       </ol>
-      <div className={styles.footer}>{labels.footer}</div>
+      <div className={styles.footer}>{raceName || labels.footer}</div>
     </div>
   );
 }

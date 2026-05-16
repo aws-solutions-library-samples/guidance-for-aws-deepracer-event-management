@@ -1,7 +1,12 @@
 .leaderboard {
   position: fixed;
-  top: 60px;
-  left: 60px;
+  /* Centred on the broadcast canvas during the idle state. The translate
+     handles the variable panel height (the row count is fixed at 4 today
+     but the event-name + footer rows can wrap). Transform doesn't
+     interact with the opacity transition. */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 1200px;
   padding: 32px 48px;
   background: linear-gradient(135deg, rgba(16, 24, 40, 0.92), rgba(28, 38, 64, 0.88));
@@ -84,9 +89,9 @@
   background: linear-gradient(
     to right,
     var(--racer-highlight, transparent) 0%,
-    transparent 40%
+    transparent 65%
   );
-  opacity: 0.45;
+  opacity: 0.75;
   pointer-events: none;
   z-index: 0;
 }

@@ -113,7 +113,7 @@ describe('Leaderboard', () => {
     expect(screen.getByText('DNF')).toBeInTheDocument();
   });
 
-  test('renders event name and labels', () => {
+  test('renders event name in the header, rank labels, and footer fallback', () => {
     render(
       <Leaderboard
         entries={entries}
@@ -126,7 +126,25 @@ describe('Leaderboard', () => {
     );
     expect(screen.getByText('My Cool Event')).toBeInTheDocument();
     expect(screen.getByText('P1')).toBeInTheDocument();
+    // No raceName supplied → footer falls back to labels.footer.
     expect(screen.getByText('Live results')).toBeInTheDocument();
+  });
+
+  test('renders the raceName in the footer when supplied', () => {
+    render(
+      <Leaderboard
+        entries={entries}
+        raceFormat="fastest"
+        gapToLeader={false}
+        eventName="My Cool Event"
+        raceName="AWS LONDON SUMMIT 2023"
+        labels={labels}
+        visible
+      />,
+    );
+    // raceName takes priority over labels.footer when set.
+    expect(screen.getByText('AWS LONDON SUMMIT 2023')).toBeInTheDocument();
+    expect(screen.queryByText('Live results')).toBeNull();
   });
 
   test('applies visible class when visible=true and hidden class when visible=false', () => {

@@ -6,3 +6,24 @@
   overflow: hidden;
   background: transparent;
 }
+
+/*
+ * Full-screen grey tint shown behind the broadcast content (leaderboard +
+ * lower-third). Replicates the dimmed-track effect the legacy SVG overlay
+ * had via its baked-in dark backdrop, dialled down so the action remains
+ * visible underneath. Fades with the same timing as the leaderboard so
+ * the two transitions feel coordinated.
+ */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1s cubic-bezier(0.65, 0, 0.35, 1);
+  z-index: 0;
+}
+
+.backdropVisible {
+  opacity: 1;
+}

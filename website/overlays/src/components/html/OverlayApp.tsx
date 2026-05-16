@@ -16,7 +16,15 @@ export default function OverlayApp() {
   const showLeaderboardParam = (searchParams.get('showLeaderboard') ?? '1') === '1';
   const gapToLeader = searchParams.get('gapToLeader') !== 'false';
 
-  const { leaderboardEntries, eventName, showLeaderboard, showLowerThird, currentRacer } = useOverlayData({
+  const {
+    leaderboardEntries,
+    eventName,
+    raceName,
+    eventBestLapMs,
+    showLeaderboard,
+    showLowerThird,
+    currentRacer,
+  } = useOverlayData({
     eventId: eventId ?? '',
     trackId,
     raceFormat,
@@ -40,14 +48,23 @@ export default function OverlayApp() {
     previous: t('lower-thirds.previous-lap'),
   };
 
+  // Replicate the legacy SVG overlay's effect of dimming the track view
+  // when the leaderboard is on screen at idle. The lower-third runs during
+  // live racing where the track action is the point — no tint there.
+  const backdropVisible = showLeaderboard && showLeaderboardParam;
+
   return (
     <div className={styles.root}>
       <ChromaBg />
+      <div
+        className={`${styles.backdrop} ${backdropVisible ? styles.backdropVisible : ''}`}
+      />
       <Leaderboard
         entries={leaderboardEntries}
         raceFormat={raceFormat}
         gapToLeader={gapToLeader}
         eventName={eventName}
+        raceName={raceName}
         labels={leaderboardLabels}
         visible={showLeaderboard && showLeaderboardParam}
       />
@@ -56,9 +73,13 @@ export default function OverlayApp() {
         timeLeftMs={currentRacer?.timeLeftMs ?? 180000}
         fastestLapMs={currentRacer?.fastestLapMs ?? null}
         lastLapMs={currentRacer?.lastLapMs ?? null}
+        eventBestLapMs={eventBestLapMs}
         eventName={eventName}
         labels={lowerThirdLabels}
         visible={showLowerThird}
+        avatarConfig={currentRacer?.avatarConfig ?? null}
+        countryCode={currentRacer?.countryCode ?? null}
+        highlightColour={currentRacer?.highlightColour ?? null}
       />
     </div>
   );

@@ -15,11 +15,28 @@ export interface CurrentRacer {
   timeLeftMs: number;
   fastestLapMs: number | null;
   lastLapMs: number | null;
+  avatarConfig: string | null;
+  countryCode: string | null;
+  highlightColour: string | null;
 }
 
 export interface OverlayData {
   leaderboardEntries: LeaderboardEntry[];
+  /** Track title from `leaderBoardConfig.leaderBoardTitle` (e.g. "LONDON"). */
   eventName: string;
+  /**
+   * Operator-configured footer text from `leaderBoardConfig.leaderBoardFooter`
+   * — typically the race / event name, used as the bottom-right brand on the
+   * leaderboard panel. Empty string if unset.
+   */
+  raceName: string;
+  /**
+   * Fastest lap time across all racers in this event (the leader's time).
+   * Used by the lower-third to colour the current racer's times: matching
+   * or beating this is "fastest of event" (purple). `null` when there are
+   * no leaderboard entries yet.
+   */
+  eventBestLapMs: number | null;
   showLeaderboard: boolean;
   showLowerThird: boolean;
   currentRacer: CurrentRacer | null;
@@ -56,6 +73,7 @@ function pickFastestAvg(
 export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataArgs): OverlayData {
   const [leaderboardEntries, setLeaderboardEntries] = useState<LeaderboardEntry[]>([]);
   const [eventName, setEventName] = useState<string>('');
+  const [raceName, setRaceName] = useState<string>('');
   const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
   const [showLowerThird, setShowLowerThird] = useState<boolean>(false);
   const [currentRacer, setCurrentRacer] = useState<CurrentRacer | null>(null);
@@ -103,12 +121,18 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
     function fetchLeaderboard(applyConfig: boolean) {
       return (
         client.graphql({ query: queries.getLeaderboard, variables: { eventId, trackId } }) as Promise<{
-          data: { getLeaderboard: { config?: { leaderBoardTitle: string }; entries: LeaderboardEntry[] } };
+          data: {
+            getLeaderboard: {
+              config?: { leaderBoardTitle: string; leaderBoardFooter?: string };
+              entries: LeaderboardEntry[];
+            };
+          };
         }>
       ).then((response) => {
         setLeaderboardEntries(response.data.getLeaderboard.entries ?? []);
         if (applyConfig && response.data.getLeaderboard.config) {
           setEventName(response.data.getLeaderboard.config.leaderBoardTitle.toUpperCase());
+          setRaceName((response.data.getLeaderboard.config.leaderBoardFooter ?? '').toUpperCase());
         }
       });
     }
@@ -169,6 +193,9 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
                 : prev.timeLeftMs,
             fastestLapMs: fastest,
             lastLapMs: last,
+            avatarConfig: info.profile?.avatarConfig ?? null,
+            countryCode: info.countryCode ?? null,
+            highlightColour: info.profile?.highlightColour ?? null,
           }));
           setShowLowerThird(true);
           setShowLeaderboard(false);
@@ -209,5 +236,23 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
     };
   }, [eventId, trackId, raceFormat]);
 
-  return { leaderboardEntries, eventName, showLeaderboard, showLowerThird, currentRacer };
+  // Event-wide best lap time — the minimum `fastestLapTime` across all
+  // leaderboard entries. Used by the lower-third to decide whether a
+  // racer's lap is the fastest of the event (purple) or just their own
+  // best (green).
+  const eventBestLapMs = leaderboardEntries.reduce<number | null>((min, e) => {
+    const t = e.fastestLapTime;
+    if (t == null || t <= 0) return min;
+    return min == null || t < min ? t : min;
+  }, null);
+
+  return {
+    leaderboardEntries,
+    eventName,
+    raceName,
+    eventBestLapMs,
+    showLeaderboard,
+    showLowerThird,
+    currentRacer,
+  };
 }

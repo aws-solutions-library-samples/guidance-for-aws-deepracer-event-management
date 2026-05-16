@@ -1,19 +1,45 @@
 .lowerThird {
   position: fixed;
-  bottom: 60px;
-  left: 60px;
-  width: 1700px;
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 32px;
-  padding: 32px 48px;
+  bottom: 40px;
+  left: 40px;
+  /* 1/3 of the 1920px broadcast canvas — compact enough to leave most of
+     the track visible behind it. The internal layout stacks identity over
+     the three stats so the narrower width still fits all the info. */
+  width: 640px;
+  padding: 16px 20px 14px 28px;
   background: linear-gradient(135deg, rgba(16, 24, 40, 0.94), rgba(28, 38, 64, 0.88));
-  border-radius: 16px;
+  border-radius: 12px;
   color: #ffffff;
   font-family: 'Inter', 'Helvetica Neue', sans-serif;
   transform: translateX(-110%);
   transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1);
   pointer-events: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/*
+ * Racer's personal colour painted as a vertical accent bar at the left edge
+ * of the panel — broadcast-style. Hidden when the racer hasn't set a colour
+ * (the var resolves to transparent and the bar is invisible).
+ */
+.lowerThird::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 10px;
+  background: var(--racer-highlight, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lowerThird > * {
+  position: relative;
+  z-index: 1;
 }
 
 .visible {
@@ -22,43 +48,121 @@
 
 .identity {
   display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.avatar {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar :global(svg) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.flagOverlay {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  font-size: 18px;
+  line-height: 1;
+  background: rgba(16, 24, 40, 0.95);
+  border-radius: 50%;
+  padding: 1px 2px;
+}
+
+.flagSolo {
+  font-size: 40px;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 56px;
+  min-width: 56px;
+  text-align: center;
+}
+
+.identityText {
+  display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
 
 .racerLabel,
 .statLabel {
-  font-size: 18px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.6);
 }
 
 .racerName {
-  font-size: 48px;
+  font-size: 26px;
   font-weight: 700;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * Stats row sits below the identity. Three equal columns so the panel
+ * lays out the same width regardless of which values are populated.
+ */
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
 }
 
 .stat {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .statValue {
   font-family: 'JetBrains Mono', 'SF Mono', monospace;
   font-variant-numeric: tabular-nums;
-  font-size: 42px;
+  font-size: 22px;
   font-weight: 600;
+  line-height: 1.1;
+}
+
+/*
+ * F1-style colour indicator bar shown under each lap-time stat. Background
+ * is set inline from the racingStatusColors palette — transparent when there
+ * is no status (e.g. on the "Remaining" cell, or before any lap is recorded).
+ * Fixed height so all three stats line up regardless of which have an
+ * indicator active.
+ */
+.statIndicator {
+  margin-top: 4px;
+  height: 4px;
+  width: 100%;
+  border-radius: 2px;
+  background: transparent;
+  transition: background 200ms ease-out;
 }
 
 .eventName {
-  grid-column: 1 / -1;
   text-align: right;
-  font-size: 16px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: rgba(255, 255, 255, 0.5);
-  margin-top: 8px;
 }
