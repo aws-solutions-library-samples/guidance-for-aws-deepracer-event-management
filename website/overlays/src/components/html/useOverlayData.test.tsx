@@ -133,7 +133,7 @@ describe('useOverlayData', () => {
     });
   });
 
-  test('local timer ticks down by 100ms between subscription messages when race is running', async () => {
+  test('local timer ticks down over time when race is running', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
       const { result } = renderHook(() =>
@@ -156,17 +156,190 @@ describe('useOverlayData', () => {
       });
       await vi.waitFor(() => expect(result.current.currentRacer?.timeLeftMs).toBe(10000));
 
-      // Advance 500ms — expect 5 ticks of 100ms each → 9500ms remaining
+      // Advance 500ms — timer ticks at 30 FPS with wall-clock delta, so the
+      // exact value depends on how many ticks fired (~15) and at what offset
+      // the last one landed. Allow a small tolerance.
       await act(async () => {
         await vi.advanceTimersByTimeAsync(500);
       });
-      expect(result.current.currentRacer?.timeLeftMs).toBe(9500);
+      const after500 = result.current.currentRacer?.timeLeftMs ?? 0;
+      expect(after500).toBeGreaterThanOrEqual(9450);
+      expect(after500).toBeLessThanOrEqual(9550);
 
-      // Advance another 1000ms — expect 8500ms remaining
+      // Advance another 1000ms — about 1500ms total elapsed
       await act(async () => {
         await vi.advanceTimersByTimeAsync(1000);
       });
-      expect(result.current.currentRacer?.timeLeftMs).toBe(8500);
+      const after1500 = result.current.currentRacer?.timeLeftMs ?? 0;
+      expect(after1500).toBeGreaterThanOrEqual(8450);
+      expect(after1500).toBeLessThanOrEqual(8550);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('mid-race messages do NOT jump the timer back up (no stutter)', async () => {
+    // Regression guard: server messages arriving during a race carry a
+    // slightly stale `timeLeftInMs` (it's what the timer was when the message
+    // was emitted, plus network delay). Adopting that value on every message
+    // produced a visible stutter — the timer would tick down then jump back
+    // up. After the fix, mid-race messages should leave the local timer
+    // alone and only update lap data.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { result } = renderHook(() =>
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+      );
+      await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
+
+      const overlaySub = mockSubscribers.find((s) => s.query.name === 'onNewOverlayInfo')!;
+      // First message — initial state transition into RACE_IN_PROGRESS.
+      act(() => {
+        overlaySub.next({
+          data: {
+            onNewOverlayInfo: {
+              username: 'racer1',
+              timeLeftInMs: 10000,
+              raceStatus: 'RACE_IN_PROGRESS',
+              laps: [],
+            },
+          },
+        });
+      });
+      await vi.waitFor(() => expect(result.current.currentRacer?.timeLeftMs).toBe(10000));
+
+      // Let the timer run for 300ms locally.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(300);
+      });
+      const before = result.current.currentRacer?.timeLeftMs ?? 0;
+      expect(before).toBeLessThan(10000); // confirm it actually ticked
+
+      // A new in-progress message arrives carrying the original (stale)
+      // `timeLeftInMs: 10000` along with new lap data. The fix should NOT
+      // adopt that timer value — it should keep the local 300-ms-elapsed
+      // value and only update lap data.
+      act(() => {
+        overlaySub.next({
+          data: {
+            onNewOverlayInfo: {
+              username: 'racer1',
+              timeLeftInMs: 10000, // stale
+              raceStatus: 'RACE_IN_PROGRESS',
+              laps: [{ lapId: 1, time: 5500, isValid: true }],
+            },
+          },
+        });
+      });
+      // Lap data picked up
+      await vi.waitFor(() =>
+        expect(result.current.currentRacer?.fastestLapMs).toBe(5500),
+      );
+      // Timer NOT bumped back to 10000 — should be at or below `before`
+      // (might tick on slightly between the message and our assert, but
+      // must not exceed `before` by more than a small jitter).
+      const after = result.current.currentRacer?.timeLeftMs ?? 0;
+      expect(after).toBeLessThanOrEqual(before + 50);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('status transition (paused → running) DOES resync the timer', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { result } = renderHook(() =>
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+      );
+      await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
+
+      const overlaySub = mockSubscribers.find((s) => s.query.name === 'onNewOverlayInfo')!;
+      // Paused at 10000.
+      act(() => {
+        overlaySub.next({
+          data: {
+            onNewOverlayInfo: {
+              username: 'racer1',
+              timeLeftInMs: 10000,
+              raceStatus: 'RACE_PAUSED',
+              laps: [],
+            },
+          },
+        });
+      });
+      await vi.waitFor(() => expect(result.current.currentRacer?.timeLeftMs).toBe(10000));
+
+      // Transition to running with a server timer value that differs from
+      // the previously-paused value — this is the case where the server is
+      // authoritative and we MUST resync.
+      act(() => {
+        overlaySub.next({
+          data: {
+            onNewOverlayInfo: {
+              username: 'racer1',
+              timeLeftInMs: 8000,
+              raceStatus: 'RACE_IN_PROGRESS',
+              laps: [],
+            },
+          },
+        });
+      });
+      await vi.waitFor(() => expect(result.current.currentRacer?.timeLeftMs).toBe(8000));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('different racer becoming current DOES resync the timer', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { result } = renderHook(() =>
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+      );
+      await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
+
+      const overlaySub = mockSubscribers.find((s) => s.query.name === 'onNewOverlayInfo')!;
+      act(() => {
+        overlaySub.next({
+          data: {
+            onNewOverlayInfo: {
+              username: 'racer1',
+              timeLeftInMs: 10000,
+              raceStatus: 'RACE_IN_PROGRESS',
+              laps: [],
+            },
+          },
+        });
+      });
+      await vi.waitFor(() => expect(result.current.currentRacer?.timeLeftMs).toBe(10000));
+
+      // Let racer1 race for a bit.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(200);
+      });
+
+      // A new racer takes over — must resync the timer to the new racer's
+      // remaining time, even though the status didn't change.
+      act(() => {
+        overlaySub.next({
+          data: {
+            onNewOverlayInfo: {
+              username: 'racer2',
+              timeLeftInMs: 5000,
+              raceStatus: 'RACE_IN_PROGRESS',
+              laps: [],
+            },
+          },
+        });
+      });
+      await vi.waitFor(() =>
+        expect(result.current.currentRacer?.username).toBe('racer2'),
+      );
+      // The new racer's timer value applied — within tolerance for one tick
+      // that may have fired between the message and our assertion.
+      const after = result.current.currentRacer?.timeLeftMs ?? 0;
+      expect(after).toBeLessThanOrEqual(5000);
+      expect(after).toBeGreaterThanOrEqual(4950);
     } finally {
       vi.useRealTimers();
     }
