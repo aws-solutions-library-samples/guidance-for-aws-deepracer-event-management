@@ -53,10 +53,15 @@ Chart.register(
  * isn't defined yet (e.g. before CloudScape stylesheets apply, or during SSR).
  */
 function resolveToken(tokenValue: string): string {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && document.body) {
     const varMatch = /^var\((--[^,)]+)/.exec(tokenValue);
     if (varMatch) {
-      const live = getComputedStyle(document.documentElement)
+      // CloudScape's dark mode is applied by adding `awsui-dark-mode` to
+      // <body>, and the design-token CSS variables are redefined under that
+      // class — so we have to read from a descendant of <body> (or <body>
+      // itself) to see the active theme's value. Reading from
+      // documentElement misses dark-mode overrides.
+      const live = getComputedStyle(document.body)
         .getPropertyValue(varMatch[1])
         .trim();
       if (live) return live;
