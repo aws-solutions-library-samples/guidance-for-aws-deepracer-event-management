@@ -1,6 +1,6 @@
 import { DockerImage, Duration } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
-import { EventBus, Rule } from 'aws-cdk-lib/aws-events';
+import { IEventBus, Rule } from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { IRole } from 'aws-cdk-lib/aws-iam';
@@ -39,7 +39,7 @@ export interface UserManagerProps {
       powerToolsLayer: lambda.ILayerVersion;
     };
   };
-  eventbus: EventBus;
+  eventbus: IEventBus;
 }
 
 export class UserManager extends Construct {
@@ -112,6 +112,7 @@ export class UserManager extends Construct {
           'cognito-idp:ListUsersInGroup',
           'cognito-idp:AdminAddUserToGroup',
           'cognito-idp:AdminRemoveUserFromGroup',
+          'cognito-idp:AdminGetUser',
         ],
         resources: [props.userPoolArn],
       })
@@ -363,7 +364,9 @@ export class UserManager extends Construct {
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: ['appsync:GraphQL'],
-          resources: [`${props.appsyncApi.api.arn}/types/Mutation/fields/deleteUser`],
+          resources: [
+            `${props.appsyncApi.api.arn}/types/Mutation/fields/deleteUser`,
+          ],
         }),
       ],
     });

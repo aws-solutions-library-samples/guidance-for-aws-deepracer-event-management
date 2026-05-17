@@ -1,0 +1,267 @@
+.layout {
+  color: white;
+  width: 100%;
+  font-size: 2.5vmin;
+  top: 25rem;
+  left: 5rem;
+  right: 5rem;
+  /*transition: opacity 200ms 500ms linear;*/
+}
+
+.titles {
+  display: flex;
+  text-transform: uppercase;
+  align-items: center;
+  font-weight: bold;
+  font-style: italic;
+  height: 2rem;
+  font-size: 1em;
+  letter-spacing: 0.15ch;
+}
+
+.positionTitle {
+  margin-left: 2vmin;
+  width: 16vmin;
+}
+
+.racerTitle {
+  margin-left: 2.5vmin;
+}
+
+.timeTitle {
+  margin-left: auto;
+  margin-right: 4vmin;
+}
+/*
+.time {
+  text-align: right;
+  flex: 1 1 0px;
+  white-space: nowrap;
+  position: relative;
+
+}
+*/
+
+.entries {
+  overflow: scroll;
+  height: calc(100vh - 32vmin);
+  position: relative;
+  /* Negative horizontal margin + matching padding extends the scroll box
+     past .leaderboardRoot's 90% width so the highlighted entry's
+     transform: scale(1.1) and cyan glow can render past the leaderboard's
+     visible "borders" without being clipped. The inner .entry width is
+     unchanged. .pageRoot has overflow-x: hidden to absorb any sliver
+     poking past the viewport. */
+  margin: 0 -10vmin;
+  padding: 0 10vmin;
+}
+
+/* When the new-finisher summary overlay is shown it sits fixed at the bottom
+   and obscures the bottom of the leaderboard. Shrink the scroll area so the
+   last visible entry (and any entry we scroll into view) clears the overlay.
+   No transition: scrollIntoView in LeaderboardTable runs in the same effect
+   tick as this class is applied, and a transition would leave it calculating
+   against the old (taller) height — landing the highlighted entry below the
+   new visible area. Snap the height so the geometry is correct immediately. */
+.entriesWithFooter {
+  height: calc(100vh - 52vmin);
+}
+
+.entries::-webkit-scrollbar{
+  display: none;
+}
+
+.entry {
+  margin-top: 0;
+  margin-left: 1.6vmin;
+  margin-right: 1.6vmin;
+  list-style: none;
+  color: black;
+  font-size: 1.2em;
+
+  height: 4em;
+  line-height: 4em;
+
+  transition: all 0.9s ease-out;
+
+  /*
+  transition-timing-function: linear;
+  transition:
+    top 600ms ease,
+    z-index 100ms 800ms linear,
+    transform 300ms 500ms ease,
+    font-size 600ms ease
+  */
+}
+
+.topThreeLiRacer {
+  /*width: 90vmin;*/
+  transition: all 0.9s ease-out;
+}
+
+.liPosition {
+  margin-left: 2vmin;
+  font-size: 2em;
+
+  width: 12vmin;
+  font-weight: 700;
+  color: inherit;
+  /*transition: color 600ms linear;*/
+}
+
+.highlightBar {
+  width: 30px;
+  align-self: stretch;
+  margin-right: -25px;
+  z-index: 0;
+}
+
+.liIdentity {
+  width: 1.6em;
+  height: 1.6em;
+  flex-shrink: 0;
+  margin-right: 1vmin;
+  overflow: visible;
+  align-self: center;
+  position: relative;
+  z-index: 1;
+  /* .entry sets line-height: 4em; positions 1-3 mask the resulting
+     vertical offset with their larger font, but positions 4+ render
+     the avatar too low. Reset line-height so the flex item sizes to
+     content. */
+  line-height: 1;
+}
+
+.liIdentity :global(svg) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.identityFlag {
+  position: absolute;
+  bottom: -0.35em;
+  right: -0.15em;
+  font-size: 0.6em;
+  line-height: 1;
+}
+
+.identityFlagOnly {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 0.8em;
+  line-height: 1;
+}
+
+.liRacer {
+  font-weight: 300;
+  /*width: 90vmin;*/
+  font-size: 1.4em;
+}
+
+.liTime {
+  padding-top: 1vmin;
+  padding-bottom: 1vmin;
+  margin-right: 4vmin;
+  font-size: 1.4em;
+  font-style: italic;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.row {
+  width: 100%;
+  border-radius: 2vmin;
+  background: rgba(113, 36, 131, 0.3);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, rgba(0, 255, 235, 0.2), rgba(117, 38, 134, 0.2));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 30%), 0 0.3rem 0.5rem rgb(0 0 0 / 50%);
+  z-index: 100;
+
+  transition: all 0.9s ease-out;
+  /*transition: top 600ms ease, z-index 100ms 800ms linear, transform 300ms 500ms ease, font-size 600ms ease;*/
+}
+
+.listEntry {
+  display: flex;
+  align-items: center;
+
+  color: rgb(225, 225, 225);
+  transition: all 0.9s ease-out;
+}
+
+.gold,
+.silver,
+.bronze {
+  color: black;
+  font-size: 1.6em;
+  font-weight: 300;
+
+  text-shadow: 0 0.2rem 0 rgba(255, 255, 255, 0.3);
+}
+
+.gold .liPosition,
+.silver .liPosition,
+.bronze .liPosition {
+  font-size: 1.3em;
+  letter-spacing: 0.15ch;
+}
+
+.bronze {
+  background: transparent;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, #fcae4d, #672f04);
+}
+
+.silver {
+  background: transparent;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, #c1c1c5, #44464c);
+}
+
+.gold {
+  background: transparent;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+    linear-gradient(90deg, #f0ba0a, #c47400);
+}
+
+.highlight {
+  box-shadow: 0 0 0 0.3rem #0095ff;
+}
+
+.animate {
+  background-image: linear-gradient(-225deg, #231557 0%, #44107a 29%, #ff1361 67%, #fff800 100%);
+  background-size: auto auto;
+  background-clip: border-box;
+  background-size: 200% auto;
+  color: #fff;
+  background-clip: text;
+  text-fill-color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textclip 2s linear infinite;
+}
+
+@keyframes textclip {
+  to {
+    background-position: 200% center;
+  }
+}
+
+.highlighted {
+  box-shadow: 0 0 1.5rem rgba(0, 255, 235, 0.6), inset 0 0 0 2px rgba(0, 255, 235, 0.8);
+  animation: highlightPulse 2s ease-in-out infinite;
+  transform: scale(1.1);
+  z-index: 200;
+}
+
+@keyframes highlightPulse {
+  0%, 100% {
+    box-shadow: 0 0 1.5rem rgba(0, 255, 235, 0.6), inset 0 0 0 2px rgba(0, 255, 235, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 2.5rem rgba(0, 255, 235, 0.9), inset 0 0 0 2px rgba(0, 255, 235, 1);
+  }
+}

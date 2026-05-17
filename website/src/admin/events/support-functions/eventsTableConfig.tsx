@@ -181,7 +181,7 @@ export const ColumnConfiguration = (
         cell: (item: Event) =>
           (
             <EventLinksButtons
-              href={`${(awsconfig as any).Urls?.leaderboardWebsite || window.location.origin}/landing-page/${item.eventId.toString()}/`}
+              href={`${window.location.origin}/leaderboard/landing-page/${item.eventId.toString()}/`}
               linkTextPrimary={i18next.t('events.link-same-tab')}
               linkTextExternal={i18next.t('events.link-new-tab')}
             />

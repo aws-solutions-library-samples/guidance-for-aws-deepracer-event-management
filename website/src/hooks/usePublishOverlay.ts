@@ -14,6 +14,7 @@ export interface OverlayInfo {
   trackId?: string;
   username?: string;
   userId?: string;
+  countryCode?: string;
   timeLeftInMs?: number;
   currentLapTimeInMs?: number;
   raceStatus?: RacesStatusEnum;

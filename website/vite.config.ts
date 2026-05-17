@@ -1,10 +1,29 @@
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
+
+// Rewrite sub-app deep links to their index.html so React Router handles routing.
+// e.g. /leaderboard/some-uuid → /leaderboard/index.html (client-side router takes over)
+function subAppFallback(): Plugin {
+    return {
+        name: 'sub-app-fallback',
+        configureServer(server) {
+            server.middlewares.use((req, _res, next) => {
+                const url = req.url ?? '';
+                if (url.startsWith('/leaderboard/') && !url.includes('.')) {
+                    req.url = '/leaderboard/index.html';
+                } else if (url.startsWith('/overlays/') && !url.includes('.')) {
+                    req.url = '/overlays/index.html';
+                }
+                next();
+            });
+        },
+    };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [react()],
+    plugins: [react(), subAppFallback()],
     resolve: {
         alias: {
             // Match CRA's baseUrl: "src" in tsconfig.json

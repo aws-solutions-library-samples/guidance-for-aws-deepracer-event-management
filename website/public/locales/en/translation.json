@@ -409,6 +409,7 @@
     "information": "Race information",
     "race-id": "Race Id",
     "track-id": "Track",
+    "track": "Track",
     "username": "Username",
     "user-id": "User Id",
     "number-of-laps": "Laps",
@@ -727,6 +728,10 @@
     "more": "More",
     "quarantined-models": "Quarantined models",
     "search": "Search",
+    "dark-mode": "Dark mode",
+    "light-mode": "Light mode",
+    "compact-density": "Compact mode",
+    "comfortable-density": "Comfortable mode",
     "sign-out": "Sign out",
     "time-keeper": "Timekeeper",
     "time-keeper-wizard": "Timekeeper wizard",
@@ -823,6 +828,25 @@
         }
       }
     }
+  },
+  "avatar-builder": {
+    "header": "Your Avatar",
+    "description": "Build your racer avatar — it will appear on the leaderboard.",
+    "save": "Save avatar",
+    "saved": "Avatar saved",
+    "save-error": "Error saving avatar, please try again",
+    "top": "Hair / Hat",
+    "accessories": "Accessories",
+    "hair-color": "Hair colour",
+    "facial-hair": "Facial hair",
+    "facial-hair-color": "Facial hair colour",
+    "clothes": "Clothes",
+    "clothes-color": "Clothes colour",
+    "eyes": "Eyes",
+    "eyebrows": "Eyebrows",
+    "mouth": "Mouth",
+    "skin": "Skin",
+    "highlight-colour": "Car highlight colour"
   },
   "upload-to-car-status": {
     "header": "Uploads to car status",

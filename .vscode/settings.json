@@ -27,8 +27,8 @@
   },
   "i18n-ally.localesPaths": [
     "website/public/locales",
-    "website-leaderboard/public/locales",
-    "website-stream-overlays/public/locales"
+    "website/leaderboard/public/locales",
+    "website/overlays/public/locales"
   ],
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"

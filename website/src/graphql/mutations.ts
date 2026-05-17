@@ -887,6 +887,11 @@ export const updateOverlayInfo = /* GraphQL */ `
             currentLapTimeInMs
             eventId
             eventName
+            profile {
+                username
+                avatarConfig
+                highlightColour
+            }
             laps {
                 autTimerConnected
                 carName
@@ -999,6 +1004,17 @@ export const updateUser = /* GraphQL */ `
             UserStatus
             Username
             sub
+        }
+    }
+`;
+
+export const updateRacerProfile = /* GraphQL */ `
+    mutation UpdateRacerProfile($input: RacerProfileInput!) {
+        updateRacerProfile(input: $input) {
+            username
+            avatarConfig
+            highlightColour
+            updatedAt
         }
     }
 `;

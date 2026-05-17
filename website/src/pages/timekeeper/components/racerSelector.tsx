@@ -2,10 +2,12 @@ import { FormField, Select, SelectProps } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../../store/store';
+import { extractUserAttribute } from '../support-functions/raceDomain';
 
 interface RaceConfig {
   userId?: string;
   username?: string;
+  countryCode?: string;
 }
 
 interface RacerValidation {
@@ -60,12 +62,14 @@ export const RacerSelector: React.FC<RacerSelectorProps> = ({
       <FormField label={t('timekeeper.racer-selector.select-racer')} description={description}>
         <Select
           selectedOption={GetRacerOptionFromId(race.userId) ?? null}
-          onChange={({ detail }) =>
+          onChange={({ detail }) => {
+            const selectedUser = racers.find((u) => u.sub === detail.selectedOption.value);
             onConfigUpdate({
               userId: detail.selectedOption.value,
               username: detail.selectedOption.label,
-            })
-          }
+              countryCode: extractUserAttribute(selectedUser?.Attributes, 'custom:countryCode'),
+            });
+          }}
           options={userOptions}
           selectedAriaLabel={t('timekeeper.racer-selector.selected')}
           filteringType="auto"

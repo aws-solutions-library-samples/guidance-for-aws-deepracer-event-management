@@ -2,18 +2,19 @@ import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
 import * as cdk from 'aws-cdk-lib';
 import { DockerImage, Duration, Expiration } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
-import { IDistribution } from 'aws-cdk-lib/aws-cloudfront';
-import { CfnIdentityPool, IUserPool, UserPoolClient } from 'aws-cdk-lib/aws-cognito';
-import { EventBus } from 'aws-cdk-lib/aws-events';
-import { IRole } from 'aws-cdk-lib/aws-iam';
+import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
+import { IUserPool, UserPool } from 'aws-cdk-lib/aws-cognito';
+import { EventBus, IEventBus } from 'aws-cdk-lib/aws-events';
+import { Role } from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
-import { IBucket } from 'aws-cdk-lib/aws-s3';
+import { Bucket } from 'aws-cdk-lib/aws-s3';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import { CodeFirstSchema } from 'awscdk-appsync-utils';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
+import * as os from 'os';
 import { CarLogsManager } from './constructs/car-logs-manager';
 import { CarManager } from './constructs/cars-manager';
 import { ClamscanServerless } from './constructs/clamscan-serverless';
@@ -27,43 +28,17 @@ import { ModelOptimizer } from './constructs/model-optimizer';
 import { ModelsManager } from './constructs/models-manager';
 import { ModelsManagerDefaultModelsDeployment } from './constructs/models-manager-default-models';
 import { RaceManager } from './constructs/race-manager';
-import { StreamingOverlay } from './constructs/streaming-overlay';
+import { RacerProfile } from './constructs/racer-profile';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
   baseStackName: string;
-  adminGroupRole: IRole;
-  operatorGroupRole: IRole;
-  commentatorGroupRole: IRole;
-  registrationGroupRole: IRole;
-  authenticatedUserRole: IRole;
-  userPool: IUserPool;
-  identiyPool: CfnIdentityPool;
-  userPoolClientWeb: UserPoolClient;
-  cloudfrontDistribution: IDistribution;
-  cloudfrontDomainNames?: string[];
-  tacCloudfrontDistribution: IDistribution;
-  tacSourceBucket: IBucket;
-  logsBucket: IBucket;
-  lambdaConfig: {
-    runtime: lambda.Runtime;
-    architecture: lambda.Architecture;
-    bundlingImage: DockerImage;
-  };
-  dremWebsiteBucket: IBucket;
-  eventbus: EventBus;
 }
 
 export class DeepracerEventManagerStack extends cdk.Stack {
   public readonly distributionId: cdk.CfnOutput;
   public readonly sourceBucketName: cdk.CfnOutput;
-  public readonly leaderboardDistributionId: cdk.CfnOutput;
-  public readonly leaderboardSourceBucketName: cdk.CfnOutput;
-  public readonly streamingOverlayDistributionId: cdk.CfnOutput;
-  public readonly streamingOverlaySourceBucketName: cdk.CfnOutput;
-  public readonly tacWebsitedistributionId: cdk.CfnOutput;
-  public readonly tacSourceBucketName: cdk.CfnOutput; // this is missing
   public readonly dremWebsiteUrl: cdk.CfnOutput;
   public readonly appsyncId: cdk.CfnOutput;
 
@@ -71,46 +46,108 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     super(scope, id, props);
 
     const stack = cdk.Stack.of(this);
+    const ssmBase = `/${props.baseStackName}`;
+
+    // Lambda config — defined locally, these are constants
+    const lambda_architecture = lambda.Architecture.ARM_64;
+    const lambda_runtime = lambda.Runtime.PYTHON_3_12;
+    let lambda_bundling_image = DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest');
+    if (os.arch() === 'arm64') {
+      lambda_bundling_image = DockerImage.fromRegistry('public.ecr.aws/sam/build-python3.12:latest-arm64');
+    }
 
     const lambdaConfig = {
-      ...props.lambdaConfig,
+      runtime: lambda_runtime,
+      architecture: lambda_architecture,
+      bundlingImage: lambda_bundling_image,
       layersConfig: this.lambdaLayers(props.baseStackName),
     };
 
-    // Get the WAF Web ACL ARN from SSM, created in the base stack
-    const wafWebAclRegionalArn = ssm.StringParameter.valueForStringParameter(
+    // SSM reads — resolved by CloudFormation at deploy time, no cross-stack Fn::ImportValue
+    const cloudfrontDistributionId = ssm.StringParameter.valueForStringParameter(
       this,
-      `/${props.baseStackName}/regionalWafWebAclArn`
+      `${ssmBase}/cloudfrontDistributionId`
+    );
+    const cloudfrontDistributionDomainName = ssm.StringParameter.valueForStringParameter(
+      this,
+      `${ssmBase}/cloudfrontDistributionDomainName`
+    );
+    const cloudfrontDomainName = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/cloudfrontDomainName`);
+    const logsBucketName = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/logsBucketName`);
+    const websiteBucketName = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/websiteBucketName`);
+    const eventBusArn = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/eventBusArn`);
+    const userPoolId = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/userPoolId`);
+    const identityPoolId = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/identityPoolId`);
+    const userPoolClientWebId = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/userPoolClientWebId`);
+    const adminGroupRoleArn = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/adminGroupRoleArn`);
+    const operatorGroupRoleArn = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/operatorGroupRoleArn`);
+    const commentatorGroupRoleArn = ssm.StringParameter.valueForStringParameter(
+      this,
+      `${ssmBase}/commentatorGroupRoleArn`
+    );
+    const registrationGroupRoleArn = ssm.StringParameter.valueForStringParameter(
+      this,
+      `${ssmBase}/registrationGroupRoleArn`
+    );
+    const authenticatedUserRoleArn = ssm.StringParameter.valueForStringParameter(
+      this,
+      `${ssmBase}/authenticatedUserRoleArn`
     );
 
+    // Reconstruct CDK objects from SSM values
+    const cloudfrontDistribution = Distribution.fromDistributionAttributes(this, 'ImportedDistribution', {
+      domainName: cloudfrontDistributionDomainName,
+      distributionId: cloudfrontDistributionId,
+    });
+    const logsBucket = Bucket.fromBucketName(this, 'ImportedLogsBucket', logsBucketName);
+    const dremWebsiteBucket = Bucket.fromBucketName(this, 'ImportedWebsiteBucket', websiteBucketName);
+    const eventbus: IEventBus = EventBus.fromEventBusArn(this, 'ImportedEventBus', eventBusArn);
+    const userPool: IUserPool = UserPool.fromUserPoolId(this, 'ImportedUserPool', userPoolId);
+    const adminGroupRole = Role.fromRoleArn(this, 'ImportedAdminGroupRole', adminGroupRoleArn, { mutable: true });
+    const operatorGroupRole = Role.fromRoleArn(this, 'ImportedOperatorGroupRole', operatorGroupRoleArn, {
+      mutable: true,
+    });
+    const commentatorGroupRole = Role.fromRoleArn(this, 'ImportedCommentatorGroupRole', commentatorGroupRoleArn, {
+      mutable: true,
+    });
+    const registrationGroupRole = Role.fromRoleArn(this, 'ImportedRegistrationGroupRole', registrationGroupRoleArn, {
+      mutable: true,
+    });
+    const authenticatedUserRole = Role.fromRoleArn(this, 'ImportedAuthenticatedUserRole', authenticatedUserRoleArn, {
+      mutable: true,
+    });
+
+    // Get the WAF Web ACL ARN from SSM, created in the base stack
+    const wafWebAclRegionalArn = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/regionalWafWebAclArn`);
+
     // Appsync API
-    const appsyncResources = this.appsyncApi(this.stackName, props.userPool, wafWebAclRegionalArn);
+    const appsyncResources = this.appsyncApi(this.stackName, userPool, wafWebAclRegionalArn);
 
     const modelsManager = new ModelsManager(this, 'ModelsManager', {
-      adminGroupRole: props.adminGroupRole,
-      operatorGroupRole: props.operatorGroupRole,
-      authenticatedUserRole: props.authenticatedUserRole,
+      adminGroupRole: adminGroupRole,
+      operatorGroupRole: operatorGroupRole,
+      authenticatedUserRole: authenticatedUserRole,
       appsyncApi: appsyncResources,
       lambdaConfig: lambdaConfig,
-      logsBucket: props.logsBucket,
-      eventbus: props.eventbus,
+      logsBucket: logsBucket,
+      eventbus: eventbus,
     });
 
     const clamscan = new ClamscanServerless(this, 'ClamscanServerless', {
-      logsBucket: props.logsBucket,
+      logsBucket: logsBucket,
       uploadBucket: modelsManager.uploadBucket,
       scannedBucked: modelsManager.modelsBucket,
       account: this.account,
       lambdaConfig: lambdaConfig,
-      eventbus: props.eventbus,
+      eventbus: eventbus,
       appsyncApi: appsyncResources,
     });
 
     const modelOptimizer = new ModelOptimizer(this, 'ModelOptimizer', {
-      logsBucket: props.logsBucket,
+      logsBucket: logsBucket,
       modelsBucket: modelsManager.modelsBucket,
       account: this.account,
-      eventbus: props.eventbus,
+      eventbus: eventbus,
       appsyncApi: appsyncResources,
       clamScanPost: clamscan.postLambda,
     });
@@ -125,41 +162,45 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     const carManager = new CarManager(this, 'CarManager', {
       appsyncApi: appsyncResources,
       lambdaConfig: lambdaConfig,
-      eventbus: props.eventbus,
+      eventbus: eventbus,
     });
 
     new CarLogsManager(this, 'CarLogsManager', {
       appsyncApi: appsyncResources,
-      logsBucket: props.logsBucket,
+      logsBucket: logsBucket,
       modelsBucket: modelsManager.modelsBucket,
       lambdaConfig: lambdaConfig,
-      eventbus: props.eventbus,
+      eventbus: eventbus,
+    });
+
+    const racerProfile = new RacerProfile(this, 'RacerProfile', {
+      appsyncApi: appsyncResources,
     });
 
     new RaceManager(this, 'RaceManager', {
       appsyncApi: appsyncResources,
       lambdaConfig: lambdaConfig,
-      eventbus: props.eventbus,
+      eventbus: eventbus,
+      racerProfileObjectType: racerProfile.profileObjectType,
+      racerProfileTable: racerProfile.table,
     });
 
     const leaderboard = new Leaderboard(this, 'Leaderboard', {
-      logsBucket: props.logsBucket,
+      logsBucket: logsBucket,
       appsyncApi: appsyncResources,
       lambdaConfig: lambdaConfig,
-      userPoolId: props.userPool.userPoolId,
-      userPoolArn: props.userPool.userPoolArn,
-      eventbus: props.eventbus,
-    });
-
-    const cwRumLeaderboardAppMonitor = new CwRumAppMonitor(this, 'CwRumLeaderboardAppMonitor', {
-      domainName: leaderboard.distribution.distributionDomainName,
+      userPoolId: userPool.userPoolId,
+      userPoolArn: userPool.userPoolArn,
+      eventbus: eventbus,
+      racerProfileObjectType: racerProfile.profileObjectType,
+      racerProfileTable: racerProfile.table,
     });
 
     const landingPage = new LandingPageManager(this, 'LandingPageManager', {
-      adminGroupRole: props.adminGroupRole,
+      adminGroupRole: adminGroupRole,
       appsyncApi: appsyncResources,
       lambdaConfig: lambdaConfig,
-      eventbus: props.eventbus,
+      eventbus: eventbus,
     });
 
     new EventsManager(this, 'EventsManager', {
@@ -167,88 +208,51 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       lambdaConfig: lambdaConfig,
       leaderboardApi: leaderboard.api,
       landingPageApi: landingPage.api,
-      eventbus: props.eventbus,
+      eventbus: eventbus,
     });
 
     new FleetsManager(this, 'FleetsManager', {
       appsyncApi: appsyncResources,
       lambdaConfig: lambdaConfig,
-      userPoolId: props.userPool.userPoolId,
-      eventbus: props.eventbus,
-    });
-
-    const streamingOverlay = new StreamingOverlay(this, 'streamingOverlay', {
-      logsBucket: props.logsBucket,
+      userPoolId: userPool.userPoolId,
+      eventbus: eventbus,
     });
 
     new SystemsManager(this, 'SystemManager');
 
     new UserManager(this, 'UserManager', {
-      authenticatedUserRole: props.authenticatedUserRole,
+      authenticatedUserRole: authenticatedUserRole,
       lambdaConfig: lambdaConfig,
-      userPoolArn: props.userPool.userPoolArn,
-      userPoolId: props.userPool.userPoolId,
+      userPoolArn: userPool.userPoolArn,
+      userPoolId: userPool.userPoolId,
       appsyncApi: appsyncResources,
-      eventbus: props.eventbus,
+      eventbus: eventbus,
     });
 
     new LabelPrinter(this, 'LabelPrinter', {
       lambdaConfig: lambdaConfig,
-      logsbucket: props.logsBucket,
+      logsbucket: logsBucket,
       appsyncApi: appsyncResources,
       carStatusDataHandlerLambda: carManager.carStatusDataHandlerLambda,
     });
 
     const cwRumAppMonitor = new CwRumAppMonitor(this, 'CwRumAppMonitor', {
-      domainName: props.cloudfrontDomainNames?.at(0) || props.cloudfrontDistribution.distributionDomainName,
+      domainName: cloudfrontDomainName,
     });
 
     // Outputs
     new cdk.CfnOutput(this, 'DremWebsite', {
-      value: 'https://' + props.cloudfrontDomainNames?.at(0) || props.cloudfrontDistribution.distributionDomainName,
+      value: 'https://' + cloudfrontDomainName,
     });
     this.dremWebsiteUrl = new cdk.CfnOutput(this, 'DremWebsiteDistributionDomainName', {
-      value: 'https://' + props.cloudfrontDistribution.distributionDomainName,
+      value: 'https://' + cloudfrontDistributionDomainName,
     });
-    new cdk.CfnOutput(this, 'tacWebsite', {
-      value: 'https://' + props.tacCloudfrontDistribution.distributionDomainName,
-    });
-    this.tacWebsitedistributionId = new cdk.CfnOutput(this, 'tacWebsitedistributionId', {
-      value: props.tacCloudfrontDistribution.distributionId,
-    });
-    new cdk.CfnOutput(this, 'tacWebsitedistributionName', {
-      value: props.tacCloudfrontDistribution.distributionDomainName,
-    });
-    this.tacSourceBucketName = new cdk.CfnOutput(this, 'tacSourceBucketName', {
-      value: props.tacSourceBucket.bucketName,
-    });
-
     this.distributionId = new cdk.CfnOutput(this, 'distributionId', {
-      value: props.cloudfrontDistribution.distributionId,
+      value: cloudfrontDistributionId,
     });
 
     this.sourceBucketName = new cdk.CfnOutput(this, 'sourceBucketName', {
-      value: props.dremWebsiteBucket.bucketName,
-    });
-
-    new cdk.CfnOutput(this, 'LeaderboardWebsite', {
-      value: 'https://' + leaderboard.distribution.distributionDomainName,
-    });
-    this.leaderboardDistributionId = new cdk.CfnOutput(this, 'leaderboardDistributionId', {
-      value: leaderboard.distribution.distributionId,
-    });
-    this.leaderboardSourceBucketName = new cdk.CfnOutput(this, 'leaderboardSourceBucketName', {
-      value: leaderboard.websiteBucket.bucketName,
-    });
-
-    new cdk.CfnOutput(this, 'streamingOverlayWebsite', {
-      value: 'https://' + streamingOverlay.distribution.distributionDomainName,
-    });
-    this.streamingOverlayDistributionId = new cdk.CfnOutput(this, 'streamingOverlayDistributionId', {
-      value: streamingOverlay.distribution.distributionId,
-    });
-    this.streamingOverlaySourceBucketName = new cdk.CfnOutput(this, 'streamingOverlaySourceBucketName', {
-      value: streamingOverlay.websiteBucket.bucketName,
+      value: dremWebsiteBucket.bucketName,
     });
 
     new cdk.CfnOutput(this, 'uploadBucketName', {
@@ -277,18 +281,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       value: cwRumAppMonitor.config,
     });
 
-    new cdk.CfnOutput(this, 'cwRumLeaderboardAppMonitorId', {
-      value: cwRumLeaderboardAppMonitor.id,
-    });
-
-    new cdk.CfnOutput(this, 'cwRumLeaderboardAppMonitorRegion', {
-      value: cwRumLeaderboardAppMonitor.region,
-    });
-
-    new cdk.CfnOutput(this, 'cwRumLeaderboardAppMonitorConfig', {
-      value: cwRumLeaderboardAppMonitor.config,
-    });
-
     this.appsyncId = new cdk.CfnOutput(this, 'appsyncId', { value: appsyncResources.api.apiId });
 
     new cdk.CfnOutput(this, 'appsyncEndpoint', {
@@ -300,16 +292,37 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, 'userPoolWebClientId', {
-      value: props.userPoolClientWeb.userPoolClientId,
+      value: userPoolClientWebId,
     });
 
     new cdk.CfnOutput(this, 'identityPoolId', {
-      value: props.identiyPool.ref,
+      value: identityPoolId,
     });
 
     new cdk.CfnOutput(this, 'userPoolId', {
-      value: props.userPool.userPoolId,
+      value: userPoolId,
     });
+
+    // CDK BucketDeployment and LogRetention singleton Lambdas — runtime and role are CDK-managed.
+    // The singleton logical IDs vary between CDK versions, so we suppress at the stack level.
+    NagSuppressions.addStackSuppressions(this, [
+      {
+        id: 'AwsSolutions-L1',
+        reason:
+          'CDK BucketDeployment singleton Lambda runtime is managed by CDK and cannot be configured by the application.',
+      },
+      {
+        id: 'AwsSolutions-IAM4',
+        reason:
+          'AWSLambdaBasicExecutionRole on the CDK BucketDeployment singleton is managed by CDK and cannot be configured by the application.',
+        appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
+      },
+      {
+        id: 'AwsSolutions-IAM5',
+        reason:
+          'CDK LogRetention singleton uses Resource::* for log group management; this role is fully managed by CDK and cannot be scoped further.',
+      },
+    ]);
   }
 
   lambdaLayers = (baseStackName: string) => {

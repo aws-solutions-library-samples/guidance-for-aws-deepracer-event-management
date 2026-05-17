@@ -37,6 +37,7 @@ interface TimekeeperLap extends BaseLap {
 interface TimekeeperRace extends BaseRace {
   averageLaps?: AverageLap[];
   laps?: TimekeeperLap[];
+  countryCode?: string;
 }
 
 interface RaceFinishPageProps {
@@ -93,6 +94,7 @@ export const RaceFinishPage: React.FC<RaceFinishPageProps> = ({
       trackId: raceInfo.trackId,
       username: raceInfo.username,
       userId: raceInfo.userId,
+      countryCode: raceInfo.countryCode,
       laps: raceInfo.laps,
       averageLaps: raceInfo.averageLaps,
       timeLeftInMs: 0,

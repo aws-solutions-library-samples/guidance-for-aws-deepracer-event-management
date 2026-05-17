@@ -44,15 +44,8 @@ export class Website extends Construct {
       })
     );
 
-    // CloudFront and OAI
-    // L2 Experimental variant CF + OAI
-    const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, 'OAI', {
-      comment: `Cloudfront to ${id}`,
-    });
-
-    const origin = cloudfront_origins.S3BucketOrigin.withOriginAccessIdentity(sourceBucket, {
-      originAccessIdentity: originAccessIdentity,
-    });
+    // CloudFront Origin Access Control (OAC) — replaces the legacy OAI
+    const origin = cloudfront_origins.S3BucketOrigin.withOriginAccessControl(sourceBucket);
 
     this.origin = origin;
 

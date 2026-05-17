@@ -3,10 +3,12 @@ import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as batch from 'aws-cdk-lib/aws-batch';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as stepFunctions from 'aws-cdk-lib/aws-stepfunctions';
 import * as stepFunctionsTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Directive, EnumType, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
@@ -274,15 +276,31 @@ export class CarLogsFetchStepFunction extends Construct {
           .otherwise(failState)
       );
 
+    const fetchLogsSMLogGroup = new logs.LogGroup(this, 'FetchLogsSFNLogs', {
+      retention: logs.RetentionDays.SIX_MONTHS,
+    });
+
     this.stepFunction = new stepFunctions.StateMachine(this, 'StateMachine', {
       definitionBody: stepFunctions.DefinitionBody.fromChainable(definition),
       tracingEnabled: true,
       timeout: Duration.minutes(30),
-      /*logs: {
-      destination: car_status_update_SM_log_group,
-      level: stepFunctions.LogLevel.ALL,
-      },*/
+      logs: {
+        destination: fetchLogsSMLogGroup,
+        level: stepFunctions.LogLevel.ALL,
+      },
     });
+    NagSuppressions.addResourceSuppressions(
+      this.stepFunction,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'CDK generates Lambda ARN:* to cover versions/aliases when a Step Function invokes a Lambda, and Resource::* is required for X-Ray tracing permissions.',
+          appliesTo: [{ regex: '/^Resource::(.+):\*$/g' }, 'Resource::*'],
+        },
+      ],
+      true
+    );
 
     // AppSync //
 
@@ -374,6 +392,18 @@ export class CarLogsFetchStepFunction extends Construct {
     const fetchFromCarDataSource = props.appsyncApi.api.addLambdaDataSource(
       'fetchFromCarDataSource',
       fetchLogsToCarAppSyncHandler
+    );
+    NagSuppressions.addResourceSuppressions(
+      fetchFromCarDataSource,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'CDK generates Lambda ARN:* to cover versions/aliases for AppSync Lambda data source invoke permissions.',
+          appliesTo: [{ regex: '/^Resource::(.+):\*$/g' }],
+        },
+      ],
+      true
     );
 
     props.appsyncApi.schema.addMutation(

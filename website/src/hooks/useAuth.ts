@@ -1,4 +1,6 @@
 import { fetchAuthSession, getCurrentUser, signOut, updatePassword } from 'aws-amplify/auth';
+import { graphqlQuery } from '../graphql/graphqlHelpers';
+import { getRacerProfile } from '../graphql/queries';
 
 /**
  * Authenticated user information returned by the Auth helpers.
@@ -45,6 +47,27 @@ export const getCurrentAuthUser = async (): Promise<AuthUser> => {
  */
 export const authSignOut = async (): Promise<void> => {
     await signOut();
+};
+
+export interface RacerProfileData {
+    username: string;
+    avatarConfig: string | null;
+    highlightColour: string | null;
+    updatedAt: string | null;
+}
+
+/**
+ * Fetch the current user's racer profile (avatar + highlight colour) from the
+ * RacerProfile DynamoDB table via AppSync. Returns null fields when no profile
+ * has been saved yet.
+ */
+export const getCurrentRacerProfile = async (): Promise<RacerProfileData | null> => {
+    const authUser = await getCurrentAuthUser();
+    const data = await graphqlQuery<{ getRacerProfile: RacerProfileData | null }>(
+        getRacerProfile,
+        { username: authUser.username }
+    );
+    return data?.getRacerProfile ?? null;
 };
 
 /**

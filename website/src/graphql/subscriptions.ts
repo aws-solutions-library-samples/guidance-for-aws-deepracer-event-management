@@ -145,6 +145,11 @@ export const onDeleteLeaderboardEntry = /* GraphQL */ `
             racedByProxy
             trackId
             username
+            profile {
+                username
+                avatarConfig
+                highlightColour
+            }
         }
     }
 `;
@@ -288,6 +293,11 @@ export const onNewLeaderboardEntry = /* GraphQL */ `
             racedByProxy
             trackId
             username
+            profile {
+                username
+                avatarConfig
+                highlightColour
+            }
         }
     }
 `;
@@ -316,6 +326,11 @@ export const onNewOverlayInfo = /* GraphQL */ `
             trackId
             userId
             username
+            profile {
+                username
+                avatarConfig
+                highlightColour
+            }
         }
     }
 `;
@@ -339,6 +354,11 @@ export const onUpdateLeaderboardEntry = /* GraphQL */ `
             racedByProxy
             trackId
             username
+            profile {
+                username
+                avatarConfig
+                highlightColour
+            }
         }
     }
 `;

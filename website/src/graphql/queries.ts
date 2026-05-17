@@ -161,6 +161,11 @@ export const getLeaderboard = /* GraphQL */ `
                 racedByProxy
                 trackId
                 username
+                profile {
+                    username
+                    avatarConfig
+                    highlightColour
+                }
             }
         }
     }
@@ -286,6 +291,16 @@ export const listUsers = /* GraphQL */ `
             UserStatus
             Username
             sub
+        }
+    }
+`;
+export const getRacerProfile = /* GraphQL */ `
+    query GetRacerProfile($username: String!) {
+        getRacerProfile(username: $username) {
+            username
+            avatarConfig
+            highlightColour
+            updatedAt
         }
     }
 `;

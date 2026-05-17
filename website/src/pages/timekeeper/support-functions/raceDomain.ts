@@ -13,10 +13,11 @@ interface AverageLap {
   avgTime: number;
 }
 
-interface Race {
+export interface Race {
   eventId: string | null;
   userId: string | null;
   username: string | null;
+  countryCode?: string;
   laps: Lap[];
   averageLaps: AverageLap[];
   trackId: number;
@@ -49,3 +50,11 @@ export const defaultLap: Lap = {
 export const defaultCar: Car = {
   ComputerName: 'Default',
 };
+
+export function extractUserAttribute(
+  attributes: Array<{ Name: string; Value: string }> | undefined,
+  name: string
+): string | undefined {
+  if (!attributes) return undefined;
+  return attributes.find((a) => a.Name === name)?.Value;
+}

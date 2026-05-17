@@ -1,7 +1,7 @@
 import { DockerImage, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import { EventBus } from 'aws-cdk-lib/aws-events';
+import { IEventBus } from 'aws-cdk-lib/aws-events';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { CodeFirstSchema, Directive, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
 import { NagSuppressions } from 'cdk-nag';
@@ -27,7 +27,7 @@ export interface FleetsManagerProps {
       appsyncHelpersLayer: lambda.ILayerVersion;
     };
   };
-  eventbus: EventBus;
+  eventbus: IEventBus;
 }
 
 export class FleetsManager extends Construct {

@@ -1,49 +1,9 @@
 {
-  "name": "leaderboard",
-  "version": "0.1.0",
+  "name": "website-leaderboard-shim",
+  "version": "0.0.0",
   "private": true,
-  "type": "module",
-  "dependencies": {
-    "@cloudscape-design/components": "^3.0.1205",
-    "@cloudscape-design/global-styles": "^1.0.50",
-    "aws-amplify": "^6.16.2",
-    "aws-rum-web": "^1.25.0",
-    "classnames": "^2.5.1",
-    "i18next": "^25.8.11",
-    "i18next-browser-languagedetector": "^8.2.1",
-    "i18next-http-backend": "^3.0.2",
-    "qrcode.react": "^3.2.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-i18next": "^15.7.4",
-    "react-router-dom": "^6.30.3",
-    "web-vitals": "^4.2.4"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "@types/jest": "^30.0.0",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^14.3.1",
-    "@testing-library/user-event": "^14.6.1",
-    "@types/node": "^22.19.11",
-    "@types/react": "^18.3.28",
-    "@types/react-dom": "^18.3.7",
-    "@vitejs/plugin-react": "^5.1.4",
-    "eslint": "^9.39.2",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.5.0",
-    "prettier": "^3.8.1",
-    "typescript": "5.9.3",
-    "typescript-eslint": "^8.56.0",
-    "vite": "^7.3.1",
-    "vitest": "^3.0.0"
-  },
+  "description": "Backward-compatibility shim for pipeline self-mutation. The v3.0.3a buildspec (baked into the existing CodeBuild project) runs `cd website-leaderboard && npm test` against the new source tree, where the directory has been renamed to website/leaderboard/. This shim lets that command succeed harmlessly so the pipeline can produce cdk.out and self-mutate. Safe to remove once all deployments are upgraded past v3.0.4.",
   "scripts": {
-    "test": "vitest run",
-    "start": "vite",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "lint": "eslint ."
+    "test": "echo 'Shim: tests moved to website/leaderboard' && exit 0"
   }
 }

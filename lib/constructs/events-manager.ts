@@ -1,7 +1,7 @@
 import { DockerImage, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import { EventBus } from 'aws-cdk-lib/aws-events';
+import { IEventBus } from 'aws-cdk-lib/aws-events';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda';
 import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
@@ -43,7 +43,7 @@ export interface EventsManagerProps {
     landingPageConfigObjectType: ObjectType;
     landingPageConfigInputType: InputType;
   };
-  eventbus: EventBus;
+  eventbus: IEventBus;
 }
 export class EventsManager extends Construct {
   constructor(scope: Construct, id: string, props: EventsManagerProps) {

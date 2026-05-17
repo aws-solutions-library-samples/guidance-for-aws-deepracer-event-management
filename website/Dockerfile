@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:22-alpine
+FROM public.ecr.aws/docker/library/node:20-alpine
 
 # Install packages
 RUN apk update && apk add --update --no-cache \
@@ -13,9 +13,6 @@ RUN apk update && apk add --update --no-cache \
     zip
 RUN apk --no-cache add --virtual builds-deps build-base python3
 
-# Update NPM
-RUN npm update -g
-
 # Install cdk
 RUN npm install -g aws-cdk
 
@@ -26,7 +23,7 @@ RUN npm install -g @aws-amplify/cli
 WORKDIR /app
 COPY package*.json /app/
 
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 ENV PORT=3000
 

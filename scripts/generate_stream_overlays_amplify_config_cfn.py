@@ -24,5 +24,5 @@ with open("cfn.outputs") as json_file:
 
     print(json.dumps(output_data, indent=4))
 
-    with open("website-stream-overlays/src/config.json", "w") as outfile:
+    with open("website/overlays/src/config.json", "w") as outfile:
         json.dump(output_data, outfile, indent=4)

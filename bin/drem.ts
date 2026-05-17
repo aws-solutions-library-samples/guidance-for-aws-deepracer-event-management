@@ -84,32 +84,18 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
 
   new DeepracerEventManagerStack(app, `drem-backend-${labelName}-infrastructure`, {
     baseStackName: baseStack.stackName,
-    cloudfrontDistribution: baseStack.cloudfrontDistribution,
-    cloudfrontDomainNames: baseStack.cloudfrontDomainNames,
-    tacCloudfrontDistribution: baseStack.tacCloudfrontDistribution,
-    tacSourceBucket: baseStack.tacSourceBucket,
-    logsBucket: baseStack.logsBucket,
-    lambdaConfig: baseStack.lambdaConfig,
-    adminGroupRole: baseStack.idp.adminGroupRole,
-    operatorGroupRole: baseStack.idp.operatorGroupRole,
-    commentatorGroupRole: baseStack.idp.commentatorGroupRole,
-    registrationGroupRole: baseStack.idp.registrationGroupRole,
-    authenticatedUserRole: baseStack.idp.authenticatedUserRole,
-    userPool: baseStack.idp.userPool,
-    identiyPool: baseStack.idp.identityPool,
-    userPoolClientWeb: baseStack.idp.userPoolClientWeb,
-    dremWebsiteBucket: baseStack.dremWebsitebucket,
-    eventbus: baseStack.eventbridge.eventbus,
     env: env,
   });
 } else {
   console.info('Pipeline deploy started...');
+  const requireApproval = app.node.tryGetContext('require_approval') !== 'false';
   new CdkPipelineStack(app, `drem-pipeline-${labelName}`, {
     labelName: labelName,
     sourceRepo: sourceRepo,
     sourceBranchName: sourceBranchName,
     email: mailAddress,
     domainName: domainName,
+    requireApproval: requireApproval,
     env: env,
   });
 }

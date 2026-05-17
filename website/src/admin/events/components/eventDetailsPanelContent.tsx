@@ -84,7 +84,7 @@ export const EventDetailsPanelContent: React.FC<EventDetailsPanelContentProps> =
         {attributeField(
           t('events.landing-page-link'),
           <EventLinksButtons
-            href={`${(awsconfig as any).Urls?.leaderboardWebsite}/landing-page/${event.eventId.toString()}/`}
+            href={`${window.location.origin}/leaderboard/landing-page/${event.eventId.toString()}/`}
             linkTextPrimary={t('events.link-same-tab')}
             linkTextExternal={t('events.link-new-tab')}
           />

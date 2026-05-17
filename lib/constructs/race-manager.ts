@@ -2,7 +2,7 @@ import { DockerImage, Duration } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { Distribution } from 'aws-cdk-lib/aws-cloudfront';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import { EventBus } from 'aws-cdk-lib/aws-events';
+import { IEventBus } from 'aws-cdk-lib/aws-events';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import {
@@ -35,7 +35,9 @@ export interface RaceManagerProps {
       powerToolsLayer: lambda.ILayerVersion;
     };
   };
-  eventbus: EventBus;
+  eventbus: IEventBus;
+  racerProfileObjectType: ObjectType;
+  racerProfileTable: dynamodb.ITable;
 }
 
 export class RaceManager extends Construct {
@@ -56,7 +58,7 @@ export class RaceManager extends Construct {
       sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
-      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
+      pointInTimeRecovery: true,
     });
 
     // BACKEND
@@ -340,6 +342,7 @@ export class RaceManager extends Construct {
         username: GraphqlType.string(),
         userId: GraphqlType.string(),
         countryCode: GraphqlType.string(),
+        profile: props.racerProfileObjectType.attribute(),
         laps: lapObjectType.attribute({ isList: true }),
         averageLaps: averageLapObjectType.attribute({ isList: true }),
         timeLeftInMs: GraphqlType.float(),
@@ -404,5 +407,28 @@ export class RaceManager extends Construct {
         ],
       })
     );
+
+    // Field resolver: Overlay.profile — live-join from RacerProfile table
+    const racerProfileDataSource = props.appsyncApi.api.addDynamoDbDataSource(
+      'RaceManagerRacerProfileDataSource',
+      props.racerProfileTable
+    );
+
+    new appsync.Resolver(this, 'OverlayProfileResolver', {
+      api: props.appsyncApi.api,
+      typeName: 'Overlay',
+      fieldName: 'profile',
+      dataSource: racerProfileDataSource,
+      requestMappingTemplate: appsync.MappingTemplate.fromString(`
+{
+  "version": "2018-05-29",
+  "operation": "GetItem",
+  "key": {
+    "username": $util.dynamodb.toDynamoDBJson($context.source.username)
+  }
+}
+`),
+      responseMappingTemplate: appsync.MappingTemplate.fromString('$util.toJson($context.result)'),
+    });
   }
 }

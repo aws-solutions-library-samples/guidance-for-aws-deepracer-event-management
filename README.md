@@ -38,7 +38,7 @@ The deployment requires the following tools:
 - [AWS CLI](https://aws.amazon.com/cli) <span style="color:orange">\*</span>
 - [AWS CDK](https://aws.amazon.com/cdk/) with Typescript support (Tested with 2.6.0) <span style="color:orange">\*</span>
 - [Node.js](https://nodejs.org) version 18.x <span style="color:orange">\*</span>
-- (Optional) [Make](https://www.gnu.org/software/make/) buildtool. We provide a Makefile with all required targets for easy use. We recommend installing Make. <span style="color:orange">\*</span>
+- (Optional) [Make](https://www.gnu.org/software/make/) buildtool. We provide a Makefile with all required targets for easy use. We recommend installing Make. Run `make help` to see grouped, colourised help for every target. <span style="color:orange">\*</span>
 
 <span style="color:orange">\* Included if you use docker compose</span>
 
@@ -245,9 +245,9 @@ As per the deployment prerequisites with the following additional tools
 
 A number of plugins are recommended when contributing code to DREM. VSCode will prompt you to install these plugins when you open the source code for the first time.
 
-We recommend that you use the Makefile based commands to simplify the steps required when developing code for DREM.
+We recommend that you use the Makefile based commands to simplify the steps required when developing code for DREM. The Makefile groups its targets into sections — run `make help` at any time to see what's available.
 
-If you plan to help develop DREM and contribute code, the initial deployment of DREM is the same as above. Once DREM has deployed, to make the deployed DREM stack available for local development, run the following commands, alternatively the stack can be run using docker compose to create containers for each of the three react applications that make up DREM:
+If you plan to help develop DREM and contribute code, the initial deployment of DREM is the same as above. Once DREM has deployed, to make the deployed DREM stack available for local development, run the following commands, alternatively the stack can be run using docker compose:
 
 In Visual Studio Code add the following extensions for the best experience:
 
@@ -274,43 +274,45 @@ make local.config
 
 #### Run the frontend locally
 
-To run the main DREM application
+Build the leaderboard and overlays sub-apps first, then start the dev server:
 
 ```sh
+make local.build
 make local.run
 ```
 
-To run the DREM leaderboard application
+All three apps are then accessible from a single server at `localhost:3000`:
 
-```sh
-make local.run-leaderboard
-```
-
-To run the DREM streaming overlays
-
-```sh
-make local.run-overlays
-```
+- `localhost:3000/` — authenticated portal
+- `localhost:3000/leaderboard/` — public leaderboard
+- `localhost:3000/overlays/<eventId>` — public stream overlays
 
 ### Docker compose based local development
 
-Using docker compose to build and run containers for each of the react applications that make up DREM.
+Using docker compose to build and run the DREM website container. The leaderboard and overlays sub-apps are pre-built locally and served by the single website container.
 
 #### Configure the local development environment
 
 **Note:** You will need to have your local development environment setup/authenticated with AWS
 
 ```sh
-make local.config.docker
+make local.config
 ```
 
 #### Start Docker
 
-With docker running on your machine, use the following commands to build and start the containers. Builds the containers if they aren't already built and runs them in 'detached' mode
+Build the leaderboard and overlays sub-apps, build the Docker image, and start the container:
 
 ```sh
+make local.docker.build
 docker compose up -d
 ```
+
+All three apps are then accessible at `localhost:3000`:
+
+- `localhost:3000/` — authenticated portal
+- `localhost:3000/leaderboard/` — public leaderboard
+- `localhost:3000/overlays/<eventId>` — public stream overlays
 
 To access the logs as the containers are running
 
@@ -453,7 +455,7 @@ There are a few display options for the leaderboard URL as detailed below:
 
 | Key    | Values                 | Default value | Notes                                                                             |
 | ------ | ---------------------- | ------------- | --------------------------------------------------------------------------------- |
-| lang   | de, en, es, fr, jp, se | en            | Translation files located in `website-leaderboard/public/locales/`                |
+| lang   | de, en, es, fr, jp, se | en            | Translation files located in `website/leaderboard/public/locales/`                |
 | qr     | header, footer         | off           | Show the QR code in the header or footer                                          |
 | scroll | true, false            | true          | Automatically scrolls to the bottom of the leaderboard on a time interval         |
 | track  | track id               | combined      | Used to show a specific event track or a combined leaderboard of all event tracks |
@@ -466,7 +468,7 @@ There are a nunber of display options for the streaming overlay URL:
 
 | Key             | Values           | Default value | Notes                                                                             |
 | --------------- | ---------------- | ------------- | --------------------------------------------------------------------------------- |
-| lang            | de, en, jp       | en            | Translation files located in `website-stream-overlays/public/locales/`            |
+| lang            | de, en, jp       | en            | Translation files located in `website/overlays/public/locales/`                   |
 | track           | track id         | 1             | Used to show a specific event track or a combined leaderboard of all event tracks |
 | showLeaderboard |                  | 1             | Show the top 4 leaderboard in between races                                       |
 | format          | fastest, average | fastest       |
