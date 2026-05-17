@@ -15,7 +15,7 @@ import { useUsers } from '../../hooks/useUsers';
 import { useStore } from '../../store/store';
 import { Event } from '../../types/domain';
 import { EventDetailsPanelContent } from './components/eventDetailsPanelContent';
-import { ColumnConfiguration, FilteringProperties } from './support-functions/eventsTableConfig';
+import { ColumnConfiguration, FilteringOptions, FilteringProperties } from './support-functions/eventsTableConfig';
 
 /**
  * AdminEvents component for managing events in the admin interface
@@ -77,6 +77,7 @@ const AdminEvents = (): JSX.Element => {
   // Table config
   const columnConfiguration = ColumnConfiguration(getUserNameFromId as any, fleets);
   const filteringProperties = FilteringProperties();
+  const filteringOptions = FilteringOptions();
 
   const selectPanelContent = useCallback((selectedItems: Event[]) => {
     if (selectedItems.length === 0) {
@@ -180,6 +181,7 @@ const AdminEvents = (): JSX.Element => {
         localStorageKey={'events-table-preferences'}
         trackBy={'eventId'}
         filteringProperties={filteringProperties as any}
+        filteringOptions={filteringOptions as any}
         filteringI18nStringsName={'events'}
       />
 

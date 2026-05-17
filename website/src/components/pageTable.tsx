@@ -41,6 +41,7 @@ interface PageTableProps<T> extends Omit<TableProps<T>, 'items' | 'columnDefinit
   header: React.ReactNode;
   trackBy: string | ((item: T) => string);
   filteringProperties?: PropertyFilterProps.FilteringProperty[];
+  filteringOptions?: PropertyFilterProps.FilteringOption[];
   filteringI18nStringsName: string;
   selectionType?: TableProps.SelectionType;
   columnConfiguration: ColumnConfiguration<T>;
@@ -58,6 +59,7 @@ export const PageTable = <T,>({
   header,
   trackBy,
   filteringProperties,
+  filteringOptions,
   filteringI18nStringsName,
   selectionType,
   columnConfiguration,
@@ -145,6 +147,7 @@ export const PageTable = <T,>({
       filter={
         <PropertyFilter
           {...propertyFilterProps}
+          filteringOptions={filteringOptions ?? propertyFilterProps.filteringOptions}
           onChange={({ detail }) => {
             actions.setPropertyFiltering(detail);
           }}
