@@ -189,8 +189,12 @@ export function SyncedActivityCharts({
               data: dates.map((d, idx) => ({ x: d.getTime(), y: s.values[idx] })),
               borderColor: s.color,
               backgroundColor: s.color + '22',
-              pointRadius: 0,
-              pointHoverRadius: 4,
+              // Always-visible dots. `pointRadius: 0` left the chart blank
+              // until hover when there were only 1–2 months of data — no line
+              // segment to draw and no points to see. 3 px is small enough
+              // not to clutter a year of data, large enough to read at idle.
+              pointRadius: 3,
+              pointHoverRadius: 5,
               pointHoverBackgroundColor: s.color,
               borderWidth: 2,
               tension: 0.25,
