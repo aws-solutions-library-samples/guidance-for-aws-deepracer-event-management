@@ -37,6 +37,15 @@ export interface OverlayData {
    * no leaderboard entries yet.
    */
   eventBestLapMs: number | null;
+  /**
+   * Username of the racer who most recently finished — set from the
+   * `onNewLeaderboardEntry` subscription (same trigger the public
+   * leaderboard uses for its own highlight) and held for
+   * `HIGHLIGHT_HOLD_MS`. The leaderboard panel uses this to highlight the
+   * just-finished racer's row and slide a 4-wide window centred on them
+   * when they fall outside the top-4.
+   */
+  highlightedUsername: string | null;
   showLeaderboard: boolean;
   showLowerThird: boolean;
   currentRacer: CurrentRacer | null;
@@ -48,6 +57,11 @@ const INITIAL_TIME_MS = 180000;
 // smooth, and tied to wall-clock delta rather than fixed -100ms so the
 // timer self-corrects if setInterval skews under load.
 const TIMER_TICK_MS = 1000 / 30;
+// How long to keep the just-finished racer highlighted on the leaderboard
+// (also gates the row-swap when they didn't make the visible top-4). The
+// visual pulse fades inside the first 12s; the row stays put for the rest
+// of this window before reverting to the natural top-4 ordering.
+const HIGHLIGHT_HOLD_MS = 30_000;
 
 function pickFastest(laps: Array<{ time: number; isValid: boolean }> | undefined): number | null {
   if (!laps) return null;
@@ -78,6 +92,7 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
   const [showLowerThird, setShowLowerThird] = useState<boolean>(false);
   const [currentRacer, setCurrentRacer] = useState<CurrentRacer | null>(null);
   const [raceStatus, setRaceStatus] = useState<string | null>(null);
+  const [highlightedUsername, setHighlightedUsername] = useState<string | null>(null);
 
   // Track the last raceStatus + username we saw on an overlay-info message so
   // we can decide whether each new message represents a state TRANSITION
@@ -93,6 +108,11 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
   // elapsed time per tick rather than assuming a fixed delta — same pattern
   // as `RaceOverlayInfo` in the public leaderboard.
   const lastTickRef = useRef<number>(0);
+  // setTimeout handle for clearing `highlightedUsername` after the hold
+  // window expires. Held in a ref so it survives re-renders but can be
+  // cancelled cleanly when the next race finishes (replacing the highlight)
+  // or when the subscription effect tears down.
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hasRacer = currentRacer != null;
   const timeHasRunOut = currentRacer != null && currentRacer.timeLeftMs <= 0;
@@ -167,6 +187,8 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
           setShowLowerThird(false);
           setShowLeaderboard(true);
           setCurrentRacer(null);
+          prevStatusRef.current = info.raceStatus ?? null;
+          prevUsernameRef.current = info.username ?? prevUsernameRef.current;
           return;
         }
 
@@ -209,10 +231,25 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
 
     const newEntrySub = (
       client.graphql({ query: subscriptions.onNewLeaderboardEntry, variables: { eventId, trackId } }) as {
-        subscribe: (handlers: { next: () => void; error?: (err: any) => void }) => { unsubscribe: () => void };
+        subscribe: (handlers: { next: (msg: any) => void; error?: (err: any) => void }) => { unsubscribe: () => void };
       }
     ).subscribe({
-      next: () => {
+      next: ({ data }) => {
+        // Same trigger the public leaderboard uses for its own highlight —
+        // a new entry arriving is the authoritative "this racer just
+        // finished their race" signal, far more reliable than guessing
+        // from overlay-info status transitions.
+        const newEntry = data?.onNewLeaderboardEntry;
+        if (newEntry?.username) {
+          setHighlightedUsername(newEntry.username);
+          if (highlightTimerRef.current) {
+            clearTimeout(highlightTimerRef.current);
+          }
+          highlightTimerRef.current = setTimeout(() => {
+            setHighlightedUsername(null);
+            highlightTimerRef.current = null;
+          }, HIGHLIGHT_HOLD_MS);
+        }
         fetchLeaderboard(false);
       },
       error: (err) => console.error('onNewLeaderboardEntry error', err),
@@ -233,6 +270,10 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
       overlaySub.unsubscribe();
       newEntrySub.unsubscribe();
       deleteEntrySub.unsubscribe();
+      if (highlightTimerRef.current) {
+        clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = null;
+      }
     };
   }, [eventId, trackId, raceFormat]);
 
@@ -251,6 +292,7 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
     eventName,
     raceName,
     eventBestLapMs,
+    highlightedUsername,
     showLeaderboard,
     showLowerThird,
     currentRacer,

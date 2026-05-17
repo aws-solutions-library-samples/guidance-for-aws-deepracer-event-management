@@ -21,6 +21,7 @@ export default function OverlayApp() {
     eventName,
     raceName,
     eventBestLapMs,
+    highlightedUsername,
     showLeaderboard,
     showLowerThird,
     currentRacer,
@@ -65,6 +66,7 @@ export default function OverlayApp() {
         gapToLeader={gapToLeader}
         eventName={eventName}
         raceName={raceName}
+        highlightedUsername={highlightedUsername}
         labels={leaderboardLabels}
         visible={showLeaderboard && showLeaderboardParam}
       />

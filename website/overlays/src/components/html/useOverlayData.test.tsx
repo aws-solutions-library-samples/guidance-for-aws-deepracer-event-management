@@ -378,4 +378,100 @@ describe('useOverlayData', () => {
       vi.useRealTimers();
     }
   });
+
+  test('captures highlightedUsername from onNewLeaderboardEntry', async () => {
+    // The public leaderboard's own highlight uses the same trigger — a new
+    // leaderboard entry arriving IS the authoritative "this racer just
+    // finished" signal.
+    const { result } = renderHook(() => useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }));
+    await waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
+    expect(result.current.highlightedUsername).toBeNull();
+
+    const newEntrySub = mockSubscribers.find((s) => s.query.name === 'onNewLeaderboardEntry')!;
+    act(() => {
+      newEntrySub.next({
+        data: { onNewLeaderboardEntry: { username: 'racer1' } },
+      });
+    });
+
+    await waitFor(() => {
+      expect(result.current.highlightedUsername).toBe('racer1');
+    });
+  });
+
+  test('clears highlightedUsername after 30s hold window', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { result } = renderHook(() =>
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+      );
+      await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
+
+      const newEntrySub = mockSubscribers.find((s) => s.query.name === 'onNewLeaderboardEntry')!;
+      act(() => {
+        newEntrySub.next({
+          data: { onNewLeaderboardEntry: { username: 'racer1' } },
+        });
+      });
+      await vi.waitFor(() => expect(result.current.highlightedUsername).toBe('racer1'));
+
+      // Still highlighted at 29.9s — within the 30s hold window.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(29_900);
+      });
+      expect(result.current.highlightedUsername).toBe('racer1');
+
+      // Cleared just past 30s.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(200);
+      });
+      await vi.waitFor(() => expect(result.current.highlightedUsername).toBeNull());
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('a second new entry replaces the highlight (no queue, no extension)', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { result } = renderHook(() =>
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+      );
+      await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
+
+      const newEntrySub = mockSubscribers.find((s) => s.query.name === 'onNewLeaderboardEntry')!;
+      act(() => {
+        newEntrySub.next({
+          data: { onNewLeaderboardEntry: { username: 'racer1' } },
+        });
+      });
+      await vi.waitFor(() => expect(result.current.highlightedUsername).toBe('racer1'));
+
+      // 10s in, racer2 finishes and a new entry arrives.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(10_000);
+      });
+      act(() => {
+        newEntrySub.next({
+          data: { onNewLeaderboardEntry: { username: 'racer2' } },
+        });
+      });
+      await vi.waitFor(() => expect(result.current.highlightedUsername).toBe('racer2'));
+
+      // The earlier 30s timer (from racer1) must NOT clear racer2 when it
+      // would have fired (30s after racer1's finish = 20s after racer2's).
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(20_100);
+      });
+      expect(result.current.highlightedUsername).toBe('racer2');
+
+      // racer2's own 30s window expires.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(10_000);
+      });
+      await vi.waitFor(() => expect(result.current.highlightedUsername).toBeNull());
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

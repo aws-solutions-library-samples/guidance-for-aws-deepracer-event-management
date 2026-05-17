@@ -24,6 +24,15 @@ export interface LeaderboardProps {
    * the rank-label footer (`labels.footer`) when empty.
    */
   raceName?: string;
+  /**
+   * Username of the just-finished racer. When set their row is highlighted
+   * (pulse fades over 12s). If they didn't make the visible top-4 the
+   * panel slides to a 4-wide window centred on them — they sit in row 3
+   * of 4 with the racers above and below for context. `useOverlayData`
+   * clears this 30s after race finish so the panel reverts to the
+   * natural top-4 ordering.
+   */
+  highlightedUsername?: string | null;
   labels: LeaderboardLabels;
   visible: boolean;
 }
@@ -32,7 +41,10 @@ interface Row {
   rank: number;
   entry: LeaderboardEntry | null;
   rankLabel: string;
+  highlighted: boolean;
 }
+
+const TOP_N = 4;
 
 function entryTime(entry: LeaderboardEntry, raceFormat: string): number | null {
   if (raceFormat === 'average') {
@@ -57,32 +69,69 @@ export function Leaderboard({
   gapToLeader,
   eventName,
   raceName,
+  highlightedUsername,
   labels,
   visible,
 }: LeaderboardProps) {
   const sorted = GetLeaderboardDataSorted(entries, raceFormat);
   const leaderTime = sorted.length > 0 ? entryTime(sorted[0], raceFormat) : null;
 
-  const rows: Row[] = [
-    { rank: 1, entry: sorted[0] ?? null, rankLabel: labels.first },
-    { rank: 2, entry: sorted[1] ?? null, rankLabel: labels.second },
-    { rank: 3, entry: sorted[2] ?? null, rankLabel: labels.third },
-    { rank: 4, entry: sorted[3] ?? null, rankLabel: labels.fourth },
-  ];
+  // Index of the just-finished racer in the full sorted list. If they're
+  // outside the visible top-N we slide the panel to a 4-wide window centred
+  // on them — they sit at index 2 (row 3) with the racers immediately above
+  // and below for context. When they're already in the top-4 (or no one is
+  // highlighted) we keep the natural top-4 ordering.
+  const highlightedIdx = highlightedUsername
+    ? sorted.findIndex((e) => e.username === highlightedUsername)
+    : -1;
+  const neighbourhoodView = highlightedIdx >= TOP_N;
+  // Place the highlighted racer at index 2 of the 4-row window. If they're
+  // close to the bottom of the field, clamp the window end so all four
+  // slots stay filled — the racer naturally slides into row 4 rather than
+  // leaving an empty trailing slot. Mirrors the public leaderboard, which
+  // calls `scrollIntoView({ block: 'center' })` and lets the browser clamp
+  // the scroll when the target is near the end of the list.
+  const windowStart = neighbourhoodView
+    ? Math.min(highlightedIdx - 2, Math.max(0, sorted.length - TOP_N))
+    : 0;
+
+  const standardLabels = [labels.first, labels.second, labels.third, labels.fourth];
+
+  const rows: Row[] = [];
+  for (let i = 0; i < TOP_N; i += 1) {
+    const sortedIdx = windowStart + i;
+    const entry = sorted[sortedIdx] ?? null;
+    const realRank = sortedIdx + 1;
+    rows.push({
+      rank: realRank,
+      entry,
+      rankLabel: neighbourhoodView ? `#${realRank}` : standardLabels[i],
+      highlighted:
+        !!highlightedUsername && entry?.username === highlightedUsername,
+    });
+  }
 
   return (
     <div className={`${styles.leaderboard} ${visible ? styles.visible : ''}`}>
       <div className={styles.eventName}>{eventName}</div>
       <ol className={styles.rows}>
-        {rows.map(({ rank, entry, rankLabel }) => {
+        {rows.map(({ rank, entry, rankLabel, highlighted }) => {
           const time = entry ? entryTime(entry, raceFormat) : null;
           const gap = rank > 1 && leaderTime != null && time != null ? time - leaderTime : null;
           const avatarConfig = entry ? parseAvatarConfig(entry.profile?.avatarConfig) : null;
           const highlightColour = entry?.profile?.highlightColour ?? null;
+          // Podium colours only apply in the natural top-4 view. In the
+          // neighbourhood view (a finisher outside the top-4) the panel
+          // shows mid-field positions like #5/#6/#7/#8 — none of which
+          // should be coloured gold/silver/bronze.
+          const podiumClass =
+            !neighbourhoodView && rank <= 3
+              ? styles[`rank${rank}` as keyof typeof styles]
+              : '';
           return (
             <li
-              key={rank}
-              className={`${styles.row} ${styles[`rank${rank}` as keyof typeof styles]}`}
+              key={`${rank}-${entry?.username ?? 'empty'}`}
+              className={`${styles.row} ${podiumClass} ${highlighted ? styles.highlighted : ''}`}
               style={
                 highlightColour
                   ? ({

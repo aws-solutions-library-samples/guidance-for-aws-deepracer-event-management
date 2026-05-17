@@ -147,6 +147,95 @@ describe('Leaderboard', () => {
     expect(screen.queryByText('Live results')).toBeNull();
   });
 
+  test('renders a 4-wide window with finisher in row 3 when highlighted racer is outside top-4', () => {
+    const bigField: LeaderboardEntry[] = [
+      { username: 'speed', fastestLapTime: 8000 },
+      { username: 'turbo', fastestLapTime: 8200 },
+      { username: 'doom', fastestLapTime: 8400 },
+      { username: 'dbro', fastestLapTime: 8600 },
+      { username: 'eve', fastestLapTime: 8800 },
+      { username: 'finisher', fastestLapTime: 9000 }, // rank 6
+      { username: 'gail', fastestLapTime: 9200 },
+      { username: 'hank', fastestLapTime: 9400 },
+    ];
+    render(
+      <Leaderboard
+        entries={bigField}
+        raceFormat="fastest"
+        gapToLeader={false}
+        eventName="Test Event"
+        highlightedUsername="finisher"
+        labels={labels}
+        visible
+      />,
+    );
+    // Window centred on rank 6 (index 5): start = 5 - 2 = 3 → ranks 4..7
+    expect(screen.queryByText('speed')).toBeNull(); // rank 1 — out
+    expect(screen.queryByText('turbo')).toBeNull(); // rank 2 — out
+    expect(screen.queryByText('doom')).toBeNull();  // rank 3 — out
+    expect(screen.getByText('dbro')).toBeInTheDocument();    // rank 4
+    expect(screen.getByText('eve')).toBeInTheDocument();     // rank 5
+    expect(screen.getByText('finisher')).toBeInTheDocument(); // rank 6 (row 3)
+    expect(screen.getByText('gail')).toBeInTheDocument();    // rank 7
+    expect(screen.queryByText('hank')).toBeNull(); // rank 8 — out
+    // Neighbourhood view uses #N rank labels, not P1/P2/...
+    expect(screen.getByText('#4')).toBeInTheDocument();
+    expect(screen.getByText('#5')).toBeInTheDocument();
+    expect(screen.getByText('#6')).toBeInTheDocument();
+    expect(screen.getByText('#7')).toBeInTheDocument();
+    expect(screen.queryByText('P1')).toBeNull();
+  });
+
+  test('window clamps to the end when the finisher is the last racer (no empty trailing row)', () => {
+    const field: LeaderboardEntry[] = [
+      { username: 'a', fastestLapTime: 8000 },
+      { username: 'b', fastestLapTime: 8200 },
+      { username: 'c', fastestLapTime: 8400 },
+      { username: 'd', fastestLapTime: 8600 },
+      { username: 'e', fastestLapTime: 8800 },
+      { username: 'tailender', fastestLapTime: 9000 }, // rank 6 of 6
+    ];
+    render(
+      <Leaderboard
+        entries={field}
+        raceFormat="fastest"
+        gapToLeader={false}
+        eventName="Test Event"
+        highlightedUsername="tailender"
+        labels={labels}
+        visible
+      />,
+    );
+    // Without clamping, window would start at 6-2=4 (ranks 5/6/empty/empty).
+    // With clamping, window starts at 6-4=2 → ranks 3..6, tailender in row 4.
+    expect(screen.queryByText('a')).toBeNull();
+    expect(screen.queryByText('b')).toBeNull();
+    expect(screen.getByText('c')).toBeInTheDocument();
+    expect(screen.getByText('d')).toBeInTheDocument();
+    expect(screen.getByText('e')).toBeInTheDocument();
+    expect(screen.getByText('tailender')).toBeInTheDocument();
+    expect(screen.getByText('#3')).toBeInTheDocument();
+    expect(screen.getByText('#6')).toBeInTheDocument();
+  });
+
+  test('highlighted racer in top-4 keeps natural ordering (no window shift)', () => {
+    render(
+      <Leaderboard
+        entries={entries}
+        raceFormat="fastest"
+        gapToLeader={false}
+        eventName="Test Event"
+        highlightedUsername="doom" // rank 3 — already visible
+        labels={labels}
+        visible
+      />,
+    );
+    // All four still rendered with standard labels.
+    expect(screen.getByText('speed')).toBeInTheDocument();
+    expect(screen.getByText('P1')).toBeInTheDocument();
+    expect(screen.getByText('doom')).toBeInTheDocument();
+  });
+
   test('applies visible class when visible=true and hidden class when visible=false', () => {
     const { container, rerender } = render(
       <Leaderboard

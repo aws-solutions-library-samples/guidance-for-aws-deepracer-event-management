@@ -101,6 +101,51 @@
   z-index: 1;
 }
 
+/*
+ * Highlight applied to the just-finished racer's row for 30s after a
+ * race completes. A bright glow pulses in immediately and fades out over
+ * 12s via the keyframe animation; the row itself stays in place for the
+ * remainder of the 30-second window (managed by `useOverlayData`'s
+ * highlightTimer) so the audience has time to read where the racer
+ * landed before the leaderboard reverts to its natural top-4 ordering.
+ *
+ * Drawn as an `::after` overlay so it stacks above the row content
+ * without fighting the podium colour gradients on `.row`. Each
+ * highlight cycle restarts because the key on the <li> changes when the
+ * username swaps, which remounts the element and replays the animation.
+ */
+.highlighted::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 2;
+  animation: leaderboardHighlight 12s ease-out forwards;
+}
+
+@keyframes leaderboardHighlight {
+  0% {
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 255, 255, 0.85),
+      0 0 18px 2px rgba(255, 255, 255, 0.55);
+    opacity: 1;
+  }
+  60% {
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+      0 0 6px 0 rgba(255, 255, 255, 0.18);
+    opacity: 1;
+  }
+  100% {
+    background: transparent;
+    box-shadow: none;
+    opacity: 0;
+  }
+}
+
 .rank {
   font-weight: 700;
 }
