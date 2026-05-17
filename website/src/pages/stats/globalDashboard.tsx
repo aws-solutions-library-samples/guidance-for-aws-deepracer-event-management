@@ -4,17 +4,22 @@ import {
   Container,
   ContentLayout,
   Header,
+  SegmentedControl,
   SpaceBetween,
   Spinner,
   StatusIndicator,
   Table,
 } from '@cloudscape-design/components';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { GetTrackTypeNameFromId } from '../../admin/events/support-functions/raceConfig';
 import { BarChart } from '../../components/charts/BarChart';
 import { categoricalPalette } from '../../components/charts/chartDefaults';
 import { PieChart } from '../../components/charts/PieChart';
 import { SyncedActivityCharts } from '../../components/charts/SyncedActivityCharts';
-import { useStatsApi } from '../../hooks/useStatsApi';
+import { FastestLapEntry, useStatsApi } from '../../hooks/useStatsApi';
+
+const ALL_TRACKS = 'ALL';
 
 function KpiCard({ title, value }: { title: string; value: string | number }) {
   return (
@@ -33,6 +38,7 @@ function formatLapTime(ms: number): string {
 export function GlobalDashboard() {
   const { t } = useTranslation();
   const { globalStats, loading, error } = useStatsApi();
+  const [trackFilter, setTrackFilter] = useState<string>(ALL_TRACKS);
 
   if (loading) {
     return (
@@ -56,6 +62,21 @@ export function GlobalDashboard() {
 
   const stats = globalStats;
   const activityDates = stats.eventsByMonth.map((m) => new Date(m.month + '-01'));
+
+  // Build the segmented-control options from whichever tracks actually
+  // have fastest-lap data, so we don't show empty tabs.
+  const trackOptions = useMemo(() => {
+    const trackSegments = (stats.fastestLapsByTrack ?? []).map((bucket) => ({
+      id: bucket.trackType,
+      text: GetTrackTypeNameFromId(bucket.trackType) ?? bucket.trackType,
+    }));
+    return [{ id: ALL_TRACKS, text: t('stats.all-tracks') }, ...trackSegments];
+  }, [stats.fastestLapsByTrack, t]);
+
+  const fastestLapsRows: FastestLapEntry[] =
+    trackFilter === ALL_TRACKS
+      ? stats.fastestLapsEver
+      : (stats.fastestLapsByTrack?.find((b) => b.trackType === trackFilter)?.entries ?? []);
 
   return (
     <ContentLayout header={<Header variant="h1">{t('stats.global-dashboard')}</Header>}>
@@ -127,13 +148,29 @@ export function GlobalDashboard() {
         </Container>
 
         {/* Fastest Laps Ever */}
-        <Container header={<Header variant="h2">{t('stats.fastest-laps-ever')}</Header>}>
+        <Container
+          header={
+            <Header
+              variant="h2"
+              actions={
+                <SegmentedControl
+                  selectedId={trackFilter}
+                  onChange={({ detail }) => setTrackFilter(detail.selectedId)}
+                  options={trackOptions}
+                  label={t('stats.filter-by-track')}
+                />
+              }
+            >
+              {t('stats.fastest-laps-ever')}
+            </Header>
+          }
+        >
           <Table
             columnDefinitions={[
               {
                 id: 'rank',
                 header: '#',
-                cell: (item) => stats.fastestLapsEver.indexOf(item) + 1,
+                cell: (item) => fastestLapsRows.indexOf(item) + 1,
                 width: 50,
               },
               { id: 'username', header: t('stats.racer'), cell: (item) => item.username },
@@ -141,7 +178,7 @@ export function GlobalDashboard() {
               {
                 id: 'trackType',
                 header: t('stats.track'),
-                cell: (item) => item.trackType.replace(/_/g, ' '),
+                cell: (item) => GetTrackTypeNameFromId(item.trackType) ?? item.trackType,
               },
               {
                 id: 'lapTimeMs',
@@ -150,8 +187,13 @@ export function GlobalDashboard() {
               },
               { id: 'eventDate', header: t('stats.date'), cell: (item) => item.eventDate },
             ]}
-            items={stats.fastestLapsEver}
+            items={fastestLapsRows}
             variant="embedded"
+            empty={
+              <Box textAlign="center" padding="m">
+                <StatusIndicator type="info">{t('stats.no-laps-on-track')}</StatusIndicator>
+              </Box>
+            }
           />
         </Container>
       </SpaceBetween>

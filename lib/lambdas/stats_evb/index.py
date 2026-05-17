@@ -212,6 +212,21 @@ def _rebuild_global_stats():
                 })
 
     fastest_laps.sort(key=lambda x: x["lapTimeMs"])
+
+    # Group by trackType and keep the top N for each. Cheap to compute here
+    # — the full sorted list is already in memory — and lets the UI flip
+    # between tracks without a per-track query. Empty-string trackTypes
+    # (events with no trackType set on raceConfig) are skipped so the
+    # UI's track-selector doesn't show a blank tab.
+    fastest_laps_by_track: dict[str, list[dict]] = {}
+    for lap in fastest_laps:
+        track_type = lap.get("trackType") or ""
+        if not track_type:
+            continue
+        bucket = fastest_laps_by_track.setdefault(track_type, [])
+        if len(bucket) < FASTEST_LAPS_MAX:
+            bucket.append(lap)
+
     fastest_laps = fastest_laps[:FASTEST_LAPS_MAX]
 
     global_stats = {
@@ -239,6 +254,10 @@ def _rebuild_global_stats():
             for t, data in sorted(track_type_counts.items())
         ],
         "fastestLapsEver": fastest_laps,
+        "fastestLapsByTrack": [
+            {"trackType": track_type, "entries": entries}
+            for track_type, entries in sorted(fastest_laps_by_track.items())
+        ],
     }
 
     stats_table.put_item(
