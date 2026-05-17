@@ -82,49 +82,13 @@ def __get_users(username_prefix=None) -> list:
     return all_users
 
 
-def __get_group_memberships() -> dict[str, list[dict[str, str]]]:
-    # Get available groups
-    list_groups_response = cognito_client.list_groups(
+def __get_user_roles(username: str) -> list:
+    """Get group memberships for a single user. Fast — single API call."""
+    response = cognito_client.admin_list_groups_for_user(
+        Username=username,
         UserPoolId=user_pool_id,
     )
-    groups = list_groups_response["Groups"]
-
-    # Get users belonging to each of the available groups
-    group_memberships = []
-    for group in groups:
-        group_name = group["GroupName"]
-        #  paginator = cognito_client.get_paginator("list_users_in_group")
-        #  response_iterator = paginator.paginate(
-        #      UserPoolId=user_pool_id,
-        #      GroupName=group_name,
-        #      PaginationConfig={
-        #          "PageSize": 60,
-        #      },
-        #  )
-        users = []
-        #  for r in response_iterator:
-        #      users.append(r["Users"])
-
-        members_in_group = [item for sublist in users for item in sublist]
-        group_memberships.append({"GroupName": group_name, "Members": members_in_group})
-    return group_memberships
-
-
-def __add_roles_to_users(users, group_memberships):
-    # TODO make this more efficient by grouping users by username
-
-    for user in users:
-        user_name = user["Username"]
-        for group_membership in group_memberships:
-            group_name = group_membership["GroupName"]
-            for user_in_group in group_membership["Members"]:
-                user_in_group = user_in_group["Username"]
-                if user_name == user_in_group:
-                    if "Roles" in user:
-                        user["Roles"].append(group_name)
-                    else:
-                        user["Roles"] = [group_name]
-    return users
+    return [g["GroupName"] for g in response.get("Groups", [])]
 
 
 @logger.inject_lambda_context(correlation_id_path=correlation_paths.APPSYNC_RESOLVER)
@@ -135,18 +99,14 @@ def lambda_handler(event, context):
 
 @app.resolver(type_name="Query", field_name="listUsers")
 def listUsers(username_prefix=None):
-    # TODO: Probably need to change this to a paging request so the frontend
-    #       can send a request for the next page
-
-    # TODO fetch users and group memberships in parallel
-
     users = __get_users(username_prefix)
-    group_memberships = __get_group_memberships()
+    return clean_json(users)
 
-    users_with_roles = __add_roles_to_users(users, group_memberships)
 
-    return clean_json(users_with_roles)
-    # return "submitted request"
+@app.resolver(type_name="Query", field_name="getUserRoles")
+def getUserRoles(username: str):
+    roles = __get_user_roles(username)
+    return {"Username": username, "Roles": roles}
 
 
 @app.resolver(type_name="Mutation", field_name="createUser")

@@ -14,6 +14,7 @@ import { ChangeRoleModal } from './changeRoleModal';
 interface User {
   Username: string;
   sub: string;
+  Roles?: string | null;
 }
 
 export const UserManagement: React.FC = () => {

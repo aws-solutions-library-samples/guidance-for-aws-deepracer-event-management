@@ -304,6 +304,16 @@ export const getRacerProfile = /* GraphQL */ `
         }
     }
 `;
+
+export const getUserRoles = /* GraphQL */ `
+    query GetUserRoles($username: String!) {
+        getUserRoles(username: $username) {
+            Username
+            Roles
+        }
+    }
+`;
+
 export const updateLeaderboardConfigs = /* GraphQL */ `
     query UpdateLeaderboardConfigs(
         $eventId: String!
@@ -313,6 +323,64 @@ export const updateLeaderboardConfigs = /* GraphQL */ `
             leaderBoardFooter
             leaderBoardTitle
             sponsor
+        }
+    }
+`;
+export const getGlobalStats = /* GraphQL */ `
+    query GetGlobalStats {
+        getGlobalStats {
+            totalEvents
+            totalRacers
+            totalLaps
+            totalValidLaps
+            totalCountries
+            eventsByCountry {
+                countryCode
+                events
+                racers
+                laps
+            }
+            eventsByMonth {
+                month
+                events
+                races
+                laps
+            }
+            eventTypeBreakdown {
+                typeOfEvent
+                count
+            }
+            trackTypeBreakdown {
+                trackType
+                count
+                bestLapMs
+            }
+            fastestLapsEver {
+                username
+                eventName
+                trackType
+                lapTimeMs
+                eventDate
+            }
+        }
+    }
+`;
+
+export const getPdfJob = /* GraphQL */ `
+    query GetPdfJob($jobId: ID!) {
+        getPdfJob(jobId: $jobId) {
+            jobId
+            status
+            type
+            eventId
+            userId
+            trackId
+            filename
+            downloadUrl
+            error
+            createdBy
+            createdAt
+            completedAt
         }
     }
 `;

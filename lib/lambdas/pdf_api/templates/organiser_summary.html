@@ -1,0 +1,44 @@
+{# lib/lambdas/pdf_api/templates/organiser_summary.html #}
+{% extends "base.html" %}
+{% from "_components.html" import kpi_box, racer_row %}
+{% block content %}
+<div class="header">
+  <img class="logo" src="{{ brand.logo_url }}" alt="logo">
+  <div>
+    <h1>{{ event.eventName }}</h1>
+    <div class="meta">
+      {{ event.eventDate }}
+      {% if event.countryCode %} · {{ event.countryCode }}{% endif %}
+      {% if event.typeOfEvent %} · {{ event.typeOfEvent.replace('_', ' ') }}{% endif %}
+      {% if event.sponsor %} · Sponsored by {{ event.sponsor }}{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="kpi-row">
+  {{ kpi_box('Racers', totals.racers) }}
+  {{ kpi_box('Races', totals.races) }}
+  {{ kpi_box('Valid laps', totals.validLaps) }}
+  {{ kpi_box('Fastest lap', totals.fastestLapFormatted) }}
+</div>
+
+{% for track in tracks %}
+  {% if tracks|length > 1 %}
+    <h2>Track: {{ track.trackId }}</h2>
+  {% else %}
+    <h2>Leaderboard</h2>
+  {% endif %}
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Racer</th><th>Country</th><th>Fastest</th><th>Average</th><th>Valid / Total</th><th>Most consecutive</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in track.racers %}
+        {{ racer_row(r) }}
+      {% endfor %}
+    </tbody>
+  </table>
+{% endfor %}
+{% endblock %}

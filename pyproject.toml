@@ -29,7 +29,8 @@ dev = [
     "constructs>=10.0.0",
     "aws-cdk.aws-lambda-python-alpha",
     "pytest",
-    "pytest-cov"
+    "pytest-cov",
+    "faker"
 ]
 
 [tool.setuptools]

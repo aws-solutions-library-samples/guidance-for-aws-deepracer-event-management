@@ -1,0 +1,141 @@
+{# lib/lambdas/pdf_api/templates/podium.html #}
+{% extends "base.html" %}
+{% from "_components.html" import format_lap, avatar_silhouette %}
+{% block content %}
+<style>
+  /* Layout: avatar + step + optional highlight stripe stacked top-to-bottom
+     in normal flow inside each column. `align-items: flex-end` on the parent
+     bottom-aligns the columns so the very bottom of every stack — the stripe
+     where present, the step where not — lands on the same baseline. */
+  .podium-block {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 2mm;
+    margin: 10mm 0;
+  }
+  .podium-col {
+    width: 52mm;
+    /* Plain block layout. Tried flex with various align-items values; both
+       `center` and `stretch` produced sizing surprises on the Lambda
+       WeasyPrint runtime (bars too narrow, or the silhouette SVG ignoring
+       its container's width). Block layout is simpler and predictable —
+       avatar centred via margin auto, step + stripe fill 52mm. */
+  }
+  .podium-col .avatar {
+    width: 28mm;
+    height: 28mm;
+    /* `0 auto` centres the avatar horizontally inside the 52mm column. */
+    margin: 0 auto 2mm auto;
+    border-radius: 50%;
+    /* Default border colour is the brand primary; inline
+       `border-color: <highlightColour>` overrides for racers who set one. */
+    border: 1.2mm solid var(--brand-primary);
+    overflow: hidden;
+    background: #ffffff;
+    box-sizing: content-box;
+  }
+  .podium-col .avatar img,
+  .podium-col .avatar svg { width: 100%; height: 100%; display: block; }
+  .podium-col .podium-step {
+    width: 100%;
+    /* height set inline */
+    padding: 4mm;
+    text-align: center;
+    color: white;
+    font-weight: 600;
+    box-sizing: border-box;
+    /* Anchor rank labels to the top so "1"/"2"/"3" sit at consistent
+       distance from the avatar across all three positions. */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  /* Highlight stripe — sibling div below the step, in normal flow at the
+     very bottom of the column stack. */
+  .podium-col .stripe {
+    width: 100%;
+    height: 2.5mm;
+  }
+  .podium-step .rank { font-size: 22pt; }
+  .podium-step .name { font-size: 14pt; margin-top: 2mm; }
+  .podium-step .country { font-size: 11pt; opacity: 0.9; margin-top: 1mm; }
+  .podium-step .country .flag {
+    height: 4mm;
+    vertical-align: middle;
+    margin-right: 1.5mm;
+    border-radius: 0.4mm;
+  }
+  .podium-step .lap { font-size: 13pt; margin-top: 2mm; opacity: 0.95; }
+  .podium-1 { background: #D4AF37; }
+  .podium-2 { background: #9AA4B2; }
+  .podium-3 { background: #CD7F32; }
+  .col-1 { order: 2; }
+  .col-2 { order: 1; }
+  .col-3 { order: 3; }
+</style>
+
+<div class="header">
+  <img class="logo" src="{{ brand.logo_url }}" alt="logo">
+  <div>
+    <h1>{{ event.eventName }} — Podium</h1>
+    <div class="meta">{{ event.eventDate }}</div>
+  </div>
+</div>
+
+<div class="podium-block">
+  {% if podium|length > 1 %}
+    <div class="podium-col col-2">
+      <div class="avatar" {% if podium[1].highlightColour %}style="border-color: {{ podium[1].highlightColour }};"{% endif %}>{% if podium[1].avatarUrl %}<img src="{{ podium[1].avatarUrl }}" alt="">{% else %}{{ avatar_silhouette() }}{% endif %}</div>
+      <div class="podium-step podium-2" style="height: 60mm;">
+        <div class="rank">2</div>
+        <div class="name">{{ podium[1].username }}</div>
+        <div class="country">{% if podium[1].flagUrl %}<img class="flag" src="{{ podium[1].flagUrl }}" alt="">{% endif %}{{ podium[1].countryCode|default('') }}</div>
+        <div class="lap">{{ format_lap(podium[1].fastestLapTime) }}</div>
+      </div>
+      {% if podium[1].highlightColour %}<div class="stripe" style="background: {{ podium[1].highlightColour }};"></div>{% endif %}
+    </div>
+  {% endif %}
+  {% if podium|length > 0 %}
+    <div class="podium-col col-1">
+      <div class="avatar" {% if podium[0].highlightColour %}style="border-color: {{ podium[0].highlightColour }};"{% endif %}>{% if podium[0].avatarUrl %}<img src="{{ podium[0].avatarUrl }}" alt="">{% else %}{{ avatar_silhouette() }}{% endif %}</div>
+      <div class="podium-step podium-1" style="height: 80mm;">
+        <div class="rank">1</div>
+        <div class="name">{{ podium[0].username }}</div>
+        <div class="country">{% if podium[0].flagUrl %}<img class="flag" src="{{ podium[0].flagUrl }}" alt="">{% endif %}{{ podium[0].countryCode|default('') }}</div>
+        <div class="lap">{{ format_lap(podium[0].fastestLapTime) }}</div>
+      </div>
+      {% if podium[0].highlightColour %}<div class="stripe" style="background: {{ podium[0].highlightColour }};"></div>{% endif %}
+    </div>
+  {% endif %}
+  {% if podium|length > 2 %}
+    <div class="podium-col col-3">
+      <div class="avatar" {% if podium[2].highlightColour %}style="border-color: {{ podium[2].highlightColour }};"{% endif %}>{% if podium[2].avatarUrl %}<img src="{{ podium[2].avatarUrl }}" alt="">{% else %}{{ avatar_silhouette() }}{% endif %}</div>
+      <div class="podium-step podium-3" style="height: 45mm;">
+        <div class="rank">3</div>
+        <div class="name">{{ podium[2].username }}</div>
+        <div class="country">{% if podium[2].flagUrl %}<img class="flag" src="{{ podium[2].flagUrl }}" alt="">{% endif %}{{ podium[2].countryCode|default('') }}</div>
+        <div class="lap">{{ format_lap(podium[2].fastestLapTime) }}</div>
+      </div>
+      {% if podium[2].highlightColour %}<div class="stripe" style="background: {{ podium[2].highlightColour }};"></div>{% endif %}
+    </div>
+  {% endif %}
+</div>
+
+{% if runners_up %}
+  <h2>Positions 4–10</h2>
+  <table>
+    <thead><tr><th>#</th><th>Racer</th><th>Country</th><th>Fastest</th></tr></thead>
+    <tbody>
+      {% for r in runners_up %}
+        <tr>
+          <td>{{ r.rank }}</td>
+          <td>{{ r.username }}</td>
+          <td>{% if r.flagUrl %}<img class="flag" src="{{ r.flagUrl }}" alt="">{% endif %}{{ r.countryCode|default('') }}</td>
+          <td>{{ format_lap(r.fastestLapTime) }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}

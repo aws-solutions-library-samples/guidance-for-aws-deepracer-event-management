@@ -9,7 +9,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "postinstall": "(cd website && npm install --legacy-peer-deps) || true; (cd website/leaderboard && npm install --legacy-peer-deps) || true; (cd website/overlays && npm install) || true"
+    "postinstall": "[ -n \"$CODEBUILD_BUILD_ID\" ] && exit 0; (cd website && npm install --legacy-peer-deps) || true; (cd website/leaderboard && npm install --legacy-peer-deps) || true; (cd website/overlays && npm install) || true"
   },
   "eslintConfig": {
     "extends": [

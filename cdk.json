@@ -38,6 +38,7 @@
       "aws",
       "aws-cn"
     ],
-    "@aws-cdk/customresources:installLatestAwsSdkDefault": false
+    "@aws-cdk/customresources:installLatestAwsSdkDefault": false,
+    "@aws-cdk/core:stackResourceLimit": 1000
   }
 }
