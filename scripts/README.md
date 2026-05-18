@@ -43,6 +43,12 @@ python scripts/drem_export.py \
   --api \
   --endpoint https://xxx.appsync-api.eu-west-1.amazonaws.com/graphql \
   --token "eyJraWQ..."
+
+# Or, with the token stashed in a file (keeps the JWT out of shell history):
+python scripts/drem_export.py \
+  --api \
+  --endpoint https://xxx.appsync-api.eu-west-1.amazonaws.com/graphql \
+  --token-file /tmp/drem-token.txt
 ```
 
 To get the endpoint URL: open the DREM website in a browser, open DevTools, filter Network requests for "graphql", and copy the request URL.
