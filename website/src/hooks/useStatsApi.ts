@@ -21,6 +21,7 @@ export interface GlobalStats {
 export interface FastestLapEntry {
   username: string;
   eventName: string;
+  typeOfEvent: string;
   trackType: string;
   lapTimeMs: number;
   eventDate: string;

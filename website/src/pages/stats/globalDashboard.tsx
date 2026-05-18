@@ -4,6 +4,7 @@ import {
   Container,
   ContentLayout,
   Header,
+  Multiselect,
   SegmentedControl,
   SpaceBetween,
   Spinner,
@@ -12,6 +13,10 @@ import {
 } from '@cloudscape-design/components';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  EventTypeConfig,
+  GetTypeOfEventNameFromId,
+} from '../../admin/events/support-functions/eventDomain';
 import { GetTrackTypeNameFromId } from '../../admin/events/support-functions/raceConfig';
 import { BarChart } from '../../components/charts/BarChart';
 import { categoricalPalette } from '../../components/charts/chartDefaults';
@@ -39,6 +44,10 @@ export function GlobalDashboard() {
   const { t } = useTranslation();
   const { globalStats, loading, error } = useStatsApi();
   const [trackFilter, setTrackFilter] = useState<string>(ALL_TRACKS);
+  // null = "all" (no filter active). Selected list = explicit narrowing.
+  // Start unconstrained so the table shows what users expect; the visible
+  // Multiselect makes it obvious they CAN narrow to verified-timing events.
+  const [typeFilter, setTypeFilter] = useState<Set<string> | null>(null);
 
   if (loading) {
     return (
@@ -73,10 +82,27 @@ export function GlobalDashboard() {
     return [{ id: ALL_TRACKS, text: t('stats.all-tracks') }, ...trackSegments];
   }, [stats.fastestLapsByTrack, t]);
 
-  const fastestLapsRows: FastestLapEntry[] =
+  // Event-type filter options — same enum the admin Events page uses. Show
+  // every value so the operator can intentionally include misclassified
+  // events if needed, even if none currently appear in the data.
+  const typeOptions = useMemo(
+    () =>
+      EventTypeConfig().map((cfg) => ({
+        value: cfg.value,
+        label: cfg.label,
+      })),
+    [],
+  );
+
+  const trackFilteredRows: FastestLapEntry[] =
     trackFilter === ALL_TRACKS
       ? stats.fastestLapsEver
       : (stats.fastestLapsByTrack?.find((b) => b.trackType === trackFilter)?.entries ?? []);
+
+  const fastestLapsRows = useMemo(() => {
+    if (!typeFilter) return trackFilteredRows;
+    return trackFilteredRows.filter((entry) => typeFilter.has(entry.typeOfEvent));
+  }, [trackFilteredRows, typeFilter]);
 
   return (
     <ContentLayout header={<Header variant="h1">{t('stats.global-dashboard')}</Header>}>
@@ -153,12 +179,36 @@ export function GlobalDashboard() {
             <Header
               variant="h2"
               actions={
-                <SegmentedControl
-                  selectedId={trackFilter}
-                  onChange={({ detail }) => setTrackFilter(detail.selectedId)}
-                  options={trackOptions}
-                  label={t('stats.filter-by-track')}
-                />
+                <SpaceBetween direction="horizontal" size="xs">
+                  <Multiselect
+                    selectedOptions={
+                      // null state = "all" — render every option as selected
+                      // so the chip count matches user intuition.
+                      typeFilter
+                        ? typeOptions.filter((o) => typeFilter.has(o.value))
+                        : typeOptions
+                    }
+                    onChange={({ detail }) => {
+                      const next = new Set(
+                        detail.selectedOptions.map((o) => o.value as string),
+                      );
+                      // Treat "all selected" as no filter, so a future
+                      // backend addition of a new enum value doesn't get
+                      // silently excluded.
+                      setTypeFilter(next.size === typeOptions.length ? null : next);
+                    }}
+                    options={typeOptions}
+                    placeholder={t('stats.filter-by-event-type')}
+                    tokenLimit={2}
+                    hideTokens={false}
+                  />
+                  <SegmentedControl
+                    selectedId={trackFilter}
+                    onChange={({ detail }) => setTrackFilter(detail.selectedId)}
+                    options={trackOptions}
+                    label={t('stats.filter-by-track')}
+                  />
+                </SpaceBetween>
               }
             >
               {t('stats.fastest-laps-ever')}
@@ -175,6 +225,11 @@ export function GlobalDashboard() {
               },
               { id: 'username', header: t('stats.racer'), cell: (item) => item.username },
               { id: 'eventName', header: t('stats.event'), cell: (item) => item.eventName },
+              {
+                id: 'typeOfEvent',
+                header: t('stats.event-type'),
+                cell: (item) => GetTypeOfEventNameFromId(item.typeOfEvent) ?? item.typeOfEvent,
+              },
               {
                 id: 'trackType',
                 header: t('stats.track'),

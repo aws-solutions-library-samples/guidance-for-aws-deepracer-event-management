@@ -219,6 +219,12 @@ export class Statistics extends NestedStack {
       definition: {
         username: GraphqlType.string({ isRequired: true }),
         eventName: GraphqlType.string({ isRequired: true }),
+        // Event-level classification (PRIVATE_WORKSHOP / AWS_SUMMIT / etc.).
+        // Exposed on each lap so the UI can filter the "fastest ever" view
+        // by event type — private/workshop timings are less rigorous than
+        // AWS Summit / re:Invent events, so narrowing to verified-timing
+        // events makes the leaderboard trustworthy.
+        typeOfEvent: GraphqlType.string({ isRequired: true }),
         trackType: GraphqlType.string({ isRequired: true }),
         lapTimeMs: GraphqlType.float({ isRequired: true }),
         eventDate: GraphqlType.string({ isRequired: true }),

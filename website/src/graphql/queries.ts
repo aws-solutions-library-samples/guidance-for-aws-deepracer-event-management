@@ -358,6 +358,7 @@ export const getGlobalStats = /* GraphQL */ `
             fastestLapsEver {
                 username
                 eventName
+                typeOfEvent
                 trackType
                 lapTimeMs
                 eventDate
@@ -367,6 +368,7 @@ export const getGlobalStats = /* GraphQL */ `
                 entries {
                     username
                     eventName
+                    typeOfEvent
                     trackType
                     lapTimeMs
                     eventDate

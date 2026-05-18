@@ -206,6 +206,11 @@ def _rebuild_global_stats():
                 fastest_laps.append({
                     "username": racer.username or uid[:8],
                     "eventName": event_stats.event_name,
+                    # `event_type` may be None for legacy events without a
+                    # typeOfEvent; fall back to "OTHER" so the field is
+                    # never null (matches the GraphQL `String!` type) and
+                    # frontend filters can still bucket those entries.
+                    "typeOfEvent": event_type or "OTHER",
                     "trackType": track_type,
                     "lapTimeMs": racer.best_lap_time_ms,
                     "eventDate": event_stats.event_date,
