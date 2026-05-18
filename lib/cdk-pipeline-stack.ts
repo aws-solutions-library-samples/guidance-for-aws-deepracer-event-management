@@ -3,6 +3,7 @@ import { Aspects, Environment, Stage } from 'aws-cdk-lib';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as notifications from 'aws-cdk-lib/aws-codestarnotifications';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as pipelines from 'aws-cdk-lib/pipelines';
@@ -70,7 +71,14 @@ export class CdkPipelineStack extends cdk.Stack {
     // setup for pseudo parameters
     const stack = cdk.Stack.of(this);
 
+    const artifactBucket = new s3.Bucket(this, 'PipelineArtifactsBucket', {
+      enforceSSL: true,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+    });
+
     const pipeline = new pipelines.CodePipeline(this, 'Pipeline', {
+      artifactBucket,
       dockerEnabledForSynth: true,
       publishAssetsInParallel: false,
       // Add this to fix asset publishing steps
@@ -316,7 +324,8 @@ export class CdkPipelineStack extends cdk.Stack {
       },
       {
         id: 'AwsSolutions-S1',
-        reason: 'Access logging for the pipeline artifacts bucket is managed by CDK Pipelines',
+        reason:
+          'Access logging for the pipeline artifacts bucket is not required for this internal CI/CD artifact store.',
       },
       {
         id: 'AwsSolutions-SNS3',
