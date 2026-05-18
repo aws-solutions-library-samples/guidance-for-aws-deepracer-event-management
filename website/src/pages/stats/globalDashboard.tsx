@@ -5,7 +5,7 @@ import {
   ContentLayout,
   Header,
   Multiselect,
-  SegmentedControl,
+  Select,
   SpaceBetween,
   Spinner,
   StatusIndicator,
@@ -44,10 +44,49 @@ export function GlobalDashboard() {
   const { t } = useTranslation();
   const { globalStats, loading, error } = useStatsApi();
   const [trackFilter, setTrackFilter] = useState<string>(ALL_TRACKS);
-  // null = "all" (no filter active). Selected list = explicit narrowing.
-  // Start unconstrained so the table shows what users expect; the visible
-  // Multiselect makes it obvious they CAN narrow to verified-timing events.
-  const [typeFilter, setTypeFilter] = useState<Set<string> | null>(null);
+  // Default to AWS Summit only — these events have the most rigorous timing
+  // setup, so the "Fastest Laps Ever" view is trustworthy out of the box.
+  // Users can broaden via the Multiselect.
+  const [typeFilter, setTypeFilter] = useState<Set<string>>(
+    () => new Set(['AWS_SUMMIT']),
+  );
+
+  // All hooks must run on every render — no early returns above this block.
+  // We feed the memos optional-chained values so they cope with `globalStats`
+  // being null during the loading state and don't blow up.
+
+  // Build dropdown options from whichever tracks actually have fastest-lap
+  // data, so we don't show empty entries. "All tracks" lives at the top.
+  const trackOptions = useMemo(() => {
+    const trackEntries = (globalStats?.fastestLapsByTrack ?? []).map((bucket) => ({
+      value: bucket.trackType,
+      label: GetTrackTypeNameFromId(bucket.trackType) ?? bucket.trackType,
+    }));
+    return [{ value: ALL_TRACKS, label: t('stats.all-tracks') }, ...trackEntries];
+  }, [globalStats?.fastestLapsByTrack, t]);
+
+  // Event-type filter options — same enum the admin Events page uses. Show
+  // every value so the operator can intentionally include misclassified
+  // events if needed, even if none currently appear in the data.
+  const typeOptions = useMemo(
+    () =>
+      EventTypeConfig().map((cfg) => ({
+        value: cfg.value,
+        label: cfg.label,
+      })),
+    [],
+  );
+
+  const trackFilteredRows: FastestLapEntry[] = !globalStats
+    ? []
+    : trackFilter === ALL_TRACKS
+      ? globalStats.fastestLapsEver
+      : (globalStats.fastestLapsByTrack?.find((b) => b.trackType === trackFilter)?.entries ?? []);
+
+  const fastestLapsRows = useMemo(
+    () => trackFilteredRows.filter((entry) => typeFilter.has(entry.typeOfEvent)),
+    [trackFilteredRows, typeFilter],
+  );
 
   if (loading) {
     return (
@@ -71,38 +110,6 @@ export function GlobalDashboard() {
 
   const stats = globalStats;
   const activityDates = stats.eventsByMonth.map((m) => new Date(m.month + '-01'));
-
-  // Build the segmented-control options from whichever tracks actually
-  // have fastest-lap data, so we don't show empty tabs.
-  const trackOptions = useMemo(() => {
-    const trackSegments = (stats.fastestLapsByTrack ?? []).map((bucket) => ({
-      id: bucket.trackType,
-      text: GetTrackTypeNameFromId(bucket.trackType) ?? bucket.trackType,
-    }));
-    return [{ id: ALL_TRACKS, text: t('stats.all-tracks') }, ...trackSegments];
-  }, [stats.fastestLapsByTrack, t]);
-
-  // Event-type filter options — same enum the admin Events page uses. Show
-  // every value so the operator can intentionally include misclassified
-  // events if needed, even if none currently appear in the data.
-  const typeOptions = useMemo(
-    () =>
-      EventTypeConfig().map((cfg) => ({
-        value: cfg.value,
-        label: cfg.label,
-      })),
-    [],
-  );
-
-  const trackFilteredRows: FastestLapEntry[] =
-    trackFilter === ALL_TRACKS
-      ? stats.fastestLapsEver
-      : (stats.fastestLapsByTrack?.find((b) => b.trackType === trackFilter)?.entries ?? []);
-
-  const fastestLapsRows = useMemo(() => {
-    if (!typeFilter) return trackFilteredRows;
-    return trackFilteredRows.filter((entry) => typeFilter.has(entry.typeOfEvent));
-  }, [trackFilteredRows, typeFilter]);
 
   return (
     <ContentLayout header={<Header variant="h1">{t('stats.global-dashboard')}</Header>}>
@@ -181,32 +188,26 @@ export function GlobalDashboard() {
               actions={
                 <SpaceBetween direction="horizontal" size="xs">
                   <Multiselect
-                    selectedOptions={
-                      // null state = "all" — render every option as selected
-                      // so the chip count matches user intuition.
-                      typeFilter
-                        ? typeOptions.filter((o) => typeFilter.has(o.value))
-                        : typeOptions
+                    selectedOptions={typeOptions.filter((o) => typeFilter.has(o.value))}
+                    onChange={({ detail }) =>
+                      setTypeFilter(
+                        new Set(detail.selectedOptions.map((o) => o.value as string)),
+                      )
                     }
-                    onChange={({ detail }) => {
-                      const next = new Set(
-                        detail.selectedOptions.map((o) => o.value as string),
-                      );
-                      // Treat "all selected" as no filter, so a future
-                      // backend addition of a new enum value doesn't get
-                      // silently excluded.
-                      setTypeFilter(next.size === typeOptions.length ? null : next);
-                    }}
                     options={typeOptions}
                     placeholder={t('stats.filter-by-event-type')}
                     tokenLimit={2}
                     hideTokens={false}
                   />
-                  <SegmentedControl
-                    selectedId={trackFilter}
-                    onChange={({ detail }) => setTrackFilter(detail.selectedId)}
+                  <Select
+                    selectedOption={
+                      trackOptions.find((o) => o.value === trackFilter) ?? trackOptions[0]
+                    }
+                    onChange={({ detail }) =>
+                      setTrackFilter(detail.selectedOption.value as string)
+                    }
                     options={trackOptions}
-                    label={t('stats.filter-by-track')}
+                    ariaLabel={t('stats.filter-by-track')}
                   />
                 </SpaceBetween>
               }
