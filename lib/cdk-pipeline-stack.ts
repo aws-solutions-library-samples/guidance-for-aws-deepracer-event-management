@@ -3,6 +3,7 @@ import { Aspects, Environment, Stage } from 'aws-cdk-lib';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as notifications from 'aws-cdk-lib/aws-codestarnotifications';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as kms from 'aws-cdk-lib/aws-kms';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
@@ -333,7 +334,13 @@ export class CdkPipelineStack extends cdk.Stack {
       },
     ]);
 
-    const topic = new sns.Topic(this, 'PipelineTopic');
+    const topicKey = new kms.Key(this, 'PipelineTopicKey', {
+      enableKeyRotation: true,
+      description: 'KMS key for pipeline notification SNS topic',
+    });
+    const topic = new sns.Topic(this, 'PipelineTopic', {
+      masterKey: topicKey,
+    });
     topic.addSubscription(new subs.EmailSubscription(props.email));
     const rule = new notifications.NotificationRule(this, 'NotificationRule', {
       source: pipeline.pipeline,
