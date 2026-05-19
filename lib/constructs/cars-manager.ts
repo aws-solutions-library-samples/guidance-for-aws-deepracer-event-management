@@ -279,6 +279,25 @@ export class CarManager extends Construct {
       })
     );
 
+    // Per-chassis history of managed-instances (mi-xxxx ids) a physical car
+    // has been registered as. Written by register_car_serial *before* it
+    // deregisters an older mi-xxx for dedup — so the link from chassis to
+    // historical mi/carName/fleet survives the SSM deregistration. Race
+    // records reference carName at race time; this table is the bridge
+    // that lets a future query answer "all races by physical car X".
+    //
+    // pk = chassisSerial, sk = managedInstanceId. Each row also carries
+    // the last-known carName + fleet, plus firstSeen / lastSeen / and a
+    // deregisteredAt timestamp once the mi is retired.
+    const carsHistoryTable = new dynamodb.Table(this, 'CarsHistoryTable', {
+      partitionKey: { name: 'chassisSerial', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'managedInstanceId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      encryption: dynamodb.TableEncryption.AWS_MANAGED,
+      removalPolicy: RemovalPolicy.DESTROY,
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
+    });
+
     // Direct-invoke Lambda the car calls after SSM agent registration —
     // dedups other managed-instances sharing the same chassis serial and
     // tags the new one. See lib/lambdas/register_car_serial/index.py.
@@ -298,6 +317,8 @@ export class CarManager extends Construct {
       environment: {
         POWERTOOLS_SERVICE_NAME: 'register_car_serial',
         LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+        CARS_STATUS_TABLE: carStatusTable.tableName,
+        CARS_HISTORY_TABLE: carsHistoryTable.tableName,
       },
     });
     register_car_serial_handler.addToRolePolicy(
@@ -311,6 +332,10 @@ export class CarManager extends Construct {
         resources: ['*'],
       })
     );
+    // Read existing car metadata (carName/fleet) so we can capture it
+    // onto the history row before deregistering the old mi.
+    carStatusTable.grantReadData(register_car_serial_handler);
+    carsHistoryTable.grantWriteData(register_car_serial_handler);
 
     // Grant the car (running under ssmRunCommandRole, the role we pass
     // to ssm.create_activation) permission to invoke ONLY this Lambda —
