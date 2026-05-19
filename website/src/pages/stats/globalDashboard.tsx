@@ -77,16 +77,35 @@ export function GlobalDashboard() {
     [],
   );
 
-  const trackFilteredRows: FastestLapEntry[] = !globalStats
-    ? []
-    : trackFilter === ALL_TRACKS
-      ? globalStats.fastestLapsEver
-      : (globalStats.fastestLapsByTrack?.find((b) => b.trackType === trackFilter)?.entries ?? []);
-
-  const fastestLapsRows = useMemo(
-    () => trackFilteredRows.filter((entry) => typeFilter.has(entry.typeOfEvent)),
-    [trackFilteredRows, typeFilter],
-  );
+  // For "All tracks", the global `fastestLapsEver` top-10 is dominated by the
+  // fastest event types — typically PRIVATE_TRACK_RACE (less rigorous timing,
+  // faster recorded times). If the user has filtered to a different event
+  // type (e.g. AWS_SUMMIT) the global list often comes up empty even when
+  // individual tracks DO have qualifying entries. So when a type filter is
+  // active, derive the "All tracks" view from the union of per-track buckets
+  // — the same entries that show up when drilling into a single track. Sort
+  // by lapTimeMs and cap at the same N as the global top-N.
+  const fastestLapsRows = useMemo<FastestLapEntry[]>(() => {
+    if (!globalStats) return [];
+    if (trackFilter !== ALL_TRACKS) {
+      const bucket = globalStats.fastestLapsByTrack?.find(
+        (b) => b.trackType === trackFilter,
+      );
+      return (bucket?.entries ?? []).filter((entry) =>
+        typeFilter.has(entry.typeOfEvent),
+      );
+    }
+    const allTypesSelected = typeFilter.size === typeOptions.length;
+    if (allTypesSelected) {
+      // No effective type filter — use the precomputed global top-N.
+      return globalStats.fastestLapsEver;
+    }
+    const unioned = (globalStats.fastestLapsByTrack ?? [])
+      .flatMap((bucket) => bucket.entries)
+      .filter((entry) => typeFilter.has(entry.typeOfEvent));
+    unioned.sort((a, b) => a.lapTimeMs - b.lapTimeMs);
+    return unioned.slice(0, globalStats.fastestLapsEver.length || 10);
+  }, [globalStats, trackFilter, typeFilter, typeOptions.length]);
 
   if (loading) {
     return (
