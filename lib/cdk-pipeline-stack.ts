@@ -367,6 +367,47 @@ def handler(event, context):
       },
     });
 
+    // cdk-nag suppressions for the emptier Lambda + the CDK Provider's
+    // framework Lambda. Both use the AWS-managed AWSLambdaBasicExecutionRole
+    // applied by default by the Lambda L2 construct, and the framework
+    // Lambda's runtime is pinned by aws-cdk-lib/custom-resources. We can't
+    // control either without restating the same permissions or forking
+    // the construct.
+    NagSuppressions.addResourceSuppressions(
+      bucketEmptier,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWSLambdaBasicExecutionRole is the default Lambda execution role; replacing it would restate the same permissions.',
+          appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
+        },
+        {
+          id: 'AwsSolutions-L1',
+          reason: 'PYTHON_3_12 is the latest stable Lambda runtime supported by the CDK version in use; bump when CDK exposes a newer Python.',
+        },
+      ],
+      true
+    );
+    NagSuppressions.addResourceSuppressions(
+      bucketEmptierProvider,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'Provider framework Lambda uses CDK-managed AWSLambdaBasicExecutionRole.',
+          appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
+        },
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Provider framework Lambda needs lambda:InvokeFunction on the onEvent handler; CDK wildcards the function version arn.',
+        },
+        {
+          id: 'AwsSolutions-L1',
+          reason: 'Provider framework Lambda runtime is pinned by aws-cdk-lib/custom-resources and cannot be controlled here.',
+        },
+      ],
+      true
+    );
+
     // Suppress cdk-nag findings for CDK Pipelines-managed resources we don't control
     NagSuppressions.addStackSuppressions(this, [
       {
