@@ -71,6 +71,34 @@ function resolveToken(tokenValue: string): string {
   return hexMatch ? hexMatch[0] : tokenValue;
 }
 
+/**
+ * Resolve a single CloudScape design-token CSS-var expression to its live
+ * value, theme-reactive in the same way `useChartTheme` is. Useful for
+ * colours not part of the standard chart theme (e.g. the per-lap status
+ * colours in the commentator race-stats chart).
+ */
+export function useResolvedToken(tokenValue: string): string {
+  const [value, setValue] = useState<string>(() => resolveToken(tokenValue));
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const refresh = () => setValue(resolveToken(tokenValue));
+    const observer = new MutationObserver(refresh);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-mode', 'style'],
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class', 'data-mode', 'style'],
+    });
+    refresh();
+    return () => observer.disconnect();
+  }, [tokenValue]);
+
+  return value;
+}
+
 // Categorical palette resolved from CloudScape design tokens.
 export const categoricalPalette: string[] = [
   tokens.colorChartsPaletteCategorical1,
