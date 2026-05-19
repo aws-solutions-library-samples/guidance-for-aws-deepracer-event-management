@@ -10,7 +10,7 @@
 import { ChartOptions, Plugin } from 'chart.js';
 import { useMemo, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
-import { chartTheme } from './chartDefaults';
+import { useChartTheme } from './chartDefaults';
 
 // react-chartjs-2 ref type. The package uses a wrapper type `ChartJSOrUndefined`,
 // but we only need the subset of the Chart.js API used below so `any` keeps
@@ -31,7 +31,8 @@ export interface SyncedActivityChartsProps {
 
 // Chart.js plugin that draws a vertical crosshair line at the currently
 // active tooltip point. Registered per-chart instance below so the line
-// only appears when the chart has an active tooltip.
+// only appears when the chart has an active tooltip. Reads the crosshair
+// colour from the chart's own x-axis tick color so it follows dark mode.
 const crosshairPlugin: Plugin<'line'> = {
   id: 'syncedCrosshair',
   afterDatasetsDraw(chart) {
@@ -40,12 +41,14 @@ const crosshairPlugin: Plugin<'line'> = {
     const x = active[0].element.x;
     const { top, bottom } = chart.chartArea;
     const ctx = chart.ctx;
+    const tickColor =
+      (chart.options.scales?.x?.ticks?.color as string | undefined) ?? '#888';
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(x, top);
     ctx.lineTo(x, bottom);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = chartTheme.tickColor;
+    ctx.strokeStyle = tickColor;
     ctx.setLineDash([4, 4]);
     ctx.stroke();
     ctx.restore();
@@ -58,6 +61,7 @@ export function SyncedActivityCharts({
   height = 180,
 }: SyncedActivityChartsProps) {
   const chartRefs = useRef<Array<LineChartRef>>([]);
+  const chartTheme = useChartTheme();
 
   const commonOptions = useMemo<ChartOptions<'line'>>(
     () => ({
@@ -133,7 +137,7 @@ export function SyncedActivityCharts({
         },
       },
     }),
-    []
+    [chartTheme]
   );
 
   const onHoverSync = (chartIdx: number) => (event: any, _elements: any) => {

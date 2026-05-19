@@ -24,6 +24,7 @@ import {
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import * as tokens from '@cloudscape-design/design-tokens';
+import { useEffect, useState } from 'react';
 
 Chart.register(
   ArcElement,
@@ -45,16 +46,29 @@ Chart.register(
 /**
  * CloudScape design tokens export colours as CSS var() expressions with a
  * hex fallback, e.g. `"var(--color-charts-palette-categorical-1-xxx, #688AE8)"`.
- * Chart.js renders to canvas and can't resolve CSS variables, so we pull the
- * hex fallback out.
+ * Chart.js renders to canvas and can't resolve CSS variables, so we resolve
+ * the active CSS variable value at runtime via getComputedStyle.
  *
- * TODO when dark mode ships (#179): replace with a runtime resolver that
- * reads the CSS variable via getComputedStyle so colours adapt to the
- * current theme. For now the hex fallback is the light-mode value.
+ * Falls back to the hex literal in the var() expression when the variable
+ * isn't defined yet (e.g. before CloudScape stylesheets apply, or during SSR).
  */
 function resolveToken(tokenValue: string): string {
-  const match = /#[0-9a-fA-F]{3,8}/.exec(tokenValue);
-  return match ? match[0] : tokenValue;
+  if (typeof window !== 'undefined' && document.body) {
+    const varMatch = /^var\((--[^,)]+)/.exec(tokenValue);
+    if (varMatch) {
+      // CloudScape's dark mode is applied by adding `awsui-dark-mode` to
+      // <body>, and the design-token CSS variables are redefined under that
+      // class — so we have to read from a descendant of <body> (or <body>
+      // itself) to see the active theme's value. Reading from
+      // documentElement misses dark-mode overrides.
+      const live = getComputedStyle(document.body)
+        .getPropertyValue(varMatch[1])
+        .trim();
+      if (live) return live;
+    }
+  }
+  const hexMatch = /#[0-9a-fA-F]{3,8}/.exec(tokenValue);
+  return hexMatch ? hexMatch[0] : tokenValue;
 }
 
 // Categorical palette resolved from CloudScape design tokens.
@@ -91,10 +105,59 @@ export const categoricalPalette: string[] = [
   tokens.colorChartsPaletteCategorical30,
 ].map(resolveToken);
 
-export const chartTheme = {
-  gridColor: resolveToken(tokens.colorChartsLineGrid),
-  axisColor: resolveToken(tokens.colorChartsLineAxis),
-  tickMarkColor: resolveToken(tokens.colorChartsLineTick),
-  tickColor: resolveToken(tokens.colorTextBodySecondary),
-  titleColor: resolveToken(tokens.colorTextHeadingDefault),
-} as const;
+export interface ChartTheme {
+  gridColor: string;
+  axisColor: string;
+  tickMarkColor: string;
+  tickColor: string;
+  titleColor: string;
+}
+
+function readChartTheme(): ChartTheme {
+  return {
+    gridColor: resolveToken(tokens.colorChartsLineGrid),
+    axisColor: resolveToken(tokens.colorChartsLineAxis),
+    tickMarkColor: resolveToken(tokens.colorChartsLineTick),
+    tickColor: resolveToken(tokens.colorTextBodySecondary),
+    titleColor: resolveToken(tokens.colorTextHeadingDefault),
+  };
+}
+
+/**
+ * Reactive chart theme — recomputes when CloudScape's dark-mode class flips
+ * on `<body>` or `<html>` so chart.js canvases redraw with the correct
+ * tick/grid/axis colours.
+ *
+ * Charts using this hook will re-render automatically on theme change because
+ * the returned object reference changes.
+ */
+export function useChartTheme(): ChartTheme {
+  const [theme, setTheme] = useState<ChartTheme>(readChartTheme);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const refresh = () => setTheme(readChartTheme());
+
+    // CloudScape applies the dark mode by toggling classes/attributes on
+    // <html> and <body>. Observe both to catch whichever it uses.
+    const observer = new MutationObserver(refresh);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-mode', 'style'],
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class', 'data-mode', 'style'],
+    });
+
+    // CloudScape's theme switch can race with the first React render — do a
+    // single follow-up read after mount so the initial chart paint picks up
+    // the correct theme even if the stylesheet hadn't settled yet.
+    refresh();
+
+    return () => observer.disconnect();
+  }, []);
+
+  return theme;
+}

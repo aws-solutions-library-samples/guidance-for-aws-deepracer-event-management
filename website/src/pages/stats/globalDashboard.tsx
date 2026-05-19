@@ -30,6 +30,22 @@ function formatLapTime(ms: number): string {
   return `${seconds.toFixed(3)}s`;
 }
 
+/**
+ * Convert an ISO-3166-1 alpha-2 country code into the corresponding
+ * regional-indicator flag emoji ("GB" → 🇬🇧). Unknown / non-letter input
+ * returns the empty string so chart.js drops the second tick line.
+ */
+function flagEmoji(code: string): string {
+  if (!code || code.length !== 2) return '';
+  const A = 'A'.charCodeAt(0);
+  const BASE = 0x1f1e6;
+  const upper = code.toUpperCase();
+  const c0 = upper.charCodeAt(0);
+  const c1 = upper.charCodeAt(1);
+  if (c0 < A || c0 > A + 25 || c1 < A || c1 > A + 25) return '';
+  return String.fromCodePoint(BASE + (c0 - A)) + String.fromCodePoint(BASE + (c1 - A));
+}
+
 export function GlobalDashboard() {
   const { t } = useTranslation();
   const { globalStats, loading, error } = useStatsApi();
@@ -81,7 +97,7 @@ export function GlobalDashboard() {
         {/* Events by Country */}
         <Container header={<Header variant="h2">{t('stats.events-by-country')}</Header>}>
           <BarChart
-            labels={stats.eventsByCountry.map((c) => c.countryCode)}
+            labels={stats.eventsByCountry.map((c) => [c.countryCode, flagEmoji(c.countryCode)])}
             values={stats.eventsByCountry.map((c) => c.events)}
             seriesLabel={t('stats.events')}
             xTitle={t('stats.country')}
