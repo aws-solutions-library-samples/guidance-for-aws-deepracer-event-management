@@ -358,9 +358,21 @@ export const getGlobalStats = /* GraphQL */ `
             fastestLapsEver {
                 username
                 eventName
+                typeOfEvent
                 trackType
                 lapTimeMs
                 eventDate
+            }
+            fastestLapsByTrack {
+                trackType
+                entries {
+                    username
+                    eventName
+                    typeOfEvent
+                    trackType
+                    lapTimeMs
+                    eventDate
+                }
             }
         }
     }

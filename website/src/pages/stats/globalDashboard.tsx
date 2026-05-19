@@ -4,17 +4,27 @@ import {
   Container,
   ContentLayout,
   Header,
+  Multiselect,
+  Select,
   SpaceBetween,
   Spinner,
   StatusIndicator,
   Table,
 } from '@cloudscape-design/components';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  EventTypeConfig,
+  GetTypeOfEventNameFromId,
+} from '../../admin/events/support-functions/eventDomain';
+import { GetTrackTypeNameFromId } from '../../admin/events/support-functions/raceConfig';
 import { BarChart } from '../../components/charts/BarChart';
 import { categoricalPalette } from '../../components/charts/chartDefaults';
 import { PieChart } from '../../components/charts/PieChart';
 import { SyncedActivityCharts } from '../../components/charts/SyncedActivityCharts';
-import { useStatsApi } from '../../hooks/useStatsApi';
+import { FastestLapEntry, useStatsApi } from '../../hooks/useStatsApi';
+
+const ALL_TRACKS = 'ALL';
 
 function KpiCard({ title, value }: { title: string; value: string | number }) {
   return (
@@ -49,6 +59,69 @@ function flagEmoji(code: string): string {
 export function GlobalDashboard() {
   const { t } = useTranslation();
   const { globalStats, loading, error } = useStatsApi();
+  const [trackFilter, setTrackFilter] = useState<string>(ALL_TRACKS);
+  // Default to AWS Summit only — these events have the most rigorous timing
+  // setup, so the "Fastest Laps Ever" view is trustworthy out of the box.
+  // Users can broaden via the Multiselect.
+  const [typeFilter, setTypeFilter] = useState<Set<string>>(
+    () => new Set(['AWS_SUMMIT']),
+  );
+
+  // All hooks must run on every render — no early returns above this block.
+  // We feed the memos optional-chained values so they cope with `globalStats`
+  // being null during the loading state and don't blow up.
+
+  // Build dropdown options from whichever tracks actually have fastest-lap
+  // data, so we don't show empty entries. "All tracks" lives at the top.
+  const trackOptions = useMemo(() => {
+    const trackEntries = (globalStats?.fastestLapsByTrack ?? []).map((bucket) => ({
+      value: bucket.trackType,
+      label: GetTrackTypeNameFromId(bucket.trackType) ?? bucket.trackType,
+    }));
+    return [{ value: ALL_TRACKS, label: t('stats.all-tracks') }, ...trackEntries];
+  }, [globalStats?.fastestLapsByTrack, t]);
+
+  // Event-type filter options — same enum the admin Events page uses. Show
+  // every value so the operator can intentionally include misclassified
+  // events if needed, even if none currently appear in the data.
+  const typeOptions = useMemo(
+    () =>
+      EventTypeConfig().map((cfg) => ({
+        value: cfg.value,
+        label: cfg.label,
+      })),
+    [],
+  );
+
+  // For "All tracks", the global `fastestLapsEver` top-10 is dominated by the
+  // fastest event types — typically PRIVATE_TRACK_RACE (less rigorous timing,
+  // faster recorded times). If the user has filtered to a different event
+  // type (e.g. AWS_SUMMIT) the global list often comes up empty even when
+  // individual tracks DO have qualifying entries. So when a type filter is
+  // active, derive the "All tracks" view from the union of per-track buckets
+  // — the same entries that show up when drilling into a single track. Sort
+  // by lapTimeMs and cap at the same N as the global top-N.
+  const fastestLapsRows = useMemo<FastestLapEntry[]>(() => {
+    if (!globalStats) return [];
+    if (trackFilter !== ALL_TRACKS) {
+      const bucket = globalStats.fastestLapsByTrack?.find(
+        (b) => b.trackType === trackFilter,
+      );
+      return (bucket?.entries ?? []).filter((entry) =>
+        typeFilter.has(entry.typeOfEvent),
+      );
+    }
+    const allTypesSelected = typeFilter.size === typeOptions.length;
+    if (allTypesSelected) {
+      // No effective type filter — use the precomputed global top-N.
+      return globalStats.fastestLapsEver;
+    }
+    const unioned = (globalStats.fastestLapsByTrack ?? [])
+      .flatMap((bucket) => bucket.entries)
+      .filter((entry) => typeFilter.has(entry.typeOfEvent));
+    unioned.sort((a, b) => a.lapTimeMs - b.lapTimeMs);
+    return unioned.slice(0, globalStats.fastestLapsEver.length || 10);
+  }, [globalStats, trackFilter, typeFilter, typeOptions.length]);
 
   if (loading) {
     return (
@@ -143,21 +216,60 @@ export function GlobalDashboard() {
         </Container>
 
         {/* Fastest Laps Ever */}
-        <Container header={<Header variant="h2">{t('stats.fastest-laps-ever')}</Header>}>
+        <Container
+          header={
+            <Header
+              variant="h2"
+              actions={
+                <SpaceBetween direction="horizontal" size="xs">
+                  <Multiselect
+                    selectedOptions={typeOptions.filter((o) => typeFilter.has(o.value))}
+                    onChange={({ detail }) =>
+                      setTypeFilter(
+                        new Set(detail.selectedOptions.map((o) => o.value as string)),
+                      )
+                    }
+                    options={typeOptions}
+                    placeholder={t('stats.filter-by-event-type')}
+                    tokenLimit={2}
+                    hideTokens={false}
+                  />
+                  <Select
+                    selectedOption={
+                      trackOptions.find((o) => o.value === trackFilter) ?? trackOptions[0]
+                    }
+                    onChange={({ detail }) =>
+                      setTrackFilter(detail.selectedOption.value as string)
+                    }
+                    options={trackOptions}
+                    ariaLabel={t('stats.filter-by-track')}
+                  />
+                </SpaceBetween>
+              }
+            >
+              {t('stats.fastest-laps-ever')}
+            </Header>
+          }
+        >
           <Table
             columnDefinitions={[
               {
                 id: 'rank',
                 header: '#',
-                cell: (item) => stats.fastestLapsEver.indexOf(item) + 1,
+                cell: (item) => fastestLapsRows.indexOf(item) + 1,
                 width: 50,
               },
               { id: 'username', header: t('stats.racer'), cell: (item) => item.username },
               { id: 'eventName', header: t('stats.event'), cell: (item) => item.eventName },
               {
+                id: 'typeOfEvent',
+                header: t('stats.event-type'),
+                cell: (item) => GetTypeOfEventNameFromId(item.typeOfEvent) ?? item.typeOfEvent,
+              },
+              {
                 id: 'trackType',
                 header: t('stats.track'),
-                cell: (item) => item.trackType.replace(/_/g, ' '),
+                cell: (item) => GetTrackTypeNameFromId(item.trackType) ?? item.trackType,
               },
               {
                 id: 'lapTimeMs',
@@ -166,8 +278,13 @@ export function GlobalDashboard() {
               },
               { id: 'eventDate', header: t('stats.date'), cell: (item) => item.eventDate },
             ]}
-            items={stats.fastestLapsEver}
+            items={fastestLapsRows}
             variant="embedded"
+            empty={
+              <Box textAlign="center" padding="m">
+                <StatusIndicator type="info">{t('stats.no-laps-on-track')}</StatusIndicator>
+              </Box>
+            }
           />
         </Container>
       </SpaceBetween>
