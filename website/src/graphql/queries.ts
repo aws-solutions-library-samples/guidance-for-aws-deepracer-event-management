@@ -204,6 +204,20 @@ export const getUploadModelToCarStatus = /* GraphQL */ `
         }
     }
 `;
+export const getCarHistory = /* GraphQL */ `
+    query GetCarHistory($chassisSerial: String!) {
+        getCarHistory(chassisSerial: $chassisSerial) {
+            chassisSerial
+            managedInstanceId
+            carName
+            fleetId
+            fleetName
+            registrationDate
+            lastSeen
+            deregisteredAt
+        }
+    }
+`;
 export const listCars = /* GraphQL */ `
     query ListCars($online: Boolean!) {
         listCars(online: $online) {

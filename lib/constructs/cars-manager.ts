@@ -444,8 +444,10 @@ export class CarManager extends Construct {
         DDB_TABLE: carStatusTable.tableName,
         DDB_PING_STATE_INDEX: carsTable_ping_state_index_name,
         STEP_FUNCTION_ARN: car_status_update_SM.stateMachineArn,
+        CARS_HISTORY_TABLE: carsHistoryTable.tableName,
       },
     });
+    carsHistoryTable.grantReadData(cars_function_handler);
 
     cars_function_handler.addToRolePolicy(
       new iam.PolicyStatement({
@@ -559,6 +561,36 @@ export class CarManager extends Construct {
         returnType: car_online_object_type.attribute({ isList: true }),
         dataSource: cars_data_source,
         directives: [Directive.iam(), Directive.cognito('admin', 'operator')],
+      })
+    );
+
+    // CarsHistory row — one per (chassisSerial, managedInstanceId) pair.
+    // Carries the carName/fleet snapshot at the time the row was written,
+    // and a deregisteredAt timestamp for retired managed-instances.
+    const car_history_entry_type = new ObjectType('CarHistoryEntry', {
+      definition: {
+        chassisSerial: GraphqlType.string({ isRequired: true }),
+        managedInstanceId: GraphqlType.string({ isRequired: true }),
+        carName: GraphqlType.string(),
+        fleetId: GraphqlType.string(),
+        fleetName: GraphqlType.string(),
+        registrationDate: GraphqlType.string(),
+        lastSeen: GraphqlType.string(),
+        deregisteredAt: GraphqlType.string(),
+      },
+      directives: [Directive.cognito('admin', 'operator')],
+    });
+    props.appsyncApi.schema.addType(car_history_entry_type);
+
+    props.appsyncApi.schema.addQuery(
+      'getCarHistory',
+      new ResolvableField({
+        args: {
+          chassisSerial: GraphqlType.string({ isRequired: true }),
+        },
+        returnType: car_history_entry_type.attribute({ isList: true }),
+        dataSource: cars_data_source,
+        directives: [Directive.cognito('admin', 'operator')],
       })
     );
 

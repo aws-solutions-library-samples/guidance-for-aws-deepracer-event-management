@@ -17,6 +17,7 @@ logger = Logger()
 DDB_TABLE_NAME = os.environ.get("DDB_TABLE")
 DDB_PING_STATE_INDEX_NAME = os.environ.get("DDB_PING_STATE_INDEX")
 STEP_FUNCTION_ARN = os.environ.get("STEP_FUNCTION_ARN")
+CARS_HISTORY_TABLE_NAME = os.environ.get("CARS_HISTORY_TABLE")
 
 dynamodb = boto3.resource("dynamodb")
 client_dynamodb = boto3.client("dynamodb")
@@ -25,6 +26,9 @@ client_ssm = boto3.client("ssm")
 client_sfn = boto3.client("stepfunctions")
 
 ddbTable = dynamodb.Table(DDB_TABLE_NAME)
+carsHistoryTable = (
+    dynamodb.Table(CARS_HISTORY_TABLE_NAME) if CARS_HISTORY_TABLE_NAME else None
+)
 
 
 colors = {
@@ -114,6 +118,40 @@ def listCars(online: str):
     except Exception as error:
         logger.exception(error)
         raise Exception(f"Error listing cars: {str(error)}")
+
+
+@app.resolver(type_name="Query", field_name="getCarHistory")
+def getCarHistory(chassisSerial: str):
+    """
+    Return every CarsHistory row for a chassisSerial — one row per
+    managed-instance the chassis has ever been registered as. Used by
+    the admin Devices "View history" panel to show a car's full
+    fleet/hostname journey across reflashes.
+    """
+    if not carsHistoryTable:
+        logger.warning("CARS_HISTORY_TABLE env var not set; returning empty history")
+        return []
+    try:
+        items = []
+        response = carsHistoryTable.query(
+            KeyConditionExpression="chassisSerial = :pk",
+            ExpressionAttributeValues={":pk": chassisSerial},
+        )
+        items.extend(response.get("Items", []))
+        while "LastEvaluatedKey" in response:
+            response = carsHistoryTable.query(
+                KeyConditionExpression="chassisSerial = :pk",
+                ExpressionAttributeValues={":pk": chassisSerial},
+                ExclusiveStartKey=response["LastEvaluatedKey"],
+            )
+            items.extend(response.get("Items", []))
+        logger.info(
+            f"getCarHistory({chassisSerial}): {len(items)} entries"
+        )
+        return items
+    except Exception as error:
+        logger.exception(error)
+        raise Exception(f"Error getting car history: {str(error)}")
 
 
 @app.resolver(type_name="Mutation", field_name="carsUpdateStatus")
