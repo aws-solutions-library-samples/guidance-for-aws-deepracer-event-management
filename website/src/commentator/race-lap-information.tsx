@@ -1,6 +1,6 @@
 import { Grid, SpaceBetween } from '@cloudscape-design/components';
 import Container from '@cloudscape-design/components/container';
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LapTable } from '../pages/timekeeper/components/lapTable';
 import { RaceGraph, RaceGraphLegend } from './race-graph';
@@ -10,6 +10,10 @@ interface Lap {
   lapId: number;
   lapTime?: number;
   time?: number;
+  // The onNewOverlayInfo subscription returns isValid on each lap; it
+  // was missing from this interface so the previous mapping defaulted
+  // it to `true` and the RaceGraph never repainted invalidated laps red.
+  isValid?: boolean;
 }
 
 interface AverageLap {
@@ -84,6 +88,21 @@ const RaceLapInformation: React.FC<RaceLapInformationProps> = ({
     }
   }, [overlayInformation]);
 
+  // Normalise once and reuse for both the table and the chart. Carrying
+  // `isValid` through here is the actual fix — the previous code hardcoded
+  // `isValid: true` which threw away the value from the subscription and
+  // left the chart unable to repaint invalidated laps in the "invalid"
+  // (red) bucket.
+  const normalisedLaps = useMemo(
+    () =>
+      Object.values(laps).map((lap) => ({
+        ...lap,
+        time: lap.lapTime ?? lap.time ?? 0,
+        isValid: lap.isValid ?? true,
+      })),
+    [laps],
+  );
+
   return (
     <SpaceBetween size="s">
       <Container disableContentPaddings>
@@ -94,7 +113,7 @@ const RaceLapInformation: React.FC<RaceLapInformationProps> = ({
           <LapTable
             variant="embedded"
             header={t('timekeeper.recorded-laps')}
-            laps={Object.values(laps).map(lap => ({ ...lap, time: lap.lapTime ?? lap.time ?? 0, isValid: true }))}
+            laps={normalisedLaps}
             averageLapInformation={overlayInformation?.averageLaps}
             rankingMethod={selectedEvent.raceConfig.rankingMethod}
             readonly={true}
@@ -102,7 +121,7 @@ const RaceLapInformation: React.FC<RaceLapInformationProps> = ({
         </Container>
         <Container>
           <RaceGraph
-            laps={Object.values(laps).map(lap => ({ ...lap, time: lap.lapTime ?? lap.time ?? 0, isValid: true }))}
+            laps={normalisedLaps}
             fastestEventLapTime={thresholds.fastestLapTime}
             fastestEventAvgLap={thresholds.fastestAverageLap}
             raceFormat={selectedEvent.raceConfig.rankingMethod}
