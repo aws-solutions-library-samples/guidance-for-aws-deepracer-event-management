@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
 import { graphqlMutate } from '../graphql/graphqlHelpers';
 import * as mutations from '../graphql/mutations';
+import awsconfig from '../config.json';
 import { Breadcrumbs } from './fleets/support-functions/supportFunctions';
 
 import {
@@ -138,6 +139,18 @@ const AdminCarActivation: React.FC<AdminCarActivationProps> = (props) => {
         response['region'] +
         '"'
     );
+    // The car invokes this Lambda after SSM registration to register its
+    // chassis serial — see `lib/lambdas/register_car_serial/`. The name is
+    // surfaced via cfn.outputs → config.json. Older deployments without
+    // this config field still work: the script's `-l` flag is optional.
+    const carActivationConfig =
+      (awsconfig as unknown as {
+        CarActivation?: { registerCarSerialFunctionName?: string };
+      }).CarActivation;
+    const serialLambdaArg = carActivationConfig?.registerCarSerialFunctionName
+      ? ' -l ' + carActivationConfig.registerCarSerialFunctionName
+      : '';
+
     setUpdateCommand(
       'curl -O ' +
         dremUrl +
@@ -153,6 +166,7 @@ const AdminCarActivation: React.FC<AdminCarActivationProps> = (props) => {
         response['activationId'] +
         ' -r ' +
         response['region'] +
+        serialLambdaArg +
         wifiActivation +
         (installCustomConsole ? ' -u' : '')
     );

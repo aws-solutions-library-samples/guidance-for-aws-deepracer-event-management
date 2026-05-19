@@ -22,8 +22,11 @@ ssmRegion=NULL
 ssid=NULL
 wifiPass=NULL
 upgradeConsole=NULL
+# Name of the registerCarSerial Lambda — passed in by the DREM activation
+# UI so the car can call back with its chassis serial after SSM register.
+serialLambda=NULL
 
-optstring=":h:p:c:i:r:s:w:u"
+optstring=":h:p:c:i:l:r:s:w:u"
 
 while getopts $optstring arg; do
     case ${arg} in
@@ -31,6 +34,7 @@ while getopts $optstring arg; do
         p) varPass=${OPTARG};;
         c) ssmCode=${OPTARG};;
         i) ssmId=${OPTARG};;
+        l) serialLambda=${OPTARG};;
         r) ssmRegion=${OPTARG};;
         s) ssid=${OPTARG};;
         w) wifiPass=${OPTARG};;
@@ -233,6 +237,33 @@ SSM_ACTIVATION()
         service amazon-ssm-agent start
 
         echo -e -n "\n- Car ${varHost} should be visible in DREM in ~5 minutes"
+
+        # Send the car's hardware chassis serial to DREM so:
+        #   1. the new managed-instance gets a ChassisSerial tag, letting
+        #      DREM track history across hostname/fleet changes;
+        #   2. any older managed-instance with the same serial (i.e. this
+        #      same physical car activated previously) is deregistered,
+        #      avoiding duplicate SSM entries for one car.
+        # All best-effort — activation still succeeds if the callback fails.
+        if [ ${serialLambda} != NULL ]; then
+            chassisSerial=$(cat /sys/class/dmi/id/chassis_serial 2>/dev/null | tr -d '[:space:]')
+            miId=$(grep -o '"ManagedInstanceID"\s*:\s*"mi-[a-z0-9]*"' /var/lib/amazon/ssm/registration 2>/dev/null | grep -o 'mi-[a-z0-9]*' | head -1)
+            if [ -n "${chassisSerial}" ] && [ -n "${miId}" ]; then
+                echo -e -n "\n- Posting chassis serial ${chassisSerial} for ${miId}"
+                payload=$(printf '{"managedInstanceId":"%s","chassisSerial":"%s"}' "${miId}" "${chassisSerial}")
+                aws lambda invoke \
+                    --region "${ssmRegion}" \
+                    --function-name "${serialLambda}" \
+                    --payload "$(echo -n "${payload}" | base64)" \
+                    --cli-binary-format raw-in-base64-out \
+                    /tmp/serial-callback.json >/dev/null 2>&1 \
+                    && echo -e -n " — done" \
+                    || echo -e -n " — failed (non-fatal)"
+                rm -f /tmp/serial-callback.json
+            else
+                echo -e -n "\n- Skipping chassis-serial callback (serial='${chassisSerial}', miId='${miId}')"
+            fi
+        fi
     fi
 }
 

@@ -41,6 +41,10 @@ export interface CarManagerProps {
 
 export class CarManager extends Construct {
   public readonly carStatusDataHandlerLambda: lambdaPython.PythonFunction;
+  // Exposed so drem-app-stack can publish a CfnOutput → cfn.outputs →
+  // amplify config → install-script CLI arg. The car uses this name to
+  // `aws lambda invoke` the chassis-serial callback after registration.
+  public readonly registerCarSerialFunctionName: string;
 
   constructor(scope: Construct, id: string, props: CarManagerProps) {
     super(scope, id);
@@ -274,6 +278,45 @@ export class CarManager extends Construct {
         resources: ['*'],
       })
     );
+
+    // Direct-invoke Lambda the car calls after SSM agent registration —
+    // dedups other managed-instances sharing the same chassis serial and
+    // tags the new one. See lib/lambdas/register_car_serial/index.py.
+    const register_car_serial_handler = new StandardLambdaPythonFunction(this, 'register_car_serial_handler', {
+      entry: 'lib/lambdas/register_car_serial/',
+      description: 'Tag managed-instance with chassis serial + dedup older instances',
+      index: 'index.py',
+      handler: 'lambda_handler',
+      timeout: Duration.minutes(1),
+      runtime: props.lambdaConfig.runtime,
+      memorySize: 128,
+      architecture: props.lambdaConfig.architecture,
+      bundling: {
+        image: props.lambdaConfig.bundlingImage,
+      },
+      layers: [props.lambdaConfig.layersConfig.powerToolsLayer],
+      environment: {
+        POWERTOOLS_SERVICE_NAME: 'register_car_serial',
+        LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+      },
+    });
+    register_car_serial_handler.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'ssm:AddTagsToResource',
+          'ssm:DeregisterManagedInstance',
+          'tag:GetResources',
+        ],
+        resources: ['*'],
+      })
+    );
+
+    // Grant the car (running under ssmRunCommandRole, the role we pass
+    // to ssm.create_activation) permission to invoke ONLY this Lambda —
+    // not the broader Lambda namespace.
+    register_car_serial_handler.grantInvoke(ssmRunCommandRole);
+    this.registerCarSerialFunctionName = register_car_serial_handler.functionName;
 
     // device_activation_clean method - clean up unactivated and expired hybrid activations
     const device_activation_clean_handler = new StandardLambdaPythonFunction(this, 'device_activation_clean_handler', {

@@ -28,6 +28,8 @@ with open("cfn.outputs") as json_file:
             cwRumAppMonitorConfig = key["OutputValue"]
         if key["OutputKey"] == "appsyncApiKey":
             appsyncApiKey = key["OutputValue"]
+        if key["OutputKey"].startswith("registerCarSerialFunctionName"):
+            registerCarSerialFunctionName = key["OutputValue"]
 
     output_data = {
         "Auth": {
@@ -54,6 +56,9 @@ with open("cfn.outputs") as json_file:
                 "region": cwRumAppMonitorRegion,
                 "config": cwRumAppMonitorConfig,
             },
+        },
+        "CarActivation": {
+            "registerCarSerialFunctionName": registerCarSerialFunctionName,
         },
     }
 
