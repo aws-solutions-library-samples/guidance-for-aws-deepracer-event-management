@@ -198,6 +198,10 @@ export const ColumnConfiguration = (
             label: i18next.t('devices.loggingcapable'),
           },
           {
+            id: 'chassisSerial',
+            label: i18next.t('devices.chassis-serial'),
+          },
+          {
             id: 'actions',
             label: i18next.t('devices.actions'),
           },
@@ -306,6 +310,14 @@ export const ColumnConfiguration = (
         width: 150,
       },
       {
+        id: 'chassisSerial',
+        header: i18next.t('devices.chassis-serial'),
+        cell: (item: Car) => item.ChassisSerial || '-',
+        sortingField: 'ChassisSerial',
+        minWidth: 150,
+        width: 200,
+      },
+      {
         id: 'actions',
         header: '',
         cell: (item: Car) => <ItemActions item={item} />,
@@ -341,6 +353,11 @@ export const FilteringProperties = () => {
     {
       key: 'CoreSWVersion',
       propertyLabel: i18next.t('devices.core-sw-version'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'ChassisSerial',
+      propertyLabel: i18next.t('devices.chassis-serial'),
       operators: [':', '!:', '=', '!='],
     },
     {

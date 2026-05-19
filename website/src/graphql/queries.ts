@@ -209,6 +209,7 @@ export const listCars = /* GraphQL */ `
         listCars(online: $online) {
             ActivationId
             AgentVersion
+            ChassisSerial
             ComputerName
             DeepRacerCoreVersion
             DeviceUiPassword

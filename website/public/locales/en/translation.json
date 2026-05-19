@@ -270,6 +270,7 @@
     "instance": "Instance",
     "last-ping-time": "Last ping time",
     "loggingcapable": "Logging capable",
+    "chassis-serial": "Chassis serial",
     "loading": "Loading devices",
     "offline": "Offline",
     "online": "Online",

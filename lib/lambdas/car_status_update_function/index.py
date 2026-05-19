@@ -133,6 +133,7 @@ def fetch_and_process_tags(instance):
         "fleetId",
         "DeviceUiPassword",
         "Type",
+        "ChassisSerial",
     ]
     for tag in tags_response["TagList"]:
         if tag["Key"] in tag_keys_to_copy:
@@ -175,6 +176,7 @@ def clean_instance_data(instance):
             "DeviceUiPassword",
             "DeepRacerCoreVersion",
             "LoggingCapable",
+            "ChassisSerial",
         ]
 
     # Create a new dict with only the allowed fields
@@ -211,6 +213,7 @@ def send_status_update(instances):
             DeviceUiPassword
             DeepRacerCoreVersion
             LoggingCapable
+            ChassisSerial
         }
     }
     """

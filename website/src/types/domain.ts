@@ -129,6 +129,7 @@ export interface Car {
     fleetId?: string;
     fleetName?: string;
     LoggingCapable?: boolean;
+    ChassisSerial?: string;
     modelIds?: string[];
     taillightColor?: string;
     lastSeen?: string;

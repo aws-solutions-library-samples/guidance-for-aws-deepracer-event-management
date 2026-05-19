@@ -505,6 +505,10 @@ export class CarManager extends Construct {
       DeviceUiPassword: GraphqlType.string(),
       DeepRacerCoreVersion: GraphqlType.string(),
       LoggingCapable: GraphqlType.boolean(),
+      // Set by `register_car_serial` after activation. Stable per
+      // physical car — survives fleet/hostname renames, so the admin
+      // cars list can use it to spot duplicates and track history.
+      ChassisSerial: GraphqlType.string(),
     };
 
     const car_online_object_type = new ObjectType('carOnline', {
