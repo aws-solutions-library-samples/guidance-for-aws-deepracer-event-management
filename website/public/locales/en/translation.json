@@ -892,6 +892,8 @@
   "stats.total-countries": "Countries",
   "stats.completion-ratio": "Lap Completion",
   "stats.events-by-country": "Events by Country",
+  "stats.bar-chart": "Bar Chart",
+  "stats.world-map": "World Map",
   "stats.activity-over-time": "Activity Over Time",
   "stats.event-type-breakdown": "Event Types",
   "stats.fastest-laps-ever": "Fastest Laps Ever",

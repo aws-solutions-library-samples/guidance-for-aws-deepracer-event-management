@@ -10,6 +10,7 @@ import {
   Spinner,
   StatusIndicator,
   Table,
+  Tabs,
 } from '@cloudscape-design/components';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +21,7 @@ import {
 import { GetTrackTypeNameFromId } from '../../admin/events/support-functions/raceConfig';
 import { BarChart } from '../../components/charts/BarChart';
 import { categoricalPalette } from '../../components/charts/chartDefaults';
+import { ChoroplethMap } from '../../components/charts/ChoroplethMap';
 import { PieChart } from '../../components/charts/PieChart';
 import { SyncedActivityCharts } from '../../components/charts/SyncedActivityCharts';
 import { FastestLapEntry, useStatsApi } from '../../hooks/useStatsApi';
@@ -169,14 +171,34 @@ export function GlobalDashboard() {
 
         {/* Events by Country */}
         <Container header={<Header variant="h2">{t('stats.events-by-country')}</Header>}>
-          <BarChart
-            labels={stats.eventsByCountry.map((c) => [c.countryCode, flagEmoji(c.countryCode)])}
-            values={stats.eventsByCountry.map((c) => c.events)}
-            seriesLabel={t('stats.events')}
-            xTitle={t('stats.country')}
-            yTitle={t('stats.events')}
-            color={categoricalPalette[0]}
-            height={300}
+          <Tabs
+            tabs={[
+              {
+                id: 'bar',
+                label: t('stats.bar-chart'),
+                content: (
+                  <BarChart
+                    labels={stats.eventsByCountry.map((c) => [c.countryCode, flagEmoji(c.countryCode)])}
+                    values={stats.eventsByCountry.map((c) => c.events)}
+                    seriesLabel={t('stats.events')}
+                    xTitle={t('stats.country')}
+                    yTitle={t('stats.events')}
+                    color={categoricalPalette[0]}
+                    height={300}
+                  />
+                ),
+              },
+              {
+                id: 'map',
+                label: t('stats.world-map'),
+                content: (
+                  <ChoroplethMap
+                    data={stats.eventsByCountry}
+                    height={400}
+                  />
+                ),
+              },
+            ]}
           />
         </Container>
 
