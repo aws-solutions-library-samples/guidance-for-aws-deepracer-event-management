@@ -26,6 +26,7 @@
     "aws-rum-web": "^1.25.0",
     "chart.js": "^4.5.1",
     "chartjs-adapter-date-fns": "^3.0.0",
+    "chartjs-chart-geo": "^4.3.6",
     "classnames": "^2.5.1",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",
@@ -39,7 +40,9 @@
     "react-i18next": "^15.7.4",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.30.3",
+    "topojson-client": "^3.1.0",
     "web-vitals": "^4.2.4",
+    "world-atlas": "^2.0.2",
     "xstate": "^4.38.3"
   },
   "scripts": {
@@ -57,6 +60,7 @@
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
     "@types/react-router-dom": "^5.3.3",
+    "@types/topojson-client": "^3.1.5",
     "@vitejs/plugin-react": "^5.1.4",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
