@@ -206,7 +206,7 @@ export const EventSelectorModal: React.FC<EventSelectorModalProps> = ({ visible,
   };
 
   return (
-    <Modal visible={visible} header={t('event-selector-modal.event-section-header')}>
+    <Modal visible={visible} onDismiss={onDismiss} header={t('event-selector-modal.event-section-header')}>
       <Form
         actions={
           <Box float="right">

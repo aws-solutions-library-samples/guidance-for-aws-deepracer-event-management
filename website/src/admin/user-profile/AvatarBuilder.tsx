@@ -86,10 +86,28 @@ const TAIL_LIGHT_COLOURS = [
 
 export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
     const { t } = useTranslation();
-    const [, dispatch] = useStore();
-    const [config, setConfig] = useState<AvatarConfig>(DEFAULT_CONFIG);
-    const [highlightColour, setHighlightColour] = useState<string>('');
-    const [isConfigured, setIsConfigured] = useState<boolean>(false);
+    const [state, dispatch] = useStore();
+    // Seed initial state from the userProfile store if TopNav has already
+    // hydrated it on app load — gives an immediate paint with the correct
+    // avatar instead of the default-yellow fallback while the fetch below
+    // is in flight. The post-fetch setConfig still runs, so an out-of-date
+    // store value gets corrected.
+    const storeProfile = state.userProfile;
+    const seededConfig = (() => {
+        if (!storeProfile?.avatarConfig) return DEFAULT_CONFIG;
+        try {
+            return { ...DEFAULT_CONFIG, ...JSON.parse(storeProfile.avatarConfig) };
+        } catch {
+            return DEFAULT_CONFIG;
+        }
+    })();
+    const [config, setConfig] = useState<AvatarConfig>(seededConfig);
+    const [highlightColour, setHighlightColour] = useState<string>(
+        storeProfile?.highlightColour ?? '',
+    );
+    const [isConfigured, setIsConfigured] = useState<boolean>(
+        !!storeProfile?.avatarConfig,
+    );
     const [saving, setSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
 

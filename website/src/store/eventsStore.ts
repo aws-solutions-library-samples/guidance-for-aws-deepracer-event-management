@@ -13,14 +13,22 @@ const configureStore = (): void => {
     UPDATE_EVENT: (curState: GlobalState, event: Event): Partial<GlobalState> => {
       console.debug('UPDATE_EVENT DISPATCH FUNCTION');
       const currentEvents = curState.events?.events || [];
-      const updatedEvents: EventsState = { ...(curState.events || { events: [], isLoading: false }) };
       const eventIndex = currentEvents.findIndex((e) => e.eventId === event.eventId);
-      if (eventIndex === -1) {
-        updatedEvents.events.push(event);
-      } else {
-        updatedEvents.events[eventIndex] = event;
-      }
-      return { events: updatedEvents };
+      // Build a NEW array (don't mutate the existing one) so downstream
+      // consumers using referential equality (e.g. useEffect deps on the
+      // events array) actually re-run. The previous in-place push/assign
+      // was why the TopNav event-selector dropdown stayed stale after
+      // creating a new event — both the eager dispatch from createEvent
+      // and the onAddedEvent subscription wrote to the same array.
+      const nextEvents = eventIndex === -1
+        ? [...currentEvents, event]
+        : currentEvents.map((e, i) => (i === eventIndex ? event : e));
+      return {
+        events: {
+          ...(curState.events || { events: [], isLoading: false }),
+          events: nextEvents,
+        },
+      };
     },
     DELETE_EVENTS: (curState: GlobalState, eventIdsToDelete: string[]): Partial<GlobalState> => {
       console.debug('DELETE_EVENT DISPATCH FUNCTION');
