@@ -8,6 +8,7 @@ import configureNotificationsStore from './notificationsStore';
 import configureRacesStore from './racesStore';
 import configureSideNavStore from './sideNavStore';
 import configureSplitPanelStore from './splitPanelStore';
+import configureUserProfileStore from './userProfileStore';
 import configureUsersStore from './usersStore';
 
 const initDataStores = () => {
@@ -18,6 +19,7 @@ const initDataStores = () => {
   configureEventsStore();
   configureModelsStore();
   configureAssetsStore();
+  configureUserProfileStore();
 
   configureSideNavStore();
   configureSplitPanelStore();
