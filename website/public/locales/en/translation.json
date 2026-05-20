@@ -903,6 +903,7 @@
   "stats.filter-by-event-type": "Filter by event type",
   "stats.no-laps-on-track": "No laps recorded on this track yet",
   "stats.racer": "Racer",
+  "stats.racers": "Racers",
   "stats.event": "Event",
   "stats.event-type": "Event type",
   "stats.track": "Track",

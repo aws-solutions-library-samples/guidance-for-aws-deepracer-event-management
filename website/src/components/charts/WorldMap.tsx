@@ -173,11 +173,10 @@ export function WorldMap({ data, height = 400 }: WorldMapProps) {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(255, 255, 255, 0.96)',
-            borderColor: theme.axisColor,
-            borderWidth: 1,
-            titleColor: theme.tickColor,
-            bodyColor: theme.tickColor,
+            // chart.js default styling (translucent dark + white text)
+            // reads cleanly in both light and dark modes — better than
+            // forcing a theme-tied colour like the other DREM charts do,
+            // which all look washed out against dark mode.
             displayColors: false,
             callbacks: {
               title(items) {
