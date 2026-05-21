@@ -161,7 +161,7 @@ export function WorldMap({ data, height = 400 }: WorldMapProps) {
             // colour so it tracks with dark mode (vs Steve's hardcoded
             // #999999 which would look off against the dark map).
             borderColor: theme.axisColor,
-            borderWidth: 0.5,
+            borderWidth: 1,
           },
         ],
       },
