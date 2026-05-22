@@ -78,10 +78,11 @@ interface AvatarBuilderProps {
     // no external props needed — reads/writes from RacerProfile table via AppSync
 }
 
-// DeepRacer tail light colour palette (confirmed from car console)
+// DeepRacer tail light colour palette (confirmed from car console).
+// White is reserved as the "race finished" stop colour and not selectable.
 const TAIL_LIGHT_COLOURS = [
     '#0000FF', '#1E8FFF', '#800080', '#673ab7', '#FF00FF', '#e91e63',
-    '#FF0090', '#FF0000', '#FF8200', '#FFFF00', '#00FF00', '#417505', '#FFFFFF',
+    '#FF0090', '#FF0000', '#FF8200', '#FFFF00', '#00FF00', '#417505',
 ];
 
 export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {

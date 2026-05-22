@@ -47,6 +47,7 @@ import RaceTimer from '../components/raceTimer';
 import { getAverageWindows } from '../support-functions/averageClaculations';
 import { defaultCar, defaultLap } from '../support-functions/raceDomain';
 import { stateMachine } from '../support-functions/stateMachine';
+import { setTaillightFromProfile, setTaillightColour, stopCar } from '../support-functions/taillightColour';
 
 import styles from './racePage.module.css';
 
@@ -80,6 +81,7 @@ export const RacePage = ({
   const [btnEndRace, setBtnEndRace] = useState(false);
   const [btnStartRace, setBtnStartRace] = useState(false);
   const [currentCar, setCurrentCar] = useState(selectedCar || defaultCar);
+  const [taillightColourName, setTaillightColourName] = useState<string | null>(null);
 
   const [
     carResetCounter,
@@ -92,6 +94,7 @@ export const RacePage = ({
   const raceTimerRef = useRef();
   const startTimeRef = useRef();
   const lastAutLapTimestampMsRef = useRef(null);
+  const stopColourRef = useRef<string | null>(null);
   const [PublishOverlay] = usePublishOverlay();
 
   //populate the laps on page refresh, without this laps array in the overlay is empty
@@ -108,6 +111,13 @@ export const RacePage = ({
       },
       endRace: () => {
         console.debug('Ending race state');
+        if (currentCar.InstanceId) {
+          if (stopColourRef.current) {
+            setTaillightColour(currentCar.InstanceId, stopColourRef.current);
+            stopColourRef.current = null;
+          }
+          stopCar(currentCar.InstanceId);
+        }
         setWarningModalVisible(true);
         // Buttons
         setBtnEndRace(true);
@@ -377,14 +387,43 @@ export const RacePage = ({
                   <Header variant="h3">{raceInfo.username}</Header>
                 </span>
                 <span key="current-car">
-                  <Header variant="h5">{t('timekeeper.current-car')}:</Header>
+                  <Header variant="h5">
+                    {t('timekeeper.current-car')}:
+                    {taillightColourName && (
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          backgroundColor: taillightColourName,
+                          marginLeft: 8,
+                          verticalAlign: 'middle',
+                          border: '1px solid #666',
+                        }}
+                        title={`Taillight: ${taillightColourName}`}
+                      />
+                    )}
+                  </Header>
                   <Select
                     selectedOption={{
                       label: currentCar.ComputerName,
                       value: currentCar.Computername,
                     }}
                     onChange={({ detail }) => {
-                      setCurrentCar(detail.selectedOption.value);
+                      const car = detail.selectedOption.value;
+                      if (currentCar.InstanceId && stopColourRef.current) {
+                        setTaillightColour(currentCar.InstanceId, stopColourRef.current);
+                      }
+                      setCurrentCar(car);
+                      if (car.InstanceId && raceInfo.username) {
+                        setTaillightFromProfile(car.InstanceId, raceInfo.username).then((result) => {
+                          if (result) {
+                            stopColourRef.current = result.stopColour;
+                            setTaillightColourName(result.raceColour);
+                          }
+                        });
+                      }
                     }}
                     options={cars.map((car) => {
                       return { label: car['ComputerName'], value: car };

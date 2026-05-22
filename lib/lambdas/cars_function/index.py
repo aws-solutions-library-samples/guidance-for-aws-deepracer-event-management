@@ -36,6 +36,7 @@ colors = {
     "green": {"blue_pwm": 0, "green_pwm": 9882180, "red_pwm": 4862660},
     "violet": {"blue_pwm": 9999825, "green_pwm": 0, "red_pwm": 9999825},
     "lime": {"blue_pwm": 0, "green_pwm": 9999825, "red_pwm": 9999825},
+    "white": {"blue_pwm": 9999825, "green_pwm": 9999825, "red_pwm": 9999825},
 }
 
 
