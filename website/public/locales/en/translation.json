@@ -280,7 +280,7 @@
     "cars": "Cars",
     "notifications": {
       "dismiss-message": "Dismiss message",
-      "label-start": "Creatin car label for ",
+      "label-start": "Creating car label for ",
       "label-ready": "Car Label is ready for ",
       "label-error": "Error creating car label for",
       "fetch-start": "Fetching car logs for ",
