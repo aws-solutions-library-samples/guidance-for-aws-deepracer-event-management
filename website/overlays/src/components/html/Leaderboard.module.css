@@ -1,0 +1,239 @@
+.leaderboard {
+  position: fixed;
+  /* Centred on the broadcast canvas during the idle state. The translate
+     handles the variable panel height (the row count is fixed at 4 today
+     but the event-name + footer rows can wrap). Transform doesn't
+     interact with the opacity transition. */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1200px;
+  padding: 32px 48px;
+  background: linear-gradient(135deg, rgba(16, 24, 40, 0.92), rgba(28, 38, 64, 0.88));
+  border-radius: 16px;
+  color: #ffffff;
+  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+  opacity: 0;
+  transition: opacity 1s cubic-bezier(0.65, 0, 0.35, 1);
+  pointer-events: none;
+}
+
+.visible {
+  opacity: 1;
+}
+
+.eventName {
+  font-size: 36px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 24px;
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  position: relative;
+  display: grid;
+  /* rank | avatar | name | gap | time. Each cell is its own grid column so
+     the avataaars SVG can't expand the row — the avatar column is fixed at
+     48px and clips. */
+  grid-template-columns: 80px 48px 1fr auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 6px solid transparent;
+  border-radius: 8px;
+  font-size: 28px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.rank1 {
+  border-left-color: #d4af37; /* gold */
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.18), rgba(255, 255, 255, 0.04));
+}
+
+.rank2 {
+  border-left-color: #c0c0c0; /* silver */
+  background: linear-gradient(90deg, rgba(192, 192, 192, 0.15), rgba(255, 255, 255, 0.04));
+}
+
+.rank3 {
+  border-left-color: #cd7f32; /* bronze */
+  background: linear-gradient(90deg, rgba(205, 127, 50, 0.16), rgba(255, 255, 255, 0.04));
+}
+
+/*
+ * Racer's personal highlight colour — drawn as a left-to-right gradient
+ * BEHIND the row content. `::before` keeps it out of grid auto-placement
+ * entirely (a real DOM child with `position: absolute` was getting its
+ * positioning overridden by a sibling rule and ended up taking a grid
+ * cell, pushing the time to a second visual line for racers with a
+ * profile colour set). When `--racer-highlight` isn't set, the gradient
+ * resolves to fully transparent and the pseudo-element is invisible —
+ * so non-highlighted rows look unchanged.
+ */
+.row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    var(--racer-highlight, transparent) 0%,
+    transparent 65%
+  );
+  opacity: 0.75;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.row > * {
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * Highlight applied to the just-finished racer's row for 30s after a
+ * race completes. A bright glow pulses in immediately and fades out over
+ * 12s via the keyframe animation; the row itself stays in place for the
+ * remainder of the 30-second window (managed by `useOverlayData`'s
+ * highlightTimer) so the audience has time to read where the racer
+ * landed before the leaderboard reverts to its natural top-4 ordering.
+ *
+ * Drawn as an `::after` overlay so it stacks above the row content
+ * without fighting the podium colour gradients on `.row`. Each
+ * highlight cycle restarts because the key on the <li> changes when the
+ * username swaps, which remounts the element and replays the animation.
+ */
+.highlighted::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 2;
+  animation: leaderboardHighlight 12s ease-out forwards;
+}
+
+@keyframes leaderboardHighlight {
+  0% {
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 255, 255, 0.85),
+      0 0 18px 2px rgba(255, 255, 255, 0.55);
+    opacity: 1;
+  }
+  60% {
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+      0 0 6px 0 rgba(255, 255, 255, 0.18);
+    opacity: 1;
+  }
+  100% {
+    background: transparent;
+    box-shadow: none;
+    opacity: 0;
+  }
+}
+
+.rank {
+  font-weight: 700;
+}
+
+.avatar {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/*
+ * Avataaars renders an SVG with explicit `width`/`height` attributes
+ * (264×280) — those need `!important` to override consistently. Without
+ * this the SVG spills out of the row and breaks the grid layout for any
+ * row that has a real avatar set. Same approach as the public leaderboard.
+ */
+.avatar :global(svg) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.avatarPlaceholder {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+/*
+ * Country flag emoji shown in a small circle pinned to the bottom-right of
+ * the avatar. Matches the pattern used by the public leaderboard.
+ */
+.flagOverlay {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 18px;
+  line-height: 1;
+  background: rgba(16, 24, 40, 0.95);
+  border-radius: 50%;
+  padding: 1px 2px;
+}
+
+/* No avatar but we do have a flag: render it as the identity icon. */
+.flagSolo {
+  font-size: 36px;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 48px;
+  min-width: 48px;
+  text-align: center;
+}
+
+.name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.gap {
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 22px;
+  min-width: 110px;
+  text-align: right;
+}
+
+.footer {
+  margin-top: 24px;
+  text-align: right;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.6);
+}
