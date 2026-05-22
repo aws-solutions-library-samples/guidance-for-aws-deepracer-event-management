@@ -713,6 +713,14 @@
       "no-car-selected-error": "Select a car or skip",
       "timekeeper": "Timekeeper",
       "submit-race": "Submit race"
+    },
+    "taillight": {
+      "label": "Car tail-light colour",
+      "description": "Sent to the assigned car when you continue. Defaults to the racer's profile colour — click a swatch to override, or ✕ to revert.",
+      "source-override": "override",
+      "source-racer": "racer's profile colour",
+      "source-default": "default (white)",
+      "revert": "Use the racer's colour"
     }
   },
   "event-selector-modal.select-track": "Track",

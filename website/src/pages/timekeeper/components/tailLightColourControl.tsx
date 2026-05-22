@@ -1,13 +1,8 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import FormField from '@cloudscape-design/components/form-field';
 import { resolveRacingColour } from '../support-functions/tailLightColour';
-
-// The colours racers can pick as their profile highlight (mirrors AvatarBuilder).
-// Convenience swatches only — the backend now accepts any exact RGB.
-const SWATCHES = [
-  '#0000FF', '#1E8FFF', '#800080', '#673ab7', '#FF00FF', '#e91e63',
-  '#FF0090', '#FF0000', '#FF8200', '#FFFF00', '#00FF00', '#417505', '#FFFFFF',
-];
+import { TAIL_LIGHT_COLOURS } from '../../../constants/tailLightColours';
 
 interface TailLightColourControlProps {
   racerHighlightColour?: string | null;
@@ -31,12 +26,13 @@ export const TailLightColourControl: React.FC<TailLightColourControlProps> = ({
   override,
   setOverride,
 }) => {
+  const { t } = useTranslation();
   const racingColour = resolveRacingColour(racerHighlightColour, override);
-  const source = override ? 'override' : racerHighlightColour ? "racer's profile colour" : 'default (white)';
+  const source = override ? t('timekeeper.taillight.source-override') : racerHighlightColour ? t('timekeeper.taillight.source-racer') : t('timekeeper.taillight.source-default');
   return (
     <FormField
-      label="Car tail-light colour"
-      description="Sent to the assigned car when you continue. Defaults to the racer's profile colour — click a swatch to override, or ✕ to revert."
+      label={t('timekeeper.taillight.label')}
+      description={t('timekeeper.taillight.description')}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -54,7 +50,7 @@ export const TailLightColourControl: React.FC<TailLightColourControlProps> = ({
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <button
             type="button"
-            title="Use the racer's colour"
+            title={t('timekeeper.taillight.revert')}
             onClick={() => setOverride(null)}
             style={{
               ...dot('transparent', override === null),
@@ -64,7 +60,7 @@ export const TailLightColourControl: React.FC<TailLightColourControlProps> = ({
           >
             ✕
           </button>
-          {SWATCHES.map((c) => (
+          {TAIL_LIGHT_COLOURS.map((c) => (
             <button
               key={c}
               type="button"
