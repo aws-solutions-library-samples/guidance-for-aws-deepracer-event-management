@@ -12,7 +12,7 @@ const racesStatusesWithFooterVisible = [
   'READY_TO_START',
   'RACE_IN_PROGRESS',
   'RACE_PAUSED',
-  //'RACE_FINSIHED',
+  //'RACE_FINISHED',
 ];
 
 interface RaceInfoFooterProps {
