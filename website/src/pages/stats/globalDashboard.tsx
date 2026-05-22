@@ -10,6 +10,7 @@ import {
   Spinner,
   StatusIndicator,
   Table,
+  Tabs,
 } from '@cloudscape-design/components';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +23,7 @@ import { BarChart } from '../../components/charts/BarChart';
 import { categoricalPalette } from '../../components/charts/chartDefaults';
 import { PieChart } from '../../components/charts/PieChart';
 import { SyncedActivityCharts } from '../../components/charts/SyncedActivityCharts';
+import { WorldMap } from '../../components/charts/WorldMap';
 import { FastestLapEntry, useStatsApi } from '../../hooks/useStatsApi';
 
 const ALL_TRACKS = 'ALL';
@@ -167,16 +169,42 @@ export function GlobalDashboard() {
           </ColumnLayout>
         </Container>
 
-        {/* Events by Country */}
+        {/* Events by Country — tab between world map ("where") and bar
+            chart ("exact comparable numbers"). */}
         <Container header={<Header variant="h2">{t('stats.events-by-country')}</Header>}>
-          <BarChart
-            labels={stats.eventsByCountry.map((c) => [c.countryCode, flagEmoji(c.countryCode)])}
-            values={stats.eventsByCountry.map((c) => c.events)}
-            seriesLabel={t('stats.events')}
-            xTitle={t('stats.country')}
-            yTitle={t('stats.events')}
-            color={categoricalPalette[0]}
-            height={300}
+          <Tabs
+            tabs={[
+              {
+                id: 'bar',
+                label: t('stats.bar-chart'),
+                content: (
+                  <BarChart
+                    labels={stats.eventsByCountry.map((c) => [c.countryCode, flagEmoji(c.countryCode)])}
+                    values={stats.eventsByCountry.map((c) => c.events)}
+                    seriesLabel={t('stats.events')}
+                    xTitle={t('stats.country')}
+                    yTitle={t('stats.events')}
+                    color={categoricalPalette[0]}
+                    height={300}
+                  />
+                ),
+              },
+              {
+                id: 'map',
+                label: t('stats.world-map'),
+                content: (
+                  <WorldMap
+                    data={stats.eventsByCountry.map((c) => ({
+                      countryCode: c.countryCode,
+                      events: c.events,
+                      racers: c.racers,
+                      laps: c.laps,
+                    }))}
+                    height={400}
+                  />
+                ),
+              },
+            ]}
           />
         </Container>
 

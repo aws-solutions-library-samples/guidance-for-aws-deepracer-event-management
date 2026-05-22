@@ -1,4 +1,9 @@
-import { Button, ButtonDropdown, SpaceBetween, BreadcrumbGroupProps } from '@cloudscape-design/components';
+import {
+  BreadcrumbGroupProps,
+  Button,
+  ButtonDropdown,
+  SpaceBetween,
+} from '@cloudscape-design/components';
 import { default as React, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -14,8 +19,8 @@ import { PageLayout } from '../components/pageLayout';
 import { PageTable } from '../components/pageTable';
 import { TableHeader } from '../components/tableConfig';
 import { useCarCmdApi } from '../hooks/useCarsApi';
-import { Breadcrumbs } from './fleets/support-functions/supportFunctions';
 import { Car } from '../types/domain';
+import { Breadcrumbs } from './fleets/support-functions/supportFunctions';
 
 type OnlineStatus = 'Online' | 'Offline';
 
@@ -65,9 +70,7 @@ const AdminDevices: React.FC = () => {
     };
   }, [refresh]);
 
-  function getLabels(event: React.MouseEvent): void {
-    event.preventDefault();
-
+  function getLabels(): void {
     selectedItems.forEach((selectedCar) => {
       getLabelSync(selectedCar.InstanceId, selectedCar.ComputerName);
     });
@@ -100,11 +103,7 @@ const AdminDevices: React.FC = () => {
           online={onlineBool}
           variant="primary"
         />
-        <Button 
-          variant="primary" 
-          onClick={() => getLabels({} as React.MouseEvent)} 
-          disabled={selectedItems.length === 0}
-        >
+        <Button variant="primary" onClick={getLabels} disabled={selectedItems.length === 0}>
           {selectedItems.length > 1
             ? t('label-printer.download-printable-labels')
             : t('label-printer.download-printable-label')}
@@ -141,7 +140,7 @@ const AdminDevices: React.FC = () => {
             nrSelectedItems={selectedItems.length}
             nrTotalItems={carsToDisplay.length}
             header={t('devices.header')}
-            actions={<HeaderActionButtons /> as any}
+            actions={(<HeaderActionButtons />) as any}
           />
         }
         itemsIsLoading={isLoading}
