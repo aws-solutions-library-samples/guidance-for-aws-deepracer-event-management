@@ -8,6 +8,8 @@ from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import AppSyncResolver
 from aws_lambda_powertools.logging import correlation_paths
 
+from taillight_colors import PALETTE, color_for
+
 tracer = Tracer()
 logger = Logger()
 app = AppSyncResolver()
@@ -29,18 +31,6 @@ ddbTable = dynamodb.Table(DDB_TABLE_NAME)
 carsHistoryTable = (
     dynamodb.Table(CARS_HISTORY_TABLE_NAME) if CARS_HISTORY_TABLE_NAME else None
 )
-
-
-colors = {
-    "blue": {"blue_pwm": 9999825, "green_pwm": 0, "red_pwm": 0},
-    "red": {"blue_pwm": 0, "green_pwm": 0, "red_pwm": 9999825},
-    "marigold": {"blue_pwm": 0, "green_pwm": 5097950, "red_pwm": 9999825},
-    "orchid purple": {"blue_pwm": 5019520, "green_pwm": 0, "red_pwm": 5019520},
-    "sky blue": {"blue_pwm": 9999825, "green_pwm": 5646960, "red_pwm": 1176450},
-    "green": {"blue_pwm": 0, "green_pwm": 9882180, "red_pwm": 4862660},
-    "violet": {"blue_pwm": 9999825, "green_pwm": 0, "red_pwm": 9999825},
-    "lime": {"blue_pwm": 0, "green_pwm": 9999825, "red_pwm": 9999825},
-}
 
 
 def check_and_run_car_status_step_function():
@@ -294,9 +284,7 @@ def carSetTaillightColor(resourceIds: List[str], selectedColor: str):
     try:
         logger.info(resourceIds)
 
-        color = colors.get(selectedColor.lower())
-        if color is None:
-            color = colors.get("Blue")
+        color = color_for(selectedColor)
 
         for instance_id in resourceIds:
             rosCommand = (
@@ -374,4 +362,4 @@ def carRestartService(resourceIds: List[str]):
 
 @app.resolver(type_name="Query", field_name="availableTaillightColors")
 def availableTaillightColors():
-    return list(colors.keys())
+    return list(PALETTE.keys())
