@@ -219,6 +219,12 @@ export class Statistics extends NestedStack {
       definition: {
         username: GraphqlType.string({ isRequired: true }),
         eventName: GraphqlType.string({ isRequired: true }),
+        // Event-level classification (PRIVATE_WORKSHOP / AWS_SUMMIT / etc.).
+        // Exposed on each lap so the UI can filter the "fastest ever" view
+        // by event type — private/workshop timings are less rigorous than
+        // AWS Summit / re:Invent events, so narrowing to verified-timing
+        // events makes the leaderboard trustworthy.
+        typeOfEvent: GraphqlType.string({ isRequired: true }),
         trackType: GraphqlType.string({ isRequired: true }),
         lapTimeMs: GraphqlType.float({ isRequired: true }),
         eventDate: GraphqlType.string({ isRequired: true }),
@@ -226,6 +232,18 @@ export class Statistics extends NestedStack {
       directives: [Directive.apiKey(), Directive.cognito('admin', 'operator', 'commentator')],
     });
     props.appsyncApi.schema.addType(fastestLapEntryType);
+
+    // Per-track top-N. `fastestLapsEver` already gives the global top 10
+    // across all tracks — this gives the top 10 for each specific track so
+    // the UI can switch and show e.g. fastest ever on re:Invent 2018.
+    const fastestLapsByTrackType = new ObjectType('FastestLapsByTrack', {
+      definition: {
+        trackType: GraphqlType.string({ isRequired: true }),
+        entries: fastestLapEntryType.attribute({ isList: true, isRequired: true }),
+      },
+      directives: [Directive.apiKey(), Directive.cognito('admin', 'operator', 'commentator')],
+    });
+    props.appsyncApi.schema.addType(fastestLapsByTrackType);
 
     const globalStatsType = new ObjectType('GlobalStats', {
       definition: {
@@ -239,6 +257,7 @@ export class Statistics extends NestedStack {
         eventTypeBreakdown: eventTypeStatType.attribute({ isList: true, isRequired: true }),
         trackTypeBreakdown: trackTypeStatType.attribute({ isList: true, isRequired: true }),
         fastestLapsEver: fastestLapEntryType.attribute({ isList: true, isRequired: true }),
+        fastestLapsByTrack: fastestLapsByTrackType.attribute({ isList: true, isRequired: true }),
       },
       directives: [Directive.apiKey(), Directive.cognito('admin', 'operator', 'commentator')],
     });

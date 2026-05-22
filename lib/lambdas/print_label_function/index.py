@@ -1,7 +1,7 @@
 import json
 import os
-import uuid
 import tempfile
+import uuid
 
 import boto3
 import http_response
@@ -125,7 +125,7 @@ def create_label_image(device_ipaddress, device_hostname, device_password):
         f"https://{qr_hostname}?epwd={qr_password}",
         box_size=6,
         border=0,
-    )
+    ).get_image()
     drawer.text(
         (670, 10),
         "Scan QR Code with Racing",

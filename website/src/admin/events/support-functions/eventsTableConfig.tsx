@@ -4,6 +4,7 @@ import awsconfig from '../../../config.json';
 import i18next from '../../../i18n';
 import { formatAwsDateTime } from '../../../support-functions/time';
 import { Event } from '../../../types/domain';
+import { EventTypeConfig, GetTypeOfEventNameFromId } from './eventDomain';
 import {
   GetRaceResetsNameFromId,
   GetRaceTypeNameFromId,
@@ -57,12 +58,22 @@ interface FilteringProperty {
   operators: string[];
 }
 
+/**
+ * Filtering option — pre-populates dropdown values for a property,
+ * matching the CloudScape PropertyFilter `FilteringOption` shape.
+ */
+interface FilteringOption {
+  propertyKey: string;
+  value: string;
+  label: string;
+}
+
 export const ColumnConfiguration = (
   getUserNameFromId: (userId: string) => string,
   allCarFleets: unknown = undefined
 ): TableConfiguration => {
   const returnObject = {
-    defaultVisibleColumns: ['eventName', 'eventDate', 'createdAt'],
+    defaultVisibleColumns: ['eventName', 'eventDate', 'typeOfEvent', 'createdAt'],
     visibleContentOptions: [
       {
         label: i18next.t('events.events-information'),
@@ -75,6 +86,10 @@ export const ColumnConfiguration = (
           {
             id: 'eventDate',
             label: i18next.t('events.event-date'),
+          },
+          {
+            id: 'typeOfEvent',
+            label: i18next.t('events.event-type'),
           },
           {
             id: 'trackType',
@@ -127,6 +142,12 @@ export const ColumnConfiguration = (
         header: i18next.t('events.event-date'),
         cell: (item: Event) => item.eventDate || '-',
         sortingField: 'eventDate',
+      },
+      {
+        id: 'typeOfEvent',
+        header: i18next.t('events.event-type'),
+        cell: (item: Event) => GetTypeOfEventNameFromId(item.typeOfEvent) || '-',
+        sortingField: 'typeOfEvent',
       },
       {
         id: 'trackType',
@@ -203,5 +224,24 @@ export const FilteringProperties = (): FilteringProperty[] => {
       propertyLabel: i18next.t('events.event-name'),
       operators: [':', '!:', '=', '!='],
     },
+    {
+      key: 'typeOfEvent',
+      propertyLabel: i18next.t('events.event-type'),
+      // typeOfEvent is an enum — only equality/inequality make sense.
+      operators: ['=', '!='],
+    },
   ].sort((a, b) => a.propertyLabel.localeCompare(b.propertyLabel));
+};
+
+/**
+ * Pre-populated filter values, used by the PropertyFilter to render a
+ * dropdown of valid `typeOfEvent` values instead of forcing the operator
+ * to type the raw enum string.
+ */
+export const FilteringOptions = (): FilteringOption[] => {
+  return EventTypeConfig().map((option) => ({
+    propertyKey: 'typeOfEvent',
+    value: option.value,
+    label: option.label,
+  }));
 };

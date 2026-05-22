@@ -59,6 +59,7 @@ export interface Event {
     eventName: string;
     eventDate?: string;
     eventType?: EventTypeEnum;
+    typeOfEvent?: string;
     countryCode?: string;
     description?: string;
     tracks?: Track[];

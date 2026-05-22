@@ -14,13 +14,17 @@ export interface GlobalStats {
   eventsByMonth: { month: string; events: number; races: number; laps: number }[];
   eventTypeBreakdown: { typeOfEvent: string; count: number }[];
   trackTypeBreakdown: { trackType: string; count: number; bestLapMs: number | null }[];
-  fastestLapsEver: {
-    username: string;
-    eventName: string;
-    trackType: string;
-    lapTimeMs: number;
-    eventDate: string;
-  }[];
+  fastestLapsEver: FastestLapEntry[];
+  fastestLapsByTrack: { trackType: string; entries: FastestLapEntry[] }[];
+}
+
+export interface FastestLapEntry {
+  username: string;
+  eventName: string;
+  typeOfEvent: string;
+  trackType: string;
+  lapTimeMs: number;
+  eventDate: string;
 }
 
 export function useStatsApi() {
