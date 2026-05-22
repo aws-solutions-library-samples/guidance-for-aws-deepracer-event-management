@@ -33,11 +33,15 @@ def main():
                         help="Export via GraphQL API instead of DynamoDB (no AWS infra access needed)")
     parser.add_argument("--endpoint", help="AppSync GraphQL endpoint URL (required with --api)")
     parser.add_argument("--token", help="Cognito JWT token (required with --api)")
+    parser.add_argument("--token-file", help="Path to a file containing the JWT (alternative to --token; keeps it out of shell history)")
     args = parser.parse_args()
 
     if args.api:
-        if not args.endpoint or not args.token:
-            parser.error("--api requires both --endpoint and --token")
+        if not args.endpoint or (not args.token and not args.token_file):
+            parser.error("--api requires --endpoint and one of --token / --token-file")
+        if args.token_file and not args.token:
+            with open(args.token_file, "r") as f:
+                args.token = f.read().strip()
         _export_via_api(args)
         return
 
