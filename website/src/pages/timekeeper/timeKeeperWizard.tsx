@@ -29,7 +29,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import WithEventSelected from '../../components/WithEventSelected';
-import { graphqlMutate } from '../../graphql/graphqlHelpers';
+import { graphqlMutate, graphqlQuery } from '../../graphql/graphqlHelpers';
 import * as mutations from '../../graphql/mutations';
 import { useCarCmdApi } from '../../hooks/useCarsApi';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
@@ -47,10 +47,12 @@ import { RacePage } from './pages/racePageLite';
 import { RaceSetupPage } from './pages/raceSetupPageLite';
 import { getAverageWindows } from './support-functions/averageClaculations';
 import { defaultRace } from './support-functions/raceDomain';
+import { getRacerProfile } from '../../graphql/queries';
+import { complementaryColour, resolveRacingColour } from './support-functions/tailLightColour';
 
 const LocalTimekeeperWizard = () => {
   const { t } = useTranslation();
-  const { carFetchLogs } = useCarCmdApi();
+  const { carFetchLogs, carsUpdateTaillightColor, carEmergencyStop } = useCarCmdApi();
   const [activeStepIndex, setActiveStepIndex] = useLocalStorage(
     'DREM-timekeeper-activeStepIndex',
     0
@@ -81,6 +83,9 @@ const LocalTimekeeperWizard = () => {
   const notificationId = '';
   const [warningModalVisible, setWarningModalVisible] = useState(false);
   const [startTime, setStartTime] = useState(undefined);
+  const [racerHighlightColour, setRacerHighlightColour] = useState(null);
+  const [colourOverride, setColourOverride] = useState(null);
+  const racingColour = resolveRacingColour(racerHighlightColour, colourOverride);
 
   // delete models from Cars
   async function carDeleteAllModels() {
@@ -99,6 +104,22 @@ const LocalTimekeeperWizard = () => {
   useEffect(() => {
     console.log('username:', race.username);
     setSelectedModels([]);
+    setColourOverride(null);
+    if (!race.username) {
+      setRacerHighlightColour(null);
+      return;
+    }
+    let cancelled = false;
+    graphqlQuery(getRacerProfile, { username: race.username })
+      .then((data) => {
+        if (!cancelled) setRacerHighlightColour(data?.getRacerProfile?.highlightColour ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setRacerHighlightColour(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [race.username]);
 
   const [state, dispatch] = useStore();
@@ -208,6 +229,13 @@ const LocalTimekeeperWizard = () => {
   };
 
   const raceIsDoneHandler = () => {
+    // Race over: switch the tail light to the contrasting "stopped" colour and
+    // send an all-stop to the car.
+    const InstanceIds = selectedCars.map((c) => c.InstanceId);
+    if (InstanceIds.length > 0) {
+      carsUpdateTaillightColor(InstanceIds, complementaryColour(racingColour));
+      carEmergencyStop(InstanceIds);
+    }
     setIsLoadingNextStep(false);
     setPreviousStepIndex(5);
     setActiveStepIndex(5);
@@ -262,6 +290,15 @@ const LocalTimekeeperWizard = () => {
       setActiveStepIndex(previousStepIndex);
       setErrorText('');
     } else {
+      // Car-assignment trigger: advancing past the car-select step (index 1)
+      // with cars chosen → light the tail light(s) in the racer's colour so the
+      // car visibly shows "ready for this racer".
+      // Fire on any forward move off the car-select step (Next, skip-to, or a
+      // forward step-nav click) — but not when navigating backward.
+      if (activeStepIndex === 1 && detail.requestedStepIndex > activeStepIndex && selectedCars.length > 0) {
+        const InstanceIds = selectedCars.map((c) => c.InstanceId);
+        carsUpdateTaillightColor(InstanceIds, racingColour);
+      }
       setIsLoadingNextStep(false);
       setPreviousStepIndex(activeStepIndex);
       setActiveStepIndex(detail.requestedStepIndex);
