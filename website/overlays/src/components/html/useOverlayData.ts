@@ -180,7 +180,7 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
           return;
         }
 
-        const finished = info.raceStatus === 'RACE_FINSIHED';
+        const finished = info.raceStatus === 'RACE_FINISHED';
         const noCompetitor = 'competitor' in info && info.competitor === null;
 
         if (finished || noCompetitor) {

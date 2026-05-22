@@ -86,7 +86,7 @@ describe('useOverlayData', () => {
     });
   });
 
-  test('on RACE_FINSIHED message: hides lower third and shows leaderboard again', async () => {
+  test('on RACE_FINISHED message: hides lower third and shows leaderboard again', async () => {
     const { result } = renderHook(() => useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }));
     await waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
 
@@ -103,7 +103,7 @@ describe('useOverlayData', () => {
     act(() => {
       overlaySub.next({
         data: {
-          onNewOverlayInfo: { username: 'racer1', timeLeftInMs: 0, raceStatus: 'RACE_FINSIHED', laps: [] },
+          onNewOverlayInfo: { username: 'racer1', timeLeftInMs: 0, raceStatus: 'RACE_FINISHED', laps: [] },
         },
       });
     });

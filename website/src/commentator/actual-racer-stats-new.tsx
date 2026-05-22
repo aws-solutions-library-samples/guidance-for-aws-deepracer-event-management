@@ -209,7 +209,7 @@ const ActualRacerStatsNew: React.FC<ActualRacerStatsNewProps> = ({ leaderboard, 
       case 'NO_RACER_SELECTED':
         //reset UI
         break;
-      case 'RACE_FINSIHED':
+      case 'RACE_FINISHED':
     }
   }, [overlayInfo]);
 

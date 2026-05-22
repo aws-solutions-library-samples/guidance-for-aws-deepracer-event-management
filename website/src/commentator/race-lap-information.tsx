@@ -23,7 +23,7 @@ interface AverageLap {
 }
 
 interface OverlayInformation {
-  raceStatus: 'READY_TO_START' | 'RACE_IN_PROGRESS' | 'RACE_PAUSED' | 'NO_RACER_SELECTED' | 'RACE_FINSIHED' | string;
+  raceStatus: 'READY_TO_START' | 'RACE_IN_PROGRESS' | 'RACE_PAUSED' | 'NO_RACER_SELECTED' | 'RACE_FINISHED' | string;
   laps: Record<string, Lap>;
   averageLaps: AverageLap[];
 }
@@ -84,7 +84,7 @@ const RaceLapInformation: React.FC<RaceLapInformationProps> = ({
       case 'NO_RACER_SELECTED':
         //reset UI
         break;
-      case 'RACE_FINSIHED':
+      case 'RACE_FINISHED':
     }
   }, [overlayInformation]);
 
