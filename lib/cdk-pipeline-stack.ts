@@ -1,12 +1,14 @@
 import * as cdk from 'aws-cdk-lib';
-import { Aspects, Environment, Stage } from 'aws-cdk-lib';
+import { Aspects, Duration, Environment, RemovalPolicy, Stage } from 'aws-cdk-lib';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as notifications from 'aws-cdk-lib/aws-codestarnotifications';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
+import * as customResources from 'aws-cdk-lib/custom-resources';
 import * as pipelines from 'aws-cdk-lib/pipelines';
 import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
@@ -312,6 +314,99 @@ export class CdkPipelineStack extends cdk.Stack {
     infrastructure_stage.addPost(postDeployStep);
 
     pipeline.buildPipeline();
+
+    // The pipeline artifact bucket (created above with SSL + encryption +
+    // block-public-access) defaults to RemovalPolicy RETAIN, so
+    // `drem-pipeline-<label>-pipelineartifactsbucket-*` is orphaned every
+    // time the pipeline stack is deleted (the bucket is also non-empty by
+    // then). Flip it to DESTROY and wire a small custom resource that
+    // empties it on stack delete. The bucket only holds CodePipeline build
+    // artifacts — no user data — so dropping it is safe.
+    artifactBucket.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
+    const bucketEmptier = new lambda.Function(this, 'PipelineArtifactBucketEmptier', {
+      description: 'Empty the CDK Pipelines artifact bucket on stack delete',
+      runtime: lambda.Runtime.PYTHON_3_12,
+      handler: 'index.handler',
+      timeout: Duration.minutes(5),
+      memorySize: 256,
+      code: lambda.Code.fromInline(`
+import boto3
+s3 = boto3.client("s3")
+
+def handler(event, context):
+    if event.get("RequestType") != "Delete":
+        return {}
+    bucket = event["ResourceProperties"]["BucketName"]
+    paginator = s3.get_paginator("list_object_versions")
+    for page in paginator.paginate(Bucket=bucket):
+        keys = []
+        for v in page.get("Versions", []) + page.get("DeleteMarkers", []):
+            keys.append({"Key": v["Key"], "VersionId": v["VersionId"]})
+        if keys:
+            s3.delete_objects(Bucket=bucket, Delete={"Objects": keys, "Quiet": True})
+    return {}
+`),
+    });
+    artifactBucket.grantReadWrite(bucketEmptier);
+    bucketEmptier.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['s3:ListBucketVersions'],
+        resources: [artifactBucket.bucketArn],
+      })
+    );
+
+    const bucketEmptierProvider = new customResources.Provider(this, 'PipelineArtifactBucketEmptierProvider', {
+      onEventHandler: bucketEmptier,
+    });
+
+    new cdk.CustomResource(this, 'PipelineArtifactBucketEmptierCustomResource', {
+      serviceToken: bucketEmptierProvider.serviceToken,
+      properties: {
+        BucketName: artifactBucket.bucketName,
+      },
+    });
+
+    // cdk-nag suppressions for the emptier Lambda + the CDK Provider's
+    // framework Lambda. Both use the AWS-managed AWSLambdaBasicExecutionRole
+    // applied by default by the Lambda L2 construct, and the framework
+    // Lambda's runtime is pinned by aws-cdk-lib/custom-resources. We can't
+    // control either without restating the same permissions or forking
+    // the construct.
+    NagSuppressions.addResourceSuppressions(
+      bucketEmptier,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWSLambdaBasicExecutionRole is the default Lambda execution role; replacing it would restate the same permissions.',
+          appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
+        },
+        {
+          id: 'AwsSolutions-L1',
+          reason: 'PYTHON_3_12 is the latest stable Lambda runtime supported by the CDK version in use; bump when CDK exposes a newer Python.',
+        },
+      ],
+      true
+    );
+    NagSuppressions.addResourceSuppressions(
+      bucketEmptierProvider,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'Provider framework Lambda uses CDK-managed AWSLambdaBasicExecutionRole.',
+          appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
+        },
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Provider framework Lambda needs lambda:InvokeFunction on the onEvent handler; CDK wildcards the function version arn.',
+        },
+        {
+          id: 'AwsSolutions-L1',
+          reason: 'Provider framework Lambda runtime is pinned by aws-cdk-lib/custom-resources and cannot be controlled here.',
+        },
+      ],
+      true
+    );
 
     // Suppress cdk-nag findings for CDK Pipelines-managed resources we don't control
     NagSuppressions.addStackSuppressions(this, [
