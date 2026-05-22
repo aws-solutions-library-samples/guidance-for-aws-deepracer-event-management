@@ -44,7 +44,7 @@ const DEFAULT_CONFIG: AvatarConfig = {
     skinColor: 'Yellow',
 };
 
-// Options derived from the avataaars library's supported values
+// Options derived from @vierweb/avataaars supported values
 const OPTIONS: Record<keyof AvatarConfig, string[]> = {
     topType: [
         'NoHair', 'Eyepatch', 'Hat', 'Hijab', 'Turban',

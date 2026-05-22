@@ -1,4 +1,4 @@
-import Avatar from 'avataaars';
+import Avatar from '@vierweb/avataaars';
 import React from 'react';
 
 /**
