@@ -187,24 +187,32 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
   useModelsApi(permissions.api.allModels);
 
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState<boolean>(false);
-  const [userAvatarConfig, setUserAvatarConfig] = useState<string | null>(null);
 
-  // Load user's avatar config for the top-nav mini avatar
+  // Avatar config flows through the global store so any updates the user
+  // makes on the AvatarBuilder page propagate to the mini-avatar here
+  // without a page refresh.
+  const userAvatarConfig = state.userProfile?.avatarConfig ?? null;
+
+  // Hydrate the store with the current user's profile on first mount.
   useEffect(() => {
     getCurrentAuthUser()
       .then((authUser) =>
-        graphqlQuery<{ getRacerProfile: { avatarConfig?: string } | null }>(
-          getRacerProfile,
-          { username: authUser.username }
-        )
+        graphqlQuery<{
+          getRacerProfile: { avatarConfig?: string; highlightColour?: string } | null;
+        }>(getRacerProfile, { username: authUser.username }),
       )
       .then((data) => {
-        const raw = data?.getRacerProfile?.avatarConfig;
-        if (raw) setUserAvatarConfig(raw);
+        const profile = data?.getRacerProfile;
+        if (!profile) return;
+        dispatch('SET_USER_PROFILE', {
+          avatarConfig: profile.avatarConfig ?? null,
+          highlightColour: profile.highlightColour ?? null,
+        });
       })
       .catch(() => {
         // silently ignore — will show default silhouette
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Visual mode and density preferences — persisted in localStorage

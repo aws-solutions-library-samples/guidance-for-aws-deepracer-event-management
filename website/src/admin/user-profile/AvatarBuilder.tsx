@@ -14,6 +14,7 @@ import { graphqlMutate, graphqlQuery } from '../../graphql/graphqlHelpers';
 import { updateRacerProfile } from '../../graphql/mutations';
 import { getRacerProfile } from '../../graphql/queries';
 import { getCurrentAuthUser } from '../../hooks/useAuth';
+import { useStore } from '../../store/store';
 
 export interface AvatarConfig {
     topType: string;
@@ -85,9 +86,28 @@ const TAIL_LIGHT_COLOURS = [
 
 export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
     const { t } = useTranslation();
-    const [config, setConfig] = useState<AvatarConfig>(DEFAULT_CONFIG);
-    const [highlightColour, setHighlightColour] = useState<string>('');
-    const [isConfigured, setIsConfigured] = useState<boolean>(false);
+    const [state, dispatch] = useStore();
+    // Seed initial state from the userProfile store if TopNav has already
+    // hydrated it on app load — gives an immediate paint with the correct
+    // avatar instead of the default-yellow fallback while the fetch below
+    // is in flight. The post-fetch setConfig still runs, so an out-of-date
+    // store value gets corrected.
+    const storeProfile = state.userProfile;
+    const seededConfig = (() => {
+        if (!storeProfile?.avatarConfig) return DEFAULT_CONFIG;
+        try {
+            return { ...DEFAULT_CONFIG, ...JSON.parse(storeProfile.avatarConfig) };
+        } catch {
+            return DEFAULT_CONFIG;
+        }
+    })();
+    const [config, setConfig] = useState<AvatarConfig>(seededConfig);
+    const [highlightColour, setHighlightColour] = useState<string>(
+        storeProfile?.highlightColour ?? '',
+    );
+    const [isConfigured, setIsConfigured] = useState<boolean>(
+        !!storeProfile?.avatarConfig,
+    );
     const [saving, setSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState('');
 
@@ -122,14 +142,21 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
     const handleSave = async () => {
         setSaving(true);
         try {
+            const serialisedConfig = JSON.stringify(config);
             await graphqlMutate(updateRacerProfile, {
                 input: {
-                    avatarConfig: JSON.stringify(config),
+                    avatarConfig: serialisedConfig,
                     highlightColour: highlightColour || null,
                 },
             });
             setIsConfigured(true);
             setSaveMessage(t('avatar-builder.saved'));
+            // Push into the shared store so the TopNav mini-avatar repaints
+            // immediately rather than waiting for a page reload.
+            dispatch('SET_USER_PROFILE', {
+                avatarConfig: serialisedConfig,
+                highlightColour: highlightColour || null,
+            });
         } catch (err) {
             setSaveMessage(t('avatar-builder.save-error'));
         } finally {

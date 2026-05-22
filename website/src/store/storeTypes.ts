@@ -70,6 +70,15 @@ export interface HelpPanelState {
   content?: React.ReactNode;
 }
 
+// Per-user racer profile (avatar config + highlight colour). Sourced
+// from getRacerProfile on app load; updated when the user saves changes
+// on the AvatarBuilder so the TopNav mini avatar reflects them
+// without a page refresh.
+export interface UserProfileState {
+  avatarConfig: string | null;
+  highlightColour: string | null;
+}
+
 // Notification state
 export interface Notification {
   id: string;
@@ -99,6 +108,7 @@ export interface GlobalState {
   splitPanel?: SplitPanelState;
   helpPanel?: HelpPanelState;
   notifications?: NotificationsState;
+  userProfile?: UserProfileState;
 }
 
 // Action type definitions using discriminated union pattern
@@ -117,4 +127,5 @@ export type StoreAction =
   | { type: 'REMOVE_NOTIFICATION'; payload: string }
   | { type: 'TOGGLE_SIDE_NAV' }
   | { type: 'TOGGLE_SPLIT_PANEL'; payload?: React.ReactNode }
-  | { type: 'TOGGLE_HELP_PANEL'; payload?: React.ReactNode };
+  | { type: 'TOGGLE_HELP_PANEL'; payload?: React.ReactNode }
+  | { type: 'SET_USER_PROFILE'; payload: Partial<UserProfileState> };
