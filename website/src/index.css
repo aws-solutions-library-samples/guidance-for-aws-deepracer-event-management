@@ -1,3 +1,12 @@
+html {
+  /* Reserve the scrollbar gutter even when no scrollbar is showing, so
+     opening a modal (which locks body scroll and hides the scrollbar)
+     doesn't cause a ~15px width jump on the page behind. Pre-existing
+     on every modal in the app, made more visible once the event-
+     selector modal's X close-button started working again. */
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

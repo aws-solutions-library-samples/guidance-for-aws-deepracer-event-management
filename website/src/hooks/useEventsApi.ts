@@ -1,7 +1,10 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { event as eventDomainDefault } from '../admin/events/support-functions/eventDomain';
 import { graphqlMutate, graphqlSubscribe } from '../graphql/graphqlHelpers';
 import * as queries from '../graphql/queries';
 import { onAddedEvent, onDeletedEvents, onUpdatedEvent } from '../graphql/subscriptions';
+import { useSelectedTrackDispatch } from '../store/contexts/storeProvider';
 import { useStore } from '../store/store';
 import { Event } from '../types/domain';
 
@@ -11,6 +14,8 @@ export const useEventsApi = (
     userHasAccess: boolean = false
 ): void => {
     const [, dispatch] = useStore();
+    const { t } = useTranslation();
+    const setSelectedTrack = useSelectedTrackDispatch();
 
     // initial data load
     useEffect(() => {
@@ -93,6 +98,24 @@ export const useEventsApi = (
                         (evt: string) => JSON.parse(evt).eventId
                     );
                     dispatch('DELETE_EVENTS', eventIdsToDelete);
+                    // If the deleted event was the active selection, reset
+                    // it to the "please select" placeholder so the TopNav
+                    // stops showing a now-dead event and downstream
+                    // consumers (WithEventSelected, timekeeper, etc.) re-
+                    // gate via `selectedEvent.eventId == null`. Setting
+                    // null here would crash those consumers — they assume
+                    // a non-null Event-shaped object with eventName set.
+                    if (selectedEvent && eventIdsToDelete.includes(selectedEvent.eventId)) {
+                        const placeholder = {
+                            ...eventDomainDefault,
+                            eventName: t('events.provider.please-select-an-event'),
+                        } as unknown as Event;
+                        setSelectedEvent(placeholder);
+                        // Also clear the track — leaving the badge showing a
+                        // track that belongs to a now-deleted event is more
+                        // confusing than a blank track.
+                        setSelectedTrack?.(undefined as any);
+                    }
                 },
             });
         }
@@ -102,5 +125,5 @@ export const useEventsApi = (
             }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userHasAccess]);
+    }, [userHasAccess, selectedEvent]);
 };

@@ -108,6 +108,62 @@ class DremApiClient:
         """
         return self._gql(query, {"username": username})["getRacerProfile"]
 
+    def update_event(self, event: dict) -> dict:
+        """
+        Update an event via the updateEvent mutation. `event` must carry
+        every field the mutation requires (eventId, eventName, typeOfEvent,
+        tracks, raceConfig) — typically the existing record with whatever
+        fields you want changed swapped in. Optional fields (eventDate,
+        sponsor, countryCode, landingPageConfig) pass through if present.
+        """
+        mutation = """
+        mutation UpdateEvent(
+          $eventId: String!,
+          $eventName: String!,
+          $typeOfEvent: TypeOfEvent!,
+          $tracks: [TrackInput!]!,
+          $raceConfig: RaceInputConfig!,
+          $eventDate: AWSDate,
+          $sponsor: String,
+          $countryCode: String,
+          $landingPageConfig: landingPageConfigInputType
+        ) {
+          updateEvent(
+            eventId: $eventId,
+            eventName: $eventName,
+            typeOfEvent: $typeOfEvent,
+            tracks: $tracks,
+            raceConfig: $raceConfig,
+            eventDate: $eventDate,
+            sponsor: $sponsor,
+            countryCode: $countryCode,
+            landingPageConfig: $landingPageConfig
+          ) {
+            eventId eventName typeOfEvent
+          }
+        }
+        """
+        variables = {
+            "eventId": event["eventId"],
+            "eventName": event["eventName"],
+            "typeOfEvent": event["typeOfEvent"],
+            "tracks": [
+                {
+                    "trackId": t["trackId"],
+                    "fleetId": t.get("fleetId"),
+                    "leaderBoardTitle": t["leaderBoardTitle"],
+                    "leaderBoardFooter": t["leaderBoardFooter"],
+                }
+                for t in (event.get("tracks") or [])
+            ],
+            "raceConfig": event["raceConfig"],
+            "eventDate": event.get("eventDate"),
+            "sponsor": event.get("sponsor"),
+            "countryCode": event.get("countryCode"),
+            "landingPageConfig": event.get("landingPageConfig"),
+        }
+        return self._gql(mutation, variables)["updateEvent"]
+
     def list_users(self) -> list[dict]:
         """
         Fetch all users via the listUsers query.

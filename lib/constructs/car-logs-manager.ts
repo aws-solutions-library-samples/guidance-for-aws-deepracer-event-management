@@ -92,6 +92,7 @@ export class CarLogsManager extends Construct {
     this.vpc = new ec2.Vpc(this, 'LogsVPC', {
       maxAzs: 2,
       natGateways: 0,
+      restrictDefaultSecurityGroup: true,
       subnetConfiguration: [
         {
           cidrMask: 24,
@@ -206,11 +207,17 @@ export class CarLogsManager extends Construct {
     });
 
     // Create security group for Batch
+    // Fargate tasks only need HTTPS outbound to reach AWS services (ECR, S3, AppSync, CloudWatch Logs)
     const batchSG = new ec2.SecurityGroup(this, 'BatchSG', {
       vpc: this.vpc,
       description: 'Security group for Batch compute environment',
-      allowAllOutbound: true,
+      allowAllOutbound: false,
     });
+    batchSG.addEgressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.HTTPS,
+      'Allow HTTPS outbound to AWS services (ECR, S3, AppSync, CloudWatch Logs)'
+    );
 
     // Create IAM roles
     const batchServiceRole = new iam.Role(this, 'BatchServiceRole', {
