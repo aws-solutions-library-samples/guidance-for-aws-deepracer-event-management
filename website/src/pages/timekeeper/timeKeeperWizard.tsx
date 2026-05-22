@@ -40,6 +40,7 @@ import {
 } from '../../store/contexts/storeProvider';
 import { useStore } from '../../store/store';
 import { CarSelector } from './components/carSelector';
+import { TailLightColourControl } from './components/tailLightColourControl';
 import { ModelSelector } from './components/modelSelector';
 import { UploadModelToCar } from './components/uploadModelsToCar';
 import { RaceFinishPage } from './pages/raceFinishPageLite';
@@ -493,16 +494,23 @@ const LocalTimekeeperWizard = () => {
             {
               title: t('timekeeper.wizard.select-car'),
               content: (
-                <CarSelector
-                  query={{
-                    tokens: [
-                      { propertyKey: 'fleetName', value: selectedTrack.fleetId, operator: '=' },
-                    ],
-                    operation: 'and',
-                  }}
-                  selectedCars={selectedCars}
-                  setSelectedCars={setSelectedCars}
-                />
+                <SpaceBetween size="m">
+                  <CarSelector
+                    query={{
+                      tokens: [
+                        { propertyKey: 'fleetName', value: selectedTrack.fleetId, operator: '=' },
+                      ],
+                      operation: 'and',
+                    }}
+                    selectedCars={selectedCars}
+                    setSelectedCars={setSelectedCars}
+                  />
+                  <TailLightColourControl
+                    racerHighlightColour={racerHighlightColour}
+                    override={colourOverride}
+                    setOverride={setColourOverride}
+                  />
+                </SpaceBetween>
               ),
               isOptional: true,
             },
