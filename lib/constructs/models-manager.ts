@@ -68,10 +68,7 @@ export class ModelsManager extends Construct {
       autoDeleteObjects: true,
       eventBridgeEnabled: true,
       removalPolicy: RemovalPolicy.DESTROY,
-      lifecycleRules: [
-        { expiration: Duration.days(15), tagFilters: { lifecycle: 'true' } },
-        { abortIncompleteMultipartUploadAfter: Duration.days(1) },
-      ],
+      lifecycleRules: [{ expiration: Duration.days(15) }, { abortIncompleteMultipartUploadAfter: Duration.days(1) }],
     });
     this.uploadBucket = uploadBucket;
 
@@ -87,7 +84,7 @@ export class ModelsManager extends Construct {
       removalPolicy: RemovalPolicy.DESTROY,
       versioned: true,
       lifecycleRules: [
-        { expiration: Duration.days(15), tagFilters: { lifecycle: 'true' } },
+        { expiration: Duration.days(60), tagFilters: { lifecycle: 'true' } },
         { abortIncompleteMultipartUploadAfter: Duration.days(1) },
       ],
     });

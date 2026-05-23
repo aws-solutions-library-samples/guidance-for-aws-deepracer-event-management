@@ -124,10 +124,7 @@ export class CarLogsManager extends Construct {
       autoDeleteObjects: true,
       eventBridgeEnabled: true,
       removalPolicy: RemovalPolicy.DESTROY,
-      lifecycleRules: [
-        { expiration: Duration.days(15), tagFilters: { lifecycle: 'true' } },
-        { abortIncompleteMultipartUploadAfter: Duration.days(1) },
-      ],
+      lifecycleRules: [{ expiration: Duration.days(15) }, { abortIncompleteMultipartUploadAfter: Duration.days(1) }],
     });
 
     const corsRule = {
@@ -160,10 +157,7 @@ export class CarLogsManager extends Construct {
       eventBridgeEnabled: true,
       removalPolicy: RemovalPolicy.DESTROY,
       versioned: true,
-      lifecycleRules: [
-        { expiration: Duration.days(60), tagFilters: { lifecycle: 'true' } },
-        { abortIncompleteMultipartUploadAfter: Duration.days(1) },
-      ],
+      lifecycleRules: [{ expiration: Duration.days(60) }, { abortIncompleteMultipartUploadAfter: Duration.days(1) }],
     });
     this.carLogsBucket.addCorsRule(corsRule);
 
