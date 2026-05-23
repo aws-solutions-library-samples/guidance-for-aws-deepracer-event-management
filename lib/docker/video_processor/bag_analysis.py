@@ -33,6 +33,8 @@ from tqdm.auto import tqdm
 matplotlib.use("Agg")
 
 bridge = CvBridge()
+
+
 WIDTH = 1280
 HEIGHT = 720
 
@@ -109,7 +111,13 @@ def process_worker(
         )
 
         with model.session as _:
-            cam = GradCam(model, model.get_conv_outputs())
+            conv_layers = model.get_conv_outputs()
+            print(
+                f"Worker {os.getpid()}: model {metadata} — "
+                f"found {len(conv_layers)} GradCam conv layer(s): "
+                + (", ".join(t.name for t in conv_layers) if conv_layers else "(none)")
+            )
+            cam = GradCam(model, conv_layers)
 
             while True:
                 try:
@@ -430,7 +438,7 @@ def process_input_frame(
         return step, cv_img, grad_img
 
     except Exception as e:
-        print(e)
+        raise
 
 
 def analyze_bag(bag_path: str, metadata: ModelMetadata) -> Dict:
@@ -457,7 +465,7 @@ def analyze_bag(bag_path: str, metadata: ModelMetadata) -> Dict:
     while reader.has_next() and s < 60:
         step = {}
 
-        (_, data, _) = reader.read_next()
+        _, data, _ = reader.read_next()
         msg = deserialize_message(data, InferResultsArray)
 
         # Timestamp
@@ -475,7 +483,7 @@ def analyze_bag(bag_path: str, metadata: ModelMetadata) -> Dict:
         s += 1
 
     while reader.has_next():
-        (_, _, _) = reader.read_next()
+        _, _, _ = reader.read_next()
         s += 1
 
     df = pd.json_normalize(steps_data["steps"])
