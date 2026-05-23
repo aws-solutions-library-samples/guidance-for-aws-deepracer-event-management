@@ -175,11 +175,12 @@ export class CdkPipelineStack extends cdk.Stack {
         'npm install',
         'cd website && npm install --legacy-peer-deps && npm test && cd ..',
         'cd website/leaderboard && npm install --legacy-peer-deps && npm test && cd ../..',
+        'cd website/overlays && npm install --legacy-peer-deps && npm test && cd ../..',
       ],
       partialBuildSpec: codebuild.BuildSpec.fromObject({
         reports: {
           website_test_reports: {
-            files: ['junit-website.xml', 'junit-leaderboard.xml'],
+            files: ['junit-website.xml', 'junit-leaderboard.xml', 'junit-overlays.xml'],
             'base-directory': 'reports',
             'file-format': 'JUNITXML',
           },
