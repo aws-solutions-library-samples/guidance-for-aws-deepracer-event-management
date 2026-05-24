@@ -19,10 +19,14 @@ console.log('Configuration:', JSON.stringify(config, null, 2));
 const sockets = new Set();
 let debugLapCounter = 0;
 
-// Per-sensor debounce tracking
+// Cross-sensor debounce: tracks the most recent lap from ANY sensor.
+// Prevents a single car pass that triggers both sensors from recording two laps.
+let lastAnyTrigger = 0;
+
+// Per-sensor lap counters
 const sensorDebounce = {
-  [config.gpio.sensor1]: { lastTrigger: 0, count: 0 },
-  [config.gpio.sensor2]: { lastTrigger: 0, count: 0 },
+  [config.gpio.sensor1]: { count: 0 },
+  [config.gpio.sensor2]: { count: 0 },
 };
 
 // Try to detect which GPIO library to use
@@ -86,13 +90,14 @@ function handleLapTrigger(gpioPin, value, timestamp) {
     return;
   }
 
-  // Check debounce - ignore triggers within debounce window
-  if (now - sensor.lastTrigger < config.gpio.debounceMs) {
-    console.log(`Debounced: GPIO${gpioPin} (${now - sensor.lastTrigger}ms since last trigger)`);
+  // Cross-sensor debounce: suppress if any sensor fired within the debounce window.
+  // Fixes: single car pass triggering both sensors and recording two laps.
+  if (now - lastAnyTrigger < config.gpio.debounceMs) {
+    console.log(`Cross-sensor debounce: GPIO${gpioPin} suppressed (${now - lastAnyTrigger}ms since last lap)`);
     return;
   }
+  lastAnyTrigger = now;
 
-  sensor.lastTrigger = now;
   sensor.count++;
   debugLapCounter++;
 
@@ -173,7 +178,7 @@ function initializeGpio() {
         } catch (e) {
           console.error('Error polling GPIO:', e.message);
         }
-      }, 10); // Poll every 10ms
+      }, 5); // Poll every 5ms
     } catch (e) {
       console.error('Failed to initialize node-libgpiod:', e);
       process.exit(1);
