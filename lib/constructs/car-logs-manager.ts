@@ -157,7 +157,7 @@ export class CarLogsManager extends Construct {
       eventBridgeEnabled: true,
       removalPolicy: RemovalPolicy.DESTROY,
       versioned: true,
-      lifecycleRules: [{ expiration: Duration.days(60) }, { abortIncompleteMultipartUploadAfter: Duration.days(1) }],
+      lifecycleRules: [{ expiration: Duration.days(30) }, { abortIncompleteMultipartUploadAfter: Duration.days(1) }],
     });
     this.carLogsBucket.addCorsRule(corsRule);
 

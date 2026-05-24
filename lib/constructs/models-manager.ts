@@ -84,7 +84,7 @@ export class ModelsManager extends Construct {
       removalPolicy: RemovalPolicy.DESTROY,
       versioned: true,
       lifecycleRules: [
-        { expiration: Duration.days(60), tagFilters: { lifecycle: 'true' } },
+        { expiration: Duration.days(30), tagFilters: { lifecycle: 'true' } },
         { abortIncompleteMultipartUploadAfter: Duration.days(1) },
       ],
     });
