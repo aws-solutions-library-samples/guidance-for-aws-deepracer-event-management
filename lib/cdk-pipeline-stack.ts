@@ -32,6 +32,7 @@ class InfrastructurePipelineStage extends Stage {
   public readonly sourceBucketName: cdk.CfnOutput;
   public readonly dremWebsiteUrl: cdk.CfnOutput;
   public readonly appsyncId: cdk.CfnOutput;
+  public readonly uploadBucketName: cdk.CfnOutput;
 
   constructor(scope: Construct, id: string, props: InfrastructurePipelineStageProps) {
     super(scope, id, props);
@@ -55,6 +56,7 @@ class InfrastructurePipelineStage extends Stage {
     this.sourceBucketName = stack.sourceBucketName;
     this.dremWebsiteUrl = stack.dremWebsiteUrl;
     this.appsyncId = stack.appsyncId;
+    this.uploadBucketName = stack.uploadBucketName;
   }
 }
 export interface CdkPipelineStackProps extends cdk.StackProps {
@@ -275,6 +277,50 @@ export class CdkPipelineStack extends cdk.Stack {
       rolePolicyStatements: rolePolicyStatementsForWebsiteDeployStages,
     });
     infrastructure_stage.addPost(websiteDeployStep);
+
+    // Upload default models directly from the source checkout — avoids bundling
+    // 249 MB of .tar.gz files into cdk.out (which would exceed the CodePipeline
+    // artifact size limit for SynthAndDeployBackend_Output).
+
+    // Shared between the sync command (which resolves the region from the CodeBuild
+    // environment) and the IAM statements (which resolve it from CloudFormation).
+    const defaultModelsKeySuffix = ':00000000-0000-0000-0000-000000000000/000000000000/default/';
+    const defaultModelsPrefix = `private/${cdk.Aws.REGION}${defaultModelsKeySuffix}`;
+    const dremBucketsArnPattern = `arn:${cdk.Aws.PARTITION}:s3:::drem-backend-${props.labelName}-*`;
+
+    const defaultModelsDeployStep = new pipelines.CodeBuildStep('DeployDefaultModels', {
+      buildEnvironment: {
+        computeType: codebuild.ComputeType.SMALL,
+      },
+      commands: [
+        'aws s3 sync ./lib/default_models/' +
+          ' s3://$uploadBucketName/private/$AWS_DEFAULT_REGION:00000000-0000-0000-0000-000000000000/000000000000/default/' +
+          ' --no-progress',
+      ],
+      envFromCfnOutputs: {
+        uploadBucketName: infrastructure.uploadBucketName,
+      },
+      rolePolicyStatements: [
+        // Bucket-level: sync lists the destination prefix before uploading.
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: ['s3:ListBucket'],
+          resources: [dremBucketsArnPattern],
+          conditions: {
+            StringEquals: { 's3:ResourceAccount': cdk.Aws.ACCOUNT_ID },
+            StringLike: { 's3:prefix': [defaultModelsPrefix, `${defaultModelsPrefix}*`] },
+          },
+        }),
+        // Object-level: write only inside the default-models prefix.
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: ['s3:PutObject'],
+          resources: [`${dremBucketsArnPattern}/${defaultModelsPrefix}*`],
+          conditions: { StringEquals: { 's3:ResourceAccount': cdk.Aws.ACCOUNT_ID } },
+        }),
+      ],
+    });
+    infrastructure_stage.addPost(defaultModelsDeployStep);
 
     // Post-deploy tests — run after MainSiteDeployToS3 completes
     const postDeployStep = new pipelines.CodeBuildStep('PostDeployTests', {
