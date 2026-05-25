@@ -5,10 +5,11 @@ register_car_serial — tag a newly-activated managed-instance with its
 chassis serial, capture history for dedup victims, and dedup older
 managed-instances that share the serial.
 
-Invoked directly (not via AppSync) from `car_activation.sh` after the SSM
-agent registers. The car runs under the same IAM role passed to
-`ssm.create_activation`, which we extend to allow `lambda:InvokeFunction`
-on this Lambda only.
+Invoked asynchronously by the `car_status_update` poller when it sees an
+online managed-instance with no `ChassisSerial` tag. With only
+`{managedInstanceId}` it reads the chassis serial off the car via SSM Run
+Command (`AWS-RunShellScript`); it can also be called directly with
+`{managedInstanceId, chassisSerial}` (used by tests / manual invokes).
 
 Input payload:
     {
@@ -34,8 +35,8 @@ Behaviour:
     3. Tag the new managed-instance with ChassisSerial=<serial>, then
        record it in CarsHistory too (deregisteredAt = null).
 
-Failure modes are non-fatal — the script invokes us best-effort and
-ignores errors, so the activation itself still succeeds even if dedup,
+Failure modes are non-fatal — the poller invokes this Lambda best-effort
+and ignores errors, so the registration flow still succeeds even if dedup,
 history capture, or tagging fails.
 """
 import os
