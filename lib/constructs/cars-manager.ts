@@ -45,6 +45,7 @@ export class CarManager extends Construct {
   // amplify config (for reference / manual invokes only). The Lambda is
   // invoked by the car_status_update poller, not by the car itself.
   public readonly registerCarSerialFunctionName: string;
+  public readonly carsHistoryTable: dynamodb.Table;
 
   constructor(scope: Construct, id: string, props: CarManagerProps) {
     super(scope, id);
@@ -297,6 +298,7 @@ export class CarManager extends Construct {
       removalPolicy: RemovalPolicy.DESTROY,
       pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
     });
+    this.carsHistoryTable = carsHistoryTable;
 
     // Lambda that reads the chassis serial off the car via SSM Run Command
     // (invoked asynchronously by the car_status_update poller), then dedups

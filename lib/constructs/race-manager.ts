@@ -38,6 +38,7 @@ export interface RaceManagerProps {
   eventbus: IEventBus;
   racerProfileObjectType: ObjectType;
   racerProfileTable: dynamodb.ITable;
+  carsHistoryTable: dynamodb.ITable;
 }
 
 export class RaceManager extends Construct {
@@ -82,10 +83,12 @@ export class RaceManager extends Construct {
         APPSYNC_URL: props.appsyncApi.api.graphqlUrl,
         EVENT_BUS_NAME: props.eventbus.eventBusName,
         POWERTOOLS_SERVICE_NAME: 'race_handler',
+        CARS_HISTORY_TABLE: props.carsHistoryTable.tableName,
       },
     });
     this.raceTable = raceTable;
     raceTable.grantReadWriteData(raceLambda);
+    props.carsHistoryTable.grantReadData(raceLambda);
     props.eventbus.grantPutEventsTo(raceLambda);
     props.appsyncApi.api.grantMutation(raceLambda, 'addLeaderboardEntry');
 
