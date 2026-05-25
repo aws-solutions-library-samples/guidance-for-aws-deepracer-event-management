@@ -4,7 +4,7 @@ import {
   ButtonDropdown,
   SpaceBetween,
 } from '@cloudscape-design/components';
-import { default as React, useEffect, useState } from 'react';
+import { default as React, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useStore } from '../store/store';
@@ -28,6 +28,15 @@ type OnlineStatus = 'Online' | 'Offline';
 const AdminDevices: React.FC = () => {
   const { t } = useTranslation(['translation', 'help-admin-cars']);
   const [state, dispatch] = useStore();
+
+  const eventsById = useMemo(() => {
+    const map: Record<string, { eventName?: string }> = {};
+    for (const ev of state.events?.events ?? []) {
+      if (ev?.eventId) map[ev.eventId] = { eventName: ev.eventName };
+    }
+    return map;
+  }, [state.events?.events]);
+
   const [carsToDisplay, setCarsToDisplay] = useState<Car[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedItems, setSelectedItems] = useState<Car[]>([]);
@@ -169,6 +178,7 @@ const AdminDevices: React.FC = () => {
         visible={historyModalVisible}
         onDismiss={() => setHistoryModalVisible(false)}
         chassisSerial={singleSelectedCar?.ChassisSerial || ''}
+        eventsById={eventsById}
       />
     </PageLayout>
   );
