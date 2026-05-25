@@ -5,11 +5,11 @@ import { Race } from '../types/domain';
 const configureStore = (): void => {
   const actions = {
     NEW_RACES: (curState: GlobalState, racesToAdd: Race[]): Partial<GlobalState> => {
-      const updatedRaces: RacesState = { 
+      const updatedRaces: RacesState = {
         ...(curState.races || { races: [], isLoading: false }),
-        races: []
+        races: [],
       };
-      
+
       racesToAdd.forEach((raceToAdd) => {
         const raceIndex = updatedRaces.races.findIndex((r) => r.raceId === raceToAdd.raceId);
         if (raceIndex === -1) {
@@ -22,11 +22,11 @@ const configureStore = (): void => {
     },
     ADD_RACES: (curState: GlobalState, racesToAdd: Race[]): Partial<GlobalState> => {
       const currentRaces = curState.races?.races || [];
-      const updatedRaces: RacesState = { 
+      const updatedRaces: RacesState = {
         ...(curState.races || { races: [], isLoading: false }),
-        races: [...currentRaces]
+        races: [...currentRaces],
       };
-      
+
       racesToAdd.forEach((raceToAdd) => {
         const raceIndex = updatedRaces.races.findIndex((r) => r.raceId === raceToAdd.raceId);
         if (raceIndex === -1) {
@@ -40,9 +40,9 @@ const configureStore = (): void => {
     UPDATE_RACE: (curState: GlobalState, race: Race): Partial<GlobalState> => {
       console.debug('UPDATE_RACE DISPATCH FUNCTION');
       const currentRaces = curState.races?.races || [];
-      const updatedRaces: RacesState = { 
+      const updatedRaces: RacesState = {
         ...(curState.races || { races: [], isLoading: false }),
-        races: [...currentRaces]
+        races: [...currentRaces],
       };
       const raceIndex = updatedRaces.races.findIndex((r) => r.raceId === race.raceId);
       if (raceIndex === -1) {
@@ -57,15 +57,15 @@ const configureStore = (): void => {
       const currentRaces = curState.races?.races || [];
       const updatedRaces: RacesState = {
         ...(curState.races || { races: [], isLoading: false }),
-        races: currentRaces.filter((race) => !raceIdsToDelete.includes(race.raceId))
+        races: currentRaces.filter((race) => !raceIdsToDelete.includes(race.raceId)),
       };
       return { races: updatedRaces };
     },
     RACES_IS_LOADING: (curState: GlobalState, isLoading: boolean): Partial<GlobalState> => {
       console.debug('RACES_IS_LOADING DISPATCH FUNCTION', isLoading);
-      const updatedRaces: RacesState = { 
+      const updatedRaces: RacesState = {
         ...(curState.races || { races: [], isLoading: false }),
-        isLoading
+        isLoading,
       };
       return { races: updatedRaces };
     },

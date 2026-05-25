@@ -23,12 +23,12 @@ interface DeleteModalProps {
  * @param props - Component props
  * @returns Rendered delete confirmation modal
  */
-export const DeleteModal = ({ 
-  visible, 
-  onVisibleChange, 
-  onDelete, 
-  children, 
-  header 
+export const DeleteModal = ({
+  visible,
+  onVisibleChange,
+  onDelete,
+  children,
+  header,
 }: DeleteModalProps): JSX.Element => {
   const { t } = useTranslation();
 

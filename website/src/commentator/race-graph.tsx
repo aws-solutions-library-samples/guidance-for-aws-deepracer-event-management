@@ -49,7 +49,7 @@ function classifyLaps(
   raceFormat: string | undefined,
   fastestEventLapTime: number | undefined,
   fastestEventAvgLap: { avgTime: number } | undefined,
-  fastestRaceAvgLap: { avgTime: number; startLapId: number; endLapId: number } | undefined,
+  fastestRaceAvgLap: { avgTime: number; startLapId: number; endLapId: number } | undefined
 ): LapPoint[] {
   const normalised: LapPoint[] = laps.map((lap: any) => ({
     lapNumber: Number(lap.lapId) + 1,
@@ -125,9 +125,9 @@ const RaceGraph = ({
         raceFormat,
         fastestEventLapTime,
         fastestEventAvgLap,
-        fastestRaceAvgLap as any,
+        fastestRaceAvgLap as any
       ),
-    [laps, raceFormat, fastestEventLapTime, fastestEventAvgLap, fastestRaceAvgLap],
+    [laps, raceFormat, fastestEventLapTime, fastestEventAvgLap, fastestRaceAvgLap]
   );
 
   // Use one chart.js dataset per status category so the legend automatically
@@ -209,7 +209,7 @@ const RaceGraph = ({
         ctx.restore();
       },
     }),
-    [threshold, statusColors.threshold],
+    [threshold, statusColors.threshold]
   );
 
   const options = useMemo<ChartOptions<'bar'>>(() => {
@@ -285,11 +285,7 @@ const RaceGraph = ({
 
   return (
     <div style={{ height: 300 }}>
-      <Bar
-        data={{ labels, datasets }}
-        options={options}
-        plugins={[thresholdPlugin]}
-      />
+      <Bar data={{ labels, datasets }} options={options} plugins={[thresholdPlugin]} />
     </div>
   );
 };

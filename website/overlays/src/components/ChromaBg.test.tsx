@@ -7,7 +7,7 @@ function renderWith(searchParams: string) {
   return render(
     <MemoryRouter initialEntries={[`/some-event?${searchParams}`]}>
       <ChromaBg />
-    </MemoryRouter>,
+    </MemoryRouter>
   );
 }
 

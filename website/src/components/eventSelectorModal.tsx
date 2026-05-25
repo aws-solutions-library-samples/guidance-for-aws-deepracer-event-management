@@ -64,7 +64,11 @@ interface EventSelectorModalProps {
   onOk: () => void;
 }
 
-export const EventSelectorModal: React.FC<EventSelectorModalProps> = ({ visible, onDismiss, onOk }) => {
+export const EventSelectorModal: React.FC<EventSelectorModalProps> = ({
+  visible,
+  onDismiss,
+  onOk,
+}) => {
   const { t } = useTranslation();
   const selectedEvent = useSelectedEventContext();
   const setSelectedEvent = useSelectedEventDispatch();
@@ -183,7 +187,11 @@ export const EventSelectorModal: React.FC<EventSelectorModalProps> = ({ visible,
   useEffect(() => {
     // set next selected track to default track if new selected event
     const selectedEvent = events.find((event) => event.eventId === config.eventId);
-    if (selectedEvent && selectedEvent.tracks && !selectedEvent.tracks.includes(nextSelectedTrack as Track)) {
+    if (
+      selectedEvent &&
+      selectedEvent.tracks &&
+      !selectedEvent.tracks.includes(nextSelectedTrack as Track)
+    ) {
       setNextSelectedTrack(selectedEvent.tracks[0]);
     }
   }, [config, events, nextSelectedTrack]);
@@ -206,7 +214,11 @@ export const EventSelectorModal: React.FC<EventSelectorModalProps> = ({ visible,
   };
 
   return (
-    <Modal visible={visible} onDismiss={onDismiss} header={t('event-selector-modal.event-section-header')}>
+    <Modal
+      visible={visible}
+      onDismiss={onDismiss}
+      header={t('event-selector-modal.event-section-header')}
+    >
       <Form
         actions={
           <Box float="right">

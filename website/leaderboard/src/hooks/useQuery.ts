@@ -13,7 +13,10 @@ export default function useQuery(method: string, params: Record<string, any> = {
     const queryApi = async () => {
       try {
         setLoading(true);
-        const response = await client.graphql({ query: (queries as any)[method], variables: params });
+        const response = await client.graphql({
+          query: (queries as any)[method],
+          variables: params,
+        });
         setData((response as any).data[method]);
         setLoading(false);
       } catch (err: any) {

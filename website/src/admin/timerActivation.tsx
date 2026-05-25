@@ -91,16 +91,13 @@ const AdminTimerActivation: React.FC<AdminTimerActivationProps> = (props) => {
   }, [hostname, dropDownSelectedItem]);
 
   async function getActivation() {
-    const apiResponse = await graphqlMutate<{ deviceActivation: any }>(
-      mutations.deviceActivation,
-      {
-        hostname: hostname,
-        deviceType: 'timer',
-        fleetId: 'fleetId' in dropDownSelectedItem ? dropDownSelectedItem.fleetId : '',
-        fleetName: dropDownSelectedItem.fleetName,
-        deviceUiPassword: '',
-      }
-    );
+    const apiResponse = await graphqlMutate<{ deviceActivation: any }>(mutations.deviceActivation, {
+      hostname: hostname,
+      deviceType: 'timer',
+      fleetId: 'fleetId' in dropDownSelectedItem ? dropDownSelectedItem.fleetId : '',
+      fleetName: dropDownSelectedItem.fleetName,
+      deviceUiPassword: '',
+    });
     const response = apiResponse.deviceActivation;
     setResult(response);
     setActivationCode(response['activationCode']);
@@ -174,7 +171,10 @@ const AdminTimerActivation: React.FC<AdminTimerActivationProps> = (props) => {
                 <Select
                   selectedOption={
                     'fleetId' in dropDownSelectedItem
-                      ? { label: dropDownSelectedItem.fleetName, value: dropDownSelectedItem.fleetId }
+                      ? {
+                          label: dropDownSelectedItem.fleetName,
+                          value: dropDownSelectedItem.fleetId,
+                        }
                       : null
                   }
                   options={dropDownFleets}
@@ -182,14 +182,19 @@ const AdminTimerActivation: React.FC<AdminTimerActivationProps> = (props) => {
                   filteringType="auto"
                   selectedAriaLabel="Selected"
                   onChange={({ detail }) => {
-                    const index = fleets.map((e) => e.fleetId).indexOf(detail.selectedOption.value ?? '');
+                    const index = fleets
+                      .map((e) => e.fleetId)
+                      .indexOf(detail.selectedOption.value ?? '');
                     if (index >= 0) {
                       setDropDownSelectedItem(fleets[index]);
                     }
                   }}
                 />
               </FormField>
-              <FormField label={t('AdminActivation.timer-activation.hostname')} errorText={hostnameErrorMessage}>
+              <FormField
+                label={t('AdminActivation.timer-activation.hostname')}
+                errorText={hostnameErrorMessage}
+              >
                 <Input
                   value={hostname}
                   placeholder={t('AdminActivation.timer-activation.hostname-placeholder')}

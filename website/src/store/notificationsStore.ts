@@ -16,7 +16,11 @@ const configureStore = (): void => {
       console.debug('DISMISS_NOTIFICATION DISPATCH FUNCTION', notificationId);
       const currentNotifications = curState.notifications?.notifications || [];
       const updatedNotifications: Notification[] = [...currentNotifications];
-      return { notifications: { notifications: updatedNotifications.filter((n) => n.id !== notificationId) } };
+      return {
+        notifications: {
+          notifications: updatedNotifications.filter((n) => n.id !== notificationId),
+        },
+      };
     },
   };
 

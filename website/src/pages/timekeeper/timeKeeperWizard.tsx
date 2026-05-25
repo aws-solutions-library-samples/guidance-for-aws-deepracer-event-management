@@ -385,11 +385,14 @@ const LocalTimekeeperWizard = () => {
     }, messageDisplayTime);
   };
 
-  const breadcrumbs = useMemo(() => [
-    { text: t('home.breadcrumb'), href: '/' },
-    { text: t('operator.breadcrumb'), href: '/admin/home' },
-    { text: t('topnav.time-keeper-wizard'), href: '/admin/timekeeper-wizard' },
-  ], [t]);
+  const breadcrumbs = useMemo(
+    () => [
+      { text: t('home.breadcrumb'), href: '/' },
+      { text: t('operator.breadcrumb'), href: '/admin/home' },
+      { text: t('topnav.time-keeper-wizard'), href: '/admin/timekeeper-wizard' },
+    ],
+    [t]
+  );
 
   // JSX
   return (

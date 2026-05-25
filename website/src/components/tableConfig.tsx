@@ -99,7 +99,12 @@ interface HeaderActionsProps {
   nrSelectedItems: number;
 }
 
-const HeaderActions = ({ onEdit, onDelete, onAdd, nrSelectedItems }: HeaderActionsProps): JSX.Element => {
+const HeaderActions = ({
+  onEdit,
+  onDelete,
+  onAdd,
+  nrSelectedItems,
+}: HeaderActionsProps): JSX.Element => {
   const disableEditButton = nrSelectedItems === 0 || nrSelectedItems > 1;
   const disableDeleteButton = nrSelectedItems === 0;
   return (
@@ -163,7 +168,9 @@ export const FullPageTableHeader = ({
       {helpPanelHidden ? (
         <Header
           actions={actions}
-          counter={<ItemsCount nrTotalItems={nrTotalItems} nrSelectedItems={nrSelectedItems} /> as any}
+          counter={
+            (<ItemsCount nrTotalItems={nrTotalItems} nrSelectedItems={nrSelectedItems} />) as any
+          }
         >
           {header}
         </Header>
@@ -175,7 +182,9 @@ export const FullPageTableHeader = ({
             </Link>
           }
           actions={actions}
-          counter={<ItemsCount nrTotalItems={nrTotalItems} nrSelectedItems={nrSelectedItems} /> as any}
+          counter={
+            (<ItemsCount nrTotalItems={nrTotalItems} nrSelectedItems={nrSelectedItems} />) as any
+          }
         >
           {header}
         </Header>
@@ -217,7 +226,9 @@ export const TableHeader = ({
           />
         )
       }
-      counter={<ItemsCount nrTotalItems={nrTotalItems} nrSelectedItems={nrSelectedItems} /> as any}
+      counter={
+        (<ItemsCount nrTotalItems={nrTotalItems} nrSelectedItems={nrSelectedItems} />) as any
+      }
     >
       {header}
     </Header>
@@ -230,7 +241,11 @@ interface TablePreferencesProps {
   contentOptions: any[];
 }
 
-export const TablePreferences = ({ preferences, setPreferences, contentOptions }: TablePreferencesProps): JSX.Element => {
+export const TablePreferences = ({
+  preferences,
+  setPreferences,
+  contentOptions,
+}: TablePreferencesProps): JSX.Element => {
   const wrapLines = WrapLines();
   const stripedRows = StripedRows();
   const contentDensity = ContentDensity();

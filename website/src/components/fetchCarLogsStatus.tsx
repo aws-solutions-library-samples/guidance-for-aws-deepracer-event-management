@@ -4,15 +4,15 @@ import { useTranslation } from 'react-i18next';
 /**
  * Valid car logs fetch status values
  */
-type CarLogsStatusType = 
-  | 'CREATED' 
-  | 'REQUESTED_UPLOAD' 
-  | 'WAITING_FOR_UPLOAD' 
-  | 'UPLOAD_FAILED' 
-  | 'UPLOADED' 
-  | 'ANALYZED' 
-  | 'PROCESSING' 
-  | 'DONE' 
+type CarLogsStatusType =
+  | 'CREATED'
+  | 'REQUESTED_UPLOAD'
+  | 'WAITING_FOR_UPLOAD'
+  | 'UPLOAD_FAILED'
+  | 'UPLOADED'
+  | 'ANALYZED'
+  | 'PROCESSING'
+  | 'DONE'
   | 'FAILED';
 
 /**

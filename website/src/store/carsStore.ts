@@ -7,11 +7,11 @@ const configureStore = (): void => {
     ADD_CARS: (curState: GlobalState, carsToAdd: Car[]): Partial<GlobalState> => {
       console.debug('ADD_CARS DISPATCH FUNCTION', carsToAdd);
       const currentCars = curState.cars?.cars || [];
-      const updatedCars: CarsState = { 
+      const updatedCars: CarsState = {
         ...(curState.cars || { cars: [], isLoading: false, refresh: false, offlineCars: false }),
-        cars: [...currentCars]
+        cars: [...currentCars],
       };
-      
+
       carsToAdd.forEach((carToAdd) => {
         const index = updatedCars.cars.findIndex((c) => c.InstanceId === carToAdd.InstanceId);
         if (index === -1) {
@@ -31,24 +31,24 @@ const configureStore = (): void => {
       const currentCars = curState.cars?.cars || [];
       const updatedCars: CarsState = {
         ...(curState.cars || { cars: [], isLoading: false, refresh: false, offlineCars: false }),
-        cars: currentCars.filter((c) => c.InstanceId !== instanceId)
+        cars: currentCars.filter((c) => c.InstanceId !== instanceId),
       };
       return { cars: updatedCars };
     },
     CARS_IS_LOADING: (curState: GlobalState, isLoading: boolean): Partial<GlobalState> => {
       console.debug('CARS_IS_LOADING DISPATCH FUNCTION', isLoading);
-      const updatedCars: CarsState = { 
+      const updatedCars: CarsState = {
         ...(curState.cars || { cars: [], isLoading: false, refresh: false, offlineCars: false }),
-        isLoading
+        isLoading,
       };
       return { cars: updatedCars };
     },
     REFRESH_CARS: (curState: GlobalState, offlineCars: boolean): Partial<GlobalState> => {
       console.debug('REFRESH_CARS DISPATCH FUNCTION', offlineCars);
-      const updatedCars: CarsState = { 
+      const updatedCars: CarsState = {
         ...(curState.cars || { cars: [], isLoading: false, refresh: false, offlineCars: false }),
         refresh: true,
-        offlineCars
+        offlineCars,
       };
       return { cars: updatedCars };
     },
@@ -62,13 +62,13 @@ export default configureStore;
 // deep merge two objects
 const mergeDeep = <T extends Record<string, any>>(target: T, source: Partial<T>): T => {
   const result = { ...target };
-  
+
   if (typeof source === 'object' && source !== null) {
     for (const key in source) {
       if (source.hasOwnProperty(key)) {
         const value = source[key];
         if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-          result[key] = mergeDeep(result[key] || {} as any, value);
+          result[key] = mergeDeep(result[key] || ({} as any), value);
         } else {
           result[key] = value as any;
         }

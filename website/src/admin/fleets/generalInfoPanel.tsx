@@ -28,11 +28,11 @@ interface GeneralInfoPanelProps {
  * @param props - Component props
  * @returns Rendered container with fleet name input
  */
-export const GeneralInfoPanel = ({ 
-  onFormIsValid, 
-  onFormIsInvalid, 
-  fleetName, 
-  onChange 
+export const GeneralInfoPanel = ({
+  onFormIsValid,
+  onFormIsInvalid,
+  fleetName,
+  onChange,
 }: GeneralInfoPanelProps): JSX.Element => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isDirty, setIsDirty] = useState<boolean>(false);

@@ -40,7 +40,11 @@ export class RacerProfile extends Construct {
         highlightColour: GraphqlType.string(),
         updatedAt: GraphqlType.awsDateTime(),
       },
-      directives: [Directive.apiKey(), Directive.iam(), Directive.cognito('admin', 'operator', 'commentator', 'racer', 'registration')],
+      directives: [
+        Directive.apiKey(),
+        Directive.iam(),
+        Directive.cognito('admin', 'operator', 'commentator', 'racer', 'registration'),
+      ],
     });
     props.appsyncApi.schema.addType(profileObjectType);
     this.profileObjectType = profileObjectType;
@@ -131,7 +135,11 @@ export class RacerProfile extends Construct {
 }
 `),
         responseMappingTemplate: appsync.MappingTemplate.fromString('$util.toJson($context.result)'),
-        directives: [Directive.apiKey(), Directive.iam(), Directive.cognito('admin', 'operator', 'commentator', 'racer', 'registration')],
+        directives: [
+          Directive.apiKey(),
+          Directive.iam(),
+          Directive.cognito('admin', 'operator', 'commentator', 'racer', 'registration'),
+        ],
       })
     );
   }

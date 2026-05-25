@@ -14,34 +14,34 @@ const WEBSITE_URL = process.env.DREM_WEBSITE_URL;
 const TIMEOUT_MS = 30_000;
 
 describe('DREM smoke tests', () => {
-    let browser: Browser;
-    let page: Page;
+  let browser: Browser;
+  let page: Page;
 
-    beforeAll(async () => {
-        browser = await chromium.launch({ args: ['--no-sandbox'] });
-        page = await browser.newPage();
-    });
+  beforeAll(async () => {
+    browser = await chromium.launch({ args: ['--no-sandbox'] });
+    page = await browser.newPage();
+  });
 
-    afterAll(async () => {
-        await browser.close();
-    });
+  afterAll(async () => {
+    await browser.close();
+  });
 
-    it('DREM_WEBSITE_URL env var is set', () => {
-        expect(WEBSITE_URL).toBeTruthy();
-    });
+  it('DREM_WEBSITE_URL env var is set', () => {
+    expect(WEBSITE_URL).toBeTruthy();
+  });
 
-    it('main page returns HTTP 200', async () => {
-        const response = await page.goto(WEBSITE_URL!, { timeout: TIMEOUT_MS });
-        expect(response?.status()).toBe(200);
-    });
+  it('main page returns HTTP 200', async () => {
+    const response = await page.goto(WEBSITE_URL!, { timeout: TIMEOUT_MS });
+    expect(response?.status()).toBe(200);
+  });
 
-    it('page title contains DREM', async () => {
-        const title = await page.title();
-        expect(title).toMatch(/deepracer|drem/i);
-    });
+  it('page title contains DREM', async () => {
+    const title = await page.title();
+    expect(title).toMatch(/deepracer|drem/i);
+  });
 
-    it('page renders a root element', async () => {
-        const root = await page.$('#root');
-        expect(root).not.toBeNull();
-    });
+  it('page renders a root element', async () => {
+    const root = await page.$('#root');
+    expect(root).not.toBeNull();
+  });
 });

@@ -182,7 +182,10 @@ export const RaceSetupPage = ({ onNext }: RaceSetupPageProps): JSX.Element => {
               racerValidation={racerValidation}
               selectedEvent={selectedEvent as any}
             />
-            <RacesDoneByUser selecedEvent={selectedEvent as any} selecedUserId={race.userId || null} />
+            <RacesDoneByUser
+              selecedEvent={selectedEvent as any}
+              selecedUserId={race.userId || null}
+            />
             <FormField
               label={t('race-admin.raced-by-proxy')}
               description={t('race-admin.raced-by-proxy-description')}

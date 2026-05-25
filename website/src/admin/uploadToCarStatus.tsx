@@ -1,4 +1,11 @@
-import { BarChart, Box, Container, Header, SpaceBetween, StatusIndicator } from '@cloudscape-design/components';
+import {
+  BarChart,
+  Box,
+  Container,
+  Header,
+  SpaceBetween,
+  StatusIndicator,
+} from '@cloudscape-design/components';
 import ColumnLayout from '@cloudscape-design/components/column-layout';
 import React, { useEffect, useState } from 'react';
 import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
@@ -11,7 +18,7 @@ import {
   colorChartsStatusInfo,
   colorChartsStatusLow,
   colorChartsStatusNeutral,
-  colorChartsStatusPositive
+  colorChartsStatusPositive,
 } from '@cloudscape-design/design-tokens';
 import { useTranslation } from 'react-i18next';
 import { EventSelectorModal } from '../components/eventSelectorModal';
@@ -20,10 +27,7 @@ import { PageTable } from '../components/pageTable';
 import { onUploadsToCarCreated, onUploadsToCarUpdated } from '../graphql/subscriptions';
 import i18next from '../i18n';
 import { useSelectedEventContext } from '../store/contexts/storeProvider';
-import {
-  ColumnConfiguration,
-  FilteringProperties,
-} from './uploadToCarStatusTableConfig';
+import { ColumnConfiguration, FilteringProperties } from './uploadToCarStatusTableConfig';
 
 // Type definitions
 type UploadStatus = 'Created' | 'Started' | 'InProgress' | 'Success' | 'Failed';
@@ -75,7 +79,7 @@ const UploadToCarStatus: React.FC = () => {
   }, [selectedEvent]);
 
   function enrichStatus(data: UploadToCarItem[]): UploadToCarItem[] {
-    data.forEach(element => {
+    data.forEach((element) => {
       // enrich status
       if (element.status === 'Created') {
         element.statusIndicator = (
@@ -148,7 +152,7 @@ const UploadToCarStatus: React.FC = () => {
       setIsLoading(false);
     }
 
-    if (typeof selectedEvent?.eventId !== "undefined") {
+    if (typeof selectedEvent?.eventId !== 'undefined') {
       listUploadsToCar();
     }
     return () => {
@@ -161,56 +165,50 @@ const UploadToCarStatus: React.FC = () => {
     const newHorizontalBarData: BarChartSeries[] = [];
 
     // Status
-    const statusesRaw = allItems.map(a => a.status);
+    const statusesRaw = allItems.map((a) => a.status);
     const statuses = statusesRaw.reduce((acc: StatusCount, status) => {
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {});
-    
+
     for (const [key, value] of Object.entries(statuses)) {
       const data: BarChartSeries = {
         title: key,
-        type: "bar",
-        data: [
-          { x: "Status", y: value as number },
-        ],
+        type: 'bar',
+        data: [{ x: 'Status', y: value as number }],
         color: getColorForStatus(key),
       };
       newHorizontalBarData.push(data);
     }
 
     // carName
-    const carNamesRaw = allItems.map(a => a.carName).filter((name): name is string => !!name);
+    const carNamesRaw = allItems.map((a) => a.carName).filter((name): name is string => !!name);
     const carNames = carNamesRaw.reduce((acc: StatusCount, name) => {
       acc[name] = (acc[name] || 0) + 1;
       return acc;
     }, {});
-    
+
     for (const [key, value] of Object.entries(carNames)) {
       const data: BarChartSeries = {
         title: key,
-        type: "bar",
-        data: [
-          { x: "Car", y: value as number },
-        ],
+        type: 'bar',
+        data: [{ x: 'Car', y: value as number }],
       };
       newHorizontalBarData.push(data);
     }
 
     // jobId
-    const jobIdsRaw = allItems.map(a => a.jobId).filter((id): id is string => !!id);
+    const jobIdsRaw = allItems.map((a) => a.jobId).filter((id): id is string => !!id);
     const jobIds = jobIdsRaw.reduce((acc: StatusCount, id) => {
       acc[id] = (acc[id] || 0) + 1;
       return acc;
     }, {});
-    
+
     for (const [key, value] of Object.entries(jobIds)) {
       const data: BarChartSeries = {
         title: key,
-        type: "bar",
-        data: [
-          { x: "Job", y: value as number },
-        ],
+        type: 'bar',
+        data: [{ x: 'Job', y: value as number }],
       };
       newHorizontalBarData.push(data);
     }
@@ -222,9 +220,9 @@ const UploadToCarStatus: React.FC = () => {
   useEffect(() => {
     const newBarData: BarChartDataPoint[] = [];
     const newXDomain: Date[] = [];
-    
-    allItems.forEach(element => {
-      if (typeof element.duration !== "undefined" && element.uploadStartTime) {
+
+    allItems.forEach((element) => {
+      if (typeof element.duration !== 'undefined' && element.uploadStartTime) {
         const dateTime = new Date(element.uploadStartTime);
         const data: BarChartDataPoint = { x: dateTime, y: element.duration };
         newBarData.push(data);
@@ -241,13 +239,15 @@ const UploadToCarStatus: React.FC = () => {
     newXDomain.sort((a, b) => {
       return a.getTime() - b.getTime();
     });
-    
+
     setBarData(newBarData);
     setXDomain(newXDomain);
 
     if (allItems.length > 0) {
       const max = allItems.reduce((prev, current) => {
-        return (prev && prev.duration && current.duration && prev.duration > current.duration) ? prev : current;
+        return prev && prev.duration && current.duration && prev.duration > current.duration
+          ? prev
+          : current;
       });
       const newMaxDuration = Math.ceil(max.duration || 0) + 3;
       setMaxDuration(newMaxDuration);
@@ -262,16 +262,16 @@ const UploadToCarStatus: React.FC = () => {
       onUploadsToCarCreated,
       filter
     ).subscribe({
-        next: (event) => {
-          console.debug(
-            'onUploadsToCarCreated event received',
-            event.value.data.onUploadsToCarCreated
-          );
-          event.value.data.onUploadsToCarCreated.status = 'Created';
-          const newItems = allItems.concat(event.value.data.onUploadsToCarCreated);
-          const enrichedItems = enrichStatus(newItems);
-          setItems(enrichedItems);
-        },
+      next: (event) => {
+        console.debug(
+          'onUploadsToCarCreated event received',
+          event.value.data.onUploadsToCarCreated
+        );
+        event.value.data.onUploadsToCarCreated.status = 'Created';
+        const newItems = allItems.concat(event.value.data.onUploadsToCarCreated);
+        const enrichedItems = enrichStatus(newItems);
+        setItems(enrichedItems);
+      },
     });
 
     return () => {
@@ -288,30 +288,32 @@ const UploadToCarStatus: React.FC = () => {
       onUploadsToCarUpdated,
       filter
     ).subscribe({
-        next: (event) => {
-          const updatedData = event.value.data.onUploadsToCarUpdated;
-          console.debug('onUploadsToCarUpdated event received', updatedData);
-          const newItems = [...allItems];
-          let currentData = newItems.find((value) => (value.modelKey === updatedData.modelKey && value.jobId === updatedData.jobId));
-          
-          // handle missed events
-          if (currentData === undefined) {
-            currentData = {} as UploadToCarItem;
-            newItems.push(currentData);
-            currentData.modelKey = updatedData.modelKey;
-          }
+      next: (event) => {
+        const updatedData = event.value.data.onUploadsToCarUpdated;
+        console.debug('onUploadsToCarUpdated event received', updatedData);
+        const newItems = [...allItems];
+        let currentData = newItems.find(
+          (value) => value.modelKey === updatedData.modelKey && value.jobId === updatedData.jobId
+        );
 
-          currentData.status = updatedData.status;
-          if (updatedData.uploadStartTime) {
-            currentData.uploadStartTime = updatedData.uploadStartTime;
-          }
-          if (updatedData.endTime) {
-            currentData.endTime = updatedData.endTime;
-          }
+        // handle missed events
+        if (currentData === undefined) {
+          currentData = {} as UploadToCarItem;
+          newItems.push(currentData);
+          currentData.modelKey = updatedData.modelKey;
+        }
 
-          const enrichedItems = enrichStatus(newItems);
-          setItems(enrichedItems);
-        },
+        currentData.status = updatedData.status;
+        if (updatedData.uploadStartTime) {
+          currentData.uploadStartTime = updatedData.uploadStartTime;
+        }
+        if (updatedData.endTime) {
+          currentData.endTime = updatedData.endTime;
+        }
+
+        const enrichedItems = enrichStatus(newItems);
+        setItems(enrichedItems);
+      },
     });
 
     return () => {
@@ -323,17 +325,14 @@ const UploadToCarStatus: React.FC = () => {
   const filteringProperties = FilteringProperties() as any;
 
   const HeaderActionButtons: React.FC = () => {
-    return (
-      <SpaceBetween direction="horizontal" size="xs">
-      </SpaceBetween>
-    );
+    return <SpaceBetween direction="horizontal" size="xs"></SpaceBetween>;
   };
 
   const breadcrumbs: Array<{ text: string; href?: string }> = [
     { text: t('home.breadcrumb'), href: '/' },
     { text: t('operator.breadcrumb'), href: '/admin/home' },
     { text: t('models.breadcrumb'), href: '/admin/home' },
-    { text: t('upload-to-car-status.breadcrumb') }
+    { text: t('upload-to-car-status.breadcrumb') },
   ];
 
   return (
@@ -359,11 +358,13 @@ const UploadToCarStatus: React.FC = () => {
       >
         <SpaceBetween direction="vertical" size="l">
           <ColumnLayout columns={2}>
-            <Container {...{ textAlign: "center", fitHeight: true } as any}>
-              <Header variant={"h2" as any}>{t('upload-to-car-status.horizontal-bar.header')}</Header>
+            <Container {...({ textAlign: 'center', fitHeight: true } as any)}>
+              <Header variant={'h2' as any}>
+                {t('upload-to-car-status.horizontal-bar.header')}
+              </Header>
               <BarChart
                 series={horizontalBarData as any}
-                xDomain={["Status", "Car", "Job"]}
+                xDomain={['Status', 'Car', 'Job']}
                 yDomain={[0, allItems.length]}
                 ariaLabel="Stacked, horizontal bar chart"
                 hideFilter
@@ -383,29 +384,30 @@ const UploadToCarStatus: React.FC = () => {
               />
             </Container>
 
-            <Container {...{ textAlign: "center", fitHeight: true } as any}>
-              <Header variant={"h2" as any}>{t('upload-to-car-status.upload-time.header')}</Header>
+            <Container {...({ textAlign: 'center', fitHeight: true } as any)}>
+              <Header variant={'h2' as any}>{t('upload-to-car-status.upload-time.header')}</Header>
               <BarChart
                 series={[
                   {
                     title: t('upload-to-car-status.upload-time.y-title'),
-                    type: "bar",
-                    data: barData as any
+                    type: 'bar',
+                    data: barData as any,
                   },
                 ]}
                 xDomain={xDomain as any}
                 yDomain={[0, maxDuration]}
                 i18nStrings={{
                   xTickFormatter: (e: Date) =>
-                    e.toLocaleDateString("en-GB", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "numeric",
-                        minute: "numeric",
-                        hour12: false
+                    e
+                      .toLocaleDateString('en-GB', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        hour12: false,
                       })
-                      .split(",")
-                      .join("\n")
+                      .split(',')
+                      .join('\n'),
                 }}
                 ariaLabel="Single data series line chart"
                 hideFilter

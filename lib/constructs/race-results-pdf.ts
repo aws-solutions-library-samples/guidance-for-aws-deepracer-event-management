@@ -6,14 +6,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { IBucket } from 'aws-cdk-lib/aws-s3';
-import {
-  CodeFirstSchema,
-  Directive,
-  EnumType,
-  GraphqlType,
-  ObjectType,
-  ResolvableField,
-} from 'awscdk-appsync-utils';
+import { CodeFirstSchema, Directive, EnumType, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 
@@ -200,10 +193,7 @@ export class RaceResultsPdf extends NestedStack {
         createdAt: GraphqlType.awsDateTime({ isRequired: true }),
         completedAt: GraphqlType.awsDateTime(),
       },
-      directives: [
-        Directive.cognito('admin', 'operator', 'commentator', 'racer'),
-        Directive.iam(),
-      ],
+      directives: [Directive.cognito('admin', 'operator', 'commentator', 'racer'), Directive.iam()],
     });
     props.appsyncApi.schema.addType(pdfJobType);
 
@@ -250,11 +240,7 @@ export class RaceResultsPdf extends NestedStack {
         appliesTo: ['Resource::*'],
       },
     ];
-    NagSuppressions.addResourceSuppressions(
-      [orchestratorLambda, workerLambda],
-      lambdaIamSuppressions,
-      true
-    );
+    NagSuppressions.addResourceSuppressions([orchestratorLambda, workerLambda], lambdaIamSuppressions, true);
     // The orchestrator also invokes the worker — IAM5 wildcard covers versions/aliases.
     NagSuppressions.addResourceSuppressions(
       orchestratorLambda,
@@ -349,4 +335,3 @@ function ecrAssetsPlatformFor(arch: lambda.Architecture) {
   const { Platform } = require('aws-cdk-lib/aws-ecr-assets');
   return arch === lambda.Architecture.ARM_64 ? Platform.LINUX_ARM64 : Platform.LINUX_AMD64;
 }
-

@@ -61,9 +61,7 @@ function resolveToken(tokenValue: string): string {
       // class — so we have to read from a descendant of <body> (or <body>
       // itself) to see the active theme's value. Reading from
       // documentElement misses dark-mode overrides.
-      const live = getComputedStyle(document.body)
-        .getPropertyValue(varMatch[1])
-        .trim();
+      const live = getComputedStyle(document.body).getPropertyValue(varMatch[1]).trim();
       if (live) return live;
     }
   }

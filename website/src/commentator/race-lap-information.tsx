@@ -23,7 +23,13 @@ interface AverageLap {
 }
 
 interface OverlayInformation {
-  raceStatus: 'READY_TO_START' | 'RACE_IN_PROGRESS' | 'RACE_PAUSED' | 'NO_RACER_SELECTED' | 'RACE_FINISHED' | string;
+  raceStatus:
+    | 'READY_TO_START'
+    | 'RACE_IN_PROGRESS'
+    | 'RACE_PAUSED'
+    | 'NO_RACER_SELECTED'
+    | 'RACE_FINISHED'
+    | string;
   laps: Record<string, Lap>;
   averageLaps: AverageLap[];
 }
@@ -47,16 +53,18 @@ interface RaceLapInformationProps {
   sortedLeaderboard: LeaderboardEntry[];
 }
 
-const RaceLapInformation: React.FC<RaceLapInformationProps> = ({ 
-  overlayInformation, 
-  selectedEvent, 
-  sortedLeaderboard 
+const RaceLapInformation: React.FC<RaceLapInformationProps> = ({
+  overlayInformation,
+  selectedEvent,
+  sortedLeaderboard,
 }) => {
   const { t } = useTranslation();
 
   const [laps, SetLaps] = useState<Record<string, Lap>>({});
   const [thresholds, setThresholds] = useState<LeaderboardEntry>({});
-  const [fastestRaceAvgLap, SetFastestRaceAvgLap] = useState<AverageLap | Record<string, never>>({});
+  const [fastestRaceAvgLap, SetFastestRaceAvgLap] = useState<AverageLap | Record<string, never>>(
+    {}
+  );
 
   const updateUI = (overlayInfo: OverlayInformation): void => {
     SetLaps(overlayInfo.laps);
@@ -100,7 +108,7 @@ const RaceLapInformation: React.FC<RaceLapInformationProps> = ({
         time: lap.lapTime ?? lap.time ?? 0,
         isValid: lap.isValid ?? true,
       })),
-    [laps],
+    [laps]
   );
 
   return (
@@ -125,7 +133,11 @@ const RaceLapInformation: React.FC<RaceLapInformationProps> = ({
             fastestEventLapTime={thresholds.fastestLapTime}
             fastestEventAvgLap={thresholds.fastestAverageLap}
             raceFormat={selectedEvent.raceConfig.rankingMethod}
-            fastestRaceAvgLap={fastestRaceAvgLap.avgTime !== undefined ? fastestRaceAvgLap as AverageLap : undefined}
+            fastestRaceAvgLap={
+              fastestRaceAvgLap.avgTime !== undefined
+                ? (fastestRaceAvgLap as AverageLap)
+                : undefined
+            }
           ></RaceGraph>
         </Container>
       </Grid>

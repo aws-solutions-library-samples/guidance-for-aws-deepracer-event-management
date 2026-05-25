@@ -20,7 +20,10 @@ const configureStore = (): void => {
       updatedSplitPanel.isOpen = isOpen;
       return { helpPanel: updatedSplitPanel };
     },
-    UPDATE_HELP_PANEL: (curState: GlobalState, settings: Partial<HelpPanelState>): Partial<GlobalState> => {
+    UPDATE_HELP_PANEL: (
+      curState: GlobalState,
+      settings: Partial<HelpPanelState>
+    ): Partial<GlobalState> => {
       console.debug('UPDATE_HELP_PANEL DISPATCH FUNCTION', settings);
       return { helpPanel: { ...curState.helpPanel, ...settings } };
     },

@@ -1,6 +1,7 @@
 # TypeScript Migration Status
 
 ## Overview
+
 This document tracks the TypeScript migration progress for the AWS DeepRacer Event Management application.
 
 **Last Updated:** 2024-01-29
@@ -10,21 +11,22 @@ This document tracks the TypeScript migration progress for the AWS DeepRacer Eve
 
 ## Summary Statistics
 
-| Metric | Value |
-|--------|-------|
-| Total TypeScript Files | 155 |
-| Fully Typed Files | 142 (91.6%) |
-| Files with @ts-nocheck | 13 (8.4%) |
-| Test Pass Rate | 100% (40/40) |
-| TypeScript Compilation Errors | 0 |
-| ESLint Status | ✅ Working |
-| Production Build Status | ✅ Success |
+| Metric                        | Value        |
+| ----------------------------- | ------------ |
+| Total TypeScript Files        | 155          |
+| Fully Typed Files             | 142 (91.6%)  |
+| Files with @ts-nocheck        | 13 (8.4%)    |
+| Test Pass Rate                | 100% (40/40) |
+| TypeScript Compilation Errors | 0            |
+| ESLint Status                 | ✅ Working   |
+| Production Build Status       | ✅ Success   |
 
 ---
 
 ## Completed Work
 
 ### ✅ Core Infrastructure (100%)
+
 - [x] tsconfig.json configured with strict mode
 - [x] All .js/.jsx files renamed to .ts/.tsx
 - [x] All @types packages installed
@@ -32,12 +34,14 @@ This document tracks the TypeScript migration progress for the AWS DeepRacer Eve
 - [x] Build process integrated with TypeScript
 
 ### ✅ Type Definitions (100%)
+
 - [x] Domain models (types/domain.ts)
 - [x] API response types (types/api.ts)
 - [x] GraphQL types (types/graphql.ts)
 - [x] All utility type helpers
 
 ### ✅ Application Code (91.6%)
+
 - [x] All utility functions (support-functions/)
 - [x] All test files (4 test files, 40 tests)
 - [x] 142 React components fully typed
@@ -53,11 +57,13 @@ This document tracks the TypeScript migration progress for the AWS DeepRacer Eve
 The following 13 files still use `@ts-nocheck` and require proper type annotations:
 
 #### 1. **commentator-stats.tsx** (254 lines)
+
 **Location:** `src/commentator/commentator-stats.tsx`
 **Complexity:** High - GraphQL subscriptions
 **Estimated Effort:** 3-4 hours
 
 **Key Typing Needs:**
+
 - No props (top-level component)
 - State variables need types:
   ```typescript
@@ -69,6 +75,7 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 - Helper functions need return types
 
 **Dependencies:**
+
 - LeaderboardEntry type from types/domain.ts
 - OverlayInfo type from types/domain.ts
 - Race type from types/domain.ts
@@ -76,11 +83,13 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 ---
 
 #### 2. **uploadModelsToCar.tsx** (263 lines)
+
 **Location:** `src/pages/timekeeper/components/uploadModelsToCar.tsx`
 **Complexity:** High - GraphQL subscriptions + file upload
 **Estimated Effort:** 3-4 hours
 
 **Key Typing Needs:**
+
 - Props interface:
   ```typescript
   interface UploadModelsToCarProps {
@@ -101,11 +110,13 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 ---
 
 #### 3. **carLogsManagement.tsx** (336 lines)
+
 **Location:** `src/pages/car-logs-management/carLogsManagement.tsx`
 **Complexity:** High - Complex state management
 **Estimated Effort:** 4-5 hours
 
 **Key Typing Needs:**
+
 - Props interface (likely none, top-level page)
 - Multiple state variables for log management
 - Table configuration types
@@ -114,11 +125,13 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 ---
 
 #### 4. **editCarsModal.tsx** (360 lines)
+
 **Location:** `src/components/editCarsModal.tsx`
 **Complexity:** High - Multi-step wizard
 **Estimated Effort:** 4-5 hours
 
 **Key Typing Needs:**
+
 - Props interface with car data and callbacks
 - Form state types
 - Validation error types
@@ -127,11 +140,13 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 ---
 
 #### 5. **deviceTableConfig.tsx** (416 lines)
+
 **Location:** `src/components/devices-table/deviceTableConfig.tsx`
 **Complexity:** Medium-High - Table configuration
 **Estimated Effort:** 3-4 hours
 
 **Key Typing Needs:**
+
 - Table column definitions
 - Device data interfaces
 - Action handler types
@@ -140,11 +155,13 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 ---
 
 #### 6. **topNav.tsx** (421 lines)
+
 **Location:** `src/components/topNav.tsx`
 **Complexity:** Medium - Navigation + auth state
 **Estimated Effort:** 3-4 hours
 
 **Key Typing Needs:**
+
 - Props interface for navigation items
 - Auth state types
 - Menu item types
@@ -153,11 +170,13 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 ---
 
 #### 7. **uploadToCarStatus.tsx** (440 lines)
+
 **Location:** `src/admin/uploadToCarStatus.tsx`
 **Complexity:** High - Status tracking + subscriptions
 **Estimated Effort:** 4-5 hours
 
 **Key Typing Needs:**
+
 - Props interface
 - Upload status types
 - GraphQL subscription types
@@ -166,11 +185,13 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 ---
 
 #### 8. **racePageLite.tsx** (459 lines)
+
 **Location:** `src/pages/timekeeper/pages/racePageLite.tsx`
 **Complexity:** Very High - Real-time race display
 **Estimated Effort:** 5-6 hours
 
 **Key Typing Needs:**
+
 - Props interface
 - Race state types
 - Timer types
@@ -180,11 +201,13 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 ---
 
 #### 9. **useCarsApi.ts** (467 lines)
+
 **Location:** `src/hooks/useCarsApi.ts`
 **Complexity:** High - Custom hook with API calls
 **Estimated Effort:** 4-5 hours
 
 **Key Typing Needs:**
+
 - Hook return type interface
 - API response types
 - Error types
@@ -194,11 +217,13 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 ---
 
 #### 10. **racePage.tsx** (473 lines)
+
 **Location:** `src/pages/timekeeper/pages/racePage.tsx`
 **Complexity:** Very High - Full race management
 **Estimated Effort:** 5-6 hours
 
 **Key Typing Needs:**
+
 - Props interface
 - Complex race state management
 - Real-time update types
@@ -208,11 +233,13 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 ---
 
 #### 11. **timeKeeperWizard.tsx** (518 lines)
+
 **Location:** `src/pages/timekeeper/wizard/timeKeeperWizard.tsx`
 **Complexity:** Very High - Multi-step wizard
 **Estimated Effort:** 5-6 hours
 
 **Key Typing Needs:**
+
 - Props interface
 - Step configuration types
 - Form state for each step
@@ -222,11 +249,13 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 ---
 
 #### 12. **carModelUploadModal.tsx** (804 lines)
+
 **Location:** `src/pages/car-model-management/carModelUploadModal.tsx`
 **Complexity:** Very High - Largest file, complex upload flow
 **Estimated Effort:** 8-10 hours
 
 **Key Typing Needs:**
+
 - Props interface
 - File upload state types
 - Multi-step upload flow types
@@ -237,6 +266,7 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 ---
 
 #### 13. **metricCalculations.test.ts** (604 lines)
+
 **Location:** `src/admin/race-admin/support-functions/metricCalculations.test.ts`
 **Complexity:** Low - Test file
 **Estimated Effort:** 1-2 hours (optional)
@@ -252,6 +282,7 @@ The following 13 files still use `@ts-nocheck` and require proper type annotatio
 For each remaining file, follow this systematic approach:
 
 #### Phase 1: Analyze (30 minutes per file)
+
 1. Identify all props used
 2. List all state variables
 3. Document all API/GraphQL calls
@@ -259,6 +290,7 @@ For each remaining file, follow this systematic approach:
 5. Identify helper functions
 
 #### Phase 2: Create Types (1-2 hours per file)
+
 1. Define props interface
 2. Create state type definitions
 3. Add API response types
@@ -266,6 +298,7 @@ For each remaining file, follow this systematic approach:
 5. Add function return types
 
 #### Phase 3: Apply Types (1-2 hours per file)
+
 1. Remove @ts-nocheck
 2. Add props interface to component
 3. Type all useState calls with generics
@@ -273,6 +306,7 @@ For each remaining file, follow this systematic approach:
 5. Fix any TypeScript errors
 
 #### Phase 4: Verify (30 minutes per file)
+
 1. Run `npx tsc --noEmit`
 2. Run `npm test`
 3. Run `npm run build`
@@ -281,21 +315,23 @@ For each remaining file, follow this systematic approach:
 ### Example: Typing a Component
 
 **Before:**
+
 ```typescript
 // @ts-nocheck
 export function MyComponent(props) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+
   const handleClick = (item) => {
     props.onSelect(item);
   };
-  
+
   return <div>...</div>;
 }
 ```
 
 **After:**
+
 ```typescript
 import { MyDataItem } from '../types/domain';
 
@@ -308,11 +344,11 @@ interface MyComponentProps {
 export function MyComponent({ items, onSelect, isEnabled = true }: MyComponentProps) {
   const [data, setData] = useState<MyDataItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  
+
   const handleClick = (item: MyDataItem): void => {
     onSelect(item);
   };
-  
+
   return <div>...</div>;
 }
 ```
@@ -325,6 +361,7 @@ export function MyComponent({ items, onSelect, isEnabled = true }: MyComponentPr
 
 **Problem:** Subscription types are complex
 **Solution:**
+
 ```typescript
 import { GraphQLResult } from '@aws-amplify/api';
 
@@ -335,9 +372,7 @@ interface SubscriptionEvent<T> {
 }
 
 useEffect(() => {
-  const subscription = API.graphql(
-    graphqlOperation(onNewLeaderboardEntry, filter)
-  ).subscribe({
+  const subscription = API.graphql(graphqlOperation(onNewLeaderboardEntry, filter)).subscribe({
     next: (event: SubscriptionEvent<{ onNewLeaderboardEntry: LeaderboardEntry }>) => {
       const entry = event.value.data.onNewLeaderboardEntry;
       updateLeaderboard(entry);
@@ -352,6 +387,7 @@ useEffect(() => {
 
 **Problem:** API.graphql returns unknown type
 **Solution:**
+
 ```typescript
 import { GraphQLResult } from '@aws-amplify/api-graphql';
 
@@ -363,9 +399,9 @@ interface GetLeaderboardResponse {
   };
 }
 
-const response = await API.graphql(
+const response = (await API.graphql(
   graphqlOperation(getLeaderboard, { eventId, trackId })
-) as GraphQLResult<GetLeaderboardResponse>;
+)) as GraphQLResult<GetLeaderboardResponse>;
 
 const entries = response.data?.getLeaderboard.entries || [];
 ```
@@ -374,6 +410,7 @@ const entries = response.data?.getLeaderboard.entries || [];
 
 **Problem:** State has nested structure
 **Solution:**
+
 ```typescript
 interface UploadJob {
   jobId: string;
@@ -393,6 +430,7 @@ const [jobs, setJobs] = useState<UploadJob[]>([]);
 
 **Problem:** Cloudscape components have complex prop types
 **Solution:**
+
 ```typescript
 import { TableProps } from '@cloudscape-design/components';
 
@@ -453,32 +491,35 @@ All files except those listed in "Remaining Work" section above.
 
 ### Timeline Estimate
 
-| Priority | Files | Estimated Time | Cumulative |
-|----------|-------|----------------|------------|
-| High | 5 files | 18-22 hours | 96.7% complete |
-| Medium | 4 files | 17-21 hours | 99.3% complete |
-| Low | 3 files | 13-15 hours | 100% complete |
-| **Total** | **12 files** | **48-58 hours** | **100%** |
+| Priority  | Files        | Estimated Time  | Cumulative     |
+| --------- | ------------ | --------------- | -------------- |
+| High      | 5 files      | 18-22 hours     | 96.7% complete |
+| Medium    | 4 files      | 17-21 hours     | 99.3% complete |
+| Low       | 3 files      | 13-15 hours     | 100% complete  |
+| **Total** | **12 files** | **48-58 hours** | **100%**       |
 
-*Note: metricCalculations.test.ts can keep @ts-nocheck as it's a test file*
+_Note: metricCalculations.test.ts can keep @ts-nocheck as it's a test file_
 
 ---
 
 ## Resources
 
 ### Type Definitions
+
 - **Domain Models:** `src/types/domain.ts`
 - **API Types:** `src/types/api.ts`
 - **GraphQL Types:** `src/types/graphql.ts`
 - **Index:** `src/types/index.ts`
 
 ### Documentation
+
 - **TypeScript Handbook:** https://www.typescriptlang.org/docs/handbook/intro.html
 - **React TypeScript Cheatsheet:** https://react-typescript-cheatsheet.netlify.app/
 - **Cloudscape Design TypeScript:** https://cloudscape.design/get-started/guides/typescript/
 - **AWS Amplify TypeScript:** https://docs.amplify.aws/lib/graphqlapi/typescript-support/q/platform/js/
 
 ### Tools
+
 - **TypeScript Compiler:** `npx tsc --noEmit`
 - **ESLint:** `npx eslint src/`
 - **Tests:** `npm test`
@@ -489,6 +530,7 @@ All files except those listed in "Remaining Work" section above.
 ## Conclusion
 
 The TypeScript migration is **89% complete** with a solid foundation:
+
 - ✅ Zero compilation errors
 - ✅ All tests passing (100%)
 - ✅ Production build working
@@ -498,6 +540,7 @@ The TypeScript migration is **89% complete** with a solid foundation:
 The remaining 13 files (8.4%) are the most complex subscription-heavy components. They can be tackled incrementally without disrupting the application, as they currently compile and run correctly with `@ts-nocheck`.
 
 **Recommended Next Steps:**
+
 1. Start with deviceTableConfig.tsx (clear structure)
 2. Move to topNav.tsx (auth state)
 3. Tackle subscription components one at a time

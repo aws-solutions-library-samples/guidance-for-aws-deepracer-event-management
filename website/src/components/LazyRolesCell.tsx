@@ -24,10 +24,9 @@ export const LazyRolesCell = ({ username }: LazyRolesCellProps) => {
     let cancelled = false;
     const fetchRoles = async () => {
       try {
-        const response = await graphqlQuery<{ getUserRoles: { Username: string; Roles: string[] } }>(
-          getUserRoles,
-          { username }
-        );
+        const response = await graphqlQuery<{
+          getUserRoles: { Username: string; Roles: string[] };
+        }>(getUserRoles, { username });
         const userRoles = response.getUserRoles?.Roles;
         const rolesStr = userRoles && userRoles.length > 0 ? userRoles.join(', ') : '-';
         rolesCache[username] = rolesStr;
@@ -45,7 +44,9 @@ export const LazyRolesCell = ({ username }: LazyRolesCellProps) => {
     };
     fetchRoles();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [username]);
 
   if (loading) return <Spinner size="normal" />;

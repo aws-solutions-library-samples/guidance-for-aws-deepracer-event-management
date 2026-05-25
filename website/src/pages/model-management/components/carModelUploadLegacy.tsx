@@ -1,10 +1,4 @@
-import {
-  Alert,
-  Badge,
-  ProgressBar,
-  Table,
-  TableProps,
-} from '@cloudscape-design/components';
+import { Alert, Badge, ProgressBar, Table, TableProps } from '@cloudscape-design/components';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { graphqlMutate } from '../../../graphql/graphqlHelpers';
@@ -53,16 +47,13 @@ export const StatusModelContent: React.FC<StatusModelContentProps> = (props) => 
   const [currentModel, setCurrentModel] = useState<Model | null>(null);
 
   async function uploadModelToCar(car: Car, model: Model): Promise<void> {
-    const response = await graphqlMutate<UploadModelToCarResponse>(
-      mutations.uploadModelToCar,
-      {
-        entry: {
-          carInstanceId: car.InstanceId,
-          modelKey: model.fileMetaData?.key,
-          username: model.username,
-        },
-      }
-    );
+    const response = await graphqlMutate<UploadModelToCarResponse>(mutations.uploadModelToCar, {
+      entry: {
+        carInstanceId: car.InstanceId,
+        modelKey: model.fileMetaData?.key,
+        username: model.username,
+      },
+    });
     if (response?.uploadModelToCar) {
       setResult(response.uploadModelToCar.ssmCommandId);
       setCommandId(response.uploadModelToCar.ssmCommandId);
@@ -74,8 +65,8 @@ export const StatusModelContent: React.FC<StatusModelContentProps> = (props) => 
   }
 
   async function uploadModelToCarStatus(
-    InstanceId: string, 
-    CommandId: string, 
+    InstanceId: string,
+    CommandId: string,
     model: Model
   ): Promise<string | undefined> {
     if (InstanceId === '' || CommandId === '') {
@@ -96,10 +87,10 @@ export const StatusModelContent: React.FC<StatusModelContentProps> = (props) => 
       CommandId: CommandId,
       Status: ssmCommandStatus,
     };
-    
+
     const tempResultsArray: UploadResult[] = [];
     let updatedElement = false;
-    
+
     for (const currentResult of results) {
       if (currentResult.CommandId === CommandId) {
         tempResultsArray.push(resultToAdd);

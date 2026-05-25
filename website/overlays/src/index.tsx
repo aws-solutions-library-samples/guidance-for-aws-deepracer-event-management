@@ -4,15 +4,9 @@ import App from './App';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
 
-import {
-    Route,
-    BrowserRouter as Router,
-    Routes
-} from "react-router-dom";
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
   <React.StrictMode>
     <Router basename="/overlays">

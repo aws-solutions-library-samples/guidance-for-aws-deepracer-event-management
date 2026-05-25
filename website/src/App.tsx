@@ -1,7 +1,4 @@
-import {
-  Authenticator,
-  useAuthenticator,
-} from '@aws-amplify/ui-react';
+import { Authenticator, useAuthenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify, type ResourcesConfig } from 'aws-amplify';
 import { AwsRum } from 'aws-rum-web';
@@ -144,7 +141,11 @@ const components = {
 
           <CountrySelector
             amplify={true}
-            description={Array.isArray(validationErrors.countryCode) ? validationErrors.countryCode[0] : validationErrors.countryCode}
+            description={
+              Array.isArray(validationErrors.countryCode)
+                ? validationErrors.countryCode[0]
+                : validationErrors.countryCode
+            }
           />
         </>
       );

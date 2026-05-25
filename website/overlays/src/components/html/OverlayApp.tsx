@@ -57,9 +57,7 @@ export default function OverlayApp() {
   return (
     <div className={styles.root}>
       <ChromaBg />
-      <div
-        className={`${styles.backdrop} ${backdropVisible ? styles.backdropVisible : ''}`}
-      />
+      <div className={`${styles.backdrop} ${backdropVisible ? styles.backdropVisible : ''}`} />
       <Leaderboard
         entries={leaderboardEntries}
         raceFormat={raceFormat}

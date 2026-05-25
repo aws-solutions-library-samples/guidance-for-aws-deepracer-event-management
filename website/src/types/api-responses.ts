@@ -1,10 +1,10 @@
 // API Response Types - Generated from CDK GraphQL Schema Definitions
 // These types match the actual API responses from the backend Lambda functions
 //
-// IMPORTANT NOTE: 
+// IMPORTANT NOTE:
 // This file contains types derived from the CDK GraphQL schema (source of truth for API responses).
 // There is a separate file `types/domain.ts` that contains frontend domain model types.
-// 
+//
 // Key Differences:
 // - api-responses.ts: Types as they come FROM the API (backend shape)
 // - domain.ts: Types as used IN the application (frontend shape)
@@ -277,7 +277,7 @@ export interface GetUsersResponse {
 }
 
 // ============================================================================
-// CARS/FLEETS API TYPES  
+// CARS/FLEETS API TYPES
 // ============================================================================
 
 export interface Car {

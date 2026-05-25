@@ -1,6 +1,18 @@
 // API response types and interfaces
 
-import { Event, Race, Car, Fleet, User, Model, CarLogAsset, Leaderboard, UploadToCarStatus, FetchFromCarStatus, Group } from './domain';
+import {
+  Event,
+  Race,
+  Car,
+  Fleet,
+  User,
+  Model,
+  CarLogAsset,
+  Leaderboard,
+  UploadToCarStatus,
+  FetchFromCarStatus,
+  Group,
+} from './domain';
 
 // Generic API response wrapper
 export interface ApiResponse<T> {

@@ -76,7 +76,8 @@ export const ColumnConfigurationRacer = (): TableConfiguration => {
         width: 240,
         minWidth: 150,
         sortingComparator: (a: any, b: any) =>
-          new Date(a.fileMetaData.uploadedDateTime).getTime() - new Date(b.fileMetaData.uploadedDateTime).getTime(),
+          new Date(a.fileMetaData.uploadedDateTime).getTime() -
+          new Date(b.fileMetaData.uploadedDateTime).getTime(),
       },
       {
         id: 'sensor',
@@ -114,7 +115,11 @@ export const ColumnConfigurationRacer = (): TableConfiguration => {
 };
 
 // Default FilterProps unless other is required for a given role
-export const FilteringPropertiesRacer = (): Array<{ key: string; propertyLabel: string; operators: string[] }> => {
+export const FilteringPropertiesRacer = (): Array<{
+  key: string;
+  propertyLabel: string;
+  operators: string[];
+}> => {
   return [
     {
       key: 'modelname',

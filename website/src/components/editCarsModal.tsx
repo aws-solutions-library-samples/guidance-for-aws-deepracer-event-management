@@ -195,7 +195,7 @@ const EditCarsModal: React.FC<EditCarsModalProps> = ({
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
-              <Button variant={"secondary" as any} onClick={() => modalClose()}>
+              <Button variant={'secondary' as any} onClick={() => modalClose()}>
                 {t('button.cancel')}
               </Button>
             </SpaceBetween>
@@ -204,7 +204,7 @@ const EditCarsModal: React.FC<EditCarsModalProps> = ({
         header={t('fleets.edit-cars.edit-cars')}
       >
         <SpaceBetween direction="vertical" size="m">
-          <Container header={<Header variant={"h4" as any}>{t('fleets.header')}</Header>}>
+          <Container header={<Header variant={'h4' as any}>{t('fleets.header')}</Header>}>
             <SpaceBetween direction="horizontal" size="xs">
               <Select
                 selectedOption={
@@ -234,7 +234,9 @@ const EditCarsModal: React.FC<EditCarsModalProps> = ({
             </SpaceBetween>
           </Container>
 
-          <Container header={<Header variant={"h4" as any}>{t('fleets.edit-cars.logs-and-models')}</Header>}>
+          <Container
+            header={<Header variant={'h4' as any}>{t('fleets.edit-cars.logs-and-models')}</Header>}
+          >
             <SpaceBetween direction="horizontal" size="xs">
               <Button
                 disabled={!online}
@@ -256,7 +258,7 @@ const EditCarsModal: React.FC<EditCarsModalProps> = ({
             </SpaceBetween>
           </Container>
 
-          <Container header={<Header variant={"h4" as any}>{t('fleets.edit-cars.title')}</Header>}>
+          <Container header={<Header variant={'h4' as any}>{t('fleets.edit-cars.title')}</Header>}>
             <SpaceBetween direction="horizontal" size="xs">
               <Button
                 disabled={!online || selectedItems.length > 1}
@@ -300,7 +302,7 @@ const EditCarsModal: React.FC<EditCarsModalProps> = ({
             </SpaceBetween>
           </Container>
 
-          <Container header={<Header variant={"h4" as any}>{t('fleets.edit-cars.delete')}</Header>}>
+          <Container header={<Header variant={'h4' as any}>{t('fleets.edit-cars.delete')}</Header>}>
             <SpaceBetween direction="horizontal" size="xs">
               <Button
                 disabled={online || selectedItems.length === 0}
