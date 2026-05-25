@@ -36,6 +36,7 @@ ignores errors, so the activation itself still succeeds even if dedup,
 history capture, or tagging fails.
 """
 import os
+import time
 from datetime import datetime, timezone
 
 from aws_lambda_powertools import Logger, Tracer
@@ -44,6 +45,60 @@ tracer = Tracer()
 logger = Logger()
 
 CHASSIS_TAG_KEY = "ChassisSerial"
+
+# Written when no serial can be read so the poll backs off and the UI shows "Unavailable" (used by the empty-serial path).
+LAST_CHECK_TAG_KEY = "lastSerialCheck"
+SSM_POLL_SECONDS = 2
+SSM_POLL_ATTEMPTS = 12  # ~24s cap for a `cat` to report back
+
+# Read the device's stable hardware serial. DeepRacer (x86) exposes it at the
+# DMI chassis_serial; Raspberry Pi (ARM, no DMI) exposes the SoC serial via the
+# devicetree node or /proc/cpuinfo. We deliberately do NOT fall back to
+# product_serial/board_serial — those are different DMI fields with different
+# values, so substituting one would capture an inconsistent id for the same car.
+SERIAL_READ_SCRIPT = r"""
+v=$(tr -d '\0' < /sys/class/dmi/id/chassis_serial 2>/dev/null | tr -d '[:space:]')
+case "$v" in ""|"Defaultstring"|"ToBeFilledByO.E.M."|"0000000000000000"|"None") ;; *) echo "$v"; exit 0;; esac
+v=$(tr -d '\0' < /sys/firmware/devicetree/base/serial-number 2>/dev/null | tr -d '[:space:]')
+case "$v" in ""|"0000000000000000") ;; *) echo "$v"; exit 0;; esac
+v=$(awk '/^Serial/{print $3}' /proc/cpuinfo 2>/dev/null | tr -d '[:space:]')
+case "$v" in ""|"0000000000000000") ;; *) echo "$v";; esac
+"""
+
+_PLACEHOLDERS = {"", "defaultstring", "tobefilledbyo.e.m.", "0000000000000000", "none"}
+
+
+def _is_real_serial(value: str) -> bool:
+    s = value.strip()
+    return s != "" and s.lower() not in _PLACEHOLDERS
+
+
+def _fetch_serial_via_ssm(ssm, managed_instance_id, poll_seconds=SSM_POLL_SECONDS):
+    """Run the multi-source read on the car via SSM Run Command and return the
+    trimmed serial, or "" if the command failed or produced nothing usable."""
+    try:
+        command_id = ssm.send_command(
+            InstanceIds=[managed_instance_id],
+            DocumentName="AWS-RunShellScript",
+            Parameters={"commands": [SERIAL_READ_SCRIPT]},
+        )["Command"]["CommandId"]
+    except Exception as exc:  # noqa: BLE001 — offline / throttled, retried next poll
+        logger.warning("send_command failed", extra={"mi": managed_instance_id, "error": str(exc)})
+        return ""
+
+    for _ in range(SSM_POLL_ATTEMPTS):
+        try:
+            inv = ssm.get_command_invocation(CommandId=command_id, InstanceId=managed_instance_id)
+        except Exception:  # noqa: BLE001 — invocation not registered yet
+            time.sleep(poll_seconds)
+            continue
+        status = inv.get("Status")
+        if status in ("Success", "Failed", "Cancelled", "TimedOut"):
+            out = (inv.get("StandardOutputContent") or "").strip()
+            return out if status == "Success" and _is_real_serial(out) else ""
+        time.sleep(poll_seconds)
+    return ""
+
 
 CARS_STATUS_TABLE = os.environ.get("CARS_STATUS_TABLE", "")
 CARS_HISTORY_TABLE = os.environ.get("CARS_HISTORY_TABLE", "")

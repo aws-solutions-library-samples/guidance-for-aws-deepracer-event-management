@@ -6,6 +6,16 @@ from unittest.mock import MagicMock
 sys.path.insert(0, os.path.dirname(__file__))
 
 
+def _mk_ssm_fetch(stdout, status="Success"):
+    ssm = MagicMock()
+    ssm.send_command.return_value = {"Command": {"CommandId": "cmd-1"}}
+    ssm.get_command_invocation.return_value = {
+        "Status": status,
+        "StandardOutputContent": stdout,
+    }
+    return ssm
+
+
 def _mk_tagging(arns):
     """Build a mocked resourcegroupstaggingapi client whose paginator
     yields one page containing the given managed-instance ARNs."""
@@ -217,3 +227,44 @@ def test_deregister_errors_are_non_fatal():
     assert result["deregistered"] == ["mi-ok"]
     assert ssm.deregister_managed_instance.call_count == 2
     ssm.add_tags_to_resource.assert_called_once()
+
+
+def test_fetch_serial_via_ssm_returns_trimmed_value():
+    sys.modules.pop("index", None)
+    from index import _fetch_serial_via_ssm
+    ssm = _mk_ssm_fetch("AMSS-9QCJ\n")
+    assert _fetch_serial_via_ssm(ssm, "mi-abc", poll_seconds=0) == "AMSS-9QCJ"
+    ssm.send_command.assert_called_once()
+
+
+def test_fetch_serial_via_ssm_empty_output_returns_blank():
+    sys.modules.pop("index", None)
+    from index import _fetch_serial_via_ssm
+    ssm = _mk_ssm_fetch("\n")
+    assert _fetch_serial_via_ssm(ssm, "mi-abc", poll_seconds=0) == ""
+
+
+def test_fetch_serial_via_ssm_failed_command_returns_blank():
+    sys.modules.pop("index", None)
+    from index import _fetch_serial_via_ssm
+    ssm = _mk_ssm_fetch("ignored", status="Failed")
+    assert _fetch_serial_via_ssm(ssm, "mi-abc", poll_seconds=0) == ""
+
+
+def test_fetch_serial_via_ssm_send_command_error_returns_blank():
+    sys.modules.pop("index", None)
+    from index import _fetch_serial_via_ssm
+    ssm = MagicMock()
+    ssm.send_command.side_effect = Exception("throttled")
+    assert _fetch_serial_via_ssm(ssm, "mi-abc", poll_seconds=0) == ""
+    ssm.get_command_invocation.assert_not_called()
+
+
+def test_fetch_serial_via_ssm_never_terminal_returns_blank():
+    sys.modules.pop("index", None)
+    from index import _fetch_serial_via_ssm, SSM_POLL_ATTEMPTS
+    ssm = MagicMock()
+    ssm.send_command.return_value = {"Command": {"CommandId": "cmd-1"}}
+    ssm.get_command_invocation.return_value = {"Status": "InProgress", "StandardOutputContent": ""}
+    assert _fetch_serial_via_ssm(ssm, "mi-abc", poll_seconds=0) == ""
+    assert ssm.get_command_invocation.call_count == SSM_POLL_ATTEMPTS
