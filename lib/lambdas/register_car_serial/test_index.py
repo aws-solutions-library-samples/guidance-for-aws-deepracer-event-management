@@ -186,10 +186,17 @@ def test_validates_managed_instance_id_prefix():
 
 
 def test_requires_chassis_serial():
-    ssm = MagicMock()
+    # chassisSerial="" now triggers the SSM-fetch path; with a plain MagicMock
+    # ssm the Status never reaches a terminal value so _fetch_serial_via_ssm
+    # returns "" — the instance gets a lastSerialCheck tag and we get
+    # serialStatus=unavailable instead of a hard "required" error.
+    ssm = _mk_ssm_fetch("\n")  # empty output → serial unavailable
     result = _register({"managedInstanceId": "mi-aaa", "chassisSerial": ""}, ssm=ssm)
     assert result["ok"] is False
-    ssm.add_tags_to_resource.assert_not_called()
+    assert result["serialStatus"] == "unavailable"
+    keys = [t["Key"] for c in ssm.add_tags_to_resource.call_args_list for t in c.kwargs["Tags"]]
+    assert "lastSerialCheck" in keys
+    assert "ChassisSerial" not in keys
 
 
 def test_skips_self_when_already_in_dedup_results():
@@ -268,3 +275,26 @@ def test_fetch_serial_via_ssm_never_terminal_returns_blank():
     ssm.get_command_invocation.return_value = {"Status": "InProgress", "StandardOutputContent": ""}
     assert _fetch_serial_via_ssm(ssm, "mi-abc", poll_seconds=0) == ""
     assert ssm.get_command_invocation.call_count == SSM_POLL_ATTEMPTS
+
+
+def test_register_fetches_serial_when_not_supplied():
+    ssm = _mk_ssm_fetch("AMSS-9QCJ\n")
+    history = MagicMock()
+    result = _register({"managedInstanceId": "mi-new"}, ssm=ssm, history_table=history)
+    assert result["ok"] is True
+    assert result["taggedInstanceId"] == "mi-new"
+    add = ssm.add_tags_to_resource.call_args.kwargs
+    assert {"Key": "ChassisSerial", "Value": "AMSS-9QCJ"} in add["Tags"]
+
+
+def test_register_marks_unavailable_when_no_serial():
+    # No serial supplied AND the SSM read returns nothing -> Unavailable.
+    # (test_requires_chassis_serial covers the explicit empty-string variant;
+    #  both normalise to "" via .get(...,"").strip().)
+    ssm = _mk_ssm_fetch("\n")
+    result = _register({"managedInstanceId": "mi-new"}, ssm=ssm, history_table=MagicMock())
+    assert result["ok"] is False
+    assert result["serialStatus"] == "unavailable"
+    keys = [t["Key"] for c in ssm.add_tags_to_resource.call_args_list for t in c.kwargs["Tags"]]
+    assert "lastSerialCheck" in keys
+    assert "ChassisSerial" not in keys

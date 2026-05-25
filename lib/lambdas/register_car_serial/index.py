@@ -13,8 +13,11 @@ on this Lambda only.
 Input payload:
     {
         "managedInstanceId": "mi-0123abcd...",
-        "chassisSerial": "ABCDEF123"
+        "chassisSerial": "ABCDEF123"   # optional — read off the car via SSM Run Command when absent
     }
+
+If no serial can be read, the instance is tagged `lastSerialCheck` and the call returns
+`serialStatus='unavailable'` (no `ChassisSerial` tag).
 
 Behaviour:
     1. Find existing ssm:managed-instance resources tagged
@@ -131,8 +134,21 @@ def _register(event, ssm, tagging, status_table=None, history_table=None):
 
     if not managed_instance_id.startswith("mi-"):
         return {"ok": False, "error": "managedInstanceId must start with 'mi-'"}
+
+    # If the caller didn't supply a serial (the server-side poll path), read it
+    # off the car via SSM Run Command.
     if not chassis_serial:
-        return {"ok": False, "error": "chassisSerial is required"}
+        chassis_serial = _fetch_serial_via_ssm(ssm, managed_instance_id)
+
+    if not chassis_serial:
+        # Mark that we tried, so the poll backs off instead of hammering SSM,
+        # and the UI can show "Unavailable" rather than "Pending".
+        ssm.add_tags_to_resource(
+            ResourceType="ManagedInstance",
+            ResourceId=managed_instance_id,
+            Tags=[{"Key": LAST_CHECK_TAG_KEY, "Value": datetime.now(timezone.utc).isoformat()}],
+        )
+        return {"ok": False, "serialStatus": "unavailable", "managedInstanceId": managed_instance_id}
 
     now = datetime.now(timezone.utc).isoformat()
     deregistered = []
