@@ -327,6 +327,8 @@ export class CarManager extends Construct {
         actions: [
           'ssm:AddTagsToResource',
           'ssm:DeregisterManagedInstance',
+          'ssm:SendCommand',
+          'ssm:GetCommandInvocation',
           'tag:GetResources',
         ],
         resources: ['*'],
@@ -337,11 +339,14 @@ export class CarManager extends Construct {
     carStatusTable.grantReadData(register_car_serial_handler);
     carsHistoryTable.grantWriteData(register_car_serial_handler);
 
-    // Grant the car (running under ssmRunCommandRole, the role we pass
-    // to ssm.create_activation) permission to invoke ONLY this Lambda —
-    // not the broader Lambda namespace.
-    register_car_serial_handler.grantInvoke(ssmRunCommandRole);
     this.registerCarSerialFunctionName = register_car_serial_handler.functionName;
+
+    // The status poller reads the serial off the car (SSM Run Command) by
+    // invoking register_car_serial, and keeps the CarsHistory lineage fresh.
+    register_car_serial_handler.grantInvoke(carStatusUpdateHandler);
+    carsHistoryTable.grantWriteData(carStatusUpdateHandler);
+    carStatusUpdateHandler.addEnvironment('REGISTER_CAR_SERIAL_FUNCTION', register_car_serial_handler.functionName);
+    carStatusUpdateHandler.addEnvironment('CARS_HISTORY_TABLE', carsHistoryTable.tableName);
 
     // device_activation_clean method - clean up unactivated and expired hybrid activations
     const device_activation_clean_handler = new StandardLambdaPythonFunction(this, 'device_activation_clean_handler', {
