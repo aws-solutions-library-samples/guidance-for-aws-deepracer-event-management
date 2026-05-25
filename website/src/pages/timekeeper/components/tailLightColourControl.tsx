@@ -52,10 +52,20 @@ export const TailLightColourControl: React.FC<TailLightColourControlProps> = ({
             type="button"
             title={t('timekeeper.taillight.revert')}
             onClick={() => setOverride(null)}
+            disabled={override === null}
             style={{
-              ...dot('transparent', override === null),
+              width: 22,
+              height: 22,
+              borderRadius: '50%',
+              border: '1px solid rgba(0,0,0,0.35)',
+              background: 'transparent',
+              padding: 0,
               fontSize: 14,
-              lineHeight: '22px',
+              lineHeight: '20px',
+              cursor: override === null ? 'default' : 'pointer',
+              // Revert is a no-op when no override is set — dim it rather than
+              // render a filled (white-looking) "selected" swatch by default.
+              opacity: override === null ? 0.4 : 1,
             }}
           >
             ✕
