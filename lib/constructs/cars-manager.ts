@@ -536,6 +536,7 @@ export class CarManager extends Construct {
       // physical car — survives fleet/hostname renames, so the admin
       // cars list can use it to spot duplicates and track history.
       ChassisSerial: GraphqlType.string(),
+      ChassisSerialStatus: GraphqlType.string(),
     };
 
     const car_online_object_type = new ObjectType('carOnline', {
