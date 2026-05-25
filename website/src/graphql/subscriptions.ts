@@ -367,6 +367,8 @@ export const onUpdatedCarsInfo = /* GraphQL */ `
         onUpdatedCarsInfo {
             ActivationId
             AgentVersion
+            ChassisSerial
+            ChassisSerialStatus
             ComputerName
             DeepRacerCoreVersion
             DeviceUiPassword

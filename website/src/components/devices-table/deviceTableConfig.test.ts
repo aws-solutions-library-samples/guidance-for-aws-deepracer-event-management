@@ -1,6 +1,7 @@
 import i18next from '../../i18n';
 
 vi.mock('@cloudscape-design/components', () => ({
+  Badge: vi.fn(),
   Checkbox: vi.fn(),
   FormField: vi.fn(),
   Link: vi.fn(),

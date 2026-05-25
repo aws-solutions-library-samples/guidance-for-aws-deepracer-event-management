@@ -224,6 +224,7 @@ export const listCars = /* GraphQL */ `
             ActivationId
             AgentVersion
             ChassisSerial
+            ChassisSerialStatus
             ComputerName
             DeepRacerCoreVersion
             DeviceUiPassword

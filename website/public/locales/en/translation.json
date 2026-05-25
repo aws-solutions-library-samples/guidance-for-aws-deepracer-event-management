@@ -271,6 +271,8 @@
     "last-ping-time": "Last ping time",
     "loggingcapable": "Logging capable",
     "chassis-serial": "Chassis serial",
+    "serial-pending": "Pending",
+    "serial-unavailable": "Unavailable",
     "view-car-history": "View car history",
     "car-history-header": "Car history",
     "car-history-empty": "No history recorded for this chassis yet",
