@@ -236,6 +236,52 @@ def test_deregister_errors_are_non_fatal():
     ssm.add_tags_to_resource.assert_called_once()
 
 
+def test_dedup_deletes_old_cars_status_row():
+    """After successfully deregistering an old mi from SSM, its cars-status
+    row must be deleted so it doesn't linger as a ghost. The CarsHistory
+    lineage row (written by _record_history above) is intentionally kept."""
+    from index import _register as _reg
+
+    ssm = MagicMock()
+    status_table = MagicMock()
+    status_table.get_item.return_value = {"Item": {"InstanceId": "mi-old", "ComputerName": "OldName"}}
+
+    result = _reg(
+        {"managedInstanceId": "mi-new", "chassisSerial": "AMSS-9QCJ"},
+        ssm=ssm,
+        tagging=_mk_tagging(["arn:aws:ssm:eu-west-1:111:managed-instance/mi-old"]),
+        status_table=status_table,
+        history_table=MagicMock(),
+    )
+
+    ssm.deregister_managed_instance.assert_called_with(InstanceId="mi-old")
+    status_table.delete_item.assert_called_with(Key={"InstanceId": "mi-old"})
+    assert result["ok"] is True
+
+
+def test_dedup_does_not_delete_status_row_when_deregister_fails():
+    """If SSM deregister raises, the mi is NOT in `deregistered`, so
+    we must NOT attempt a cars-status delete — the mi may still be live."""
+    from index import _register as _reg
+
+    ssm = MagicMock()
+    ssm.deregister_managed_instance.side_effect = Exception("ssm unavailable")
+    status_table = MagicMock()
+    status_table.get_item.return_value = {"Item": {"InstanceId": "mi-old", "ComputerName": "OldName"}}
+
+    result = _reg(
+        {"managedInstanceId": "mi-new", "chassisSerial": "AMSS-9QCJ"},
+        ssm=ssm,
+        tagging=_mk_tagging(["arn:aws:ssm:eu-west-1:111:managed-instance/mi-old"]),
+        status_table=status_table,
+        history_table=MagicMock(),
+    )
+
+    ssm.deregister_managed_instance.assert_called_with(InstanceId="mi-old")
+    status_table.delete_item.assert_not_called()
+    assert result["ok"] is True  # tagging the new mi still succeeds
+
+
 def test_fetch_serial_via_ssm_returns_trimmed_value():
     sys.modules.pop("index", None)
     from index import _fetch_serial_via_ssm

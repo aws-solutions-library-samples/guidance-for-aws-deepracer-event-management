@@ -336,8 +336,9 @@ export class CarManager extends Construct {
       })
     );
     // Read existing car metadata (carName/fleet) so we can capture it
-    // onto the history row before deregistering the old mi.
-    carStatusTable.grantReadData(register_car_serial_handler);
+    // onto the history row before deregistering the old mi. Write access
+    // is needed to delete the ghost row after a successful deregister.
+    carStatusTable.grantReadWriteData(register_car_serial_handler);
     carsHistoryTable.grantWriteData(register_car_serial_handler);
 
     this.registerCarSerialFunctionName = register_car_serial_handler.functionName;

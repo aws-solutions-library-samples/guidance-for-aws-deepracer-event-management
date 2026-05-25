@@ -176,6 +176,14 @@ def _register(event, ssm, tagging, status_table=None, history_table=None):
             logger.warning(
                 "deregister failed", extra={"oldInstanceId": old_id, "error": str(exc)}
             )
+        # The mi is gone from SSM; also drop its row from DREM's live cars-status
+        # table so it doesn't linger as a ghost. The CarsHistory lineage row
+        # written above is intentionally kept — it's the durable record.
+        if old_id in deregistered and status_table is not None:
+            try:
+                status_table.delete_item(Key={"InstanceId": old_id})
+            except Exception as exc:  # noqa: BLE001 — best-effort cleanup
+                logger.warning("cars-status delete failed", extra={"oldInstanceId": old_id, "error": str(exc)})
 
     ssm.add_tags_to_resource(
         ResourceType="ManagedInstance",
