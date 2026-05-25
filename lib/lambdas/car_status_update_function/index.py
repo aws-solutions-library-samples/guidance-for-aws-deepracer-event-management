@@ -45,8 +45,6 @@ MINIMUM_LOGGING_VERSION = [2, 1, 2, 7]
 
 @logger.inject_lambda_context
 @tracer.capture_lambda_handler
-@logger.inject_lambda_context
-@tracer.capture_lambda_handler
 def lambda_handler(event: dict, context: LambdaContext):
     result = {}
     start_time = time.time()
