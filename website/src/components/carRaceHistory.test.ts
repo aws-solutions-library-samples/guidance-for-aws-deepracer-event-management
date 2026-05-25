@@ -56,4 +56,29 @@ describe('flattenRaceHistory', () => {
   it('returns [] for null data', () => {
     expect(flattenRaceHistory(null, {})).toEqual([]);
   });
+
+  it('preserves a 0 lap time and falls back to "-" for missing event/host', () => {
+    const partial = {
+      activations: [
+        {
+          // no carName -> hostName should fall back to "-"
+          managedInstanceId: 'mi-x',
+          races: [
+            {
+              // no eventId, no trackId -> both should fall back to "-"
+              raceId: 'r9',
+              createdAt: '2026-04-01T00:00:00Z',
+              laps: [{ lapId: 'l9', time: 0, resets: 0, isValid: true }],
+            },
+          ],
+        },
+      ],
+    };
+    const rows = flattenRaceHistory(partial as any, {});
+    expect(rows).toHaveLength(1);
+    expect(rows[0].lapTime).toBe(0); // 0 is a real value, not coerced to null
+    expect(rows[0].hostName).toBe('-');
+    expect(rows[0].eventName).toBe('-');
+    expect(rows[0].trackName).toBe('-');
+  });
 });

@@ -195,5 +195,6 @@ describe('DeepracerEventManagerStack', () => {
       TypeName: 'Query',
     });
     expect(templateJson).toContain('CarRaceHistoryActivation');
+    expect(templateJson).toContain('CarRaceHistorySummary');
   });
 });

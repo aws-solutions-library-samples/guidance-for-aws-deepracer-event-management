@@ -234,7 +234,7 @@ export class RaceManager extends Construct {
     const carRaceHistoryType = new ObjectType('CarRaceHistory', {
       definition: {
         chassisSerial: GraphqlType.string(),
-        summary: carRaceHistorySummaryType.attribute(),
+        summary: carRaceHistorySummaryType.attribute({ isRequired: true }),
         activations: carRaceHistoryActivationType.attribute({ isList: true }),
       },
       directives: [Directive.cognito('admin', 'operator')],
