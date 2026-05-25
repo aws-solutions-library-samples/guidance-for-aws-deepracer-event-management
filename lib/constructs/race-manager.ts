@@ -184,6 +184,80 @@ export class RaceManager extends Construct {
 
     props.appsyncApi.schema.addType(raceObjectType);
 
+    // #66 — cross-hostname race history for a physical car (chassis serial).
+    // Resolved by race_api: scans the race table, joins nested-lap carName to
+    // the CarsHistory activation windows.
+    const carRaceHistoryLapType = new ObjectType('CarRaceHistoryLap', {
+      definition: {
+        lapId: GraphqlType.id(),
+        time: GraphqlType.float(),
+        resets: GraphqlType.int(),
+        isValid: GraphqlType.boolean(),
+      },
+      directives: [Directive.cognito('admin', 'operator')],
+    });
+
+    const carRaceHistoryRaceType = new ObjectType('CarRaceHistoryRace', {
+      definition: {
+        raceId: GraphqlType.id(),
+        eventId: GraphqlType.id(),
+        trackId: GraphqlType.id(),
+        createdAt: GraphqlType.awsDateTime(),
+        laps: carRaceHistoryLapType.attribute({ isList: true }),
+      },
+      directives: [Directive.cognito('admin', 'operator')],
+    });
+
+    const carRaceHistoryActivationType = new ObjectType('CarRaceHistoryActivation', {
+      definition: {
+        managedInstanceId: GraphqlType.string(),
+        carName: GraphqlType.string(),
+        from: GraphqlType.awsDateTime(),
+        to: GraphqlType.awsDateTime(),
+        raceCount: GraphqlType.int(),
+        lapCount: GraphqlType.int(),
+        races: carRaceHistoryRaceType.attribute({ isList: true }),
+      },
+      directives: [Directive.cognito('admin', 'operator')],
+    });
+
+    const carRaceHistorySummaryType = new ObjectType('CarRaceHistorySummary', {
+      definition: {
+        totalRaces: GraphqlType.int(),
+        totalLaps: GraphqlType.int(),
+        totalValidLaps: GraphqlType.int(),
+        bestLapTime: GraphqlType.float(),
+      },
+      directives: [Directive.cognito('admin', 'operator')],
+    });
+
+    const carRaceHistoryType = new ObjectType('CarRaceHistory', {
+      definition: {
+        chassisSerial: GraphqlType.string(),
+        summary: carRaceHistorySummaryType.attribute(),
+        activations: carRaceHistoryActivationType.attribute({ isList: true }),
+      },
+      directives: [Directive.cognito('admin', 'operator')],
+    });
+
+    props.appsyncApi.schema.addType(carRaceHistoryLapType);
+    props.appsyncApi.schema.addType(carRaceHistoryRaceType);
+    props.appsyncApi.schema.addType(carRaceHistoryActivationType);
+    props.appsyncApi.schema.addType(carRaceHistorySummaryType);
+    props.appsyncApi.schema.addType(carRaceHistoryType);
+
+    props.appsyncApi.schema.addQuery(
+      'getCarRaceHistory',
+      new ResolvableField({
+        args: {
+          chassisSerial: GraphqlType.string({ isRequired: true }),
+        },
+        returnType: carRaceHistoryType.attribute(),
+        dataSource: raceDataSource,
+        directives: [Directive.cognito('admin', 'operator')],
+      })
+    );
+
     const raceDeleteInputType = new InputType('RaceDeleteInput', {
       definition: {
         userId: GraphqlType.id({ isRequired: true }),
