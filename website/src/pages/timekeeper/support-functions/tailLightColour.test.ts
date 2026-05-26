@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import {
   resolveRacingColour,
-  complementaryColour,
+  nearestPaletteColour,
   DEFAULT_RACING_COLOUR,
-  DEFAULT_STOP_COLOUR,
+  STOP_COLOUR,
 } from './tailLightColour';
+import { TAIL_LIGHT_COLOURS } from '../../../constants/tailLightColours';
 
 describe('resolveRacingColour', () => {
   it('prefers override, then highlight, then the default', () => {
@@ -15,30 +16,26 @@ describe('resolveRacingColour', () => {
   });
 });
 
-describe('complementaryColour', () => {
-  it('returns blue when the racing colour is in the red range (#243 rule)', () => {
-    expect(complementaryColour('#FF0000')).toBe('#0000FF');
+describe('STOP_COLOUR', () => {
+  it('is fixed white', () => {
+    expect(STOP_COLOUR).toBe('#FFFFFF');
+  });
+});
+
+describe('nearestPaletteColour', () => {
+  it('returns a palette colour unchanged (distance 0)', () => {
+    for (const c of TAIL_LIGHT_COLOURS) {
+      expect(nearestPaletteColour(c).toUpperCase()).toBe(c.toUpperCase());
+    }
   });
 
-  it('rotates hue 180° for non-red colours', () => {
-    expect(complementaryColour('#0000FF')).toBe('#FFFF00'); // blue → yellow
-    expect(complementaryColour('#00FF00')).toBe('#FF00FF'); // green → magenta
+  it('snaps an out-of-palette hex to the nearest palette colour', () => {
+    expect(nearestPaletteColour('#673ab7').toUpperCase()).toBe('#800080');
+    expect(nearestPaletteColour('#e01010').toUpperCase()).toBe('#FF0000');
   });
 
-  it('treats hot-pink (hue ~326°) as red-range → blue', () => {
-    expect(complementaryColour('#FF0090')).toBe('#0000FF');
-  });
-
-  it('expands 3-digit hex shorthand', () => {
-    expect(complementaryColour('#F00')).toBe('#0000FF'); // #F00 → #FF0000 (red range)
-  });
-
-  it('returns the stop default for achromatic input', () => {
-    expect(complementaryColour('#FFFFFF')).toBe(DEFAULT_STOP_COLOUR);
-    expect(complementaryColour('#808080')).toBe(DEFAULT_STOP_COLOUR);
-  });
-
-  it('returns the stop default for malformed input', () => {
-    expect(complementaryColour('nope')).toBe(DEFAULT_STOP_COLOUR);
+  it('returns a palette colour for malformed input (falls back, never throws)', () => {
+    expect(TAIL_LIGHT_COLOURS).toContain(nearestPaletteColour('nope'));
+    expect(TAIL_LIGHT_COLOURS).toContain(nearestPaletteColour(''));
   });
 });

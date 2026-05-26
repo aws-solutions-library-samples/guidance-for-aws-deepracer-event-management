@@ -1,7 +1,16 @@
-/** Racer has no highlight colour → white while racing. */
-export const DEFAULT_RACING_COLOUR = '#FFFFFF';
-/** Fallback "stopped" colour (also used when the racing colour has no usable hue). */
-export const DEFAULT_STOP_COLOUR = '#FF0000';
+import { graphqlQuery } from '../../../graphql/graphqlHelpers';
+import { getRacerProfile } from '../../../graphql/queries';
+import { carSetTaillightColor, carEmergencyStop } from '../../../graphql/mutations';
+import { TAIL_LIGHT_COLOURS } from '../../../constants/tailLightColours';
+
+/**
+ * Racing colour when the racer has no highlight + no override. Blue (the car's
+ * natural default tail-light, and palette[0]) — deliberately NOT white, which
+ * is reserved as the stop signal (STOP_COLOUR) and excluded from the palette.
+ */
+export const DEFAULT_RACING_COLOUR = '#0000FF';
+/** Fixed "stopped" colour, sent on race end (distinct from any racing colour). */
+export const STOP_COLOUR = '#FFFFFF';
 
 /**
  * Colour to send to the car: operator override → racer highlight → default.
@@ -18,73 +27,76 @@ export function resolveRacingColour(
   );
 }
 
-interface Rgb { r: number; g: number; b: number; }
-interface Hsl { h: number; s: number; l: number; }
-
-function hexToRgb(hex: string): Rgb | null {
-  let h = hex.trim().replace(/^#/, '');
+function hexToRgb(hex: string): [number, number, number] | null {
+  let h = (hex || '').trim().replace(/^#/, '');
   if (h.length === 3) h = h.split('').map((c) => c + c).join('');
   if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
-  return {
-    r: parseInt(h.slice(0, 2), 16),
-    g: parseInt(h.slice(2, 4), 16),
-    b: parseInt(h.slice(4, 6), 16),
-  };
-}
-
-function rgbToHex({ r, g, b }: Rgb): string {
-  const hh = (n: number) => Math.round(n).toString(16).padStart(2, '0');
-  return `#${hh(r)}${hh(g)}${hh(b)}`.toUpperCase();
-}
-
-function rgbToHsl({ r, g, b }: Rgb): Hsl {
-  const rn = r / 255, gn = g / 255, bn = b / 255;
-  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
-  const l = (max + min) / 2;
-  const d = max - min;
-  let h = 0, s = 0;
-  if (d !== 0) {
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    if (max === rn) h = (gn - bn) / d + (gn < bn ? 6 : 0);
-    else if (max === gn) h = (bn - rn) / d + 2;
-    else h = (rn - gn) / d + 4;
-    h *= 60;
-  }
-  return { h, s, l };
-}
-
-function hslToRgb({ h, s, l }: Hsl): Rgb {
-  if (s === 0) { const v = l * 255; return { r: v, g: v, b: v }; }
-  const hue2rgb = (p: number, q: number, t: number) => {
-    if (t < 0) t += 1;
-    if (t > 1) t -= 1;
-    if (t < 1 / 6) return p + (q - p) * 6 * t;
-    if (t < 1 / 2) return q;
-    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-    return p;
-  };
-  const hn = h / 360;
-  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-  const p = 2 * l - q;
-  return {
-    r: hue2rgb(p, q, hn + 1 / 3) * 255,
-    g: hue2rgb(p, q, hn) * 255,
-    b: hue2rgb(p, q, hn - 1 / 3) * 255,
-  };
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 }
 
 /**
- * Contrasting "stopped" colour for a racing colour.
- * - malformed / achromatic (white/grey/black) → DEFAULT_STOP_COLOUR
- * - racing hue in the red range (≥315° or ≤30°) → blue (#243: a green-ish
- *   complement reads poorly on stream)
- * - otherwise → 180° hue rotation at the same saturation/lightness
+ * Snap an arbitrary hex to the nearest hardware-validated palette colour
+ * (RGB Euclidean). An in-palette colour returns itself (distance 0); malformed
+ * input falls back to the first palette colour (never throws). Defensive layer
+ * for legacy profiles holding a hex that was dropped from the palette (e.g.
+ * #673ab7) — the picker only offers palette colours, so new picks are exact.
  */
-export function complementaryColour(hex: string): string {
-  const rgb = hexToRgb(hex);
-  if (!rgb) return DEFAULT_STOP_COLOUR;
-  const hsl = rgbToHsl(rgb);
-  if (hsl.s < 0.1) return DEFAULT_STOP_COLOUR;
-  if (hsl.h >= 315 || hsl.h <= 30) return '#0000FF';
-  return rgbToHex(hslToRgb({ ...hsl, h: (hsl.h + 180) % 360 }));
+export function nearestPaletteColour(hex: string): string {
+  const target = hexToRgb(hex);
+  if (!target) return TAIL_LIGHT_COLOURS[0];
+  let nearest = TAIL_LIGHT_COLOURS[0];
+  let min = Infinity;
+  for (const c of TAIL_LIGHT_COLOURS) {
+    const rgb = hexToRgb(c)!;
+    const d =
+      (target[0] - rgb[0]) ** 2 + (target[1] - rgb[1]) ** 2 + (target[2] - rgb[2]) ** 2;
+    if (d < min) {
+      min = d;
+      nearest = c;
+    }
+  }
+  return nearest;
+}
+
+/**
+ * Fetch the racer's profile, resolve + snap their highlight colour to a palette
+ * hex, and set it on the car. Returns the colour applied + the stop colour, or
+ * null if the racer has no highlight colour. Used by the classic race pages.
+ */
+export async function setTaillightFromProfile(
+  carInstanceId: string,
+  username: string
+): Promise<{ raceColour: string; stopColour: string } | null> {
+  try {
+    const data = await graphqlQuery<{ getRacerProfile: { highlightColour?: string | null } | null }>(
+      getRacerProfile,
+      { username }
+    );
+    const hex = data?.getRacerProfile?.highlightColour;
+    if (!hex) return null;
+    const raceColour = nearestPaletteColour(hex);
+    await graphqlQuery(carSetTaillightColor, { resourceIds: [carInstanceId], selectedColor: raceColour });
+    return { raceColour, stopColour: STOP_COLOUR };
+  } catch (err) {
+    console.error('Failed to set taillight colour from profile:', err);
+    return null;
+  }
+}
+
+/** Set a specific hex colour on the car (used for the stop colour + reverts). */
+export async function setTaillightColour(carInstanceId: string, colour: string): Promise<void> {
+  try {
+    await graphqlQuery(carSetTaillightColor, { resourceIds: [carInstanceId], selectedColor: colour });
+  } catch (err) {
+    console.error('Failed to set taillight colour:', err);
+  }
+}
+
+/** Emergency-stop the car (sent on race end). */
+export async function stopCar(carInstanceId: string): Promise<void> {
+  try {
+    await graphqlQuery(carEmergencyStop, { resourceIds: [carInstanceId] });
+  } catch (err) {
+    console.error('Failed to emergency stop car:', err);
+  }
 }
