@@ -49,7 +49,7 @@ import { RaceSetupPage } from './pages/raceSetupPageLite';
 import { getAverageWindows } from './support-functions/averageClaculations';
 import { buildRaceConfigFromEvent, defaultRace } from './support-functions/raceDomain';
 import { getRacerProfile } from '../../graphql/queries';
-import { complementaryColour, resolveRacingColour } from './support-functions/tailLightColour';
+import { resolveRacingColour, nearestPaletteColour, STOP_COLOUR } from './support-functions/tailLightColour';
 
 const LocalTimekeeperWizard = () => {
   const { t } = useTranslation();
@@ -86,7 +86,7 @@ const LocalTimekeeperWizard = () => {
   const [startTime, setStartTime] = useState(undefined);
   const [racerHighlightColour, setRacerHighlightColour] = useState(null);
   const [colourOverride, setColourOverride] = useState(null);
-  const racingColour = resolveRacingColour(racerHighlightColour, colourOverride);
+  const racingColour = nearestPaletteColour(resolveRacingColour(racerHighlightColour, colourOverride));
 
   // delete models from Cars
   async function carDeleteAllModels() {
@@ -240,7 +240,7 @@ const LocalTimekeeperWizard = () => {
     // send an all-stop to the car.
     const InstanceIds = selectedCars.map((c) => c.InstanceId);
     if (InstanceIds.length > 0) {
-      carsUpdateTaillightColor(InstanceIds, complementaryColour(racingColour));
+      carsUpdateTaillightColor(InstanceIds, STOP_COLOUR);
       carEmergencyStop(InstanceIds);
     }
     setIsLoadingNextStep(false);
