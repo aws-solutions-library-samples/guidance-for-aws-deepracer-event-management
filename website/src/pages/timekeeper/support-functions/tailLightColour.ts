@@ -60,8 +60,11 @@ export function nearestPaletteColour(hex: string): string {
 
 /**
  * Fetch the racer's profile, resolve + snap their highlight colour to a palette
- * hex, and set it on the car. Returns the colour applied + the stop colour, or
- * null if the racer has no highlight colour. Used by the classic race pages.
+ * hex, and set it on the car. Returns the colour applied + the stop colour.
+ * A racer with no highlight colour falls back to DEFAULT_RACING_COLOUR (blue) —
+ * so every racer gets a tail-light colour during the race, matching the wizard.
+ * Returns null only if the profile fetch / set fails (the light is left as-is).
+ * Used by the classic race pages.
  */
 export async function setTaillightFromProfile(
   carInstanceId: string,
@@ -73,8 +76,7 @@ export async function setTaillightFromProfile(
       { username }
     );
     const hex = data?.getRacerProfile?.highlightColour;
-    if (!hex) return null;
-    const raceColour = nearestPaletteColour(hex);
+    const raceColour = nearestPaletteColour(resolveRacingColour(hex));
     await graphqlQuery(carSetTaillightColor, { resourceIds: [carInstanceId], selectedColor: raceColour });
     return { raceColour, stopColour: STOP_COLOUR };
   } catch (err) {

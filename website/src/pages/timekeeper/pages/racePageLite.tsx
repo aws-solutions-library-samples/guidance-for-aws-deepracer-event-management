@@ -118,10 +118,9 @@ export const RacePage = ({
       endRace: () => {
         console.debug('Ending race state');
         if (currentCar?.InstanceId) {
-          // Always signal "stopped" with the fixed white STOP_COLOUR, regardless
-          // of whether a racing colour was applied (stopColourRef is only set when
-          // the racer had a highlight colour). The wizard parent also sends
-          // STOP_COLOUR, so this keeps the page correct standalone. See #243.
+          // Always signal "stopped" with the fixed white STOP_COLOUR — never
+          // gated on stopColourRef. The wizard parent also sends STOP_COLOUR,
+          // so this keeps the page correct standalone. See #243.
           setTaillightColour(currentCar.InstanceId, STOP_COLOUR);
           stopColourRef.current = null;
           stopCar(currentCar.InstanceId);
