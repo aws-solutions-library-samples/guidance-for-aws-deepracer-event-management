@@ -1,24 +1,6 @@
 import Avatar from '@vierweb/avataaars';
 import React from 'react';
-
-/**
- * Generic person silhouette SVG — used when the user has not configured an avatar.
- * Renders a neutral grey head-and-shoulders outline inside a circle.
- */
-const PlaceholderSilhouette: React.FC<{ size: number }> = ({ size }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 64 64"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-label="No avatar configured"
-  >
-    <circle cx="32" cy="32" r="31" fill="#e9ebed" stroke="#b6bec9" strokeWidth="1" />
-    <circle cx="32" cy="24" r="10" fill="#b6bec9" />
-    <ellipse cx="32" cy="52" rx="18" ry="14" fill="#b6bec9" />
-  </svg>
-);
+import defaultAvatar from '../assets/defaultAvatar.svg';
 
 export interface AvatarDisplayProps {
   /** JSON string of avatar config, a parsed object, or null/undefined if unconfigured */
@@ -33,7 +15,7 @@ export interface AvatarDisplayProps {
  * Shared avatar display component.
  *
  * - If `avatarConfig` is provided (non-null, non-empty), renders the avataaars Avatar.
- * - Otherwise renders a neutral grey silhouette placeholder.
+ * - Otherwise renders the default DeepRacer helmet avatar.
  *
  * Used in: profile page header, top navigation, and anywhere else an avatar is shown.
  */
@@ -45,14 +27,22 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   const parsed = parseConfig(avatarConfig);
 
   if (!parsed) {
-    return <PlaceholderSilhouette size={size} />;
+    // No avatar configured → the default DeepRacer helmet ("Stig"), matching DRoA.
+    return (
+      <img src={defaultAvatar} alt="Default racer avatar" style={{ width: size, height: size }} />
+    );
   }
+
+  // @vierweb/avataaars@3 defaults hats to blue; mirror avataaars@2 / DRoA by
+  // colouring the hat with the racer's hair colour when one is set.
+  const renderConfig =
+    parsed.hairColor && !parsed.hatColor ? { ...parsed, hatColor: parsed.hairColor } : parsed;
 
   return (
     <Avatar
       avatarStyle={avatarStyle}
       style={{ width: size, height: size }}
-      {...(parsed as Record<string, string>)}
+      {...(renderConfig as Record<string, string>)}
     />
   );
 };
@@ -86,5 +76,3 @@ function parseConfig(
 
   return null;
 }
-
-export { PlaceholderSilhouette };
