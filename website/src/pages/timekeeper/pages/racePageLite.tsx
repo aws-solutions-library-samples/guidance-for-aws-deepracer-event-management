@@ -137,7 +137,11 @@ export const RacePage = ({
       captureLap: (context, event) => {
         event.isValid = 'isValid' in event ? event.isValid : false;
 
-        const isLapValid = event.isValid && carResetCounter <= raceConfig.numberOfResetsPerLap;
+        // Default an unset reset-limit to Infinity so a partial/empty raceConfig
+        // doesn't mark every lap invalid (numberOfResetsPerLap undefined would make
+        // `0 <= undefined` false). A configured race still enforces its real limit.
+        const isLapValid =
+          event.isValid && carResetCounter <= (raceConfig.numberOfResetsPerLap ?? Infinity);
 
         const lapId = raceInfo.laps.length;
         const timerLapTimeMs = Number.isFinite(event?.timerLapTimeMs) ? event.timerLapTimeMs : null;
@@ -400,7 +404,13 @@ export const RacePage = ({
 
                   <RaceTimer
                     onExpire={() => {
-                      return send('EXPIRE');
+                      // Only end the race on the timer when there's a real time
+                      // limit. With an empty/partial raceConfig (raceTimeInMin unset)
+                      // resetTimers() resets to 0, so the timer "expires" instantly —
+                      // a no-time-limit race must not auto-end on that.
+                      if (raceConfig.raceTimeInMin) {
+                        send('EXPIRE');
+                      }
                     }}
                     ref={raceTimerRef}
                   />
