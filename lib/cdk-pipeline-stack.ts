@@ -175,11 +175,12 @@ export class CdkPipelineStack extends cdk.Stack {
         'npm install',
         'cd website && npm install --legacy-peer-deps && npm test && cd ..',
         'cd website/leaderboard && npm install --legacy-peer-deps && npm test && cd ../..',
+        'cd website/overlays && npm install --legacy-peer-deps && npm test && cd ../..',
       ],
       partialBuildSpec: codebuild.BuildSpec.fromObject({
         reports: {
           website_test_reports: {
-            files: ['junit-website.xml', 'junit-leaderboard.xml'],
+            files: ['junit-website.xml', 'junit-leaderboard.xml', 'junit-overlays.xml'],
             'base-directory': 'reports',
             'file-format': 'JUNITXML',
           },
@@ -256,7 +257,7 @@ export class CdkPipelineStack extends cdk.Stack {
           " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache --legacy-peer-deps && npm run build'",
         'mkdir -p ./website/public/leaderboard && cp -r ./website/leaderboard/build/. ./website/public/leaderboard/',
         'docker run --rm -v $(pwd):/foo -w /foo/website/overlays' +
-          " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache && npm run build'",
+          " public.ecr.aws/sam/build-nodejs22.x:latest bash -c 'npm install --cache /tmp/empty-cache --legacy-peer-deps && npm run build'",
         'mkdir -p ./website/public/overlays && cp -r ./website/overlays/build/. ./website/public/overlays/',
 
         // Build main site (sub-apps already in public/)
@@ -378,12 +379,14 @@ def handler(event, context):
       [
         {
           id: 'AwsSolutions-IAM4',
-          reason: 'AWSLambdaBasicExecutionRole is the default Lambda execution role; replacing it would restate the same permissions.',
+          reason:
+            'AWSLambdaBasicExecutionRole is the default Lambda execution role; replacing it would restate the same permissions.',
           appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
         },
         {
           id: 'AwsSolutions-L1',
-          reason: 'PYTHON_3_12 is the latest stable Lambda runtime supported by the CDK version in use; bump when CDK exposes a newer Python.',
+          reason:
+            'PYTHON_3_12 is the latest stable Lambda runtime supported by the CDK version in use; bump when CDK exposes a newer Python.',
         },
       ],
       true
@@ -398,11 +401,13 @@ def handler(event, context):
         },
         {
           id: 'AwsSolutions-IAM5',
-          reason: 'Provider framework Lambda needs lambda:InvokeFunction on the onEvent handler; CDK wildcards the function version arn.',
+          reason:
+            'Provider framework Lambda needs lambda:InvokeFunction on the onEvent handler; CDK wildcards the function version arn.',
         },
         {
           id: 'AwsSolutions-L1',
-          reason: 'Provider framework Lambda runtime is pinned by aws-cdk-lib/custom-resources and cannot be controlled here.',
+          reason:
+            'Provider framework Lambda runtime is pinned by aws-cdk-lib/custom-resources and cannot be controlled here.',
         },
       ],
       true
