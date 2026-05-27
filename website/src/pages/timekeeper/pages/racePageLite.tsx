@@ -47,7 +47,12 @@ import RaceTimer from '../components/raceTimer';
 import { getAverageWindows } from '../support-functions/averageClaculations';
 import { defaultCar, defaultLap } from '../support-functions/raceDomain';
 import { stateMachine } from '../support-functions/stateMachine';
-import { setTaillightFromProfile, setTaillightColour, stopCar } from '../support-functions/tailLightColour';
+import {
+  setTaillightFromProfile,
+  setTaillightColour,
+  stopCar,
+  STOP_COLOUR,
+} from '../support-functions/tailLightColour';
 
 import styles from './racePage.module.css';
 
@@ -113,10 +118,12 @@ export const RacePage = ({
       endRace: () => {
         console.debug('Ending race state');
         if (currentCar?.InstanceId) {
-          if (stopColourRef.current) {
-            setTaillightColour(currentCar.InstanceId, stopColourRef.current);
-            stopColourRef.current = null;
-          }
+          // Always signal "stopped" with the fixed white STOP_COLOUR, regardless
+          // of whether a racing colour was applied (stopColourRef is only set when
+          // the racer had a highlight colour). The wizard parent also sends
+          // STOP_COLOUR, so this keeps the page correct standalone. See #243.
+          setTaillightColour(currentCar.InstanceId, STOP_COLOUR);
+          stopColourRef.current = null;
           stopCar(currentCar.InstanceId);
         }
         setWarningModalVisible(true);

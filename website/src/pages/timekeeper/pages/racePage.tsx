@@ -46,7 +46,12 @@ import { getAverageWindows } from '../support-functions/averageClaculations';
 import { defaultCar, defaultLap } from '../support-functions/raceDomain';
 import { stateMachine } from '../support-functions/stateMachine';
 import { Breadcrumbs } from '../support-functions/supportFunctions';
-import { setTaillightFromProfile, setTaillightColour, stopCar } from '../support-functions/tailLightColour';
+import {
+  setTaillightFromProfile,
+  setTaillightColour,
+  stopCar,
+  STOP_COLOUR,
+} from '../support-functions/tailLightColour';
 
 import styles from './racePage.module.css';
 
@@ -111,10 +116,14 @@ export const RacePage = ({
       endRace: () => {
         console.debug('Ending race state');
         if (currentCar?.InstanceId) {
-          if (stopColourRef.current) {
-            setTaillightColour(currentCar.InstanceId, stopColourRef.current);
-            stopColourRef.current = null;
-          }
+          // Always signal "stopped" with the fixed white STOP_COLOUR, regardless
+          // of whether a racing colour was applied. stopColourRef is only set when
+          // the racer had a highlight colour (setTaillightFromProfile returns null
+          // otherwise), so gating on it meant racers without a highlight never got
+          // the white stop light — unlike the wizard, which sends STOP_COLOUR
+          // unconditionally from its parent. See #243 / converged tail-light.
+          setTaillightColour(currentCar.InstanceId, STOP_COLOUR);
+          stopColourRef.current = null;
           stopCar(currentCar.InstanceId);
         }
         setWarningModalVisible(true);
