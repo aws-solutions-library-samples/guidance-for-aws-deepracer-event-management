@@ -1,4 +1,4 @@
-import { DockerImage, Duration } from 'aws-cdk-lib';
+import { DockerImage, Duration, NestedStack, NestedStackProps } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { IEventBus, Rule } from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
@@ -19,7 +19,7 @@ import { StandardLambdaPythonFunction } from './standard-lambda-python-function'
 
 import { Construct } from 'constructs';
 
-export interface UserManagerProps {
+export interface UserManagerProps extends NestedStackProps {
   authenticatedUserRole: IRole;
   userPoolId: string;
   userPoolArn: string;
@@ -42,13 +42,11 @@ export interface UserManagerProps {
   eventbus: IEventBus;
 }
 
-export class UserManager extends Construct {
-  // public readonly origin: cloudfront.IOrigin;
-  // public readonly sourceBucket: s3.IBucket;
+export class UserManager extends NestedStack {
   public readonly userApiObject: ObjectType;
 
   constructor(scope: Construct, id: string, props: UserManagerProps) {
-    super(scope, id);
+    super(scope, id, props);
 
     // delete users Function
     const delete_user_function = new StandardLambdaPythonFunction(this, 'delete_user_function', {

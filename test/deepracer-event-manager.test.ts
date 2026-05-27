@@ -127,4 +127,21 @@ describe('DeepracerEventManagerStack', () => {
     // infra stack is reading from SSM rather than via Fn::ImportValue.
     expect(templateJson).toContain('AWS::SSM::Parameter::Value<String>');
   });
+
+  test('infrastructure stack stays clear of the 500-resource CloudFormation cap', () => {
+    // CloudFormation hard-limits a stack to 500 resources. This is the LOCAL
+    // aws-cdk-lib synth count; the pipeline synthesizes with a pinned CDK that
+    // has emitted ~11 MORE resources (local 493 vs CloudFormation 504 seen in
+    // May 2026 — see backlog #53/#70). So we assert a MARGIN below 500 and keep
+    // the real (pipeline) number safely under the hard cap. The fix when this
+    // trips is a NestedStack (see CLAUDE.md + backlog #70), not raising the number.
+    const count = Object.keys(template.toJSON().Resources).length;
+    // eslint-disable-next-line no-console
+    console.log(`[cfn-cap] infrastructure parent stack: ${count} resources (local synth)`);
+    if (count > 475) {
+      // eslint-disable-next-line no-console
+      console.warn(`[cfn-cap] WARNING: infrastructure stack at ${count} resources (local) — approaching the 500 cap; plan a NestedStack split (backlog #70).`);
+    }
+    expect(count).toBeLessThan(485);
+  });
 });
