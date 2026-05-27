@@ -1,18 +1,18 @@
-import { CfnResource, Stack } from 'aws-cdk-lib';
+import { CfnResource, NestedStack, NestedStackProps, Stack } from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3Deployment from 'aws-cdk-lib/aws-s3-deployment';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 
-export interface ModelsManagerProps {
+export interface ModelsManagerProps extends NestedStackProps {
   uploadBucket: s3.IBucket;
   modelsBucket: s3.IBucket;
 }
 
-export class ModelsManagerDefaultModelsDeployment extends Construct {
+export class ModelsManagerDefaultModelsDeployment extends NestedStack {
   constructor(scope: Construct, id: string, props: ModelsManagerProps) {
-    super(scope, id);
+    super(scope, id, props);
 
     const stack = Stack.of(this);
 
@@ -54,5 +54,25 @@ export class ModelsManagerDefaultModelsDeployment extends Construct {
       memoryLimit: 512,
       role: defaultModelsDeploymentRole,
     });
+
+    NagSuppressions.addStackSuppressions(this, [
+      {
+        id: 'AwsSolutions-IAM4',
+        reason:
+          'AWSLambdaBasicExecutionRole on the BucketDeployment custom resource Lambda is managed by CDK and cannot be configured.',
+        appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
+      },
+      {
+        id: 'AwsSolutions-IAM5',
+        reason:
+          'BucketDeployment custom resource Lambda requires wildcard S3 permissions; managed by CDK.',
+        appliesTo: ['Action::s3:GetObject*', 'Action::s3:GetBucket*', 'Action::s3:List*', { regex: '/^Resource::arn:aws:s3:::cdk-.*/' }],
+      },
+      {
+        id: 'AwsSolutions-L1',
+        reason:
+          'BucketDeployment custom resource Lambda runtime is managed by CDK and cannot be configured.',
+      },
+    ]);
   }
 }

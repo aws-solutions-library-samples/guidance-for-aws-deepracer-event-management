@@ -1,5 +1,5 @@
 import * as lambdaPython from '@aws-cdk/aws-lambda-python-alpha';
-import { DockerImage, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
+import { DockerImage, Duration, NestedStack, NestedStackProps, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -11,7 +11,7 @@ import { StandardLambdaPythonFunction } from './standard-lambda-python-function'
 import { CodeFirstSchema, Directive, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
 import { Construct } from 'constructs';
 
-export interface LabelPrinterProps {
+export interface LabelPrinterProps extends NestedStackProps {
   logsbucket: IBucket;
   appsyncApi: {
     schema: CodeFirstSchema;
@@ -30,9 +30,9 @@ export interface LabelPrinterProps {
   carStatusDataHandlerLambda: lambdaPython.PythonFunction;
 }
 
-export class LabelPrinter extends Construct {
+export class LabelPrinter extends NestedStack {
   constructor(scope: Construct, id: string, props: LabelPrinterProps) {
-    super(scope, id);
+    super(scope, id, props);
 
     const stack = Stack.of(this);
 
