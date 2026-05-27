@@ -1,4 +1,4 @@
-import { CfnResource, Duration, Size, Stack } from 'aws-cdk-lib';
+import { CfnResource, Duration, NestedStack, NestedStackProps, Size, Stack } from 'aws-cdk-lib';
 import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { Platform } from 'aws-cdk-lib/aws-ecr-assets';
 import { IEventBus, Match, Rule } from 'aws-cdk-lib/aws-events';
@@ -10,7 +10,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { StandardLambdaDockerImageFuncion } from './standard-lambda-docker-image-function';
 
-interface ModelOptimizerProps {
+export interface ModelOptimizerProps extends NestedStackProps {
   modelsBucket: s3.IBucket;
   logsBucket: s3.IBucket;
   account: string;
@@ -23,9 +23,9 @@ interface ModelOptimizerProps {
   clamScanPost: lambda.IFunction;
 }
 
-export class ModelOptimizer extends Construct {
+export class ModelOptimizer extends NestedStack {
   constructor(scope: Construct, id: string, props: ModelOptimizerProps) {
-    super(scope, id);
+    super(scope, id, props);
 
     const modelOptimizer = new StandardLambdaDockerImageFuncion(this, 'ModelsOptimizerFunction', {
       description: 'Optimize uploaded model',
