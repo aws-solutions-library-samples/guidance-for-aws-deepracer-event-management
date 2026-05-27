@@ -58,3 +58,21 @@ export function extractUserAttribute(
   if (!attributes) return undefined;
   return attributes.find((a) => a.Name === name)?.Value;
 }
+
+/**
+ * Build the timekeeper's race config from the selected event.
+ *
+ * Always returns a NEW object — never the event's stored `raceConfig`
+ * reference — so callers can't accidentally mutate shared store state (the
+ * old `raceDetails['eventName'] = …` writes leaked the event name back onto
+ * the store event). Tolerates an event with no `raceConfig`, returning just
+ * the event name rather than crashing. See issue #267.
+ */
+export function buildRaceConfigFromEvent(
+  selectedEvent:
+    | { raceConfig?: Record<string, any> | null; eventName?: string }
+    | null
+    | undefined
+): Record<string, any> {
+  return { ...(selectedEvent?.raceConfig ?? {}), eventName: selectedEvent?.eventName };
+}

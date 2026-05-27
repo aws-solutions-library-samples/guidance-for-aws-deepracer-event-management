@@ -46,7 +46,7 @@ import { RaceFinishPage } from './pages/raceFinishPageLite';
 import { RacePage } from './pages/racePageLite';
 import { RaceSetupPage } from './pages/raceSetupPageLite';
 import { getAverageWindows } from './support-functions/averageClaculations';
-import { defaultRace } from './support-functions/raceDomain';
+import { buildRaceConfigFromEvent, defaultRace } from './support-functions/raceDomain';
 
 const LocalTimekeeperWizard = () => {
   const { t } = useTranslation();
@@ -102,12 +102,18 @@ const LocalTimekeeperWizard = () => {
   }, [race.username]);
 
   const [state, dispatch] = useStore();
-  // change event info and race config when a user select another event
+  // change event info and race config when a user selects another event
   useEffect(() => {
+    // Don't re-sync the race config once a race is underway (step 4 = race,
+    // step 5 = submit). A re-dispatched selectedEvent (e.g. after an events-
+    // store refresh) must not clobber a live race's raceConfig/eventId. See #267.
+    if (activeStepIndex >= 4) return;
+
     if (selectedEvent.eventId !== race.eventId) {
-      let raceDetails = selectedEvent.raceConfig;
-      raceDetails['eventName'] = selectedEvent.eventName;
-      setRaceConfig(raceDetails);
+      // Copy, don't mutate — buildRaceConfigFromEvent returns a fresh object so
+      // we never write the event name back onto the shared store event, and it
+      // null-guards an event with no stored raceConfig.
+      setRaceConfig(buildRaceConfigFromEvent(selectedEvent));
 
       const modifiedRace = { ...race, eventId: selectedEvent.eventId };
       setRace(modifiedRace);
