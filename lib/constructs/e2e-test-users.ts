@@ -1,4 +1,4 @@
-import { CfnOutput, CustomResource, Duration, NestedStack, NestedStackProps, Stack } from 'aws-cdk-lib';
+import { CfnOutput, CustomResource, Duration, NestedStack, NestedStackProps } from 'aws-cdk-lib';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import { CfnUserPoolUserToGroupAttachment } from 'aws-cdk-lib/aws-cognito';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -21,8 +21,6 @@ export class E2eTestUsers extends NestedStack {
 
   constructor(scope: Construct, id: string, props: E2eTestUsersProps) {
     super(scope, id, props);
-
-    const stack = Stack.of(this);
 
     this.racerUsername = 'drem-test-racer';
     this.adminUsername = 'drem-test-admin';
@@ -178,8 +176,8 @@ def handler(event, context):
       },
       {
         id: 'AwsSolutions-IAM5',
-        reason: 'Provider framework Lambda requires wildcard permissions; managed by CDK custom-resources module.',
-        appliesTo: ['Resource::*'],
+        reason: 'Provider framework Lambda requires wildcard permissions to invoke the onEvent handler (Lambda ARN:* for versions/aliases); managed by CDK custom-resources module.',
+        appliesTo: ['Resource::*', { regex: '/^Resource::.*:\\*$/' }],
       },
       {
         id: 'AwsSolutions-L1',
