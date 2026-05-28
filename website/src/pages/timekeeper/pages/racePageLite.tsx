@@ -65,6 +65,7 @@ export const RacePage = ({
   onNext,
   selectedCar,
   setStartTime,
+  taillightColour,
 }) => {
   const { t } = useTranslation(['translation', 'help-admin-timekeeper-race-page']);
   const [state] = useStore();
@@ -86,7 +87,12 @@ export const RacePage = ({
   const [btnEndRace, setBtnEndRace] = useState(false);
   const [btnStartRace, setBtnStartRace] = useState(false);
   const [currentCar, setCurrentCar] = useState(selectedCar || defaultCar);
-  const [taillightColourName, setTaillightColourName] = useState<string | null>(null);
+  // Seed the swatch from the colour the wizard already resolved + applied
+  // (the car is pre-selected via the wizard's car step, so the on-page
+  // dropdown onChange — which otherwise sets this — never fires here).
+  const [taillightColourName, setTaillightColourName] = useState<string | null>(
+    taillightColour ?? null
+  );
 
   const [
     carResetCounter,

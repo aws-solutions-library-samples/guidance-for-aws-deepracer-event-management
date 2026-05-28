@@ -553,6 +553,7 @@ const LocalTimekeeperWizard = () => {
                   onNext={raceIsDoneHandler}
                   selectedCar={selectedCars[0]}
                   setStartTime={setStartTime}
+                  taillightColour={racingColour}
                 />
               ),
               isOptional: false,
