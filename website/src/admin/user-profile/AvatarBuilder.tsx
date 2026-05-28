@@ -144,10 +144,10 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
         setSaveMessage('');
     };
 
-    const handleSave = async () => {
+    const persistConfig = async (cfg: AvatarConfig) => {
         setSaving(true);
         try {
-            const serialisedConfig = JSON.stringify(config);
+            const serialisedConfig = JSON.stringify(cfg);
             await graphqlMutate(updateRacerProfile, {
                 input: {
                     avatarConfig: serialisedConfig,
@@ -167,6 +167,18 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleSave = () => persistConfig(config);
+
+    // "Reset to default racer" → the Stig helmet. Sets the Helmet sentinel top
+    // (not a config wipe) so Stig also shows on the leaderboard, which renders
+    // flag-only for genuinely unconfigured racers. Avatar only — the car
+    // highlight colour is left untouched.
+    const handleReset = () => {
+        const resetConfig: AvatarConfig = { ...DEFAULT_CONFIG, topType: 'Helmet' };
+        setConfig(resetConfig);
+        persistConfig(resetConfig);
     };
 
     const selectFor = (key: keyof AvatarConfig, label: string) => (
@@ -283,6 +295,9 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
                 </FormField>
                 <SpaceBetween direction="horizontal" size="xs">
                     {saveMessage && <Box variant="p">{saveMessage}</Box>}
+                    <Button onClick={handleReset} disabled={saving}>
+                        {t('avatar-builder.reset')}
+                    </Button>
                     <Button variant="primary" onClick={handleSave} loading={saving}>
                         {t('avatar-builder.save')}
                     </Button>

@@ -844,6 +844,7 @@
     "header": "Your Avatar",
     "description": "Build your racer avatar — it will appear on the leaderboard.",
     "save": "Save avatar",
+    "reset": "Reset to default racer",
     "saved": "Avatar saved",
     "save-error": "Error saving avatar, please try again",
     "top": "Hair / Hat",
