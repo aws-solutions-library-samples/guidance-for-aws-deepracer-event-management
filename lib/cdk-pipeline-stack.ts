@@ -141,7 +141,8 @@ export class CdkPipelineStack extends cdk.Stack {
             ` -c account=${props.env.account} -c region=${props.env.region}` +
             ` -c source_branch=${props.sourceBranchName} -c source_repo=${props.sourceRepo}` +
             (props.domainName ? ` -c domain_name=${props.domainName}` : '') +
-            (props.requireApproval === false ? ` -c require_approval=false` : ''),
+            (props.requireApproval === false ? ` -c require_approval=false` : '') +
+            (props.enableAdminTests === true ? ` -c test_e2e_admin=true` : ''),
         ],
         partialBuildSpec: codebuild.BuildSpec.fromObject({
           reports: {
