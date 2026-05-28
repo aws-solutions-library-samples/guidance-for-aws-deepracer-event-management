@@ -1,7 +1,8 @@
-import { CfnOutput, NestedStack, NestedStackProps } from 'aws-cdk-lib';
+import { CfnOutput, CustomResource, Duration, NestedStack, NestedStackProps, Stack } from 'aws-cdk-lib';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import { CfnUserPoolUserToGroupAttachment } from 'aws-cdk-lib/aws-cognito';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as customResources from 'aws-cdk-lib/custom-resources';
 import { NagSuppressions } from 'cdk-nag';
@@ -20,6 +21,8 @@ export class E2eTestUsers extends NestedStack {
 
   constructor(scope: Construct, id: string, props: E2eTestUsersProps) {
     super(scope, id, props);
+
+    const stack = Stack.of(this);
 
     this.racerUsername = 'drem-test-racer';
     this.adminUsername = 'drem-test-admin';
@@ -80,81 +83,84 @@ export class E2eTestUsers extends NestedStack {
       username: this.adminUsername,
     }).node.addDependency(adminUser);
 
-    const setPasswordRole = new iam.Role(this, 'SetPasswordRole', {
-      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-      inlinePolicies: {
-        cognitoAdmin: new iam.PolicyDocument({
-          statements: [
-            new iam.PolicyStatement({
-              actions: ['cognito-idp:AdminSetUserPassword'],
-              resources: [userPool.userPoolArn],
-            }),
-          ],
-        }),
-        secretsRead: new iam.PolicyDocument({
-          statements: [
-            new iam.PolicyStatement({
-              actions: ['secretsmanager:GetSecretValue'],
-              resources: [racerPasswordSecret.secretArn, adminPasswordSecret.secretArn],
-            }),
-          ],
-        }),
-      },
+    // Custom resource Lambda that reads passwords from Secrets Manager and
+    // sets them on the Cognito test users. Defence-in-depth: the Lambda
+    // hardcodes the allowed usernames and rejects any other.
+    const setPasswordFn = new lambda.Function(this, 'SetTestPasswordsFn', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      architecture: lambda.Architecture.ARM_64,
+      handler: 'index.handler',
+      timeout: Duration.seconds(30),
+      code: lambda.Code.fromInline(`
+import json
+import boto3
+import cfnresponse
+
+ALLOWED_USERNAMES = frozenset(['drem-test-racer', 'drem-test-admin'])
+
+cognito_client = boto3.client('cognito-idp')
+secrets_client = boto3.client('secretsmanager')
+
+def handler(event, context):
+    try:
+        if event['RequestType'] == 'Delete':
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+            return
+
+        props = event['ResourceProperties']
+        user_pool_id = props['UserPoolId']
+        users = json.loads(props['Users'])
+
+        for user in users:
+            username = user['username']
+            secret_arn = user['secretArn']
+
+            if username not in ALLOWED_USERNAMES:
+                raise ValueError(f'Username {username} not in allowed list')
+
+            secret_response = secrets_client.get_secret_value(SecretId=secret_arn)
+            password = secret_response['SecretString']
+
+            cognito_client.admin_set_user_password(
+                UserPoolId=user_pool_id,
+                Username=username,
+                Password=password,
+                Permanent=True,
+            )
+
+        cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+    except Exception as e:
+        print(f'Error: {e}')
+        cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
+`),
     });
 
-    const setRacerPassword = new customResources.AwsCustomResource(this, 'SetRacerPassword', {
-      onCreate: {
-        service: 'CognitoIdentityServiceProvider',
-        action: 'adminSetUserPassword',
-        parameters: {
-          UserPoolId: props.userPoolId,
-          Username: this.racerUsername,
-          Password: racerPasswordSecret.secretValue.toString(),
-          Permanent: true,
-        },
-        physicalResourceId: customResources.PhysicalResourceId.of('set-racer-password'),
-      },
-      onUpdate: {
-        service: 'CognitoIdentityServiceProvider',
-        action: 'adminSetUserPassword',
-        parameters: {
-          UserPoolId: props.userPoolId,
-          Username: this.racerUsername,
-          Password: racerPasswordSecret.secretValue.toString(),
-          Permanent: true,
-        },
-        physicalResourceId: customResources.PhysicalResourceId.of('set-racer-password'),
-      },
-      role: setPasswordRole,
-    });
-    setRacerPassword.node.addDependency(racerUser);
+    setPasswordFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['cognito-idp:AdminSetUserPassword'],
+      resources: [userPool.userPoolArn],
+    }));
 
-    const setAdminPassword = new customResources.AwsCustomResource(this, 'SetAdminPassword', {
-      onCreate: {
-        service: 'CognitoIdentityServiceProvider',
-        action: 'adminSetUserPassword',
-        parameters: {
-          UserPoolId: props.userPoolId,
-          Username: this.adminUsername,
-          Password: adminPasswordSecret.secretValue.toString(),
-          Permanent: true,
-        },
-        physicalResourceId: customResources.PhysicalResourceId.of('set-admin-password'),
-      },
-      onUpdate: {
-        service: 'CognitoIdentityServiceProvider',
-        action: 'adminSetUserPassword',
-        parameters: {
-          UserPoolId: props.userPoolId,
-          Username: this.adminUsername,
-          Password: adminPasswordSecret.secretValue.toString(),
-          Permanent: true,
-        },
-        physicalResourceId: customResources.PhysicalResourceId.of('set-admin-password'),
-      },
-      role: setPasswordRole,
+    setPasswordFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['secretsmanager:GetSecretValue'],
+      resources: [racerPasswordSecret.secretArn, adminPasswordSecret.secretArn],
+    }));
+
+    const provider = new customResources.Provider(this, 'SetPasswordProvider', {
+      onEventHandler: setPasswordFn,
     });
-    setAdminPassword.node.addDependency(adminUser);
+
+    const setPasswordsCr = new CustomResource(this, 'SetTestPasswords', {
+      serviceToken: provider.serviceToken,
+      properties: {
+        UserPoolId: props.userPoolId,
+        Users: JSON.stringify([
+          { username: this.racerUsername, secretArn: racerPasswordSecret.secretArn },
+          { username: this.adminUsername, secretArn: adminPasswordSecret.secretArn },
+        ]),
+      },
+    });
+    setPasswordsCr.node.addDependency(racerUser);
+    setPasswordsCr.node.addDependency(adminUser);
 
     this.racerPasswordSecretArn = racerPasswordSecret.secretArn;
     this.adminPasswordSecretArn = adminPasswordSecret.secretArn;
@@ -167,17 +173,17 @@ export class E2eTestUsers extends NestedStack {
     NagSuppressions.addStackSuppressions(this, [
       {
         id: 'AwsSolutions-IAM4',
-        reason: 'AWSLambdaBasicExecutionRole on AwsCustomResource framework Lambda is managed by CDK.',
+        reason: 'AWSLambdaBasicExecutionRole on the Provider framework Lambda is managed by CDK.',
         appliesTo: ['Policy::arn:<AWS::Partition>:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'],
       },
       {
         id: 'AwsSolutions-IAM5',
-        reason: 'AwsCustomResource framework Lambda requires wildcard permissions; managed by CDK.',
+        reason: 'Provider framework Lambda requires wildcard permissions; managed by CDK custom-resources module.',
         appliesTo: ['Resource::*'],
       },
       {
         id: 'AwsSolutions-L1',
-        reason: 'AwsCustomResource framework Lambda runtime is managed by CDK.',
+        reason: 'Provider framework Lambda runtime is managed by CDK.',
       },
       {
         id: 'AwsSolutions-SMG4',
