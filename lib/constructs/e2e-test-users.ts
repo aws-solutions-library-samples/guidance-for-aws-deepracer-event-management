@@ -51,10 +51,7 @@ export class E2eTestUsers extends NestedStack {
       userPoolId: props.userPoolId,
       username: this.racerUsername,
       desiredDeliveryMediums: ['EMAIL'],
-      userAttributes: [
-        { name: 'email', value: props.email },
-        { name: 'email_verified', value: 'true' },
-      ],
+      userAttributes: [{ name: 'email', value: props.email }],
       messageAction: 'SUPPRESS',
     });
 
@@ -68,10 +65,7 @@ export class E2eTestUsers extends NestedStack {
       userPoolId: props.userPoolId,
       username: this.adminUsername,
       desiredDeliveryMediums: ['EMAIL'],
-      userAttributes: [
-        { name: 'email', value: props.email },
-        { name: 'email_verified', value: 'true' },
-      ],
+      userAttributes: [{ name: 'email', value: props.email }],
       messageAction: 'SUPPRESS',
     });
 
@@ -125,6 +119,11 @@ def handler(event, context):
                 Password=password,
                 Permanent=True,
             )
+            cognito_client.admin_update_user_attributes(
+                UserPoolId=user_pool_id,
+                Username=username,
+                UserAttributes=[{'Name': 'email_verified', 'Value': 'true'}],
+            )
 
         cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
     except Exception as e:
@@ -134,7 +133,7 @@ def handler(event, context):
     });
 
     setPasswordFn.addToRolePolicy(new iam.PolicyStatement({
-      actions: ['cognito-idp:AdminSetUserPassword'],
+      actions: ['cognito-idp:AdminSetUserPassword', 'cognito-idp:AdminUpdateUserAttributes'],
       resources: [userPool.userPoolArn],
     }));
 
