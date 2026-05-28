@@ -51,7 +51,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:post-deploy": "vitest run --config vitest.config.post-deploy.ts --reporter=default --reporter=junit --outputFile=../reports/junit-post-deploy.xml src/__tests__/graphql-schema-conformance.test.ts src/__tests__/smoke.test.ts src/__tests__/e2e-auth.test.ts"
+    "test:post-deploy": "vitest run --config vitest.config.post-deploy.ts --reporter=default --reporter=junit --outputFile=../reports/junit-post-deploy.xml src/__tests__/graphql-schema-conformance.test.ts src/__tests__/smoke.test.ts src/__tests__/e2e-auth.test.ts",
+    "test:e2e-admin": "vitest run --config vitest.config.post-deploy.ts --reporter=default --reporter=junit --outputFile=../reports/junit-e2e-admin.xml src/__tests__/e2e-admin.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

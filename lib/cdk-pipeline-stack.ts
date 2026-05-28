@@ -25,6 +25,7 @@ export interface InfrastructurePipelineStageProps extends cdk.StackProps {
   email: string;
   env: Environment;
   domainName?: string;
+  enableAdminTests?: boolean;
 }
 
 class InfrastructurePipelineStage extends Stage {
@@ -33,7 +34,8 @@ class InfrastructurePipelineStage extends Stage {
   public readonly dremWebsiteUrl: cdk.CfnOutput;
   public readonly appsyncId: cdk.CfnOutput;
   public readonly testRacerPasswordSecretArn: cdk.CfnOutput;
-  public readonly testAdminPasswordSecretArn: cdk.CfnOutput;
+  public readonly testAdminPasswordSecretArn: cdk.CfnOutput | undefined;
+  public readonly enableAdminTests: boolean;
 
   constructor(scope: Construct, id: string, props: InfrastructurePipelineStageProps) {
     super(scope, id, props);
@@ -46,9 +48,11 @@ class InfrastructurePipelineStage extends Stage {
       labelName: props.labelName,
       domainName: props.domainName,
     });
+    const enableAdminTests = props.enableAdminTests ?? false;
     const stack = new DeepracerEventManagerStack(this, 'infrastructure', {
       baseStackName: baseStack.stackName,
       email: props.email,
+      enableAdminTests,
     });
     // Base deploys before infrastructure so SSM parameters exist when
     // CloudFormation resolves them at changeset creation time.
@@ -60,6 +64,7 @@ class InfrastructurePipelineStage extends Stage {
     this.appsyncId = stack.appsyncId;
     this.testRacerPasswordSecretArn = stack.testRacerPasswordSecretArn;
     this.testAdminPasswordSecretArn = stack.testAdminPasswordSecretArn;
+    this.enableAdminTests = enableAdminTests;
   }
 }
 export interface CdkPipelineStackProps extends cdk.StackProps {
@@ -70,6 +75,7 @@ export interface CdkPipelineStackProps extends cdk.StackProps {
   env: Environment;
   domainName?: string;
   requireApproval?: boolean;
+  enableAdminTests?: boolean;
 }
 
 export class CdkPipelineStack extends cdk.Stack {
@@ -290,9 +296,8 @@ export class CdkPipelineStack extends cdk.Stack {
       commands: [
         'npm install',
         'aws appsync get-introspection-schema --api-id $appsyncId --format SDL website/src/graphql/schema.graphql',
-        // Fetch test user passwords from Secrets Manager
+        // Fetch racer test user password from Secrets Manager
         'export TEST_RACER_PASSWORD=$(aws secretsmanager get-secret-value --secret-id $TEST_RACER_SECRET_ARN --query SecretString --output text)',
-        'export TEST_ADMIN_PASSWORD=$(aws secretsmanager get-secret-value --secret-id $TEST_ADMIN_SECRET_ARN --query SecretString --output text)',
         // Root postinstall is gated to skip on CodeBuild ($CODEBUILD_BUILD_ID is set),
         // so install website/ deps explicitly before running its npm scripts.
         // `--legacy-peer-deps` for the avataaars@2 React 17 peer.
@@ -302,11 +307,9 @@ export class CdkPipelineStack extends cdk.Stack {
         appsyncId: infrastructure.appsyncId,
         DREM_WEBSITE_URL: infrastructure.dremWebsiteUrl,
         TEST_RACER_SECRET_ARN: infrastructure.testRacerPasswordSecretArn,
-        TEST_ADMIN_SECRET_ARN: infrastructure.testAdminPasswordSecretArn,
       },
       env: {
         TEST_RACER_USERNAME: 'drem-test-racer',
-        TEST_ADMIN_USERNAME: 'drem-test-admin',
       },
       rolePolicyStatements: [
         new iam.PolicyStatement({
@@ -332,6 +335,46 @@ export class CdkPipelineStack extends cdk.Stack {
     });
     postDeployStep.addStepDependency(websiteDeployStep);
     infrastructure_stage.addPost(postDeployStep);
+
+    // Enhanced admin E2E tests — only when test_e2e_admin=true in build.config
+    if (infrastructure.enableAdminTests && infrastructure.testAdminPasswordSecretArn) {
+      const adminE2eStep = new pipelines.CodeBuildStep('EnhancedE2ETests', {
+        buildEnvironment: {
+          computeType: codebuild.ComputeType.SMALL,
+        },
+        installCommands: [`n ${NODE_VERSION}`, 'node --version', 'npx playwright install --with-deps chromium'],
+        commands: [
+          'npm install',
+          'export TEST_ADMIN_PASSWORD=$(aws secretsmanager get-secret-value --secret-id $TEST_ADMIN_SECRET_ARN --query SecretString --output text)',
+          'cd website && npm install --legacy-peer-deps && npm run test:e2e-admin && cd ..',
+        ],
+        envFromCfnOutputs: {
+          DREM_WEBSITE_URL: infrastructure.dremWebsiteUrl,
+          TEST_ADMIN_SECRET_ARN: infrastructure.testAdminPasswordSecretArn,
+        },
+        env: {
+          TEST_ADMIN_USERNAME: 'drem-test-admin',
+        },
+        rolePolicyStatements: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: ['secretsmanager:GetSecretValue'],
+            resources: ['*'],
+          }),
+        ],
+        partialBuildSpec: codebuild.BuildSpec.fromObject({
+          reports: {
+            e2e_admin_reports: {
+              files: ['junit-e2e-admin.xml'],
+              'base-directory': 'reports',
+              'file-format': 'JUNITXML',
+            },
+          },
+        }),
+      });
+      adminE2eStep.addStepDependency(postDeployStep);
+      infrastructure_stage.addPost(adminE2eStep);
+    }
 
     pipeline.buildPipeline();
 

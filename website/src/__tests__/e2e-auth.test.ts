@@ -1,9 +1,8 @@
 /**
- * Authenticated E2E Tests — "can a user log in and use the app?"
+ * Authenticated smoke test — "can a racer log in?"
  *
- * Runs against the live CloudFront URL using Cognito test users created
- * by the E2eTestUsers CDK construct. Credentials are injected via env vars
- * from Secrets Manager in the PostDeploy pipeline step.
+ * Always runs in PostDeployTests. Validates that the deployed site
+ * renders the login form and a standard (racer) user can authenticate.
  */
 
 import { chromium } from 'playwright';
@@ -13,8 +12,6 @@ import type { Browser, Page } from 'playwright';
 const WEBSITE_URL = process.env.DREM_WEBSITE_URL;
 const RACER_USERNAME = process.env.TEST_RACER_USERNAME;
 const RACER_PASSWORD = process.env.TEST_RACER_PASSWORD;
-const ADMIN_USERNAME = process.env.TEST_ADMIN_USERNAME;
-const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD;
 const TIMEOUT_MS = 30_000;
 const TEST_TIMEOUT_MS = 60_000;
 
@@ -25,7 +22,6 @@ async function login(page: Page, username: string, password: string) {
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
   await page.waitForTimeout(5000);
-  // Cognito may show "Verify Contact" screen — click Skip if present
   const skipButton = await page.$('button:has-text("Skip"), [class*="skip"]');
   if (skipButton) {
     await skipButton.click();
@@ -33,7 +29,7 @@ async function login(page: Page, username: string, password: string) {
   }
 }
 
-describe('Authenticated E2E — racer login', () => {
+describe('Authenticated smoke — racer login', () => {
   let browser: Browser;
   let page: Page;
 
@@ -68,49 +64,5 @@ describe('Authenticated E2E — racer login', () => {
     await page.waitForTimeout(5000);
     const bodyText = await page.evaluate(() => document.body?.innerText || '');
     expect(bodyText.toLowerCase()).toMatch(/model/i);
-  }, TEST_TIMEOUT_MS);
-});
-
-describe('Authenticated E2E — admin login', () => {
-  let browser: Browser;
-  let page: Page;
-
-  beforeAll(async () => {
-    browser = await chromium.launch({ args: ['--no-sandbox'] });
-    page = await browser.newPage();
-  });
-
-  afterAll(async () => {
-    await browser.close();
-  });
-
-  it('env vars are set', () => {
-    expect(ADMIN_USERNAME).toBeTruthy();
-    expect(ADMIN_PASSWORD).toBeTruthy();
-  });
-
-  it('admin can log in', async () => {
-    await login(page, ADMIN_USERNAME!, ADMIN_PASSWORD!);
-    const url = page.url();
-    expect(url).not.toContain('login');
-  }, TEST_TIMEOUT_MS);
-
-  it('admin sees operator navigation items', async () => {
-    const pageContent = await page.content();
-    expect(pageContent).toMatch(/operator|event|device|model/i);
-  });
-
-  it('user management page loads', async () => {
-    await page.goto(`${WEBSITE_URL}/admin/user-management`, { timeout: TIMEOUT_MS });
-    await page.waitForSelector('table, [class*="table"]', { timeout: TIMEOUT_MS });
-    const table = await page.$('table, [class*="table"]');
-    expect(table).not.toBeNull();
-  }, TEST_TIMEOUT_MS);
-
-  it('stats page renders', async () => {
-    await page.goto(`${WEBSITE_URL}/stats`, { timeout: TIMEOUT_MS });
-    await page.waitForSelector('canvas, [class*="chart"], [class*="stats"]', { timeout: TIMEOUT_MS });
-    const chart = await page.$('canvas, [class*="chart"], [class*="stats"]');
-    expect(chart).not.toBeNull();
   }, TEST_TIMEOUT_MS);
 });

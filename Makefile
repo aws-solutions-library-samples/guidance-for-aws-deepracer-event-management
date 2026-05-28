@@ -30,6 +30,12 @@ else
 require_approval_arg =
 endif
 
+ifdef test_e2e_admin
+test_e2e_admin_arg = -c test_e2e_admin=$(test_e2e_admin)
+else
+test_e2e_admin_arg =
+endif
+
 ## CONSTANTS
 dremSrcPath := website/src
 leaderboardSrcPath := website/leaderboard/src
@@ -75,10 +81,10 @@ drem.bootstrap: 				## Bootstrap the CDK environment
 
 .PHONY: pipeline.synth pipeline.deploy pipeline.clean
 pipeline.synth: 				## Synth the CDK pipeline
-	npx cdk synth $(CDK_CONTEXT) $(require_approval_arg)
+	npx cdk synth $(CDK_CONTEXT) $(require_approval_arg) $(test_e2e_admin_arg)
 
 pipeline.deploy: 				## Deploy the CDK pipeline
-	npx cdk deploy $(CDK_CONTEXT) $(require_approval_arg) --require-approval never
+	npx cdk deploy $(CDK_CONTEXT) $(require_approval_arg) $(test_e2e_admin_arg) --require-approval never
 
 pipeline.clean: 				## Destroys the CDK pipeline stack only
 	npx cdk destroy $(CDK_CONTEXT) --force

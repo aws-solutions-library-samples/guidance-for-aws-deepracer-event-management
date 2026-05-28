@@ -11,34 +11,29 @@ import { Construct } from 'constructs';
 export interface E2eTestUsersProps extends NestedStackProps {
   userPoolId: string;
   email: string;
+  enableAdminTests?: boolean;
 }
 
 export class E2eTestUsers extends NestedStack {
   public readonly racerUsername: string;
   public readonly adminUsername: string;
   public readonly racerPasswordSecretArn: string;
-  public readonly adminPasswordSecretArn: string;
+  public readonly adminPasswordSecretArn: string | undefined;
 
   constructor(scope: Construct, id: string, props: E2eTestUsersProps) {
     super(scope, id, props);
+
+    const enableAdmin = props.enableAdminTests ?? false;
 
     this.racerUsername = 'drem-test-racer';
     this.adminUsername = 'drem-test-admin';
 
     const userPool = cognito.UserPool.fromUserPoolId(this, 'ImportedUserPool', props.userPoolId);
 
+    // --- Racer test user (always created) ---
+
     const racerPasswordSecret = new secretsmanager.Secret(this, 'RacerPasswordSecret', {
       description: 'E2E test racer user password',
-      generateSecretString: {
-        passwordLength: 16,
-        excludePunctuation: false,
-        includeSpace: false,
-        requireEachIncludedType: true,
-      },
-    });
-
-    const adminPasswordSecret = new secretsmanager.Secret(this, 'AdminPasswordSecret', {
-      description: 'E2E test admin user password',
       generateSecretString: {
         passwordLength: 16,
         excludePunctuation: false,
@@ -61,23 +56,50 @@ export class E2eTestUsers extends NestedStack {
       username: this.racerUsername,
     }).node.addDependency(racerUser);
 
-    const adminUser = new cognito.CfnUserPoolUser(this, 'TestAdminUser', {
-      userPoolId: props.userPoolId,
-      username: this.adminUsername,
-      desiredDeliveryMediums: ['EMAIL'],
-      userAttributes: [{ name: 'email', value: props.email }],
-      messageAction: 'SUPPRESS',
-    });
+    // --- Admin test user (only when enableAdminTests=true) ---
 
-    new CfnUserPoolUserToGroupAttachment(this, 'TestAdminToGroup', {
-      userPoolId: props.userPoolId,
-      groupName: 'admin',
-      username: this.adminUsername,
-    }).node.addDependency(adminUser);
+    let adminPasswordSecret: secretsmanager.Secret | undefined;
+    let adminUser: cognito.CfnUserPoolUser | undefined;
 
-    // Custom resource Lambda that reads passwords from Secrets Manager and
-    // sets them on the Cognito test users. Defence-in-depth: the Lambda
-    // hardcodes the allowed usernames and rejects any other.
+    if (enableAdmin) {
+      adminPasswordSecret = new secretsmanager.Secret(this, 'AdminPasswordSecret', {
+        description: 'E2E test admin user password',
+        generateSecretString: {
+          passwordLength: 16,
+          excludePunctuation: false,
+          includeSpace: false,
+          requireEachIncludedType: true,
+        },
+      });
+
+      adminUser = new cognito.CfnUserPoolUser(this, 'TestAdminUser', {
+        userPoolId: props.userPoolId,
+        username: this.adminUsername,
+        desiredDeliveryMediums: ['EMAIL'],
+        userAttributes: [{ name: 'email', value: props.email }],
+        messageAction: 'SUPPRESS',
+      });
+
+      new CfnUserPoolUserToGroupAttachment(this, 'TestAdminToGroup', {
+        userPoolId: props.userPoolId,
+        groupName: 'admin',
+        username: this.adminUsername,
+      }).node.addDependency(adminUser);
+    }
+
+    // --- Password-setter Lambda ---
+    // Defence-in-depth: hardcodes allowed usernames, rejects any other.
+
+    const users: { username: string; secretArn: string }[] = [
+      { username: this.racerUsername, secretArn: racerPasswordSecret.secretArn },
+    ];
+    const secretArns: string[] = [racerPasswordSecret.secretArn];
+
+    if (enableAdmin && adminPasswordSecret) {
+      users.push({ username: this.adminUsername, secretArn: adminPasswordSecret.secretArn });
+      secretArns.push(adminPasswordSecret.secretArn);
+    }
+
     const setPasswordFn = new lambda.Function(this, 'SetTestPasswordsFn', {
       runtime: lambda.Runtime.PYTHON_3_12,
       architecture: lambda.Architecture.ARM_64,
@@ -139,7 +161,7 @@ def handler(event, context):
 
     setPasswordFn.addToRolePolicy(new iam.PolicyStatement({
       actions: ['secretsmanager:GetSecretValue'],
-      resources: [racerPasswordSecret.secretArn, adminPasswordSecret.secretArn],
+      resources: secretArns,
     }));
 
     const provider = new customResources.Provider(this, 'SetPasswordProvider', {
@@ -150,22 +172,24 @@ def handler(event, context):
       serviceToken: provider.serviceToken,
       properties: {
         UserPoolId: props.userPoolId,
-        Users: JSON.stringify([
-          { username: this.racerUsername, secretArn: racerPasswordSecret.secretArn },
-          { username: this.adminUsername, secretArn: adminPasswordSecret.secretArn },
-        ]),
+        Users: JSON.stringify(users),
       },
     });
     setPasswordsCr.node.addDependency(racerUser);
-    setPasswordsCr.node.addDependency(adminUser);
+    if (adminUser) setPasswordsCr.node.addDependency(adminUser);
+
+    // --- Outputs ---
 
     this.racerPasswordSecretArn = racerPasswordSecret.secretArn;
-    this.adminPasswordSecretArn = adminPasswordSecret.secretArn;
+    this.adminPasswordSecretArn = adminPasswordSecret?.secretArn;
 
     new CfnOutput(this, 'TestRacerUsername', { value: this.racerUsername });
-    new CfnOutput(this, 'TestAdminUsername', { value: this.adminUsername });
     new CfnOutput(this, 'TestRacerPasswordSecretArn', { value: racerPasswordSecret.secretArn });
-    new CfnOutput(this, 'TestAdminPasswordSecretArn', { value: adminPasswordSecret.secretArn });
+
+    if (enableAdmin && adminPasswordSecret) {
+      new CfnOutput(this, 'TestAdminUsername', { value: this.adminUsername });
+      new CfnOutput(this, 'TestAdminPasswordSecretArn', { value: adminPasswordSecret.secretArn });
+    }
 
     NagSuppressions.addStackSuppressions(this, [
       {
