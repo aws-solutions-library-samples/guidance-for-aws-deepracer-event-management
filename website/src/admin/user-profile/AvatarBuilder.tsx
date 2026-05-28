@@ -20,6 +20,8 @@ export interface AvatarConfig {
     topType: string;
     accessoriesType: string;
     hairColor: string;
+    // '' = "match hair" (mapped to the nearest hat colour at render); otherwise a @vierweb hat colour.
+    hatColor: string;
     facialHairType: string;
     facialHairColor: string;
     clotheType: string;
@@ -34,6 +36,7 @@ const DEFAULT_CONFIG: AvatarConfig = {
     topType: 'NoHair',
     accessoriesType: 'Blank',
     hairColor: 'Brown',
+    hatColor: '',
     facialHairType: 'Blank',
     facialHairColor: 'Brown',
     clotheType: 'ShirtCrewNeck',
@@ -47,6 +50,7 @@ const DEFAULT_CONFIG: AvatarConfig = {
 // Options derived from @vierweb/avataaars supported values
 const OPTIONS: Record<keyof AvatarConfig, string[]> = {
     topType: [
+        'Helmet',
         'NoHair', 'Eyepatch', 'Hat', 'Hijab', 'Turban',
         'WinterHat1', 'WinterHat2', 'WinterHat3', 'WinterHat4',
         'LongHairBigHair', 'LongHairBob', 'LongHairBun', 'LongHairCurly',
@@ -60,6 +64,7 @@ const OPTIONS: Record<keyof AvatarConfig, string[]> = {
     ],
     accessoriesType: ['Blank', 'Kurt', 'Prescription01', 'Prescription02', 'Round', 'Sunglasses', 'Wayfarers'],
     hairColor: ['Auburn', 'Black', 'Blonde', 'BlondeGolden', 'Brown', 'BrownDark', 'PastelPink', 'Platinum', 'Red', 'SilverGray'],
+    hatColor: ['Black', 'Blue01', 'Blue02', 'Blue03', 'Gray01', 'Gray02', 'Heather', 'PastelBlue', 'PastelGreen', 'PastelOrange', 'PastelRed', 'PastelYellow', 'Pink', 'Red', 'White'],
     facialHairType: ['Blank', 'BeardMedium', 'BeardLight', 'BeardMajestic', 'MoustacheFancy', 'MoustacheMagnum'],
     facialHairColor: ['Auburn', 'Black', 'Blonde', 'BlondeGolden', 'Brown', 'BrownDark', 'Platinum', 'Red'],
     clotheType: ['BlazerShirt', 'BlazerSweater', 'CollarSweater', 'GraphicShirt', 'Hoodie', 'Overall', 'ShirtCrewNeck', 'ShirtScoopNeck', 'ShirtVNeck'],
@@ -174,6 +179,23 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
         </FormField>
     );
 
+    // hatColor needs an extra "match hair" option ('') — only meaningful for hat tops.
+    const hatColorField = (
+        <FormField label={t('avatar-builder.hat-color')}>
+            <Select
+                selectedOption={{
+                    value: config.hatColor,
+                    label: config.hatColor === '' ? t('avatar-builder.hat-color-auto') : config.hatColor,
+                }}
+                options={[
+                    { value: '', label: t('avatar-builder.hat-color-auto') },
+                    ...toSelectOptions(OPTIONS.hatColor),
+                ]}
+                onChange={set('hatColor')}
+            />
+        </FormField>
+    );
+
     // Header with inline avatar preview (visible when collapsed)
     const headerContent = (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -198,6 +220,7 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
                     <div>
                         <SpaceBetween size="m">
                             {selectFor('topType', t('avatar-builder.top'))}
+                            {hatColorField}
                             {selectFor('accessoriesType', t('avatar-builder.accessories'))}
                             {selectFor('hairColor', t('avatar-builder.hair-color'))}
                             {selectFor('facialHairType', t('avatar-builder.facial-hair'))}

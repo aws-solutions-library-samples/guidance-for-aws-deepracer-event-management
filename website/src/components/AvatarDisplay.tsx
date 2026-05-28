@@ -1,6 +1,7 @@
 import Avatar from '@vierweb/avataaars';
 import React from 'react';
 import defaultAvatar from '../assets/defaultAvatar.svg';
+import { resolveAvatarRender } from './avatarRender';
 
 export interface AvatarDisplayProps {
   /** JSON string of avatar config, a parsed object, or null/undefined if unconfigured */
@@ -14,8 +15,8 @@ export interface AvatarDisplayProps {
 /**
  * Shared avatar display component.
  *
- * - If `avatarConfig` is provided (non-null, non-empty), renders the avataaars Avatar.
- * - Otherwise renders the default DeepRacer helmet avatar.
+ * - Renders the avataaars Avatar for a configured racer (with hatColor defaulted to hairColor).
+ * - Renders the default DeepRacer helmet ("Stig") when unconfigured or the Helmet top is chosen.
  *
  * Used in: profile page header, top navigation, and anywhere else an avatar is shown.
  */
@@ -24,25 +25,20 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   size = 40,
   avatarStyle = 'Circle',
 }) => {
-  const parsed = parseConfig(avatarConfig);
+  const render = resolveAvatarRender(parseConfig(avatarConfig));
 
-  if (!parsed) {
-    // No avatar configured → the default DeepRacer helmet ("Stig"), matching DRoA.
+  if (render.useDefault) {
+    // No config, or the "Helmet" top → the default DeepRacer helmet ("Stig"), matching DRoA.
     return (
       <img src={defaultAvatar} alt="Default racer avatar" style={{ width: size, height: size }} />
     );
   }
 
-  // @vierweb/avataaars@3 defaults hats to blue; mirror avataaars@2 / DRoA by
-  // colouring the hat with the racer's hair colour when one is set.
-  const renderConfig =
-    parsed.hairColor && !parsed.hatColor ? { ...parsed, hatColor: parsed.hairColor } : parsed;
-
   return (
     <Avatar
       avatarStyle={avatarStyle}
       style={{ width: size, height: size }}
-      {...(renderConfig as Record<string, string>)}
+      {...render.config}
     />
   );
 };
