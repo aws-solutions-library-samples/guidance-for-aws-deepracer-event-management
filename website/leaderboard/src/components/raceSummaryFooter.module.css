@@ -105,7 +105,8 @@
   z-index: 1;
 }
 
-.summaryIdentityIcon :global(svg) {
+.summaryIdentityIcon :global(svg),
+.summaryIdentityIcon img {
   width: 100% !important;
   height: 100% !important;
 }

@@ -132,7 +132,8 @@
   line-height: 1;
 }
 
-.liIdentity :global(svg) {
+.liIdentity :global(svg),
+.liIdentity img {
   width: 100% !important;
   height: 100% !important;
 }

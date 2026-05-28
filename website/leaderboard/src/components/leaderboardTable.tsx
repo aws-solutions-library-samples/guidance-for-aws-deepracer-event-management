@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-import Avatar from 'avataaars';
+import Avatar from '@vierweb/avataaars';
 import classnames from 'classnames';
 import { useTranslation } from 'react-i18next';
 import { useWindowSize } from '../hooks/useWindowSize';
@@ -10,6 +10,8 @@ import { scrollTo } from '../utils';
 import { Flag } from './flag';
 import styles from './leaderboardTable.module.css';
 import { parseAvatarConfig } from './parseAvatarConfig';
+import { resolveAvatarRender } from './avatarRender';
+import defaultAvatar from '../assets/defaultAvatar.svg';
 
 interface LeaderboardTableProps {
   leaderboardEntries: any[];
@@ -70,6 +72,7 @@ const LeaderboardTable = ({
       }
 
       const avatarConfig = parseAvatarConfig(entry.profile?.avatarConfig);
+      const avatarRender = avatarConfig ? resolveAvatarRender(avatarConfig) : null;
       const isHighlighted = highlightedUsername && entry.username === highlightedUsername;
 
       return (
@@ -103,7 +106,12 @@ const LeaderboardTable = ({
             <div className={styles.liIdentity}>
               {avatarConfig ? (
                 <>
-                  <Avatar avatarStyle="Transparent" {...(avatarConfig as Record<string, string>)} />
+                  {avatarRender &&
+                    (avatarRender.useDefault ? (
+                      <img src={defaultAvatar} alt="Default racer avatar" />
+                    ) : (
+                      <Avatar avatarStyle="Transparent" {...avatarRender.config} />
+                    ))}
                   {showFlag && entry.countryCode && (
                     <span className={styles.identityFlag}>
                       <Flag countryCode={entry.countryCode} />
