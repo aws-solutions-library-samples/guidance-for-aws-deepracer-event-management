@@ -84,6 +84,7 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
 
   new DeepracerEventManagerStack(app, `drem-backend-${labelName}-infrastructure`, {
     baseStackName: baseStack.stackName,
+    email: mailAddress,
     env: env,
   });
 } else {

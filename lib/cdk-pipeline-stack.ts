@@ -32,6 +32,8 @@ class InfrastructurePipelineStage extends Stage {
   public readonly sourceBucketName: cdk.CfnOutput;
   public readonly dremWebsiteUrl: cdk.CfnOutput;
   public readonly appsyncId: cdk.CfnOutput;
+  public readonly testRacerPasswordSecretArn: cdk.CfnOutput;
+  public readonly testAdminPasswordSecretArn: cdk.CfnOutput;
 
   constructor(scope: Construct, id: string, props: InfrastructurePipelineStageProps) {
     super(scope, id, props);
@@ -46,6 +48,7 @@ class InfrastructurePipelineStage extends Stage {
     });
     const stack = new DeepracerEventManagerStack(this, 'infrastructure', {
       baseStackName: baseStack.stackName,
+      email: props.email,
     });
     // Base deploys before infrastructure so SSM parameters exist when
     // CloudFormation resolves them at changeset creation time.
@@ -55,6 +58,8 @@ class InfrastructurePipelineStage extends Stage {
     this.sourceBucketName = stack.sourceBucketName;
     this.dremWebsiteUrl = stack.dremWebsiteUrl;
     this.appsyncId = stack.appsyncId;
+    this.testRacerPasswordSecretArn = stack.testRacerPasswordSecretArn;
+    this.testAdminPasswordSecretArn = stack.testAdminPasswordSecretArn;
   }
 }
 export interface CdkPipelineStackProps extends cdk.StackProps {
@@ -285,6 +290,9 @@ export class CdkPipelineStack extends cdk.Stack {
       commands: [
         'npm install',
         'aws appsync get-introspection-schema --api-id $appsyncId --format SDL website/src/graphql/schema.graphql',
+        // Fetch test user passwords from Secrets Manager
+        'export TEST_RACER_PASSWORD=$(aws secretsmanager get-secret-value --secret-id $TEST_RACER_SECRET_ARN --query SecretString --output text)',
+        'export TEST_ADMIN_PASSWORD=$(aws secretsmanager get-secret-value --secret-id $TEST_ADMIN_SECRET_ARN --query SecretString --output text)',
         // Root postinstall is gated to skip on CodeBuild ($CODEBUILD_BUILD_ID is set),
         // so install website/ deps explicitly before running its npm scripts.
         // `--legacy-peer-deps` for the avataaars@2 React 17 peer.
@@ -293,11 +301,22 @@ export class CdkPipelineStack extends cdk.Stack {
       envFromCfnOutputs: {
         appsyncId: infrastructure.appsyncId,
         DREM_WEBSITE_URL: infrastructure.dremWebsiteUrl,
+        TEST_RACER_SECRET_ARN: infrastructure.testRacerPasswordSecretArn,
+        TEST_ADMIN_SECRET_ARN: infrastructure.testAdminPasswordSecretArn,
+      },
+      env: {
+        TEST_RACER_USERNAME: 'drem-test-racer',
+        TEST_ADMIN_USERNAME: 'drem-test-admin',
       },
       rolePolicyStatements: [
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: ['appsync:GetIntrospectionSchema'],
+          resources: ['*'],
+        }),
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: ['secretsmanager:GetSecretValue'],
           resources: ['*'],
         }),
       ],
