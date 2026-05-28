@@ -50,7 +50,10 @@ export class E2eTestUsers extends NestedStack {
       userPoolId: props.userPoolId,
       username: this.racerUsername,
       desiredDeliveryMediums: ['EMAIL'],
-      userAttributes: [{ name: 'email', value: props.email }],
+      userAttributes: [
+        { name: 'email', value: props.email },
+        { name: 'email_verified', value: 'true' },
+      ],
       messageAction: 'SUPPRESS',
     });
 
@@ -64,7 +67,10 @@ export class E2eTestUsers extends NestedStack {
       userPoolId: props.userPoolId,
       username: this.adminUsername,
       desiredDeliveryMediums: ['EMAIL'],
-      userAttributes: [{ name: 'email', value: props.email }],
+      userAttributes: [
+        { name: 'email', value: props.email },
+        { name: 'email_verified', value: 'true' },
+      ],
       messageAction: 'SUPPRESS',
     });
 
@@ -103,7 +109,7 @@ export class E2eTestUsers extends NestedStack {
         parameters: {
           UserPoolId: props.userPoolId,
           Username: this.racerUsername,
-          Password: racerPasswordSecret.secretValue.unsafeUnwrap(),
+          Password: racerPasswordSecret.secretValue.toString(),
           Permanent: true,
         },
         physicalResourceId: customResources.PhysicalResourceId.of('set-racer-password'),
@@ -114,7 +120,7 @@ export class E2eTestUsers extends NestedStack {
         parameters: {
           UserPoolId: props.userPoolId,
           Username: this.racerUsername,
-          Password: racerPasswordSecret.secretValue.unsafeUnwrap(),
+          Password: racerPasswordSecret.secretValue.toString(),
           Permanent: true,
         },
         physicalResourceId: customResources.PhysicalResourceId.of('set-racer-password'),
@@ -130,7 +136,7 @@ export class E2eTestUsers extends NestedStack {
         parameters: {
           UserPoolId: props.userPoolId,
           Username: this.adminUsername,
-          Password: adminPasswordSecret.secretValue.unsafeUnwrap(),
+          Password: adminPasswordSecret.secretValue.toString(),
           Permanent: true,
         },
         physicalResourceId: customResources.PhysicalResourceId.of('set-admin-password'),
@@ -141,7 +147,7 @@ export class E2eTestUsers extends NestedStack {
         parameters: {
           UserPoolId: props.userPoolId,
           Username: this.adminUsername,
-          Password: adminPasswordSecret.secretValue.unsafeUnwrap(),
+          Password: adminPasswordSecret.secretValue.toString(),
           Permanent: true,
         },
         physicalResourceId: customResources.PhysicalResourceId.of('set-admin-password'),

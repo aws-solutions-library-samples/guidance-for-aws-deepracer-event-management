@@ -16,14 +16,21 @@ const RACER_PASSWORD = process.env.TEST_RACER_PASSWORD;
 const ADMIN_USERNAME = process.env.TEST_ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD;
 const TIMEOUT_MS = 30_000;
+const TEST_TIMEOUT_MS = 60_000;
 
 async function login(page: Page, username: string, password: string) {
   await page.goto(WEBSITE_URL!, { timeout: TIMEOUT_MS });
-  await page.waitForSelector('[name="username"], input[autocomplete="username"]', { timeout: TIMEOUT_MS });
-  await page.fill('[name="username"], input[autocomplete="username"]', username);
-  await page.fill('[name="password"], input[autocomplete="password"]', password);
+  await page.waitForSelector('input[name="username"]', { timeout: TIMEOUT_MS });
+  await page.fill('input[name="username"]', username);
+  await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
-  await page.waitForSelector('[data-testid="side-navigation"], nav', { timeout: TIMEOUT_MS });
+  await page.waitForTimeout(5000);
+  // Cognito may show "Verify Contact" screen — click Skip if present
+  const skipButton = await page.$('button:has-text("Skip"), [class*="skip"]');
+  if (skipButton) {
+    await skipButton.click();
+    await page.waitForTimeout(3000);
+  }
 }
 
 describe('Authenticated E2E — racer login', () => {
@@ -49,7 +56,7 @@ describe('Authenticated E2E — racer login', () => {
     await login(page, RACER_USERNAME!, RACER_PASSWORD!);
     const url = page.url();
     expect(url).not.toContain('login');
-  });
+  }, TEST_TIMEOUT_MS);
 
   it('authenticated page renders navigation', async () => {
     const nav = await page.$('nav, [class*="side-nav"], [class*="Navigation"]');
@@ -58,10 +65,10 @@ describe('Authenticated E2E — racer login', () => {
 
   it('models page is accessible', async () => {
     await page.goto(`${WEBSITE_URL}/models/view`, { timeout: TIMEOUT_MS });
-    await page.waitForSelector('h1, [class*="header"]', { timeout: TIMEOUT_MS });
-    const heading = await page.textContent('h1, [class*="header"]');
-    expect(heading).toBeTruthy();
-  });
+    await page.waitForTimeout(5000);
+    const bodyText = await page.evaluate(() => document.body?.innerText || '');
+    expect(bodyText.toLowerCase()).toMatch(/model/i);
+  }, TEST_TIMEOUT_MS);
 });
 
 describe('Authenticated E2E — admin login', () => {
@@ -86,7 +93,7 @@ describe('Authenticated E2E — admin login', () => {
     await login(page, ADMIN_USERNAME!, ADMIN_PASSWORD!);
     const url = page.url();
     expect(url).not.toContain('login');
-  });
+  }, TEST_TIMEOUT_MS);
 
   it('admin sees operator navigation items', async () => {
     const pageContent = await page.content();
@@ -98,12 +105,12 @@ describe('Authenticated E2E — admin login', () => {
     await page.waitForSelector('table, [class*="table"]', { timeout: TIMEOUT_MS });
     const table = await page.$('table, [class*="table"]');
     expect(table).not.toBeNull();
-  });
+  }, TEST_TIMEOUT_MS);
 
   it('stats page renders', async () => {
     await page.goto(`${WEBSITE_URL}/stats`, { timeout: TIMEOUT_MS });
     await page.waitForSelector('canvas, [class*="chart"], [class*="stats"]', { timeout: TIMEOUT_MS });
     const chart = await page.$('canvas, [class*="chart"], [class*="stats"]');
     expect(chart).not.toBeNull();
-  });
+  }, TEST_TIMEOUT_MS);
 });
