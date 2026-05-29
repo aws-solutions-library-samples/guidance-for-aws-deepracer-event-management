@@ -266,7 +266,11 @@ const RaceOverlayInfo = ({
                     (avatarRender.useDefault ? (
                       <img src={defaultAvatar} alt="Default racer avatar" />
                     ) : (
-                      <Avatar avatarStyle="Transparent" {...avatarRender.config} />
+                      <Avatar
+                    avatarStyle="Transparent"
+                    style={{ width: '100%', height: '100%' }}
+                    {...avatarRender.config}
+                  />
                     ))}
                   {countryCode && (
                     <span className={styles.overlayIdentityFlag}>
