@@ -21,6 +21,7 @@ import {
 } from '../../../store/contexts/storeProvider';
 import { RacerSelector } from '../components/racerSelector';
 import { RacesDoneByUser } from '../components/racesDoneByUser';
+import { buildRaceConfigFromEvent } from '../support-functions/raceDomain';
 import { Breadcrumbs } from '../support-functions/supportFunctions';
 
 interface RaceSetupPageProps {
@@ -126,13 +127,13 @@ export const RaceSetupPage = ({ onNext }: RaceSetupPageProps): JSX.Element => {
           variant="primary"
           disabled={racerValidation.isInvalid}
           onClick={() => {
+            // Copy, don't mutate: selectedEvent.raceConfig is a shared store
+            // object and `race` is React state — build a fresh payload rather
+            // than writing eventName/eventId/laps back onto them. See #267.
             const raceDetails: any = {
-              race: race,
-              config: selectedEvent?.raceConfig,
+              race: { ...race, eventId: selectedEvent?.eventId, laps: [] },
+              config: buildRaceConfigFromEvent(selectedEvent),
             };
-            raceDetails.config['eventName'] = selectedEvent?.eventName;
-            raceDetails.race['eventId'] = selectedEvent?.eventId;
-            raceDetails.race['laps'] = [];
             onNext(raceDetails);
           }}
         >

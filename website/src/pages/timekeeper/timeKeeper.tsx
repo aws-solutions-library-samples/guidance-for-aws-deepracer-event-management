@@ -9,7 +9,7 @@ import { RaceFinishPage } from './pages/raceFinishPage';
 import { RacePage } from './pages/racePage';
 import { RaceSetupPage } from './pages/raceSetupPage';
 import { getAverageWindows } from './support-functions/averageClaculations';
-import { defaultRace } from './support-functions/raceDomain';
+import { buildRaceConfigFromEvent, defaultRace } from './support-functions/raceDomain';
 
 interface Lap {
   lapTime: number;
@@ -32,12 +32,19 @@ export const Timekeeper = (): JSX.Element => {
   const selectedTrack = useSelectedTrackContext();
 
   const [state, dispatch] = useStore();
-  // change event info and race config when a user select another event
+  // change event info and race config when a user selects another event
   useEffect(() => {
+    // Only sync the race config from the selected event while on the setup
+    // step. Mid-race (step 1) and on the finish page (step 2) the active race
+    // owns its config — a re-dispatched selectedEvent (e.g. after an events-
+    // store refresh) must not clobber a live race's raceConfig/eventId. See #267.
+    if (activeStepIndex !== 0) return;
+
     if (selectedEvent?.eventId !== race.eventId) {
-      let raceDetails: any = selectedEvent?.raceConfig;
-      raceDetails['eventName'] = selectedEvent?.eventName;
-      setRaceConfig(raceDetails);
+      // Copy, don't mutate — buildRaceConfigFromEvent returns a fresh object so
+      // we never write the event name back onto the shared store event, and it
+      // null-guards an event with no stored raceConfig.
+      setRaceConfig(buildRaceConfigFromEvent(selectedEvent));
 
       const modifiedRace = { ...race, eventId: selectedEvent?.eventId };
       setRace(modifiedRace);
