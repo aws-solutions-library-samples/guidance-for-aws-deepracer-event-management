@@ -41,6 +41,10 @@ export interface CarManagerProps {
 
 export class CarManager extends Construct {
   public readonly carStatusDataHandlerLambda: lambdaPython.PythonFunction;
+  // Exposed so drem-app-stack can publish a CfnOutput → cfn.outputs →
+  // amplify config (for reference / manual invokes only). The Lambda is
+  // invoked by the car_status_update poller, not by the car itself.
+  public readonly registerCarSerialFunctionName: string;
 
   constructor(scope: Construct, id: string, props: CarManagerProps) {
     super(scope, id);
@@ -275,6 +279,77 @@ export class CarManager extends Construct {
       })
     );
 
+    // Per-chassis history of managed-instances (mi-xxxx ids) a physical car
+    // has been registered as. Written by register_car_serial *before* it
+    // deregisters an older mi-xxx for dedup — so the link from chassis to
+    // historical mi/carName/fleet survives the SSM deregistration. Race
+    // records reference carName at race time; this table is the bridge
+    // that lets a future query answer "all races by physical car X".
+    //
+    // pk = chassisSerial, sk = managedInstanceId. Each row also carries
+    // the last-known carName + fleet, plus firstSeen / lastSeen / and a
+    // deregisteredAt timestamp once the mi is retired.
+    const carsHistoryTable = new dynamodb.Table(this, 'CarsHistoryTable', {
+      partitionKey: { name: 'chassisSerial', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'managedInstanceId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      encryption: dynamodb.TableEncryption.AWS_MANAGED,
+      removalPolicy: RemovalPolicy.DESTROY,
+      pointInTimeRecoverySpecification: { pointInTimeRecoveryEnabled: true },
+    });
+
+    // Lambda that reads the chassis serial off the car via SSM Run Command
+    // (invoked asynchronously by the car_status_update poller), then dedups
+    // other managed-instances sharing the serial and tags the new one.
+    // See lib/lambdas/register_car_serial/index.py.
+    const register_car_serial_handler = new StandardLambdaPythonFunction(this, 'register_car_serial_handler', {
+      entry: 'lib/lambdas/register_car_serial/',
+      description: 'Tag managed-instance with chassis serial + dedup older instances',
+      index: 'index.py',
+      handler: 'lambda_handler',
+      timeout: Duration.minutes(1),
+      runtime: props.lambdaConfig.runtime,
+      memorySize: 128,
+      architecture: props.lambdaConfig.architecture,
+      bundling: {
+        image: props.lambdaConfig.bundlingImage,
+      },
+      layers: [props.lambdaConfig.layersConfig.powerToolsLayer],
+      environment: {
+        POWERTOOLS_SERVICE_NAME: 'register_car_serial',
+        LOG_LEVEL: props.lambdaConfig.layersConfig.powerToolsLogLevel,
+        CARS_STATUS_TABLE: carStatusTable.tableName,
+        CARS_HISTORY_TABLE: carsHistoryTable.tableName,
+      },
+    });
+    register_car_serial_handler.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'ssm:AddTagsToResource',
+          'ssm:DeregisterManagedInstance',
+          'ssm:SendCommand',
+          'ssm:GetCommandInvocation',
+          'tag:GetResources',
+        ],
+        resources: ['*'],
+      })
+    );
+    // Read existing car metadata (carName/fleet) so we can capture it
+    // onto the history row before deregistering the old mi. Write access
+    // is needed to delete the ghost row after a successful deregister.
+    carStatusTable.grantReadWriteData(register_car_serial_handler);
+    carsHistoryTable.grantWriteData(register_car_serial_handler);
+
+    this.registerCarSerialFunctionName = register_car_serial_handler.functionName;
+
+    // The status poller reads the serial off the car (SSM Run Command) by
+    // invoking register_car_serial, and keeps the CarsHistory lineage fresh.
+    register_car_serial_handler.grantInvoke(carStatusUpdateHandler);
+    carsHistoryTable.grantWriteData(carStatusUpdateHandler);
+    carStatusUpdateHandler.addEnvironment('REGISTER_CAR_SERIAL_FUNCTION', register_car_serial_handler.functionName);
+    carStatusUpdateHandler.addEnvironment('CARS_HISTORY_TABLE', carsHistoryTable.tableName);
+
     // device_activation_clean method - clean up unactivated and expired hybrid activations
     const device_activation_clean_handler = new StandardLambdaPythonFunction(this, 'device_activation_clean_handler', {
       entry: 'lib/lambdas/device_activation_clean/',
@@ -376,8 +451,10 @@ export class CarManager extends Construct {
         DDB_TABLE: carStatusTable.tableName,
         DDB_PING_STATE_INDEX: carsTable_ping_state_index_name,
         STEP_FUNCTION_ARN: car_status_update_SM.stateMachineArn,
+        CARS_HISTORY_TABLE: carsHistoryTable.tableName,
       },
     });
+    carsHistoryTable.grantReadData(cars_function_handler);
 
     cars_function_handler.addToRolePolicy(
       new iam.PolicyStatement({
@@ -462,6 +539,11 @@ export class CarManager extends Construct {
       DeviceUiPassword: GraphqlType.string(),
       DeepRacerCoreVersion: GraphqlType.string(),
       LoggingCapable: GraphqlType.boolean(),
+      // Set by `register_car_serial` after activation. Stable per
+      // physical car — survives fleet/hostname renames, so the admin
+      // cars list can use it to spot duplicates and track history.
+      ChassisSerial: GraphqlType.string(),
+      ChassisSerialStatus: GraphqlType.string(),
     };
 
     const car_online_object_type = new ObjectType('carOnline', {
@@ -487,6 +569,36 @@ export class CarManager extends Construct {
         returnType: car_online_object_type.attribute({ isList: true }),
         dataSource: cars_data_source,
         directives: [Directive.iam(), Directive.cognito('admin', 'operator')],
+      })
+    );
+
+    // CarsHistory row — one per (chassisSerial, managedInstanceId) pair.
+    // Carries the carName/fleet snapshot at the time the row was written,
+    // and a deregisteredAt timestamp for retired managed-instances.
+    const car_history_entry_type = new ObjectType('CarHistoryEntry', {
+      definition: {
+        chassisSerial: GraphqlType.string({ isRequired: true }),
+        managedInstanceId: GraphqlType.string({ isRequired: true }),
+        carName: GraphqlType.string(),
+        fleetId: GraphqlType.string(),
+        fleetName: GraphqlType.string(),
+        registrationDate: GraphqlType.string(),
+        lastSeen: GraphqlType.string(),
+        deregisteredAt: GraphqlType.string(),
+      },
+      directives: [Directive.cognito('admin', 'operator')],
+    });
+    props.appsyncApi.schema.addType(car_history_entry_type);
+
+    props.appsyncApi.schema.addQuery(
+      'getCarHistory',
+      new ResolvableField({
+        args: {
+          chassisSerial: GraphqlType.string({ isRequired: true }),
+        },
+        returnType: car_history_entry_type.attribute({ isList: true }),
+        dataSource: cars_data_source,
+        directives: [Directive.cognito('admin', 'operator')],
       })
     );
 

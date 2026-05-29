@@ -1,5 +1,5 @@
 import React from 'react';
-import { Checkbox, FormField, Link } from '@cloudscape-design/components';
+import { Badge, Checkbox, FormField, Link } from '@cloudscape-design/components';
 import ButtonDropdown, { ButtonDropdownProps } from '@cloudscape-design/components/button-dropdown';
 import DatePicker from '@cloudscape-design/components/date-picker';
 import { useTranslation } from 'react-i18next';
@@ -198,6 +198,10 @@ export const ColumnConfiguration = (
             label: i18next.t('devices.loggingcapable'),
           },
           {
+            id: 'chassisSerial',
+            label: i18next.t('devices.chassis-serial'),
+          },
+          {
             id: 'actions',
             label: i18next.t('devices.actions'),
           },
@@ -306,6 +310,19 @@ export const ColumnConfiguration = (
         width: 150,
       },
       {
+        id: 'chassisSerial',
+        header: i18next.t('devices.chassis-serial'),
+        cell: (item: Car) => {
+          if (item.ChassisSerial) return item.ChassisSerial;
+          if (item.ChassisSerialStatus === 'Unavailable')
+            return <Badge color="grey">{i18next.t('devices.serial-unavailable')}</Badge>;
+          return <Badge color="blue">{i18next.t('devices.serial-pending')}</Badge>;
+        },
+        sortingField: 'ChassisSerial',
+        minWidth: 150,
+        width: 200,
+      },
+      {
         id: 'actions',
         header: '',
         cell: (item: Car) => <ItemActions item={item} />,
@@ -341,6 +358,11 @@ export const FilteringProperties = () => {
     {
       key: 'CoreSWVersion',
       propertyLabel: i18next.t('devices.core-sw-version'),
+      operators: [':', '!:', '=', '!='],
+    },
+    {
+      key: 'ChassisSerial',
+      propertyLabel: i18next.t('devices.chassis-serial'),
       operators: [':', '!:', '=', '!='],
     },
     {

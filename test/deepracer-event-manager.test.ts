@@ -144,4 +144,47 @@ describe('DeepracerEventManagerStack', () => {
     }
     expect(count).toBeLessThan(485);
   });
+
+  // ---------------------------------------------------------------------------
+  // Chassis-serial capture wiring
+  //
+  // These three assertions guard the end-to-end wiring for chassis-serial
+  // capture introduced in feat/car-chassis-serial. A drift in any of the three
+  // points silently disables serial capture in production — no runtime error,
+  // the car status poller just stops recording chassis serials. Keep them
+  // together so a future refactor (rename env var, tighten IAM, rename the
+  // GraphQL field) breaks a test rather than a silent prod regression.
+  // ---------------------------------------------------------------------------
+  test('wires the chassis-serial capture: poller env + SSM perms + status field', () => {
+    // 1. The status poller Lambda must carry both env vars that activate serial
+    //    capture. If either is missing the poller silently skips serial
+    //    recording without logging an error.
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      Environment: {
+        Variables: Match.objectLike({
+          REGISTER_CAR_SERIAL_FUNCTION: Match.anyValue(),
+          CARS_HISTORY_TABLE: Match.anyValue(),
+        }),
+      },
+    });
+
+    // 2. The register_car_serial Lambda's role must grant ssm:SendCommand and
+    //    ssm:GetCommandInvocation. Without these the Lambda cannot run the
+    //    on-car script that reads the chassis serial from the hardware.
+    template.hasResourceProperties('AWS::IAM::Policy', {
+      PolicyDocument: {
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Action: Match.arrayWith(['ssm:SendCommand', 'ssm:GetCommandInvocation']),
+          }),
+        ]),
+      },
+    });
+
+    // 3. The ChassisSerialStatus field must be present in the synthesised
+    //    AppSync schema so the captured status flows through to the UI.
+    //    If this field is removed from the ObjectType definition the cars
+    //    list page loses the serial-capture status column with no other signal.
+    expect(templateJson).toContain('ChassisSerialStatus');
+  });
 });

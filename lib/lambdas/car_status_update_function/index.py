@@ -1,6 +1,7 @@
+import json
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import boto3
 from appsync_helpers import send_mutation
@@ -10,13 +11,38 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 tracer = Tracer()
 logger = Logger()
 client_ssm = boto3.client("ssm")
+client_lambda = boto3.client("lambda")
+_ddb = boto3.resource("dynamodb")
+
+CARS_HISTORY_TABLE = os.environ.get("CARS_HISTORY_TABLE", "")
+REGISTER_CAR_SERIAL_FUNCTION = os.environ.get("REGISTER_CAR_SERIAL_FUNCTION", "")
+SERIAL_BACKOFF = timedelta(hours=1)
+
+
+def derive_serial_status(instance: dict) -> str:
+    if instance.get("ChassisSerial"):
+        return instance["ChassisSerial"]
+    if instance.get("lastSerialCheck"):
+        return "Unavailable"
+    return "Pending"
+
+
+def capture_due(instance: dict, now) -> bool:
+    if instance.get("ChassisSerial"):
+        return False
+    last = instance.get("lastSerialCheck")
+    if not last:
+        return True
+    try:
+        return (now - datetime.fromisoformat(last)) >= SERIAL_BACKOFF
+    except (ValueError, TypeError):
+        return True
+
 
 UNKNOWN_VERSION = "Unknown Version"
 MINIMUM_LOGGING_VERSION = [2, 1, 2, 7]
 
 
-@logger.inject_lambda_context
-@tracer.capture_lambda_handler
 @logger.inject_lambda_context
 @tracer.capture_lambda_handler
 def lambda_handler(event: dict, context: LambdaContext):
@@ -49,6 +75,17 @@ def lambda_handler(event: dict, context: LambdaContext):
 
                     # Get and process tags
                     fetch_and_process_tags(instance)
+
+                    now = datetime.now(timezone.utc)
+                    instance["ChassisSerialStatus"] = derive_serial_status(instance)
+                    if instance.get("ChassisSerial"):
+                        upsert_history(instance, now)
+                    elif REGISTER_CAR_SERIAL_FUNCTION and capture_due(instance, now):
+                        client_lambda.invoke(
+                            FunctionName=REGISTER_CAR_SERIAL_FUNCTION,
+                            InvocationType="Event",
+                            Payload=json.dumps({"managedInstanceId": instance["InstanceId"]}).encode(),
+                        )
 
                 # Clean up instance data regardless of status
                 clean_instance_data(instance)
@@ -133,10 +170,37 @@ def fetch_and_process_tags(instance):
         "fleetId",
         "DeviceUiPassword",
         "Type",
+        "ChassisSerial",
+        "lastSerialCheck",
     ]
     for tag in tags_response["TagList"]:
         if tag["Key"] in tag_keys_to_copy:
             instance[tag["Key"]] = tag["Value"]
+
+
+def upsert_history(instance: dict, now) -> None:
+    """Keep the CarsHistory row for the current activation complete + fresh."""
+    if not CARS_HISTORY_TABLE:
+        return
+    item = {
+        "chassisSerial": instance["ChassisSerial"],
+        "managedInstanceId": instance["InstanceId"],
+        "lastSeen": now.isoformat(),
+    }
+    for src, dst in (("ComputerName", "carName"), ("fleetId", "fleetId"),
+                     ("fleetName", "fleetName"), ("RegistrationDate", "registrationDate")):
+        if instance.get(src):
+            item[dst] = instance[src]
+    keys = {"chassisSerial", "managedInstanceId"}
+    try:
+        _ddb.Table(CARS_HISTORY_TABLE).update_item(
+            Key={"chassisSerial": item["chassisSerial"], "managedInstanceId": item["managedInstanceId"]},
+            UpdateExpression="SET " + ", ".join(f"#{k}=:{k}" for k in item if k not in keys),
+            ExpressionAttributeNames={f"#{k}": k for k in item if k not in keys},
+            ExpressionAttributeValues={f":{k}": v for k, v in item.items() if k not in keys},
+        )
+    except Exception as e:  # noqa: BLE001 — best-effort, never block status update
+        logger.warning(f"history upsert failed for {item['managedInstanceId']}: {e}")
 
 
 def clean_instance_data(instance):
@@ -175,6 +239,8 @@ def clean_instance_data(instance):
             "DeviceUiPassword",
             "DeepRacerCoreVersion",
             "LoggingCapable",
+            "ChassisSerial",
+            "ChassisSerialStatus",
         ]
 
     # Create a new dict with only the allowed fields
@@ -211,6 +277,8 @@ def send_status_update(instances):
             DeviceUiPassword
             DeepRacerCoreVersion
             LoggingCapable
+            ChassisSerial
+            ChassisSerialStatus
         }
     }
     """

@@ -13,6 +13,7 @@ import {
   ColumnConfiguration,
   FilteringProperties,
 } from '../components/devices-table/deviceTableConfig';
+import { CarHistoryModal } from '../components/carHistoryModal';
 import EditCarsModal from '../components/editCarsModal';
 import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
 import { PageLayout } from '../components/pageLayout';
@@ -35,7 +36,15 @@ const AdminDevices: React.FC = () => {
   const [refresh, setRefresh] = useState<boolean>(false);
   const [columnConfiguration] = useState(() => ColumnConfiguration());
   const [filteringProperties] = useState(() => FilteringProperties());
+  const [historyModalVisible, setHistoryModalVisible] = useState<boolean>(false);
   const { getLabelSync } = useCarCmdApi();
+
+  // "View history" is only useful when a single car is selected AND
+  // that car has a ChassisSerial tag — older cars activated before the
+  // chassis-serial capture work landed won't have one, so the modal
+  // would just be empty.
+  const singleSelectedCar = selectedItems.length === 1 ? selectedItems[0] : null;
+  const historyButtonDisabled = !singleSelectedCar?.ChassisSerial;
 
   const reloadCars = async (): Promise<void> => {
     setIsLoading(true);
@@ -108,6 +117,12 @@ const AdminDevices: React.FC = () => {
             ? t('label-printer.download-printable-labels')
             : t('label-printer.download-printable-label')}
         </Button>
+        <Button
+          disabled={historyButtonDisabled}
+          onClick={() => setHistoryModalVisible(true)}
+        >
+          {t('devices.view-car-history')}
+        </Button>
       </SpaceBetween>
     );
   };
@@ -149,6 +164,11 @@ const AdminDevices: React.FC = () => {
         trackBy={'InstanceId'}
         filteringProperties={filteringProperties as any}
         filteringI18nStringsName={'devices'}
+      />
+      <CarHistoryModal
+        visible={historyModalVisible}
+        onDismiss={() => setHistoryModalVisible(false)}
+        chassisSerial={singleSelectedCar?.ChassisSerial || ''}
       />
     </PageLayout>
   );
