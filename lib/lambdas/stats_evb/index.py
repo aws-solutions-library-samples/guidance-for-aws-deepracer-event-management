@@ -148,6 +148,9 @@ def _rebuild_global_stats():
     event_type_counts = {}
     track_type_counts = {}
     fastest_laps = []
+    # Cache Cognito lookups across events — a racer who competes in many
+    # events is resolved once, not once per event.
+    user_cache: dict[str, dict] = {}
 
     EXCLUDED_EVENT_TYPES = {"TEST_EVENT"}
 
@@ -163,7 +166,16 @@ def _rebuild_global_stats():
             continue
         races_data = dynamo_helpers.replace_decimal_with_float(races)
 
-        event_stats = compute_event_stats(event_data, races_data)
+        # Resolve display names so fastest-lap entries show the racer's name
+        # rather than the truncated Cognito sub (matches the leaderboard).
+        user_map = {}
+        for uid in {r["userId"] for r in races}:
+            if uid not in user_cache:
+                username, country_code = _get_username_by_user_id(uid)
+                user_cache[uid] = {"username": username, "countryCode": country_code}
+            user_map[uid] = user_cache[uid]
+
+        event_stats = compute_event_stats(event_data, races_data, user_map=user_map)
         if not event_stats:
             continue
 
