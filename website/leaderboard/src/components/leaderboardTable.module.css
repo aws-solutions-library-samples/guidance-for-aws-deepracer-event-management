@@ -187,6 +187,10 @@
   height: 100%;
   font-size: 0.8em;
   line-height: 1;
+  /* Cancel the -0.2em avatar-raise on .liIdentity (only the avatar needs lifting)
+     so a flag-only entry stays vertically centred on the row. */
+  position: relative;
+  top: 0.2em;
 }
 
 .liRacer {
