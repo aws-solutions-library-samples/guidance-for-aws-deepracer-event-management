@@ -107,7 +107,7 @@ def _get_all_races_for_event(event_id: str) -> list[dict]:
 
 
 def _get_username_by_user_id(user_id: str) -> tuple[str, str]:
-    """Look up username and countryCode from Cognito."""
+    """Look up username and countryCode from Cognito (single-user path)."""
     try:
         response = cognito_client.list_users(
             UserPoolId=USER_POOL_ID,
@@ -125,6 +125,45 @@ def _get_username_by_user_id(user_id: str) -> tuple[str, str]:
     except Exception as e:
         logger.warning(f"Cognito lookup failed for {user_id}: {e}")
         return user_id[:8], ""
+
+
+def _load_user_pool_index() -> dict[str, dict]:
+    """
+    One paginated ListUsers scan over the whole pool — returns
+    {sub: {"username": ..., "countryCode": ...}}.
+
+    Used by _rebuild_global_stats: ~6k racers × per-sub list_users at
+    ~50ms each would push the Lambda past its 5-min timeout. One scan
+    at 60 users/page does the same work in ~100 paginated calls.
+    """
+    index: dict[str, dict] = {}
+    pagination_token: str | None = None
+    while True:
+        kwargs: dict = {"UserPoolId": USER_POOL_ID, "Limit": 60}
+        if pagination_token:
+            kwargs["PaginationToken"] = pagination_token
+        try:
+            response = cognito_client.list_users(**kwargs)
+        except Exception as e:
+            logger.warning(f"Cognito ListUsers failed mid-scan: {e}")
+            break
+        for user in response.get("Users", []):
+            sub = ""
+            country_code = ""
+            for attr in user.get("Attributes") or []:
+                if attr["Name"] == "sub":
+                    sub = attr["Value"]
+                elif attr["Name"] == "custom:countryCode":
+                    country_code = attr["Value"]
+            if sub:
+                index[sub] = {
+                    "username": user["Username"],
+                    "countryCode": country_code,
+                }
+        pagination_token = response.get("PaginationToken")
+        if not pagination_token:
+            break
+    return index
 
 
 def _rebuild_global_stats():
@@ -148,9 +187,10 @@ def _rebuild_global_stats():
     event_type_counts = {}
     track_type_counts = {}
     fastest_laps = []
-    # Cache Cognito lookups across events — a racer who competes in many
-    # events is resolved once, not once per event.
-    user_cache: dict[str, dict] = {}
+    # One paginated ListUsers scan up front — turns N sub-filter calls
+    # (one per racer, ~50ms each) into ~N/60 paginated pages, keeping
+    # the rebuild well inside the 5-minute Lambda timeout.
+    user_index = _load_user_pool_index()
 
     EXCLUDED_EVENT_TYPES = {"TEST_EVENT"}
 
@@ -168,12 +208,14 @@ def _rebuild_global_stats():
 
         # Resolve display names so fastest-lap entries show the racer's name
         # rather than the truncated Cognito sub (matches the leaderboard).
-        user_map = {}
-        for uid in {r["userId"] for r in races}:
-            if uid not in user_cache:
-                username, country_code = _get_username_by_user_id(uid)
-                user_cache[uid] = {"username": username, "countryCode": country_code}
-            user_map[uid] = user_cache[uid]
+        # user_index is the whole user pool keyed by sub — a missing sub
+        # (deleted racer) is left out, and the `racer.username or uid[:8]`
+        # fallback below preserves the previous behaviour for those rows.
+        user_map = {
+            uid: user_index[uid]
+            for uid in {r["userId"] for r in races}
+            if uid in user_index
+        }
 
         event_stats = compute_event_stats(event_data, races_data, user_map=user_map)
         if not event_stats:
