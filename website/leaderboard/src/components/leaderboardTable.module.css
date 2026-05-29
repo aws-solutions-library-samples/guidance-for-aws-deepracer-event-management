@@ -135,6 +135,17 @@
   top: -0.2em;
 }
 
+/* @vierweb/avataaars wraps its svg in a div sized in PX (it parseFloats our
+   style width "100%" to 100px), with `all: initial` inline — so the avatar
+   renders at a fixed ~104px and overflows the responsive em/vmin slot. Force
+   that wrapper to fill the slot so the avatar scales with it and the flag badge
+   lands on the avatar's real bottom-right corner. */
+.liIdentity > div {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+}
+
 .liIdentity :global(svg),
 .liIdentity img {
   width: 100% !important;
