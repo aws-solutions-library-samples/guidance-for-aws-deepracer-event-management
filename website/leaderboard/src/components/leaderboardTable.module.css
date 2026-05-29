@@ -130,6 +130,9 @@
      the avatar too low. Reset line-height so the flex item sizes to
      content. */
   line-height: 1;
+  /* Nudge the avatar up so the face sits centred on the bar rather than
+     hanging low with the shoulders below it (em-based → scales per position). */
+  top: -0.2em;
 }
 
 .liIdentity :global(svg),
@@ -144,6 +147,8 @@
   right: -0.15em;
   font-size: 0.6em;
   line-height: 1;
+  /* Keep the flag badge above the avatar svg. */
+  z-index: 2;
 }
 
 .identityFlagOnly {
