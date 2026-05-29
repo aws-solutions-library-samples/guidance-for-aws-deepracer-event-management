@@ -142,16 +142,20 @@
 }
 
 .identityFlag {
+  /* Cover the whole avatar slot and flex the badge to the bottom-right corner.
+     More robust than anchoring with `right`/`bottom`: @vierweb does its own
+     viewport-aware width calc + a style MutationObserver, so the avatar's box
+     can't be reliably anchored against — flex alignment to the slot corner
+     sidesteps that entirely. z-index keeps it above the avatar svg. */
   position: absolute;
-  /* Sit on the avatar's bottom-right corner. width:max-content shrinks the
-     badge to the emoji so `right` anchors the glyph (not an empty wide box). */
-  bottom: -0.05em;
-  right: -0.05em;
-  width: max-content;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
   font-size: 0.6em;
   line-height: 1;
-  /* Keep the flag badge above the avatar svg. */
   z-index: 2;
+  pointer-events: none;
 }
 
 .identityFlagOnly {
