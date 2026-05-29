@@ -143,8 +143,11 @@
 
 .identityFlag {
   position: absolute;
-  bottom: -0.35em;
-  right: -0.15em;
+  /* Sit on the avatar's bottom-right corner. width:max-content shrinks the
+     badge to the emoji so `right` anchors the glyph (not an empty wide box). */
+  bottom: -0.05em;
+  right: -0.05em;
+  width: max-content;
   font-size: 0.6em;
   line-height: 1;
   /* Keep the flag badge above the avatar svg. */
