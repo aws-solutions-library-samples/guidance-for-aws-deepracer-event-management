@@ -173,10 +173,10 @@
   pointer-events: none;
 }
 
-/* Overhang the flag glyph slightly past the slot's bottom-right corner so it
-   reads as a corner badge rather than sitting on the avatar's shoulder. */
+/* Overhang the flag glyph past the slot's bottom-right corner so it sits on the
+   corner as a badge rather than on the avatar's shoulder. */
 .identityFlag > div {
-  margin: 0 -0.12em -0.18em 0;
+  margin: 0 -0.18em -0.42em 0;
 }
 
 .identityFlagOnly {
