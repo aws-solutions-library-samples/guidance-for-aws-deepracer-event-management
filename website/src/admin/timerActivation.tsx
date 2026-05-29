@@ -9,7 +9,6 @@ import { Breadcrumbs } from './fleets/support-functions/supportFunctions';
 import {
   Box,
   Button,
-  ButtonDropdown,
   Container,
   Form,
   FormField,
@@ -17,6 +16,8 @@ import {
   Header,
   Input,
   Popover,
+  Select,
+  SelectProps,
   SpaceBetween,
   StatusIndicator,
 } from '@cloudscape-design/components';
@@ -26,11 +27,6 @@ import { useStore } from '../store/store';
 interface Fleet {
   fleetId: string;
   fleetName: string;
-}
-
-interface DropDownItem {
-  id: string;
-  text: string;
 }
 
 interface AdminTimerActivationProps {
@@ -51,7 +47,7 @@ const AdminTimerActivation: React.FC<AdminTimerActivationProps> = (props) => {
   const [loading, setLoading] = useState<string>('');
   const [hostnameErrorMessage, setHostnameErrorMessage] = useState<string>('');
 
-  const [dropDownFleets, setDropDownFleets] = useState<DropDownItem[]>([{ id: 'none', text: 'none' }]);
+  const [dropDownFleets, setDropDownFleets] = useState<SelectProps.Option[]>([]);
   const [dropDownSelectedItem, setDropDownSelectedItem] = useState<Fleet | { fleetName: string }>({
     fleetName: t('fleets.edit-cars.select-fleet'),
   });
@@ -71,13 +67,11 @@ const AdminTimerActivation: React.FC<AdminTimerActivationProps> = (props) => {
     if (fleets.length > 0) {
       setDropDownFleets(
         fleets
-          .map((thisFleet) => {
-            return {
-              id: thisFleet.fleetId,
-              text: thisFleet.fleetName,
-            };
-          })
-          .sort((a, b) => (a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1))
+          .map((thisFleet) => ({
+            label: thisFleet.fleetName,
+            value: thisFleet.fleetId,
+          }))
+          .sort((a, b) => ((a.label ?? '').toLowerCase() > (b.label ?? '').toLowerCase() ? 1 : -1))
       );
     }
 
@@ -177,17 +171,23 @@ const AdminTimerActivation: React.FC<AdminTimerActivationProps> = (props) => {
           <Container>
             <SpaceBetween direction="vertical" size="l">
               <FormField label={t('AdminActivation.timer-activation.fleet')}>
-                <ButtonDropdown
-                  items={dropDownFleets}
-                  onItemClick={({ detail }) => {
-                    const index = fleets.map((e) => e.fleetId).indexOf(detail.id);
-                    if (detail.id !== 'none') {
+                <Select
+                  selectedOption={
+                    'fleetId' in dropDownSelectedItem
+                      ? { label: dropDownSelectedItem.fleetName, value: dropDownSelectedItem.fleetId }
+                      : null
+                  }
+                  options={dropDownFleets}
+                  placeholder={t('fleets.edit-cars.select-fleet')}
+                  filteringType="auto"
+                  selectedAriaLabel="Selected"
+                  onChange={({ detail }) => {
+                    const index = fleets.map((e) => e.fleetId).indexOf(detail.selectedOption.value ?? '');
+                    if (index >= 0) {
                       setDropDownSelectedItem(fleets[index]);
                     }
                   }}
-                >
-                  {dropDownSelectedItem.fleetName}
-                </ButtonDropdown>
+                />
               </FormField>
               <FormField label={t('AdminActivation.timer-activation.hostname')} errorText={hostnameErrorMessage}>
                 <Input

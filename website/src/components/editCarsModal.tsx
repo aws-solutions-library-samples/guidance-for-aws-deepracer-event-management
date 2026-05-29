@@ -10,6 +10,8 @@ import {
   Container,
   Header,
   Modal,
+  Select,
+  SelectProps,
   SpaceBetween,
 } from '@cloudscape-design/components';
 import { useCarCmdApi } from '../hooks/useCarsApi';
@@ -57,9 +59,7 @@ const EditCarsModal: React.FC<EditCarsModalProps> = ({
   const [deleteModelsModalVisible, setDeleteModelsModalVisible] = useState(false);
   const [deleteCarsModalVisible, setDeleteCarsModalVisible] = useState(false);
 
-  const [dropDownFleets, setDropDownFleets] = useState<DropdownItem[]>([
-    { id: 'none', text: 'none' },
-  ]);
+  const [dropDownFleets, setDropDownFleets] = useState<SelectProps.Option[]>([]);
   const [dropDownSelectedItem, setDropDownSelectedItem] = useState<SelectedFleet>({
     fleetName: t('fleets.edit-cars.select-fleet'),
   });
@@ -80,10 +80,12 @@ const EditCarsModal: React.FC<EditCarsModalProps> = ({
   useEffect(() => {
     if (fleets.length > 0) {
       setDropDownFleets(
-        fleets.map((thisFleet) => ({
-          id: thisFleet.fleetId,
-          text: thisFleet.fleetName,
-        }))
+        fleets
+          .map((thisFleet) => ({
+            label: thisFleet.fleetName,
+            value: thisFleet.fleetId,
+          }))
+          .sort((a, b) => ((a.label ?? '').toLowerCase() > (b.label ?? '').toLowerCase() ? 1 : -1))
       );
     }
   }, [fleets]);
@@ -204,17 +206,23 @@ const EditCarsModal: React.FC<EditCarsModalProps> = ({
         <SpaceBetween direction="vertical" size="m">
           <Container header={<Header variant={"h4" as any}>{t('fleets.header')}</Header>}>
             <SpaceBetween direction="horizontal" size="xs">
-              <ButtonDropdown
-                items={dropDownFleets as ButtonDropdownProps.Items}
-                onItemClick={({ detail }) => {
-                  const index = fleets.map((e) => e.fleetId).indexOf(detail.id);
+              <Select
+                selectedOption={
+                  dropDownSelectedItem.fleetId
+                    ? { label: dropDownSelectedItem.fleetName, value: dropDownSelectedItem.fleetId }
+                    : null
+                }
+                options={dropDownFleets}
+                placeholder={t('fleets.edit-cars.select-fleet')}
+                filteringType="auto"
+                selectedAriaLabel="Selected"
+                onChange={({ detail }) => {
+                  const index = fleets.map((e) => e.fleetId).indexOf(detail.selectedOption.value ?? '');
                   if (index >= 0) {
                     setDropDownSelectedItem(fleets[index]);
                   }
                 }}
-              >
-                {dropDownSelectedItem.fleetName}
-              </ButtonDropdown>
+              />
               <Button
                 variant="primary"
                 onClick={() => {
