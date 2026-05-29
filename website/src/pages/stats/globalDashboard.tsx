@@ -28,6 +28,16 @@ import { FastestLapEntry, useStatsApi } from '../../hooks/useStatsApi';
 
 const ALL_TRACKS = 'ALL';
 
+// The stats page only surfaces event types where lap timing is reliable —
+// the rest still live in the data and the admin Events page, they just
+// don't appear in the multiselect or get rolled into the "all selected"
+// view here.
+const STATS_VISIBLE_TYPES = new Set([
+  'AWS_SUMMIT',
+  'OFFICIAL_TRACK_RACE',
+  'OFFICIAL_WORKSHOP',
+]);
+
 function KpiCard({ title, value }: { title: string; value: string | number }) {
   return (
     <Box>
@@ -83,26 +93,27 @@ export function GlobalDashboard() {
     return [{ value: ALL_TRACKS, label: t('stats.all-tracks') }, ...trackEntries];
   }, [globalStats?.fastestLapsByTrack, t]);
 
-  // Event-type filter options — same enum the admin Events page uses. Show
-  // every value so the operator can intentionally include misclassified
-  // events if needed, even if none currently appear in the data.
+  // Event-type filter options — narrowed to STATS_VISIBLE_TYPES (private /
+  // test / "other" events have less rigorous timing and would dominate the
+  // ranking; they're still visible everywhere else, just not filterable in
+  // the stats top-N).
   const typeOptions = useMemo(
     () =>
-      EventTypeConfig().map((cfg) => ({
-        value: cfg.value,
-        label: cfg.label,
-      })),
+      EventTypeConfig()
+        .filter((cfg) => STATS_VISIBLE_TYPES.has(cfg.value))
+        .map((cfg) => ({
+          value: cfg.value,
+          label: cfg.label,
+        })),
     [],
   );
 
-  // For "All tracks", the global `fastestLapsEver` top-10 is dominated by the
-  // fastest event types — typically PRIVATE_TRACK_RACE (less rigorous timing,
-  // faster recorded times). If the user has filtered to a different event
-  // type (e.g. AWS_SUMMIT) the global list often comes up empty even when
-  // individual tracks DO have qualifying entries. So when a type filter is
-  // active, derive the "All tracks" view from the union of per-track buckets
-  // — the same entries that show up when drilling into a single track. Sort
-  // by lapTimeMs and cap at the same N as the global top-N.
+  // For "All tracks", derive the view from the union of per-track buckets
+  // filtered by the type selection. The precomputed `fastestLapsEver`
+  // top-N can't be used as a shortcut here because it spans every event
+  // type (including the ones STATS_VISIBLE_TYPES intentionally hides), so
+  // even "all dropdown options selected" needs to go through the union
+  // path to keep hidden types out.
   const fastestLapsRows = useMemo<FastestLapEntry[]>(() => {
     if (!globalStats) return [];
     if (trackFilter !== ALL_TRACKS) {
@@ -113,17 +124,20 @@ export function GlobalDashboard() {
         typeFilter.has(entry.typeOfEvent),
       );
     }
-    const allTypesSelected = typeFilter.size === typeOptions.length;
-    if (allTypesSelected) {
-      // No effective type filter — use the precomputed global top-N.
-      return globalStats.fastestLapsEver;
-    }
     const unioned = (globalStats.fastestLapsByTrack ?? [])
       .flatMap((bucket) => bucket.entries)
       .filter((entry) => typeFilter.has(entry.typeOfEvent));
     unioned.sort((a, b) => a.lapTimeMs - b.lapTimeMs);
     return unioned.slice(0, globalStats.fastestLapsEver.length || 10);
-  }, [globalStats, trackFilter, typeFilter, typeOptions.length]);
+  }, [globalStats, trackFilter, typeFilter]);
+
+  // Drop the Event column when the view is fully un-narrowed (every visible
+  // type + every track) — the event name is essentially noise across that
+  // many rows. Narrowing either dropdown brings the column back.
+  const allVisibleTypesSelected =
+    typeFilter.size === STATS_VISIBLE_TYPES.size &&
+    [...STATS_VISIBLE_TYPES].every((t) => typeFilter.has(t));
+  const showEventNameColumn = !(allVisibleTypesSelected && trackFilter === ALL_TRACKS);
 
   if (loading) {
     return (
@@ -288,7 +302,9 @@ export function GlobalDashboard() {
                 width: 50,
               },
               { id: 'username', header: t('stats.racer'), cell: (item) => item.username },
-              { id: 'eventName', header: t('stats.event'), cell: (item) => item.eventName },
+              ...(showEventNameColumn
+                ? [{ id: 'eventName', header: t('stats.event'), cell: (item: FastestLapEntry) => item.eventName }]
+                : []),
               {
                 id: 'typeOfEvent',
                 header: t('stats.event-type'),
