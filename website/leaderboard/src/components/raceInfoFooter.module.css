@@ -105,15 +105,37 @@
   z-index: 1;
 }
 
-.overlayIdentityIcon :global(svg) {
+/* @vierweb nests its svg in two px-sized divs that overflow the slot; constrain
+   both (and the svg) so the avatar fills the slot. See leaderboardTable.module.css. */
+.overlayIdentityIcon > div,
+.overlayIdentityIcon > div div {
   width: 100% !important;
   height: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+}
+
+.overlayIdentityIcon :global(svg),
+.overlayIdentityIcon img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
 }
 
 .overlayIdentityFlag {
+  /* Flex the badge to the slot's bottom-right corner (robust vs anchoring against
+     @vierweb's box); the inner-div margin overhangs it onto the corner. */
   position: absolute;
-  bottom: -0.3vmin;
-  right: -0.3vmin;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
   font-size: 2vmin;
   line-height: 1;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.overlayIdentityFlag > div {
+  margin: 0 -0.18em -0.42em 0;
 }

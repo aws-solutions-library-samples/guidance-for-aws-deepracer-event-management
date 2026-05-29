@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Avatar from 'avataaars';
+import Avatar from '@vierweb/avataaars';
 import useInterval from '../hooks/useInterval';
 import { Flag } from './flag';
 import { parseAvatarConfig } from './parseAvatarConfig';
+import { resolveAvatarRender } from './avatarRender';
+import defaultAvatar from '../assets/defaultAvatar.svg';
 import styles from './raceInfoFooter.module.css';
 
 const displayUpdateInterval = 1000 / 30; // 30 fps
@@ -48,6 +50,7 @@ const RaceOverlayInfo = ({
 }: RaceOverlayInfoProps) => {
   const { t } = useTranslation();
   const parsedAvatar = parseAvatarConfig(avatarConfig);
+  const avatarRender = parsedAvatar ? resolveAvatarRender(parsedAvatar) : null;
   // raw timing values
   const [bestLapMs, setBestLapMs] = useState(0);
   const [bestAvgMs, setBestAvgMs] = useState(0);
@@ -259,7 +262,16 @@ const RaceOverlayInfo = ({
             <span className={styles.overlayIdentityIcon}>
               {parsedAvatar ? (
                 <>
-                  <Avatar avatarStyle="Transparent" {...(parsedAvatar as Record<string, string>)} />
+                  {avatarRender &&
+                    (avatarRender.useDefault ? (
+                      <img src={defaultAvatar} alt="Default racer avatar" />
+                    ) : (
+                      <Avatar
+                    avatarStyle="Transparent"
+                    style={{ width: '100%', height: '100%' }}
+                    {...avatarRender.config}
+                  />
+                    ))}
                   {countryCode && (
                     <span className={styles.overlayIdentityFlag}>
                       <Flag countryCode={countryCode} />

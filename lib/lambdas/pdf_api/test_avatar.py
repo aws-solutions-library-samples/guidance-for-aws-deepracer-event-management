@@ -17,10 +17,35 @@ except ImportError:
     _PY_AVATAAARS_AVAILABLE = False
 
 
-def test_returns_none_for_falsy():
+def _fake_cairosvg(monkeypatch, png_bytes=b"\x89PNG-helmet"):
+    """Stub cairosvg so helmet rendering is deterministic without the native lib."""
+    fake = types.ModuleType("cairosvg")
+    fake.svg2png = lambda **kwargs: png_bytes
+    monkeypatch.setitem(sys.modules, "cairosvg", fake)
+    return "data:image/png;base64," + base64.b64encode(png_bytes).decode("ascii")
+
+
+def test_no_config_renders_helmet(monkeypatch):
+    """No avatar set → the default DeepRacer helmet ("Stig"), matching the web UI."""
+    expected = _fake_cairosvg(monkeypatch)
+    assert avatar.render_avatar_data_uri(None) == expected
+    assert avatar.render_avatar_data_uri("") == expected
+    assert avatar.render_avatar_data_uri({}) == expected
+
+
+def test_helmet_top_renders_helmet(monkeypatch):
+    """The 'Helmet' sentinel top renders the helmet SVG, not a py-avataaars figure
+    (works even when py_avataaars is unavailable)."""
+    expected = _fake_cairosvg(monkeypatch)
+    monkeypatch.setitem(sys.modules, "py_avataaars", None)
+    assert avatar.render_avatar_data_uri({"topType": "Helmet", "hairColor": "Brown"}) == expected
+
+
+def test_helmet_returns_none_without_cairosvg(monkeypatch):
+    """If cairosvg is missing, helmet rendering degrades to None → silhouette."""
+    monkeypatch.setitem(sys.modules, "cairosvg", None)
     assert avatar.render_avatar_data_uri(None) is None
-    assert avatar.render_avatar_data_uri("") is None
-    assert avatar.render_avatar_data_uri({}) is None
+    assert avatar.render_avatar_data_uri({"topType": "Helmet"}) is None
 
 
 def test_returns_none_for_invalid_json_string():

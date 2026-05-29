@@ -1,9 +1,11 @@
-import Avatar from 'avataaars';
+import Avatar from '@vierweb/avataaars';
 import { useTranslation } from 'react-i18next';
 import { useWindowSize } from '../hooks/useWindowSize';
 import { convertMsToString } from '../support-functions/time';
 import { Flag } from './flag';
 import { parseAvatarConfig } from './parseAvatarConfig';
+import { resolveAvatarRender } from './avatarRender';
+import defaultAvatar from '../assets/defaultAvatar.svg';
 import styles from './raceSummaryFooter.module.css';
 
 const RaceSummaryFooter = (params: any) => {
@@ -29,6 +31,7 @@ const RaceSummaryFooter = (params: any) => {
   } = params;
 
   const parsedAvatar = parseAvatarConfig(profile?.avatarConfig);
+  const avatarRender = parsedAvatar ? resolveAvatarRender(parsedAvatar) : null;
   const highlightColour = profile?.highlightColour;
 
   let username = params['username'];
@@ -117,7 +120,16 @@ const RaceSummaryFooter = (params: any) => {
                   <span className={styles.summaryIdentityIcon}>
                     {parsedAvatar ? (
                       <>
-                        <Avatar avatarStyle="Transparent" {...(parsedAvatar as Record<string, string>)} />
+                        {avatarRender &&
+                          (avatarRender.useDefault ? (
+                            <img src={defaultAvatar} alt="Default racer avatar" />
+                          ) : (
+                            <Avatar
+                              avatarStyle="Transparent"
+                              style={{ width: '100%', height: '100%' }}
+                              {...avatarRender.config}
+                            />
+                          ))}
                         {countryCode && (
                           <span className={styles.summaryIdentityFlag}>
                             <Flag countryCode={countryCode} />

@@ -20,6 +20,8 @@ export interface AvatarConfig {
     topType: string;
     accessoriesType: string;
     hairColor: string;
+    // '' = "match hair" (mapped to the nearest hat colour at render); otherwise a @vierweb hat colour.
+    hatColor: string;
     facialHairType: string;
     facialHairColor: string;
     clotheType: string;
@@ -34,6 +36,7 @@ const DEFAULT_CONFIG: AvatarConfig = {
     topType: 'NoHair',
     accessoriesType: 'Blank',
     hairColor: 'Brown',
+    hatColor: '',
     facialHairType: 'Blank',
     facialHairColor: 'Brown',
     clotheType: 'ShirtCrewNeck',
@@ -44,9 +47,10 @@ const DEFAULT_CONFIG: AvatarConfig = {
     skinColor: 'Yellow',
 };
 
-// Options derived from the avataaars library's supported values
+// Options derived from @vierweb/avataaars supported values
 const OPTIONS: Record<keyof AvatarConfig, string[]> = {
     topType: [
+        'Helmet',
         'NoHair', 'Eyepatch', 'Hat', 'Hijab', 'Turban',
         'WinterHat1', 'WinterHat2', 'WinterHat3', 'WinterHat4',
         'LongHairBigHair', 'LongHairBob', 'LongHairBun', 'LongHairCurly',
@@ -60,6 +64,7 @@ const OPTIONS: Record<keyof AvatarConfig, string[]> = {
     ],
     accessoriesType: ['Blank', 'Kurt', 'Prescription01', 'Prescription02', 'Round', 'Sunglasses', 'Wayfarers'],
     hairColor: ['Auburn', 'Black', 'Blonde', 'BlondeGolden', 'Brown', 'BrownDark', 'PastelPink', 'Platinum', 'Red', 'SilverGray'],
+    hatColor: ['Black', 'Blue01', 'Blue02', 'Blue03', 'Gray01', 'Gray02', 'Heather', 'PastelBlue', 'PastelGreen', 'PastelOrange', 'PastelRed', 'PastelYellow', 'Pink', 'Red', 'White'],
     facialHairType: ['Blank', 'BeardMedium', 'BeardLight', 'BeardMajestic', 'MoustacheFancy', 'MoustacheMagnum'],
     facialHairColor: ['Auburn', 'Black', 'Blonde', 'BlondeGolden', 'Brown', 'BrownDark', 'Platinum', 'Red'],
     clotheType: ['BlazerShirt', 'BlazerSweater', 'CollarSweater', 'GraphicShirt', 'Hoodie', 'Overall', 'ShirtCrewNeck', 'ShirtScoopNeck', 'ShirtVNeck'],
@@ -139,10 +144,10 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
         setSaveMessage('');
     };
 
-    const handleSave = async () => {
+    const persistConfig = async (cfg: AvatarConfig) => {
         setSaving(true);
         try {
-            const serialisedConfig = JSON.stringify(config);
+            const serialisedConfig = JSON.stringify(cfg);
             await graphqlMutate(updateRacerProfile, {
                 input: {
                     avatarConfig: serialisedConfig,
@@ -164,12 +169,41 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
         }
     };
 
+    const handleSave = () => persistConfig(config);
+
+    // "Reset to default racer" → the Stig helmet. Sets the Helmet sentinel top
+    // (not a config wipe) so Stig also shows on the leaderboard, which renders
+    // flag-only for genuinely unconfigured racers. Avatar only — the car
+    // highlight colour is left untouched.
+    const handleReset = () => {
+        const resetConfig: AvatarConfig = { ...DEFAULT_CONFIG, topType: 'Helmet' };
+        setConfig(resetConfig);
+        persistConfig(resetConfig);
+    };
+
     const selectFor = (key: keyof AvatarConfig, label: string) => (
         <FormField label={label}>
             <Select
                 selectedOption={{ value: config[key], label: config[key] }}
                 options={toSelectOptions(OPTIONS[key])}
                 onChange={set(key)}
+            />
+        </FormField>
+    );
+
+    // hatColor needs an extra "match hair" option ('') — only meaningful for hat tops.
+    const hatColorField = (
+        <FormField label={t('avatar-builder.hat-color')}>
+            <Select
+                selectedOption={{
+                    value: config.hatColor,
+                    label: config.hatColor === '' ? t('avatar-builder.hat-color-auto') : config.hatColor,
+                }}
+                options={[
+                    { value: '', label: t('avatar-builder.hat-color-auto') },
+                    ...toSelectOptions(OPTIONS.hatColor),
+                ]}
+                onChange={set('hatColor')}
             />
         </FormField>
     );
@@ -198,6 +232,7 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
                     <div>
                         <SpaceBetween size="m">
                             {selectFor('topType', t('avatar-builder.top'))}
+                            {hatColorField}
                             {selectFor('accessoriesType', t('avatar-builder.accessories'))}
                             {selectFor('hairColor', t('avatar-builder.hair-color'))}
                             {selectFor('facialHairType', t('avatar-builder.facial-hair'))}
@@ -260,6 +295,9 @@ export const AvatarBuilder: React.FC<AvatarBuilderProps> = () => {
                 </FormField>
                 <SpaceBetween direction="horizontal" size="xs">
                     {saveMessage && <Box variant="p">{saveMessage}</Box>}
+                    <Button onClick={handleReset} disabled={saving}>
+                        {t('avatar-builder.reset')}
+                    </Button>
                     <Button variant="primary" onClick={handleSave} loading={saving}>
                         {t('avatar-builder.save')}
                     </Button>

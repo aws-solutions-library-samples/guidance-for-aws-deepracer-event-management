@@ -130,19 +130,53 @@
      the avatar too low. Reset line-height so the flex item sizes to
      content. */
   line-height: 1;
+  /* Nudge the avatar up so the face sits centred on the bar rather than
+     hanging low with the shoulders below it (em-based → scales per position). */
+  top: -0.2em;
 }
 
-.liIdentity :global(svg) {
+/* @vierweb/avataaars renders the svg inside TWO nested px-sized divs (it
+   parseFloats our style width "100%" to 100px), each with `all: initial` inline
+   — so the avatar is a fixed ~100px and overflows the responsive em/vmin slot,
+   pushing the flag badge (pinned to the slot) to the avatar's interior. Force
+   both wrapper divs (and the svg) to fill the slot so the avatar scales with it
+   and the flag lands on its real bottom-right corner. Verified via Playwright. */
+.liIdentity > div,
+.liIdentity > div div {
   width: 100% !important;
   height: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+}
+
+.liIdentity :global(svg),
+.liIdentity img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
 }
 
 .identityFlag {
+  /* Cover the whole avatar slot and flex the badge to the bottom-right corner.
+     More robust than anchoring with `right`/`bottom`: @vierweb does its own
+     viewport-aware width calc + a style MutationObserver, so the avatar's box
+     can't be reliably anchored against — flex alignment to the slot corner
+     sidesteps that entirely. z-index keeps it above the avatar svg. */
   position: absolute;
-  bottom: -0.35em;
-  right: -0.15em;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
   font-size: 0.6em;
   line-height: 1;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Overhang the flag glyph past the slot's bottom-right corner so it sits on the
+   corner as a badge rather than on the avatar's shoulder. */
+.identityFlag > div {
+  margin: 0 -0.18em -0.42em 0;
 }
 
 .identityFlagOnly {
@@ -153,6 +187,10 @@
   height: 100%;
   font-size: 0.8em;
   line-height: 1;
+  /* Cancel the -0.2em avatar-raise on .liIdentity (only the avatar needs lifting)
+     so a flag-only entry stays vertically centred on the row. */
+  position: relative;
+  top: 0.2em;
 }
 
 .liRacer {
