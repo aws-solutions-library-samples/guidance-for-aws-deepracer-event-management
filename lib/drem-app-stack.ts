@@ -33,9 +33,12 @@ import { Statistics } from './constructs/statistics';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
 import { RaceResultsPdf } from './constructs/race-results-pdf';
+import { E2eTestUsers } from './constructs/e2e-test-users';
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
   baseStackName: string;
+  email: string;
+  enableAdminTests?: boolean;
 }
 
 export class DeepracerEventManagerStack extends cdk.Stack {
@@ -43,6 +46,8 @@ export class DeepracerEventManagerStack extends cdk.Stack {
   public readonly sourceBucketName: cdk.CfnOutput;
   public readonly dremWebsiteUrl: cdk.CfnOutput;
   public readonly appsyncId: cdk.CfnOutput;
+  public readonly testRacerPasswordSecretArn: cdk.CfnOutput;
+  public readonly testAdminPasswordSecretArn: cdk.CfnOutput | undefined;
 
   constructor(scope: Construct, id: string, props: DeepracerEventManagerStackProps) {
     super(scope, id, props);
@@ -267,7 +272,21 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       domainName: cloudfrontDomainName,
     });
 
+    const e2eTestUsers = new E2eTestUsers(this, 'E2eTestUsers', {
+      userPoolId: userPoolId,
+      email: props.email,
+      enableAdminTests: props.enableAdminTests,
+    });
+
     // Outputs
+    this.testRacerPasswordSecretArn = new cdk.CfnOutput(this, 'testRacerPasswordSecretArn', {
+      value: e2eTestUsers.racerPasswordSecretArn,
+    });
+    if (e2eTestUsers.adminPasswordSecretArn) {
+      this.testAdminPasswordSecretArn = new cdk.CfnOutput(this, 'testAdminPasswordSecretArn', {
+        value: e2eTestUsers.adminPasswordSecretArn,
+      });
+    }
     new cdk.CfnOutput(this, 'DremWebsite', {
       value: 'https://' + cloudfrontDomainName,
     });

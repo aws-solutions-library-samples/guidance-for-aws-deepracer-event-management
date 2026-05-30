@@ -84,11 +84,13 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
 
   new DeepracerEventManagerStack(app, `drem-backend-${labelName}-infrastructure`, {
     baseStackName: baseStack.stackName,
+    email: mailAddress,
     env: env,
   });
 } else {
   console.info('Pipeline deploy started...');
   const requireApproval = app.node.tryGetContext('require_approval') !== 'false';
+  const enableAdminTests = app.node.tryGetContext('test_e2e_admin') === 'true';
   new CdkPipelineStack(app, `drem-pipeline-${labelName}`, {
     labelName: labelName,
     sourceRepo: sourceRepo,
@@ -96,6 +98,7 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
     email: mailAddress,
     domainName: domainName,
     requireApproval: requireApproval,
+    enableAdminTests: enableAdminTests,
     env: env,
   });
 }

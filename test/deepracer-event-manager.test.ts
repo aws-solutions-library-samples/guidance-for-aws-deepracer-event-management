@@ -106,6 +106,7 @@ describe('DeepracerEventManagerStack', () => {
     });
     const infra = new DeepracerEventManagerStack(app, 'TestInfra', {
       baseStackName: base.stackName,
+      email: 'test@example.com',
       env: ENV,
     });
     template = Template.fromStack(infra);
