@@ -107,16 +107,11 @@ export class Idp extends Construct {
 
       userPool = new cognito.UserPool(this, 'UserPool', {
         userPoolName: stack.stackName,
-        signInAliases: { email: true },
         standardAttributes: {
           email: { required: true, mutable: true },
-          preferredUsername: { required: false, mutable: true },
         },
         customAttributes: {
           countryCode: new cognito.StringAttribute({
-            mutable: true,
-          }),
-          racerName: new cognito.StringAttribute({
             mutable: true,
           }),
         },

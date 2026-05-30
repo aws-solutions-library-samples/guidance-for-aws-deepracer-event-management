@@ -138,7 +138,6 @@ def create_user(username: str, email: str, countryCode: str):
                 {"Name": "email", "Value": email},
                 {"Name": "custom:countryCode", "Value": countryCode},
                 {"Name": "preferred_username", "Value": username},
-                {"Name": "custom:racerName", "Value": username},
             ],
             DesiredDeliveryMediums=[
                 "EMAIL",
