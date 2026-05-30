@@ -3,6 +3,7 @@ import json
 with open("cfn.outputs") as json_file:
     data = json.load(json_file)
 
+    useExternalIdp = "false"
     for key in data:
         if key["OutputKey"].startswith("appsyncEndpoint"):
             appsyncEndpoint = key["OutputValue"]
@@ -30,6 +31,8 @@ with open("cfn.outputs") as json_file:
             appsyncApiKey = key["OutputValue"]
         if key["OutputKey"].startswith("registerCarSerialFunctionName"):
             registerCarSerialFunctionName = key["OutputValue"]
+        if key["OutputKey"] == "useExternalIdp":
+            useExternalIdp = key["OutputValue"]
 
     output_data = {
         "Auth": {
@@ -59,6 +62,9 @@ with open("cfn.outputs") as json_file:
         },
         "CarActivation": {
             "registerCarSerialFunctionName": registerCarSerialFunctionName,
+        },
+        "Features": {
+            "useExternalIdp": useExternalIdp == "true",
         },
     }
 

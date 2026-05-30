@@ -18,6 +18,10 @@ export interface AuthUser {
   jwtToken: string;
   /** Cognito user groups (e.g. ['admin', 'operator']) */
   groups: string[];
+  /** Display name: custom:racerName → preferred_username → username */
+  displayName: string;
+  /** All Cognito user attributes (standard + custom) */
+  attributes: Record<string, string>;
 }
 
 /**
@@ -30,7 +34,18 @@ export const getCurrentAuthUser = async (): Promise<AuthUser> => {
   const session = await fetchAuthSession();
 
   const accessToken = session.tokens?.accessToken;
+  const idToken = session.tokens?.idToken;
   const groups: string[] = (accessToken?.payload?.['cognito:groups'] as string[] | undefined) ?? [];
+
+  // Extract attributes from the ID token payload — already in memory after
+  // fetchAuthSession(), so no extra Cognito API call is needed.
+  // Cognito embeds all standard and custom user attributes in the ID token;
+  // only string values are kept (this naturally excludes numeric JWT claims
+  // such as exp/iat and array claims such as cognito:groups).
+  const idPayload = (idToken?.payload ?? {}) as Record<string, unknown>;
+  const attributes: Record<string, string> = Object.fromEntries(
+    Object.entries(idPayload).filter((e): e is [string, string] => typeof e[1] === 'string')
+  );
 
   return {
     username: user.username,
@@ -38,7 +53,21 @@ export const getCurrentAuthUser = async (): Promise<AuthUser> => {
     identityId: session.identityId ?? '',
     jwtToken: accessToken?.toString() ?? '',
     groups,
+    attributes,
+    displayName:
+      attributes['custom:racerName'] || attributes['preferred_username'] || user.username,
   };
+};
+
+/**
+ * Lightweight alternative to getCurrentAuthUser() that only resolves the
+ * current user's Cognito groups — no fetchUserAttributes() round-trip.
+ * Use this in hooks that only need permission checks (e.g. usePermissions).
+ */
+export const getAuthGroups = async (): Promise<string[]> => {
+  const session = await fetchAuthSession();
+  const accessToken = session.tokens?.accessToken;
+  return (accessToken?.payload?.['cognito:groups'] as string[] | undefined) ?? [];
 };
 
 /**

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { getCurrentAuthUser } from './useAuth';
+import { getAuthGroups } from './useAuth';
+
+import awsconfig from '../config.json';
 
 interface ApiPermissions {
   fleets: boolean;
@@ -32,23 +34,24 @@ export interface Permissions {
  * @returns {Object} user permissions
  */
 export const usePermissions = (): Permissions => {
-  const [permissions, setPermissions] = useState<Permissions>(getPermissions([]));
+  const useExternalIdp = Boolean(awsconfig.Features?.useExternalIdp);
+  const [permissions, setPermissions] = useState<Permissions>(getPermissions([], useExternalIdp));
 
   useEffect(() => {
     // Config Groups
-    getCurrentAuthUser().then((authUser) => {
-      setPermissions(getPermissions(authUser.groups));
+    getAuthGroups().then((groups) => {
+      setPermissions(getPermissions(groups, useExternalIdp));
     });
 
     return () => {
       // Unmounting
     };
-  }, []);
+  }, [useExternalIdp]);
 
   return permissions;
 };
 
-const getPermissions = (groups: string[]): Permissions => {
+const getPermissions = (groups: string[], useExternalIdp: boolean = false): Permissions => {
   const defaultPermissions: Permissions = {
     api: {
       fleets: false,
@@ -129,6 +132,15 @@ const getPermissions = (groups: string[]): Permissions => {
     permissions.api = {
       ...apiPermissions,
       events: true,
+    };
+  }
+
+  // When using an external IDP, hide admin and registration UI
+  if (useExternalIdp) {
+    permissions.sideNavItems = {
+      ...permissions.sideNavItems,
+      admin: false,
+      registration: false,
     };
   }
 

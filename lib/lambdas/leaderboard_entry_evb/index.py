@@ -5,6 +5,7 @@ import os
 import appsync_helpers
 import boto3
 import dynamo_helpers
+import user_utils
 from aws_lambda_powertools import Logger, Tracer
 
 tracer = Tracer()
@@ -57,11 +58,9 @@ def __get_username_by_user_id(userId: str) -> tuple:
     )
     logger.info(response)
     user = response["Users"][0]
-    username = user["Username"]
-    countryCode = None
-    for attributes in user["Attributes"]:
-        if attributes["Name"] == "custom:countryCode":
-            countryCode = attributes["Value"]
+    username = user_utils.resolve_display_name(user)
+    attrs = {a["Name"]: a["Value"] for a in user["Attributes"]}
+    countryCode = attrs.get("custom:countryCode")
 
     logger.info(username)
     logger.info(countryCode)

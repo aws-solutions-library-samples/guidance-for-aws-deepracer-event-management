@@ -38,7 +38,7 @@ RUN pip install --no-cache-dir -r ${LAMBDA_TASK_ROOT}/requirements.txt -t ${LAMB
 #   - index.lambda_handler     — AppSync resolver (generateRaceResultsPdf, updatePdfJob, getPdfJob)
 #   - worker.lambda_handler    — async PDF renderer
 # All share shared.py helpers + appsync_iam.py for IAM-signed callbacks.
-COPY index.py worker.py shared.py appsync_iam.py race_summary.py render.py avatar.py flag.py ${LAMBDA_TASK_ROOT}/
+COPY index.py worker.py shared.py appsync_iam.py race_summary.py render.py avatar.py flag.py user_utils.py ${LAMBDA_TASK_ROOT}/
 COPY templates ${LAMBDA_TASK_ROOT}/templates
 
 CMD ["index.lambda_handler"]

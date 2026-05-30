@@ -31,7 +31,8 @@ export function ModelUpload(): JSX.Element {
     const getData = async () => {
       getCurrentAuthUser().then((authUser) => {
         setSub(authUser.sub);
-        setUsername(authUser.username);
+        // Keep model ownership aligned with Settings display name.
+        setUsername(authUser.displayName);
       });
     };
 
