@@ -23,6 +23,7 @@ import {
   Tooltip,
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
+import zoomPlugin from 'chartjs-plugin-zoom';
 import * as tokens from '@cloudscape-design/design-tokens';
 import { useEffect, useState } from 'react';
 
@@ -40,7 +41,8 @@ Chart.register(
   PointElement,
   TimeScale,
   Title,
-  Tooltip
+  Tooltip,
+  zoomPlugin
 );
 
 /**
