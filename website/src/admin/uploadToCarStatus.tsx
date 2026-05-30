@@ -391,6 +391,10 @@ const UploadToCarStatus: React.FC = () => {
 
   // Vertical bars over upload start time. Time-scale data points are
   // {x: epoch ms, y: duration} — chart.js places them on the time axis.
+  // `barThickness` is fixed (rather than the default 'flex' / category-width
+  // sizing) because the time scale would otherwise size each bar by the
+  // smallest gap between two uploads; two uploads a few seconds apart
+  // collapse every bar to a sub-pixel sliver that looks like an empty chart.
   const timeChartData = useMemo<ChartData<'bar', { x: number; y: number }[]>>(
     () => ({
       datasets: [
@@ -402,6 +406,9 @@ const UploadToCarStatus: React.FC = () => {
           })),
           backgroundColor: categoricalPalette[0],
           borderWidth: 0,
+          borderRadius: 2,
+          barThickness: 8,
+          maxBarThickness: 16,
         },
       ],
     }),
