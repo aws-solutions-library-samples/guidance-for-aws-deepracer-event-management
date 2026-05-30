@@ -424,6 +424,20 @@ Using the console remove the S3 bucket created in step 1 of deploying DREM.
 aws ssm delete-parameter --name /drem/S3RepoBucket --region $REGION
 ```
 
+## Known issues
+
+### `make install` fails with Lambda `MemorySize` constraint on fresh AWS accounts (rare)
+
+If `make install` aborts in CloudFormation on `ModelOptimizerModelsOptimizerFunction` (or another Lambda function) with an error similar to:
+
+> `Resource handler returned message: "'MemorySize' value failed to satisfy constraint: Member must have value less than or equal to 3008"`
+
+your account is hitting AWS's [reduced initial Lambda limits](https://stackoverflow.com/questions/70943739/aws-lambda-memorysize-value-failed-to-satisfy-constraint) on new accounts. The Model Optimizer Lambda is provisioned above the new-account memory cap and the deploy aborts.
+
+**Workaround:** launch a medium-sized EC2 instance in the target region, leave it running for a few minutes, then terminate it. The activity prompts AWS to lift the account's Lambda memory cap. Retry `make install` once that's done.
+
+This is rare — typically only seen on freshly created AWS accounts that have had no significant prior workload in the target region. See [#71](https://github.com/aws-solutions-library-samples/guidance-for-aws-deepracer-event-management/issues/71).
+
 ## Sample models
 
 DREM has sample models trained used the reward functions in the AWS DeepRacer console that are available to load on to cars at events.
