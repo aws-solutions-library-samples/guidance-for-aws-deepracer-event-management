@@ -46,6 +46,12 @@ import { getAverageWindows } from '../support-functions/averageClaculations';
 import { defaultCar, defaultLap } from '../support-functions/raceDomain';
 import { stateMachine } from '../support-functions/stateMachine';
 import { Breadcrumbs } from '../support-functions/supportFunctions';
+import {
+  setTaillightFromProfile,
+  setTaillightColour,
+  stopCar,
+  STOP_COLOUR,
+} from '../support-functions/tailLightColour';
 
 import styles from './racePage.module.css';
 
@@ -78,6 +84,7 @@ export const RacePage = ({
   const [btnEndRace, setBtnEndRace] = useState(false);
   const [btnStartRace, setBtnStartRace] = useState(false);
   const [currentCar, setCurrentCar] = useState(defaultCar);
+  const [taillightColourName, setTaillightColourName] = useState<string | null>(null);
 
   const [
     carResetCounter,
@@ -90,6 +97,8 @@ export const RacePage = ({
   const raceTimerRef = useRef();
   const startTimeRef = useRef();
   const lastAutLapTimestampMsRef = useRef(null);
+  const stopColourRef = useRef<string | null>(null);
+  const profileReqRef = useRef(0);
   const [PublishOverlay] = usePublishOverlay();
 
   // populate the laps on page refresh, without this laps array in the overlay is empty
@@ -106,6 +115,15 @@ export const RacePage = ({
       },
       endRace: () => {
         console.debug('Ending race state');
+        if (currentCar?.InstanceId) {
+          // Always signal "stopped" with the fixed white STOP_COLOUR — never
+          // gated on stopColourRef (which is only populated on a successful
+          // profile/colour apply). Matches the wizard, which sends STOP_COLOUR
+          // unconditionally from its parent. See #243 / converged tail-light.
+          setTaillightColour(currentCar.InstanceId, STOP_COLOUR);
+          stopColourRef.current = null;
+          stopCar(currentCar.InstanceId);
+        }
         setWarningModalVisible(true);
         // Buttons
         setBtnEndRace(true);
@@ -391,14 +409,47 @@ export const RacePage = ({
                   <Header variant="h3">{raceInfo.username}</Header>
                 </span>
                 <span key="current-car">
-                  <Header variant="h5">{t('timekeeper.current-car')}:</Header>
+                  <Header variant="h5">
+                    {t('timekeeper.current-car')}:
+                    {taillightColourName && (
+                      <span
+                        style={{
+                          display: 'inline-block', width: 12, height: 12, borderRadius: '50%',
+                          marginLeft: 8, backgroundColor: taillightColourName,
+                          boxShadow: '0 0 0 1px rgba(0,0,0,0.3)',
+                        }}
+                        title={`Tail-light: ${taillightColourName}`}
+                      />
+                    )}
+                  </Header>
                   <Select
                     selectedOption={{
                       label: currentCar.ComputerName,
                       value: currentCar.Computername,
                     }}
                     onChange={({ detail }) => {
-                      setCurrentCar(detail.selectedOption.value);
+                      const car = detail.selectedOption.value;
+                      if (currentCar?.InstanceId && stopColourRef.current) {
+                        setTaillightColour(currentCar.InstanceId, stopColourRef.current);
+                      }
+                      setCurrentCar(car);
+                      if (car?.InstanceId && raceInfo.username) {
+                        const reqId = ++profileReqRef.current;
+                        setTaillightFromProfile(car.InstanceId, raceInfo.username).then((result) => {
+                          if (profileReqRef.current !== reqId) return; // superseded by a newer car-select
+                          if (result) {
+                            stopColourRef.current = result.stopColour;
+                            setTaillightColourName(result.raceColour);
+                          } else {
+                            stopColourRef.current = null;
+                            setTaillightColourName(null);
+                          }
+                        });
+                      } else {
+                        profileReqRef.current++; // invalidate any in-flight request
+                        stopColourRef.current = null;
+                        setTaillightColourName(null);
+                      }
                     }}
                     options={cars.map((car) => {
                       return { label: car['ComputerName'], value: car };
