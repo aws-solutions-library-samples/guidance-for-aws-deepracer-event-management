@@ -1,6 +1,6 @@
-import { Box, Container, Header, SpaceBetween, StatusIndicator } from '@cloudscape-design/components';
+import { Box, Container, Header, Icon, SpaceBetween, StatusIndicator } from '@cloudscape-design/components';
 import ColumnLayout from '@cloudscape-design/components/column-layout';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { ChartData, ChartOptions } from 'chart.js';
 import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
@@ -427,28 +427,72 @@ const UploadToCarStatus: React.FC = () => {
   );
 
   // Default window: the last hour up to now. The full data set is still
-  // loaded; the user can drag-pan the chart leftward to walk back through
-  // earlier uploads (chartjs-plugin-zoom handles the pan interaction).
-  // Recompute "now" when allItems changes so a new upload nudges the
-  // initial window forward to include the latest event.
+  // loaded; the user can drag-pan the chart leftward (or click the left
+  // arrow) to walk back through earlier uploads. The window is held in
+  // React state so the scroll arrows and chart options stay in sync —
+  // onPanComplete commits the post-drag scale range back into state.
   const ONE_HOUR_MS = 60 * 60 * 1000;
-  const initialWindow = useMemo(() => {
+  const HALF_HOUR_MS = 30 * 60 * 1000;
+  const chartRef = useRef<any>(null);
+  const [timeWindow, setTimeWindow] = useState(() => ({
+    min: Date.now() - ONE_HOUR_MS,
+    max: Date.now(),
+  }));
+
+  // Reset the window to "the last hour from now" when the underlying
+  // data set changes, so a new upload nudges the view forward to
+  // include the latest event.
+  useEffect(() => {
     const max = Date.now();
-    return { min: max - ONE_HOUR_MS, max };
+    setTimeWindow({ min: max - ONE_HOUR_MS, max });
   }, [allItems]);
 
-  // For pan limits, clamp leftward scrolling to the oldest upload and
-  // rightward scrolling to "now" so users can't drag into empty future
-  // or scroll past their oldest data.
-  const panBounds = useMemo(() => {
+  // Numeric ms range of the loaded data — used both to clamp pan/zoom
+  // and to decide whether each scroll arrow should appear.
+  const dataRange = useMemo(() => {
     const times = barData
       .map((d) => (d.x instanceof Date ? d.x.getTime() : new Date(d.x).getTime()))
       .filter((n) => Number.isFinite(n));
-    return {
-      min: times.length ? Math.min(...times) - ONE_HOUR_MS : undefined,
-      max: Date.now(),
-    };
+    return times.length
+      ? { min: Math.min(...times), max: Math.max(...times) }
+      : null;
   }, [barData]);
+
+  // For pan limits, clamp leftward scrolling to one hour before the
+  // oldest upload and rightward scrolling to "now" so users can't drag
+  // into empty future or scroll past their oldest data.
+  const panBounds = useMemo(
+    () => ({
+      min: dataRange ? dataRange.min - ONE_HOUR_MS : undefined,
+      max: Date.now(),
+    }),
+    [dataRange]
+  );
+
+  // Are there uploads outside the visible window in either direction?
+  // Drives the chevron-arrow indicators alongside the chart edges.
+  const canScrollLeft = !!dataRange && dataRange.min < timeWindow.min;
+  const canScrollRight = !!dataRange && dataRange.max > timeWindow.max;
+
+  // Shift the window by `deltaMs` (positive = forward in time). Clamps
+  // against panBounds so we never scroll past the oldest data or into
+  // the future.
+  const scrollWindow = (deltaMs: number) => {
+    const span = timeWindow.max - timeWindow.min;
+    let newMin = timeWindow.min + deltaMs;
+    let newMax = timeWindow.max + deltaMs;
+    const lowerLimit = panBounds.min ?? newMin;
+    const upperLimit = panBounds.max ?? newMax;
+    if (newMin < lowerLimit) {
+      newMin = lowerLimit;
+      newMax = newMin + span;
+    }
+    if (newMax > upperLimit) {
+      newMax = upperLimit;
+      newMin = newMax - span;
+    }
+    setTimeWindow({ min: newMin, max: newMax });
+  };
 
   const timeChartOptions = useMemo<ChartOptions<'bar'>>(
     () => ({
@@ -462,11 +506,10 @@ const UploadToCarStatus: React.FC = () => {
             title: (items) => {
               const ts = items[0]?.parsed?.x;
               return ts
-                ? new Date(ts).toLocaleString('en-GB', {
-                    month: 'short',
-                    day: 'numeric',
+                ? new Date(ts).toLocaleTimeString('en-GB', {
                     hour: 'numeric',
                     minute: 'numeric',
+                    second: 'numeric',
                     hour12: false,
                   })
                 : '';
@@ -481,6 +524,10 @@ const UploadToCarStatus: React.FC = () => {
             // pinch zoom are deliberately left off, since the user
             // asked for scrollable history with a fixed 1-hour view,
             // not free zoom that could collapse the window.
+            onPanComplete: ({ chart }: any) => {
+              const scale = chart.scales.x;
+              setTimeWindow({ min: scale.min, max: scale.max });
+            },
           },
           limits: {
             x: {
@@ -493,8 +540,8 @@ const UploadToCarStatus: React.FC = () => {
       scales: {
         x: {
           type: 'time',
-          min: initialWindow.min,
-          max: initialWindow.max,
+          min: timeWindow.min,
+          max: timeWindow.max,
           // Mirror CloudScape's tick layout — let chart.js pick the right
           // unit for the visible range, then format with date-fns. The
           // hour/minute units render "29 May at 14:00" (matching the
@@ -539,7 +586,7 @@ const UploadToCarStatus: React.FC = () => {
         },
       },
     }),
-    [maxDuration, chartTheme, t, initialWindow, panBounds]
+    [maxDuration, chartTheme, t, timeWindow, panBounds]
   );
 
   const emptyState = (
@@ -588,8 +635,61 @@ const UploadToCarStatus: React.FC = () => {
             <Container {...{ textAlign: "center", fitHeight: true } as any}>
               <Header variant={"h2" as any}>{t('upload-to-car-status.upload-time.header')}</Header>
               {barData.length > 0 ? (
-                <div style={{ height: 250 }} aria-label="Upload duration over time">
-                  <Bar data={timeChartData} options={timeChartOptions} />
+                <div
+                  style={{ height: 250, position: 'relative' }}
+                  aria-label="Upload duration over time"
+                >
+                  <Bar ref={chartRef} data={timeChartData} options={timeChartOptions} />
+                  {canScrollLeft && (
+                    <button
+                      type="button"
+                      onClick={() => scrollWindow(-HALF_HOUR_MS)}
+                      aria-label="Show earlier uploads"
+                      style={{
+                        position: 'absolute',
+                        left: 4,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: chartTheme.tooltipBgColor,
+                        border: `1px solid ${chartTheme.tooltipBorderColor}`,
+                        borderRadius: 4,
+                        padding: '4px 6px',
+                        cursor: 'pointer',
+                        color: chartTheme.tickColor,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1,
+                      }}
+                    >
+                      <Icon name="angle-left" />
+                    </button>
+                  )}
+                  {canScrollRight && (
+                    <button
+                      type="button"
+                      onClick={() => scrollWindow(HALF_HOUR_MS)}
+                      aria-label="Show later uploads"
+                      style={{
+                        position: 'absolute',
+                        right: 4,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: chartTheme.tooltipBgColor,
+                        border: `1px solid ${chartTheme.tooltipBorderColor}`,
+                        borderRadius: 4,
+                        padding: '4px 6px',
+                        cursor: 'pointer',
+                        color: chartTheme.tickColor,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1,
+                      }}
+                    >
+                      <Icon name="angle-right" />
+                    </button>
+                  )}
                 </div>
               ) : (
                 emptyState
