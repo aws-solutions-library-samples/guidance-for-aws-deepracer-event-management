@@ -6,7 +6,7 @@
 import { ChartOptions } from 'chart.js';
 import { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { categoricalPalette, useChartTheme } from './chartDefaults';
+import { categoricalPalette, tooltipBaseOptions, useChartTheme } from './chartDefaults';
 
 export interface BarChartProps {
   /**
@@ -39,14 +39,7 @@ export function BarChart({
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(255, 255, 255, 0.96)',
-          borderColor: chartTheme.axisColor,
-          borderWidth: 1,
-          titleColor: chartTheme.tickColor,
-          bodyColor: chartTheme.tickColor,
-          displayColors: false,
-        },
+        tooltip: tooltipBaseOptions(chartTheme),
       },
       scales: {
         x: {
