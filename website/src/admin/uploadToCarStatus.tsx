@@ -288,7 +288,7 @@ const UploadToCarStatus: React.FC = () => {
 
     return {
       labels: horizontalChartLabels,
-      datasets: allItems.map((item) => {
+      datasets: allItems.map((item, idx) => {
         const carColour = item.carName
           ? carColours.get(item.carName)!
           : statusPalette.neutral;
@@ -298,15 +298,41 @@ const UploadToCarStatus: React.FC = () => {
         const labelParts: string[] = [item.status];
         if (item.carName) labelParts.push(item.carName);
         if (item.jobId) labelParts.push(item.jobId.slice(0, 8));
+
+        // Adjacent uploads that belong to the same job merge into one
+        // visual block — drop the divider on whichever side touches a
+        // sibling with the same jobId. Applies across all three rows
+        // because each upload is one dataset that paints all three.
+        const prev = allItems[idx - 1];
+        const next = allItems[idx + 1];
+        const mergeLeft = !!(prev?.jobId && item.jobId && prev.jobId === item.jobId);
+        const mergeRight = !!(next?.jobId && item.jobId && next.jobId === item.jobId);
+
         return {
           label: labelParts.join(' · '),
           data: [1, 1, 1],
           backgroundColor: [getColorForStatus(item.status), carColour, jobColour],
           borderColor: chartTheme.bgColor,
-          borderWidth: 2,
+          // Per-side widths: row edges (top/bottom) stay borderless so
+          // each row reads as a band; the seam borders (left/right)
+          // disappear when the neighbouring upload shares this job.
+          borderWidth: {
+            top: 0,
+            bottom: 0,
+            left: mergeLeft ? 0 : 2,
+            right: mergeRight ? 0 : 2,
+          },
           borderSkipped: false,
           stack: 'all',
-        };
+          // Stashed for the tooltip callbacks — Chart.js ignores extra
+          // dataset properties so this is safe to ride along.
+          _uploadInfo: {
+            status: item.status,
+            carName: item.carName,
+            jobId: item.jobId,
+            uploadStartTime: item.uploadStartTime,
+          },
+        } as any;
       }),
     };
   }, [allItems, chartTheme.bgColor]);
@@ -316,9 +342,38 @@ const UploadToCarStatus: React.FC = () => {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
+      // Hover any segment of an upload and Chart.js activates the whole
+      // dataset (i.e. all three row segments belonging to that upload),
+      // so the tooltip can render a combined Status / Car / Job view
+      // regardless of which row the cursor is over.
+      interaction: { mode: 'dataset', intersect: false },
       plugins: {
         legend: { display: false },
-        tooltip: tooltipBaseOptions(chartTheme),
+        tooltip: {
+          ...tooltipBaseOptions(chartTheme),
+          callbacks: {
+            title: (items) => {
+              const info = (items[0]?.dataset as any)?._uploadInfo;
+              if (!info?.uploadStartTime) return '';
+              return new Date(info.uploadStartTime).toLocaleString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: false,
+              });
+            },
+            label: (item) => {
+              const info = (item.dataset as any)._uploadInfo;
+              if (!info) return '';
+              const row = horizontalChartLabels[item.dataIndex];
+              if (row === 'Status') return `Status: ${info.status}`;
+              if (row === 'Car') return `Car: ${info.carName ?? '—'}`;
+              if (row === 'Job') return `Job: ${info.jobId ? info.jobId.slice(0, 8) : '—'}`;
+              return '';
+            },
+          },
+        },
       },
       scales: {
         x: {
