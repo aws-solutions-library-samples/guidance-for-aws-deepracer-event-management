@@ -112,6 +112,8 @@ export const getEvents = /* GraphQL */ `
                 raceTimeInMin
                 rankingMethod
                 trackType
+                raceEndCondition
+                numberOfLaps
             }
             sponsor
             tracks {

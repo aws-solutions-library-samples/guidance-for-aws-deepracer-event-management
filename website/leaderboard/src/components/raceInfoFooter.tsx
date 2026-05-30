@@ -60,6 +60,8 @@ const RaceInfoFooter = ({ eventId, trackId, visible, raceFormat }: RaceInfoFoote
             countryCode: raceInfo.countryCode || '',
             avatarConfig: raceInfo.profile?.avatarConfig || null,
             highlightColour: raceInfo.profile?.highlightColour || null,
+            raceEndCondition: raceInfo.raceEndCondition,
+            numberOfLaps: raceInfo.numberOfLaps,
           });
           SetIsVisible(true);
         } else {
@@ -113,6 +115,8 @@ const RaceInfoFooter = ({ eventId, trackId, visible, raceFormat }: RaceInfoFoote
                 countryCode={raceInfo.countryCode}
                 avatarConfig={raceInfo.avatarConfig}
                 highlightColour={raceInfo.highlightColour}
+                raceEndCondition={raceInfo.raceEndCondition}
+                numberOfLaps={raceInfo.numberOfLaps}
               />
             </span>
           </div>

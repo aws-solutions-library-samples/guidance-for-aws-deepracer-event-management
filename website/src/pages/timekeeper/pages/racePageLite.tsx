@@ -34,6 +34,7 @@ import { useTranslation } from 'react-i18next';
 import {
   GetRaceResetsNameFromId,
   GetRaceTypeNameFromId,
+  RaceEndConditionEnum,
   RaceTypeEnum,
 } from '../../../admin/events/support-functions/raceConfig';
 import useCounter from '../../../hooks/useCounter';
@@ -109,10 +110,20 @@ export const RacePage = ({
   const profileReqRef = useRef(0);
   const [PublishOverlay] = usePublishOverlay();
 
+  const isLapCountRace = raceConfig.raceEndCondition === RaceEndConditionEnum.LAP_COUNT;
+  const targetLaps = Number(raceConfig.numberOfLaps) || 0;
+
   //populate the laps on page refresh, without this laps array in the overlay is empty
   useEffect(() => {
     lapsForOverlay.current = raceInfo.laps;
   }, [raceInfo.laps]);
+
+  // Auto-end race when lap count target is reached
+  useEffect(() => {
+    if (isLapCountRace && targetLaps > 0 && raceInfo.laps.length >= targetLaps) {
+      send('END');
+    }
+  }, [raceInfo.laps.length, isLapCountRace, targetLaps, send]);
 
   const [, send] = useMachine(stateMachine, {
     actions: {
@@ -123,6 +134,8 @@ export const RacePage = ({
       },
       endRace: () => {
         console.debug('Ending race state');
+        lapTimerRef.current?.pause();
+        raceTimerRef.current?.pause();
         if (currentCar?.InstanceId) {
           // Always signal "stopped" with the fixed white STOP_COLOUR — never
           // gated on stopColourRef. The wizard parent also sends STOP_COLOUR,
@@ -203,9 +216,11 @@ export const RacePage = ({
             countryCode: raceInfo.countryCode,
             laps: lapsForOverlay.current,
             averageLaps: averageLapTimeInformationForOverlay.current,
-            timeLeftInMs: raceConfig.raceTimeInMin * 60 * 1000, // racetime in MS
+            timeLeftInMs: isLapCountRace ? 0 : raceConfig.raceTimeInMin * 60 * 1000,
             currentLapTimeInMs: 0,
             raceStatus: 'READY_TO_START',
+            raceEndCondition: raceConfig.raceEndCondition || 'TIME_BASED',
+            numberOfLaps: isLapCountRace ? targetLaps : null,
           };
         });
       },
@@ -220,9 +235,11 @@ export const RacePage = ({
             countryCode: raceInfo.countryCode,
             laps: lapsForOverlay.current,
             averageLaps: averageLapTimeInformationForOverlay.current,
-            timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
+            timeLeftInMs: isLapCountRace ? 0 : raceTimerRef.current?.getCurrentTimeInMs(),
             currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
             raceStatus: 'RACE_IN_PROGRESS',
+            raceEndCondition: raceConfig.raceEndCondition || 'TIME_BASED',
+            numberOfLaps: isLapCountRace ? targetLaps : null,
           };
         }, 2000);
       },
@@ -237,9 +254,11 @@ export const RacePage = ({
             countryCode: raceInfo.countryCode,
             laps: lapsForOverlay.current,
             averageLaps: averageLapTimeInformationForOverlay.current,
-            timeLeftInMs: raceTimerRef.current.getCurrentTimeInMs(),
+            timeLeftInMs: isLapCountRace ? 0 : raceTimerRef.current?.getCurrentTimeInMs(),
             currentLapTimeInMs: lapTimerRef.current.getCurrentTimeInMs(),
             raceStatus: 'RACE_PAUSED',
+            raceEndCondition: raceConfig.raceEndCondition || 'TIME_BASED',
+            numberOfLaps: isLapCountRace ? targetLaps : null,
           };
         });
       },
@@ -324,20 +343,22 @@ export const RacePage = ({
   // support functions
   const startTimers = () => {
     lapTimerRef.current.start();
-    raceTimerRef.current.start();
+    raceTimerRef.current?.start();
   };
 
   const pauseTimers = () => {
     lapTimerRef.current.pause();
-    raceTimerRef.current.pause();
+    raceTimerRef.current?.pause();
   };
 
   const resetTimers = () => {
     pauseTimers();
-    if (raceConfig.raceTimeInMin) {
-      raceTimerRef.current.reset(raceConfig.raceTimeInMin * 60 * 1000);
-    } else {
-      raceTimerRef.current.reset(0 * 60 * 1000);
+    if (raceTimerRef.current) {
+      if (raceConfig.raceTimeInMin) {
+        raceTimerRef.current.reset(raceConfig.raceTimeInMin * 60 * 1000);
+      } else {
+        raceTimerRef.current.reset(0 * 60 * 1000);
+      }
     }
     lapTimerRef.current.reset();
   };
@@ -455,22 +476,28 @@ export const RacePage = ({
               <Grid
                 gridDefinition={[{ colspan: 6 }, { colspan: 6 }, { colspan: 6 }, { colspan: 6 }]}
               >
-                <span key="time-left">
-                  <Header variant="h5">{t('timekeeper.time-left')}</Header>
-
-                  <RaceTimer
-                    onExpire={() => {
-                      // Only end the race on the timer when there's a real time
-                      // limit. With an empty/partial raceConfig (raceTimeInMin unset)
-                      // resetTimers() resets to 0, so the timer "expires" instantly —
-                      // a no-time-limit race must not auto-end on that.
-                      if (raceConfig.raceTimeInMin) {
-                        send('EXPIRE');
-                      }
-                    }}
-                    ref={raceTimerRef}
-                  />
-                </span>
+                {isLapCountRace ? (
+                  <span key="lap-count">
+                    <Header variant="h5">{t('timekeeper.lap-progress')}</Header>
+                    <Header variant="h3">{raceInfo.laps.length} / {targetLaps}</Header>
+                  </span>
+                ) : (
+                  <span key="time-left">
+                    <Header variant="h5">{t('timekeeper.time-left')}</Header>
+                    <RaceTimer
+                      onExpire={() => {
+                        // Only end the race on the timer when there's a real time
+                        // limit. With an empty/partial raceConfig (raceTimeInMin unset)
+                        // resetTimers() resets to 0, so the timer "expires" instantly —
+                        // a no-time-limit race must not auto-end on that. See #266.
+                        if (raceConfig.raceTimeInMin) {
+                          send('EXPIRE');
+                        }
+                      }}
+                      ref={raceTimerRef}
+                    />
+                  </span>
+                )}
                 <span key="current-lap">
                   <Header variant="h5">{t('timekeeper.current-lap')}</Header>
                   <LapTimer ref={lapTimerRef} />

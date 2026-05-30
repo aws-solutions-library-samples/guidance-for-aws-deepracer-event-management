@@ -26,6 +26,7 @@ export interface Track {
 export interface RaceConfig {
     raceType?: RaceTypeEnum;
     raceFormat?: RaceFormatEnum;
+    raceEndCondition?: string;
     numberOfLaps?: number;
     rankingMethod?: string;
     trackType?: string;

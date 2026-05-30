@@ -363,6 +363,8 @@ export const onNewOverlayInfo = /* GraphQL */ `
         avatarConfig
         highlightColour
       }
+      raceEndCondition
+      numberOfLaps
       __typename
     }
   }
