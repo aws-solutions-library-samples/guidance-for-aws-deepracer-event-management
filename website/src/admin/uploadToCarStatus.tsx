@@ -501,9 +501,13 @@ const UploadToCarStatus: React.FC = () => {
           // CloudScape "<day> at HH:mm" style), and broader zooms get
           // sensible day/month labels.
           time: {
+            // 1-hour window is always same-day, so the date is redundant on
+            // the axis — strip it to keep ticks short. Broader-zoom formats
+            // are inert (wheel/pinch zoom is off), but kept sensible in
+            // case zoom is ever turned on.
             displayFormats: {
-              minute: "d MMM 'at' HH:mm",
-              hour: "d MMM 'at' HH:mm",
+              minute: 'HH:mm',
+              hour: 'HH:mm',
               day: 'd MMM',
               week: 'd MMM',
               month: 'MMM yyyy',
