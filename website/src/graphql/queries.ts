@@ -218,6 +218,39 @@ export const getCarHistory = /* GraphQL */ `
         }
     }
 `;
+export const getCarRaceHistory = /* GraphQL */ `
+    query getCarRaceHistory($chassisSerial: String!) {
+        getCarRaceHistory(chassisSerial: $chassisSerial) {
+            chassisSerial
+            summary {
+                totalRaces
+                totalLaps
+                totalValidLaps
+                bestLapTime
+            }
+            activations {
+                managedInstanceId
+                carName
+                from
+                to
+                raceCount
+                lapCount
+                races {
+                    raceId
+                    eventId
+                    trackId
+                    createdAt
+                    laps {
+                        lapId
+                        time
+                        resets
+                        isValid
+                    }
+                }
+            }
+        }
+    }
+`;
 export const listCars = /* GraphQL */ `
     query ListCars($online: Boolean!) {
         listCars(online: $online) {

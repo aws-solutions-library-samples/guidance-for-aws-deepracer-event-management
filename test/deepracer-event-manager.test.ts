@@ -187,4 +187,14 @@ describe('DeepracerEventManagerStack', () => {
     //    list page loses the serial-capture status column with no other signal.
     expect(templateJson).toContain('ChassisSerialStatus');
   });
+
+  test('wires the cross-hostname race history: resolver + schema types (#66)', () => {
+    // #66 — the cross-hostname race-history query + types must synthesise.
+    template.hasResourceProperties('AWS::AppSync::Resolver', {
+      FieldName: 'getCarRaceHistory',
+      TypeName: 'Query',
+    });
+    expect(templateJson).toContain('CarRaceHistoryActivation');
+    expect(templateJson).toContain('CarRaceHistorySummary');
+  });
 });

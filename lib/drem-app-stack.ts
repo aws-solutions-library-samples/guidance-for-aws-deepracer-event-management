@@ -185,6 +185,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       eventbus: eventbus,
       racerProfileObjectType: racerProfile.profileObjectType,
       racerProfileTable: racerProfile.table,
+      carsHistoryTable: carManager.carsHistoryTable,
     });
 
     const leaderboard = new Leaderboard(this, 'Leaderboard', {

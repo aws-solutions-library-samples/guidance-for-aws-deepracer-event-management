@@ -8,6 +8,7 @@ from functools import reduce
 from statistics import mean
 
 import boto3
+import car_race_history
 import dynamo_helpers
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import AppSyncResolver
@@ -22,6 +23,10 @@ app = AppSyncResolver()
 LAPS_DDB_TABLE_NAME = os.environ["DDB_TABLE"]
 dynamodb = boto3.resource("dynamodb")
 ddbTable = dynamodb.Table(LAPS_DDB_TABLE_NAME)
+CARS_HISTORY_TABLE_NAME = os.environ.get("CARS_HISTORY_TABLE")
+carsHistoryTable = (
+    dynamodb.Table(CARS_HISTORY_TABLE_NAME) if CARS_HISTORY_TABLE_NAME else None
+)
 
 RACE_LAP_TYPE = "lap"
 RACE_TYPE = "race"
@@ -36,6 +41,46 @@ cloudwatch_events = boto3.client("events")
 def lambda_handler(event, context):
     logger.info(event)
     return app.resolve(event, context)
+
+
+@app.resolver(type_name="Query", field_name="getCarRaceHistory")
+def getCarRaceHistory(chassisSerial):
+    """#66: every lap a physical car ran across all its hostnames.
+
+    Reads the chassis lineage (CarsHistory), scans the race table, and joins
+    nested-lap carName to each activation window. On-demand admin/operator view
+    — not a hot path (see the design doc's access-pattern note).
+    """
+    empty = {
+        "chassisSerial": chassisSerial,
+        "summary": {"totalRaces": 0, "totalLaps": 0, "totalValidLaps": 0, "bestLapTime": None},
+        "activations": [],
+    }
+    if not chassisSerial or carsHistoryTable is None:
+        return empty
+
+    history_rows = car_race_history.collect_paginated(
+        lambda start_key: carsHistoryTable.query(
+            **{
+                "KeyConditionExpression": Key("chassisSerial").eq(chassisSerial),
+                **({"ExclusiveStartKey": start_key} if start_key else {}),
+            }
+        )
+    )
+    if not history_rows:
+        return empty
+
+    races = car_race_history.collect_paginated(
+        lambda start_key: ddbTable.scan(
+            **{
+                "FilterExpression": Attr("type").eq(RACE_TYPE),
+                **({"ExclusiveStartKey": start_key} if start_key else {}),
+            }
+        )
+    )
+
+    result = car_race_history.assemble_car_race_history(chassisSerial, history_rows, races)
+    return dynamo_helpers.replace_decimal_with_float(result)
 
 
 @app.resolver(type_name="Query", field_name="getRaces")
