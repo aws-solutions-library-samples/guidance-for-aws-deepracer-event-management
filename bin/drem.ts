@@ -72,6 +72,11 @@ if (domainName) {
   domainName = undefined;
 }
 
+const cwRumEnabled = app.node.tryGetContext('DISABLE_CW_RUM') !== 'true';
+if (!cwRumEnabled) {
+  console.info('CloudWatch RUM is disabled');
+}
+
 if (app.node.tryGetContext('manual_deploy') === 'True') {
   console.info('Manual Deploy started....');
 
@@ -84,6 +89,7 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
 
   new DeepracerEventManagerStack(app, `drem-backend-${labelName}-infrastructure`, {
     baseStackName: baseStack.stackName,
+    cwRumEnabled: cwRumEnabled,
     env: env,
   });
 } else {
@@ -95,6 +101,7 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
     sourceBranchName: sourceBranchName,
     email: mailAddress,
     domainName: domainName,
+    cwRumEnabled: cwRumEnabled,
     requireApproval: requireApproval,
     env: env,
   });

@@ -24,6 +24,12 @@ else
 domain_name_arg =
 endif
 
+ifdef disable_cw_rum
+cwrum_args = -c DISABLE_CW_RUM=true
+else
+cwrum_args =
+endif
+
 ifdef require_approval
 require_approval_arg = -c require_approval=$(require_approval)
 else
@@ -41,7 +47,8 @@ VENV_PYTHON := .venv/bin/python3
 # isn't set in build.config — passing an empty string is a no-op for cdk.
 CDK_CONTEXT := -c email=$(email) -c label=$(label) -c account=$(account_id) \
                -c region=$(region) -c source_branch=$(source_branch) \
-               -c source_repo=$(source_repo) $(domain_name_arg)
+               -c source_repo=$(source_repo) $(domain_name_arg) \
+               $(cwrum_args)
 
 ## ----------------------------------------------------------------------------
 .PHONY: help
