@@ -45,21 +45,9 @@ interface BarChartDataPoint {
   y: number;
 }
 
-interface BarChartSeries {
-  title: string;
-  type: string;
-  data: BarChartDataPoint[];
-  color?: string;
-}
-
-interface StatusCount {
-  [key: string]: number;
-}
-
 const UploadToCarStatus: React.FC = () => {
   const { t } = useTranslation(['translation', 'help-admin-cars']);
   const [allItems, setItems] = useState<UploadToCarItem[]>([]);
-  const [horizontalBarData, setHorizontalBarData] = useState<BarChartSeries[]>([]);
   const [barData, setBarData] = useState<BarChartDataPoint[]>([]);
   const [maxDuration, setMaxDuration] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -155,68 +143,6 @@ const UploadToCarStatus: React.FC = () => {
       // Unmounting
     };
   }, [selectedEvent]);
-
-  // horizontal bar chart
-  useEffect(() => {
-    const newHorizontalBarData: BarChartSeries[] = [];
-
-    // Status
-    const statusesRaw = allItems.map(a => a.status);
-    const statuses = statusesRaw.reduce((acc: StatusCount, status) => {
-      acc[status] = (acc[status] || 0) + 1;
-      return acc;
-    }, {});
-    
-    for (const [key, value] of Object.entries(statuses)) {
-      const data: BarChartSeries = {
-        title: key,
-        type: "bar",
-        data: [
-          { x: "Status", y: value as number },
-        ],
-        color: getColorForStatus(key),
-      };
-      newHorizontalBarData.push(data);
-    }
-
-    // carName
-    const carNamesRaw = allItems.map(a => a.carName).filter((name): name is string => !!name);
-    const carNames = carNamesRaw.reduce((acc: StatusCount, name) => {
-      acc[name] = (acc[name] || 0) + 1;
-      return acc;
-    }, {});
-    
-    for (const [key, value] of Object.entries(carNames)) {
-      const data: BarChartSeries = {
-        title: key,
-        type: "bar",
-        data: [
-          { x: "Car", y: value as number },
-        ],
-      };
-      newHorizontalBarData.push(data);
-    }
-
-    // jobId
-    const jobIdsRaw = allItems.map(a => a.jobId).filter((id): id is string => !!id);
-    const jobIds = jobIdsRaw.reduce((acc: StatusCount, id) => {
-      acc[id] = (acc[id] || 0) + 1;
-      return acc;
-    }, {});
-    
-    for (const [key, value] of Object.entries(jobIds)) {
-      const data: BarChartSeries = {
-        title: key,
-        type: "bar",
-        data: [
-          { x: "Job", y: value as number },
-        ],
-      };
-      newHorizontalBarData.push(data);
-    }
-
-    setHorizontalBarData(newHorizontalBarData);
-  }, [allItems]);
 
   // bar chart
   useEffect(() => {
@@ -332,28 +258,58 @@ const UploadToCarStatus: React.FC = () => {
   const chartTheme = useChartTheme();
 
   // Stacked horizontal chart — one row per dimension (Status / Car / Job).
-  // Each series produced upstream is a single point pinned to one row, so the
-  // chart.js dataset puts its count in that row's slot and zero in the others.
+  // Each upload contributes a single 1-unit segment to all three rows, so
+  // the segment boundaries line up across rows: the divider between two
+  // jobs in the Job row sits at the same x position as the divider in
+  // the Status and Car rows above it. The dividers themselves are drawn
+  // by painting a borderColor that matches the chart container bg, so
+  // they read as gaps in both light and dark mode.
   const horizontalChartLabels = ['Status', 'Car', 'Job'];
-  const horizontalChartData = useMemo<ChartData<'bar'>>(
-    () => ({
+  const horizontalChartData = useMemo<ChartData<'bar'>>(() => {
+    // Stable palette assignments — the same car name / job id always
+    // gets the same swatch regardless of arrival order, so re-renders
+    // after a new upload don't shuffle the colours.
+    const carColours = new Map<string, string>();
+    const jobColours = new Map<string, string>();
+    for (const item of allItems) {
+      if (item.carName && !carColours.has(item.carName)) {
+        carColours.set(
+          item.carName,
+          categoricalPalette[carColours.size % categoricalPalette.length]
+        );
+      }
+      if (item.jobId && !jobColours.has(item.jobId)) {
+        jobColours.set(
+          item.jobId,
+          categoricalPalette[jobColours.size % categoricalPalette.length]
+        );
+      }
+    }
+
+    return {
       labels: horizontalChartLabels,
-      datasets: horizontalBarData.map((s, i) => {
-        const point = s.data[0];
-        const slot = horizontalChartLabels.indexOf(point.x as string);
-        const data = [0, 0, 0];
-        if (slot >= 0) data[slot] = point.y;
+      datasets: allItems.map((item) => {
+        const carColour = item.carName
+          ? carColours.get(item.carName)!
+          : statusPalette.neutral;
+        const jobColour = item.jobId
+          ? jobColours.get(item.jobId)!
+          : statusPalette.neutral;
+        const labelParts: string[] = [item.status];
+        if (item.carName) labelParts.push(item.carName);
+        if (item.jobId) labelParts.push(item.jobId.slice(0, 8));
         return {
-          label: s.title,
-          data,
-          backgroundColor: s.color ?? categoricalPalette[i % categoricalPalette.length],
-          borderWidth: 0,
+          label: labelParts.join(' · '),
+          data: [1, 1, 1],
+          backgroundColor: [getColorForStatus(item.status), carColour, jobColour],
+          borderColor: chartTheme.bgColor,
+          borderWidth: 2,
+          borderSkipped: false,
           stack: 'all',
         };
       }),
-    }),
-    [horizontalBarData]
-  );
+    };
+  }, [allItems, chartTheme.bgColor]);
 
   const horizontalChartOptions = useMemo<ChartOptions<'bar'>>(
     () => ({
@@ -519,7 +475,7 @@ const UploadToCarStatus: React.FC = () => {
           <ColumnLayout columns={2}>
             <Container {...{ textAlign: "center", fitHeight: true } as any}>
               <Header variant={"h2" as any}>{t('upload-to-car-status.horizontal-bar.header')}</Header>
-              {horizontalBarData.length > 0 ? (
+              {allItems.length > 0 ? (
                 <div style={{ height: 250 }} aria-label="Stacked, horizontal bar chart">
                   <Bar data={horizontalChartData} options={horizontalChartOptions} />
                 </div>
