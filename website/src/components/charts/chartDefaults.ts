@@ -137,6 +137,14 @@ export interface ChartTheme {
   tickMarkColor: string;
   tickColor: string;
   titleColor: string;
+  /**
+   * Chart container background — matches CloudScape's container content
+   * surface, so border-as-divider tricks (drawing a borderColor=bgColor
+   * between stacked segments to make them read as separated) work in
+   * both light and dark mode without flashing the wrong colour at the
+   * theme boundary.
+   */
+  bgColor: string;
   tooltipBgColor: string;
   tooltipBorderColor: string;
   tooltipTextColor: string;
@@ -149,6 +157,7 @@ function readChartTheme(): ChartTheme {
     tickMarkColor: resolveToken(tokens.colorChartsLineTick),
     tickColor: resolveToken(tokens.colorTextBodySecondary),
     titleColor: resolveToken(tokens.colorTextHeadingDefault),
+    bgColor: resolveToken(tokens.colorBackgroundContainerContent),
     // Use CloudScape's popover tokens — purpose-built for floating surfaces
     // and theme-aware (white-on-dark in light mode, dark-on-light in dark
     // mode). The previous hardcoded `rgba(255,255,255,0.96)` rendered
