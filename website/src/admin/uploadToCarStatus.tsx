@@ -647,7 +647,11 @@ const UploadToCarStatus: React.FC = () => {
                       aria-label="Show earlier uploads"
                       style={{
                         position: 'absolute',
-                        left: 4,
+                        // Inset past the y-axis title + tick labels so the
+                        // "Seconds" rotated title stays readable. The y-axis
+                        // area is ~55px wide given the duration scale we
+                        // use; bumping the chevron to 60 clears it.
+                        left: 60,
                         top: '50%',
                         transform: 'translateY(-50%)',
                         background: chartTheme.tooltipBgColor,
@@ -672,7 +676,10 @@ const UploadToCarStatus: React.FC = () => {
                       aria-label="Show later uploads"
                       style={{
                         position: 'absolute',
-                        right: 4,
+                        // Match the left chevron's inset so the pair sits
+                        // symmetrically inside the plot area rather than
+                        // flush against the container edge.
+                        right: 12,
                         top: '50%',
                         transform: 'translateY(-50%)',
                         background: chartTheme.tooltipBgColor,
