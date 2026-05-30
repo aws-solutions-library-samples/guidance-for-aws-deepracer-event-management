@@ -426,6 +426,30 @@ const UploadToCarStatus: React.FC = () => {
     [barData, t]
   );
 
+  // Default window: the last hour up to now. The full data set is still
+  // loaded; the user can drag-pan the chart leftward to walk back through
+  // earlier uploads (chartjs-plugin-zoom handles the pan interaction).
+  // Recompute "now" when allItems changes so a new upload nudges the
+  // initial window forward to include the latest event.
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+  const initialWindow = useMemo(() => {
+    const max = Date.now();
+    return { min: max - ONE_HOUR_MS, max };
+  }, [allItems]);
+
+  // For pan limits, clamp leftward scrolling to the oldest upload and
+  // rightward scrolling to "now" so users can't drag into empty future
+  // or scroll past their oldest data.
+  const panBounds = useMemo(() => {
+    const times = barData
+      .map((d) => (d.x instanceof Date ? d.x.getTime() : new Date(d.x).getTime()))
+      .filter((n) => Number.isFinite(n));
+    return {
+      min: times.length ? Math.min(...times) - ONE_HOUR_MS : undefined,
+      max: Date.now(),
+    };
+  }, [barData]);
+
   const timeChartOptions = useMemo<ChartOptions<'bar'>>(
     () => ({
       responsive: true,
@@ -449,10 +473,28 @@ const UploadToCarStatus: React.FC = () => {
             },
           },
         },
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: 'x',
+            // Hold no modifier — straight drag pans. The wheel and
+            // pinch zoom are deliberately left off, since the user
+            // asked for scrollable history with a fixed 1-hour view,
+            // not free zoom that could collapse the window.
+          },
+          limits: {
+            x: {
+              min: panBounds.min,
+              max: panBounds.max,
+            },
+          },
+        },
       },
       scales: {
         x: {
           type: 'time',
+          min: initialWindow.min,
+          max: initialWindow.max,
           // Mirror CloudScape's tick layout — let chart.js pick the right
           // unit for the visible range, then format with date-fns. The
           // hour/minute units render "29 May at 14:00" (matching the
@@ -493,7 +535,7 @@ const UploadToCarStatus: React.FC = () => {
         },
       },
     }),
-    [maxDuration, chartTheme, t]
+    [maxDuration, chartTheme, t, initialWindow, panBounds]
   );
 
   const emptyState = (
