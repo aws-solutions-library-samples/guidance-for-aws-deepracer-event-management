@@ -647,13 +647,12 @@ const UploadToCarStatus: React.FC = () => {
                       aria-label="Show earlier uploads"
                       style={{
                         position: 'absolute',
-                        // Inset past the y-axis title + tick labels so the
-                        // "Seconds" rotated title stays readable. The y-axis
-                        // area is ~55px wide given the duration scale we
-                        // use; bumping the chevron to 60 clears it.
-                        left: 60,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
+                        // Sit below the x-axis on the same baseline as the
+                        // "Time (UTC)" title — out of the plot area entirely,
+                        // so they never overlap bars, tick labels, or the
+                        // y-axis "Seconds" title.
+                        left: 8,
+                        bottom: 0,
                         background: chartTheme.tooltipBgColor,
                         border: `1px solid ${chartTheme.tooltipBorderColor}`,
                         borderRadius: 4,
@@ -676,12 +675,8 @@ const UploadToCarStatus: React.FC = () => {
                       aria-label="Show later uploads"
                       style={{
                         position: 'absolute',
-                        // Match the left chevron's inset so the pair sits
-                        // symmetrically inside the plot area rather than
-                        // flush against the container edge.
-                        right: 12,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
+                        right: 8,
+                        bottom: 0,
                         background: chartTheme.tooltipBgColor,
                         border: `1px solid ${chartTheme.tooltipBorderColor}`,
                         borderRadius: 4,
