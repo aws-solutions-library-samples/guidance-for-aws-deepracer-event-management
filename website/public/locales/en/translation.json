@@ -852,6 +852,9 @@
     "settings": {
       "breadcrumb": "Settings",
       "name": "Name",
+      "username": "Username",
+      "email": "Email",
+      "racerName": "Racer name",
       "delete.header": "Delete your DREM account",
       "changepw.header": "Complete the form to update your password",
       "form": {

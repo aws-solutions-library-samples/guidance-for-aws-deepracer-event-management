@@ -3,6 +3,7 @@ import os
 
 import boto3
 import http_response
+import user_utils
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.event_handler import AppSyncResolver
 from aws_lambda_powertools.logging import correlation_paths
@@ -39,6 +40,7 @@ def __get_user(username: str) -> dict:
     user = response["Users"][0]
     logger.info(user)
     user["sub"] = __extract_user_attribute(user["Attributes"], "sub")
+    user["racerName"] = user_utils.resolve_display_name(user)
     logger.info(user)
     return clean_json(user)
 
@@ -49,11 +51,12 @@ def __get_users(username_prefix=None) -> list:
     # Base filter for enabled users
     filter_string = 'status = "Enabled"'
 
-    # Use username prefix filter instead if provided
+    # Use preferred_username prefix filter instead if provided
+    # preferred_username is lowercased by Cognito, so we lowercase the prefix
     if username_prefix:
         # Escape quotes in the prefix to prevent injection
-        safe_prefix = username_prefix.replace('"', '\\"')
-        filter_string = f'username ^= "{safe_prefix}"'
+        safe_prefix = username_prefix.lower().replace('"', '\\"')
+        filter_string = f'preferred_username ^= "{safe_prefix}"'
 
     logger.debug(f"Filter string: {filter_string}")
 
@@ -75,9 +78,10 @@ def __get_users(username_prefix=None) -> list:
     # batches of results to appsync end point...
     all_users = [item for sublist in users for item in sublist]
 
-    # pull "sub" out to top level of user object
+    # pull "sub" and "racerName" out to top level of user object
     for user in all_users:
         user["sub"] = __extract_user_attribute(user["Attributes"], "sub")
+        user["racerName"] = user_utils.resolve_display_name(user)
 
     return all_users
 
@@ -133,6 +137,8 @@ def create_user(username: str, email: str, countryCode: str):
             UserAttributes=[
                 {"Name": "email", "Value": email},
                 {"Name": "custom:countryCode", "Value": countryCode},
+                {"Name": "preferred_username", "Value": username},
+                {"Name": "custom:racerName", "Value": username},
             ],
             DesiredDeliveryMediums=[
                 "EMAIL",

@@ -1,17 +1,15 @@
-import {
-  Authenticator,
-  useAuthenticator,
-} from '@aws-amplify/ui-react';
+import { Authenticator, useAuthenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify, type ResourcesConfig } from 'aws-amplify';
 import { AwsRum } from 'aws-rum-web';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import './App.css';
 
 import { CountrySelector } from './components/countrySelector';
 import TopNav from './components/topNav';
 import awsconfig from './config.json';
+import { getCurrentAuthUser } from './hooks/useAuth';
 import { StoreProvider } from './store/contexts/storeProvider';
 import initDataStores from './store/initStore';
 
@@ -129,7 +127,6 @@ try {
 const components = {
   Header() {
     // const { tokens } = useTheme();
-
     return <img src="/logo-bw.png" alt="Logo" width={300} height={300} className="center" />;
   },
 
@@ -144,7 +141,11 @@ const components = {
 
           <CountrySelector
             amplify={true}
-            description={Array.isArray(validationErrors.countryCode) ? validationErrors.countryCode[0] : validationErrors.countryCode}
+            description={
+              Array.isArray(validationErrors.countryCode)
+                ? validationErrors.countryCode[0]
+                : validationErrors.countryCode
+            }
           />
         </>
       );
@@ -193,16 +194,28 @@ export default function App() {
         hideSignUp={false}
         signUpAttributes={['email']}
       >
-        {({ signOut, user }) => (
-          <main>
-            <StoreProvider>
-              <Router>
-                <TopNav user={user?.username || ''} signout={signOut} />
-              </Router>
-            </StoreProvider>
-          </main>
-        )}
+        {({ signOut }) => <AuthenticatedApp signOut={signOut} />}
       </Authenticator>
     </Suspense>
+  );
+}
+
+function AuthenticatedApp({ signOut }: { signOut: (() => void) | undefined }) {
+  const [displayName, setDisplayName] = useState<string>('');
+
+  useEffect(() => {
+    getCurrentAuthUser().then((authUser) => {
+      setDisplayName(authUser.displayName);
+    });
+  }, []);
+
+  return (
+    <main>
+      <StoreProvider>
+        <Router>
+          <TopNav user={displayName} signout={signOut} />
+        </Router>
+      </StoreProvider>
+    </main>
   );
 }

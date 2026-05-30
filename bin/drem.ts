@@ -72,6 +72,11 @@ if (domainName) {
   domainName = undefined;
 }
 
+const extUserPoolId = (app.node.tryGetContext('EXT_USER_POOL_ID') as string | undefined) || undefined;
+if (extUserPoolId) {
+  console.info('Using existing external User Pool ID: ' + extUserPoolId);
+}
+
 if (app.node.tryGetContext('manual_deploy') === 'True') {
   console.info('Manual Deploy started....');
 
@@ -79,6 +84,7 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
     email: mailAddress,
     labelName: labelName,
     domainName: domainName,
+    extUserPoolId: extUserPoolId,
     env: env,
   });
 
@@ -95,6 +101,7 @@ if (app.node.tryGetContext('manual_deploy') === 'True') {
     sourceBranchName: sourceBranchName,
     email: mailAddress,
     domainName: domainName,
+    extUserPoolId: extUserPoolId,
     requireApproval: requireApproval,
     env: env,
   });

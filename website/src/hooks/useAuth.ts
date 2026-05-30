@@ -1,4 +1,10 @@
-import { fetchAuthSession, getCurrentUser, signOut, updatePassword } from 'aws-amplify/auth';
+import {
+  fetchAuthSession,
+  fetchUserAttributes,
+  getCurrentUser,
+  signOut,
+  updatePassword,
+} from 'aws-amplify/auth';
 import { graphqlQuery } from '../graphql/graphqlHelpers';
 import { getRacerProfile } from '../graphql/queries';
 
@@ -8,16 +14,20 @@ import { getRacerProfile } from '../graphql/queries';
  * version upgrades a single-file change.
  */
 export interface AuthUser {
-    /** Cognito username */
-    username: string;
-    /** Cognito user sub (unique ID, used for S3 paths) */
-    sub: string;
-    /** Cognito identity pool ID */
-    identityId: string;
-    /** JWT access token (used for REST API calls) */
-    jwtToken: string;
-    /** Cognito user groups (e.g. ['admin', 'operator']) */
-    groups: string[];
+  /** Cognito username */
+  username: string;
+  /** Cognito user sub (unique ID, used for S3 paths) */
+  sub: string;
+  /** Cognito identity pool ID */
+  identityId: string;
+  /** JWT access token (used for REST API calls) */
+  jwtToken: string;
+  /** Cognito user groups (e.g. ['admin', 'operator']) */
+  groups: string[];
+  /** Display name: custom:racerName → preferred_username → username */
+  displayName: string;
+  /** All Cognito user attributes (standard + custom) */
+  attributes: Record<string, string>;
 }
 
 /**
@@ -26,34 +36,53 @@ export interface AuthUser {
  * into a single typed response.
  */
 export const getCurrentAuthUser = async (): Promise<AuthUser> => {
-    const user = await getCurrentUser();
-    const session = await fetchAuthSession();
+  const user = await getCurrentUser();
+  const session = await fetchAuthSession();
 
-    const accessToken = session.tokens?.accessToken;
-    const groups: string[] =
-        (accessToken?.payload?.['cognito:groups'] as string[] | undefined) ?? [];
+  const accessToken = session.tokens?.accessToken;
+  const groups: string[] = (accessToken?.payload?.['cognito:groups'] as string[] | undefined) ?? [];
 
-    return {
-        username: user.username,
-        sub: user.userId, // v6: userId is the sub
-        identityId: session.identityId ?? '',
-        jwtToken: accessToken?.toString() ?? '',
-        groups,
-    };
+  const rawAttributes = await fetchUserAttributes();
+  // fetchUserAttributes returns Record<string, string | undefined>; normalise to string
+  const attributes: Record<string, string> = Object.fromEntries(
+    Object.entries(rawAttributes).filter(([, v]) => v !== undefined)
+  ) as Record<string, string>;
+
+  return {
+    username: user.username,
+    sub: user.userId, // v6: userId is the sub
+    identityId: session.identityId ?? '',
+    jwtToken: accessToken?.toString() ?? '',
+    groups,
+    attributes,
+    displayName:
+      attributes['custom:racerName'] || attributes['preferred_username'] || user.username,
+  };
+};
+
+/**
+ * Lightweight alternative to getCurrentAuthUser() that only resolves the
+ * current user's Cognito groups — no fetchUserAttributes() round-trip.
+ * Use this in hooks that only need permission checks (e.g. usePermissions).
+ */
+export const getAuthGroups = async (): Promise<string[]> => {
+  const session = await fetchAuthSession();
+  const accessToken = session.tokens?.accessToken;
+  return (accessToken?.payload?.['cognito:groups'] as string[] | undefined) ?? [];
 };
 
 /**
  * Sign the current user out.
  */
 export const authSignOut = async (): Promise<void> => {
-    await signOut();
+  await signOut();
 };
 
 export interface RacerProfileData {
-    username: string;
-    avatarConfig: string | null;
-    highlightColour: string | null;
-    updatedAt: string | null;
+  username: string;
+  avatarConfig: string | null;
+  highlightColour: string | null;
+  updatedAt: string | null;
 }
 
 /**
@@ -62,12 +91,11 @@ export interface RacerProfileData {
  * has been saved yet.
  */
 export const getCurrentRacerProfile = async (): Promise<RacerProfileData | null> => {
-    const authUser = await getCurrentAuthUser();
-    const data = await graphqlQuery<{ getRacerProfile: RacerProfileData | null }>(
-        getRacerProfile,
-        { username: authUser.username }
-    );
-    return data?.getRacerProfile ?? null;
+  const authUser = await getCurrentAuthUser();
+  const data = await graphqlQuery<{ getRacerProfile: RacerProfileData | null }>(getRacerProfile, {
+    username: authUser.username,
+  });
+  return data?.getRacerProfile ?? null;
 };
 
 /**
@@ -76,8 +104,8 @@ export const getCurrentRacerProfile = async (): Promise<RacerProfileData | null>
  * @param newPassword - New password
  */
 export const authChangePassword = async (
-    oldPassword: string,
-    newPassword: string
+  oldPassword: string,
+  newPassword: string
 ): Promise<void> => {
-    await updatePassword({ oldPassword, newPassword });
+  await updatePassword({ oldPassword, newPassword });
 };

@@ -1,30 +1,32 @@
 import { useEffect, useState } from 'react';
-import { getCurrentAuthUser } from './useAuth';
+import { getAuthGroups } from './useAuth';
+
+import awsconfig from '../config.json';
 
 interface ApiPermissions {
-    fleets: boolean;
-    events: boolean;
-    users: boolean;
-    races: boolean;
-    cars: boolean;
-    allModels: boolean;
+  fleets: boolean;
+  events: boolean;
+  users: boolean;
+  races: boolean;
+  cars: boolean;
+  allModels: boolean;
 }
 
 interface SideNavPermissions {
-    registration: boolean;
-    commentator: boolean;
-    operator: boolean;
-    admin: boolean;
+  registration: boolean;
+  commentator: boolean;
+  operator: boolean;
+  admin: boolean;
 }
 
 interface TopNavPermissions {
-    eventSelection: boolean;
+  eventSelection: boolean;
 }
 
 export interface Permissions {
-    api: ApiPermissions;
-    sideNavItems: SideNavPermissions;
-    topNavItems: TopNavPermissions;
+  api: ApiPermissions;
+  sideNavItems: SideNavPermissions;
+  topNavItems: TopNavPermissions;
 }
 
 /**
@@ -32,105 +34,115 @@ export interface Permissions {
  * @returns {Object} user permissions
  */
 export const usePermissions = (): Permissions => {
-    const [permissions, setPermissions] = useState<Permissions>(getPermissions([]));
+  const useExternalIdp = Boolean(awsconfig.Features?.useExternalIdp);
+  const [permissions, setPermissions] = useState<Permissions>(getPermissions([], useExternalIdp));
 
-    useEffect(() => {
-        // Config Groups
-        getCurrentAuthUser().then((authUser) => {
-            setPermissions(getPermissions(authUser.groups));
-        });
+  useEffect(() => {
+    // Config Groups
+    getAuthGroups().then((groups) => {
+      setPermissions(getPermissions(groups, useExternalIdp));
+    });
 
-        return () => {
-            // Unmounting
-        };
-    }, []);
+    return () => {
+      // Unmounting
+    };
+  }, [useExternalIdp]);
 
-    return permissions;
+  return permissions;
 };
 
-const getPermissions = (groups: string[]): Permissions => {
-    const defaultPermissions: Permissions = {
-        api: {
-            fleets: false,
-            events: false,
-            users: false,
-            races: false,
-            cars: false,
-            allModels: false,
-        },
-        sideNavItems: {
-            registration: false,
-            commentator: false,
-            operator: false,
-            admin: false,
-        },
-        topNavItems: {
-            eventSelection: false,
-        },
+const getPermissions = (groups: string[], useExternalIdp: boolean = false): Permissions => {
+  const defaultPermissions: Permissions = {
+    api: {
+      fleets: false,
+      events: false,
+      users: false,
+      races: false,
+      cars: false,
+      allModels: false,
+    },
+    sideNavItems: {
+      registration: false,
+      commentator: false,
+      operator: false,
+      admin: false,
+    },
+    topNavItems: {
+      eventSelection: false,
+    },
+  };
+
+  let permissions: Permissions = defaultPermissions;
+
+  // set topNavItems permissions
+  if (groups.includes('admin') || groups.includes('operator') || groups.includes('commentator')) {
+    permissions.topNavItems.eventSelection = true;
+  }
+
+  // Set sideNavItem permissions
+  if (groups.includes('registration') || groups.includes('admin')) {
+    const sideNavPermissions = { ...permissions.sideNavItems };
+    permissions.sideNavItems = {
+      ...sideNavPermissions,
+      registration: true,
     };
+  }
+  if (groups.includes('commentator') || groups.includes('admin')) {
+    const sideNavPermissions = { ...permissions.sideNavItems };
+    permissions.sideNavItems = {
+      ...sideNavPermissions,
+      commentator: true,
+    };
+  }
+  if (groups.includes('operator') || groups.includes('admin')) {
+    const sideNavPermissions = { ...permissions.sideNavItems };
+    permissions.sideNavItems = {
+      ...sideNavPermissions,
+      operator: true,
+    };
+  }
+  if (groups.includes('admin')) {
+    const sideNavPermissions = { ...permissions.sideNavItems };
+    permissions.sideNavItems = {
+      ...sideNavPermissions,
+      admin: true,
+    };
+  }
 
-    let permissions: Permissions = defaultPermissions;
+  // Set API permissions
+  if (groups.includes('operator') || groups.includes('admin')) {
+    const apiPermissions = { ...permissions.api };
+    permissions.api = {
+      ...apiPermissions,
+      fleets: true,
+      events: true,
+      users: true,
+      races: true,
+      cars: true,
+      allModels: true,
+    };
+  } else if (groups.includes('registration')) {
+    const apiPermissions = { ...permissions.api };
+    permissions.api = {
+      ...apiPermissions,
+      users: true,
+    };
+  } else if (groups.includes('commentator')) {
+    const apiPermissions = { ...permissions.api };
+    permissions.api = {
+      ...apiPermissions,
+      events: true,
+    };
+  }
 
-    // set topNavItems permissions
-    if (groups.includes('admin') || groups.includes('operator') || groups.includes('commentator')) {
-        permissions.topNavItems.eventSelection = true;
-    }
+  // When using an external IDP, hide admin and registration UI
+  if (useExternalIdp) {
+    permissions.sideNavItems = {
+      ...permissions.sideNavItems,
+      admin: false,
+      registration: false,
+    };
+  }
 
-    // Set sideNavItem permissions
-    if (groups.includes('registration') || groups.includes('admin')) {
-        const sideNavPermissions = { ...permissions.sideNavItems };
-        permissions.sideNavItems = {
-            ...sideNavPermissions,
-            registration: true,
-        };
-    }
-    if (groups.includes('commentator') || groups.includes('admin')) {
-        const sideNavPermissions = { ...permissions.sideNavItems };
-        permissions.sideNavItems = {
-            ...sideNavPermissions,
-            commentator: true,
-        };
-    }
-    if (groups.includes('operator') || groups.includes('admin')) {
-        const sideNavPermissions = { ...permissions.sideNavItems };
-        permissions.sideNavItems = {
-            ...sideNavPermissions,
-            operator: true,
-        };
-    }
-    if (groups.includes('admin')) {
-        const sideNavPermissions = { ...permissions.sideNavItems };
-        permissions.sideNavItems = {
-            ...sideNavPermissions,
-            admin: true,
-        };
-    }
-
-    // Set API permissions
-    if (groups.includes('operator') || groups.includes('admin')) {
-        const apiPermissions = { ...permissions.api };
-        permissions.api = {
-            ...apiPermissions,
-            fleets: true,
-            events: true,
-            users: true,
-            races: true,
-            cars: true,
-            allModels: true,
-        };
-    } else if (groups.includes('registration')) {
-        const apiPermissions = { ...permissions.api };
-        permissions.api = {
-            ...apiPermissions,
-            users: true,
-        };
-    } else if (groups.includes('commentator')) {
-        const apiPermissions = { ...permissions.api };
-        permissions.api = {
-            ...apiPermissions,
-            events: true,
-        };
-    }
-
-    return permissions;
+  return permissions;
 };
