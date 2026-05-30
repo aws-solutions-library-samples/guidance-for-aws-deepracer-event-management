@@ -1,15 +1,11 @@
-import {
-  BarChart,
-  Box,
-  Container,
-  Header,
-  SpaceBetween,
-  StatusIndicator,
-} from '@cloudscape-design/components';
+import { Box, Container, Header, SpaceBetween, StatusIndicator } from '@cloudscape-design/components';
 import ColumnLayout from '@cloudscape-design/components/column-layout';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Bar } from 'react-chartjs-2';
+import { ChartData, ChartOptions } from 'chart.js';
 import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
 import { TableHeader } from '../components/tableConfig';
+import { categoricalPalette, useChartTheme } from '../components/charts/chartDefaults';
 import { graphqlMutate, graphqlSubscribe } from '../graphql/graphqlHelpers';
 import * as queries from '../graphql/queries';
 
@@ -18,7 +14,7 @@ import {
   colorChartsStatusInfo,
   colorChartsStatusLow,
   colorChartsStatusNeutral,
-  colorChartsStatusPositive,
+  colorChartsStatusPositive
 } from '@cloudscape-design/design-tokens';
 import { useTranslation } from 'react-i18next';
 import { EventSelectorModal } from '../components/eventSelectorModal';
@@ -27,7 +23,10 @@ import { PageTable } from '../components/pageTable';
 import { onUploadsToCarCreated, onUploadsToCarUpdated } from '../graphql/subscriptions';
 import i18next from '../i18n';
 import { useSelectedEventContext } from '../store/contexts/storeProvider';
-import { ColumnConfiguration, FilteringProperties } from './uploadToCarStatusTableConfig';
+import {
+  ColumnConfiguration,
+  FilteringProperties,
+} from './uploadToCarStatusTableConfig';
 
 // Type definitions
 type UploadStatus = 'Created' | 'Started' | 'InProgress' | 'Success' | 'Failed';
@@ -65,7 +64,6 @@ const UploadToCarStatus: React.FC = () => {
   const [allItems, setItems] = useState<UploadToCarItem[]>([]);
   const [horizontalBarData, setHorizontalBarData] = useState<BarChartSeries[]>([]);
   const [barData, setBarData] = useState<BarChartDataPoint[]>([]);
-  const [xDomain, setXDomain] = useState<Date[]>([]);
   const [maxDuration, setMaxDuration] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedItems, setSelectedItems] = useState<UploadToCarItem[]>([]);
@@ -79,7 +77,7 @@ const UploadToCarStatus: React.FC = () => {
   }, [selectedEvent]);
 
   function enrichStatus(data: UploadToCarItem[]): UploadToCarItem[] {
-    data.forEach((element) => {
+    data.forEach(element => {
       // enrich status
       if (element.status === 'Created') {
         element.statusIndicator = (
@@ -152,7 +150,7 @@ const UploadToCarStatus: React.FC = () => {
       setIsLoading(false);
     }
 
-    if (typeof selectedEvent?.eventId !== 'undefined') {
+    if (typeof selectedEvent?.eventId !== "undefined") {
       listUploadsToCar();
     }
     return () => {
@@ -165,50 +163,56 @@ const UploadToCarStatus: React.FC = () => {
     const newHorizontalBarData: BarChartSeries[] = [];
 
     // Status
-    const statusesRaw = allItems.map((a) => a.status);
+    const statusesRaw = allItems.map(a => a.status);
     const statuses = statusesRaw.reduce((acc: StatusCount, status) => {
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {});
-
+    
     for (const [key, value] of Object.entries(statuses)) {
       const data: BarChartSeries = {
         title: key,
-        type: 'bar',
-        data: [{ x: 'Status', y: value as number }],
+        type: "bar",
+        data: [
+          { x: "Status", y: value as number },
+        ],
         color: getColorForStatus(key),
       };
       newHorizontalBarData.push(data);
     }
 
     // carName
-    const carNamesRaw = allItems.map((a) => a.carName).filter((name): name is string => !!name);
+    const carNamesRaw = allItems.map(a => a.carName).filter((name): name is string => !!name);
     const carNames = carNamesRaw.reduce((acc: StatusCount, name) => {
       acc[name] = (acc[name] || 0) + 1;
       return acc;
     }, {});
-
+    
     for (const [key, value] of Object.entries(carNames)) {
       const data: BarChartSeries = {
         title: key,
-        type: 'bar',
-        data: [{ x: 'Car', y: value as number }],
+        type: "bar",
+        data: [
+          { x: "Car", y: value as number },
+        ],
       };
       newHorizontalBarData.push(data);
     }
 
     // jobId
-    const jobIdsRaw = allItems.map((a) => a.jobId).filter((id): id is string => !!id);
+    const jobIdsRaw = allItems.map(a => a.jobId).filter((id): id is string => !!id);
     const jobIds = jobIdsRaw.reduce((acc: StatusCount, id) => {
       acc[id] = (acc[id] || 0) + 1;
       return acc;
     }, {});
-
+    
     for (const [key, value] of Object.entries(jobIds)) {
       const data: BarChartSeries = {
         title: key,
-        type: 'bar',
-        data: [{ x: 'Job', y: value as number }],
+        type: "bar",
+        data: [
+          { x: "Job", y: value as number },
+        ],
       };
       newHorizontalBarData.push(data);
     }
@@ -219,14 +223,12 @@ const UploadToCarStatus: React.FC = () => {
   // bar chart
   useEffect(() => {
     const newBarData: BarChartDataPoint[] = [];
-    const newXDomain: Date[] = [];
 
-    allItems.forEach((element) => {
-      if (typeof element.duration !== 'undefined' && element.uploadStartTime) {
+    allItems.forEach(element => {
+      if (typeof element.duration !== "undefined" && element.uploadStartTime) {
         const dateTime = new Date(element.uploadStartTime);
         const data: BarChartDataPoint = { x: dateTime, y: element.duration };
         newBarData.push(data);
-        newXDomain.push(dateTime);
       }
     });
 
@@ -236,18 +238,11 @@ const UploadToCarStatus: React.FC = () => {
       return dateA.getTime() - dateB.getTime();
     });
 
-    newXDomain.sort((a, b) => {
-      return a.getTime() - b.getTime();
-    });
-
     setBarData(newBarData);
-    setXDomain(newXDomain);
 
     if (allItems.length > 0) {
       const max = allItems.reduce((prev, current) => {
-        return prev && prev.duration && current.duration && prev.duration > current.duration
-          ? prev
-          : current;
+        return (prev && prev.duration && current.duration && prev.duration > current.duration) ? prev : current;
       });
       const newMaxDuration = Math.ceil(max.duration || 0) + 3;
       setMaxDuration(newMaxDuration);
@@ -262,16 +257,16 @@ const UploadToCarStatus: React.FC = () => {
       onUploadsToCarCreated,
       filter
     ).subscribe({
-      next: (event) => {
-        console.debug(
-          'onUploadsToCarCreated event received',
-          event.value.data.onUploadsToCarCreated
-        );
-        event.value.data.onUploadsToCarCreated.status = 'Created';
-        const newItems = allItems.concat(event.value.data.onUploadsToCarCreated);
-        const enrichedItems = enrichStatus(newItems);
-        setItems(enrichedItems);
-      },
+        next: (event) => {
+          console.debug(
+            'onUploadsToCarCreated event received',
+            event.value.data.onUploadsToCarCreated
+          );
+          event.value.data.onUploadsToCarCreated.status = 'Created';
+          const newItems = allItems.concat(event.value.data.onUploadsToCarCreated);
+          const enrichedItems = enrichStatus(newItems);
+          setItems(enrichedItems);
+        },
     });
 
     return () => {
@@ -288,32 +283,30 @@ const UploadToCarStatus: React.FC = () => {
       onUploadsToCarUpdated,
       filter
     ).subscribe({
-      next: (event) => {
-        const updatedData = event.value.data.onUploadsToCarUpdated;
-        console.debug('onUploadsToCarUpdated event received', updatedData);
-        const newItems = [...allItems];
-        let currentData = newItems.find(
-          (value) => value.modelKey === updatedData.modelKey && value.jobId === updatedData.jobId
-        );
+        next: (event) => {
+          const updatedData = event.value.data.onUploadsToCarUpdated;
+          console.debug('onUploadsToCarUpdated event received', updatedData);
+          const newItems = [...allItems];
+          let currentData = newItems.find((value) => (value.modelKey === updatedData.modelKey && value.jobId === updatedData.jobId));
+          
+          // handle missed events
+          if (currentData === undefined) {
+            currentData = {} as UploadToCarItem;
+            newItems.push(currentData);
+            currentData.modelKey = updatedData.modelKey;
+          }
 
-        // handle missed events
-        if (currentData === undefined) {
-          currentData = {} as UploadToCarItem;
-          newItems.push(currentData);
-          currentData.modelKey = updatedData.modelKey;
-        }
+          currentData.status = updatedData.status;
+          if (updatedData.uploadStartTime) {
+            currentData.uploadStartTime = updatedData.uploadStartTime;
+          }
+          if (updatedData.endTime) {
+            currentData.endTime = updatedData.endTime;
+          }
 
-        currentData.status = updatedData.status;
-        if (updatedData.uploadStartTime) {
-          currentData.uploadStartTime = updatedData.uploadStartTime;
-        }
-        if (updatedData.endTime) {
-          currentData.endTime = updatedData.endTime;
-        }
-
-        const enrichedItems = enrichStatus(newItems);
-        setItems(enrichedItems);
-      },
+          const enrichedItems = enrichStatus(newItems);
+          setItems(enrichedItems);
+        },
     });
 
     return () => {
@@ -325,15 +318,179 @@ const UploadToCarStatus: React.FC = () => {
   const filteringProperties = FilteringProperties() as any;
 
   const HeaderActionButtons: React.FC = () => {
-    return <SpaceBetween direction="horizontal" size="xs"></SpaceBetween>;
+    return (
+      <SpaceBetween direction="horizontal" size="xs">
+      </SpaceBetween>
+    );
   };
 
   const breadcrumbs: Array<{ text: string; href?: string }> = [
     { text: t('home.breadcrumb'), href: '/' },
     { text: t('operator.breadcrumb'), href: '/admin/home' },
     { text: t('models.breadcrumb'), href: '/admin/home' },
-    { text: t('upload-to-car-status.breadcrumb') },
+    { text: t('upload-to-car-status.breadcrumb') }
   ];
+
+  const chartTheme = useChartTheme();
+
+  // Stacked horizontal chart — one row per dimension (Status / Car / Job).
+  // Each series produced upstream is a single point pinned to one row, so the
+  // chart.js dataset puts its count in that row's slot and zero in the others.
+  const horizontalChartLabels = ['Status', 'Car', 'Job'];
+  const horizontalChartData = useMemo<ChartData<'bar'>>(
+    () => ({
+      labels: horizontalChartLabels,
+      datasets: horizontalBarData.map((s, i) => {
+        const point = s.data[0];
+        const slot = horizontalChartLabels.indexOf(point.x as string);
+        const data = [0, 0, 0];
+        if (slot >= 0) data[slot] = point.y;
+        return {
+          label: s.title,
+          data,
+          backgroundColor: s.color ?? categoricalPalette[i % categoricalPalette.length],
+          borderWidth: 0,
+          stack: 'all',
+        };
+      }),
+    }),
+    [horizontalBarData]
+  );
+
+  const horizontalChartOptions = useMemo<ChartOptions<'bar'>>(
+    () => ({
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(255, 255, 255, 0.96)',
+          borderColor: chartTheme.axisColor,
+          borderWidth: 1,
+          titleColor: chartTheme.tickColor,
+          bodyColor: chartTheme.tickColor,
+        },
+      },
+      scales: {
+        x: {
+          stacked: true,
+          beginAtZero: true,
+          max: allItems.length || undefined,
+          title: {
+            display: true,
+            text: t('upload-to-car-status.horizontal-bar.x-title'),
+            color: chartTheme.tickColor,
+          },
+          grid: { color: chartTheme.gridColor },
+          border: { color: chartTheme.axisColor },
+          ticks: { color: chartTheme.tickColor, precision: 0 },
+        },
+        y: {
+          stacked: true,
+          grid: { display: false, color: chartTheme.gridColor },
+          border: { color: chartTheme.axisColor },
+          ticks: { color: chartTheme.tickColor },
+        },
+      },
+    }),
+    [allItems.length, chartTheme, t]
+  );
+
+  // Vertical bars over upload start time. Time-scale data points are
+  // {x: epoch ms, y: duration} — chart.js places them on the time axis.
+  const timeChartData = useMemo<ChartData<'bar', { x: number; y: number }[]>>(
+    () => ({
+      datasets: [
+        {
+          label: t('upload-to-car-status.upload-time.y-title'),
+          data: barData.map((d) => ({
+            x: d.x instanceof Date ? d.x.getTime() : new Date(d.x).getTime(),
+            y: d.y,
+          })),
+          backgroundColor: categoricalPalette[0],
+          borderWidth: 0,
+        },
+      ],
+    }),
+    [barData, t]
+  );
+
+  const timeChartOptions = useMemo<ChartOptions<'bar'>>(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(255, 255, 255, 0.96)',
+          borderColor: chartTheme.axisColor,
+          borderWidth: 1,
+          titleColor: chartTheme.tickColor,
+          bodyColor: chartTheme.tickColor,
+          callbacks: {
+            title: (items) => {
+              const ts = items[0]?.parsed?.x;
+              return ts
+                ? new Date(ts).toLocaleString('en-GB', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: false,
+                  })
+                : '';
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          type: 'time',
+          title: { display: true, text: 'Time (UTC)', color: chartTheme.tickColor },
+          grid: { display: false, color: chartTheme.gridColor },
+          border: { color: chartTheme.axisColor },
+          ticks: {
+            color: chartTheme.tickColor,
+            maxRotation: 0,
+            callback: (value) =>
+              new Date(value as number)
+                .toLocaleDateString('en-GB', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  hour12: false,
+                })
+                .split(',')
+                .join('\n'),
+          },
+        },
+        y: {
+          beginAtZero: true,
+          max: maxDuration || undefined,
+          title: {
+            display: true,
+            text: t('upload-to-car-status.upload-time.y-title'),
+            color: chartTheme.tickColor,
+          },
+          grid: { color: chartTheme.gridColor },
+          border: { color: chartTheme.axisColor },
+          ticks: { color: chartTheme.tickColor },
+        },
+      },
+    }),
+    [maxDuration, chartTheme, t]
+  );
+
+  const emptyState = (
+    <Box textAlign="center" color="inherit">
+      <b>No data available</b>
+      <Box variant="p" color="inherit">
+        There is no data available
+      </Box>
+    </Box>
+  );
 
   return (
     <div>
@@ -358,72 +515,26 @@ const UploadToCarStatus: React.FC = () => {
       >
         <SpaceBetween direction="vertical" size="l">
           <ColumnLayout columns={2}>
-            <Container {...({ textAlign: 'center', fitHeight: true } as any)}>
-              <Header variant={'h2' as any}>
-                {t('upload-to-car-status.horizontal-bar.header')}
-              </Header>
-              <BarChart
-                series={horizontalBarData as any}
-                xDomain={['Status', 'Car', 'Job']}
-                yDomain={[0, allItems.length]}
-                ariaLabel="Stacked, horizontal bar chart"
-                hideFilter
-                hideLegend
-                height={250}
-                horizontalBars
-                stackedBars
-                xTitle={t('upload-to-car-status.horizontal-bar.x-title')}
-                empty={
-                  <Box textAlign="center" color="inherit">
-                    <b>No data available</b>
-                    <Box variant="p" color="inherit">
-                      There is no data available
-                    </Box>
-                  </Box>
-                }
-              />
+            <Container {...{ textAlign: "center", fitHeight: true } as any}>
+              <Header variant={"h2" as any}>{t('upload-to-car-status.horizontal-bar.header')}</Header>
+              {horizontalBarData.length > 0 ? (
+                <div style={{ height: 250 }} aria-label="Stacked, horizontal bar chart">
+                  <Bar data={horizontalChartData} options={horizontalChartOptions} />
+                </div>
+              ) : (
+                emptyState
+              )}
             </Container>
 
-            <Container {...({ textAlign: 'center', fitHeight: true } as any)}>
-              <Header variant={'h2' as any}>{t('upload-to-car-status.upload-time.header')}</Header>
-              <BarChart
-                series={[
-                  {
-                    title: t('upload-to-car-status.upload-time.y-title'),
-                    type: 'bar',
-                    data: barData as any,
-                  },
-                ]}
-                xDomain={xDomain as any}
-                yDomain={[0, maxDuration]}
-                i18nStrings={{
-                  xTickFormatter: (e: Date) =>
-                    e
-                      .toLocaleDateString('en-GB', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: 'numeric',
-                        hour12: false,
-                      })
-                      .split(',')
-                      .join('\n'),
-                }}
-                ariaLabel="Single data series line chart"
-                hideFilter
-                hideLegend
-                height={250}
-                xTitle="Time (UTC)"
-                yTitle={t('upload-to-car-status.upload-time.y-title')}
-                empty={
-                  <Box textAlign="center" color="inherit">
-                    <b>No data available</b>
-                    <Box variant="p" color="inherit">
-                      There is no data available
-                    </Box>
-                  </Box>
-                }
-              />
+            <Container {...{ textAlign: "center", fitHeight: true } as any}>
+              <Header variant={"h2" as any}>{t('upload-to-car-status.upload-time.header')}</Header>
+              {barData.length > 0 ? (
+                <div style={{ height: 250 }} aria-label="Upload duration over time">
+                  <Bar data={timeChartData} options={timeChartOptions} />
+                </div>
+              ) : (
+                emptyState
+              )}
             </Container>
           </ColumnLayout>
 
