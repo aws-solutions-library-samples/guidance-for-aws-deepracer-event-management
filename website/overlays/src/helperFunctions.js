@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { GetFormattedLapTime, GetFormattedTotalTime, GetLeaderboardDataSorted, PadZero, PadZeroMS } from './format';
 
 export function SetLocalizedLowerThirdsLabels(racerLabel, remainingLabel, fastestLabel, previousLabel) {
   const racerAndLapInfoObj = d3.select(document.getElementById('lower-third-racer-and-lap-info').contentDocument);
@@ -180,13 +181,7 @@ export function getLeaderboardData(entries) {
   return leaderboardTempData;
 }
 
-export {
-  GetFormattedLapTime,
-  GetFormattedTotalTime,
-  GetLeaderboardDataSorted,
-  PadZero,
-  PadZeroMS,
-} from './format';
+export { GetFormattedLapTime, GetFormattedTotalTime, GetLeaderboardDataSorted, PadZero, PadZeroMS };
 
 export function checkMin(min) {
   if (min < 10 && min >= 0) {
