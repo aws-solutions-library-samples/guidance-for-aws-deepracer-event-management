@@ -63,3 +63,7 @@ build.log
 
 # Git worktrees
 .worktrees
+
+# Claude Code working artifacts (plans / specs) — kept out of the repo
+# so AI-generated planning docs don't pile up under docs/. See #276.
+docs/superpowers/
