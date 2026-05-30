@@ -52,7 +52,7 @@ Chart.register(
  * Falls back to the hex literal in the var() expression when the variable
  * isn't defined yet (e.g. before CloudScape stylesheets apply, or during SSR).
  */
-function resolveToken(tokenValue: string): string {
+export function resolveToken(tokenValue: string): string {
   if (typeof window !== 'undefined' && document.body) {
     const varMatch = /^var\((--[^,)]+)/.exec(tokenValue);
     if (varMatch) {
@@ -137,6 +137,9 @@ export interface ChartTheme {
   tickMarkColor: string;
   tickColor: string;
   titleColor: string;
+  tooltipBgColor: string;
+  tooltipBorderColor: string;
+  tooltipTextColor: string;
 }
 
 function readChartTheme(): ChartTheme {
@@ -146,6 +149,48 @@ function readChartTheme(): ChartTheme {
     tickMarkColor: resolveToken(tokens.colorChartsLineTick),
     tickColor: resolveToken(tokens.colorTextBodySecondary),
     titleColor: resolveToken(tokens.colorTextHeadingDefault),
+    // Use CloudScape's popover tokens — purpose-built for floating surfaces
+    // and theme-aware (white-on-dark in light mode, dark-on-light in dark
+    // mode). The previous hardcoded `rgba(255,255,255,0.96)` rendered
+    // illegible tooltips against the dark theme.
+    tooltipBgColor: resolveToken(tokens.colorBackgroundPopover),
+    tooltipBorderColor: resolveToken(tokens.colorBorderPopover),
+    tooltipTextColor: resolveToken(tokens.colorTextBodyDefault),
+  };
+}
+
+/**
+ * Status colours (success, failure, in-progress, etc.) resolved once at
+ * module load — for any chart.js visualisation that needs to colour
+ * categorical status values consistently with the rest of CloudScape.
+ *
+ * Use as a `Record<string, string>` keyed by your domain status names; map
+ * each domain value to one of the slots below.
+ */
+export const statusPalette = {
+  positive: resolveToken(tokens.colorChartsStatusPositive),
+  critical: resolveToken(tokens.colorChartsStatusCritical),
+  info: resolveToken(tokens.colorChartsStatusInfo),
+  low: resolveToken(tokens.colorChartsStatusLow),
+  neutral: resolveToken(tokens.colorChartsStatusNeutral),
+} as const;
+
+/**
+ * Standard chart.js tooltip options block. Pass a `ChartTheme` (from
+ * `useChartTheme()`) so the tooltip background / border / text follow
+ * the active CloudScape light/dark theme. Spread into
+ * `options.plugins.tooltip` and override fields per-chart as needed.
+ */
+export function tooltipBaseOptions(theme: ChartTheme) {
+  return {
+    backgroundColor: theme.tooltipBgColor,
+    borderColor: theme.tooltipBorderColor,
+    borderWidth: 1,
+    titleColor: theme.tooltipTextColor,
+    bodyColor: theme.tooltipTextColor,
+    displayColors: false,
+    padding: 8,
+    cornerRadius: 4,
   };
 }
 

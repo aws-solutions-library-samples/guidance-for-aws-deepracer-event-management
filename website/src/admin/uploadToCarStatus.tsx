@@ -5,17 +5,14 @@ import { Bar } from 'react-chartjs-2';
 import { ChartData, ChartOptions } from 'chart.js';
 import { SimpleHelpPanelLayout } from '../components/help-panels/simple-help-panel';
 import { TableHeader } from '../components/tableConfig';
-import { categoricalPalette, useChartTheme } from '../components/charts/chartDefaults';
+import {
+  categoricalPalette,
+  statusPalette,
+  tooltipBaseOptions,
+  useChartTheme,
+} from '../components/charts/chartDefaults';
 import { graphqlMutate, graphqlSubscribe } from '../graphql/graphqlHelpers';
 import * as queries from '../graphql/queries';
-
-import {
-  colorChartsStatusCritical,
-  colorChartsStatusInfo,
-  colorChartsStatusLow,
-  colorChartsStatusNeutral,
-  colorChartsStatusPositive
-} from '@cloudscape-design/design-tokens';
 import { useTranslation } from 'react-i18next';
 import { EventSelectorModal } from '../components/eventSelectorModal';
 import { PageLayout } from '../components/pageLayout';
@@ -123,19 +120,20 @@ const UploadToCarStatus: React.FC = () => {
   }
 
   function getColorForStatus(status: string): string {
-    let color = colorChartsStatusNeutral;
-    if (status === 'Created') {
-      color = colorChartsStatusInfo;
-    } else if (status === 'Started') {
-      color = colorChartsStatusNeutral;
-    } else if (status === 'InProgress') {
-      color = colorChartsStatusLow;
-    } else if (status === 'Success') {
-      color = colorChartsStatusPositive;
-    } else if (status === 'Failed') {
-      color = colorChartsStatusCritical;
+    switch (status) {
+      case 'Created':
+        return statusPalette.info;
+      case 'Started':
+        return statusPalette.neutral;
+      case 'InProgress':
+        return statusPalette.low;
+      case 'Success':
+        return statusPalette.positive;
+      case 'Failed':
+        return statusPalette.critical;
+      default:
+        return statusPalette.neutral;
     }
-    return color;
   }
 
   useEffect(() => {
@@ -364,13 +362,7 @@ const UploadToCarStatus: React.FC = () => {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(255, 255, 255, 0.96)',
-          borderColor: chartTheme.axisColor,
-          borderWidth: 1,
-          titleColor: chartTheme.tickColor,
-          bodyColor: chartTheme.tickColor,
-        },
+        tooltip: tooltipBaseOptions(chartTheme),
       },
       scales: {
         x: {
@@ -423,11 +415,7 @@ const UploadToCarStatus: React.FC = () => {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: 'rgba(255, 255, 255, 0.96)',
-          borderColor: chartTheme.axisColor,
-          borderWidth: 1,
-          titleColor: chartTheme.tickColor,
-          bodyColor: chartTheme.tickColor,
+          ...tooltipBaseOptions(chartTheme),
           callbacks: {
             title: (items) => {
               const ts = items[0]?.parsed?.x;
@@ -447,23 +435,30 @@ const UploadToCarStatus: React.FC = () => {
       scales: {
         x: {
           type: 'time',
+          // Mirror CloudScape's tick layout — let chart.js pick the right
+          // unit for the visible range, then format with date-fns. The
+          // hour/minute units render "29 May at 14:00" (matching the
+          // CloudScape "<day> at HH:mm" style), and broader zooms get
+          // sensible day/month labels.
+          time: {
+            displayFormats: {
+              minute: "d MMM 'at' HH:mm",
+              hour: "d MMM 'at' HH:mm",
+              day: 'd MMM',
+              week: 'd MMM',
+              month: 'MMM yyyy',
+              quarter: 'MMM yyyy',
+              year: 'yyyy',
+            },
+          },
           title: { display: true, text: 'Time (UTC)', color: chartTheme.tickColor },
           grid: { display: false, color: chartTheme.gridColor },
           border: { color: chartTheme.axisColor },
           ticks: {
             color: chartTheme.tickColor,
+            autoSkip: true,
+            autoSkipPadding: 20,
             maxRotation: 0,
-            callback: (value) =>
-              new Date(value as number)
-                .toLocaleDateString('en-GB', {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  hour12: false,
-                })
-                .split(',')
-                .join('\n'),
           },
         },
         y: {
