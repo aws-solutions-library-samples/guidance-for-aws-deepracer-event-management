@@ -217,7 +217,9 @@ const EditCarsModal: React.FC<EditCarsModalProps> = ({
                 filteringType="auto"
                 selectedAriaLabel="Selected"
                 onChange={({ detail }) => {
-                  const index = fleets.map((e) => e.fleetId).indexOf(detail.selectedOption.value ?? '');
+                  const index = fleets
+                    .map((e) => e.fleetId)
+                    .indexOf(detail.selectedOption.value ?? '');
                   if (index >= 0) {
                     setDropDownSelectedItem(fleets[index]);
                   }

@@ -1,5 +1,11 @@
 import * as d3 from 'd3';
-import { GetFormattedLapTime, GetFormattedTotalTime, GetLeaderboardDataSorted, PadZero, PadZeroMS } from './format';
+import {
+  GetFormattedLapTime,
+  GetFormattedTotalTime,
+  GetLeaderboardDataSorted,
+  PadZero,
+  PadZeroMS,
+} from './format';
 
 export function SetLocalizedLowerThirdsLabels(
   racerLabel,

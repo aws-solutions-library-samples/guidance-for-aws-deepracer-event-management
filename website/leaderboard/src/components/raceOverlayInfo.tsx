@@ -280,10 +280,10 @@ const RaceOverlayInfo = ({
                       <img src={defaultAvatar} alt="Default racer avatar" />
                     ) : (
                       <Avatar
-                    avatarStyle="Transparent"
-                    style={{ width: '100%', height: '100%' }}
-                    {...avatarRender.config}
-                  />
+                        avatarStyle="Transparent"
+                        style={{ width: '100%', height: '100%' }}
+                        {...avatarRender.config}
+                      />
                     ))}
                   {countryCode && (
                     <span className={styles.overlayIdentityFlag}>

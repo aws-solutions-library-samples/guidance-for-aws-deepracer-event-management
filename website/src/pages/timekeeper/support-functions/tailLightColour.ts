@@ -29,7 +29,11 @@ export function resolveRacingColour(
 
 function hexToRgb(hex: string): [number, number, number] | null {
   let h = (hex || '').trim().replace(/^#/, '');
-  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  if (h.length === 3)
+    h = h
+      .split('')
+      .map((c) => c + c)
+      .join('');
   if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 }
@@ -48,8 +52,7 @@ export function nearestPaletteColour(hex: string): string {
   let min = Infinity;
   for (const c of TAIL_LIGHT_COLOURS) {
     const rgb = hexToRgb(c)!;
-    const d =
-      (target[0] - rgb[0]) ** 2 + (target[1] - rgb[1]) ** 2 + (target[2] - rgb[2]) ** 2;
+    const d = (target[0] - rgb[0]) ** 2 + (target[1] - rgb[1]) ** 2 + (target[2] - rgb[2]) ** 2;
     if (d < min) {
       min = d;
       nearest = c;
@@ -71,13 +74,15 @@ export async function setTaillightFromProfile(
   username: string
 ): Promise<{ raceColour: string; stopColour: string } | null> {
   try {
-    const data = await graphqlQuery<{ getRacerProfile: { highlightColour?: string | null } | null }>(
-      getRacerProfile,
-      { username }
-    );
+    const data = await graphqlQuery<{
+      getRacerProfile: { highlightColour?: string | null } | null;
+    }>(getRacerProfile, { username });
     const hex = data?.getRacerProfile?.highlightColour;
     const raceColour = nearestPaletteColour(resolveRacingColour(hex));
-    await graphqlQuery(carSetTaillightColor, { resourceIds: [carInstanceId], selectedColor: raceColour });
+    await graphqlQuery(carSetTaillightColor, {
+      resourceIds: [carInstanceId],
+      selectedColor: raceColour,
+    });
     return { raceColour, stopColour: STOP_COLOUR };
   } catch (err) {
     console.error('Failed to set taillight colour from profile:', err);
@@ -88,7 +93,10 @@ export async function setTaillightFromProfile(
 /** Set a specific hex colour on the car (used for the stop colour + reverts). */
 export async function setTaillightColour(carInstanceId: string, colour: string): Promise<void> {
   try {
-    await graphqlQuery(carSetTaillightColor, { resourceIds: [carInstanceId], selectedColor: colour });
+    await graphqlQuery(carSetTaillightColor, {
+      resourceIds: [carInstanceId],
+      selectedColor: colour,
+    });
   } catch (err) {
     console.error('Failed to set taillight colour:', err);
   }

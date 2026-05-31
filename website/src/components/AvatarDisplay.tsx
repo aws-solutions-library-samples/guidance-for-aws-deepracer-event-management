@@ -35,11 +35,7 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   }
 
   return (
-    <Avatar
-      avatarStyle={avatarStyle}
-      style={{ width: size, height: size }}
-      {...render.config}
-    />
+    <Avatar avatarStyle={avatarStyle} style={{ width: size, height: size }} {...render.config} />
   );
 };
 

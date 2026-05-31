@@ -406,7 +406,9 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
         type: 'menu-dropdown',
         text: user,
         iconSvg: (
-          <span style={{ display: 'inline-block', marginTop: '-8px', transform: 'translateX(-5px)' }}>
+          <span
+            style={{ display: 'inline-block', marginTop: '-8px', transform: 'translateX(-5px)' }}
+          >
             <AvatarDisplay avatarConfig={userAvatarConfig} size={24} />
           </span>
         ),

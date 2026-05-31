@@ -409,8 +409,12 @@ export const RacePage = ({
                     {taillightColourName && (
                       <span
                         style={{
-                          display: 'inline-block', width: 12, height: 12, borderRadius: '50%',
-                          marginLeft: 8, backgroundColor: taillightColourName,
+                          display: 'inline-block',
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          marginLeft: 8,
+                          backgroundColor: taillightColourName,
                           boxShadow: '0 0 0 1px rgba(0,0,0,0.3)',
                         }}
                         title={`Tail-light: ${taillightColourName}`}
@@ -430,16 +434,18 @@ export const RacePage = ({
                       setCurrentCar(car);
                       if (car?.InstanceId && raceInfo.username) {
                         const reqId = ++profileReqRef.current;
-                        setTaillightFromProfile(car.InstanceId, raceInfo.username).then((result) => {
-                          if (profileReqRef.current !== reqId) return; // superseded by a newer car-select
-                          if (result) {
-                            stopColourRef.current = result.stopColour;
-                            setTaillightColourName(result.raceColour);
-                          } else {
-                            stopColourRef.current = null;
-                            setTaillightColourName(null);
+                        setTaillightFromProfile(car.InstanceId, raceInfo.username).then(
+                          (result) => {
+                            if (profileReqRef.current !== reqId) return; // superseded by a newer car-select
+                            if (result) {
+                              stopColourRef.current = result.stopColour;
+                              setTaillightColourName(result.raceColour);
+                            } else {
+                              stopColourRef.current = null;
+                              setTaillightColourName(null);
+                            }
                           }
-                        });
+                        );
                       } else {
                         profileReqRef.current++; // invalidate any in-flight request
                         stopColourRef.current = null;
