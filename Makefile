@@ -25,7 +25,7 @@ domain_name_arg =
 endif
 
 ifdef disable_cw_rum
-cwrum_args = -c DISABLE_CW_RUM=true
+cwrum_args = -c DISABLE_CW_RUM=$(disable_cw_rum)
 else
 cwrum_args =
 endif
