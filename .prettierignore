@@ -1,3 +1,6 @@
+# Jinja2 templates (Prettier reformats block tags unsafely)
+lib/lambdas/pdf_api/templates/
+
 # Build outputs
 website/build
 website/reports

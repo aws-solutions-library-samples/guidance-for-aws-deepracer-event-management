@@ -1,28 +1,23 @@
-{# lib/lambdas/pdf_api/templates/racer_certificate.html #} {% extends "base.html" %} {% from "_components.html" import
-format_lap, avatar_silhouette %} {% block content %}
+{# lib/lambdas/pdf_api/templates/racer_certificate.html #}
+{% extends "base.html" %}
+{% from "_components.html" import format_lap, avatar_silhouette %}
+{% block content %}
 <style>
   /* Full-bleed page with no base footer so the certificate border can sit nicely. */
   @page {
     size: A4 landscape;
     margin: 10mm;
-    @bottom-left {
-      content: '';
-    }
-    @bottom-right {
-      content: '';
-    }
+    @bottom-left { content: ""; }
+    @bottom-right { content: ""; }
   }
   .cert-border {
     box-sizing: border-box;
     border: 3mm double var(--brand-accent);
     padding: 12mm 20mm;
-    height: 190mm; /* A4 landscape page height 210mm - 10mm*2 margins. */
+    height: 190mm;         /* A4 landscape page height 210mm - 10mm*2 margins. */
     text-align: center;
   }
-  .cert-logo {
-    height: 32mm;
-    margin-bottom: 2mm;
-  }
+  .cert-logo { height: 32mm; margin-bottom: 2mm; }
   /* Plain block container, no flex — flex sizing of <img> is unreliable in
      WeasyPrint 62.3 on the Lambda runtime (the image kept its intrinsic
      280px ≈ 74mm size and broke both the size and the margin: 0 auto
@@ -37,11 +32,7 @@ format_lap, avatar_silhouette %} {% block content %}
     overflow: hidden;
   }
   .cert-avatar svg,
-  .cert-avatar img {
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
+  .cert-avatar img { width: 100%; height: 100%; display: block; }
   .cert-title {
     font-size: 30pt;
     font-weight: 700;
@@ -50,29 +41,10 @@ format_lap, avatar_silhouette %} {% block content %}
     text-transform: uppercase;
     margin-bottom: 4mm;
   }
-  .cert-body {
-    font-size: 14pt;
-    color: var(--brand-text);
-    margin: 3mm 0;
-  }
-  .cert-name {
-    font-size: 28pt;
-    font-weight: 700;
-    color: var(--brand-primary);
-    margin: 4mm 0 1mm 0;
-  }
-  .cert-country {
-    font-size: 12pt;
-    color: var(--brand-muted);
-    margin: 0 0 4mm 0;
-    letter-spacing: 0.5px;
-  }
-  .cert-country .flag {
-    height: 5mm;
-    vertical-align: middle;
-    margin-right: 2mm;
-    border-radius: 0.5mm;
-  }
+  .cert-body { font-size: 14pt; color: var(--brand-text); margin: 3mm 0; }
+  .cert-name { font-size: 28pt; font-weight: 700; color: var(--brand-primary); margin: 4mm 0 1mm 0; }
+  .cert-country { font-size: 12pt; color: var(--brand-muted); margin: 0 0 4mm 0; letter-spacing: 0.5px; }
+  .cert-country .flag { height: 5mm; vertical-align: middle; margin-right: 2mm; border-radius: 0.5mm; }
   /* Table layout for stats — WeasyPrint 62.3's flexbox is unreliable for centered
      column flow, so use a table which always lays out correctly. */
   .cert-stats {
@@ -103,18 +75,18 @@ format_lap, avatar_silhouette %} {% block content %}
   }
 </style>
 
-<div class="cert-border" {% if racer.highlightColour %}style="border-color: {{ racer.highlightColour }};" {% endif %}>
-  <img class="cert-logo" src="{{ brand.logo_url }}" alt="logo" />
+<div class="cert-border" {% if racer.highlightColour %}style="border-color: {{ racer.highlightColour }};"{% endif %}>
+  <img class="cert-logo" src="{{ brand.logo_url }}" alt="logo">
   <div class="cert-title">Certificate of Achievement</div>
-  <div class="cert-avatar" {% if racer.highlightColour %}style="border-color: {{ racer.highlightColour }};" {% endif %}>
-    {% if racer.avatarUrl %}<img src="{{ racer.avatarUrl }}" alt="" />{% else %}{{ avatar_silhouette() }}{% endif %}
+  <div class="cert-avatar" {% if racer.highlightColour %}style="border-color: {{ racer.highlightColour }};"{% endif %}>
+    {% if racer.avatarUrl %}<img src="{{ racer.avatarUrl }}" alt="">{% else %}{{ avatar_silhouette() }}{% endif %}
   </div>
   <div class="cert-body">This certificate is proudly presented to</div>
   <div class="cert-name">{{ racer.username }}</div>
   {% if racer.countryCode %}
-  <div class="cert-country">
-    {% if racer.flagUrl %}<img class="flag" src="{{ racer.flagUrl }}" alt="" />{% endif %}{{ racer.countryCode }}
-  </div>
+    <div class="cert-country">
+      {% if racer.flagUrl %}<img class="flag" src="{{ racer.flagUrl }}" alt="">{% endif %}{{ racer.countryCode }}
+    </div>
   {% endif %}
   <div class="cert-body">
     for participation in <strong>{{ event.eventName }}</strong>
