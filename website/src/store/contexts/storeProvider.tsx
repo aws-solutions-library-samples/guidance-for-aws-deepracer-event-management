@@ -12,13 +12,19 @@ const defaultEvent = (t: TFunction): Partial<Event> & { eventName: string } => {
   return defEvent;
 };
 
-const selectedEventContext = createContext<(Partial<Event> & { eventName: string }) | undefined>(undefined);
+const selectedEventContext = createContext<(Partial<Event> & { eventName: string }) | undefined>(
+  undefined
+);
 export function useSelectedEventContext(): (Partial<Event> & { eventName: string }) | undefined {
   return useContext(selectedEventContext);
 }
 
-const selectedEventDispatch = createContext<((event: Partial<Event> & { eventName: string }) => void) | undefined>(undefined);
-export function useSelectedEventDispatch(): ((event: Partial<Event> & { eventName: string }) => void) | undefined {
+const selectedEventDispatch = createContext<
+  ((event: Partial<Event> & { eventName: string }) => void) | undefined
+>(undefined);
+export function useSelectedEventDispatch():
+  | ((event: Partial<Event> & { eventName: string }) => void)
+  | undefined {
   return useContext(selectedEventDispatch);
 }
 
@@ -40,7 +46,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = (props) => {
   const { t } = useTranslation();
 
   const [selectedEvent, setSelectedEvent] = useLocalStorage<Partial<Event> & { eventName: string }>(
-    'DREM-selected-event', 
+    'DREM-selected-event',
     defaultEvent(t)
   );
 

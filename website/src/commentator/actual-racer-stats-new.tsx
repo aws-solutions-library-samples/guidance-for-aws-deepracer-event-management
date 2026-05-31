@@ -21,7 +21,11 @@ interface ValueWithLabelProps {
 }
 
 // color values: text-status-info, text-label
-const ValueWithLabel: React.FC<ValueWithLabelProps> = ({ label, children, color = 'text-label' }) => (
+const ValueWithLabel: React.FC<ValueWithLabelProps> = ({
+  label,
+  children,
+  color = 'text-label',
+}) => (
   <div>
     <Box variant="h3">{label}</Box>
     <Box color={color as any} variant="h2">
@@ -69,7 +73,11 @@ interface ActualRacerStatsNewProps {
   raceFormat: string;
 }
 
-const ActualRacerStatsNew: React.FC<ActualRacerStatsNewProps> = ({ leaderboard, overlayInfo, raceFormat }) => {
+const ActualRacerStatsNew: React.FC<ActualRacerStatsNewProps> = ({
+  leaderboard,
+  overlayInfo,
+  raceFormat,
+}) => {
   const { t } = useTranslation();
   //const { actualRacer, leaderboard = [] } = props;
 

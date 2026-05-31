@@ -1,8 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('../admin/events/support-functions/raceConfig', () => ({
-  GetTrackTypeNameFromId: (id?: string | null) =>
-    id === '1' ? 'reInvent 2018' : undefined,
+  GetTrackTypeNameFromId: (id?: string | null) => (id === '1' ? 'reInvent 2018' : undefined),
 }));
 
 import { flattenRaceHistory } from './carRaceHistory';
@@ -16,7 +15,10 @@ const data = {
       managedInstanceId: 'mi-2',
       races: [
         {
-          raceId: 'r2', eventId: 'e2', trackId: '2', createdAt: '2026-03-10T00:00:00Z',
+          raceId: 'r2',
+          eventId: 'e2',
+          trackId: '2',
+          createdAt: '2026-03-10T00:00:00Z',
           laps: [{ lapId: 'l3', time: 11.0, resets: 0, isValid: true }],
         },
       ],
@@ -26,7 +28,10 @@ const data = {
       managedInstanceId: 'mi-1',
       races: [
         {
-          raceId: 'r1', eventId: 'e1', trackId: '1', createdAt: '2026-01-10T00:00:00Z',
+          raceId: 'r1',
+          eventId: 'e1',
+          trackId: '1',
+          createdAt: '2026-01-10T00:00:00Z',
           laps: [
             { lapId: 'l1', time: 12.5, resets: 1, isValid: true },
             { lapId: 'l2', time: 99.9, resets: 3, isValid: false },

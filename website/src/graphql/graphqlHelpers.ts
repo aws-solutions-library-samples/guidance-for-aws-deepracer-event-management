@@ -33,11 +33,11 @@ const client = generateClient();
  * const cars = response.listCars;
  */
 export async function graphqlQuery<T = any>(
-    query: string,
-    variables?: Record<string, any>
+  query: string,
+  variables?: Record<string, any>
 ): Promise<T> {
-    const result = (await client.graphql({ query, variables } as any)) as GraphQLResult<T>;
-    return result.data as T;
+  const result = (await client.graphql({ query, variables } as any)) as GraphQLResult<T>;
+  return result.data as T;
 }
 
 /**
@@ -48,31 +48,31 @@ export async function graphqlQuery<T = any>(
  * const response = await graphqlMutate<{ deleteFleets: string[] }>(deleteFleets, { fleetIds });
  */
 export async function graphqlMutate<T = any>(
-    query: string,
-    variables?: Record<string, any>,
-    options?: { authMode?: string }
+  query: string,
+  variables?: Record<string, any>,
+  options?: { authMode?: string }
 ): Promise<T> {
-    const params: any = { query, variables };
-    if (options?.authMode) {
-        params.authMode = options.authMode;
-    }
-    const result = (await client.graphql(params)) as GraphQLResult<T>;
-    return result.data as T;
+  const params: any = { query, variables };
+  if (options?.authMode) {
+    params.authMode = options.authMode;
+  }
+  const result = (await client.graphql(params)) as GraphQLResult<T>;
+  return result.data as T;
 }
 
 /** Subscription event shape — kept compatible with v5 consumers using event.value.data */
 export interface GraphQLSubscriptionEvent<T> {
-    value: {
-        data: T;
-    };
+  value: {
+    data: T;
+  };
 }
 
 /** Subscription observable returned by graphqlSubscribe */
 export interface GraphQLSubscription<T> {
-    subscribe(handlers: {
-        next: (event: GraphQLSubscriptionEvent<T>) => void;
-        error?: (error: any) => void;
-    }): { unsubscribe: () => void };
+  subscribe(handlers: {
+    next: (event: GraphQLSubscriptionEvent<T>) => void;
+    error?: (error: any) => void;
+  }): { unsubscribe: () => void };
 }
 
 /**
@@ -93,25 +93,25 @@ export interface GraphQLSubscription<T> {
  * // Later: sub.unsubscribe();
  */
 export function graphqlSubscribe<T = any>(
-    subscription: string,
-    variables?: Record<string, any>
+  subscription: string,
+  variables?: Record<string, any>
 ): GraphQLSubscription<T> {
-    const observable = client.graphql({ query: subscription, variables } as any) as any;
+  const observable = client.graphql({ query: subscription, variables } as any) as any;
 
-    return {
-        subscribe(handlers: {
-            next: (event: GraphQLSubscriptionEvent<T>) => void;
-            error?: (error: any) => void;
-        }) {
-            const sub = observable.subscribe({
-                next: (event: any) => {
-                    // v6 delivers { data } directly; wrap to v5-compatible { value: { data } }
-                    const data = event?.data ?? event?.value?.data;
-                    handlers.next({ value: { data } });
-                },
-                error: handlers.error,
-            });
-            return { unsubscribe: () => sub.unsubscribe() };
+  return {
+    subscribe(handlers: {
+      next: (event: GraphQLSubscriptionEvent<T>) => void;
+      error?: (error: any) => void;
+    }) {
+      const sub = observable.subscribe({
+        next: (event: any) => {
+          // v6 delivers { data } directly; wrap to v5-compatible { value: { data } }
+          const data = event?.data ?? event?.value?.data;
+          handlers.next({ value: { data } });
         },
-    };
+        error: handlers.error,
+      });
+      return { unsubscribe: () => sub.unsubscribe() };
+    },
+  };
 }

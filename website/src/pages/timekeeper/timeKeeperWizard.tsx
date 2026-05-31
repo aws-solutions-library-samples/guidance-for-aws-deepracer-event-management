@@ -49,7 +49,11 @@ import { RaceSetupPage } from './pages/raceSetupPageLite';
 import { getAverageWindows } from './support-functions/averageClaculations';
 import { buildRaceConfigFromEvent, defaultRace } from './support-functions/raceDomain';
 import { getRacerProfile } from '../../graphql/queries';
-import { resolveRacingColour, nearestPaletteColour, STOP_COLOUR } from './support-functions/tailLightColour';
+import {
+  resolveRacingColour,
+  nearestPaletteColour,
+  STOP_COLOUR,
+} from './support-functions/tailLightColour';
 
 const LocalTimekeeperWizard = () => {
   const { t } = useTranslation();
@@ -86,7 +90,9 @@ const LocalTimekeeperWizard = () => {
   const [startTime, setStartTime] = useState(undefined);
   const [racerHighlightColour, setRacerHighlightColour] = useState(null);
   const [colourOverride, setColourOverride] = useState(null);
-  const racingColour = nearestPaletteColour(resolveRacingColour(racerHighlightColour, colourOverride));
+  const racingColour = nearestPaletteColour(
+    resolveRacingColour(racerHighlightColour, colourOverride)
+  );
 
   // delete models from Cars
   async function carDeleteAllModels() {
@@ -302,7 +308,11 @@ const LocalTimekeeperWizard = () => {
       // car visibly shows "ready for this racer".
       // Fire on any forward move off the car-select step (Next, skip-to, or a
       // forward step-nav click) — but not when navigating backward.
-      if (activeStepIndex === 1 && detail.requestedStepIndex > activeStepIndex && selectedCars.length > 0) {
+      if (
+        activeStepIndex === 1 &&
+        detail.requestedStepIndex > activeStepIndex &&
+        selectedCars.length > 0
+      ) {
         const InstanceIds = selectedCars.map((c) => c.InstanceId);
         carsUpdateTaillightColor(InstanceIds, racingColour);
       }
@@ -385,11 +395,14 @@ const LocalTimekeeperWizard = () => {
     }, messageDisplayTime);
   };
 
-  const breadcrumbs = useMemo(() => [
-    { text: t('home.breadcrumb'), href: '/' },
-    { text: t('operator.breadcrumb'), href: '/admin/home' },
-    { text: t('topnav.time-keeper-wizard'), href: '/admin/timekeeper-wizard' },
-  ], [t]);
+  const breadcrumbs = useMemo(
+    () => [
+      { text: t('home.breadcrumb'), href: '/' },
+      { text: t('operator.breadcrumb'), href: '/admin/home' },
+      { text: t('topnav.time-keeper-wizard'), href: '/admin/timekeeper-wizard' },
+    ],
+    [t]
+  );
 
   // JSX
   return (

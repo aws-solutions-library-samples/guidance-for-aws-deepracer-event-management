@@ -77,11 +77,13 @@ const AdminFleets = (): JSX.Element => {
     <PageLayout
       helpPanelHidden={false}
       helpPanelContent={
-        <SimpleHelpPanelLayout
-          headerContent={t('header', { ns: 'help-admin-fleets' })}
-          bodyContent={t('content', { ns: 'help-admin-fleets' })}
-          footerContent={t('footer', { ns: 'help-admin-fleets' })}
-        /> as any
+        (
+          <SimpleHelpPanelLayout
+            headerContent={t('header', { ns: 'help-admin-fleets' })}
+            bodyContent={t('content', { ns: 'help-admin-fleets' })}
+            footerContent={t('footer', { ns: 'help-admin-fleets' })}
+          />
+        ) as any
       }
       header={t('fleets.header')}
       description={t('fleets.description')}
@@ -99,7 +101,7 @@ const AdminFleets = (): JSX.Element => {
             nrSelectedItems={selectedFleetsInTable.length}
             nrTotalItems={fleets.length}
             header={t('fleets.table-header')}
-            actions={<HeaderActionButtons /> as any}
+            actions={(<HeaderActionButtons />) as any}
           />
         }
         itemsIsLoading={isLoading}

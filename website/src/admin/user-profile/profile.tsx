@@ -63,7 +63,9 @@ const ProfileHome: React.FC<ProfileHomeProps> = (props) => {
     try {
       getCurrentAuthUser()
         .then(async (authUser) => {
-          const apiResponse = await graphqlMutate(mutations.deleteUser, { username: authUser.username });
+          const apiResponse = await graphqlMutate(mutations.deleteUser, {
+            username: authUser.username,
+          });
           console.debug(apiResponse);
           await authSignOut();
         })

@@ -70,7 +70,9 @@ function pickFastest(laps: Array<{ time: number; isValid: boolean }> | undefined
   return valid.reduce((min, lap) => (lap.time < min ? lap.time : min), Number.POSITIVE_INFINITY);
 }
 
-function pickLast(laps: Array<{ lapId: number; time: number; isValid: boolean }> | undefined): number | null {
+function pickLast(
+  laps: Array<{ lapId: number; time: number; isValid: boolean }> | undefined
+): number | null {
   if (!laps) return null;
   const valid = laps.filter((l) => l.isValid);
   if (valid.length === 0) return null;
@@ -78,10 +80,13 @@ function pickLast(laps: Array<{ lapId: number; time: number; isValid: boolean }>
 }
 
 function pickFastestAvg(
-  avgLaps: Array<{ avgTime: number; startLapId: number; endLapId: number }> | undefined,
+  avgLaps: Array<{ avgTime: number; startLapId: number; endLapId: number }> | undefined
 ): number | null {
   if (!avgLaps || avgLaps.length === 0) return null;
-  return avgLaps.reduce((min, lap) => (lap.avgTime < min ? lap.avgTime : min), Number.POSITIVE_INFINITY);
+  return avgLaps.reduce(
+    (min, lap) => (lap.avgTime < min ? lap.avgTime : min),
+    Number.POSITIVE_INFINITY
+  );
 }
 
 export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataArgs): OverlayData {
@@ -140,7 +145,10 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
 
     function fetchLeaderboard(applyConfig: boolean) {
       return (
-        client.graphql({ query: queries.getLeaderboard, variables: { eventId, trackId } }) as Promise<{
+        client.graphql({
+          query: queries.getLeaderboard,
+          variables: { eventId, trackId },
+        }) as Promise<{
           data: {
             getLeaderboard: {
               config?: { leaderBoardTitle: string; leaderBoardFooter?: string };
@@ -162,8 +170,13 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
     });
 
     const overlaySub = (
-      client.graphql({ query: subscriptions.onNewOverlayInfo, variables: { eventId, trackId } }) as {
-        subscribe: (handlers: { next: (msg: any) => void; error?: (err: any) => void }) => { unsubscribe: () => void };
+      client.graphql({
+        query: subscriptions.onNewOverlayInfo,
+        variables: { eventId, trackId },
+      }) as {
+        subscribe: (handlers: { next: (msg: any) => void; error?: (err: any) => void }) => {
+          unsubscribe: () => void;
+        };
       }
     ).subscribe({
       next: ({ data }) => {
@@ -210,9 +223,7 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
           setCurrentRacer((prev) => ({
             username: info.username,
             timeLeftMs:
-              shouldResyncTimer || !prev
-                ? info.timeLeftInMs ?? INITIAL_TIME_MS
-                : prev.timeLeftMs,
+              shouldResyncTimer || !prev ? (info.timeLeftInMs ?? INITIAL_TIME_MS) : prev.timeLeftMs,
             fastestLapMs: fastest,
             lastLapMs: last,
             avatarConfig: info.profile?.avatarConfig ?? null,
@@ -230,8 +241,13 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
     });
 
     const newEntrySub = (
-      client.graphql({ query: subscriptions.onNewLeaderboardEntry, variables: { eventId, trackId } }) as {
-        subscribe: (handlers: { next: (msg: any) => void; error?: (err: any) => void }) => { unsubscribe: () => void };
+      client.graphql({
+        query: subscriptions.onNewLeaderboardEntry,
+        variables: { eventId, trackId },
+      }) as {
+        subscribe: (handlers: { next: (msg: any) => void; error?: (err: any) => void }) => {
+          unsubscribe: () => void;
+        };
       }
     ).subscribe({
       next: ({ data }) => {
@@ -256,8 +272,13 @@ export function useOverlayData({ eventId, trackId, raceFormat }: UseOverlayDataA
     });
 
     const deleteEntrySub = (
-      client.graphql({ query: subscriptions.onDeleteLeaderboardEntry, variables: { eventId, trackId } }) as {
-        subscribe: (handlers: { next: () => void; error?: (err: any) => void }) => { unsubscribe: () => void };
+      client.graphql({
+        query: subscriptions.onDeleteLeaderboardEntry,
+        variables: { eventId, trackId },
+      }) as {
+        subscribe: (handlers: { next: () => void; error?: (err: any) => void }) => {
+          unsubscribe: () => void;
+        };
       }
     ).subscribe({
       next: () => {

@@ -6,13 +6,7 @@ import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { DockerImage } from 'aws-cdk-lib';
-import {
-  CodeFirstSchema,
-  Directive,
-  GraphqlType,
-  ObjectType,
-  ResolvableField,
-} from 'awscdk-appsync-utils';
+import { CodeFirstSchema, Directive, GraphqlType, ObjectType, ResolvableField } from 'awscdk-appsync-utils';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
@@ -99,10 +93,7 @@ export class Statistics extends NestedStack {
       bundling: {
         image: props.lambdaConfig.bundlingImage,
       },
-      layers: [
-        props.lambdaConfig.layersConfig.helperFunctionsLayer,
-        props.lambdaConfig.layersConfig.powerToolsLayer,
-      ],
+      layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
       environment: {
         STATS_TABLE: statsTable.tableName,
         RACE_TABLE: props.raceTable.tableName,
@@ -144,10 +135,7 @@ export class Statistics extends NestedStack {
       bundling: {
         image: props.lambdaConfig.bundlingImage,
       },
-      layers: [
-        props.lambdaConfig.layersConfig.helperFunctionsLayer,
-        props.lambdaConfig.layersConfig.powerToolsLayer,
-      ],
+      layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
       environment: {
         STATS_TABLE: statsTable.tableName,
         POWERTOOLS_SERVICE_NAME: 'stats_api',

@@ -15,7 +15,7 @@ const configureStore = (): void => {
   const actions = {
     SET_USER_PROFILE: (
       curState: GlobalState,
-      patch: Partial<UserProfileState>,
+      patch: Partial<UserProfileState>
     ): Partial<GlobalState> => {
       const current = curState.userProfile ?? { avatarConfig: null, highlightColour: null };
       return { userProfile: { ...current, ...patch } };

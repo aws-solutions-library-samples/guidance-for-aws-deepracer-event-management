@@ -170,7 +170,8 @@ export const ColumnConfiguration = (
       {
         id: 'raceNumberOfResets',
         header: i18next.t('events.race.resets-per-lap'),
-        cell: (item: Event) => GetRaceResetsNameFromId(item.raceConfig?.numberOfResetsPerLap) || '-',
+        cell: (item: Event) =>
+          GetRaceResetsNameFromId(item.raceConfig?.numberOfResetsPerLap) || '-',
         sortingField: 'raceNumberOfResets',
       },
       {
@@ -199,20 +200,19 @@ export const ColumnConfiguration = (
       {
         id: 'eventLandingPageLink',
         header: i18next.t('events.landing-page-link'),
-        cell: (item: Event) =>
-          (
-            <EventLinksButtons
-              href={`${window.location.origin}/leaderboard/landing-page/${item.eventId.toString()}/`}
-              linkTextPrimary={i18next.t('events.link-same-tab')}
-              linkTextExternal={i18next.t('events.link-new-tab')}
-            />
-          ),
+        cell: (item: Event) => (
+          <EventLinksButtons
+            href={`${window.location.origin}/leaderboard/landing-page/${item.eventId.toString()}/`}
+            linkTextPrimary={i18next.t('events.link-same-tab')}
+            linkTextExternal={i18next.t('events.link-new-tab')}
+          />
+        ),
       },
     ],
-    defaultSortingColumn: null as any,  // Will be set below
+    defaultSortingColumn: null as any, // Will be set below
     defaultSortingIsDescending: true,
   };
-  returnObject.defaultSortingColumn = returnObject.columnDefinitions[1];  // eventDate
+  returnObject.defaultSortingColumn = returnObject.columnDefinitions[1]; // eventDate
 
   return returnObject as TableConfiguration;
 };

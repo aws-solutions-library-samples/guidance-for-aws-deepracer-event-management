@@ -28,7 +28,11 @@ export const TailLightColourControl: React.FC<TailLightColourControlProps> = ({
 }) => {
   const { t } = useTranslation();
   const racingColour = resolveRacingColour(racerHighlightColour, override);
-  const source = override ? t('timekeeper.taillight.source-override') : racerHighlightColour ? t('timekeeper.taillight.source-racer') : t('timekeeper.taillight.source-default');
+  const source = override
+    ? t('timekeeper.taillight.source-override')
+    : racerHighlightColour
+      ? t('timekeeper.taillight.source-racer')
+      : t('timekeeper.taillight.source-default');
   return (
     <FormField
       label={t('timekeeper.taillight.label')}

@@ -12,11 +12,11 @@ interface DeleteModelModalProps {
   variant?: 'normal' | 'primary' | 'link' | 'icon';
 }
 
-export const DeleteModelModal: React.FC<DeleteModelModalProps> = ({ 
-  disabled, 
-  selectedModels, 
-  onDelete, 
-  variant 
+export const DeleteModelModal: React.FC<DeleteModelModalProps> = ({
+  disabled,
+  selectedModels,
+  onDelete,
+  variant,
 }) => {
   const { t } = useTranslation();
   const [, dispatch] = useStore();
@@ -77,7 +77,9 @@ const ItemsList: React.FC<ItemsListProps> = ({ items }) => {
   return (
     <ul>
       {items.map((item: any) => (
-        <li key={item.fileMetaData?.key || item.modelKey}>{item.fileMetaData?.filename || item.modelName}</li>
+        <li key={item.fileMetaData?.key || item.modelKey}>
+          {item.fileMetaData?.filename || item.modelName}
+        </li>
       ))}
     </ul>
   );

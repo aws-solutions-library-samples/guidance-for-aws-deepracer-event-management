@@ -28,7 +28,7 @@ describe('Leaderboard', () => {
         eventName="Test Event"
         labels={labels}
         visible
-      />,
+      />
     );
     expect(screen.getByText('speed')).toBeInTheDocument();
     expect(screen.getByText('08.324')).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe('Leaderboard', () => {
         eventName="Test Event"
         labels={labels}
         visible
-      />,
+      />
     );
     expect(screen.getByText('speed')).toBeInTheDocument();
     expect(screen.getByText('turbo')).toBeInTheDocument();
@@ -64,7 +64,7 @@ describe('Leaderboard', () => {
         eventName="Test Event"
         labels={labels}
         visible
-      />,
+      />
     );
     expect(screen.getByText('+00.406')).toBeInTheDocument(); // 8730 - 8324
     expect(screen.getByText('+00.661')).toBeInTheDocument(); // 8985 - 8324
@@ -80,7 +80,7 @@ describe('Leaderboard', () => {
         eventName="Test Event"
         labels={labels}
         visible
-      />,
+      />
     );
     expect(screen.queryByText('+00.406')).toBeNull();
   });
@@ -88,13 +88,15 @@ describe('Leaderboard', () => {
   test('renders fastestAverageLap.avgTime in average format', () => {
     render(
       <Leaderboard
-        entries={[{ username: 'avg', fastestAverageLap: { avgTime: 9500, startLapId: 1, endLapId: 3 } }]}
+        entries={[
+          { username: 'avg', fastestAverageLap: { avgTime: 9500, startLapId: 1, endLapId: 3 } },
+        ]}
         raceFormat="average"
         gapToLeader={false}
         eventName="Test Event"
         labels={labels}
         visible
-      />,
+      />
     );
     expect(screen.getByText('09.500')).toBeInTheDocument();
   });
@@ -108,7 +110,7 @@ describe('Leaderboard', () => {
         eventName="Test Event"
         labels={labels}
         visible
-      />,
+      />
     );
     expect(screen.getByText('DNF')).toBeInTheDocument();
   });
@@ -122,7 +124,7 @@ describe('Leaderboard', () => {
         eventName="My Cool Event"
         labels={labels}
         visible
-      />,
+      />
     );
     expect(screen.getByText('My Cool Event')).toBeInTheDocument();
     expect(screen.getByText('P1')).toBeInTheDocument();
@@ -140,7 +142,7 @@ describe('Leaderboard', () => {
         raceName="AWS LONDON SUMMIT 2023"
         labels={labels}
         visible
-      />,
+      />
     );
     // raceName takes priority over labels.footer when set.
     expect(screen.getByText('AWS LONDON SUMMIT 2023')).toBeInTheDocument();
@@ -167,16 +169,16 @@ describe('Leaderboard', () => {
         highlightedUsername="finisher"
         labels={labels}
         visible
-      />,
+      />
     );
     // Window centred on rank 6 (index 5): start = 5 - 2 = 3 → ranks 4..7
     expect(screen.queryByText('speed')).toBeNull(); // rank 1 — out
     expect(screen.queryByText('turbo')).toBeNull(); // rank 2 — out
-    expect(screen.queryByText('doom')).toBeNull();  // rank 3 — out
-    expect(screen.getByText('dbro')).toBeInTheDocument();    // rank 4
-    expect(screen.getByText('eve')).toBeInTheDocument();     // rank 5
+    expect(screen.queryByText('doom')).toBeNull(); // rank 3 — out
+    expect(screen.getByText('dbro')).toBeInTheDocument(); // rank 4
+    expect(screen.getByText('eve')).toBeInTheDocument(); // rank 5
     expect(screen.getByText('finisher')).toBeInTheDocument(); // rank 6 (row 3)
-    expect(screen.getByText('gail')).toBeInTheDocument();    // rank 7
+    expect(screen.getByText('gail')).toBeInTheDocument(); // rank 7
     expect(screen.queryByText('hank')).toBeNull(); // rank 8 — out
     // Neighbourhood view uses #N rank labels, not P1/P2/...
     expect(screen.getByText('#4')).toBeInTheDocument();
@@ -204,7 +206,7 @@ describe('Leaderboard', () => {
         highlightedUsername="tailender"
         labels={labels}
         visible
-      />,
+      />
     );
     // Without clamping, window would start at 6-2=4 (ranks 5/6/empty/empty).
     // With clamping, window starts at 6-4=2 → ranks 3..6, tailender in row 4.
@@ -228,7 +230,7 @@ describe('Leaderboard', () => {
         highlightedUsername="doom" // rank 3 — already visible
         labels={labels}
         visible
-      />,
+      />
     );
     // All four still rendered with standard labels.
     expect(screen.getByText('speed')).toBeInTheDocument();
@@ -245,7 +247,7 @@ describe('Leaderboard', () => {
         eventName="Test"
         labels={labels}
         visible
-      />,
+      />
     );
     const root = container.firstElementChild as HTMLElement;
     expect(root.className).toMatch(/visible/);
@@ -258,7 +260,7 @@ describe('Leaderboard', () => {
         eventName="Test"
         labels={labels}
         visible={false}
-      />,
+      />
     );
     expect(root.className).not.toMatch(/visible/);
   });

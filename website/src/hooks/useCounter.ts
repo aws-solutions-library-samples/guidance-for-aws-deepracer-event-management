@@ -7,7 +7,7 @@ type UseCounterReturn = [
   number, // counterValue
   () => void, // increaseCounter
   () => void, // decreaseCounter
-  (initValue?: number) => void // resetCounter
+  (initValue?: number) => void, // resetCounter
 ];
 
 /**

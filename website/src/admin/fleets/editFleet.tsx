@@ -21,7 +21,7 @@ export const EditFleet = (): JSX.Element => {
   const selectedFleet = location.state as FleetConfig | undefined;
   const navigate = useNavigate();
   const [state, dispatch] = useStore();
-  
+
   const mutationResult = useMutation();
   const send = mutationResult[0] as (method: string, payload: any) => Promise<void>;
   const isLoading = mutationResult[1] as boolean;
@@ -113,10 +113,10 @@ export const EditFleet = (): JSX.Element => {
               onFormIsValid={formIsValidHandler}
               onFormIsInvalid={formIsInvalidHandler}
             />
-            <DevicesPanel 
-              onChange={updateConfigHandler} 
-              fleetName={fleetConfig.fleetName || ''} 
-              fleetId={fleetConfig.fleetId || ''} 
+            <DevicesPanel
+              onChange={updateConfigHandler}
+              fleetName={fleetConfig.fleetName || ''}
+              fleetId={fleetConfig.fleetId || ''}
             />
           </SpaceBetween>
         </Form>

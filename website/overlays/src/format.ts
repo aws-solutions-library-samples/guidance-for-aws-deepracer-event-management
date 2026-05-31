@@ -55,7 +55,7 @@ export function GetFormattedTotalTime(timeInMS: number): string {
 
 export function GetLeaderboardDataSorted<T extends LeaderboardEntry>(
   entries: T[],
-  raceFormat: string,
+  raceFormat: string
 ): T[] {
   const sorted = [...entries];
   if (raceFormat === 'average') {

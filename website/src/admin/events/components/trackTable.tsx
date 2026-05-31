@@ -113,7 +113,7 @@ export const TrackTable: React.FC<TrackTableProps> = ({ eventId, tracks, raceFor
   ];
 
   console.info(tableItems);
-  
+
   return (
     <Table
       header={<Header variant="h3">Leaderboards</Header>}

@@ -25,7 +25,9 @@ const FollowFooter = ({
           <div>{text}</div>
           <div className={styles.qrCodeDiv}>
             {' '}
-            {qrCodeVisible === 'footer' && <QrCode eventId={eventId} trackId={trackId} raceFormat={raceFormat} />}{' '}
+            {qrCodeVisible === 'footer' && (
+              <QrCode eventId={eventId} trackId={trackId} raceFormat={raceFormat} />
+            )}{' '}
           </div>
         </div>
       )}

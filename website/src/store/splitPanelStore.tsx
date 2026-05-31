@@ -18,7 +18,10 @@ const configureStore = (): void => {
       updatedSplitPanel.isOpen = isOpen;
       return { splitPanel: updatedSplitPanel };
     },
-    UPDATE_SPLIT_PANEL: (curState: GlobalState, settings: SplitPanelState): Partial<GlobalState> => {
+    UPDATE_SPLIT_PANEL: (
+      curState: GlobalState,
+      settings: SplitPanelState
+    ): Partial<GlobalState> => {
       console.debug('UPDATE_SPLIT_PANEL DISPATCH FUNCTION');
       return { splitPanel: settings };
     },

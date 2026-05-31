@@ -7,7 +7,7 @@
 - ✅ Zero TypeScript compilation errors
 - ✅ 100% test pass rate (40/40 tests)
 - ✅ Production build working
-- ⚠️  13 files remaining with `@ts-nocheck`
+- ⚠️ 13 files remaining with `@ts-nocheck`
 
 ---
 
@@ -16,15 +16,18 @@
 This directory contains three comprehensive guides for the TypeScript migration:
 
 ### 1. 📘 [TYPESCRIPT_MIGRATION_STATUS.md](./TYPESCRIPT_MIGRATION_STATUS.md) (13 KB)
+
 **Purpose:** Main migration roadmap and reference guide
 
 **Use this when:**
+
 - Starting to work on TypeScript migration
 - Need to understand what's left to do
 - Want to see effort estimates
 - Looking for file-specific requirements
 
 **Contains:**
+
 - Complete migration status and metrics
 - Detailed breakdown of all 13 remaining files
 - Specific typing requirements for each component
@@ -38,15 +41,18 @@ This directory contains three comprehensive guides for the TypeScript migration:
 ---
 
 ### 2. 🔍 [TYPESCRIPT_QUICK_REFERENCE.md](./TYPESCRIPT_QUICK_REFERENCE.md) (12 KB)
+
 **Purpose:** Quick reference for common TypeScript patterns
 
 **Use this when:**
+
 - Writing TypeScript code
 - Need a code example
 - Want to know how to type something
 - Encountering a type error
 
 **Contains:**
+
 - 10 common TypeScript patterns with examples
 - React component prop typing
 - useState hook typing patterns
@@ -64,15 +70,18 @@ This directory contains three comprehensive guides for the TypeScript migration:
 ---
 
 ### 3. ✅ [TYPESCRIPT_MIGRATION_CHECKLIST.md](./TYPESCRIPT_MIGRATION_CHECKLIST.md) (9 KB)
+
 **Purpose:** Step-by-step checklist for migrating files
 
 **Use this when:**
+
 - Actually migrating a file from JavaScript to TypeScript
 - Removing `@ts-nocheck` from a file
 - Want to ensure you don't miss any steps
 - Need a quality checklist
 
 **Contains:**
+
 - Pre-migration preparation checklist
 - 4-phase migration process with checkboxes
   - Phase 1: Analysis (30 min)
@@ -104,19 +113,20 @@ This directory contains three comprehensive guides for the TypeScript migration:
 
 ### Migration Metrics
 
-| Metric | Value | Status |
-|--------|-------|--------|
-| Total TypeScript Files | 162 | - |
-| Fully Typed Files | 149 | ✅ 92% |
-| Files with @ts-nocheck | 13 | ⚠️ 8% |
-| TypeScript Compilation Errors | 0 | ✅ |
-| Test Pass Rate | 40/40 (100%) | ✅ |
-| Production Build | Success | ✅ |
-| ESLint Status | Working | ✅ |
+| Metric                        | Value        | Status |
+| ----------------------------- | ------------ | ------ |
+| Total TypeScript Files        | 162          | -      |
+| Fully Typed Files             | 149          | ✅ 92% |
+| Files with @ts-nocheck        | 13           | ⚠️ 8%  |
+| TypeScript Compilation Errors | 0            | ✅     |
+| Test Pass Rate                | 40/40 (100%) | ✅     |
+| Production Build              | Success      | ✅     |
+| ESLint Status                 | Working      | ✅     |
 
 ### What's Complete
 
 ✅ **Core Infrastructure**
+
 - tsconfig.json configured with strict mode
 - All .js/.jsx files renamed to .ts/.tsx
 - All @types packages installed
@@ -124,12 +134,14 @@ This directory contains three comprehensive guides for the TypeScript migration:
 - Build process integrated
 
 ✅ **Type Definitions**
+
 - Domain models (`src/types/domain.ts`)
 - API response types (`src/types/api.ts`)
 - GraphQL types (`src/types/graphql.ts`)
 - Utility type helpers
 
 ✅ **Application Code**
+
 - All utility functions (`src/support-functions/`)
 - All test files (4 test files, 40 tests)
 - 149 React components fully typed
@@ -143,29 +155,20 @@ This directory contains three comprehensive guides for the TypeScript migration:
 ### 13 Files with @ts-nocheck (8% of codebase)
 
 **Tier 1: Easier** (3 files, 10-12 hours)
+
 1. `deviceTableConfig.tsx` (416 lines, 3-4 hours)
 2. `topNav.tsx` (421 lines, 3-4 hours)
 3. `commentator-stats.tsx` (254 lines, 3-4 hours)
 
-**Tier 2: Medium** (2 files, 7-9 hours)
-4. `uploadModelsToCar.tsx` (263 lines, 3-4 hours)
-5. `useCarsApi.ts` (467 lines, 4-5 hours)
+**Tier 2: Medium** (2 files, 7-9 hours) 4. `uploadModelsToCar.tsx` (263 lines, 3-4 hours) 5. `useCarsApi.ts` (467 lines, 4-5 hours)
 
-**Tier 3: Medium-Hard** (2 files, 8-10 hours)
-6. `editCarsModal.tsx` (360 lines, 4-5 hours)
-7. `uploadToCarStatus.tsx` (440 lines, 4-5 hours)
+**Tier 3: Medium-Hard** (2 files, 8-10 hours) 6. `editCarsModal.tsx` (360 lines, 4-5 hours) 7. `uploadToCarStatus.tsx` (440 lines, 4-5 hours)
 
-**Tier 4: Hard** (4 files, 19-22 hours)
-8. `carLogsManagement.tsx` (336 lines, 4-5 hours)
-9. `racePageLite.tsx` (459 lines, 5-6 hours)
-10. `racePage.tsx` (473 lines, 5-6 hours)
-11. `timeKeeperWizard.tsx` (518 lines, 5-6 hours)
+**Tier 4: Hard** (4 files, 19-22 hours) 8. `carLogsManagement.tsx` (336 lines, 4-5 hours) 9. `racePageLite.tsx` (459 lines, 5-6 hours) 10. `racePage.tsx` (473 lines, 5-6 hours) 11. `timeKeeperWizard.tsx` (518 lines, 5-6 hours)
 
-**Tier 5: Hardest** (1 file, 8-10 hours)
-12. `carModelUploadModal.tsx` (804 lines, 8-10 hours)
+**Tier 5: Hardest** (1 file, 8-10 hours) 12. `carModelUploadModal.tsx` (804 lines, 8-10 hours)
 
-**Optional:**
-13. `metricCalculations.test.ts` (604 lines, 1-2 hours) - Test file can keep @ts-nocheck
+**Optional:** 13. `metricCalculations.test.ts` (604 lines, 1-2 hours) - Test file can keep @ts-nocheck
 
 **Total Estimated Effort:** 48-58 hours
 
@@ -209,6 +212,7 @@ This directory contains three comprehensive guides for the TypeScript migration:
 ## 🛠️ Development Commands
 
 ### TypeScript Verification
+
 ```bash
 # Check TypeScript compilation (must show 0 errors)
 npx tsc --noEmit
@@ -218,6 +222,7 @@ find src -type f \( -name "*.ts" -o -name "*.tsx" \) | xargs grep -l "@ts-nochec
 ```
 
 ### Testing
+
 ```bash
 # Run all tests
 npm test
@@ -230,6 +235,7 @@ npm test -- path/to/test.test.ts
 ```
 
 ### Linting
+
 ```bash
 # Run ESLint
 npx eslint --ext .ts,.tsx src/
@@ -239,6 +245,7 @@ npx eslint --ext .ts,.tsx src/ --fix
 ```
 
 ### Building
+
 ```bash
 # Development build
 npm start
@@ -269,6 +276,7 @@ import { GraphQLOperation } from '../types/graphql';
 ### Core Domain Types
 
 **Key interfaces available:**
+
 - `Event` - Event information
 - `Track` - Track details
 - `Race` - Race data
@@ -286,21 +294,27 @@ import { GraphQLOperation } from '../types/graphql';
 ## ❓ Common Questions
 
 ### Q: How do I type a GraphQL subscription?
+
 **A:** See [TYPESCRIPT_QUICK_REFERENCE.md](./TYPESCRIPT_QUICK_REFERENCE.md#5-graphql-subscriptions) - Pattern #5
 
 ### Q: How do I type useState with a complex object?
+
 **A:** See [TYPESCRIPT_QUICK_REFERENCE.md](./TYPESCRIPT_QUICK_REFERENCE.md#2-usestate-hook) - Pattern #2
 
 ### Q: What if I get "implicit any" errors?
+
 **A:** See [TYPESCRIPT_QUICK_REFERENCE.md](./TYPESCRIPT_QUICK_REFERENCE.md#common-issues-and-solutions) - Common Issues section
 
 ### Q: How do I type Cloudscape components?
+
 **A:** See [TYPESCRIPT_QUICK_REFERENCE.md](./TYPESCRIPT_QUICK_REFERENCE.md#6-cloudscape-components) - Pattern #6
 
 ### Q: Which file should I migrate first?
+
 **A:** Start with `deviceTableConfig.tsx` or `topNav.tsx` (Tier 1, easier)
 
 ### Q: Can I skip the test file migration?
+
 **A:** Yes, `metricCalculations.test.ts` can optionally keep `@ts-nocheck`
 
 ---
@@ -308,16 +322,19 @@ import { GraphQLOperation } from '../types/graphql';
 ## 🎓 Learning Resources
 
 ### TypeScript Documentation
+
 - **Official Handbook:** https://www.typescriptlang.org/docs/handbook/intro.html
 - **React TypeScript Cheatsheet:** https://react-typescript-cheatsheet.netlify.app/
 - **TypeScript Deep Dive:** https://basarat.gitbook.io/typescript/
 
 ### Library-Specific
+
 - **Cloudscape Design TypeScript:** https://cloudscape.design/get-started/guides/typescript/
 - **AWS Amplify TypeScript:** https://docs.amplify.aws/lib/graphqlapi/typescript-support/q/platform/js/
 - **React TypeScript:** https://react-typescript-cheatsheet.netlify.app/docs/basic/getting-started/hooks
 
 ### Project-Specific
+
 - **Type Definitions:** `src/types/`
 - **Existing Typed Components:** Browse `src/` for examples
 - **Test Examples:** `src/**/*.test.ts`
@@ -347,6 +364,7 @@ A file is considered "fully typed" when:
 ### How to track your progress:
 
 1. **Before starting:** Note the current `@ts-nocheck` count
+
    ```bash
    find src -type f \( -name "*.ts" -o -name "*.tsx" \) | xargs grep -l "@ts-nocheck" | wc -l
    ```

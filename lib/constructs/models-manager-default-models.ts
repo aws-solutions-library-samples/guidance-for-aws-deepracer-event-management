@@ -64,14 +64,17 @@ export class ModelsManagerDefaultModelsDeployment extends NestedStack {
       },
       {
         id: 'AwsSolutions-IAM5',
-        reason:
-          'BucketDeployment custom resource Lambda requires wildcard S3 permissions; managed by CDK.',
-        appliesTo: ['Action::s3:GetObject*', 'Action::s3:GetBucket*', 'Action::s3:List*', { regex: '/^Resource::arn:aws:s3:::cdk-.*/' }],
+        reason: 'BucketDeployment custom resource Lambda requires wildcard S3 permissions; managed by CDK.',
+        appliesTo: [
+          'Action::s3:GetObject*',
+          'Action::s3:GetBucket*',
+          'Action::s3:List*',
+          { regex: '/^Resource::arn:aws:s3:::cdk-.*/' },
+        ],
       },
       {
         id: 'AwsSolutions-L1',
-        reason:
-          'BucketDeployment custom resource Lambda runtime is managed by CDK and cannot be configured.',
+        reason: 'BucketDeployment custom resource Lambda runtime is managed by CDK and cannot be configured.',
       },
     ]);
   }

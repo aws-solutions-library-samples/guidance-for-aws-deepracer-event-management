@@ -5,24 +5,25 @@ import { initReactI18next } from 'react-i18next';
 
 const isProduction = import.meta.env.PROD;
 
-i18n.use(Backend)
-    .use(LanguageDetector)
-    .use(initReactI18next)
-    .init({
-        debug: !isProduction,
-        // lng: 'de', // testing
-        fallbackLng: {
-            'en-US': ['en'],
-            'en-GB': ['en'],
-            default: ['en'],
-        },
-        interpolation: {
-            escapeValue: false,
-        },
+i18n
+  .use(Backend)
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    debug: !isProduction,
+    // lng: 'de', // testing
+    fallbackLng: {
+      'en-US': ['en'],
+      'en-GB': ['en'],
+      default: ['en'],
+    },
+    interpolation: {
+      escapeValue: false,
+    },
 
-        backend: {
-            loadPath: '/locales/{{lng}}/{{ns}}.json',
-        },
-    });
+    backend: {
+      loadPath: '/locales/{{lng}}/{{ns}}.json',
+    },
+  });
 
 export default i18n;

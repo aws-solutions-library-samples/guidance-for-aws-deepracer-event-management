@@ -154,7 +154,7 @@ export const RaceConfigPanel: React.FC<RaceConfigPanelProps> = ({ raceConfig, on
   const resetOptions = ResetConfig();
   const trackOptions = TrackTypeConfig();
   const { t } = useTranslation();
-  
+
   const UpdateConfig = useCallback(
     (attr: Partial<RaceConfig>) => {
       const updatePayload = { raceConfig: { ...raceConfig, ...attr } };
@@ -163,7 +163,7 @@ export const RaceConfigPanel: React.FC<RaceConfigPanelProps> = ({ raceConfig, on
     },
     [raceConfig, onChange]
   );
-  
+
   const [raceCustomizationsFooter, setRaceCustomizationsFooter] = useState<React.ReactNode>(
     <DefaultRacingFooter
       numberOfResetsPerLap={raceConfig.numberOfResetsPerLap}

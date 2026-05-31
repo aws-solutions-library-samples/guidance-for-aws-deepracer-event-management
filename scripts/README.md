@@ -108,12 +108,12 @@ When importing users (`--skip-users` not set):
 
 When user mapping is active, these fields are rewritten during import:
 
-| Table | Fields remapped |
-|-------|----------------|
-| Races | `userId`, `sk` (contains `USER#{userId}`) |
-| Leaderboard | `userId`, `sk` (contains `{trackId}#{userId}`) |
-| Events | `createdBy` |
-| Fleets | `createdBy` |
+| Table        | Fields remapped                                                          |
+| ------------ | ------------------------------------------------------------------------ |
+| Races        | `userId`, `sk` (contains `USER#{userId}`)                                |
+| Leaderboard  | `userId`, `sk` (contains `{trackId}#{userId}`)                           |
+| Events       | `createdBy`                                                              |
+| Fleets       | `createdBy`                                                              |
 | RacerProfile | _none — keyed by `username`, which Cognito preserves on user recreation_ |
 
 ## Rebuild Statistics
@@ -160,15 +160,15 @@ Use `--stack <label>` to override the label from `build.config` (e.g., `--stack 
 
 ## Data scope
 
-| Source | Exported | Imported | Notes |
-|--------|----------|----------|-------|
-| Events | Yes | Yes | Core event config, tracks, race config |
-| Races | Yes | Yes | Race records with laps and averageLaps |
-| Leaderboard | Yes | Yes | Pre-computed; also recomputable from races |
-| Fleets | Yes | Yes | Fleet-to-car mappings |
-| Landing pages | Yes | Yes | Per-event landing page links |
-| Cognito users | Yes | Yes | With group memberships; passwords not transferable |
-| Statistics | No | No | Derived — use `drem_rebuild_stats.py` after import |
-| Car status | No | No | Device-specific, not transferable |
-| Models | No | No | S3 refs won't transfer between accounts |
-| Car log assets | No | No | S3 refs won't transfer |
+| Source         | Exported | Imported | Notes                                              |
+| -------------- | -------- | -------- | -------------------------------------------------- |
+| Events         | Yes      | Yes      | Core event config, tracks, race config             |
+| Races          | Yes      | Yes      | Race records with laps and averageLaps             |
+| Leaderboard    | Yes      | Yes      | Pre-computed; also recomputable from races         |
+| Fleets         | Yes      | Yes      | Fleet-to-car mappings                              |
+| Landing pages  | Yes      | Yes      | Per-event landing page links                       |
+| Cognito users  | Yes      | Yes      | With group memberships; passwords not transferable |
+| Statistics     | No       | No       | Derived — use `drem_rebuild_stats.py` after import |
+| Car status     | No       | No       | Device-specific, not transferable                  |
+| Models         | No       | No       | S3 refs won't transfer between accounts            |
+| Car log assets | No       | No       | S3 refs won't transfer                             |

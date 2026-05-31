@@ -34,14 +34,14 @@ const makeStack = () => {
 
 describe('RacerProfile construct', () => {
   let template: Template;
-  beforeAll(() => { template = makeStack(); });
+  beforeAll(() => {
+    template = makeStack();
+  });
 
   test('creates a DynamoDB table keyed by username', () => {
     template.hasResourceProperties('AWS::DynamoDB::Table', {
       KeySchema: [{ AttributeName: 'username', KeyType: 'HASH' }],
-      AttributeDefinitions: Match.arrayWith([
-        { AttributeName: 'username', AttributeType: 'S' },
-      ]),
+      AttributeDefinitions: Match.arrayWith([{ AttributeName: 'username', AttributeType: 'S' }]),
       PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true },
     });
   });

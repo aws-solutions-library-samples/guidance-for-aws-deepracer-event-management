@@ -78,9 +78,7 @@ const RaceAdmin = (): JSX.Element => {
     const selectPanelContent = (selectedItems: Race[]) => {
       if (selectedItems.length === 0) {
         return (
-          <DrSplitPanel header="0 races selected">
-            {t('race-admin.select-a-race')}
-          </DrSplitPanel>
+          <DrSplitPanel header="0 races selected">{t('race-admin.select-a-race')}</DrSplitPanel>
         );
       } else if (selectedItems.length === 1) {
         return (
@@ -114,7 +112,9 @@ const RaceAdmin = (): JSX.Element => {
   }, [SelectedRacesInTable, dispatch, t]);
 
   const getExportFilename = (suffix: string) => {
-    const eventSlug = (selectedEvent?.eventName || 'races').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+    const eventSlug = (selectedEvent?.eventName || 'races')
+      .replace(/[^a-zA-Z0-9]/g, '-')
+      .toLowerCase();
     const date = new Date().toISOString().slice(0, 10);
     return `${eventSlug}-${suffix}-${date}.csv`;
   };
@@ -184,7 +184,7 @@ const RaceAdmin = (): JSX.Element => {
             nrSelectedItems={SelectedRacesInTable.length}
             nrTotalItems={races.length}
             header={t('race-admin.races-table-header')}
-            actions={<HeaderActionButtons /> as any}
+            actions={(<HeaderActionButtons />) as any}
           />
         }
         itemsIsLoading={isLoading || usersIsLoading}

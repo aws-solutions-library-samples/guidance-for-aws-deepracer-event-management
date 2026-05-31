@@ -151,7 +151,8 @@ export const ColumnConfigurationOperator = (): ColumnConfiguration => {
         width: 240,
         minWidth: 150,
         sortingComparator: (a, b) =>
-          new Date(a.fileMetaData.uploadedDateTime).getTime() - new Date(b.fileMetaData.uploadedDateTime).getTime(),
+          new Date(a.fileMetaData.uploadedDateTime).getTime() -
+          new Date(b.fileMetaData.uploadedDateTime).getTime(),
       },
       {
         id: 'modelMD5Hash',

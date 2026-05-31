@@ -268,14 +268,8 @@ export const addRace = /* GraphQL */ `
   }
 `;
 export const carDeleteAllModels = /* GraphQL */ `
-  mutation CarDeleteAllModels(
-    $resourceIds: [String!]
-    $withSystemLogs: Boolean
-  ) {
-    carDeleteAllModels(
-      resourceIds: $resourceIds
-      withSystemLogs: $withSystemLogs
-    )
+  mutation CarDeleteAllModels($resourceIds: [String!], $withSystemLogs: Boolean) {
+    carDeleteAllModels(resourceIds: $resourceIds, withSystemLogs: $withSystemLogs)
   }
 `;
 export const carEmergencyStop = /* GraphQL */ `
@@ -289,14 +283,8 @@ export const carRestartService = /* GraphQL */ `
   }
 `;
 export const carSetTaillightColor = /* GraphQL */ `
-  mutation CarSetTaillightColor(
-    $resourceIds: [String!]
-    $selectedColor: String!
-  ) {
-    carSetTaillightColor(
-      resourceIds: $resourceIds
-      selectedColor: $selectedColor
-    )
+  mutation CarSetTaillightColor($resourceIds: [String!], $selectedColor: String!) {
+    carSetTaillightColor(resourceIds: $resourceIds, selectedColor: $selectedColor)
   }
 `;
 export const carsDelete = /* GraphQL */ `
@@ -305,16 +293,8 @@ export const carsDelete = /* GraphQL */ `
   }
 `;
 export const carsUpdateFleet = /* GraphQL */ `
-  mutation CarsUpdateFleet(
-    $fleetId: String!
-    $fleetName: String!
-    $resourceIds: [String!]
-  ) {
-    carsUpdateFleet(
-      fleetId: $fleetId
-      fleetName: $fleetName
-      resourceIds: $resourceIds
-    ) {
+  mutation CarsUpdateFleet($fleetId: String!, $fleetName: String!, $resourceIds: [String!]) {
+    carsUpdateFleet(fleetId: $fleetId, fleetName: $fleetName, resourceIds: $resourceIds) {
       ActivationId
       AgentVersion
       ComputerName
@@ -467,11 +447,7 @@ export const createStartUploadToCarDbEntry = /* GraphQL */ `
   }
 `;
 export const createUser = /* GraphQL */ `
-  mutation CreateUser(
-    $countryCode: String!
-    $email: String!
-    $username: String!
-  ) {
+  mutation CreateUser($countryCode: String!, $email: String!, $username: String!) {
     createUser(countryCode: $countryCode, email: $email, username: $username) {
       Attributes {
         Name
@@ -545,16 +521,8 @@ export const deleteFleets = /* GraphQL */ `
   }
 `;
 export const deleteLeaderboardEntry = /* GraphQL */ `
-  mutation DeleteLeaderboardEntry(
-    $eventId: ID!
-    $trackId: ID!
-    $username: String!
-  ) {
-    deleteLeaderboardEntry(
-      eventId: $eventId
-      trackId: $trackId
-      username: $username
-    ) {
+  mutation DeleteLeaderboardEntry($eventId: ID!, $trackId: ID!, $username: String!) {
+    deleteLeaderboardEntry(eventId: $eventId, trackId: $trackId, username: $username) {
       avgLapTime
       avgLapsPerAttempt
       countryCode

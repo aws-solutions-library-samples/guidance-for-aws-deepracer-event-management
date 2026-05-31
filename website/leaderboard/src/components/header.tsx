@@ -10,7 +10,9 @@ const Header = ({ headerText, eventId, trackId, raceFormat, qrCodeVisible }) => 
     <div className={styles.headerRoot}>
       <img src={Logo} alt="DeepRacer Logo" className={styles.logo} />
       <div className={styles.headerText}>{headerText}</div>
-      {qrCodeVisible === 'header' && <QrCode eventId={eventId} trackId={trackId} raceFormat={raceFormat}/>}
+      {qrCodeVisible === 'header' && (
+        <QrCode eventId={eventId} trackId={trackId} raceFormat={raceFormat} />
+      )}
     </div>
   );
 };

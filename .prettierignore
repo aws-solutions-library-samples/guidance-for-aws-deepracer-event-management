@@ -1,0 +1,26 @@
+# Jinja2 templates (Prettier reformats block tags unsafely)
+lib/lambdas/pdf_api/templates/
+
+# Build outputs
+website/build
+website/reports
+website/leaderboard/build
+website/overlays/build
+website/public/leaderboard
+website/public/overlays
+cdk.out
+
+# Compiled TypeScript
+bin/*.js
+bin/*.d.ts
+lib/**/*.js
+lib/**/*.d.ts
+test/**/*.js
+test/**/*.d.ts
+
+# Dependencies & environments
+node_modules
+.venv
+
+# Lock files
+package-lock.json

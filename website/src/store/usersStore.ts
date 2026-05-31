@@ -22,9 +22,9 @@ const configureStore = (): void => {
     },
     DELETE_USER: (curState: GlobalState, user: User): Partial<GlobalState> => {
       const currentUsers = curState.users?.users || [];
-      const updatedUsers: UsersState = { 
+      const updatedUsers: UsersState = {
         ...(curState.users || { users: [], isLoading: false }),
-        users: currentUsers.filter((u) => u.sub !== user.sub)
+        users: currentUsers.filter((u) => u.sub !== user.sub),
       };
       return { users: updatedUsers };
     },

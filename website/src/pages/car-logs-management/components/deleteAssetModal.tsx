@@ -21,11 +21,11 @@ interface DeleteAssetModalProps {
   variant?: 'normal' | 'primary' | 'link' | 'icon';
 }
 
-export const DeleteAssetModal: React.FC<DeleteAssetModalProps> = ({ 
-  disabled, 
-  selectedAssets, 
-  onDelete, 
-  variant 
+export const DeleteAssetModal: React.FC<DeleteAssetModalProps> = ({
+  disabled,
+  selectedAssets,
+  onDelete,
+  variant,
 }) => {
   const { t } = useTranslation();
   const [send] = useMutation() as any; // TODO: Type useMutation hook properly

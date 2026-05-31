@@ -112,16 +112,13 @@ const AdminCarActivation: React.FC<AdminCarActivationProps> = (props) => {
   }, [t, password, hostname, dropDownSelectedItem]);
 
   async function getActivation() {
-    const apiResponse = await graphqlMutate<{ deviceActivation: any }>(
-      mutations.deviceActivation,
-      {
-        hostname: hostname,
-        deviceType: 'deepracer',
-        fleetId: 'fleetId' in dropDownSelectedItem ? dropDownSelectedItem.fleetId : '',
-        fleetName: dropDownSelectedItem.fleetName,
-        deviceUiPassword: password,
-      }
-    );
+    const apiResponse = await graphqlMutate<{ deviceActivation: any }>(mutations.deviceActivation, {
+      hostname: hostname,
+      deviceType: 'deepracer',
+      fleetId: 'fleetId' in dropDownSelectedItem ? dropDownSelectedItem.fleetId : '',
+      fleetName: dropDownSelectedItem.fleetName,
+      deviceUiPassword: password,
+    });
     const response = apiResponse.deviceActivation;
     setSsmCommand(
       'sudo amazon-ssm-agent -register -code "' +
@@ -192,7 +189,10 @@ const AdminCarActivation: React.FC<AdminCarActivationProps> = (props) => {
                 <Select
                   selectedOption={
                     'fleetId' in dropDownSelectedItem
-                      ? { label: dropDownSelectedItem.fleetName, value: dropDownSelectedItem.fleetId }
+                      ? {
+                          label: dropDownSelectedItem.fleetName,
+                          value: dropDownSelectedItem.fleetId,
+                        }
                       : null
                   }
                   options={dropDownFleets}
@@ -200,7 +200,9 @@ const AdminCarActivation: React.FC<AdminCarActivationProps> = (props) => {
                   filteringType="auto"
                   selectedAriaLabel="Selected"
                   onChange={({ detail }) => {
-                    const index = fleets.map((e) => e.fleetId).indexOf(detail.selectedOption.value ?? '');
+                    const index = fleets
+                      .map((e) => e.fleetId)
+                      .indexOf(detail.selectedOption.value ?? '');
                     if (index >= 0) {
                       setDropDownSelectedItem(fleets[index]);
                     }

@@ -71,24 +71,26 @@ export const LandingPageConfigPanel: React.FC<LandingPageConfigPanelProps> = ({
     onChange(landingPageConfig);
   };
 
-  const Control: React.FC<ControlProps> = React.memo(({ value, index, placeholder, setItems, prop }) => {
-    return (
-      <Input
-        value={value || ''}
-        placeholder={placeholder}
-        onChange={({ detail }) => {
-          setItems((items) => {
-            const updatedItems = [...items];
-            updatedItems[index] = {
-              ...updatedItems[index],
-              [prop]: detail.value,
-            };
-            return updatedItems;
-          });
-        }}
-      />
-    );
-  });
+  const Control: React.FC<ControlProps> = React.memo(
+    ({ value, index, placeholder, setItems, prop }) => {
+      return (
+        <Input
+          value={value || ''}
+          placeholder={placeholder}
+          onChange={({ detail }) => {
+            setItems((items) => {
+              const updatedItems = [...items];
+              updatedItems[index] = {
+                ...updatedItems[index],
+                [prop]: detail.value,
+              };
+              return updatedItems;
+            });
+          }}
+        />
+      );
+    }
+  );
 
   const definition: AttributeEditorProps.FieldDefinition<LandingPageLink>[] = useMemo(
     () => [
@@ -136,13 +138,16 @@ export const LandingPageConfigPanel: React.FC<LandingPageConfigPanelProps> = ({
     setItems((items) => [...items, {}]);
   }, []);
 
-  const onRemoveButtonClick = useCallback(({ detail: { itemIndex } }: { detail: { itemIndex: number } }) => {
-    setItems((items) => {
-      const newItems = items.slice();
-      newItems.splice(itemIndex, 1);
-      return newItems;
-    });
-  }, []);
+  const onRemoveButtonClick = useCallback(
+    ({ detail: { itemIndex } }: { detail: { itemIndex: number } }) => {
+      setItems((items) => {
+        const newItems = items.slice();
+        newItems.splice(itemIndex, 1);
+        return newItems;
+      });
+    },
+    []
+  );
 
   // JSX
   return (

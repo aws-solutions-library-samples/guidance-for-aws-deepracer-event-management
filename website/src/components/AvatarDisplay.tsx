@@ -35,11 +35,7 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   }
 
   return (
-    <Avatar
-      avatarStyle={avatarStyle}
-      style={{ width: size, height: size }}
-      {...render.config}
-    />
+    <Avatar avatarStyle={avatarStyle} style={{ width: size, height: size }} {...render.config} />
   );
 };
 
@@ -62,9 +58,7 @@ function parseConfig(
       if (typeof parsed === 'string') {
         parsed = JSON.parse(parsed);
       }
-      return parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0
-        ? parsed
-        : null;
+      return parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0 ? parsed : null;
     } catch {
       return null;
     }

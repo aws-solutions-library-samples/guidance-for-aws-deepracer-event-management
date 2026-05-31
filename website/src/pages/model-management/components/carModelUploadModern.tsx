@@ -77,7 +77,7 @@ export const UploadModelToCarModern: React.FC<UploadModelToCarModernProps> = ({
   useEffect(() => {
     const getData = async (): Promise<void> => {
       const thisJobIds: string[] = [];
-      
+
       for (const car of cars) {
         const variables = {
           carInstanceId: car.InstanceId,
@@ -92,7 +92,7 @@ export const UploadModelToCarModern: React.FC<UploadModelToCarModernProps> = ({
             username: modelToUpload.username || '',
           })),
         };
-        
+
         console.debug('variables', variables);
 
         const response = await graphqlMutate<StartUploadToCarResponse>(
@@ -102,17 +102,17 @@ export const UploadModelToCarModern: React.FC<UploadModelToCarModernProps> = ({
         console.debug('startUploadToCar', response.startUploadToCar.jobId);
         thisJobIds.push(response.startUploadToCar.jobId);
       }
-      
+
       setJobIds(thisJobIds);
     };
-    
+
     getData();
   }, [cars, event, models]);
 
   // Subscribe to job creation events
   useEffect(() => {
     const subscriptions: GraphQLSubscription[] = [];
-    
+
     jobIds.forEach((jobId) => {
       const filter = { jobId };
       const subscription = graphqlSubscribe<{ onUploadsToCarCreated: JobData }>(
@@ -124,7 +124,7 @@ export const UploadModelToCarModern: React.FC<UploadModelToCarModernProps> = ({
             'onUploadsToCarCreated event received',
             event.value.data.onUploadsToCarCreated
           );
-          
+
           const newJob: JobData = {
             ...event.value.data.onUploadsToCarCreated,
             status: 'Created',
@@ -132,11 +132,11 @@ export const UploadModelToCarModern: React.FC<UploadModelToCarModernProps> = ({
               <StatusIndicator type="info">{t('carmodelupload.status.created')}</StatusIndicator>
             ),
           };
-          
+
           setJobs((prevJobs) => [...prevJobs, newJob]);
         },
       });
-      
+
       subscriptions.push(subscription);
     });
 
@@ -150,7 +150,7 @@ export const UploadModelToCarModern: React.FC<UploadModelToCarModernProps> = ({
   // Subscribe to job update events
   useEffect(() => {
     const subscriptions: GraphQLSubscription[] = [];
-    
+
     jobIds.forEach((jobId) => {
       const filter = { jobId };
       const subscription = graphqlSubscribe<{ onUploadsToCarUpdated: Partial<JobData> }>(
@@ -160,11 +160,11 @@ export const UploadModelToCarModern: React.FC<UploadModelToCarModernProps> = ({
         next: (event) => {
           const updatedData = event.value.data.onUploadsToCarUpdated;
           console.debug('onUploadsToCarUpdated event received', updatedData);
-          
+
           setJobs((prevJobs) => {
             const newJobs = [...prevJobs];
             let currentData = newJobs.find((value) => value.modelKey === updatedData.modelKey);
-            
+
             if (currentData === undefined) {
               currentData = { modelKey: updatedData.modelKey || '' };
               newJobs.push(currentData);
@@ -174,9 +174,7 @@ export const UploadModelToCarModern: React.FC<UploadModelToCarModernProps> = ({
             if (updatedData.status === 'Created') {
               currentData.status = updatedData.status;
               currentData.statusIndicator = (
-                <StatusIndicator type="info">
-                  {t('carmodelupload.status.created')}
-                </StatusIndicator>
+                <StatusIndicator type="info">{t('carmodelupload.status.created')}</StatusIndicator>
               );
             } else if (updatedData.status === 'Started') {
               currentData.status = updatedData.status;
@@ -199,7 +197,7 @@ export const UploadModelToCarModern: React.FC<UploadModelToCarModernProps> = ({
                   {t('carmodelupload.status.success')}
                 </StatusIndicator>
               );
-              
+
               // Calculate upload duration
               if (currentData.uploadStartTime && updatedData.endTime) {
                 const uploadStartDateTime = Date.parse(currentData.uploadStartTime);
@@ -217,7 +215,7 @@ export const UploadModelToCarModern: React.FC<UploadModelToCarModernProps> = ({
               currentData.status = updatedData.status;
               currentData.statusIndicator = <>{updatedData.status}</>;
             }
-            
+
             // Update timestamps
             if (updatedData.uploadStartTime) {
               currentData.uploadStartTime = updatedData.uploadStartTime;
@@ -225,12 +223,12 @@ export const UploadModelToCarModern: React.FC<UploadModelToCarModernProps> = ({
             if (updatedData.endTime) {
               currentData.endTime = updatedData.endTime;
             }
-            
+
             return newJobs;
           });
         },
       });
-      
+
       subscriptions.push(subscription);
     });
 

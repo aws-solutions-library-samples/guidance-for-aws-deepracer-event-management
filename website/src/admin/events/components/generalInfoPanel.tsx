@@ -6,7 +6,7 @@ import {
   Header,
   Input,
   Select,
-  SpaceBetween
+  SpaceBetween,
 } from '@cloudscape-design/components';
 import { getNames, registerLocale } from 'i18n-iso-countries';
 import enLocale from 'i18n-iso-countries/langs/en.json';
@@ -161,7 +161,10 @@ export const EventInfoPanel: React.FC<EventInfoPanelProps> = ({
           label={t('events.leaderboard.sponsor')}
           description={t('events.leaderboard.sponsor-description')}
         >
-          <Input onChange={({ detail }) => onChange({ sponsor: detail.value })} value={sponsor || ''} />
+          <Input
+            onChange={({ detail }) => onChange({ sponsor: detail.value })}
+            value={sponsor || ''}
+          />
         </FormField>
       </SpaceBetween>
     </Container>

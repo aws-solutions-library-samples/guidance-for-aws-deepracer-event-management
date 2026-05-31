@@ -20,7 +20,7 @@ describe('LowerThird', () => {
         eventName="Test Event"
         labels={labels}
         visible
-      />,
+      />
     );
     expect(screen.getByText('speedy')).toBeInTheDocument();
     expect(screen.getByText('02:05.4')).toBeInTheDocument(); // remaining
@@ -43,7 +43,7 @@ describe('LowerThird', () => {
         eventName="Test Event"
         labels={labels}
         visible
-      />,
+      />
     );
     // Two placeholder slots (fastest + last) should both show 00.000
     expect(screen.getAllByText('00.000')).toHaveLength(2);
@@ -59,7 +59,7 @@ describe('LowerThird', () => {
         eventName="Test Event"
         labels={labels}
         visible
-      />,
+      />
     );
     const root = container.firstElementChild as HTMLElement;
     expect(root.className).toMatch(/visible/);
@@ -73,7 +73,7 @@ describe('LowerThird', () => {
         eventName="Test Event"
         labels={labels}
         visible={false}
-      />,
+      />
     );
     expect(root.className).not.toMatch(/visible/);
   });

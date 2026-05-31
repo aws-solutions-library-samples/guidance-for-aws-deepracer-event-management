@@ -75,7 +75,9 @@ const LapsTable = ({
           <EmptyState
             title={t('common.no-matches')}
             subtitle={t('common.we-cant-find-a-match')}
-            action={<Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>}
+            action={
+              <Button onClick={() => actions.setFiltering('')}>{t('table.clear-filter')}</Button>
+            }
           />
         ),
       },

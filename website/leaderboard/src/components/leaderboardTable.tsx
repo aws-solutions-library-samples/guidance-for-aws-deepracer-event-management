@@ -61,7 +61,8 @@ const LeaderboardTable = ({
       } else {
         if (aspectRatio > 1.2 && username.length > 30) {
           username = username.substr(0, 30) + '...';
-        } else if (aspectRatio < 1.2 && username.length > 20) username = username.substr(0, 20) + '...';
+        } else if (aspectRatio < 1.2 && username.length > 20)
+          username = username.substr(0, 20) + '...';
       }
 
       let timeValue = t('leaderboard.DNF');
@@ -207,7 +208,9 @@ const LeaderboardTable = ({
       <div className={styles.titles}>
         <div className={styles.positionTitle}>{t('leaderboard.position')}</div>
         <div className={styles.racerTitle}>{t('leaderboard.racer')}</div>
-        <div className={styles.timeTitle}>{t(fastest ? 'leaderboard.time' : 'leaderboard.average')}</div>
+        <div className={styles.timeTitle}>
+          {t(fastest ? 'leaderboard.time' : 'leaderboard.average')}
+        </div>
       </div>
       <div
         ref={entriesRef}
