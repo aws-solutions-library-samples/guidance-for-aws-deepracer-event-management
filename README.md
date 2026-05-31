@@ -191,6 +191,16 @@ To have a custom URL, rather than the default URL in `cloudfront.net`, add `doma
 
 DREM will be available on `drem.your_domain`. It is possible to configure this retrospectively for already deployed DREM instances.
 
+#### Optional: Disable CloudWatch RUM
+
+By default, DREM deploys a [CloudWatch RUM](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-RUM.html) App Monitor to collect real-user performance and error telemetry from the web portal. To opt out, add the following to `build.config`:
+
+```sh
+disable_cw_rum=true
+```
+
+This passes `-c DISABLE_CW_RUM=true` to CDK and skips creation of the RUM App Monitor resource. This setting can be applied at initial deployment or changed on a subsequent deploy.
+
 ### Option 2. Deploy DREM as a developer / contributor
 
 #### Prerequisites
