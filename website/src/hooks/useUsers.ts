@@ -9,7 +9,11 @@ import { User } from '../types/api-responses';
  * @example
  * const [users, isLoading, getUserNameFromId] = useUsers();
  */
-export const useUsers = (): [User[], boolean, (userId: string | null | undefined) => string | undefined] => {
+export const useUsers = (): [
+  User[],
+  boolean,
+  (userId: string | null | undefined) => string | undefined,
+] => {
   const [state] = useStore();
   const users: User[] = state.users?.users || [];
   const isLoading: boolean = state.users?.isLoading || false;
@@ -26,7 +30,7 @@ export const useUsers = (): [User[], boolean, (userId: string | null | undefined
       const user = users.find((user) => user.sub === userId);
       if (user == null) return userId;
 
-      return user.Username;
+      return user.RacerName || user.Username;
     },
     [users]
   );

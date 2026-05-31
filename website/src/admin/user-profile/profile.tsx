@@ -1,12 +1,14 @@
-import ColumnLayout from '@cloudscape-design/components/column-layout';
 import React, { useEffect, useState } from 'react';
+
 import { useTranslation } from 'react-i18next';
 
 import { PageLayout } from '../../components/pageLayout';
 
 import Container from '@cloudscape-design/components/container';
 import Header from '@cloudscape-design/components/header';
+import KeyValuePairs from '@cloudscape-design/components/key-value-pairs';
 
+import awsconfig from '../../config.json';
 import { AvatarBuilder } from './AvatarBuilder';
 
 import { graphqlMutate } from '../../graphql/graphqlHelpers';
@@ -31,6 +33,8 @@ const ProfileHome: React.FC<ProfileHomeProps> = (props) => {
   const { t } = useTranslation();
 
   const [username, setUsername] = useState<string | undefined>();
+  const [email, setEmail] = useState<string | undefined>();
+  const [racerName, setRacerName] = useState<string | undefined>();
   const [identityId, setIdentityId] = useState<string | undefined>();
   const [deleteUserModalVisible, setDeleteUserModalVisible] = useState<boolean>(false);
   const [buttonDisabled, setButtonDisabled] = useState<boolean>(true);
@@ -49,6 +53,8 @@ const ProfileHome: React.FC<ProfileHomeProps> = (props) => {
       getCurrentAuthUser().then((authUser) => {
         setUsername(authUser.username);
         setIdentityId(authUser.identityId);
+        setEmail(authUser.attributes['email']);
+        setRacerName(authUser.displayName);
       });
     };
 
@@ -63,7 +69,9 @@ const ProfileHome: React.FC<ProfileHomeProps> = (props) => {
     try {
       getCurrentAuthUser()
         .then(async (authUser) => {
-          const apiResponse = await graphqlMutate(mutations.deleteUser, { username: authUser.username });
+          const apiResponse = await graphqlMutate(mutations.deleteUser, {
+            username: authUser.username,
+          });
           console.debug(apiResponse);
           await authSignOut();
         })
@@ -112,12 +120,7 @@ const ProfileHome: React.FC<ProfileHomeProps> = (props) => {
     };
   }, [current_password, new_password, new_password_confirm]);
 
-  const ValueWithLabel = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div>
-      <Box variant="awsui-key-label">{label}</Box>
-      <div>{children}</div>
-    </div>
-  );
+  const isExternalIdp = awsconfig.Features?.useExternalIdp;
 
   return (
     <>
@@ -130,43 +133,44 @@ const ProfileHome: React.FC<ProfileHomeProps> = (props) => {
           { text: t('user-profile.settings.breadcrumb'), href: '/' },
         ]}
       >
-        <ColumnLayout columns={2}>
+        <SpaceBetween size="l">
           <Container header={<Header variant="h2">{t('user-profile.header.details')}</Header>}>
-            <SpaceBetween size="l">
-              <ValueWithLabel label={t('user-profile.settings.name')}>{username}</ValueWithLabel>
-            </SpaceBetween>
+            <KeyValuePairs
+              columns={3}
+              items={[
+                { label: t('user-profile.settings.username'), value: username },
+                { label: t('user-profile.settings.email'), value: email },
+                { label: t('user-profile.settings.racerName'), value: racerName },
+              ]}
+            />
           </Container>
-          <div></div>
 
           <AvatarBuilder />
-          <div></div>
 
-          <Container
-            header={
-              <Header variant="h2" description={t('user-profile.settings.changepw.header')}>
-                {t('user-profile.buttons.update-password')}
-              </Header>
-            }
-          >
-            <Header variant="h3">{formSubmitMessage}</Header>
-
-            <Form
-              errorText={formErrorMessage}
-              actions={
-                <SpaceBetween direction="horizontal" size="xs">
-                  <Button
-                    variant="primary"
-                    onClick={() => {
-                      updateUserPW();
-                    }}
-                    disabled={buttonDisabled}
-                  >
-                    {t('user-profile.buttons.update-password')}
-                  </Button>
-                </SpaceBetween>
+          {!isExternalIdp && (
+            <Container
+              header={
+                <Header variant="h2" description={t('user-profile.settings.changepw.header')}>
+                  {t('user-profile.buttons.update-password')}
+                </Header>
               }
             >
-              <Container>
+              <Form
+                errorText={formErrorMessage}
+                actions={
+                  <SpaceBetween direction="horizontal" size="xs">
+                    <Button
+                      variant="primary"
+                      onClick={() => {
+                        updateUserPW();
+                      }}
+                      disabled={buttonDisabled}
+                    >
+                      {t('user-profile.buttons.update-password')}
+                    </Button>
+                  </SpaceBetween>
+                }
+              >
                 <SpaceBetween direction="vertical" size="l">
                   <FormField
                     label={t('user-profile.settings.form.label.current_pw')}
@@ -210,29 +214,29 @@ const ProfileHome: React.FC<ProfileHomeProps> = (props) => {
                     />
                   </FormField>
                 </SpaceBetween>
-              </Container>
-            </Form>
-          </Container>
-          <div></div>
+              </Form>
+            </Container>
+          )}
 
-          <Container
-            header={
-              <Header variant="h2" description={t('user-profile.settings.delete.header')}>
-                {t('user-profile.buttons.delete')}
-              </Header>
-            }
-          >
-            <Button
-              variant="primary"
-              onClick={() => {
-                setDeleteUserModalVisible(true);
-              }}
+          {!isExternalIdp && (
+            <Container
+              header={
+                <Header variant="h2" description={t('user-profile.settings.delete.header')}>
+                  {t('user-profile.buttons.delete')}
+                </Header>
+              }
             >
-              {t('user-profile.buttons.delete')}
-            </Button>
-          </Container>
-          <div></div>
-        </ColumnLayout>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setDeleteUserModalVisible(true);
+                }}
+              >
+                {t('user-profile.buttons.delete')}
+              </Button>
+            </Container>
+          )}
+        </SpaceBetween>
       </PageLayout>
 
       <Modal

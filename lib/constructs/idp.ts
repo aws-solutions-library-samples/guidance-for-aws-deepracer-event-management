@@ -11,6 +11,18 @@ import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { StandardLambdaPythonFunction } from './standard-lambda-python-function';
 
+/** Group names in the external Cognito User Pool that map to DREM roles.
+ *  Only relevant when `existingUserPoolId` is set.
+ *  Defaults match the DROA reference group names.
+ */
+export interface ExternalGroupNames {
+  admin?: string;
+  operator?: string;
+  racer?: string;
+  commentator?: string;
+  registration?: string;
+}
+
 export interface IdpProps {
   distribution: cloudfront.IDistribution;
   defaultAdminEmail: string;
@@ -25,6 +37,9 @@ export interface IdpProps {
     };
   };
   eventbus: EventBus;
+  existingUserPoolId?: string;
+  /** Override the external pool group names that map to DREM roles (only used when `existingUserPoolId` is set). */
+  externalGroupNames?: ExternalGroupNames;
 }
 
 export class Idp extends Construct {
@@ -37,105 +52,119 @@ export class Idp extends Construct {
   public readonly commentatorGroupRole: iam.IRole;
   public readonly registrationGroupRole: iam.IRole;
   public readonly unauthenticated_user_role: iam.IRole;
+  public readonly useExistingUserPool: boolean;
 
   constructor(scope: Construct, id: string, props: IdpProps) {
     super(scope, id);
 
     const stack = cdk.Stack.of(this);
 
-    const pre_sign_up_lambda = new StandardLambdaPythonFunction(this, 'pre_sign_up_lambda', {
-      entry: 'lib/lambdas/cognito_triggers/',
-      description: 'Cognito pre sign up Lambda',
-      index: 'index.py',
-      handler: 'pre_sign_up_handler',
-      timeout: Duration.minutes(1),
-      runtime: props.lambdaConfig.runtime,
-      memorySize: 128,
-      architecture: props.lambdaConfig.architecture,
-      environment: {
-        eventbus_name: props.eventbus.eventBusName,
-        default_user_group: 'racer',
-        POWERTOOLS_SERVICE_NAME: 'cognito_presignup_lambda',
-      },
-      bundling: {
-        image: props.lambdaConfig.bundlingImage,
-      },
-      layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
-    });
-    props.eventbus.grantPutEventsTo(pre_sign_up_lambda);
+    const useExistingUserPool = !!props.existingUserPoolId;
+    this.useExistingUserPool = useExistingUserPool;
 
-    const pre_token_generation_lambda = new StandardLambdaPythonFunction(this, 'post_authentication_lambda', {
-      entry: 'lib/lambdas/cognito_triggers/',
-      description: 'Cognito pre token trigger lambda',
-      handler: 'pre_token_generation_handler',
-      runtime: props.lambdaConfig.runtime,
-      architecture: props.lambdaConfig.architecture,
-      environment: {
-        eventbus_name: props.eventbus.eventBusName,
-        default_user_group: 'racer',
-        POWERTOOLS_SERVICE_NAME: 'cognito_post_confirmation_lambda',
-      },
-      bundling: {
-        image: props.lambdaConfig.bundlingImage,
-      },
-      layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
-    });
+    let userPool: cognito.IUserPool;
+    let pre_token_generation_lambda: StandardLambdaPythonFunction | undefined;
 
-    const userPool = new cognito.UserPool(this, 'UserPool', {
-      userPoolName: stack.stackName,
-      standardAttributes: {
-        email: { required: true, mutable: true },
-      },
-      customAttributes: {
-        countryCode: new cognito.StringAttribute({
-          mutable: true,
-        }),
-      },
-      featurePlan: cognito.FeaturePlan.PLUS,
-      mfa: cognito.Mfa.OPTIONAL,
-      advancedSecurityMode: cognito.AdvancedSecurityMode.ENFORCED,
-      selfSignUpEnabled: true,
-      autoVerify: { email: true },
-      removalPolicy: RemovalPolicy.DESTROY,
-      passwordPolicy: {
-        minLength: 8,
-        requireLowercase: true,
-        requireDigits: true,
-        requireSymbols: true,
-        requireUppercase: true,
-        tempPasswordValidity: Duration.days(2),
-      },
-      userInvitation: {
-        emailSubject: 'Invite to join DREM',
-        emailBody:
-          'Hello {username}, you have been invited to join DREM. \n' +
-          'Your temporary password is \n\n{####}\n\n' +
-          'https://' +
-          props.distribution.distributionDomainName,
-        smsMessage: 'Hello {username}, your temporary password for DREM is {####}',
-      },
-      userVerification: {
-        emailSubject: 'Verify your email for DREM',
-        emailBody: 'Thanks for signing up to DREM \n\nYour verification code is \n{####}',
-        emailStyle: cognito.VerificationEmailStyle.CODE,
-        smsMessage: 'Thanks for signing up to DREM. Your verification code is {####}',
-      },
-      lambdaTriggers: {
-        preSignUp: pre_sign_up_lambda,
-        preTokenGeneration: pre_token_generation_lambda,
-      },
-    });
+    if (!useExistingUserPool) {
+      const pre_sign_up_lambda = new StandardLambdaPythonFunction(this, 'pre_sign_up_lambda', {
+        entry: 'lib/lambdas/cognito_triggers/',
+        description: 'Cognito pre sign up Lambda',
+        index: 'index.py',
+        handler: 'pre_sign_up_handler',
+        timeout: Duration.minutes(1),
+        runtime: props.lambdaConfig.runtime,
+        memorySize: 128,
+        architecture: props.lambdaConfig.architecture,
+        environment: {
+          eventbus_name: props.eventbus.eventBusName,
+          default_user_group: 'racer',
+          POWERTOOLS_SERVICE_NAME: 'cognito_presignup_lambda',
+        },
+        bundling: {
+          image: props.lambdaConfig.bundlingImage,
+        },
+        layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
+      });
+      props.eventbus.grantPutEventsTo(pre_sign_up_lambda);
+
+      const localPreTokenLambda = new StandardLambdaPythonFunction(this, 'post_authentication_lambda', {
+        entry: 'lib/lambdas/cognito_triggers/',
+        description: 'Cognito pre token trigger lambda',
+        handler: 'pre_token_generation_handler',
+        runtime: props.lambdaConfig.runtime,
+        architecture: props.lambdaConfig.architecture,
+        environment: {
+          eventbus_name: props.eventbus.eventBusName,
+          default_user_group: 'racer',
+          POWERTOOLS_SERVICE_NAME: 'cognito_post_confirmation_lambda',
+        },
+        bundling: {
+          image: props.lambdaConfig.bundlingImage,
+        },
+        layers: [props.lambdaConfig.layersConfig.helperFunctionsLayer, props.lambdaConfig.layersConfig.powerToolsLayer],
+      });
+      pre_token_generation_lambda = localPreTokenLambda;
+
+      userPool = new cognito.UserPool(this, 'UserPool', {
+        userPoolName: stack.stackName,
+        standardAttributes: {
+          email: { required: true, mutable: true },
+        },
+        customAttributes: {
+          countryCode: new cognito.StringAttribute({
+            mutable: true,
+          }),
+        },
+        featurePlan: cognito.FeaturePlan.PLUS,
+        mfa: cognito.Mfa.OPTIONAL,
+        advancedSecurityMode: cognito.AdvancedSecurityMode.ENFORCED,
+        selfSignUpEnabled: true,
+        autoVerify: { email: true },
+        removalPolicy: RemovalPolicy.DESTROY,
+        passwordPolicy: {
+          minLength: 8,
+          requireLowercase: true,
+          requireDigits: true,
+          requireSymbols: true,
+          requireUppercase: true,
+          tempPasswordValidity: Duration.days(2),
+        },
+        userInvitation: {
+          emailSubject: 'Invite to join DREM',
+          emailBody:
+            'Hello {username}, you have been invited to join DREM. \n' +
+            'Your temporary password is \n\n{####}\n\n' +
+            'https://' +
+            props.distribution.distributionDomainName,
+          smsMessage: 'Hello {username}, your temporary password for DREM is {####}',
+        },
+        userVerification: {
+          emailSubject: 'Verify your email for DREM',
+          emailBody: 'Thanks for signing up to DREM \n\nYour verification code is \n{####}',
+          emailStyle: cognito.VerificationEmailStyle.CODE,
+          smsMessage: 'Thanks for signing up to DREM. Your verification code is {####}',
+        },
+        lambdaTriggers: {
+          preSignUp: pre_sign_up_lambda,
+          preTokenGeneration: localPreTokenLambda,
+        },
+      });
+    } else {
+      userPool = cognito.UserPool.fromUserPoolId(this, 'UserPool', props.existingUserPoolId!);
+    }
 
     this.userPool = userPool;
 
-    pre_token_generation_lambda.addAdditionalRolePolicy(
-      'updateUserPolicy',
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ['cognito-idp:AdminAddUserToGroup'],
-        resources: [userPool.userPoolArn],
-      })
-    );
+    if (pre_token_generation_lambda) {
+      pre_token_generation_lambda.addAdditionalRolePolicy(
+        'updateUserPolicy',
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: ['cognito-idp:AdminAddUserToGroup'],
+          resources: [userPool.userPoolArn],
+        })
+      );
+    }
 
     //         NagSuppressions.add_resource_suppressions(
     //             self._userPool,
@@ -199,33 +228,22 @@ export class Idp extends Construct {
     });
     this.authenticatedUserRole = authUserRole;
 
-    const defaultUserPoolRoleParameter = `/${stack.stackName}/defaultUserRole`;
-    const defaultUserPoolRoleParameterSSM = new ssm.StringParameter(this, 'appsyncHelperLambdaLayerArn', {
-      stringValue: authUserRole.roleArn,
-      parameterName: defaultUserPoolRoleParameter,
-    });
-    pre_token_generation_lambda.addAdditionalRolePolicy(
-      'getSSMDefaultRoleARNPermission',
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ['ssm:GetParameter'],
-        resources: [defaultUserPoolRoleParameterSSM.parameterArn],
-      })
-    );
-
-    new cognito.CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleAttachment', {
-      identityPoolId: identityPool.ref,
-      roles: {
-        authenticated: authUserRole.roleArn,
-      },
-      roleMappings: {
-        mapping: {
-          type: 'Token',
-          identityProvider: `cognito-idp.${stack.region}.amazonaws.com/${userPool.userPoolId}:${userPoolClientWeb.userPoolClientId}`,
-          ambiguousRoleResolution: 'AuthenticatedRole',
-        },
-      },
-    });
+    let defaultUserPoolRoleParameter: string | undefined;
+    if (pre_token_generation_lambda) {
+      defaultUserPoolRoleParameter = `/${stack.stackName}/defaultUserRole`;
+      const defaultUserPoolRoleParameterSSM = new ssm.StringParameter(this, 'appsyncHelperLambdaLayerArn', {
+        stringValue: authUserRole.roleArn,
+        parameterName: defaultUserPoolRoleParameter,
+      });
+      pre_token_generation_lambda.addAdditionalRolePolicy(
+        'getSSMDefaultRoleARNPermission',
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: ['ssm:GetParameter'],
+          resources: [defaultUserPoolRoleParameterSSM.parameterArn],
+        })
+      );
+    }
 
     //  Admin Users Group Role
     const adminGroupRole = new iam.Role(this, 'AdminUserGroupRole', {
@@ -287,64 +305,135 @@ export class Idp extends Construct {
     });
     this.registrationGroupRole = registrationGroupRole;
 
-    pre_token_generation_lambda.addEnvironment('default_user_group_role_parameter', defaultUserPoolRoleParameter);
+    // Only resolved for the external pool path (Rules-based mapping).
+    const extGroups = useExistingUserPool
+      ? {
+          admin: props.externalGroupNames?.admin ?? 'dr-admins',
+          operator: props.externalGroupNames?.operator ?? 'dr-race-facilitators',
+          racer: props.externalGroupNames?.racer ?? 'dr-racers',
+          commentator: props.externalGroupNames?.commentator ?? 'dr-commentator',
+          registration: props.externalGroupNames?.registration ?? 'dr-registration',
+        }
+      : undefined;
 
-    //  Cognito User Group (Racers)
-    new cognito.CfnUserPoolGroup(this, 'RacerGroup', {
-      userPoolId: userPool.userPoolId,
-      description: 'Racer user group',
-      groupName: 'racer',
-      precedence: 1,
-      roleArn: authUserRole.roleArn,
+    new cognito.CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleAttachment', {
+      identityPoolId: identityPool.ref,
+      roles: {
+        authenticated: authUserRole.roleArn,
+      },
+      roleMappings: useExistingUserPool
+        ? {
+            // Rules-based: map external IDP group names directly to DREM IAM roles
+            mapping: {
+              type: 'Rules',
+              identityProvider: `cognito-idp.${stack.region}.amazonaws.com/${userPool.userPoolId}:${userPoolClientWeb.userPoolClientId}`,
+              ambiguousRoleResolution: 'AuthenticatedRole',
+              rulesConfiguration: {
+                rules: [
+                  {
+                    claim: 'cognito:groups',
+                    matchType: 'Contains',
+                    value: extGroups!.admin,
+                    roleArn: adminGroupRole.roleArn,
+                  },
+                  {
+                    claim: 'cognito:groups',
+                    matchType: 'Contains',
+                    value: extGroups!.operator,
+                    roleArn: operatorGroupRole.roleArn,
+                  },
+                  {
+                    claim: 'cognito:groups',
+                    matchType: 'Contains',
+                    value: extGroups!.racer,
+                    roleArn: authUserRole.roleArn,
+                  },
+                  {
+                    claim: 'cognito:groups',
+                    matchType: 'Contains',
+                    value: extGroups!.commentator,
+                    roleArn: commentatorGroupRole.roleArn,
+                  },
+                  {
+                    claim: 'cognito:groups',
+                    matchType: 'Contains',
+                    value: extGroups!.registration,
+                    roleArn: registrationGroupRole.roleArn,
+                  },
+                ],
+              },
+            },
+          }
+        : {
+            // Token-based: derives roles from Cognito group roleArn assignments
+            mapping: {
+              type: 'Token',
+              identityProvider: `cognito-idp.${stack.region}.amazonaws.com/${userPool.userPoolId}:${userPoolClientWeb.userPoolClientId}`,
+              ambiguousRoleResolution: 'AuthenticatedRole',
+            },
+          },
     });
 
-    //  Cognito User Group (Operator)
-    new cognito.CfnUserPoolGroup(this, 'OperatorGroup', {
-      userPoolId: userPool.userPoolId,
-      description: 'Operator user group',
-      groupName: 'operator',
-      precedence: 1,
-      roleArn: operatorGroupRole.roleArn,
-    });
+    if (pre_token_generation_lambda && defaultUserPoolRoleParameter) {
+      pre_token_generation_lambda.addEnvironment('default_user_group_role_parameter', defaultUserPoolRoleParameter);
+    }
 
-    //  Cognito User Group (Admin)
-    const adminGroup = new cognito.CfnUserPoolGroup(this, 'AdminGroup', {
-      userPoolId: userPool.userPoolId,
-      description: 'Admin user group',
-      groupName: 'admin',
-      precedence: 1,
-      roleArn: adminGroupRole.roleArn,
-    });
+    if (!useExistingUserPool) {
+      //  Cognito User Group (Racers)
+      new cognito.CfnUserPoolGroup(this, 'RacerGroup', {
+        userPoolId: userPool.userPoolId,
+        description: 'Racer user group',
+        groupName: 'racer',
+        precedence: 1,
+        roleArn: authUserRole.roleArn,
+      });
 
-    //  Cognito User Group (Commentator)
-    new cognito.CfnUserPoolGroup(this, 'CommentatorGroup', {
-      userPoolId: userPool.userPoolId,
-      description: 'Commentator user group',
-      groupName: 'commentator',
-      precedence: 1,
-      roleArn: commentatorGroupRole.roleArn,
-    });
+      //  Cognito User Group (Operator)
+      new cognito.CfnUserPoolGroup(this, 'OperatorGroup', {
+        userPoolId: userPool.userPoolId,
+        description: 'Operator user group',
+        groupName: 'operator',
+        precedence: 1,
+        roleArn: operatorGroupRole.roleArn,
+      });
 
-    //  Cognito User Group (Commentator)
-    new cognito.CfnUserPoolGroup(this, 'RegistrationGroup', {
-      userPoolId: userPool.userPoolId,
-      description: 'Registration user group',
-      groupName: 'registration',
-      precedence: 1,
-      roleArn: registrationGroupRole.roleArn,
-    });
+      //  Cognito User Group (Admin)
+      const adminGroup = new cognito.CfnUserPoolGroup(this, 'AdminGroup', {
+        userPoolId: userPool.userPoolId,
+        description: 'Admin user group',
+        groupName: 'admin',
+        precedence: 1,
+        roleArn: adminGroupRole.roleArn,
+      });
 
-    //  Add a default Admin user to the system
-    const defaultAdminUserName = 'admin';
+      //  Add a default Admin user to the system
+      const adminUser = new CognitoUser(this, 'DefaultAdminUser', {
+        username: 'admin',
+        email: props.defaultAdminEmail,
+        userPool: userPool,
+        groupName: adminGroup.ref,
+      });
+      adminUser.node.addDependency(adminGroup);
+      adminUser.node.addDependency(userPool);
 
-    const adminUser = new CognitoUser(this, 'DefaultAdminUser', {
-      username: defaultAdminUserName,
-      email: props.defaultAdminEmail,
-      userPool: userPool,
-      groupName: adminGroup.ref,
-    });
-    adminUser.node.addDependency(adminGroup);
-    adminUser.node.addDependency(userPool);
+      //  Cognito User Group (Commentator)
+      new cognito.CfnUserPoolGroup(this, 'CommentatorGroup', {
+        userPoolId: userPool.userPoolId,
+        description: 'Commentator user group',
+        groupName: 'commentator',
+        precedence: 1,
+        roleArn: commentatorGroupRole.roleArn,
+      });
+
+      //  Cognito User Group (Registration)
+      new cognito.CfnUserPoolGroup(this, 'RegistrationGroup', {
+        userPoolId: userPool.userPoolId,
+        description: 'Registration user group',
+        groupName: 'registration',
+        precedence: 1,
+        roleArn: registrationGroupRole.roleArn,
+      });
+    }
 
     NagSuppressions.addResourceSuppressions(
       userPool,

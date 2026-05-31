@@ -31,7 +31,8 @@ export function ModelUpload(): JSX.Element {
     const getData = async () => {
       getCurrentAuthUser().then((authUser) => {
         setSub(authUser.sub);
-        setUsername(authUser.username);
+        // Keep model ownership aligned with Settings display name.
+        setUsername(authUser.displayName);
       });
     };
 
@@ -56,7 +57,7 @@ export function ModelUpload(): JSX.Element {
       const uploadRegion = legacyConfig.Storage?.region;
 
       const uploadOp = uploadData({
-        path: ({identityId}) => `private/${identityId}/${s3path}`,
+        path: ({ identityId }) => `private/${identityId}/${s3path}`,
         data: file,
         options: {
           contentType: file.type,
@@ -78,7 +79,9 @@ export function ModelUpload(): JSX.Element {
               },
             });
           },
-          ...(uploadBucket ? { bucket: { bucketName: uploadBucket, region: uploadRegion || '' } } : {}),
+          ...(uploadBucket
+            ? { bucket: { bucketName: uploadBucket, region: uploadRegion || '' } }
+            : {}),
         },
       });
 
@@ -141,8 +144,9 @@ export function ModelUpload(): JSX.Element {
       onChange={({ detail }) => setSelectedFiles(detail.value)}
       value={selectedFiles}
       i18nStrings={{
-        uploadButtonText: (multiple) => multiple ? t('upload.chose-files') : t('upload.chose-file'),
-        dropzoneText: (multiple) => multiple ? t('upload.drop-files') : t('upload.drop-file'),
+        uploadButtonText: (multiple) =>
+          multiple ? t('upload.chose-files') : t('upload.chose-file'),
+        dropzoneText: (multiple) => (multiple ? t('upload.drop-files') : t('upload.drop-file')),
         removeFileAriaLabel: (fileIndex) => `Remove file ${fileIndex + 1}`,
         limitShowFewer: t('upload.show-fewer'),
         limitShowMore: t('upload.show-more'),
