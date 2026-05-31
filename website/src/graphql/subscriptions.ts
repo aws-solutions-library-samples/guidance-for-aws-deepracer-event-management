@@ -363,32 +363,31 @@ export const onUpdateLeaderboardEntry = /* GraphQL */ `
   }
 `;
 export const onUpdatedCarsInfo = /* GraphQL */ `
-    subscription OnUpdatedCarsInfo {
-        onUpdatedCarsInfo {
-            ActivationId
-            AgentVersion
-            ChassisSerial
-            ChassisSerialStatus
-            ComputerName
-            DeepRacerCoreVersion
-            DeviceUiPassword
-            IamRole
-            InstanceId
-            IpAddress
-            IsLatestVersion
-            LastPingDateTime
-            LoggingCapable
-            Name
-            PingStatus
-            PlatformName
-            PlatformType
-            PlatformVersion
-            RegistrationDate
-            ResourceType
-            Type
-            fleetId
-            fleetName
-        }
+  subscription OnUpdatedCarsInfo {
+    onUpdatedCarsInfo {
+      ActivationId
+      AgentVersion
+      ChassisSerial
+      ChassisSerialStatus
+      ComputerName
+      DeepRacerCoreVersion
+      DeviceUiPassword
+      IamRole
+      InstanceId
+      IpAddress
+      IsLatestVersion
+      LastPingDateTime
+      LoggingCapable
+      Name
+      PingStatus
+      PlatformName
+      PlatformType
+      PlatformVersion
+      RegistrationDate
+      ResourceType
+      Type
+      fleetId
+      fleetName
     }
   }
 `;

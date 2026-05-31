@@ -252,32 +252,31 @@ export const getCarRaceHistory = /* GraphQL */ `
   }
 `;
 export const listCars = /* GraphQL */ `
-    query ListCars($online: Boolean!) {
-        listCars(online: $online) {
-            ActivationId
-            AgentVersion
-            ChassisSerial
-            ChassisSerialStatus
-            ComputerName
-            DeepRacerCoreVersion
-            DeviceUiPassword
-            IamRole
-            InstanceId
-            IpAddress
-            IsLatestVersion
-            LastPingDateTime
-            LoggingCapable
-            Name
-            PingStatus
-            PlatformName
-            PlatformType
-            PlatformVersion
-            RegistrationDate
-            ResourceType
-            Type
-            fleetId
-            fleetName
-        }
+  query ListCars($online: Boolean!) {
+    listCars(online: $online) {
+      ActivationId
+      AgentVersion
+      ChassisSerial
+      ChassisSerialStatus
+      ComputerName
+      DeepRacerCoreVersion
+      DeviceUiPassword
+      IamRole
+      InstanceId
+      IpAddress
+      IsLatestVersion
+      LastPingDateTime
+      LoggingCapable
+      Name
+      PingStatus
+      PlatformName
+      PlatformType
+      PlatformVersion
+      RegistrationDate
+      ResourceType
+      Type
+      fleetId
+      fleetName
     }
   }
 `;
