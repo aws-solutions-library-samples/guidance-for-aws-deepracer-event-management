@@ -133,7 +133,7 @@ export class CdkPipelineStack extends cdk.Stack {
             ` -c account=${props.env.account} -c region=${props.env.region}` +
             ` -c source_branch=${props.sourceBranchName} -c source_repo=${props.sourceRepo}` +
             (props.domainName ? ` -c domain_name=${props.domainName}` : '') +
-            (props.cwRumEnabled === false ? ` -c DISABLE_CW_RUM=true` : '') +
+            (props.cwRumEnabled === false ? ` -c disable_cw_rum=true` : '') +
             (props.requireApproval === false ? ` -c require_approval=false` : ''),
         ],
         partialBuildSpec: codebuild.BuildSpec.fromObject({

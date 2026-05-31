@@ -72,7 +72,7 @@ if (domainName) {
   domainName = undefined;
 }
 
-const cwRumEnabled = app.node.tryGetContext('DISABLE_CW_RUM') !== 'true';
+const cwRumEnabled = app.node.tryGetContext('disable_cw_rum') !== 'true';
 if (!cwRumEnabled) {
   console.info('CloudWatch RUM is disabled');
 }

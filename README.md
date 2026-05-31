@@ -199,7 +199,7 @@ By default, DREM deploys a [CloudWatch RUM](https://docs.aws.amazon.com/AmazonCl
 disable_cw_rum=true
 ```
 
-This passes `-c DISABLE_CW_RUM=true` to CDK and skips creation of the RUM App Monitor resource. This setting can be applied at initial deployment or changed on a subsequent deploy.
+This passes `-c disable_cw_rum=true` to CDK and skips creation of the RUM App Monitor resource. This setting can be applied at initial deployment or changed on a subsequent deploy.
 
 ### Option 2. Deploy DREM as a developer / contributor
 
