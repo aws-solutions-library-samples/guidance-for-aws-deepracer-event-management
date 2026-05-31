@@ -9,7 +9,7 @@
   "trailingComma": "es5",
   "overrides": [
     {
-      "files": ["website/src/**", "website/leaderboard/src/**", "website/overlays/src/**"],
+      "files": ["website/**"],
       "options": {
         "printWidth": 100
       }

@@ -16,7 +16,10 @@
     </style>
   </head>
   <body>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
 
     <div class="container">
       <div id="alert_box"></div>
@@ -24,8 +27,12 @@
         <div class="col-xs-1"></div>
         <div class="col-xs-10" align="center">
           <img class="image_pad" src="./static/AWS_logo_RGB.svg" width="100" alt="AWS Logo" />
-          <h3 class="form-signin-heading bottomPadding" style="margin-top: 30px">Unlock your AWS DeepRacer vehicle</h3>
-          <p>The default AWS DeepRacer password can be found printed on the bottom of your vehicle.</p>
+          <h3 class="form-signin-heading bottomPadding" style="margin-top: 30px">
+            Unlock your AWS DeepRacer vehicle
+          </h3>
+          <p>
+            The default AWS DeepRacer password can be found printed on the bottom of your vehicle.
+          </p>
         </div>
         <div class="col-xs-1"></div>
       </div>
@@ -43,18 +50,24 @@
             autofocus
           />
           <p style="color: #df3312; margin-bottom: 0px">
-            {% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %} {{ message }}
-            {% endfor %} {% endif %} {% endwith %}
+            {% with messages = get_flashed_messages() %} {% if messages %} {% for message in
+            messages %} {{ message }} {% endfor %} {% endif %} {% endwith %}
           </p>
           <div class="bottomPadding" style="padding-top: 10px">
             <input type="checkbox" id="showPassword" name="showPassword" />
-            <label for="showPassword" style="font-weight: normal; padding-left: 3px"> Show password</label>
+            <label for="showPassword" style="font-weight: normal; padding-left: 3px">
+              Show password</label
+            >
           </div>
           <div class="bottomPadding">
-            <button class="btn btn-lg btn-primary btn-block" id="login_submit">Access vehicle</button>
+            <button class="btn btn-lg btn-primary btn-block" id="login_submit">
+              Access vehicle
+            </button>
           </div>
           <p>
-            <a href="https://docs.aws.amazon.com/console/deepracer/recover-vehicle-password" target="_blank"
+            <a
+              href="https://docs.aws.amazon.com/console/deepracer/recover-vehicle-password"
+              target="_blank"
               >Forgot password
               <span class="external-icon-img"
                 ><img src="./static/images/external_icon.svg" alt="External link icon" /></span
@@ -98,7 +111,9 @@
         });
 
         $('#showPassword').change(function () {
-          $(this).is(':checked') ? $('#password').attr('type', 'text') : $('#password').attr('type', 'password');
+          $(this).is(':checked')
+            ? $('#password').attr('type', 'text')
+            : $('#password').attr('type', 'password');
         });
       });
 

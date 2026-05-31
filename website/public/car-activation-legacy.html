@@ -167,8 +167,10 @@
       </div>
 
       <div class="browser-warning">
-        <strong>Legacy Browser Mode:</strong> You are using an older browser. This simplified interface provides the
-        core car activation functionality. <br /><small>User Agent: <span id="userAgent"></span></small>
+        <strong>Legacy Browser Mode:</strong> You are using an older browser. This simplified
+        interface provides the core car activation functionality. <br /><small
+          >User Agent: <span id="userAgent"></span
+        ></small>
       </div>
 
       <form id="activationForm">
@@ -192,7 +194,9 @@
         </div>
 
         <div class="form-group">
-          <label> <input type="checkbox" id="customConsole" /> Install Custom Console (Beta) </label>
+          <label>
+            <input type="checkbox" id="customConsole" /> Install Custom Console (Beta)
+          </label>
         </div>
 
         <div class="wifi-section">
@@ -212,7 +216,9 @@
         </div>
 
         <div class="form-group">
-          <button type="submit" class="button" id="generateButton" disabled>Generate Activation Script</button>
+          <button type="submit" class="button" id="generateButton" disabled>
+            Generate Activation Script
+          </button>
         </div>
       </form>
 
@@ -221,7 +227,9 @@
       <div id="results" class="results" style="display: none">
         <h3>Activation Script</h3>
         <div class="script-container">
-          <button class="copy-button" onclick="copyToClipboard('activationScript', this)">Copy</button>
+          <button class="copy-button" onclick="copyToClipboard('activationScript', this)">
+            Copy
+          </button>
           <div id="activationScript"></div>
         </div>
 
@@ -294,7 +302,9 @@
 
       function validateForm() {
         var isValid =
-          hostnameInput.value.trim() !== '' && passwordInput.value.trim() !== '' && fleetSelect.value !== '';
+          hostnameInput.value.trim() !== '' &&
+          passwordInput.value.trim() !== '' &&
+          fleetSelect.value !== '';
 
         generateButton.disabled = !isValid;
       }
@@ -302,7 +312,8 @@
       function loadFleets() {
         // Make GraphQL request to get fleets
         var query = {
-          query: 'query GetAllFleets { getAllFleets { fleetId fleetName createdAt createdBy carIds } }',
+          query:
+            'query GetAllFleets { getAllFleets { fleetId fleetName createdAt createdBy carIds } }',
         };
 
         makeGraphQLRequest(
@@ -430,7 +441,8 @@
       }
 
       function makeGraphQLRequest(query, onSuccess, onError) {
-        var endpoint = window.__DREM_APPSYNC_ENDPOINT__ || sessionStorage.getItem('drem_appsync_endpoint');
+        var endpoint =
+          window.__DREM_APPSYNC_ENDPOINT__ || sessionStorage.getItem('drem_appsync_endpoint');
         if (!endpoint) {
           onError('AppSync endpoint not found. Please navigate here via the main DREM app.');
           return;

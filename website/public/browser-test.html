@@ -59,14 +59,20 @@
     <div class="info-box">
       <h3>How to Test Legacy Mode in Modern Browsers:</h3>
       <ol>
-        <li><strong>URL Parameter:</strong> Add <code>?legacy=true</code> to the car activation URL</li>
+        <li>
+          <strong>URL Parameter:</strong> Add <code>?legacy=true</code> to the car activation URL
+        </li>
         <li>
           <strong>Browser DevTools User Agent Override:</strong>
           <ul>
             <li>
-              Chrome/Edge: F12 → Network tab → "No throttling" dropdown → Add custom device with Firefox 84.0 user agent
+              Chrome/Edge: F12 → Network tab → "No throttling" dropdown → Add custom device with
+              Firefox 84.0 user agent
             </li>
-            <li>Firefox: F12 → Settings (gear icon) → Check "Show custom format" → Enter custom user agent</li>
+            <li>
+              Firefox: F12 → Settings (gear icon) → Check "Show custom format" → Enter custom user
+              agent
+            </li>
           </ul>
         </li>
         <li>
@@ -88,7 +94,9 @@
             typeof String.prototype.includes !== 'undefined';
 
           const hasModernReact =
-            typeof Symbol !== 'undefined' && typeof Map !== 'undefined' && typeof Set !== 'undefined';
+            typeof Symbol !== 'undefined' &&
+            typeof Map !== 'undefined' &&
+            typeof Set !== 'undefined';
 
           const hasES6 = (() => {
             try {

@@ -133,7 +133,9 @@ Use this checklist when removing `@ts-nocheck` from files and adding proper Type
 
 - [ ] Add type assertions to `API.graphql` calls
   ```typescript
-  const response = (await API.graphql(graphqlOperation(query, variables))) as GraphQLResult<ResponseType>;
+  const response = (await API.graphql(
+    graphqlOperation(query, variables)
+  )) as GraphQLResult<ResponseType>;
   ```
 
 ### Step 6: Type Subscriptions
