@@ -143,7 +143,7 @@ export function GlobalDashboard() {
     return (
       <ContentLayout header={<Header variant="h1">{t('stats.global-dashboard')}</Header>}>
         <Box textAlign="center" padding={{ top: 'xxxl' }}>
-          <StatusIndicator type="info">{t('stats.no-data')}</StatusIndicator>
+          <StatusIndicator type="info">{t('stats.no-race-data')}</StatusIndicator>
         </Box>
       </ContentLayout>
     );

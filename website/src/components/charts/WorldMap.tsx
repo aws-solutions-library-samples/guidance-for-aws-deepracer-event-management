@@ -103,6 +103,14 @@ interface WorldMapProps {
    * (integer-friendly). Use for the avg metric to render 1-decimal output.
    */
   formatValue?: (v: number) => string;
+  /**
+   * Optional: which raw count the primary value corresponds to. When set,
+   * the tooltip skips that field's context line to avoid duplicating the
+   * primary metric (e.g. with metric=Events, no need for an extra
+   * "Events: N" line). Leave unset for metrics that don't match a raw
+   * field (e.g. an avg).
+   */
+  primaryField?: 'events' | 'racers' | 'laps';
   height?: number;
 }
 
@@ -118,7 +126,7 @@ const worldFeatures = (() => {
   return (fc as unknown as { features: any[] }).features;
 })();
 
-export function WorldMap({ data, metricLabel, formatValue, height = 400 }: WorldMapProps) {
+export function WorldMap({ data, metricLabel, formatValue, primaryField, height = 400 }: WorldMapProps) {
   const { t, i18n } = useTranslation();
   const theme = useChartTheme();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -219,16 +227,21 @@ export function WorldMap({ data, metricLabel, formatValue, height = 400 }: World
               },
               label(item) {
                 const raw: any = item.raw;
-                if (!raw?.countryCode) return t('stats.no-events') as string;
+                if (!raw?.countryCode) return t('stats.no-data') as string;
                 const primary = formatValue
                   ? formatValue(raw.value ?? 0)
                   : String(raw.value ?? 0);
-                return [
-                  `${metricLabel}: ${primary}`,
-                  `${t('stats.events')}: ${raw.events ?? 0}`,
-                  `${t('stats.racers')}: ${raw.racers ?? 0}`,
-                  `${t('stats.laps')}: ${raw.laps ?? 0}`,
-                ];
+                const lines = [`${metricLabel}: ${primary}`];
+                if (primaryField !== 'events') {
+                  lines.push(`${t('stats.events')}: ${raw.events ?? 0}`);
+                }
+                if (primaryField !== 'racers') {
+                  lines.push(`${t('stats.racers')}: ${raw.racers ?? 0}`);
+                }
+                if (primaryField !== 'laps') {
+                  lines.push(`${t('stats.laps')}: ${raw.laps ?? 0}`);
+                }
+                return lines;
               },
             },
           },
@@ -268,7 +281,7 @@ export function WorldMap({ data, metricLabel, formatValue, height = 400 }: World
     return () => {
       chart.destroy();
     };
-  }, [byNumericId, maxValue, theme, t, countryNames, metricLabel, formatValue]);
+  }, [byNumericId, maxValue, theme, t, countryNames, metricLabel, formatValue, primaryField]);
 
   return (
     <div style={{ height }}>
