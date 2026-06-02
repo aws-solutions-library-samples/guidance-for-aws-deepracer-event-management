@@ -155,7 +155,7 @@ export function GlobalDashboard() {
       case 'laps':
         return t('stats.laps');
       case 'avgLapsPerEvent':
-        return t('stats.avg-laps-per-event');
+        return t('stats.metric-avg-laps');
     }
   }, [countryMetric, t]);
 
