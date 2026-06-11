@@ -113,7 +113,10 @@ const DefaultRacingFooter: React.FC<DefaultRacingFooterProps> = ({
         description={t('events.race.end-condition.description')}
       >
         <Select
-          selectedOption={GetRaceEndConditionOptionFromId(raceEndCondition || RaceEndConditionEnum.TIME_BASED) || null}
+          selectedOption={
+            GetRaceEndConditionOptionFromId(raceEndCondition || RaceEndConditionEnum.TIME_BASED) ||
+            null
+          }
           onChange={({ detail }) => onChange({ raceEndCondition: detail.selectedOption.value })}
           options={raceEndConditionOptions}
           selectedAriaLabel="Selected"
@@ -139,7 +142,9 @@ const DefaultRacingFooter: React.FC<DefaultRacingFooterProps> = ({
       >
         <Select
           selectedOption={GetNumberOfLapsOptionFromId(numberOfLaps) || null}
-          onChange={({ detail }) => onChange({ numberOfLaps: parseInt(detail.selectedOption.value || '3') })}
+          onChange={({ detail }) =>
+            onChange({ numberOfLaps: parseInt(detail.selectedOption.value || '3') })
+          }
           options={numberOfLapsOptions}
           selectedAriaLabel="Selected"
           disabled={!isLapCount}
