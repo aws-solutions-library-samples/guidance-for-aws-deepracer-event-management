@@ -34,11 +34,7 @@ const ALL_TRACKS = 'ALL';
 // the rest still live in the data and the admin Events page, they just
 // don't appear in the multiselect or get rolled into the "all selected"
 // view here.
-const STATS_VISIBLE_TYPES = new Set([
-  'AWS_SUMMIT',
-  'OFFICIAL_TRACK_RACE',
-  'OFFICIAL_WORKSHOP',
-]);
+const STATS_VISIBLE_TYPES = new Set(['AWS_SUMMIT', 'OFFICIAL_TRACK_RACE', 'OFFICIAL_WORKSHOP']);
 
 function KpiCard({ title, value }: { title: string; value: string | number }) {
   return (
@@ -77,9 +73,7 @@ export function GlobalDashboard() {
   // Default to AWS Summit only — these events have the most rigorous timing
   // setup, so the "Fastest Laps Ever" view is trustworthy out of the box.
   // Users can broaden via the Multiselect.
-  const [typeFilter, setTypeFilter] = useState<Set<string>>(
-    () => new Set(['AWS_SUMMIT']),
-  );
+  const [typeFilter, setTypeFilter] = useState<Set<string>>(() => new Set(['AWS_SUMMIT']));
 
   // All hooks must run on every render — no early returns above this block.
   // We feed the memos optional-chained values so they cope with `globalStats`
@@ -107,7 +101,7 @@ export function GlobalDashboard() {
           value: cfg.value,
           label: cfg.label,
         })),
-    [],
+    []
   );
 
   // For "All tracks", derive the view from the union of per-track buckets
@@ -119,12 +113,8 @@ export function GlobalDashboard() {
   const fastestLapsRows = useMemo<FastestLapEntry[]>(() => {
     if (!globalStats) return [];
     if (trackFilter !== ALL_TRACKS) {
-      const bucket = globalStats.fastestLapsByTrack?.find(
-        (b) => b.trackType === trackFilter,
-      );
-      return (bucket?.entries ?? []).filter((entry) =>
-        typeFilter.has(entry.typeOfEvent),
-      );
+      const bucket = globalStats.fastestLapsByTrack?.find((b) => b.trackType === trackFilter);
+      return (bucket?.entries ?? []).filter((entry) => typeFilter.has(entry.typeOfEvent));
     }
     const unioned = (globalStats.fastestLapsByTrack ?? [])
       .flatMap((bucket) => bucket.entries)
@@ -145,7 +135,7 @@ export function GlobalDashboard() {
 
   const countryRows = useMemo(
     () => deriveCountryMetric(globalStats?.eventsByCountry ?? [], countryMetric),
-    [globalStats?.eventsByCountry, countryMetric],
+    [globalStats?.eventsByCountry, countryMetric]
   );
 
   const countryMetricLabel = useMemo(() => {
@@ -167,7 +157,7 @@ export function GlobalDashboard() {
       countryMetric === 'avgLapsPerEvent'
         ? (v: number) => (Math.round(v * 10) / 10).toString()
         : undefined,
-    [countryMetric],
+    [countryMetric]
   );
 
   // Map the active metric to the raw count field that the WorldMap tooltip
@@ -232,9 +222,7 @@ export function GlobalDashboard() {
               actions={
                 <SegmentedControl
                   selectedId={countryMetric}
-                  onChange={({ detail }) =>
-                    setCountryMetric(detail.selectedId as MetricKey)
-                  }
+                  onChange={({ detail }) => setCountryMetric(detail.selectedId as MetricKey)}
                   label={t('stats.country-breakdown')}
                   options={[
                     { id: 'events', text: t('stats.events') },
@@ -255,10 +243,7 @@ export function GlobalDashboard() {
                 label: t('stats.bar-chart'),
                 content: (
                   <BarChart
-                    labels={countryRows.map((c) => [
-                      c.countryCode,
-                      flagEmoji(c.countryCode),
-                    ])}
+                    labels={countryRows.map((c) => [c.countryCode, flagEmoji(c.countryCode)])}
                     values={countryRows.map((c) => c.value)}
                     seriesLabel={countryMetricLabel}
                     xTitle={t('stats.country')}
@@ -330,9 +315,7 @@ export function GlobalDashboard() {
                   <Multiselect
                     selectedOptions={typeOptions.filter((o) => typeFilter.has(o.value))}
                     onChange={({ detail }) =>
-                      setTypeFilter(
-                        new Set(detail.selectedOptions.map((o) => o.value as string)),
-                      )
+                      setTypeFilter(new Set(detail.selectedOptions.map((o) => o.value as string)))
                     }
                     options={typeOptions}
                     placeholder={t('stats.filter-by-event-type')}
@@ -343,9 +326,7 @@ export function GlobalDashboard() {
                     selectedOption={
                       trackOptions.find((o) => o.value === trackFilter) ?? trackOptions[0]
                     }
-                    onChange={({ detail }) =>
-                      setTrackFilter(detail.selectedOption.value as string)
-                    }
+                    onChange={({ detail }) => setTrackFilter(detail.selectedOption.value as string)}
                     options={trackOptions}
                     ariaLabel={t('stats.filter-by-track')}
                   />
@@ -366,7 +347,13 @@ export function GlobalDashboard() {
               },
               { id: 'username', header: t('stats.racer'), cell: (item) => item.username },
               ...(showEventNameColumn
-                ? [{ id: 'eventName', header: t('stats.event'), cell: (item: FastestLapEntry) => item.eventName }]
+                ? [
+                    {
+                      id: 'eventName',
+                      header: t('stats.event'),
+                      cell: (item: FastestLapEntry) => item.eventName,
+                    },
+                  ]
                 : []),
               {
                 id: 'typeOfEvent',
