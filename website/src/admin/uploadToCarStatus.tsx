@@ -1,4 +1,11 @@
-import { Box, Container, Header, Icon, SpaceBetween, StatusIndicator } from '@cloudscape-design/components';
+import {
+  Box,
+  Container,
+  Header,
+  Icon,
+  SpaceBetween,
+  StatusIndicator,
+} from '@cloudscape-design/components';
 import ColumnLayout from '@cloudscape-design/components/column-layout';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
@@ -20,10 +27,7 @@ import { PageTable } from '../components/pageTable';
 import { onUploadsToCarCreated, onUploadsToCarUpdated } from '../graphql/subscriptions';
 import i18next from '../i18n';
 import { useSelectedEventContext } from '../store/contexts/storeProvider';
-import {
-  ColumnConfiguration,
-  FilteringProperties,
-} from './uploadToCarStatusTableConfig';
+import { ColumnConfiguration, FilteringProperties } from './uploadToCarStatusTableConfig';
 
 // Type definitions
 type UploadStatus = 'Created' | 'Started' | 'InProgress' | 'Success' | 'Failed';
@@ -62,7 +66,7 @@ const UploadToCarStatus: React.FC = () => {
   }, [selectedEvent]);
 
   function enrichStatus(data: UploadToCarItem[]): UploadToCarItem[] {
-    data.forEach(element => {
+    data.forEach((element) => {
       // enrich status
       if (element.status === 'Created') {
         element.statusIndicator = (
@@ -136,7 +140,7 @@ const UploadToCarStatus: React.FC = () => {
       setIsLoading(false);
     }
 
-    if (typeof selectedEvent?.eventId !== "undefined") {
+    if (typeof selectedEvent?.eventId !== 'undefined') {
       listUploadsToCar();
     }
     return () => {
@@ -148,8 +152,8 @@ const UploadToCarStatus: React.FC = () => {
   useEffect(() => {
     const newBarData: BarChartDataPoint[] = [];
 
-    allItems.forEach(element => {
-      if (typeof element.duration !== "undefined" && element.uploadStartTime) {
+    allItems.forEach((element) => {
+      if (typeof element.duration !== 'undefined' && element.uploadStartTime) {
         const dateTime = new Date(element.uploadStartTime);
         const data: BarChartDataPoint = { x: dateTime, y: element.duration };
         newBarData.push(data);
@@ -166,7 +170,9 @@ const UploadToCarStatus: React.FC = () => {
 
     if (allItems.length > 0) {
       const max = allItems.reduce((prev, current) => {
-        return (prev && prev.duration && current.duration && prev.duration > current.duration) ? prev : current;
+        return prev && prev.duration && current.duration && prev.duration > current.duration
+          ? prev
+          : current;
       });
       const newMaxDuration = Math.ceil(max.duration || 0) + 3;
       setMaxDuration(newMaxDuration);
@@ -181,16 +187,16 @@ const UploadToCarStatus: React.FC = () => {
       onUploadsToCarCreated,
       filter
     ).subscribe({
-        next: (event) => {
-          console.debug(
-            'onUploadsToCarCreated event received',
-            event.value.data.onUploadsToCarCreated
-          );
-          event.value.data.onUploadsToCarCreated.status = 'Created';
-          const newItems = allItems.concat(event.value.data.onUploadsToCarCreated);
-          const enrichedItems = enrichStatus(newItems);
-          setItems(enrichedItems);
-        },
+      next: (event) => {
+        console.debug(
+          'onUploadsToCarCreated event received',
+          event.value.data.onUploadsToCarCreated
+        );
+        event.value.data.onUploadsToCarCreated.status = 'Created';
+        const newItems = allItems.concat(event.value.data.onUploadsToCarCreated);
+        const enrichedItems = enrichStatus(newItems);
+        setItems(enrichedItems);
+      },
     });
 
     return () => {
@@ -207,30 +213,32 @@ const UploadToCarStatus: React.FC = () => {
       onUploadsToCarUpdated,
       filter
     ).subscribe({
-        next: (event) => {
-          const updatedData = event.value.data.onUploadsToCarUpdated;
-          console.debug('onUploadsToCarUpdated event received', updatedData);
-          const newItems = [...allItems];
-          let currentData = newItems.find((value) => (value.modelKey === updatedData.modelKey && value.jobId === updatedData.jobId));
-          
-          // handle missed events
-          if (currentData === undefined) {
-            currentData = {} as UploadToCarItem;
-            newItems.push(currentData);
-            currentData.modelKey = updatedData.modelKey;
-          }
+      next: (event) => {
+        const updatedData = event.value.data.onUploadsToCarUpdated;
+        console.debug('onUploadsToCarUpdated event received', updatedData);
+        const newItems = [...allItems];
+        let currentData = newItems.find(
+          (value) => value.modelKey === updatedData.modelKey && value.jobId === updatedData.jobId
+        );
 
-          currentData.status = updatedData.status;
-          if (updatedData.uploadStartTime) {
-            currentData.uploadStartTime = updatedData.uploadStartTime;
-          }
-          if (updatedData.endTime) {
-            currentData.endTime = updatedData.endTime;
-          }
+        // handle missed events
+        if (currentData === undefined) {
+          currentData = {} as UploadToCarItem;
+          newItems.push(currentData);
+          currentData.modelKey = updatedData.modelKey;
+        }
 
-          const enrichedItems = enrichStatus(newItems);
-          setItems(enrichedItems);
-        },
+        currentData.status = updatedData.status;
+        if (updatedData.uploadStartTime) {
+          currentData.uploadStartTime = updatedData.uploadStartTime;
+        }
+        if (updatedData.endTime) {
+          currentData.endTime = updatedData.endTime;
+        }
+
+        const enrichedItems = enrichStatus(newItems);
+        setItems(enrichedItems);
+      },
     });
 
     return () => {
@@ -242,17 +250,14 @@ const UploadToCarStatus: React.FC = () => {
   const filteringProperties = FilteringProperties() as any;
 
   const HeaderActionButtons: React.FC = () => {
-    return (
-      <SpaceBetween direction="horizontal" size="xs">
-      </SpaceBetween>
-    );
+    return <SpaceBetween direction="horizontal" size="xs"></SpaceBetween>;
   };
 
   const breadcrumbs: Array<{ text: string; href?: string }> = [
     { text: t('home.breadcrumb'), href: '/' },
     { text: t('operator.breadcrumb'), href: '/admin/home' },
     { text: t('models.breadcrumb'), href: '/admin/home' },
-    { text: t('upload-to-car-status.breadcrumb') }
+    { text: t('upload-to-car-status.breadcrumb') },
   ];
 
   const chartTheme = useChartTheme();
@@ -279,22 +284,15 @@ const UploadToCarStatus: React.FC = () => {
         );
       }
       if (item.jobId && !jobColours.has(item.jobId)) {
-        jobColours.set(
-          item.jobId,
-          categoricalPalette[jobColours.size % categoricalPalette.length]
-        );
+        jobColours.set(item.jobId, categoricalPalette[jobColours.size % categoricalPalette.length]);
       }
     }
 
     return {
       labels: horizontalChartLabels,
       datasets: allItems.map((item, idx) => {
-        const carColour = item.carName
-          ? carColours.get(item.carName)!
-          : statusPalette.neutral;
-        const jobColour = item.jobId
-          ? jobColours.get(item.jobId)!
-          : statusPalette.neutral;
+        const carColour = item.carName ? carColours.get(item.carName)! : statusPalette.neutral;
+        const jobColour = item.jobId ? jobColours.get(item.jobId)! : statusPalette.neutral;
         const labelParts: string[] = [item.status];
         if (item.carName) labelParts.push(item.carName);
         if (item.jobId) labelParts.push(item.jobId.slice(0, 8));
@@ -453,9 +451,7 @@ const UploadToCarStatus: React.FC = () => {
     const times = barData
       .map((d) => (d.x instanceof Date ? d.x.getTime() : new Date(d.x).getTime()))
       .filter((n) => Number.isFinite(n));
-    return times.length
-      ? { min: Math.min(...times), max: Math.max(...times) }
-      : null;
+    return times.length ? { min: Math.min(...times), max: Math.max(...times) } : null;
   }, [barData]);
 
   // For pan limits, clamp leftward scrolling to one hour before the
@@ -621,8 +617,10 @@ const UploadToCarStatus: React.FC = () => {
       >
         <SpaceBetween direction="vertical" size="l">
           <ColumnLayout columns={2}>
-            <Container {...{ textAlign: "center", fitHeight: true } as any}>
-              <Header variant={"h2" as any}>{t('upload-to-car-status.horizontal-bar.header')}</Header>
+            <Container {...({ textAlign: 'center', fitHeight: true } as any)}>
+              <Header variant={'h2' as any}>
+                {t('upload-to-car-status.horizontal-bar.header')}
+              </Header>
               {allItems.length > 0 ? (
                 <div style={{ height: 250 }} aria-label="Stacked, horizontal bar chart">
                   <Bar data={horizontalChartData} options={horizontalChartOptions} />
@@ -632,8 +630,8 @@ const UploadToCarStatus: React.FC = () => {
               )}
             </Container>
 
-            <Container {...{ textAlign: "center", fitHeight: true } as any}>
-              <Header variant={"h2" as any}>{t('upload-to-car-status.upload-time.header')}</Header>
+            <Container {...({ textAlign: 'center', fitHeight: true } as any)}>
+              <Header variant={'h2' as any}>{t('upload-to-car-status.upload-time.header')}</Header>
               {barData.length > 0 ? (
                 <div
                   style={{ height: 250, position: 'relative' }}
