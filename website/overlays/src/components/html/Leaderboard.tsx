@@ -56,9 +56,7 @@ function entryTime(entry: LeaderboardEntry, raceFormat: string): number | null {
 function formatTime(entry: LeaderboardEntry | null, raceFormat: string): string {
   if (!entry) return '';
   if (raceFormat === 'average') {
-    return entry.fastestAverageLap
-      ? GetFormattedLapTime(entry.fastestAverageLap.avgTime)
-      : 'DNF';
+    return entry.fastestAverageLap ? GetFormattedLapTime(entry.fastestAverageLap.avgTime) : 'DNF';
   }
   return entry.fastestLapTime != null ? GetFormattedLapTime(entry.fastestLapTime) : '';
 }
@@ -106,8 +104,7 @@ export function Leaderboard({
       rank: realRank,
       entry,
       rankLabel: neighbourhoodView ? `#${realRank}` : standardLabels[i],
-      highlighted:
-        !!highlightedUsername && entry?.username === highlightedUsername,
+      highlighted: !!highlightedUsername && entry?.username === highlightedUsername,
     });
   }
 
@@ -125,9 +122,7 @@ export function Leaderboard({
           // shows mid-field positions like #5/#6/#7/#8 — none of which
           // should be coloured gold/silver/bronze.
           const podiumClass =
-            !neighbourhoodView && rank <= 3
-              ? styles[`rank${rank}` as keyof typeof styles]
-              : '';
+            !neighbourhoodView && rank <= 3 ? styles[`rank${rank}` as keyof typeof styles] : '';
           return (
             <li
               key={`${rank}-${entry?.username ?? 'empty'}`}
@@ -147,10 +142,7 @@ export function Leaderboard({
               <span className={styles.rank}>{rankLabel}</span>
               {avatarConfig ? (
                 <span className={styles.avatar}>
-                  <Avatar
-                    avatarStyle="Transparent"
-                    {...(avatarConfig as Record<string, string>)}
-                  />
+                  <Avatar avatarStyle="Transparent" {...(avatarConfig as Record<string, string>)} />
                   {entry?.countryCode ? (
                     <Flag countryCode={entry.countryCode} className={styles.flagOverlay} />
                   ) : null}
@@ -166,9 +158,7 @@ export function Leaderboard({
                   even when there is no gap (P1, gapToLeader off, no time
                   data) so the grid keeps its column alignment. */}
               <span className={styles.gap}>
-                {gapToLeader && gap != null && gap > 0
-                  ? `+${GetFormattedLapTime(gap)}`
-                  : ''}
+                {gapToLeader && gap != null && gap > 0 ? `+${GetFormattedLapTime(gap)}` : ''}
               </span>
               <span className={styles.time}>{formatTime(entry, raceFormat)}</span>
             </li>

@@ -12,16 +12,8 @@ export const carPrintableLabel = /* GraphQL */ `
   }
 `;
 export const getAllCarLogsAssets = /* GraphQL */ `
-  query GetAllCarLogsAssets(
-    $limit: Int
-    $nextToken: String
-    $user_sub: String
-  ) {
-    getAllCarLogsAssets(
-      limit: $limit
-      nextToken: $nextToken
-      user_sub: $user_sub
-    ) {
+  query GetAllCarLogsAssets($limit: Int, $nextToken: String, $user_sub: String) {
+    getAllCarLogsAssets(limit: $limit, nextToken: $nextToken, user_sub: $user_sub) {
       assets {
         assetId
         assetMetaData {
@@ -99,9 +91,7 @@ export const getAllModels = /* GraphQL */ `
   }
 `;
 export const getCarLogsAssetsDownloadLinks = /* GraphQL */ `
-  query GetCarLogsAssetsDownloadLinks(
-    $assetSubPairs: [CarLogsAssetSubPairsInput!]
-  ) {
+  query GetCarLogsAssetsDownloadLinks($assetSubPairs: [CarLogsAssetSubPairsInput!]) {
     getCarLogsAssetsDownloadLinks(assetSubPairs: $assetSubPairs) {
       assetId
       downloadLink
@@ -230,14 +220,8 @@ export const getRaces = /* GraphQL */ `
   }
 `;
 export const getUploadModelToCarStatus = /* GraphQL */ `
-  query GetUploadModelToCarStatus(
-    $carInstanceId: String!
-    $ssmCommandId: String!
-  ) {
-    getUploadModelToCarStatus(
-      carInstanceId: $carInstanceId
-      ssmCommandId: $ssmCommandId
-    ) {
+  query GetUploadModelToCarStatus($carInstanceId: String!, $ssmCommandId: String!) {
+    getUploadModelToCarStatus(carInstanceId: $carInstanceId, ssmCommandId: $ssmCommandId) {
       carInstanceId
       ssmCommandId
       ssmCommandStatus
@@ -346,10 +330,7 @@ export const updateLeaderboardConfigs = /* GraphQL */ `
     $eventId: String!
     $leaderboardConfigs: [LeaderBoardConfigInputType]!
   ) {
-    updateLeaderboardConfigs(
-      eventId: $eventId
-      leaderboardConfigs: $leaderboardConfigs
-    ) {
+    updateLeaderboardConfigs(eventId: $eventId, leaderboardConfigs: $leaderboardConfigs) {
       leaderBoardFooter
       leaderBoardTitle
       sponsor

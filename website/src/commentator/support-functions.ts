@@ -8,7 +8,9 @@ interface OverlayInfo {
   averageLaps?: AverageLap[];
 }
 
-export const getFacestAvgFromOverlayInfo = (overlayInfo: OverlayInfo): AverageLap | Record<string, never> => {
+export const getFacestAvgFromOverlayInfo = (
+  overlayInfo: OverlayInfo
+): AverageLap | Record<string, never> => {
   let lapsSortedByAvgTime: AverageLap[] = [];
 
   if (overlayInfo.averageLaps && overlayInfo.averageLaps.length > 0) {

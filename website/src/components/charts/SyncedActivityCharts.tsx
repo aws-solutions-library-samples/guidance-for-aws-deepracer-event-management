@@ -41,8 +41,7 @@ const crosshairPlugin: Plugin<'line'> = {
     const x = active[0].element.x;
     const { top, bottom } = chart.chartArea;
     const ctx = chart.ctx;
-    const tickColor =
-      (chart.options.scales?.x?.ticks?.color as string | undefined) ?? '#888';
+    const tickColor = (chart.options.scales?.x?.ticks?.color as string | undefined) ?? '#888';
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(x, top);
@@ -55,11 +54,7 @@ const crosshairPlugin: Plugin<'line'> = {
   },
 };
 
-export function SyncedActivityCharts({
-  dates,
-  series,
-  height = 180,
-}: SyncedActivityChartsProps) {
+export function SyncedActivityCharts({ dates, series, height = 180 }: SyncedActivityChartsProps) {
   const chartRefs = useRef<Array<LineChartRef>>([]);
   const chartTheme = useChartTheme();
 
@@ -207,11 +202,7 @@ export function SyncedActivityCharts({
           ],
         };
         return (
-          <div
-            key={s.title}
-            style={{ height, position: 'relative' }}
-            onMouseLeave={onLeaveSync}
-          >
+          <div key={s.title} style={{ height, position: 'relative' }} onMouseLeave={onLeaveSync}>
             <Line
               ref={(el) => {
                 chartRefs.current[i] = el;

@@ -1,9 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import {
-  GetFormattedLapTime,
-  GetFormattedTotalTime,
-  GetLeaderboardDataSorted,
-} from './format';
+import { GetFormattedLapTime, GetFormattedTotalTime, GetLeaderboardDataSorted } from './format';
 
 describe('GetFormattedLapTime', () => {
   test('sub-minute time without showMinutes returns SS.mmm', () => {

@@ -147,7 +147,7 @@ export function CreateUser(): JSX.Element {
             </SpaceBetween>
           }
         >
-          <Container {...({ textAlign: "center" } as any)}>
+          <Container {...({ textAlign: 'center' } as any)}>
             <SpaceBetween direction="vertical" size="l">
               <FormField label={t('users.racer-name')} errorText={usernameErrorText}>
                 <Input

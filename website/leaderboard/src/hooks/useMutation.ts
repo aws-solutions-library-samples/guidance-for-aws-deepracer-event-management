@@ -14,7 +14,10 @@ export default function useMutation() {
     try {
       setIsLoading(true);
       setData(undefined);
-      const response = await client.graphql({ query: (mutations as any)[method], variables: payload });
+      const response = await client.graphql({
+        query: (mutations as any)[method],
+        variables: payload,
+      });
       setData({ ...(response as any).data[method] });
       setIsLoading(false);
       setErrorMessage('');

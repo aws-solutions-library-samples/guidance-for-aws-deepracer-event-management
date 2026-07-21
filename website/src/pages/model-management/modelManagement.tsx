@@ -29,9 +29,9 @@ interface ModelManagementProps {
   onlyDisplayOwnModels?: boolean;
 }
 
-export const ModelManagement: React.FC<ModelManagementProps> = ({ 
-  isOperatorView = false, 
-  onlyDisplayOwnModels = true 
+export const ModelManagement: React.FC<ModelManagementProps> = ({
+  isOperatorView = false,
+  onlyDisplayOwnModels = true,
 }) => {
   const { t } = useTranslation([
     'translation',
@@ -46,14 +46,16 @@ export const ModelManagement: React.FC<ModelManagementProps> = ({
   const [, dispatch] = useStore();
   const models = state.models?.models || [];
   const isLoading = state.models?.isLoading || false;
-  const [currentUserSub, setCurrentUserSub] = useState<string>('')
+  const [currentUserSub, setCurrentUserSub] = useState<string>('');
 
   useEffect(() => {
-    getCurrentAuthUser().then((authUser) => {
-      setCurrentUserSub(authUser.sub);
-    }).catch(() => {
-      setCurrentUserSub('');
-    });
+    getCurrentAuthUser()
+      .then((authUser) => {
+        setCurrentUserSub(authUser.sub);
+      })
+      .catch(() => {
+        setCurrentUserSub('');
+      });
   }, []);
 
   // based on onlyDisplayOwnModels select if only the users own models should be displayed or all available models

@@ -8,7 +8,7 @@ import { EventSelectorModal } from './eventSelectorModal';
 /**
  * Higher-Order Component that ensures an event is selected before rendering the wrapped component
  * If no event is selected, displays an event selector modal
- * 
+ *
  * @param WrappedComponent - The component to wrap with event selection logic
  * @returns Component with event selection enforcement
  */

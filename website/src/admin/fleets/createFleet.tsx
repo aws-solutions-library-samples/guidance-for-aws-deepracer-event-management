@@ -101,10 +101,10 @@ export const CreateFleet = (): JSX.Element => {
               onFormIsValid={formIsValidHandler}
               onFormIsInvalid={formIsInvalidHandler}
             />
-            <DevicesPanel 
-              onChange={UpdateConfigHandler} 
-              fleetName={fleetConfig.fleetName || ''} 
-              fleetId={fleetConfig.fleetId || ''} 
+            <DevicesPanel
+              onChange={UpdateConfigHandler}
+              fleetName={fleetConfig.fleetName || ''}
+              fleetId={fleetConfig.fleetId || ''}
             />
           </SpaceBetween>
         </Form>

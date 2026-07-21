@@ -24,9 +24,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
-    exclude: [
-      '**/node_modules/**',
-    ],
+    exclude: ['**/node_modules/**'],
     reporters: ['default', ['junit', { outputFile: '../reports/junit-overlays.xml' }]],
   },
 });

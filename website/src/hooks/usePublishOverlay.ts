@@ -20,7 +20,10 @@ export interface OverlayInfo {
   raceStatus?: RacesStatusEnum;
 }
 
-export const usePublishOverlay = (): [(callback: () => OverlayInfo, interval?: number) => void, () => void] => {
+export const usePublishOverlay = (): [
+  (callback: () => OverlayInfo, interval?: number) => void,
+  () => void,
+] => {
   const [SendMutation] = useMutation();
   const intervalTimerId = useRef<NodeJS.Timeout | undefined>();
   const lastMessage = useRef<OverlayInfo>({});

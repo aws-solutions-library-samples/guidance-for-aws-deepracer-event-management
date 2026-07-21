@@ -49,34 +49,38 @@ export function racesToCSV(races: RaceForExport[], eventName?: string): string {
     const laps = race.laps || [];
     if (laps.length === 0) {
       // Race with no laps — still include a row
-      rows.push([
-        race.raceId,
-        escapeCSV(race.username || race.userId),
-        race.userId,
-        race.trackId,
-        String(race.racedByProxy || false),
-        race.createdAt || '',
-        '',
-        '',
-        '',
-        '',
-        '',
-      ].join(','));
-    } else {
-      for (const lap of laps) {
-        rows.push([
+      rows.push(
+        [
           race.raceId,
           escapeCSV(race.username || race.userId),
           race.userId,
           race.trackId,
           String(race.racedByProxy || false),
           race.createdAt || '',
-          String(Number(lap.lapId) + 1),
-          String(lap.time),
-          (lap.time / 1000).toFixed(3),
-          String(lap.resets),
-          String(lap.isValid),
-        ].join(','));
+          '',
+          '',
+          '',
+          '',
+          '',
+        ].join(',')
+      );
+    } else {
+      for (const lap of laps) {
+        rows.push(
+          [
+            race.raceId,
+            escapeCSV(race.username || race.userId),
+            race.userId,
+            race.trackId,
+            String(race.racedByProxy || false),
+            race.createdAt || '',
+            String(Number(lap.lapId) + 1),
+            String(lap.time),
+            (lap.time / 1000).toFixed(3),
+            String(lap.resets),
+            String(lap.isValid),
+          ].join(',')
+        );
       }
     }
   }
@@ -102,7 +106,10 @@ const SUMMARY_HEADERS = [
 
 export function racesToSummaryCSV(races: RaceForExport[]): string {
   // Group by userId + trackId
-  const grouped: Record<string, { races: RaceForExport[]; username: string; trackId: string; userId: string }> = {};
+  const grouped: Record<
+    string,
+    { races: RaceForExport[]; username: string; trackId: string; userId: string }
+  > = {};
   for (const race of races) {
     const key = `${race.userId}#${race.trackId}`;
     if (!grouped[key]) {
@@ -125,24 +132,28 @@ export function racesToSummaryCSV(races: RaceForExport[]): string {
     const validTimes = validLaps.map((l) => l.time);
     const totalResets = allLaps.reduce((sum, l) => sum + (l.resets || 0), 0);
     const fastest = validTimes.length > 0 ? Math.min(...validTimes) : '';
-    const avg = validTimes.length > 0 ? validTimes.reduce((a, b) => a + b, 0) / validTimes.length : '';
-    const completionRatio = allLaps.length > 0 ? ((validLaps.length / allLaps.length) * 100).toFixed(1) : '';
+    const avg =
+      validTimes.length > 0 ? validTimes.reduce((a, b) => a + b, 0) / validTimes.length : '';
+    const completionRatio =
+      allLaps.length > 0 ? ((validLaps.length / allLaps.length) * 100).toFixed(1) : '';
 
-    rows.push([
-      escapeCSV(group.username),
-      group.userId,
-      group.trackId,
-      String(group.races.length),
-      String(allLaps.length),
-      String(validLaps.length),
-      String(invalidLaps),
-      String(fastest),
-      typeof fastest === 'number' ? (fastest / 1000).toFixed(3) : '',
-      typeof avg === 'number' ? avg.toFixed(1) : '',
-      typeof avg === 'number' ? (avg / 1000).toFixed(3) : '',
-      String(totalResets),
-      String(completionRatio),
-    ].join(','));
+    rows.push(
+      [
+        escapeCSV(group.username),
+        group.userId,
+        group.trackId,
+        String(group.races.length),
+        String(allLaps.length),
+        String(validLaps.length),
+        String(invalidLaps),
+        String(fastest),
+        typeof fastest === 'number' ? (fastest / 1000).toFixed(3) : '',
+        typeof avg === 'number' ? avg.toFixed(1) : '',
+        typeof avg === 'number' ? (avg / 1000).toFixed(3) : '',
+        String(totalResets),
+        String(completionRatio),
+      ].join(',')
+    );
   }
 
   return rows.join('\n');

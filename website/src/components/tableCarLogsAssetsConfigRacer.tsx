@@ -125,8 +125,10 @@ export const ColumnConfigurationRacer = (): ColumnConfiguration => {
         sortingField: 'modelname',
         sortingComparator: (a, b) => {
           // Compare first model name in each array
-          const aName = a.models && a.models.length > 0 ? (a.models[0].modelName || '') : (a.modelname || '');
-          const bName = b.models && b.models.length > 0 ? (b.models[0].modelName || '') : (b.modelname || '');
+          const aName =
+            a.models && a.models.length > 0 ? a.models[0].modelName || '' : a.modelname || '';
+          const bName =
+            b.models && b.models.length > 0 ? b.models[0].modelName || '' : b.modelname || '';
           return aName.localeCompare(bName);
         },
         width: 200,
@@ -172,7 +174,8 @@ export const ColumnConfigurationRacer = (): ColumnConfiguration => {
         cell: (item) => String(formatAwsDateTime(item.assetMetaData.uploadedDateTime)) || '-',
         sortingField: 'uploadedDateTime',
         sortingComparator: (a, b) =>
-          new Date(a.assetMetaData.uploadedDateTime).getTime() - new Date(b.assetMetaData.uploadedDateTime).getTime(),
+          new Date(a.assetMetaData.uploadedDateTime).getTime() -
+          new Date(b.assetMetaData.uploadedDateTime).getTime(),
         width: 240,
         minWidth: 150,
       },

@@ -3,26 +3,26 @@ import * as events from 'aws-cdk-lib/aws-events';
 import { Construct } from 'constructs';
 
 export class Eventbridge extends Construct {
-    public readonly eventbus: events.EventBus;
+  public readonly eventbus: events.EventBus;
 
-    constructor(scope: Construct, id: string) {
-        // , props: CdnProps) {
-        super(scope, id);
+  constructor(scope: Construct, id: string) {
+    // , props: CdnProps) {
+    super(scope, id);
 
-        //  Event Bus locked to this account
-        const bus = new events.EventBus(this, 'bus', {
-            // eventBusName: 'MyCustomEventBus',
-        });
+    //  Event Bus locked to this account
+    const bus = new events.EventBus(this, 'bus', {
+      // eventBusName: 'MyCustomEventBus',
+    });
 
-        bus.archive('MyArchive', {
-            // archiveName: 'MyCustomEventBusArchive',
-            // description: 'MyCustomerEventBus Archive',
-            eventPattern: {
-                account: [Stack.of(this).account],
-            },
-            retention: Duration.days(15),
-        });
+    bus.archive('MyArchive', {
+      // archiveName: 'MyCustomEventBusArchive',
+      // description: 'MyCustomerEventBus Archive',
+      eventPattern: {
+        account: [Stack.of(this).account],
+      },
+      retention: Duration.days(15),
+    });
 
-        this.eventbus = bus;
-    }
+    this.eventbus = bus;
+  }
 }

@@ -94,29 +94,28 @@ export const CarModelUploadModal: React.FC<CarModelUploadModalProps> = ({ models
     await graphqlMutate(mutations.carDeleteAllModels, { resourceIds: InstanceIds });
   }
 
-  const { items, actions, filteredItemsCount, collectionProps, filterProps } =
-    useCollection(cars, {
-      filtering: {
-        empty: (
-          <EmptyState
-            title={t('carmodelupload.no-cars')}
-            subtitle={t('carmodelupload.no-cars-online')}
-          />
-        ),
-        noMatch: (
-          <EmptyState
-            title={t('common.no-matches')}
-            subtitle={t('common.we-cant-find-a-match')}
-            action={
-              <Button onClick={() => actions.setFiltering('')}>
-                {t('carmodelupload.clear-filter')}
-              </Button>
-            }
-          />
-        ),
-      },
-      sorting: { defaultState: { sortingColumn: columnConfiguration.columnDefinitions[1] as any } },
-    });
+  const { items, actions, filteredItemsCount, collectionProps, filterProps } = useCollection(cars, {
+    filtering: {
+      empty: (
+        <EmptyState
+          title={t('carmodelupload.no-cars')}
+          subtitle={t('carmodelupload.no-cars-online')}
+        />
+      ),
+      noMatch: (
+        <EmptyState
+          title={t('common.no-matches')}
+          subtitle={t('common.we-cant-find-a-match')}
+          action={
+            <Button onClick={() => actions.setFiltering('')}>
+              {t('carmodelupload.clear-filter')}
+            </Button>
+          }
+        />
+      ),
+    },
+    sorting: { defaultState: { sortingColumn: columnConfiguration.columnDefinitions[1] as any } },
+  });
 
   // Car selection table
   const modalTable = (

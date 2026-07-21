@@ -59,7 +59,7 @@ export const RaceSetupPage: React.FC<RaceSetupPageProps> = ({ race, setRace }) =
   useEffect(() => {
     // update race setup when track or event is changed while on page
     if (!selectedEvent || !selectedTrack) return;
-    
+
     setRace((preValue) => {
       return {
         ...preValue,
@@ -149,7 +149,10 @@ export const RaceSetupPage: React.FC<RaceSetupPageProps> = ({ race, setRace }) =
           racerValidation={racerValidation}
           selectedEvent={selectedEvent}
         />
-        <RacesDoneByUser selecedEvent={(selectedEvent as any) || null} selecedUserId={race.userId || null} />
+        <RacesDoneByUser
+          selecedEvent={(selectedEvent as any) || null}
+          selecedUserId={race.userId || null}
+        />
         <FormField
           label={t('race-admin.raced-by-proxy')}
           description={t('race-admin.raced-by-proxy-description')}

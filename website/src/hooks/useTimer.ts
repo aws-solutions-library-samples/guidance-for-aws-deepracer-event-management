@@ -6,7 +6,7 @@ export const Direction = {
   Down: 'Down',
 } as const;
 
-export type DirectionType = typeof Direction[keyof typeof Direction];
+export type DirectionType = (typeof Direction)[keyof typeof Direction];
 
 interface Time {
   minutes: string | number;
@@ -20,7 +20,7 @@ type TimerReturnType = [
   boolean,
   () => void,
   () => void,
-  (startingTime?: number) => void
+  (startingTime?: number) => void,
 ];
 
 export default function useTimer(

@@ -7,7 +7,11 @@ import { LeaderboardTable } from '../components/leaderboardTable';
 import { RaceInfoFooter } from '../components/raceInfoFooter';
 import { RaceSummaryFooter } from '../components/raceSummaryFooter';
 import { getLeaderboard } from '../graphql/queries';
-import { onDeleteLeaderboardEntry, onNewLeaderboardEntry, onUpdateLeaderboardEntry } from '../graphql/subscriptions';
+import {
+  onDeleteLeaderboardEntry,
+  onNewLeaderboardEntry,
+  onUpdateLeaderboardEntry,
+} from '../graphql/subscriptions';
 import styles from './leaderboard.module.css';
 
 const client = generateClient();
@@ -22,7 +26,14 @@ interface LeaderboardProps {
   showFlag: boolean;
 }
 
-const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, showFlag }: LeaderboardProps) => {
+const Leaderboard = ({
+  eventId,
+  trackId,
+  raceFormat,
+  showQrCode,
+  scrollEnabled,
+  showFlag,
+}: LeaderboardProps) => {
   const [leaderboardEntries, SetleaderboardEntries] = useState<any[]>([]);
   const [leaderboardConfig, setLeaderboardConfig] = useState<any>({
     leaderBoardTitle: '',
@@ -92,35 +103,39 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
    * @param {Array} allEntries    All leaderboard entries
    * @return {}
    */
-  const calcRaceSummary = useCallback((newEntry: any, previousPostition: number, allEntries: any[]) => {
-    const [entryIndex] = findEntryByUsername(newEntry.username, allEntries);
-    const overallRank = entryIndex + 1; // +1 due to that list index start from 0 and leaderboard on 1
-    newEntry.overallRank = overallRank;
-    console.debug(overallRank);
+  const calcRaceSummary = useCallback(
+    (newEntry: any, previousPostition: number, allEntries: any[]) => {
+      const [entryIndex] = findEntryByUsername(newEntry.username, allEntries);
+      const overallRank = entryIndex + 1; // +1 due to that list index start from 0 and leaderboard on 1
+      newEntry.overallRank = overallRank;
+      console.debug(overallRank);
 
-    // calculate consistency (previous leaderboard position)
-    console.debug(previousPostition);
-    if (previousPostition) {
-      newEntry.consistency = previousPostition;
-    } else {
-      newEntry.consistency = newEntry.overallRank;
-    }
-    console.debug(newEntry);
-
-    //calculate gap to fastest
-    if (overallRank === 0) {
-      newEntry.gapToFastest = 0;
-    } else {
-      if (raceFormat === 'fastest') {
-        newEntry.gapToFastest = newEntry.fastestLapTime - allEntries[0].fastestLapTime;
-      } else if (newEntry.fastestAverageLap) {
-        newEntry.gapToFastest = newEntry.fastestAverageLap.avgTime - allEntries[0].fastestAverageLap.avgTime;
+      // calculate consistency (previous leaderboard position)
+      console.debug(previousPostition);
+      if (previousPostition) {
+        newEntry.consistency = previousPostition;
       } else {
-        newEntry.gapToFastest = null;
+        newEntry.consistency = newEntry.overallRank;
       }
-    }
-    SetRaceSummaryData(newEntry);
-  }, []);
+      console.debug(newEntry);
+
+      //calculate gap to fastest
+      if (overallRank === 0) {
+        newEntry.gapToFastest = 0;
+      } else {
+        if (raceFormat === 'fastest') {
+          newEntry.gapToFastest = newEntry.fastestLapTime - allEntries[0].fastestLapTime;
+        } else if (newEntry.fastestAverageLap) {
+          newEntry.gapToFastest =
+            newEntry.fastestAverageLap.avgTime - allEntries[0].fastestAverageLap.avgTime;
+        } else {
+          newEntry.gapToFastest = null;
+        }
+      }
+      SetRaceSummaryData(newEntry);
+    },
+    []
+  );
 
   /**
    * Update leaderboard with a new entry
@@ -180,12 +195,14 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
   useEffect(() => {
     if (eventId) {
       const getLeaderboardData = async () => {
-        const response = await client.graphql({
+        const response = (await client.graphql({
           query: getLeaderboard,
           variables: { eventId: eventId, trackId: trackId },
-        }) as any;
+        })) as any;
         const leaderboard = response.data.getLeaderboard;
-        response.data.getLeaderboard.entries.forEach((entry: any) => updateLeaderboardEntries(entry));
+        response.data.getLeaderboard.entries.forEach((entry: any) =>
+          updateLeaderboardEntries(entry)
+        );
         setLeaderboardConfig(leaderboard.config);
       };
       getLeaderboardData();
@@ -196,67 +213,67 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
       // get all updates if trackId == 'combined'
       const subscriptionTrackId = trackId === 'combined' ? undefined : trackId;
       SetSubscription(
-        (client
-          .graphql({
+        (
+          client.graphql({
             query: onNewLeaderboardEntry,
             variables: { eventId: eventId, trackId: subscriptionTrackId },
-          }) as any)
-          .subscribe({
-            next: ({ data }: any) => {
-              console.debug('onNewLeaderboardEntry');
-              const newEntry = data.onNewLeaderboardEntry;
-              console.debug(newEntry);
-              updateLeaderboardEntries(newEntry);
-              setHighlightedUsername(newEntry.username);
-              setTimeout(() => setHighlightedUsername(null), 12000);
-              SetraceSummaryFooterIsVisible(true);
-              setTimeout(() => {
-                SetraceSummaryFooterIsVisible(false);
-              }, 12000);
-            },
-            error: (error: any) => console.warn(error),
-          })
+          }) as any
+        ).subscribe({
+          next: ({ data }: any) => {
+            console.debug('onNewLeaderboardEntry');
+            const newEntry = data.onNewLeaderboardEntry;
+            console.debug(newEntry);
+            updateLeaderboardEntries(newEntry);
+            setHighlightedUsername(newEntry.username);
+            setTimeout(() => setHighlightedUsername(null), 12000);
+            SetraceSummaryFooterIsVisible(true);
+            setTimeout(() => {
+              SetraceSummaryFooterIsVisible(false);
+            }, 12000);
+          },
+          error: (error: any) => console.warn(error),
+        })
       );
 
       if (onUpdateSubscription) {
         onUpdateSubscription.unsubscribe();
       }
       SetOnUpdateSubscription(
-        (client
-          .graphql({
+        (
+          client.graphql({
             query: onUpdateLeaderboardEntry,
             variables: { eventId: eventId, trackId: subscriptionTrackId },
-          }) as any)
-          .subscribe({
-            next: ({ data }: any) => {
-              console.debug('onUpdateLeaderboardEntry');
-              const newEntry = data.onUpdateLeaderboardEntry;
-              updateLeaderboardEntries(newEntry);
-              setHighlightedUsername(newEntry.username);
-              setTimeout(() => setHighlightedUsername(null), 12000);
-            },
-            error: (error: any) => console.warn(error),
-          })
+          }) as any
+        ).subscribe({
+          next: ({ data }: any) => {
+            console.debug('onUpdateLeaderboardEntry');
+            const newEntry = data.onUpdateLeaderboardEntry;
+            updateLeaderboardEntries(newEntry);
+            setHighlightedUsername(newEntry.username);
+            setTimeout(() => setHighlightedUsername(null), 12000);
+          },
+          error: (error: any) => console.warn(error),
+        })
       );
 
       if (onDeleteSubscription) {
         onDeleteSubscription.unsubscribe();
       }
       SetOnDeleteSubscription(
-        (client
-          .graphql({
+        (
+          client.graphql({
             query: onDeleteLeaderboardEntry,
             variables: { eventId: eventId, trackId: subscriptionTrackId },
-          }) as any)
-          .subscribe({
-            next: ({ data }: any) => {
-              console.debug('onDeleteLeaderboardEntry');
-              const entryToDelete = data.onDeleteLeaderboardEntry;
-              console.debug(entryToDelete);
-              removeLeaderboardEntry(entryToDelete);
-            },
-            error: (error: any) => console.warn(error),
-          })
+          }) as any
+        ).subscribe({
+          next: ({ data }: any) => {
+            console.debug('onDeleteLeaderboardEntry');
+            const entryToDelete = data.onDeleteLeaderboardEntry;
+            console.debug(entryToDelete);
+            removeLeaderboardEntry(entryToDelete);
+          },
+          error: (error: any) => console.warn(error),
+        })
       );
 
       return () => {
@@ -309,7 +326,11 @@ const Leaderboard = ({ eventId, trackId, raceFormat, showQrCode, scrollEnabled, 
         trackId={trackId}
         raceFormat={raceFormat}
       />
-      <RaceSummaryFooter visible={racSummaryFooterIsVisible} {...raceSummaryData} raceFormat={raceFormat} />
+      <RaceSummaryFooter
+        visible={racSummaryFooterIsVisible}
+        {...raceSummaryData}
+        raceFormat={raceFormat}
+      />
     </>
   );
 };

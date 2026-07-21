@@ -90,12 +90,14 @@ export const UserManagement: React.FC = () => {
         columnConfiguration={columnConfiguration as any}
         isItemDisabled={(item: User) => item.sub === currentUserSub}
         header={
-          <TableHeader
-            nrSelectedItems={selectedItems.length}
-            nrTotalItems={users.length}
-            header={t('users.header-list')}
-            actions={<HeaderActionButtons /> as any}
-          /> as any
+          (
+            <TableHeader
+              nrSelectedItems={selectedItems.length}
+              nrTotalItems={users.length}
+              header={t('users.header-list')}
+              actions={(<HeaderActionButtons />) as any}
+            />
+          ) as any
         }
         itemsIsLoading={isLoading}
         loadingText={t('users.loading-groups')}

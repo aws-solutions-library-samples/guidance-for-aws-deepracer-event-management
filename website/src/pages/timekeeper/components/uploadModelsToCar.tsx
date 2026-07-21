@@ -5,12 +5,7 @@ import { graphqlMutate, graphqlSubscribe } from '../../../graphql/graphqlHelpers
 import * as mutations from '../../../graphql/mutations';
 import { formatAwsDateTime } from '../../../support-functions/time';
 
-import {
-  Alert,
-  ProgressBar,
-  StatusIndicator,
-  Table
-} from '@cloudscape-design/components';
+import { Alert, ProgressBar, StatusIndicator, Table } from '@cloudscape-design/components';
 
 import { onUploadsToCarCreated, onUploadsToCarUpdated } from '../../../graphql/subscriptions';
 
@@ -79,7 +74,11 @@ interface UploadModelToCarProps {
   modelsToUpload: ModelToUpload[];
 }
 
-export function UploadModelToCar({ cars, event, modelsToUpload }: UploadModelToCarProps): JSX.Element {
+export function UploadModelToCar({
+  cars,
+  event,
+  modelsToUpload,
+}: UploadModelToCarProps): JSX.Element {
   const { t } = useTranslation();
   const [jobIds, setJobIds] = useState<string[]>([]);
   const [jobs, setJobs] = useState<UploadJob[]>([]);
@@ -97,7 +96,7 @@ export function UploadModelToCar({ cars, event, modelsToUpload }: UploadModelToC
   useEffect(() => {
     const getData = async (): Promise<void> => {
       const thisJobIds: string[] = [];
-      
+
       // Process cars sequentially to avoid race conditions with state updates
       for (const car of cars) {
         const variables = {
@@ -127,7 +126,7 @@ export function UploadModelToCar({ cars, event, modelsToUpload }: UploadModelToC
           thisJobIds.push(response.startUploadToCar.jobId);
         }
       }
-      
+
       setJobIds(thisJobIds);
     };
     getData();
@@ -135,7 +134,7 @@ export function UploadModelToCar({ cars, event, modelsToUpload }: UploadModelToC
 
   useEffect(() => {
     const subscriptions: GraphQLSubscription[] = [];
-    
+
     jobIds.forEach((jobId) => {
       const filter = {
         jobId: jobId,
@@ -173,7 +172,7 @@ export function UploadModelToCar({ cars, event, modelsToUpload }: UploadModelToC
   // monitor for updated jobs matching our JobIds
   useEffect(() => {
     const subscriptions: GraphQLSubscription[] = [];
-    
+
     jobIds.forEach((jobId) => {
       const filter = {
         jobId: jobId,
@@ -185,11 +184,11 @@ export function UploadModelToCar({ cars, event, modelsToUpload }: UploadModelToC
         next: (event) => {
           const updatedData = event.value.data.onUploadsToCarUpdated;
           console.debug('onUploadsToCarUpdated event received', updatedData);
-          
+
           setJobs((prevJobs) => {
             const newJobs = [...prevJobs];
             let currentData = newJobs.find((value) => value.modelKey === updatedData.modelKey);
-            
+
             if (currentData === undefined) {
               currentData = { modelKey: updatedData.modelKey };
               newJobs.push(currentData);
@@ -198,9 +197,7 @@ export function UploadModelToCar({ cars, event, modelsToUpload }: UploadModelToC
             if (updatedData.status === 'Created') {
               currentData.status = updatedData.status;
               currentData.statusIndicator = (
-                <StatusIndicator type="info">
-                  {t('carmodelupload.status.created')}
-                </StatusIndicator>
+                <StatusIndicator type="info">{t('carmodelupload.status.created')}</StatusIndicator>
               );
             } else if (updatedData.status === 'Started') {
               currentData.status = updatedData.status;
@@ -243,14 +240,14 @@ export function UploadModelToCar({ cars, event, modelsToUpload }: UploadModelToC
               currentData.status = updatedData.status;
               currentData.statusIndicator = <>{updatedData.status}</>;
             }
-            
+
             if (updatedData.uploadStartTime) {
               currentData.uploadStartTime = updatedData.uploadStartTime;
             }
             if (updatedData.endTime) {
               currentData.endTime = updatedData.endTime;
             }
-            
+
             return newJobs;
           });
         },
@@ -342,4 +339,3 @@ export function UploadModelToCar({ cars, event, modelsToUpload }: UploadModelToC
     </div>
   );
 }
-

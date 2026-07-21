@@ -24,7 +24,7 @@ const detectBrowserCapabilities = (): boolean => {
 // User agent based detection as fallback
 const isLegacyBrowser = (): boolean => {
   const userAgent = navigator.userAgent.toLowerCase();
-  
+
   // Firefox versions before 85 (released January 2021)
   const firefoxMatch = userAgent.match(/firefox\/(\d+)/);
   if (firefoxMatch && parseInt(firefoxMatch[1]) < 85) {
@@ -59,7 +59,7 @@ const AdminCarActivationWrapper: React.FC = () => {
     // Check for force legacy mode via URL parameter (for testing)
     const urlParams = new URLSearchParams(window.location.search);
     const forceLegacy = urlParams.get('legacy') === 'true';
-    
+
     // Perform browser detection
     const isLegacy = forceLegacy || !detectBrowserCapabilities() || isLegacyBrowser();
     setShouldUseLegacy(isLegacy);
@@ -76,13 +76,15 @@ const AdminCarActivationWrapper: React.FC = () => {
   // Show loading state while detecting
   if (shouldUseLegacy === null) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '200px',
-        fontFamily: 'Arial, sans-serif'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '200px',
+          fontFamily: 'Arial, sans-serif',
+        }}
+      >
         <div>Loading car activation...</div>
       </div>
     );
@@ -91,14 +93,19 @@ const AdminCarActivationWrapper: React.FC = () => {
   // If legacy browser, show a fallback message (shouldn't normally be seen due to redirect)
   if (shouldUseLegacy) {
     return (
-      <div style={{ 
-        padding: '20px', 
-        textAlign: 'center',
-        fontFamily: 'Arial, sans-serif'
-      }}>
+      <div
+        style={{
+          padding: '20px',
+          textAlign: 'center',
+          fontFamily: 'Arial, sans-serif',
+        }}
+      >
         <h2>Redirecting to Legacy Interface...</h2>
         <p>Your browser requires the simplified car activation interface.</p>
-        <p>If you are not redirected automatically, <a href="/car-activation-legacy.html">click here</a>.</p>
+        <p>
+          If you are not redirected automatically,{' '}
+          <a href="/car-activation-legacy.html">click here</a>.
+        </p>
       </div>
     );
   }

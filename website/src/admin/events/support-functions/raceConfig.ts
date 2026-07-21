@@ -16,7 +16,7 @@ export const RaceTypeEnum = {
   BEST_LAP_TIME: 'BEST_LAP_TIME',
 } as const;
 
-export type RaceType = typeof RaceTypeEnum[keyof typeof RaceTypeEnum];
+export type RaceType = (typeof RaceTypeEnum)[keyof typeof RaceTypeEnum];
 
 // LAP RESET OPTIONS METHODS
 export const ResetConfig = (): ConfigOption[] => {
@@ -44,7 +44,9 @@ export const GetRaceResetsNameFromId = (id: string | number | null | undefined):
   return item?.label || '';
 };
 
-export const GetResetOptionFromId = (id: string | number | null | undefined): ConfigOption | undefined => {
+export const GetResetOptionFromId = (
+  id: string | number | null | undefined
+): ConfigOption | undefined => {
   if (id == null) return undefined;
 
   const resetConfig = ResetConfig();
@@ -67,7 +69,9 @@ export const RaceTimeConfig = (): ConfigOption[] => {
   ];
 };
 
-export const GetRaceTimeOptionFromId = (id: string | number | null | undefined): ConfigOption | undefined => {
+export const GetRaceTimeOptionFromId = (
+  id: string | number | null | undefined
+): ConfigOption | undefined => {
   if (id == null) return undefined;
 
   const raceTimeOptions = RaceTimeConfig();
@@ -94,7 +98,9 @@ export const GetMaxRunsPerRacerFromId = (id: string | number | null | undefined)
   return item?.label || '';
 };
 
-export const GetMaxRunsPerRacerOptionFromId = (id: string | number | null | undefined): ConfigOption | undefined => {
+export const GetMaxRunsPerRacerOptionFromId = (
+  id: string | number | null | undefined
+): ConfigOption | undefined => {
   if (id == null) return undefined;
 
   const allowedRacesPerRacerConfig = MaxRunsPerRacerConfig();
@@ -117,7 +123,9 @@ export const LapConfig = (): ConfigOption[] => {
   ];
 };
 
-export const GetLapsOptionFromId = (id: string | number | null | undefined): ConfigOption | undefined => {
+export const GetLapsOptionFromId = (
+  id: string | number | null | undefined
+): ConfigOption | undefined => {
   if (id == null) return undefined;
 
   const lapsToFinishOptions = LapConfig();
@@ -183,7 +191,10 @@ export const GetRankingNameFromId = (id: string | null | undefined): string | un
   return option?.label;
 };
 
-export const GetRaceTypeNameFromId = (id: string | null | undefined, averageLapsWindowSize?: string): string | undefined => {
+export const GetRaceTypeNameFromId = (
+  id: string | null | undefined,
+  averageLapsWindowSize?: string
+): string | undefined => {
   if (id == null) return undefined;
 
   const raceTypeConfig = RaceTypeConfig();
@@ -208,7 +219,9 @@ export const AverageLapWindowConfig = (): ConfigOption[] => {
   ];
 };
 
-export const GetAverageLapWindowFromId = (id: string | number | null | undefined): ConfigOption | undefined => {
+export const GetAverageLapWindowFromId = (
+  id: string | number | null | undefined
+): ConfigOption | undefined => {
   if (id == null) return undefined;
 
   const averageLapsWindowOptions = AverageLapWindowConfig();

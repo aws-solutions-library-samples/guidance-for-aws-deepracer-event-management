@@ -43,7 +43,7 @@ export const DeviceLink: React.FC<DeviceLinkProps> = ({
   pingStatus,
 }) => {
   const { t } = useTranslation();
-  
+
   if (pingStatus === 'Online') {
     if (type === 'timer') {
       return (
@@ -55,7 +55,10 @@ export const DeviceLink: React.FC<DeviceLinkProps> = ({
       return (
         <>
           <div>
-            <Link external href={`https://${IP}/?epwd=${deviceUiPassword ? atob(deviceUiPassword) : ''}`}>
+            <Link
+              external
+              href={`https://${IP}/?epwd=${deviceUiPassword ? atob(deviceUiPassword) : ''}`}
+            >
               {t('devices.device-links.car')}
             </Link>
           </div>
@@ -72,7 +75,7 @@ export const DeviceLink: React.FC<DeviceLinkProps> = ({
       );
     }
   }
-  
+
   return <>-</>;
 };
 
@@ -80,28 +83,30 @@ export const ItemActions: React.FC<ItemActionsProps> = ({ item }) => {
   const { carFetchLogs, carRestartService, carEmergencyStop, carDeleteAllModels } = useCarCmdApi();
   const { t } = useTranslation();
   const selectedEvent = useSelectedEventContext();
-  
+
   if (item.PingStatus === 'Online') {
     return (
       <ButtonDropdown
-        items={[
-          {
-            id: 'fetch-logs',
-            text: t('devices.fetch-logs'),
-          },
-          {
-            id: 'delete-models',
-            text: t('devices.clean-car'),
-          },
-          {
-            id: 'restart-service',
-            text: t('devices.restart-service'),
-          },
-          {
-            id: 'car-stop',
-            text: t('devices.car-stop'),
-          },
-        ] as ButtonDropdownProps.Items}
+        items={
+          [
+            {
+              id: 'fetch-logs',
+              text: t('devices.fetch-logs'),
+            },
+            {
+              id: 'delete-models',
+              text: t('devices.clean-car'),
+            },
+            {
+              id: 'restart-service',
+              text: t('devices.restart-service'),
+            },
+            {
+              id: 'car-stop',
+              text: t('devices.car-stop'),
+            },
+          ] as ButtonDropdownProps.Items
+        }
         variant="inline-icon"
         expandToViewport
         disabled={item.Type !== 'deepracer'}
@@ -126,7 +131,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({ item }) => {
       />
     );
   }
-  
+
   return <>-</>;
 };
 
@@ -331,7 +336,7 @@ export const ColumnConfiguration = (
     defaultSortingColumn: {} as any, // Will be set below
     defaultSortingIsDescending: false,
   };
-  
+
   returnObject.defaultSortingColumn = returnObject.columnDefinitions[1]; // uploadedDateTime
   returnObject.defaultSortingIsDescending = false;
 
@@ -441,7 +446,13 @@ export const FilteringProperties = () => {
       operators: [
         {
           operator: '=',
-          form: ({ value, onChange }: { value?: string[]; onChange: (value: string[]) => void }) => {
+          form: ({
+            value,
+            onChange,
+          }: {
+            value?: string[];
+            onChange: (value: string[]) => void;
+          }) => {
             const deviceTypes = [
               { value: 'deepracer', label: i18next.t('devices.filter-deepracer') },
               { value: 'timer', label: i18next.t('devices.filter-timer') },

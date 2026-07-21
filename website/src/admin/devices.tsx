@@ -126,10 +126,7 @@ const AdminDevices: React.FC = () => {
             ? t('label-printer.download-printable-labels')
             : t('label-printer.download-printable-label')}
         </Button>
-        <Button
-          disabled={historyButtonDisabled}
-          onClick={() => setHistoryModalVisible(true)}
-        >
+        <Button disabled={historyButtonDisabled} onClick={() => setHistoryModalVisible(true)}>
           {t('devices.view-car-history')}
         </Button>
       </SpaceBetween>

@@ -18,7 +18,11 @@ interface ContentHeaderProps {
  * @param props - Component props
  * @returns Rendered content header with breadcrumbs
  */
-export function ContentHeader({ header, description, breadcrumbs }: ContentHeaderProps): JSX.Element {
+export function ContentHeader({
+  header,
+  description,
+  breadcrumbs,
+}: ContentHeaderProps): JSX.Element {
   return (
     <>
       <BreadcrumbGroup items={breadcrumbs} ariaLabel="Breadcrumbs" />

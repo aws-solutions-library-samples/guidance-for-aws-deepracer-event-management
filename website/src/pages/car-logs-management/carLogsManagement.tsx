@@ -60,9 +60,9 @@ type GraphQLSubscription = {
   unsubscribe: () => void;
 };
 
-export const CarLogsManagement: React.FC<CarLogsManagementProps> = ({ 
-  isOperatorView = false, 
-  onlyDisplayOwnAssets = true 
+export const CarLogsManagement: React.FC<CarLogsManagementProps> = ({
+  isOperatorView = false,
+  onlyDisplayOwnAssets = true,
 }) => {
   const { t } = useTranslation(['translation', 'help-model-carlogs', 'help-admin-model-carlogs']);
   const [columnConfiguration, setColumnConfiguration] = useState(() => ColumnConfigurationRacer());
@@ -89,7 +89,9 @@ export const CarLogsManagement: React.FC<CarLogsManagementProps> = ({
   }, []);
 
   const assetsToDisplay: CarLogAsset[] = onlyDisplayOwnAssets
-    ? assets.filter((asset: any) => asset.sub === currentUserSub || asset.username === currentUserSub)
+    ? assets.filter(
+        (asset: any) => asset.sub === currentUserSub || asset.username === currentUserSub
+      )
     : assets;
 
   const reloadAssets = async (): Promise<void> => {
@@ -170,10 +172,9 @@ export const CarLogsManagement: React.FC<CarLogsManagementProps> = ({
   const listFetchesFromCar = useCallback(async (): Promise<void> => {
     setIsLoadingJobs(true);
     setJobItems([]);
-    const response = await graphqlMutate<ListFetchesFromCarResponse>(
-      queries.listFetchesFromCar,
-      { eventId: selectedEvent?.eventId }
-    );
+    const response = await graphqlMutate<ListFetchesFromCarResponse>(queries.listFetchesFromCar, {
+      eventId: selectedEvent?.eventId,
+    });
     if (response?.listFetchesFromCar) {
       setJobItems(response.listFetchesFromCar);
     }

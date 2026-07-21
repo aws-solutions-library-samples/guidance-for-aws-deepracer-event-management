@@ -52,9 +52,15 @@ const CommentatorStats: React.FC = () => {
   const selectedEvent = useSelectedEventContext();
   const selectedTrack = useSelectedTrackContext();
 
-  const [addedRaceSubscription, SetAddedRaceSubscription] = useState<GraphQLSubscription | undefined>();
-  const [newOverlayInfoSubscription, setNewOverlayInfoSubscription] = useState<GraphQLSubscription | undefined>();
-  const [newLeaderboardEntrySubscription, setNewLeaderboardEntrySubscription] = useState<GraphQLSubscription | undefined>();
+  const [addedRaceSubscription, SetAddedRaceSubscription] = useState<
+    GraphQLSubscription | undefined
+  >();
+  const [newOverlayInfoSubscription, setNewOverlayInfoSubscription] = useState<
+    GraphQLSubscription | undefined
+  >();
+  const [newLeaderboardEntrySubscription, setNewLeaderboardEntrySubscription] = useState<
+    GraphQLSubscription | undefined
+  >();
 
   const [eventSelectModalVisible, setEventSelectModalVisible] = useState<boolean>(false);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntryWithAverage[]>([]);
@@ -79,10 +85,15 @@ const CommentatorStats: React.FC = () => {
     return [undefined, undefined];
   };
 
-  const fastestSortFunction = (a: LeaderboardEntryWithAverage, b: LeaderboardEntryWithAverage): number =>
-    a.fastestLapTime - b.fastestLapTime;
+  const fastestSortFunction = (
+    a: LeaderboardEntryWithAverage,
+    b: LeaderboardEntryWithAverage
+  ): number => a.fastestLapTime - b.fastestLapTime;
 
-  const fastestAverageSortFunction = (a: LeaderboardEntryWithAverage, b: LeaderboardEntryWithAverage): number => {
+  const fastestAverageSortFunction = (
+    a: LeaderboardEntryWithAverage,
+    b: LeaderboardEntryWithAverage
+  ): number => {
     if (!a.fastestAverageLap && !b.fastestAverageLap) return 0;
     if (!a.fastestAverageLap) return 1;
     if (!b.fastestAverageLap) return -1;
@@ -126,9 +137,10 @@ const CommentatorStats: React.FC = () => {
 
     const eventId = selectedEvent.eventId;
 
-    const response = await graphqlQuery<GetLeaderboardResponse>(
-      getLeaderboard, { eventId: eventId, trackId: selectedTrack.trackId }
-    );
+    const response = await graphqlQuery<GetLeaderboardResponse>(getLeaderboard, {
+      eventId: eventId,
+      trackId: selectedTrack.trackId,
+    });
 
     let sortedLeaderboard: LeaderboardEntryWithAverage[] = [];
 
@@ -163,9 +175,7 @@ const CommentatorStats: React.FC = () => {
     if (!selectedEvent?.eventId) return;
 
     const eventId = selectedEvent.eventId;
-    const response = await graphqlQuery<GetRacesResponse>(
-      getRaces, { eventId: eventId }
-    );
+    const response = await graphqlQuery<GetRacesResponse>(getRaces, { eventId: eventId });
 
     const tmp = groupBy(response?.getRaces || [], ({ userId }) => userId);
     console.log('Mapped Races: ', tmp);
@@ -203,10 +213,7 @@ const CommentatorStats: React.FC = () => {
     const trackId = selectedTrack.trackId;
 
     SetAddedRaceSubscription(
-      graphqlSubscribe<{ onAddedRace: Race }>(
-        onAddedRace,
-        { eventId, trackId }
-      ).subscribe({
+      graphqlSubscribe<{ onAddedRace: Race }>(onAddedRace, { eventId, trackId }).subscribe({
         next: (event) => {
           // update Races
           // setRaces((state) => state.concat(event.value.data.onAddedRace));
@@ -218,10 +225,10 @@ const CommentatorStats: React.FC = () => {
     );
 
     setNewOverlayInfoSubscription(
-      graphqlSubscribe<{ onNewOverlayInfo: OverlayInfo }>(
-        onNewOverlayInfo,
-        { eventId, trackId }
-      ).subscribe({
+      graphqlSubscribe<{ onNewOverlayInfo: OverlayInfo }>(onNewOverlayInfo, {
+        eventId,
+        trackId,
+      }).subscribe({
         next: (event) => {
           const eventData = event.value.data.onNewOverlayInfo;
           //if (eventData.raceStatus === 'READY_TO_START') loadLeaderboard();

@@ -39,7 +39,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   selectedModels,
   setSelectedModels,
   clearModelsOnCarToggle,
-  setClearModelsOnCarToggle
+  setClearModelsOnCarToggle,
 }) => {
   const { t } = useTranslation([
     'translation',
@@ -61,8 +61,8 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
   );
 
   let tabeleFooterContent = (
-    <SpaceBetween direction='vertical' size='s'>
-      <Box float='right'>
+    <SpaceBetween direction="vertical" size="s">
+      <Box float="right">
         <Toggle
           onChange={({ detail }) => {
             setClearModelsOnCarToggle(detail.checked);

@@ -150,8 +150,16 @@ const CarHistoryModal: React.FC<CarHistoryModalProps> = ({
           trackBy="managedInstanceId"
           columnDefinitions={[
             { id: 'carName', header: t('devices.host-name'), cell: (item) => item.carName || '-' },
-            { id: 'fleetName', header: t('devices.fleet-name'), cell: (item) => item.fleetName || '-' },
-            { id: 'managedInstanceId', header: t('devices.instance'), cell: (item) => item.managedInstanceId },
+            {
+              id: 'fleetName',
+              header: t('devices.fleet-name'),
+              cell: (item) => item.fleetName || '-',
+            },
+            {
+              id: 'managedInstanceId',
+              header: t('devices.instance'),
+              cell: (item) => item.managedInstanceId,
+            },
             {
               id: 'registrationDate',
               header: t('devices.registration-date'),
@@ -205,8 +213,16 @@ const CarHistoryModal: React.FC<CarHistoryModalProps> = ({
               trackBy="key"
               columnDefinitions={[
                 { id: 'hostName', header: t('devices.host-name'), cell: (r) => r.hostName },
-                { id: 'eventName', header: t('devices.car-history-col-event'), cell: (r) => r.eventName },
-                { id: 'trackName', header: t('devices.car-history-col-track'), cell: (r) => r.trackName },
+                {
+                  id: 'eventName',
+                  header: t('devices.car-history-col-event'),
+                  cell: (r) => r.eventName,
+                },
+                {
+                  id: 'trackName',
+                  header: t('devices.car-history-col-track'),
+                  cell: (r) => r.trackName,
+                },
                 {
                   id: 'date',
                   header: t('devices.car-history-col-date'),
@@ -222,9 +238,15 @@ const CarHistoryModal: React.FC<CarHistoryModalProps> = ({
                   header: t('devices.car-history-col-valid'),
                   cell: (r) =>
                     r.isValid ? (
-                      <StatusIndicator type="success" iconAriaLabel={t('devices.car-history-valid')} />
+                      <StatusIndicator
+                        type="success"
+                        iconAriaLabel={t('devices.car-history-valid')}
+                      />
                     ) : (
-                      <StatusIndicator type="stopped" iconAriaLabel={t('devices.car-history-invalid')} />
+                      <StatusIndicator
+                        type="stopped"
+                        iconAriaLabel={t('devices.car-history-invalid')}
+                      />
                     ),
                 },
               ]}

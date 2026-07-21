@@ -42,8 +42,12 @@ export const MultiChoicePanelContent = ({ races }: MultiChoicePanelContentProps)
     <ColumnLayout columns={4} variant={'text-grid'}>
       <FormField label={t('race-admin.multi-select.total-laps')}>{metrics.totalLaps}</FormField>
       <FormField label={t('race-admin.multi-select.total-resets')}>{metrics.totalresets}</FormField>
-      <FormField label={t('race-admin.multi-select.avg-resets-per-lap')}>{metrics.avgresestsPerLap}</FormField>
-      <FormField label={t('race-admin.multi-select.avg-laps-per-race')}>{metrics.avgLapsPerRace}</FormField>
+      <FormField label={t('race-admin.multi-select.avg-resets-per-lap')}>
+        {metrics.avgresestsPerLap}
+      </FormField>
+      <FormField label={t('race-admin.multi-select.avg-laps-per-race')}>
+        {metrics.avgLapsPerRace}
+      </FormField>
       <FormField label={t('race-admin.multi-select.avg-lap-time')}>
         {metrics.avgLapTime !== null ? convertMsToString(metrics.avgLapTime) : '-'}
       </FormField>
@@ -53,8 +57,12 @@ export const MultiChoicePanelContent = ({ races }: MultiChoicePanelContentProps)
       <FormField label={t('race-admin.multi-select.slowest-lap-time')}>
         {metrics.slowestLap !== null ? convertMsToString(metrics.slowestLap) : '-'}
       </FormField>
-      <FormField label={t('race-admin.multi-select.unique-racer-count')}>{metrics.numberOfUniqueRacers}</FormField>
-      <FormField label={t('race-admin.multi-select.number-of-races')}>{metrics.numberOfRaces}</FormField>
+      <FormField label={t('race-admin.multi-select.unique-racer-count')}>
+        {metrics.numberOfUniqueRacers}
+      </FormField>
+      <FormField label={t('race-admin.multi-select.number-of-races')}>
+        {metrics.numberOfRaces}
+      </FormField>
       <FormField label={t('race-admin.multi-select.most-races-by-user')}>
         {metrics.mostNumberOfRacesByUser}
       </FormField>

@@ -1,6 +1,7 @@
 # TypeScript Quick Reference Guide
 
 ## Overview
+
 This guide provides quick references for common TypeScript patterns used in the AWS DeepRacer Event Management application.
 
 ## Type Definitions Location
@@ -16,6 +17,7 @@ src/types/
 ```
 
 **Import types:**
+
 ```typescript
 import { Event, Track, Race, Lap, LeaderboardEntry } from '../types';
 // or
@@ -39,11 +41,11 @@ interface MyComponentProps {
   isLoading?: boolean;
 }
 
-export const MyComponent: React.FC<MyComponentProps> = ({ 
-  event, 
-  track, 
-  onSelect, 
-  isLoading = false 
+export const MyComponent: React.FC<MyComponentProps> = ({
+  event,
+  track,
+  onSelect,
+  isLoading = false
 }) => {
   // Component implementation
   return <div>...</div>;
@@ -51,6 +53,7 @@ export const MyComponent: React.FC<MyComponentProps> = ({
 ```
 
 **Alternative syntax (preferred for complex components):**
+
 ```typescript
 export function MyComponent({ event, track, onSelect, isLoading = false }: MyComponentProps) {
   // Component implementation
@@ -142,9 +145,9 @@ interface GetLeaderboardResponse {
 
 // Type the API call
 const loadLeaderboard = async (eventId: string, trackId: string): Promise<LeaderboardEntry[]> => {
-  const response = await API.graphql(
+  const response = (await API.graphql(
     graphqlOperation(getLeaderboard, { eventId, trackId })
-  ) as GraphQLResult<GetLeaderboardResponse>;
+  )) as GraphQLResult<GetLeaderboardResponse>;
 
   return response.data?.getLeaderboard.entries || [];
 };
@@ -169,10 +172,8 @@ interface SubscriptionEvent<T> {
 // Use in useEffect
 useEffect(() => {
   const filter = { eventId: selectedEvent.eventId };
-  
-  const subscription = API.graphql(
-    graphqlOperation(onNewLeaderboardEntry, filter)
-  ).subscribe({
+
+  const subscription = API.graphql(graphqlOperation(onNewLeaderboardEntry, filter)).subscribe({
     next: (event: SubscriptionEvent<{ onNewLeaderboardEntry: LeaderboardEntry }>) => {
       const entry = event.value.data.onNewLeaderboardEntry;
       updateLeaderboard(entry);
@@ -273,7 +274,7 @@ async function loadData(id: string): Promise<Event> {
 // Function that returns a promise with possible null
 async function findUser(username: string): Promise<User | null> {
   const users = await loadUsers();
-  return users.find(u => u.username === username) || null;
+  return users.find((u) => u.username === username) || null;
 }
 
 // Function with error handling
@@ -401,8 +402,10 @@ interface LeaderboardEntry {
 ## Common Issues and Solutions
 
 ### Issue 1: "Implicit any type"
+
 **Problem:** `Parameter 'x' implicitly has an 'any' type`
 **Solution:** Add explicit type annotation
+
 ```typescript
 // ❌ Bad
 const handleClick = (item) => { ... }
@@ -412,8 +415,10 @@ const handleClick = (item: Event) => { ... }
 ```
 
 ### Issue 2: "Property does not exist on type"
+
 **Problem:** `Property 'eventName' does not exist on type 'Event | null'`
 **Solution:** Use optional chaining or type guard
+
 ```typescript
 // ❌ Bad
 const name = event.eventName;
@@ -427,8 +432,10 @@ if (event) {
 ```
 
 ### Issue 3: "Type 'X' is not assignable to type 'Y'"
+
 **Problem:** Types don't match
 **Solution:** Ensure types align or use type assertion carefully
+
 ```typescript
 // ❌ Bad
 const events: Event[] = response.data; // if response.data might be undefined
@@ -438,8 +445,10 @@ const events: Event[] = response.data?.events || [];
 ```
 
 ### Issue 4: "Cannot find module"
+
 **Problem:** Import path not resolving
 **Solution:** Use correct relative path or check tsconfig paths
+
 ```typescript
 // ❌ Bad (if types is not in same directory)
 import { Event } from './types';
@@ -455,6 +464,7 @@ import { Event } from 'types/domain';
 ## TypeScript Configuration
 
 Current `tsconfig.json` settings:
+
 ```json
 {
   "compilerOptions": {
@@ -471,6 +481,7 @@ Current `tsconfig.json` settings:
 ```
 
 **Key settings:**
+
 - `strict: true` - Enables all strict type checking
 - `jsx: "react-jsx"` - Modern JSX transform (React 18+)
 - `baseUrl: "src"` - Allows imports from src/ without ../../../
@@ -503,11 +514,13 @@ describe('calculateMetrics', () => {
 ## ESLint Rules
 
 Current TypeScript ESLint rules warn about:
+
 - `@typescript-eslint/no-explicit-any` - Avoid using `any` type
 - `@typescript-eslint/no-unused-vars` - Remove unused variables
 - React hooks dependencies
 
 **Disable specific rule for one line:**
+
 ```typescript
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const data: any = complexLegacyObject;
@@ -547,6 +560,7 @@ npm run build
 ## Migration Status
 
 ✅ **89% Complete** (142 out of 155 files fully typed)
+
 - 0 TypeScript compilation errors
 - 100% test pass rate (40/40 tests)
 - Production build working

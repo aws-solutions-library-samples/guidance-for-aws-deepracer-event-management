@@ -69,10 +69,7 @@ export function extractUserAttribute(
  * the event name rather than crashing. See issue #267.
  */
 export function buildRaceConfigFromEvent(
-  selectedEvent:
-    | { raceConfig?: Record<string, any> | null; eventName?: string }
-    | null
-    | undefined
+  selectedEvent: { raceConfig?: Record<string, any> | null; eventName?: string } | null | undefined
 ): Record<string, any> {
   return { ...(selectedEvent?.raceConfig ?? {}), eventName: selectedEvent?.eventName };
 }

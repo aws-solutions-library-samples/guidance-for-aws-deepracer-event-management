@@ -140,7 +140,9 @@ describe('DeepracerEventManagerStack', () => {
     console.log(`[cfn-cap] infrastructure parent stack: ${count} resources (local synth)`);
     if (count > 475) {
       // eslint-disable-next-line no-console
-      console.warn(`[cfn-cap] WARNING: infrastructure stack at ${count} resources (local) — approaching the 500 cap; plan a NestedStack split (backlog #70).`);
+      console.warn(
+        `[cfn-cap] WARNING: infrastructure stack at ${count} resources (local) — approaching the 500 cap; plan a NestedStack split (backlog #70).`
+      );
     }
     expect(count).toBeLessThan(485);
   });

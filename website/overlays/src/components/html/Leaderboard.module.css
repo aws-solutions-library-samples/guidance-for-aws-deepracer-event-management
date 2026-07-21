@@ -86,11 +86,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to right,
-    var(--racer-highlight, transparent) 0%,
-    transparent 65%
-  );
+  background: linear-gradient(to right, var(--racer-highlight, transparent) 0%, transparent 65%);
   opacity: 0.75;
   pointer-events: none;
   z-index: 0;

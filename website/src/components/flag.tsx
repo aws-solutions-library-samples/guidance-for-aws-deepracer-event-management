@@ -38,7 +38,7 @@ export function Flag({ countryCode, size = 'large' }: FlagProps): JSX.Element {
       </TextContent>
     );
   }
-  
+
   return (
     <TextContent>
       <h1>{countryToFlag(countryCode)}</h1>

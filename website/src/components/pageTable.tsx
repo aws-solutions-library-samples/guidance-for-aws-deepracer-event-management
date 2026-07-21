@@ -75,15 +75,15 @@ export const PageTable = <T,>({
   });
 
   // check to see if defaultSortingColumn is configured, if not set it to column 0
-  if(typeof columnConfiguration.defaultSortingColumn == "undefined") {
-    console.log("defaultSortingColumn", "undefined");
-    columnConfiguration.defaultSortingColumn = columnConfiguration.columnDefinitions[0]
+  if (typeof columnConfiguration.defaultSortingColumn == 'undefined') {
+    console.log('defaultSortingColumn', 'undefined');
+    columnConfiguration.defaultSortingColumn = columnConfiguration.columnDefinitions[0];
   }
 
   // check to see if defaultSortingIsDescending is configured, if not set it to false
-  if(typeof columnConfiguration.defaultSortingIsDescending == "undefined") {
-    console.log("defaultSortingIsDescending", "undefined");
-    columnConfiguration.defaultSortingIsDescending = false
+  if (typeof columnConfiguration.defaultSortingIsDescending == 'undefined') {
+    console.log('defaultSortingIsDescending', 'undefined');
+    columnConfiguration.defaultSortingIsDescending = false;
   }
 
   const {
@@ -111,10 +111,12 @@ export const PageTable = <T,>({
         }
       : undefined,
     pagination: { pageSize: preferences.pageSize },
-    sorting: { defaultState: { 
-      sortingColumn: columnConfiguration.defaultSortingColumn as any,
-      isDescending: columnConfiguration.defaultSortingIsDescending
-    } },
+    sorting: {
+      defaultState: {
+        sortingColumn: columnConfiguration.defaultSortingColumn as any,
+        isDescending: columnConfiguration.defaultSortingIsDescending,
+      },
+    },
     selection: {},
   });
 

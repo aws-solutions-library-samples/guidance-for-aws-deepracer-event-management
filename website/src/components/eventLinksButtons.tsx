@@ -19,10 +19,10 @@ interface EventLinksButtonsProps {
  * @param props - Component props
  * @returns Rendered link buttons
  */
-export const EventLinksButtons = ({ 
-  href, 
-  linkTextPrimary, 
-  linkTextExternal 
+export const EventLinksButtons = ({
+  href,
+  linkTextPrimary,
+  linkTextExternal,
 }: EventLinksButtonsProps): JSX.Element => {
   return (
     <div>

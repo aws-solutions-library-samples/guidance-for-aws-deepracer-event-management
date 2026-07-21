@@ -9,16 +9,18 @@ import styles from './landingPage.module.css';
 export function LandingPage() {
   const urlParams = useParams();
   const eventId = urlParams.eventId;
-  
-  const [searchParams, setSearchParams] = useSearchParams(); 
-  var trackId = searchParams.get("track");
-  const raceFormat = searchParams.get("format");
-  
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  var trackId = searchParams.get('track');
+  const raceFormat = searchParams.get('format');
+
   console.debug('eventId', eventId);
   console.debug('track', trackId);
   console.debug('format', raceFormat);
 
-  if (trackId === null) {trackId = '1';}
+  if (trackId === null) {
+    trackId = '1';
+  }
 
   const defaultPageItems = [
     {

@@ -67,7 +67,7 @@
   height: calc(100vh - 52vmin);
 }
 
-.entries::-webkit-scrollbar{
+.entries::-webkit-scrollbar {
   display: none;
 }
 
@@ -213,9 +213,12 @@
   width: 100%;
   border-radius: 2vmin;
   background: rgba(113, 36, 131, 0.3);
-  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
     linear-gradient(90deg, rgba(0, 255, 235, 0.2), rgba(117, 38, 134, 0.2));
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 30%), 0 0.3rem 0.5rem rgb(0 0 0 / 50%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 30%),
+    0 0.3rem 0.5rem rgb(0 0 0 / 50%);
   z-index: 100;
 
   transition: all 0.9s ease-out;
@@ -249,19 +252,22 @@
 
 .bronze {
   background: transparent;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
     linear-gradient(90deg, #fcae4d, #672f04);
 }
 
 .silver {
   background: transparent;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
     linear-gradient(90deg, #c1c1c5, #44464c);
 }
 
 .gold {
   background: transparent;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0)),
     linear-gradient(90deg, #f0ba0a, #c47400);
 }
 
@@ -289,17 +295,24 @@
 }
 
 .highlighted {
-  box-shadow: 0 0 1.5rem rgba(0, 255, 235, 0.6), inset 0 0 0 2px rgba(0, 255, 235, 0.8);
+  box-shadow:
+    0 0 1.5rem rgba(0, 255, 235, 0.6),
+    inset 0 0 0 2px rgba(0, 255, 235, 0.8);
   animation: highlightPulse 2s ease-in-out infinite;
   transform: scale(1.1);
   z-index: 200;
 }
 
 @keyframes highlightPulse {
-  0%, 100% {
-    box-shadow: 0 0 1.5rem rgba(0, 255, 235, 0.6), inset 0 0 0 2px rgba(0, 255, 235, 0.8);
+  0%,
+  100% {
+    box-shadow:
+      0 0 1.5rem rgba(0, 255, 235, 0.6),
+      inset 0 0 0 2px rgba(0, 255, 235, 0.8);
   }
   50% {
-    box-shadow: 0 0 2.5rem rgba(0, 255, 235, 0.9), inset 0 0 0 2px rgba(0, 255, 235, 1);
+    box-shadow:
+      0 0 2.5rem rgba(0, 255, 235, 0.9),
+      inset 0 0 0 2px rgba(0, 255, 235, 1);
   }
 }

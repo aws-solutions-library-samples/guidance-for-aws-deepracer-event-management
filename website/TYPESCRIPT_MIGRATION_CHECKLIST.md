@@ -19,24 +19,20 @@ Use this checklist when removing `@ts-nocheck` from files and adding proper Type
   - List all props passed to the component
   - Note required vs optional props
   - Document default values
-  
 - [ ] **List all state variables**
   - Note the type of data each state holds
   - Identify initial values
   - Document update patterns
-  
 - [ ] **Document all API/GraphQL operations**
   - List queries used
   - List mutations used
   - List subscriptions used
   - Note the response data structure
-  
 - [ ] **Note all event handlers**
   - Click handlers
-  - Change handlers  
+  - Change handlers
   - Custom callbacks
   - Async operations
-  
 - [ ] **Identify helper functions**
   - Note function parameters
   - Note return types
@@ -108,12 +104,13 @@ Use this checklist when removing `@ts-nocheck` from files and adding proper Type
 ### Step 2: Add Props Interface
 
 - [ ] Update component signature with props interface
+
   ```typescript
   // Option 1
   export const Component: React.FC<ComponentProps> = ({ prop1, prop2 }) => {
     // ...
   };
-  
+
   // Option 2 (preferred for complex components)
   export function Component({ prop1, prop2 }: ComponentProps) {
     // ...
@@ -136,9 +133,9 @@ Use this checklist when removing `@ts-nocheck` from files and adding proper Type
 
 - [ ] Add type assertions to `API.graphql` calls
   ```typescript
-  const response = await API.graphql(
+  const response = (await API.graphql(
     graphqlOperation(query, variables)
-  ) as GraphQLResult<ResponseType>;
+  )) as GraphQLResult<ResponseType>;
   ```
 
 ### Step 6: Type Subscriptions
@@ -333,7 +330,7 @@ Your migration is complete when:
 
 - ✅ `@ts-nocheck` directive removed
 - ✅ All props have explicit interface
-- ✅ All `useState` calls have type parameters  
+- ✅ All `useState` calls have type parameters
 - ✅ All function parameters have types
 - ✅ All function return types are explicit
 - ✅ All event handlers are typed
@@ -378,6 +375,7 @@ Your migration is complete when:
 ## Questions or Issues?
 
 If you encounter issues:
+
 1. Check `TYPESCRIPT_QUICK_REFERENCE.md` for common patterns
 2. Review similar files that have already been migrated
 3. Check `src/types/` for existing type definitions

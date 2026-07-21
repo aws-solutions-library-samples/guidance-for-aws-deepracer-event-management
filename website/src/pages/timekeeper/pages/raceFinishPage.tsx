@@ -43,7 +43,7 @@ interface TimekeeperRace extends BaseRace {
 interface RaceFinishPageProps {
   eventName: string;
   raceInfo: TimekeeperRace;
-  fastestLap?: any[];  // Use any to avoid type conflicts with LapTable
+  fastestLap?: any[]; // Use any to avoid type conflicts with LapTable
   fastestAverageLap?: AverageLap[];
   raceConfig: RaceConfig & { eventName: string };
   onAction?: (lapId: number) => void;
@@ -170,7 +170,9 @@ export const RaceFinishPage: React.FC<RaceFinishPageProps> = ({
 
   let fastestAverageLapInformation = <></>;
   if (raceConfig.rankingMethod === RaceTypeEnum.BEST_AVERAGE_LAP_TIME_X_LAP) {
-    fastestAverageLapInformation = <FastestAverageLapTable fastestAverageLap={fastestAverageLap as any} />;
+    fastestAverageLapInformation = (
+      <FastestAverageLapTable fastestAverageLap={fastestAverageLap as any} />
+    );
   }
 
   const lapsPanel = (

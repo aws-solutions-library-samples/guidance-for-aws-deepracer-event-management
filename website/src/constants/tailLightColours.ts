@@ -10,6 +10,12 @@
  * green, violet (magenta), lime (yellow).
  */
 export const TAIL_LIGHT_COLOURS = [
-  '#0000FF', '#FF0000', '#FF8200', '#800080',
-  '#1E90FF', '#7CFC00', '#FF00FF', '#FFFF00',
+  '#0000FF',
+  '#FF0000',
+  '#FF8200',
+  '#800080',
+  '#1E90FF',
+  '#7CFC00',
+  '#FF00FF',
+  '#FFFF00',
 ];

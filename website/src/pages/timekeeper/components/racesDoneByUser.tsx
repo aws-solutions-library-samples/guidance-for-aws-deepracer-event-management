@@ -20,7 +20,10 @@ interface RacesDoneByUserProps {
  * @param props - Component props
  * @returns Rendered form field with race counts
  */
-export const RacesDoneByUser = ({ selecedEvent, selecedUserId }: RacesDoneByUserProps): JSX.Element => {
+export const RacesDoneByUser = ({
+  selecedEvent,
+  selecedUserId,
+}: RacesDoneByUserProps): JSX.Element => {
   const { t } = useTranslation();
   const [racesDoneByRacer, setRacesDoneByRacer] = useState<number | string>('-');
   const [maxAllowedRacesPerRacer, setMaxAllowedRacesPerRacer] = useState<number | string>('-');

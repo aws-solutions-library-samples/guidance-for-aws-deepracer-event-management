@@ -6,7 +6,9 @@ const configureStore = (): void => {
   const actions = {
     ADD_EVENTS: (curState: GlobalState, events: Event[]): Partial<GlobalState> => {
       console.debug('ADD_EVENTS DISPATCH FUNCTION');
-      const updatedEvents: EventsState = { ...(curState.events || { events: [], isLoading: false }) };
+      const updatedEvents: EventsState = {
+        ...(curState.events || { events: [], isLoading: false }),
+      };
       updatedEvents.events = events;
       return { events: updatedEvents };
     },
@@ -20,9 +22,10 @@ const configureStore = (): void => {
       // was why the TopNav event-selector dropdown stayed stale after
       // creating a new event — both the eager dispatch from createEvent
       // and the onAddedEvent subscription wrote to the same array.
-      const nextEvents = eventIndex === -1
-        ? [...currentEvents, event]
-        : currentEvents.map((e, i) => (i === eventIndex ? event : e));
+      const nextEvents =
+        eventIndex === -1
+          ? [...currentEvents, event]
+          : currentEvents.map((e, i) => (i === eventIndex ? event : e));
       return {
         events: {
           ...(curState.events || { events: [], isLoading: false }),
@@ -33,15 +36,17 @@ const configureStore = (): void => {
     DELETE_EVENTS: (curState: GlobalState, eventIdsToDelete: string[]): Partial<GlobalState> => {
       console.debug('DELETE_EVENT DISPATCH FUNCTION');
       const currentEvents = curState.events?.events || [];
-      const updatedEvents: EventsState = { 
+      const updatedEvents: EventsState = {
         ...(curState.events || { events: [], isLoading: false }),
-        events: currentEvents.filter((event) => !eventIdsToDelete.includes(event.eventId))
+        events: currentEvents.filter((event) => !eventIdsToDelete.includes(event.eventId)),
       };
       return { events: updatedEvents };
     },
     EVENTS_IS_LOADING: (curState: GlobalState, isLoading: boolean): Partial<GlobalState> => {
       console.debug('EVENTS_IS_LOADING DISPATCH FUNCTION', isLoading);
-      const updatedEvents: EventsState = { ...(curState.events || { events: [], isLoading: false }) };
+      const updatedEvents: EventsState = {
+        ...(curState.events || { events: [], isLoading: false }),
+      };
       updatedEvents.isLoading = isLoading;
       return { events: updatedEvents };
     },

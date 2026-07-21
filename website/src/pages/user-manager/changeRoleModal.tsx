@@ -1,4 +1,11 @@
-import { Box, Button, Modal, RadioGroup, RadioGroupProps, SpaceBetween } from '@cloudscape-design/components';
+import {
+  Box,
+  Button,
+  Modal,
+  RadioGroup,
+  RadioGroupProps,
+  SpaceBetween,
+} from '@cloudscape-design/components';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -24,10 +31,14 @@ interface ChangeRoleModalProps {
  * @param props - Component props
  * @returns Rendered modal with role selection
  */
-export const ChangeRoleModal = ({ onDismiss, visible, onSave }: ChangeRoleModalProps): JSX.Element => {
+export const ChangeRoleModal = ({
+  onDismiss,
+  visible,
+  onSave,
+}: ChangeRoleModalProps): JSX.Element => {
   const { t } = useTranslation();
   const [selectedRole, setSelectedRole] = useState<RoleType | undefined>();
-  
+
   const roles: RadioGroupProps.RadioButtonDefinition[] = [
     { value: 'admin', label: 'Administrator' },
     { value: 'operator', label: 'Operator' },
@@ -52,7 +63,7 @@ export const ChangeRoleModal = ({ onDismiss, visible, onSave }: ChangeRoleModalP
         </Box>
       }
     >
-      <Box fontWeight="heavy">{t('users-admin.change-role-modal-sub')}</Box> 
+      <Box fontWeight="heavy">{t('users-admin.change-role-modal-sub')}</Box>
       <RadioGroup
         onChange={({ detail }) => setSelectedRole(detail.value as RoleType)}
         value={selectedRole || null}

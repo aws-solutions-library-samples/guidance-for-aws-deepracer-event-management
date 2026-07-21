@@ -15,7 +15,11 @@ import { useUsers } from '../../hooks/useUsers';
 import { useStore } from '../../store/store';
 import { Event } from '../../types/domain';
 import { EventDetailsPanelContent } from './components/eventDetailsPanelContent';
-import { ColumnConfiguration, FilteringOptions, FilteringProperties } from './support-functions/eventsTableConfig';
+import {
+  ColumnConfiguration,
+  FilteringOptions,
+  FilteringProperties,
+} from './support-functions/eventsTableConfig';
 
 /**
  * AdminEvents component for managing events in the admin interface
@@ -79,21 +83,24 @@ const AdminEvents = (): JSX.Element => {
   const filteringProperties = FilteringProperties();
   const filteringOptions = FilteringOptions();
 
-  const selectPanelContent = useCallback((selectedItems: Event[]) => {
-    if (selectedItems.length === 0) {
-      return (
-        <DrSplitPanel header={`0 ${t('events.split-panel-header')}`}>
-          {t('events.split-panel.empty')}
-        </DrSplitPanel>
-      );
-    } else if (selectedItems.length === 1) {
-      return (
-        <DrSplitPanel header={selectedItems[0].eventName}>
-          <EventDetailsPanelContent event={selectedItems[0] as any} />
-        </DrSplitPanel>
-      );
-    }
-  }, [t]);
+  const selectPanelContent = useCallback(
+    (selectedItems: Event[]) => {
+      if (selectedItems.length === 0) {
+        return (
+          <DrSplitPanel header={`0 ${t('events.split-panel-header')}`}>
+            {t('events.split-panel.empty')}
+          </DrSplitPanel>
+        );
+      } else if (selectedItems.length === 1) {
+        return (
+          <DrSplitPanel header={selectedItems[0].eventName}>
+            <EventDetailsPanelContent event={selectedItems[0] as any} />
+          </DrSplitPanel>
+        );
+      }
+    },
+    [t]
+  );
 
   useEffect(() => {
     console.debug('show split panel');
@@ -173,7 +180,7 @@ const AdminEvents = (): JSX.Element => {
             nrSelectedItems={SelectedEventsInTable.length}
             nrTotalItems={events.length}
             header={t('events.events-table')}
-            actions={<HeaderActionButtons /> as any}
+            actions={(<HeaderActionButtons />) as any}
           />
         }
         itemsIsLoading={eventIsLoading}

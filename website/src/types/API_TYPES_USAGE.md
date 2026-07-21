@@ -22,11 +22,11 @@ This file (`types/api-responses.ts`) contains comprehensive TypeScript type defi
 
 The frontend sometimes needs different representations than the backend provides:
 
-| Field | API Response Type | Domain Type | Reason |
-|-------|------------------|-------------|---------|
-| `raceTimeInMin` | `number` | `string` | Frontend displays as string in forms |
-| `lapTime` | `time` (Lap) | `lapTime` (domain.Lap) | Different field names for clarity |
-| `userId` | `string` | `string` | Same - direct mapping |
+| Field           | API Response Type | Domain Type            | Reason                               |
+| --------------- | ----------------- | ---------------------- | ------------------------------------ |
+| `raceTimeInMin` | `number`          | `string`               | Frontend displays as string in forms |
+| `lapTime`       | `time` (Lap)      | `lapTime` (domain.Lap) | Different field names for clarity    |
+| `userId`        | `string`          | `string`               | Same - direct mapping                |
 
 ### Transformation Pattern
 
@@ -35,19 +35,19 @@ import { GetEventsResponse, Event as APIEvent } from '../types/api-responses';
 import { Event as DomainEvent } from '../types/domain';
 
 // Fetch from API
-const apiResponse = await API.graphql(
-  graphqlOperation(getEvents)
-) as { data: GetEventsResponse['data'] };
+const apiResponse = (await API.graphql(graphqlOperation(getEvents))) as {
+  data: GetEventsResponse['data'];
+};
 
 const apiEvents: APIEvent[] = apiResponse.data.getEvents;
 
 // Transform to domain model
-const domainEvents: DomainEvent[] = apiEvents.map(apiEvent => ({
+const domainEvents: DomainEvent[] = apiEvents.map((apiEvent) => ({
   ...apiEvent,
   raceConfig: {
     ...apiEvent.raceConfig,
     raceTimeInMin: String(apiEvent.raceConfig.raceTimeInMin), // number -> string
-  }
+  },
 }));
 
 // Use domain model in component
@@ -83,11 +83,12 @@ The types in `api-responses.ts` are based on:
 ### 1. Typing GraphQL Queries
 
 #### Before (Untyped):
+
 ```typescript
 const response = await API.graphql(
-  graphqlOperation(getLeaderboard, { 
-    eventId: eventId, 
-    trackId: selectedTrack.trackId 
+  graphqlOperation(getLeaderboard, {
+    eventId: eventId,
+    trackId: selectedTrack.trackId,
   })
 );
 // response is 'any' - no type safety!
@@ -95,15 +96,16 @@ const leaderboard = response.data.getLeaderboard;
 ```
 
 #### After (Typed):
+
 ```typescript
 import { GetLeaderboardResponse } from '../types/api-responses';
 
-const response = await API.graphql(
-  graphqlOperation(getLeaderboard, { 
-    eventId: eventId, 
-    trackId: selectedTrack.trackId 
+const response = (await API.graphql(
+  graphqlOperation(getLeaderboard, {
+    eventId: eventId,
+    trackId: selectedTrack.trackId,
   })
-) as { data: GetLeaderboardResponse['data'] };
+)) as { data: GetLeaderboardResponse['data'] };
 
 const leaderboard = response.data.getLeaderboard;
 // Now TypeScript knows leaderboard has:
@@ -114,12 +116,13 @@ const leaderboard = response.data.getLeaderboard;
 ### 2. Typing Event API Calls
 
 #### Fetching Events:
+
 ```typescript
 import { GetEventsResponse, Event } from '../types/api-responses';
 
-const response = await API.graphql(
-  graphqlOperation(getEvents)
-) as { data: GetEventsResponse['data'] };
+const response = (await API.graphql(graphqlOperation(getEvents))) as {
+  data: GetEventsResponse['data'];
+};
 
 const events: Event[] = response.data.getEvents;
 // TypeScript now knows each event has:
@@ -129,33 +132,42 @@ const events: Event[] = response.data.getEvents;
 ```
 
 #### Creating an Event:
+
 ```typescript
-import { AddEventInput, AddEventResponse, TypeOfEvent, TrackType, RankingMethod } from '../types/api-responses';
+import {
+  AddEventInput,
+  AddEventResponse,
+  TypeOfEvent,
+  TrackType,
+  RankingMethod,
+} from '../types/api-responses';
 
 const input: AddEventInput = {
-  eventName: "Summer Championship",
+  eventName: 'Summer Championship',
   typeOfEvent: TypeOfEvent.OFFICIAL_TRACK_RACE,
-  eventDate: "2025-06-15",
-  sponsor: "AWS",
-  countryCode: "US",
-  tracks: [{
-    trackId: "1",
-    leaderBoardTitle: "Main Track",
-    leaderBoardFooter: "Powered by AWS"
-  }],
+  eventDate: '2025-06-15',
+  sponsor: 'AWS',
+  countryCode: 'US',
+  tracks: [
+    {
+      trackId: '1',
+      leaderBoardTitle: 'Main Track',
+      leaderBoardFooter: 'Powered by AWS',
+    },
+  ],
   raceConfig: {
     raceTimeInMin: 4,
     numberOfResetsPerLap: 3,
     trackType: TrackType.REINVENT_2023,
     rankingMethod: RankingMethod.BEST_LAP_TIME,
-    maxRunsPerRacer: "unlimited",
-    averageLapsWindow: 3
-  }
+    maxRunsPerRacer: 'unlimited',
+    averageLapsWindow: 3,
+  },
 };
 
-const response = await API.graphql(
-  graphqlOperation(addEvent, input)
-) as { data: AddEventResponse['data'] };
+const response = (await API.graphql(graphqlOperation(addEvent, input))) as {
+  data: AddEventResponse['data'];
+};
 
 const newEvent = response.data.addEvent;
 ```
@@ -163,44 +175,47 @@ const newEvent = response.data.addEvent;
 ### 3. Typing Race Operations
 
 #### Adding a Race with Laps:
+
 ```typescript
 import { AddRaceInput, AddRaceResponse, Lap } from '../types/api-responses';
 
 const laps: AddRaceInput['laps'] = [
   {
-    lapId: "1",
+    lapId: '1',
     time: 12.345,
     resets: 0,
     isValid: true,
     autTimerConnected: true,
-    carName: "Car01"
+    carName: 'Car01',
   },
   {
-    lapId: "2",
-    time: 11.890,
+    lapId: '2',
+    time: 11.89,
     resets: 1,
     isValid: true,
     autTimerConnected: true,
-    carName: "Car01"
-  }
+    carName: 'Car01',
+  },
 ];
 
 const input: AddRaceInput = {
-  eventId: "evt-123",
-  trackId: "1",
-  userId: "user-456",
+  eventId: 'evt-123',
+  trackId: '1',
+  userId: 'user-456',
   racedByProxy: false,
   laps: laps,
-  averageLaps: [{
-    startLapId: 1,
-    endLapId: 2,
-    avgTime: 12.1175
-  }]
+  averageLaps: [
+    {
+      startLapId: 1,
+      endLapId: 2,
+      avgTime: 12.1175,
+    },
+  ],
 };
 
-const response = await API.graphql(
-  graphqlOperation(addRace, input)
-) as { data: AddRaceResponse['data'] };
+const response = (await API.graphql(graphqlOperation(addRace, input))) as {
+  data: AddRaceResponse['data'];
+};
 
 const race = response.data.addRace;
 ```
@@ -210,9 +225,9 @@ const race = response.data.addRace;
 ```typescript
 import { GetAllModelsResponse, Model } from '../types/api-responses';
 
-const response = await API.graphql(
-  graphqlOperation(getAllModels, { limit: 50 })
-) as { data: GetAllModelsResponse['data'] };
+const response = (await API.graphql(graphqlOperation(getAllModels, { limit: 50 }))) as {
+  data: GetAllModelsResponse['data'];
+};
 
 const models: Model[] = response.data.getAllModels.models;
 const nextToken: string | undefined = response.data.getAllModels.nextToken;
@@ -229,9 +244,9 @@ const nextToken: string | undefined = response.data.getAllModels.nextToken;
 import { GraphQLResponse, GraphQLError, GetEventsResponse } from '../types/api-responses';
 
 try {
-  const response = await API.graphql(
-    graphqlOperation(getEvents)
-  ) as GraphQLResponse<GetEventsResponse['data']>;
+  const response = (await API.graphql(graphqlOperation(getEvents))) as GraphQLResponse<
+    GetEventsResponse['data']
+  >;
 
   if (response.errors && response.errors.length > 0) {
     const error: GraphQLError = response.errors[0];
@@ -252,7 +267,9 @@ try {
 ## Type Categories
 
 ### 1. Domain Types
+
 Core data structures that represent business entities:
+
 - `Event` - Event details and configuration
 - `Race` - Race session with laps and averages
 - `Lap` - Individual lap data
@@ -263,7 +280,9 @@ Core data structures that represent business entities:
 - `Fleet` - Fleet of cars
 
 ### 2. API Response Types
+
 Wrapper types for GraphQL responses:
+
 - `GetEventsResponse` - Response from getEvents query
 - `AddEventResponse` - Response from addEvent mutation
 - `GetLeaderboardResponse` - Response from getLeaderboard query
@@ -271,14 +290,18 @@ Wrapper types for GraphQL responses:
 - And more...
 
 ### 3. Input Types
+
 Types for mutation arguments:
+
 - `AddEventInput` - Arguments for adding an event
 - `UpdateEventInput` - Arguments for updating an event
 - `AddRaceInput` - Arguments for adding a race
 - `UpdateRaceInput` - Arguments for updating a race
 
 ### 4. Enum Types
+
 Constrained string values from GraphQL schema:
+
 - `TrackType` - Track variations
 - `RankingMethod` - Scoring methods
 - `TypeOfEvent` - Event categories
@@ -286,6 +309,7 @@ Constrained string values from GraphQL schema:
 ## Enums Reference
 
 ### TrackType
+
 ```typescript
 enum TrackType {
   REINVENT_2018 = 'REINVENT_2018',
@@ -300,6 +324,7 @@ enum TrackType {
 ```
 
 ### RankingMethod
+
 ```typescript
 enum RankingMethod {
   BEST_LAP_TIME = 'BEST_LAP_TIME',
@@ -308,6 +333,7 @@ enum RankingMethod {
 ```
 
 ### TypeOfEvent
+
 ```typescript
 enum TypeOfEvent {
   PRIVATE_WORKSHOP = 'PRIVATE_WORKSHOP',
@@ -321,19 +347,19 @@ enum TypeOfEvent {
 ## Best Practices
 
 ### 1. Always Use Type Assertions for API.graphql()
+
 ```typescript
 // ✅ Good
-const response = await API.graphql(
-  graphqlOperation(query, variables)
-) as { data: ResponseType['data'] };
+const response = (await API.graphql(graphqlOperation(query, variables))) as {
+  data: ResponseType['data'];
+};
 
 // ❌ Bad
-const response = await API.graphql(
-  graphqlOperation(query, variables)
-); // Returns 'any'
+const response = await API.graphql(graphqlOperation(query, variables)); // Returns 'any'
 ```
 
 ### 2. Extract Types for Complex Structures
+
 ```typescript
 // ✅ Good - Extract and reuse types
 import { Lap, AverageLap } from '../types/api-responses';
@@ -352,6 +378,7 @@ const laps: Array<{
 ```
 
 ### 3. Use Enums for Constrained Values
+
 ```typescript
 // ✅ Good - Use enum
 import { TrackType } from '../types/api-responses';
@@ -362,6 +389,7 @@ const trackType = 'REINVENT_2023'; // Typo-prone
 ```
 
 ### 4. Handle Optional Fields Safely
+
 ```typescript
 import { LeaderboardEntry } from '../types/api-responses';
 
@@ -380,6 +408,7 @@ const lapTime = entry.fastestLapTime; // Might be undefined
 To convert existing untyped API calls:
 
 1. **Find the API call**:
+
    ```typescript
    const response = await API.graphql(graphqlOperation(getEvents));
    ```
@@ -387,15 +416,17 @@ To convert existing untyped API calls:
 2. **Identify the operation** (getEvents, addRace, updateEvent, etc.)
 
 3. **Import the corresponding response type**:
+
    ```typescript
    import { GetEventsResponse } from '../types/api-responses';
    ```
 
 4. **Add type assertion**:
+
    ```typescript
-   const response = await API.graphql(
-     graphqlOperation(getEvents)
-   ) as { data: GetEventsResponse['data'] };
+   const response = (await API.graphql(graphqlOperation(getEvents))) as {
+     data: GetEventsResponse['data'];
+   };
    ```
 
 5. **Update variable types**:
@@ -415,6 +446,7 @@ When the backend API changes:
 ## Common Patterns
 
 ### Pattern 1: Loading Data with useState
+
 ```typescript
 import { Event } from '../types/api-responses';
 
@@ -423,28 +455,29 @@ const [loading, setLoading] = useState<boolean>(true);
 
 useEffect(() => {
   const fetchEvents = async () => {
-    const response = await API.graphql(
-      graphqlOperation(getEvents)
-    ) as { data: { getEvents: Event[] } };
-    
+    const response = (await API.graphql(graphqlOperation(getEvents))) as {
+      data: { getEvents: Event[] };
+    };
+
     setEvents(response.data.getEvents);
     setLoading(false);
   };
-  
+
   fetchEvents();
 }, []);
 ```
 
 ### Pattern 2: Form Submission
+
 ```typescript
 import { AddEventInput, TypeOfEvent } from '../types/api-responses';
 
 const handleSubmit = async (formData: AddEventInput) => {
   try {
-    const response = await API.graphql(
-      graphqlOperation(addEvent, formData)
-    ) as { data: { addEvent: Event } };
-    
+    const response = (await API.graphql(graphqlOperation(addEvent, formData))) as {
+      data: { addEvent: Event };
+    };
+
     console.log('Event created:', response.data.addEvent);
   } catch (error) {
     console.error('Failed to create event:', error);
@@ -453,19 +486,18 @@ const handleSubmit = async (formData: AddEventInput) => {
 ```
 
 ### Pattern 3: Subscription Handling
+
 ```typescript
 import { Race } from '../types/api-responses';
 
-const subscription = API.graphql(
-  graphqlOperation(onAddedRace, { eventId, trackId })
-).subscribe({
+const subscription = API.graphql(graphqlOperation(onAddedRace, { eventId, trackId })).subscribe({
   next: ({ value }: any) => {
     const race: Race = value.data.onAddedRace;
     // Handle new race
   },
   error: (error: any) => {
     console.error('Subscription error:', error);
-  }
+  },
 });
 ```
 

@@ -4,10 +4,7 @@ interface UseWebsocketReturn {
   isConnected: boolean;
 }
 
-export default function useWebsocket(
-  url: string,
-  onMessage: (data: string) => void
-): [boolean] {
+export default function useWebsocket(url: string, onMessage: (data: string) => void): [boolean] {
   const [waitingToReconnect, setWaitingToReconnect] = useState<boolean | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const wsClientRef = useRef<WebSocket | null>(null);

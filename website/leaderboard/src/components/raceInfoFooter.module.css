@@ -6,7 +6,15 @@
   height: fit-content;
   z-index: 4000;
 
-  background: linear-gradient(120deg, #7305a0 0%, #2f0c67 80%, #fff 80%, #fff 85%, transparent 85%, transparent);
+  background: linear-gradient(
+    120deg,
+    #7305a0 0%,
+    #2f0c67 80%,
+    #fff 80%,
+    #fff 85%,
+    transparent 85%,
+    transparent
+  );
   background-repeat: no-repeat;
   background-size: 130% 130%;
 
@@ -69,7 +77,7 @@
   font-weight: 500;
   font-size: 5vmin;
   font-style: italic;
-  font-family: "Open Sans", "Helvetica Neue", Roboto, Arial, sans-serif
+  font-family: 'Open Sans', 'Helvetica Neue', Roboto, Arial, sans-serif;
   /*padding: 2vb;*/
 }
 

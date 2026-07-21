@@ -49,8 +49,8 @@ const APPSYNC_SCALARS_AND_DIRECTIVES = `
 `;
 
 function loadSchema(): GraphQLSchema {
-    const schemaSource = readFileSync(join(GRAPHQL_DIR, 'schema.graphql'), 'utf-8');
-    return buildSchema(APPSYNC_SCALARS_AND_DIRECTIVES + '\n' + schemaSource);
+  const schemaSource = readFileSync(join(GRAPHQL_DIR, 'schema.graphql'), 'utf-8');
+  return buildSchema(APPSYNC_SCALARS_AND_DIRECTIVES + '\n' + schemaSource);
 }
 
 /**
@@ -58,15 +58,15 @@ function loadSchema(): GraphQLSchema {
  * (each string is a GraphQL operation).
  */
 async function loadOperationStrings(filename: string): Promise<Record<string, string>> {
-    // Use dynamic import for ESM compatibility
-    const mod = await import(join(GRAPHQL_DIR, filename));
-    const ops: Record<string, string> = {};
-    for (const [name, value] of Object.entries(mod)) {
-        if (typeof value === 'string') {
-            ops[name] = value;
-        }
+  // Use dynamic import for ESM compatibility
+  const mod = await import(join(GRAPHQL_DIR, filename));
+  const ops: Record<string, string> = {};
+  for (const [name, value] of Object.entries(mod)) {
+    if (typeof value === 'string') {
+      ops[name] = value;
     }
-    return ops;
+  }
+  return ops;
 }
 
 /**
@@ -74,14 +74,14 @@ async function loadOperationStrings(filename: string): Promise<Record<string, st
  * Returns an array of error messages (empty = valid).
  */
 function validateOperation(schema: GraphQLSchema, operationSource: string): string[] {
-    try {
-        const doc = parse(operationSource);
-        const errors = validate(schema, doc);
-        return errors.map((e) => e.message);
-    } catch (e: unknown) {
-        // Parse error — the string isn't even valid GraphQL syntax
-        return [(e as Error).message];
-    }
+  try {
+    const doc = parse(operationSource);
+    const errors = validate(schema, doc);
+    return errors.map((e) => e.message);
+  } catch (e: unknown) {
+    // Parse error — the string isn't even valid GraphQL syntax
+    return [(e as Error).message];
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -89,194 +89,194 @@ function validateOperation(schema: GraphQLSchema, operationSource: string): stri
 // ---------------------------------------------------------------------------
 
 describe('GraphQL Schema Conformance — Layer 1', () => {
-    let schema: GraphQLSchema;
+  let schema: GraphQLSchema;
 
-    beforeAll(() => {
-        schema = loadSchema();
+  beforeAll(() => {
+    schema = loadSchema();
+  });
+
+  // -----------------------------------------------------------------------
+  // Test: Schema itself is parseable
+  // -----------------------------------------------------------------------
+  it('schema.graphql is a valid, parseable GraphQL schema', () => {
+    expect(schema).toBeDefined();
+    // Should have Mutation, Query, and Subscription root types
+    expect(schema.getMutationType()).toBeDefined();
+    expect(schema.getQueryType()).toBeDefined();
+    expect(schema.getSubscriptionType()).toBeDefined();
+  });
+
+  // -----------------------------------------------------------------------
+  // mutations.ts
+  // -----------------------------------------------------------------------
+  describe('mutations.ts — every exported operation is valid against the schema', () => {
+    let mutations: Record<string, string>;
+
+    beforeAll(async () => {
+      mutations = await loadOperationStrings('mutations.ts');
     });
 
-    // -----------------------------------------------------------------------
-    // Test: Schema itself is parseable
-    // -----------------------------------------------------------------------
-    it('schema.graphql is a valid, parseable GraphQL schema', () => {
-        expect(schema).toBeDefined();
-        // Should have Mutation, Query, and Subscription root types
-        expect(schema.getMutationType()).toBeDefined();
-        expect(schema.getQueryType()).toBeDefined();
-        expect(schema.getSubscriptionType()).toBeDefined();
+    it('exports at least one mutation', () => {
+      expect(Object.keys(mutations).length).toBeGreaterThan(0);
     });
 
-    // -----------------------------------------------------------------------
-    // mutations.ts
-    // -----------------------------------------------------------------------
-    describe('mutations.ts — every exported operation is valid against the schema', () => {
-        let mutations: Record<string, string>;
-
-        beforeAll(async () => {
-            mutations = await loadOperationStrings('mutations.ts');
-        });
-
-        it('exports at least one mutation', () => {
-            expect(Object.keys(mutations).length).toBeGreaterThan(0);
-        });
-
-        it('every mutation is syntactically valid GraphQL', () => {
-            const parseErrors: Record<string, string> = {};
-            for (const [name, source] of Object.entries(mutations)) {
-                try {
-                    parse(source);
-                } catch (e: unknown) {
-                    parseErrors[name] = (e as Error).message;
-                }
-            }
-            expect(parseErrors).toEqual({});
-        });
-
-        it('every mutation validates against schema.graphql (correct types, fields, arguments)', () => {
-            const validationFailures: Record<string, string[]> = {};
-            for (const [name, source] of Object.entries(mutations)) {
-                const errors = validateOperation(schema, source);
-                if (errors.length > 0) {
-                    validationFailures[name] = errors;
-                }
-            }
-            expect(validationFailures).toEqual({});
-        });
+    it('every mutation is syntactically valid GraphQL', () => {
+      const parseErrors: Record<string, string> = {};
+      for (const [name, source] of Object.entries(mutations)) {
+        try {
+          parse(source);
+        } catch (e: unknown) {
+          parseErrors[name] = (e as Error).message;
+        }
+      }
+      expect(parseErrors).toEqual({});
     });
 
-    // -----------------------------------------------------------------------
-    // queries.ts
-    // -----------------------------------------------------------------------
-    describe('queries.ts — every exported operation is valid against the schema', () => {
-        let queries: Record<string, string>;
+    it('every mutation validates against schema.graphql (correct types, fields, arguments)', () => {
+      const validationFailures: Record<string, string[]> = {};
+      for (const [name, source] of Object.entries(mutations)) {
+        const errors = validateOperation(schema, source);
+        if (errors.length > 0) {
+          validationFailures[name] = errors;
+        }
+      }
+      expect(validationFailures).toEqual({});
+    });
+  });
 
-        beforeAll(async () => {
-            queries = await loadOperationStrings('queries.ts');
-        });
+  // -----------------------------------------------------------------------
+  // queries.ts
+  // -----------------------------------------------------------------------
+  describe('queries.ts — every exported operation is valid against the schema', () => {
+    let queries: Record<string, string>;
 
-        it('exports at least one query', () => {
-            expect(Object.keys(queries).length).toBeGreaterThan(0);
-        });
-
-        it('every query is syntactically valid GraphQL', () => {
-            const parseErrors: Record<string, string> = {};
-            for (const [name, source] of Object.entries(queries)) {
-                try {
-                    parse(source);
-                } catch (e: unknown) {
-                    parseErrors[name] = (e as Error).message;
-                }
-            }
-            expect(parseErrors).toEqual({});
-        });
-
-        it('every query validates against schema.graphql (correct types, fields, arguments)', () => {
-            const validationFailures: Record<string, string[]> = {};
-            for (const [name, source] of Object.entries(queries)) {
-                const errors = validateOperation(schema, source);
-                if (errors.length > 0) {
-                    validationFailures[name] = errors;
-                }
-            }
-            expect(validationFailures).toEqual({});
-        });
+    beforeAll(async () => {
+      queries = await loadOperationStrings('queries.ts');
     });
 
-    // -----------------------------------------------------------------------
-    // subscriptions.ts
-    // -----------------------------------------------------------------------
-    describe('subscriptions.ts — every exported operation is valid against the schema', () => {
-        let subscriptions: Record<string, string>;
-
-        beforeAll(async () => {
-            subscriptions = await loadOperationStrings('subscriptions.ts');
-        });
-
-        it('exports at least one subscription', () => {
-            expect(Object.keys(subscriptions).length).toBeGreaterThan(0);
-        });
-
-        it('every subscription is syntactically valid GraphQL', () => {
-            const parseErrors: Record<string, string> = {};
-            for (const [name, source] of Object.entries(subscriptions)) {
-                try {
-                    parse(source);
-                } catch (e: unknown) {
-                    parseErrors[name] = (e as Error).message;
-                }
-            }
-            expect(parseErrors).toEqual({});
-        });
-
-        it('every subscription validates against schema.graphql (correct types, fields, arguments)', () => {
-            const validationFailures: Record<string, string[]> = {};
-            for (const [name, source] of Object.entries(subscriptions)) {
-                const errors = validateOperation(schema, source);
-                if (errors.length > 0) {
-                    validationFailures[name] = errors;
-                }
-            }
-            expect(validationFailures).toEqual({});
-        });
+    it('exports at least one query', () => {
+      expect(Object.keys(queries).length).toBeGreaterThan(0);
     });
 
-    // -----------------------------------------------------------------------
-    // Sanity check: .js files (known-good) should all pass
-    // -----------------------------------------------------------------------
-    describe('mutations.js — baseline: all operations should be schema-valid', () => {
-        let mutations: Record<string, string>;
-
-        beforeAll(async () => {
-            mutations = await loadOperationStrings('mutations.js');
-        });
-
-        it('every .js mutation validates against schema.graphql', () => {
-            const validationFailures: Record<string, string[]> = {};
-            for (const [name, source] of Object.entries(mutations)) {
-                const errors = validateOperation(schema, source);
-                if (errors.length > 0) {
-                    validationFailures[name] = errors;
-                }
-            }
-            expect(validationFailures).toEqual({});
-        });
+    it('every query is syntactically valid GraphQL', () => {
+      const parseErrors: Record<string, string> = {};
+      for (const [name, source] of Object.entries(queries)) {
+        try {
+          parse(source);
+        } catch (e: unknown) {
+          parseErrors[name] = (e as Error).message;
+        }
+      }
+      expect(parseErrors).toEqual({});
     });
 
-    describe('queries.js — baseline: all operations should be schema-valid', () => {
-        let queries: Record<string, string>;
+    it('every query validates against schema.graphql (correct types, fields, arguments)', () => {
+      const validationFailures: Record<string, string[]> = {};
+      for (const [name, source] of Object.entries(queries)) {
+        const errors = validateOperation(schema, source);
+        if (errors.length > 0) {
+          validationFailures[name] = errors;
+        }
+      }
+      expect(validationFailures).toEqual({});
+    });
+  });
 
-        beforeAll(async () => {
-            queries = await loadOperationStrings('queries.js');
-        });
+  // -----------------------------------------------------------------------
+  // subscriptions.ts
+  // -----------------------------------------------------------------------
+  describe('subscriptions.ts — every exported operation is valid against the schema', () => {
+    let subscriptions: Record<string, string>;
 
-        it('every .js query validates against schema.graphql', () => {
-            const validationFailures: Record<string, string[]> = {};
-            for (const [name, source] of Object.entries(queries)) {
-                const errors = validateOperation(schema, source);
-                if (errors.length > 0) {
-                    validationFailures[name] = errors;
-                }
-            }
-            expect(validationFailures).toEqual({});
-        });
+    beforeAll(async () => {
+      subscriptions = await loadOperationStrings('subscriptions.ts');
     });
 
-    describe('subscriptions.js — baseline: all operations should be schema-valid', () => {
-        let subscriptions: Record<string, string>;
-
-        beforeAll(async () => {
-            subscriptions = await loadOperationStrings('subscriptions.js');
-        });
-
-        it('every .js subscription validates against schema.graphql', () => {
-            const validationFailures: Record<string, string[]> = {};
-            for (const [name, source] of Object.entries(subscriptions)) {
-                const errors = validateOperation(schema, source);
-                if (errors.length > 0) {
-                    validationFailures[name] = errors;
-                }
-            }
-            expect(validationFailures).toEqual({});
-        });
+    it('exports at least one subscription', () => {
+      expect(Object.keys(subscriptions).length).toBeGreaterThan(0);
     });
+
+    it('every subscription is syntactically valid GraphQL', () => {
+      const parseErrors: Record<string, string> = {};
+      for (const [name, source] of Object.entries(subscriptions)) {
+        try {
+          parse(source);
+        } catch (e: unknown) {
+          parseErrors[name] = (e as Error).message;
+        }
+      }
+      expect(parseErrors).toEqual({});
+    });
+
+    it('every subscription validates against schema.graphql (correct types, fields, arguments)', () => {
+      const validationFailures: Record<string, string[]> = {};
+      for (const [name, source] of Object.entries(subscriptions)) {
+        const errors = validateOperation(schema, source);
+        if (errors.length > 0) {
+          validationFailures[name] = errors;
+        }
+      }
+      expect(validationFailures).toEqual({});
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Sanity check: .js files (known-good) should all pass
+  // -----------------------------------------------------------------------
+  describe('mutations.js — baseline: all operations should be schema-valid', () => {
+    let mutations: Record<string, string>;
+
+    beforeAll(async () => {
+      mutations = await loadOperationStrings('mutations.js');
+    });
+
+    it('every .js mutation validates against schema.graphql', () => {
+      const validationFailures: Record<string, string[]> = {};
+      for (const [name, source] of Object.entries(mutations)) {
+        const errors = validateOperation(schema, source);
+        if (errors.length > 0) {
+          validationFailures[name] = errors;
+        }
+      }
+      expect(validationFailures).toEqual({});
+    });
+  });
+
+  describe('queries.js — baseline: all operations should be schema-valid', () => {
+    let queries: Record<string, string>;
+
+    beforeAll(async () => {
+      queries = await loadOperationStrings('queries.js');
+    });
+
+    it('every .js query validates against schema.graphql', () => {
+      const validationFailures: Record<string, string[]> = {};
+      for (const [name, source] of Object.entries(queries)) {
+        const errors = validateOperation(schema, source);
+        if (errors.length > 0) {
+          validationFailures[name] = errors;
+        }
+      }
+      expect(validationFailures).toEqual({});
+    });
+  });
+
+  describe('subscriptions.js — baseline: all operations should be schema-valid', () => {
+    let subscriptions: Record<string, string>;
+
+    beforeAll(async () => {
+      subscriptions = await loadOperationStrings('subscriptions.js');
+    });
+
+    it('every .js subscription validates against schema.graphql', () => {
+      const validationFailures: Record<string, string[]> = {};
+      for (const [name, source] of Object.entries(subscriptions)) {
+        const errors = validateOperation(schema, source);
+        if (errors.length > 0) {
+          validationFailures[name] = errors;
+        }
+      }
+      expect(validationFailures).toEqual({});
+    });
+  });
 });

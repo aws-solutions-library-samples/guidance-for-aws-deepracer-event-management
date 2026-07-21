@@ -46,7 +46,9 @@ export const TableEmptyState: React.FC<TableEmptyStateProps> = ({ resourceName }
   </Box>
 );
 
-export const PropertyFilterI18nStrings = (resourceName: string): PropertyFilterProps.I18nStrings => {
+export const PropertyFilterI18nStrings = (
+  resourceName: string
+): PropertyFilterProps.I18nStrings => {
   const strings: PropertyFilterProps.I18nStrings = {
     filteringAriaLabel: i18next.t('filtering.filtering-aria-label'),
     dismissAriaLabel: i18next.t('filtering.dismiss-aria-label'),

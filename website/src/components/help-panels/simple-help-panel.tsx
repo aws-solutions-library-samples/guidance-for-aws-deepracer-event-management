@@ -18,10 +18,10 @@ interface SimpleHelpPanelLayoutProps {
  * @param props - Component props with markdown content
  * @returns Rendered help panel with header, body, and footer
  */
-export const SimpleHelpPanelLayout = ({ 
-  headerContent, 
-  bodyContent, 
-  footerContent 
+export const SimpleHelpPanelLayout = ({
+  headerContent,
+  bodyContent,
+  footerContent,
 }: SimpleHelpPanelLayoutProps): JSX.Element => {
   return (
     <HelpPanel

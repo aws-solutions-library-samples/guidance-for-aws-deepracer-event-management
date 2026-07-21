@@ -9,29 +9,35 @@ AWS DeepRacer Event Manager (DREM) — a full-stack event management platform fo
 ## Commands
 
 ### CDK Infrastructure (root)
+
 ```sh
 npm run build        # Compile TypeScript CDK code
 npm test             # Run CDK unit tests (Jest)
 ```
 
 ### Main Website (`website/`)
+
 ```sh
 npm start            # Vite dev server on port 3000
 npm run build        # Type-check + Vite build
 npm test             # Vitest (single pass)
 npm run test:watch   # Vitest (watch mode)
 ```
+
 Run a single test file: `npx vitest run src/path/to/file.test.tsx`
 
 ### Leaderboard (`website/leaderboard/`) / Overlays (`website/overlays/`)
+
 ```sh
 npm run build        # Vite build (base: /leaderboard/ or /overlays/)
 npm run lint         # ESLint
 ```
+
 These apps are not run as standalone dev servers. They are built into `website/public/leaderboard/`
 and `website/public/overlays/` via `make local.build` and served by the main website dev server.
 
 ### Makefile shortcuts
+
 ```sh
 make test                    # Run all tests (CDK + website)
 make local.run               # Start all apps at localhost:3000 (run local.build first)
@@ -42,16 +48,19 @@ make manual.deploy.hotswap   # Fast Lambda/asset hotswap redeploy
 ```
 
 ### Local dev setup
+
 1. `make local.config` — pull CloudFormation outputs and regenerate Amplify configs for all three apps
 2. `make local.build` — build leaderboard and overlays into `website/public/`
 3. `make local.run` — start dev server at `localhost:3000`
 
 All three apps are then accessible from a single server:
+
 - `localhost:3000/` — authenticated portal
 - `localhost:3000/leaderboard/` — public leaderboard
 - `localhost:3000/overlays/<eventId>` — public stream overlays
 
 ### Python Lambda development
+
 ```sh
 make local.config.python     # Create venv + pip install -e .[dev]
 pytest                        # Run Python tests
@@ -60,12 +69,14 @@ pytest                        # Run Python tests
 ## Architecture
 
 ### Two CDK Stacks (deployed via `lib/`)
+
 1. **BaseStack** (`drem-backend-<label>-base`) — WAF, CloudFront for main site, Cognito User Pool + Identity Pool, EventBridge custom bus, shared Lambda layers, optional Route53/ACM
 2. **DeepracerEventManagerStack** (`drem-backend-<label>-infrastructure`) — everything else; all domain constructs attach their types/resolvers to a single **AppSync GraphQL API**
 
 **Deployment pipeline** (`CdkPipelineStack`) — self-mutating AWS CodePipeline pulling from GitHub; builds all three React apps and deploys both stacks. Configured via `build.config`.
 
 ### Backend Pattern
+
 - All backend logic is **Python 3.12 ARM64 Lambda**, using AWS Lambda Powertools (`@tracer`, `@logger`, `AppSyncResolver`)
 - Each domain construct (e.g. `RaceManager`, `ModelsManager`) appends its own GraphQL types/queries/mutations to the AppSync schema using `awscdk-appsync-utils` — the schema is code-first
 - DynamoDB is used per domain (separate tables); Lambda resolvers handle all CRUD
@@ -73,6 +84,7 @@ pytest                        # Run Python tests
 - Inter-service events flow through an **EventBridge custom bus**
 
 ### Frontend (`website/`)
+
 - **Entry:** `src/App.tsx` — configures Amplify v6, initialises CloudWatch RUM, wraps app in Cognito `Authenticator`
 - **UI:** [AWS CloudScape Design System](https://cloudscape.design/) throughout
 - **Routing:** React Router v6, driven by `TopNav` with a side navigation
@@ -82,9 +94,11 @@ pytest                        # Run Python tests
 - **i18n:** i18next with translations in `src/i18n/` (de, en, es, fr, jp, se)
 
 ### Cognito User Groups / Roles
+
 `admin`, `operator`, `commentator`, `registration`, `racer` — access control is enforced both in IAM (via group roles) and in AppSync resolvers.
 
 ### Public Frontends
+
 - **Leaderboard** (`website/leaderboard/`) — unauthenticated, subscribes to AppSync via API key for live data; supports URL query params for display (lang, QR, track, format, flag); built to `website/public/leaderboard/` and served at `/leaderboard/*`
 - **Stream Overlays** (`website/overlays/`) — unauthenticated, API key auth; uses D3.js for animated visualisations; supports chroma key background for broadcast use; built to `website/public/overlays/` and served at `/overlays/*`
 
@@ -93,11 +107,13 @@ pytest                        # Run Python tests
 `BaseStack` and `DeepracerEventManagerStack` share values exclusively via **SSM Parameter Store** — there are no CloudFormation `Fn::ImportValue` / `CfnOutput` cross-stack references between them. This means either stack can be updated independently and in any order without CloudFormation blocking on export dependencies.
 
 **How it works:**
+
 - `BaseStack` writes all shared resource identifiers to SSM under `/${stackName}/<key>` at the end of its constructor
 - `DeepracerEventManagerStack` reads them via `ssm.StringParameter.valueForStringParameter()` (resolved at CloudFormation deploy time, not synth time) and reconstructs CDK objects using `from*` static methods (`Role.fromRoleArn`, `EventBus.fromEventBusArn`, `Bucket.fromBucketName`, etc.)
 - `DeepracerEventManagerStack` only takes `baseStackName: string` as a cross-stack prop
 
 **When adding new resources to BaseStack that InfrastructureStack needs:**
+
 1. Write the resource identifier to SSM in `BaseStack` constructor
 2. Read it with `valueForStringParameter` in `DeepracerEventManagerStack` and reconstruct the CDK object
 3. Do NOT pass it as a constructor prop — this would recreate the `Fn::ImportValue` dependency
@@ -112,6 +128,7 @@ The infrastructure stack runs close to CloudFormation's per-stack resource quota
 **New features should default to a `NestedStack` wrapper** unless they're trivially small (a few resources) or tightly coupled to existing parent-stack resources.
 
 **Pattern:**
+
 ```ts
 import { NestedStack, NestedStackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
@@ -131,6 +148,7 @@ export class MyFeature extends NestedStack {
 The call site in `drem-app-stack.ts` is unchanged (`new MyFeature(this, 'MyFeature', { ... })`).
 
 **Things to know about NestedStack:**
+
 - Cross-stack references to the parent (e.g. the AppSync API, DynamoDB tables passed in via props) are handled automatically by CDK — they become CFN parameters of the nested stack at deploy time.
 - The nested stack counts as **1 resource** in the parent, regardless of how many it contains internally.
 - AppSync schema mutations (`props.appsyncApi.schema.addType(...)`) still work — the schema lives in the parent and is rendered there; only resolvers and data sources land in the nested stack.

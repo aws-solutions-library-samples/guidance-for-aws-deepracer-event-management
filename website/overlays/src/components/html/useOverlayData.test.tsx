@@ -46,7 +46,9 @@ import { useOverlayData } from './useOverlayData';
 
 describe('useOverlayData', () => {
   test('loads initial leaderboard entries and event name on mount', async () => {
-    const { result } = renderHook(() => useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }));
+    const { result } = renderHook(() =>
+      useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' })
+    );
     await waitFor(() => {
       expect(result.current.leaderboardEntries).toEqual([{ username: 'a', fastestLapTime: 1000 }]);
       expect(result.current.eventName).toBe('FAKE EVENT');
@@ -54,14 +56,18 @@ describe('useOverlayData', () => {
   });
 
   test('shows leaderboard initially, hides lower thirds', async () => {
-    const { result } = renderHook(() => useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }));
+    const { result } = renderHook(() =>
+      useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' })
+    );
     await waitFor(() => expect(result.current.showLeaderboard).toBe(true));
     expect(result.current.showLowerThird).toBe(false);
     expect(result.current.currentRacer).toBeNull();
   });
 
   test('on RACE_IN_PROGRESS message: hides leaderboard, shows lower third with racer info', async () => {
-    const { result } = renderHook(() => useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }));
+    const { result } = renderHook(() =>
+      useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' })
+    );
     await waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
 
     const overlaySub = mockSubscribers.find((s) => s.query.name === 'onNewOverlayInfo')!;
@@ -87,14 +93,21 @@ describe('useOverlayData', () => {
   });
 
   test('on RACE_FINISHED message: hides lower third and shows leaderboard again', async () => {
-    const { result } = renderHook(() => useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }));
+    const { result } = renderHook(() =>
+      useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' })
+    );
     await waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
 
     const overlaySub = mockSubscribers.find((s) => s.query.name === 'onNewOverlayInfo')!;
     act(() => {
       overlaySub.next({
         data: {
-          onNewOverlayInfo: { username: 'racer1', timeLeftInMs: 120000, raceStatus: 'RACE_IN_PROGRESS', laps: [] },
+          onNewOverlayInfo: {
+            username: 'racer1',
+            timeLeftInMs: 120000,
+            raceStatus: 'RACE_IN_PROGRESS',
+            laps: [],
+          },
         },
       });
     });
@@ -103,7 +116,12 @@ describe('useOverlayData', () => {
     act(() => {
       overlaySub.next({
         data: {
-          onNewOverlayInfo: { username: 'racer1', timeLeftInMs: 0, raceStatus: 'RACE_FINISHED', laps: [] },
+          onNewOverlayInfo: {
+            username: 'racer1',
+            timeLeftInMs: 0,
+            raceStatus: 'RACE_FINISHED',
+            laps: [],
+          },
         },
       });
     });
@@ -115,7 +133,9 @@ describe('useOverlayData', () => {
   });
 
   test('on competitor=null message: same effect as race finished', async () => {
-    const { result } = renderHook(() => useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }));
+    const { result } = renderHook(() =>
+      useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' })
+    );
     await waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
 
     const overlaySub = mockSubscribers.find((s) => s.query.name === 'onNewOverlayInfo')!;
@@ -137,7 +157,7 @@ describe('useOverlayData', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
       const { result } = renderHook(() =>
-        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' })
       );
       await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
 
@@ -188,7 +208,7 @@ describe('useOverlayData', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
       const { result } = renderHook(() =>
-        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' })
       );
       await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
 
@@ -232,9 +252,7 @@ describe('useOverlayData', () => {
         });
       });
       // Lap data picked up
-      await vi.waitFor(() =>
-        expect(result.current.currentRacer?.fastestLapMs).toBe(5500),
-      );
+      await vi.waitFor(() => expect(result.current.currentRacer?.fastestLapMs).toBe(5500));
       // Timer NOT bumped back to 10000 — should be at or below `before`
       // (might tick on slightly between the message and our assert, but
       // must not exceed `before` by more than a small jitter).
@@ -249,7 +267,7 @@ describe('useOverlayData', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
       const { result } = renderHook(() =>
-        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' })
       );
       await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
 
@@ -294,7 +312,7 @@ describe('useOverlayData', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
       const { result } = renderHook(() =>
-        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' })
       );
       await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
 
@@ -332,9 +350,7 @@ describe('useOverlayData', () => {
           },
         });
       });
-      await vi.waitFor(() =>
-        expect(result.current.currentRacer?.username).toBe('racer2'),
-      );
+      await vi.waitFor(() => expect(result.current.currentRacer?.username).toBe('racer2'));
       // The new racer's timer value applied — within tolerance for one tick
       // that may have fired between the message and our assertion.
       const after = result.current.currentRacer?.timeLeftMs ?? 0;
@@ -349,7 +365,7 @@ describe('useOverlayData', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
       const { result } = renderHook(() =>
-        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' })
       );
       await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
 
@@ -383,7 +399,9 @@ describe('useOverlayData', () => {
     // The public leaderboard's own highlight uses the same trigger — a new
     // leaderboard entry arriving IS the authoritative "this racer just
     // finished" signal.
-    const { result } = renderHook(() => useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }));
+    const { result } = renderHook(() =>
+      useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' })
+    );
     await waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
     expect(result.current.highlightedUsername).toBeNull();
 
@@ -403,7 +421,7 @@ describe('useOverlayData', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
       const { result } = renderHook(() =>
-        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' })
       );
       await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
 
@@ -435,7 +453,7 @@ describe('useOverlayData', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
       const { result } = renderHook(() =>
-        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' }),
+        useOverlayData({ eventId: 'e1', trackId: '1', raceFormat: 'fastest' })
       );
       await vi.waitFor(() => expect(result.current.leaderboardEntries.length).toBe(1));
 

@@ -11,7 +11,12 @@ interface TracksPanelProps {
   onFormIsInvalid: () => void;
 }
 
-export const TracksPanel: React.FC<TracksPanelProps> = ({ tracks, onChange, onFormIsValid, onFormIsInvalid }) => {
+export const TracksPanel: React.FC<TracksPanelProps> = ({
+  tracks,
+  onChange,
+  onFormIsValid,
+  onFormIsInvalid,
+}) => {
   const { t } = useTranslation();
   const [activeTabId, setActiveTabId] = useState<string>('1');
   const [lastPressedTabId, setLastPressedTabId] = useState<string>('1');
