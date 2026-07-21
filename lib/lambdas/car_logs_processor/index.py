@@ -3,6 +3,7 @@ import io
 import os
 import re
 import tarfile
+import time
 
 import appsync_helpers
 import boto3
@@ -44,7 +45,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
                 key = record["s3"]["object"]["key"]
 
                 matched_bags, batch_job_id = process_bag_files(
-                    bucket, key, output_bucket, "Manual"
+                    bucket, key, output_bucket, f"Manual-{int(time.time() * 1000)}"
                 )
     elif "data" in event:
         race_data = None
