@@ -3,6 +3,7 @@ import * as appsync from 'aws-cdk-lib/aws-appsync';
 import { Platform } from 'aws-cdk-lib/aws-ecr-assets';
 import { IEventBus, Match, Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { EventBridgeDestination } from 'aws-cdk-lib/aws-lambda-destinations';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -168,6 +169,13 @@ export class ClamscanServerless extends Construct {
     props.uploadBucket.grantReadWrite(postLambda);
 
     props.scannedBucked.grantWrite(postLambda);
+    postLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['s3:PutObjectTagging'],
+        resources: [`${props.scannedBucked.bucketArn}/*`],
+      })
+    );
 
     const libraryBucketLogicalId = Stack.of(this).getLogicalId(libraryBucket.node.defaultChild as CfnResource);
     const uploadBucketLogicalId = Stack.of(this).getLogicalId(props.uploadBucket.node.defaultChild as CfnResource);

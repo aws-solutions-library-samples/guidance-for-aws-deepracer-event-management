@@ -93,6 +93,21 @@ def lambda_handler(event, context):
         model_status = "AVAILABLE"
         copy_file(src_bucket, key, DESTINATION_BUCKET, model_key)
 
+        # Tag user-uploaded models so the S3 lifecycle rule will eventually expire them.
+        # Default models have "default" as the username path segment and must not be tagged.
+        is_default_model = s3_key_parts[3] == "default"
+        if not is_default_model:
+            try:
+                client_s3.put_object_tagging(
+                    Bucket=DESTINATION_BUCKET,
+                    Key=model_key,
+                    Tagging={"TagSet": [{"Key": "lifecycle", "Value": "true"}]},
+                )
+            except Exception as tag_error:
+                logger.warning(
+                    f"Failed to apply lifecycle tag for model {model_key}: {tag_error}"
+                )
+
         appsync_helpers.send_mutation(
             query, {"modelId": model_id, "sub": sub, "status": model_status}
         )
