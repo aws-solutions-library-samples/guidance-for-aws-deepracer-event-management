@@ -112,7 +112,7 @@ def __add_to_leaderboard(variables):
             $trackId: ID!
             $username: String!
             $racedByProxy: Boolean!
-            $countryCode: String!
+            $countryCode: String
             $mostConcecutiveLaps: Int!
         ) {
             addLeaderboardEntry(
