@@ -10,7 +10,7 @@
 import { ChartOptions, Plugin } from 'chart.js';
 import { useMemo, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
-import { useChartTheme } from './chartDefaults';
+import { tooltipBaseOptions, useChartTheme } from './chartDefaults';
 
 // react-chartjs-2 ref type. The package uses a wrapper type `ChartJSOrUndefined`,
 // but we only need the subset of the Chart.js API used below so `any` keeps
@@ -66,13 +66,8 @@ export function SyncedActivityCharts({ dates, series, height = 180 }: SyncedActi
       plugins: {
         legend: { display: false },
         tooltip: {
+          ...tooltipBaseOptions(chartTheme),
           enabled: true,
-          backgroundColor: 'rgba(255, 255, 255, 0.96)',
-          borderColor: chartTheme.axisColor,
-          borderWidth: 1,
-          titleColor: chartTheme.tickColor,
-          bodyColor: chartTheme.tickColor,
-          displayColors: false,
           callbacks: {
             // The default time-axis title renders as a full locale date/time —
             // we only want "Mar 2025".
