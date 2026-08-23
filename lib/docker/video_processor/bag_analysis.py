@@ -23,10 +23,12 @@ from deepracer_interfaces_pkg.msg import InferResultsArray  # type: ignore
 from deepracer_viz.gradcam.cam import GradCam
 from deepracer_viz.model.metadata import ModelMetadata
 from deepracer_viz.model.model import Model
+from matplotlib import colors as mcolors
 from matplotlib import font_manager as fm
 from matplotlib import gridspec
 from matplotlib import pyplot as plt
 from matplotlib import rcParams
+from PIL import Image, ImageDraw, ImageFont
 from rclpy.serialization import deserialize_message  # type: ignore
 from tqdm.auto import tqdm
 
@@ -57,6 +59,10 @@ FONT_SMALL = fm.FontProperties(
 )
 
 procs = []
+
+_panel_bounds: dict = None
+_PIL_FONT_TITLE = None
+_PIL_FONT_INFO = None
 
 
 def signal_handler(sig, frame):
@@ -97,14 +103,7 @@ def process_worker(
         result_list, list_lock = result
         flip_x = bag_info.get("flip_x", False)
 
-        fig = create_plot(
-            action_names,
-            flip_x,
-            HEIGHT,
-            WIDTH,
-            72,
-            transparent=(background is not None),
-        )
+        bar_fig = create_bar_fig(action_names, flip_x)
 
         model = Model.from_bytes(
             model_bytes=model_bytes, metadata=metadata, log_device_placement=False
@@ -130,7 +129,7 @@ def process_worker(
                         data, start_time=bag_info["start_time"], seq=index, cam=cam
                     )
                     encimg = create_img(
-                        fig,
+                        bar_fig,
                         step,
                         bag_info,
                         img,
@@ -166,8 +165,8 @@ def process_worker(
     finally:
         # Cleanup resources
         try:
-            if "fig" in locals():
-                plt.close(fig)
+            if "bar_fig" in locals():
+                plt.close(bar_fig)
         except Exception as cleanup_error:
             print(f"Worker {os.getpid()}: Error during cleanup: {cleanup_error}")
 
@@ -259,6 +258,67 @@ def create_plot(
     return fig
 
 
+def _get_panel_bounds() -> dict:
+    """Compute and cache pixel bounds of each panel from the gridspec layout."""
+    global _panel_bounds
+    if _panel_bounds is not None:
+        return _panel_bounds
+    fig = create_plot([], False, HEIGHT, WIDTH, 72)
+    axes = fig.get_axes()
+
+    def _pixel_bounds(ax):
+        pos = ax.get_position()
+        return (
+            int(pos.x0 * WIDTH),
+            int((1 - pos.y1) * HEIGHT),
+            int(pos.x1 * WIDTH),
+            int((1 - pos.y0) * HEIGHT),
+        )
+
+    _panel_bounds = {
+        "img": _pixel_bounds(axes[0]),
+        "grad": _pixel_bounds(axes[1]),
+        "bar": _pixel_bounds(axes[2]),
+    }
+    plt.close(fig)
+    return _panel_bounds
+
+
+def create_bar_fig(
+    action_names: List[str],
+    flip_x: bool,
+) -> matplotlib.figure.Figure:
+    """Create a matplotlib figure sized to the bar chart panel only."""
+    bounds = _get_panel_bounds()
+    bx1, by1, bx2, by2 = bounds["bar"]
+    w, h = bx2 - bx1, by2 - by1
+
+    fig, ax = plt.subplots(figsize=(w / 72, h / 72), dpi=72)
+    fig.set_facecolor(COLOR_BACKGROUND)
+    ax.set_facecolor(COLOR_BACKGROUND)
+    ax.set_ylim(0.0, 1.0)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    fig.subplots_adjust(left=0.01, right=0.99, top=0.99, bottom=0.01)
+
+    labels = action_names[::-1] if flip_x else action_names
+    for i, label in enumerate(labels):
+        ax.text(
+            i,
+            0.5,
+            label,
+            ha="center",
+            va="center",
+            rotation=90,
+            color=COLOR_TEXT_SECONDARY,
+            fontproperties=FONT_SMALL,
+        )
+
+    return fig
+
+
 def create_img(
     fig: matplotlib.figure.Figure,
     step: Dict,
@@ -285,88 +345,105 @@ def create_img(
     Returns:
         np.ndarray: The resulting image as a cv2 MatLike object.
     """
+    global _PIL_FONT_TITLE, _PIL_FONT_INFO
+    if _PIL_FONT_TITLE is None:
+        _PIL_FONT_TITLE = ImageFont.truetype(
+            os.path.join(SCRIPT_DIR, "resources", "Amazon_Ember_Bd.ttf"), 25
+        )
+        _PIL_FONT_INFO = ImageFont.truetype(
+            os.path.join(SCRIPT_DIR, "resources", "Amazon_Ember_Rg.ttf"), 20
+        )
+
+    panels = _get_panel_bounds()
 
     timestamp_formatted = "{:02}:{:05.2f}".format(
         int(step["timestamp"] // 60), step["timestamp"] % 60
     )
-
-    # Split bag_info['name'] into parts
     name_parts = bag_info["name"].split("-")
-    # Create one string with the last two parts
     start_time = "-".join(name_parts[-2:])
-    # Create another string with the rest
     model_name = "-".join(name_parts[:-2])
 
-    # Update left-aligned suptitle
-    fig.texts.clear()
-    fig.text(
-        0.025,
-        0.95,
-        model_name,
-        color=COLOR_TEXT_PRIMARY,
-        fontproperties=FONT_BIG_BD,
-        ha="left",
-    )
-
-    # Add right-aligned suptitle
-    fig.text(
-        0.975,
-        0.95,
-        "{} {} / {}".format(start_time, timestamp_formatted, step["seq_0"]),
-        color=COLOR_TEXT_SECONDARY,
-        fontproperties=FONT_BIG,
-        ha="right",
-    )
-
-    x = list(range(0, len(action_names)))
-
-    car_result = pd.DataFrame(step["car_results"])
-
-    ax = fig.get_axes()
-    for a in ax:
-        for p in set(a.containers):
-            p.remove()
-        for i in set(a.images):
-            i.remove()
-
-    ax[0].imshow(img)
-    ax[1].imshow(grad_img)
-
-    # If there are action_names it is a discrete action space
-    if len(action_names) > 0:
-        # Highlight the highest bar in a different color
-        bar_colors = [COLOR_EDGE] * len(car_result["probability"])
-        max_index = car_result["probability"].idxmax()
-        bar_colors[max_index] = COLOR_HIGHLIGHT
-
-        if flip_x:
-            ax[2].bar(x, car_result["probability"][::-1], color=bar_colors[::-1])
-        else:
-            ax[2].bar(x, car_result["probability"], color=bar_colors)
-
-    fig.canvas.draw()
-
-    # Get the canvas buffer and convert it to a numpy array
-    buf = fig.canvas.buffer_rgba()
-    ncols, nrows = fig.canvas.get_width_height()
-    img = np.frombuffer(buf, dtype=np.uint8).reshape(nrows, ncols, 4)
-
-    # Apply background if available
+    # Base frame: background image or black canvas
     if background is not None:
-        gradient_alpha_rgb_mul, one_minus_gradient_alpha = utils.get_gradient_values(
-            img
-        )
-        img = cv2.cvtColor(
-            utils.apply_gradient(
-                background.copy(), gradient_alpha_rgb_mul, one_minus_gradient_alpha
-            ),
-            cv2.COLOR_RGBA2BGR,
-        )
+        frame = cv2.cvtColor(background, cv2.COLOR_RGBA2BGR)
     else:
-        img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGR)
+        frame = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
 
-    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 95]  # Adjust the quality as needed
-    _, encimg = cv2.imencode(".jpg", img, encode_param)
+    # Camera image → img panel (direct numpy blit)
+    ix1, iy1, ix2, iy2 = panels["img"]
+    frame[iy1:iy2, ix1:ix2] = cv2.resize(
+        cv2.cvtColor(img, cv2.COLOR_RGB2BGR), (ix2 - ix1, iy2 - iy1)
+    )
+
+    # GradCam → grad panel (direct numpy blit)
+    gx1, gy1, gx2, gy2 = panels["grad"]
+    if grad_img.dtype != np.uint8:
+        grad_display = (np.clip(grad_img, 0, 1) * 255).astype(np.uint8)
+    else:
+        grad_display = grad_img
+    if grad_display.ndim == 2:
+        grad_bgr = cv2.cvtColor(grad_display, cv2.COLOR_GRAY2BGR)
+    elif grad_display.shape[2] == 4:
+        grad_bgr = cv2.cvtColor(grad_display, cv2.COLOR_RGBA2BGR)
+    else:
+        grad_bgr = cv2.cvtColor(grad_display, cv2.COLOR_RGB2BGR)
+    frame[gy1:gy2, gx1:gx2] = cv2.resize(grad_bgr, (gx2 - gx1, gy2 - gy1))
+
+    # Bar chart → rendered by small matplotlib figure, then blitted
+    bx1, by1, bx2, by2 = panels["bar"]
+    ax = fig.get_axes()[0]
+    for container in list(ax.containers):
+        container.remove()
+    if len(action_names) > 0:
+        n = len(action_names)
+        x = list(range(n))
+        car_result = pd.DataFrame(step["car_results"])
+        bar_colors = [COLOR_EDGE] * n
+        bar_colors[car_result["probability"].idxmax()] = COLOR_HIGHLIGHT
+        probs = list(car_result["probability"])
+        if flip_x:
+            ax.bar(x, probs[::-1], color=bar_colors[::-1])
+        else:
+            ax.bar(x, probs, color=bar_colors)
+        ax.set_xlim(-0.5, n - 0.5)
+    fig.canvas.draw()
+    buf = fig.canvas.buffer_rgba()
+    bar_w, bar_h = fig.canvas.get_width_height()
+    bar_arr = np.frombuffer(buf, dtype=np.uint8).reshape(bar_h, bar_w, 4)
+    frame[by1:by2, bx1:bx2] = cv2.resize(
+        cv2.cvtColor(bar_arr, cv2.COLOR_RGBA2BGR), (bx2 - bx1, by2 - by1)
+    )
+
+    # Panel borders
+    border_bgr = tuple(int(c * 255) for c in reversed(mcolors.to_rgb(COLOR_EDGE)))
+    for key in ("img", "grad", "bar"):
+        px1, py1, px2, py2 = panels[key]
+        cv2.rectangle(frame, (px1, py1), (px2 - 1, py2 - 1), border_bgr, 1)
+
+    # Header text via Pillow (supports custom TTF fonts)
+    # anchor="lb"/"rb": x/y is bottom-left / bottom-right — matches matplotlib va='bottom'
+    pil_frame = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    draw = ImageDraw.Draw(pil_frame)
+    header_y = int((1 - 0.95) * HEIGHT)
+    draw.text(
+        (int(0.025 * WIDTH), header_y),
+        model_name,
+        font=_PIL_FONT_TITLE,
+        fill=COLOR_TEXT_PRIMARY,
+        anchor="lb",
+    )
+    right_text = "{} {} / {}".format(start_time, timestamp_formatted, step["seq_0"])
+    draw.text(
+        (int(0.975 * WIDTH), header_y),
+        right_text,
+        font=_PIL_FONT_INFO,
+        fill=COLOR_TEXT_SECONDARY,
+        anchor="rb",
+    )
+    frame = cv2.cvtColor(np.array(pil_frame), cv2.COLOR_RGB2BGR)
+
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 95]
+    _, encimg = cv2.imencode(".jpg", frame, encode_param)
     return encimg
 
 
@@ -565,7 +642,9 @@ def process_file(
     utils.print_baginfo(bag_info)
 
     # Key data points
-    worker_count = int((psutil.cpu_count(logical=False)) * 3 / 4)
+    worker_count = (
+        args.workers if args.workers else int((psutil.cpu_count(logical=False)) * 3 / 4)
+    )
     frame_limit = int(min(bag_info["total_frames"], frame_limit))
 
     print("")
@@ -824,6 +903,12 @@ def main():
     )
     parser.add_argument(
         "--output_file", help="The path to the output video file", default=None
+    )
+    parser.add_argument(
+        "--workers",
+        help="Number of worker processes (default: 3/4 of physical cores)",
+        default=None,
+        type=int,
     )
 
     args = parser.parse_args()
