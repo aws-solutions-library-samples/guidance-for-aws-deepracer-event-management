@@ -161,13 +161,7 @@ export class Idp extends Construct {
     const userPoolClientWeb = new cognito.UserPoolClient(this, 'UserPoolClientWeb', {
       userPool: userPool,
       preventUserExistenceErrors: true,
-    });
-
-    userPool.addClient('DremClient', {
-      oAuth: {
-        callbackUrls: ['https://' + props.distribution.distributionDomainName, 'http://localhost:3000'],
-        logoutUrls: ['https://' + props.distribution.distributionDomainName, 'http://localhost:3000'],
-      },
+      refreshTokenValidity: Duration.days(1),
     });
     this.userPoolClientWeb = userPoolClientWeb;
 
