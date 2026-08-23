@@ -923,9 +923,11 @@
   "stats.total-laps": "Total Valid Laps",
   "stats.total-countries": "Countries",
   "stats.completion-ratio": "Lap Completion",
-  "stats.events-by-country": "Events by Country",
   "stats.bar-chart": "Bar chart",
   "stats.world-map": "World map",
+  "stats.country-breakdown": "Country breakdown",
+  "stats.metric-avg-laps": "Avg laps / event",
+  "stats.no-data": "No data",
   "stats.no-events": "No events",
   "stats.activity-over-time": "Activity Over Time",
   "stats.event-type-breakdown": "Event Types",
@@ -947,5 +949,5 @@
   "stats.country": "Country",
   "stats.month": "Month",
   "stats.count": "Count",
-  "stats.no-data": "No race data available yet. Statistics will appear after the first race is completed."
+  "stats.no-race-data": "No race data available yet. Statistics will appear after the first race is completed."
 }

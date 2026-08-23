@@ -1,9 +1,11 @@
 /**
  * Choropleth world map for the stats dashboard.
  *
- * Each country is shaded by event count (lighter = fewer, darker = more,
- * white = none). Hover tooltip shows the localised country name plus the
- * event/racer/lap counts.
+ * Each country is shaded by the supplied `value` (lighter = fewer, darker
+ * = more, white = none). The parent picks what `value` represents (event
+ * count, lap count, etc.) and passes the matching `metricLabel`. Tooltip
+ * shows the localised country name, the metric value, plus event / racer /
+ * lap counts as context.
  *
  * Implementation notes:
  *
@@ -238,13 +240,39 @@ const ALPHA2_TO_NUMERIC: Record<string, string> = {
 
 interface CountryDatum {
   countryCode: string;
+  /**
+   * Pre-derived value for the choropleth (e.g. events count, laps count,
+   * or avg laps per event). The parent decides what this number means and
+   * passes the matching label via `metricLabel`.
+   */
+  value: number;
+  // Raw counts retained so the tooltip can show all three regardless of
+  // which metric drives the colour scale.
   events: number;
-  racers?: number;
-  laps?: number;
+  racers: number;
+  laps: number;
 }
 
 interface WorldMapProps {
   data: CountryDatum[];
+  /**
+   * Localised label for the primary tooltip line + chart.js dataset label.
+   * E.g. "Events", "Laps", "Avg laps per event".
+   */
+  metricLabel: string;
+  /**
+   * Optional formatter for the primary tooltip value. Defaults to identity
+   * (integer-friendly). Use for the avg metric to render 1-decimal output.
+   */
+  formatValue?: (v: number) => string;
+  /**
+   * Optional: which raw count the primary value corresponds to. When set,
+   * the tooltip skips that field's context line to avoid duplicating the
+   * primary metric (e.g. with metric=Events, no need for an extra
+   * "Events: N" line). Leave unset for metrics that don't match a raw
+   * field (e.g. an avg).
+   */
+  primaryField?: 'events' | 'racers' | 'laps';
   height?: number;
 }
 
@@ -257,14 +285,20 @@ const worldFeatures = (() => {
   return (fc as unknown as { features: any[] }).features;
 })();
 
-export function WorldMap({ data, height = 400 }: WorldMapProps) {
+export function WorldMap({
+  data,
+  metricLabel,
+  formatValue,
+  primaryField,
+  height = 400,
+}: WorldMapProps) {
   const { t, i18n } = useTranslation();
   const theme = useChartTheme();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Find the max event count once per data refresh so the log-scaled
+  // Find the max value once per data refresh so the log-scaled
   // interpolator can normalise. Falls back to 1 to avoid log(0).
-  const maxEvents = useMemo(() => Math.max(1, ...data.map((d) => d.events)), [data]);
+  const maxValue = useMemo(() => Math.max(1, ...data.map((d) => d.value)), [data]);
 
   // Index by topojson numeric id so the chart's per-feature data lookup is
   // O(1) instead of O(n) per render.
@@ -297,8 +331,9 @@ export function WorldMap({ data, height = 400 }: WorldMapProps) {
       const matched = byNumericId.get(numericId);
       return {
         feature: featureGeom,
-        value: matched?.events ?? 0,
+        value: matched?.value ?? 0,
         countryCode: matched?.countryCode,
+        events: matched?.events ?? 0,
         racers: matched?.racers ?? 0,
         laps: matched?.laps ?? 0,
       };
@@ -310,7 +345,7 @@ export function WorldMap({ data, height = 400 }: WorldMapProps) {
         labels: worldFeatures.map((f) => (f.properties as any)?.name ?? ''),
         datasets: [
           {
-            label: t('stats.events') as string,
+            label: metricLabel,
             outline: worldFeatures,
             data: datapoints as any,
             // Subtle separator between countries — uses the theme axis
@@ -353,12 +388,19 @@ export function WorldMap({ data, height = 400 }: WorldMapProps) {
               },
               label(item) {
                 const raw: any = item.raw;
-                if (!raw?.countryCode) return t('stats.no-events') as string;
-                return [
-                  `${t('stats.events')}: ${raw.value ?? 0}`,
-                  `${t('stats.racers')}: ${raw.racers ?? 0}`,
-                  `${t('stats.laps')}: ${raw.laps ?? 0}`,
-                ];
+                if (!raw?.countryCode) return t('stats.no-data') as string;
+                const primary = formatValue ? formatValue(raw.value ?? 0) : String(raw.value ?? 0);
+                const lines = [`${metricLabel}: ${primary}`];
+                if (primaryField !== 'events') {
+                  lines.push(`${t('stats.events')}: ${raw.events ?? 0}`);
+                }
+                if (primaryField !== 'racers') {
+                  lines.push(`${t('stats.racers')}: ${raw.racers ?? 0}`);
+                }
+                if (primaryField !== 'laps') {
+                  lines.push(`${t('stats.laps')}: ${raw.laps ?? 0}`);
+                }
+                return lines;
               },
             },
           },
@@ -383,7 +425,7 @@ export function WorldMap({ data, height = 400 }: WorldMapProps) {
             // zero — visually distinguishes "no events" from "few events".
             interpolate: (v: number) => {
               if (v <= 0) return '#ffffff';
-              const t = Math.log1p(v * maxEvents) / Math.log1p(maxEvents);
+              const t = Math.log1p(v * maxValue) / Math.log1p(maxValue);
               const r = Math.round(220 - t * 180);
               const g = Math.round(230 - t * 150);
               return `rgb(${r}, ${g}, 255)`;
@@ -398,7 +440,7 @@ export function WorldMap({ data, height = 400 }: WorldMapProps) {
     return () => {
       chart.destroy();
     };
-  }, [byNumericId, maxEvents, theme, t, countryNames]);
+  }, [byNumericId, maxValue, theme, t, countryNames, metricLabel, formatValue, primaryField]);
 
   return (
     <div style={{ height }}>

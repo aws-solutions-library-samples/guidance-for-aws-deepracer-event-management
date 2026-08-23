@@ -5,6 +5,7 @@ import {
   ContentLayout,
   Header,
   Multiselect,
+  SegmentedControl,
   Select,
   SpaceBetween,
   Spinner,
@@ -25,6 +26,7 @@ import { PieChart } from '../../components/charts/PieChart';
 import { SyncedActivityCharts } from '../../components/charts/SyncedActivityCharts';
 import { WorldMap } from '../../components/charts/WorldMap';
 import { FastestLapEntry, useStatsApi } from '../../hooks/useStatsApi';
+import { deriveCountryMetric, type MetricKey } from './countryMetric';
 
 const ALL_TRACKS = 'ALL';
 
@@ -129,6 +131,44 @@ export function GlobalDashboard() {
     [...STATS_VISIBLE_TYPES].every((t) => typeFilter.has(t));
   const showEventNameColumn = !(allVisibleTypesSelected && trackFilter === ALL_TRACKS);
 
+  const [countryMetric, setCountryMetric] = useState<MetricKey>('events');
+
+  const countryRows = useMemo(
+    () => deriveCountryMetric(globalStats?.eventsByCountry ?? [], countryMetric),
+    [globalStats?.eventsByCountry, countryMetric]
+  );
+
+  const countryMetricLabel = useMemo(() => {
+    switch (countryMetric) {
+      case 'events':
+        return t('stats.events');
+      case 'laps':
+        return t('stats.laps');
+      case 'avgLapsPerEvent':
+        return t('stats.metric-avg-laps');
+    }
+  }, [countryMetric, t]);
+
+  // Tooltip + bar-chart Y-axis label for the avg metric should render one
+  // decimal so "25" doesn't sit next to "12.3"; the raw `value` stays
+  // unrounded for the chart's own scale calculations.
+  const formatCountryValue = useMemo(
+    () =>
+      countryMetric === 'avgLapsPerEvent'
+        ? (v: number) => (Math.round(v * 10) / 10).toString()
+        : undefined,
+    [countryMetric]
+  );
+
+  // Map the active metric to the raw count field that the WorldMap tooltip
+  // should suppress (so it doesn't show a duplicate context line). The
+  // avg metric doesn't match any raw field, so leave primaryField unset.
+  const countryPrimaryField = useMemo<'events' | 'laps' | undefined>(() => {
+    if (countryMetric === 'events') return 'events';
+    if (countryMetric === 'laps') return 'laps';
+    return undefined;
+  }, [countryMetric]);
+
   if (loading) {
     return (
       <ContentLayout header={<Header variant="h1">{t('stats.global-dashboard')}</Header>}>
@@ -143,7 +183,7 @@ export function GlobalDashboard() {
     return (
       <ContentLayout header={<Header variant="h1">{t('stats.global-dashboard')}</Header>}>
         <Box textAlign="center" padding={{ top: 'xxxl' }}>
-          <StatusIndicator type="info">{t('stats.no-data')}</StatusIndicator>
+          <StatusIndicator type="info">{t('stats.no-race-data')}</StatusIndicator>
         </Box>
       </ContentLayout>
     );
@@ -175,7 +215,27 @@ export function GlobalDashboard() {
 
         {/* Events by Country — tab between world map ("where") and bar
             chart ("exact comparable numbers"). */}
-        <Container header={<Header variant="h2">{t('stats.events-by-country')}</Header>}>
+        <Container
+          header={
+            <Header
+              variant="h2"
+              actions={
+                <SegmentedControl
+                  selectedId={countryMetric}
+                  onChange={({ detail }) => setCountryMetric(detail.selectedId as MetricKey)}
+                  label={t('stats.country-breakdown')}
+                  options={[
+                    { id: 'events', text: t('stats.events') },
+                    { id: 'laps', text: t('stats.laps') },
+                    { id: 'avgLapsPerEvent', text: t('stats.metric-avg-laps') },
+                  ]}
+                />
+              }
+            >
+              {t('stats.country-breakdown')}
+            </Header>
+          }
+        >
           <Tabs
             tabs={[
               {
@@ -183,14 +243,11 @@ export function GlobalDashboard() {
                 label: t('stats.bar-chart'),
                 content: (
                   <BarChart
-                    labels={stats.eventsByCountry.map((c) => [
-                      c.countryCode,
-                      flagEmoji(c.countryCode),
-                    ])}
-                    values={stats.eventsByCountry.map((c) => c.events)}
-                    seriesLabel={t('stats.events')}
+                    labels={countryRows.map((c) => [c.countryCode, flagEmoji(c.countryCode)])}
+                    values={countryRows.map((c) => c.value)}
+                    seriesLabel={countryMetricLabel}
                     xTitle={t('stats.country')}
-                    yTitle={t('stats.events')}
+                    yTitle={countryMetricLabel}
                     color={categoricalPalette[0]}
                     height={300}
                   />
@@ -201,12 +258,10 @@ export function GlobalDashboard() {
                 label: t('stats.world-map'),
                 content: (
                   <WorldMap
-                    data={stats.eventsByCountry.map((c) => ({
-                      countryCode: c.countryCode,
-                      events: c.events,
-                      racers: c.racers,
-                      laps: c.laps,
-                    }))}
+                    data={countryRows}
+                    metricLabel={countryMetricLabel}
+                    formatValue={formatCountryValue}
+                    primaryField={countryPrimaryField}
                     height={400}
                   />
                 ),
