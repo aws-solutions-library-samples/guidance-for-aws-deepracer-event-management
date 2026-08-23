@@ -26,13 +26,12 @@ import { LandingPageManager } from './constructs/landing-page';
 import { Leaderboard } from './constructs/leaderboard';
 import { ModelOptimizer } from './constructs/model-optimizer';
 import { ModelsManager } from './constructs/models-manager';
-import { ModelsManagerDefaultModelsDeployment } from './constructs/models-manager-default-models';
 import { RaceManager } from './constructs/race-manager';
+import { RaceResultsPdf } from './constructs/race-results-pdf';
 import { RacerProfile } from './constructs/racer-profile';
 import { Statistics } from './constructs/statistics';
 import { SystemsManager } from './constructs/systems-manager';
 import { UserManager } from './constructs/user-manager';
-import { RaceResultsPdf } from './constructs/race-results-pdf';
 
 export interface DeepracerEventManagerStackProps extends cdk.StackProps {
   baseStackName: string;
@@ -43,6 +42,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
   public readonly sourceBucketName: cdk.CfnOutput;
   public readonly dremWebsiteUrl: cdk.CfnOutput;
   public readonly appsyncId: cdk.CfnOutput;
+  public readonly uploadBucketName: cdk.CfnOutput;
 
   constructor(scope: Construct, id: string, props: DeepracerEventManagerStackProps) {
     super(scope, id, props);
@@ -153,13 +153,6 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       appsyncApi: appsyncResources,
       clamScanPost: clamscan.postLambda,
     });
-
-    const defaultModelsDeployment = new ModelsManagerDefaultModelsDeployment(this, 'DefaultModelsDeployment', {
-      uploadBucket: modelsManager.uploadBucket,
-      modelsBucket: modelsManager.modelsBucket,
-    });
-    defaultModelsDeployment.node.addDependency(clamscan);
-    defaultModelsDeployment.node.addDependency(modelOptimizer);
 
     const carManager = new CarManager(this, 'CarManager', {
       appsyncApi: appsyncResources,
@@ -283,7 +276,7 @@ export class DeepracerEventManagerStack extends cdk.Stack {
       value: dremWebsiteBucket.bucketName,
     });
 
-    new cdk.CfnOutput(this, 'uploadBucketName', {
+    this.uploadBucketName = new cdk.CfnOutput(this, 'uploadBucketName', {
       value: modelsManager.uploadBucket.bucketName,
     });
 

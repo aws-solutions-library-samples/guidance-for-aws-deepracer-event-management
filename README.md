@@ -447,7 +447,14 @@ They were trained for 12 hours using the PPO training algorithm, default discret
 - Loss type: Huber
 - Number of experience episodes between each policy-updating iteration: 20
 
-These models can be found in `lib/default_models`
+Additionally three calibration models are included:
+
+- Calibrate-Center.tar.gz will go straight
+- Calibrate-Left-100pct.tar.gz will turn 100% to the left
+- Calibrate-Right-100pct.tar.gz will turn 100% to the right
+
+These models can be found in `lib/default_models`. They are automatically deployed if you deploy using the pipeline approach. If you do a manual
+deploy can choose to deploy the models using `make manual.deploy.model`.
 
 ## Leaderboard Switches
 
