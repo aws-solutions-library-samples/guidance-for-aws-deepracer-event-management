@@ -29,7 +29,7 @@ import path = require('path');
 import { CarLogsFetchStepFunction } from './car-logs-fetch';
 
 const MAX_VCPU = 32;
-const MAX_JOB_VCPU = MAX_VCPU / 2;
+const MAX_JOB_VCPU = MAX_VCPU / 4;
 
 export interface CarLogsManagerProps {
   logsBucket: s3.IBucket;

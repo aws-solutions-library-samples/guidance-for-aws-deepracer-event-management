@@ -46,6 +46,7 @@ COLOR_HIGHLIGHT = "#ff9900"
 COLOR_TEXT_PRIMARY = "#a166ff"
 COLOR_TEXT_SECONDARY = "lightgray"
 COLOR_BACKGROUND = "black"
+BORDER_BGR = tuple(int(c * 255) for c in reversed(mcolors.to_rgb(COLOR_EDGE)))
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 FONT_BIG = fm.FontProperties(
@@ -65,6 +66,28 @@ _PIL_FONT_TITLE = None
 _PIL_FONT_INFO = None
 
 
+def _container_vcpus() -> int:
+    """Return allocated physical-core equivalent from cgroup quota (vCPUs / 2, since vCPUs are hyperthreads)."""
+    try:
+        with open("/sys/fs/cgroup/cpu.max") as f:
+            quota, period = f.read().split()
+        if quota == "max":
+            return psutil.cpu_count(logical=False)
+        return max(1, int(int(quota) / int(period)) // 2)
+    except (FileNotFoundError, ValueError):
+        pass
+    try:
+        with open("/sys/fs/cgroup/cpu/cpu.cfs_quota_us") as f:
+            quota = int(f.read())
+        with open("/sys/fs/cgroup/cpu/cpu.cfs_period_us") as f:
+            period = int(f.read())
+        if quota < 0:
+            return psutil.cpu_count(logical=False)
+        return max(1, int(quota / period) // 2)
+    except (FileNotFoundError, ValueError):
+        return psutil.cpu_count(logical=False)
+
+
 def signal_handler(sig, frame):
     for p in procs:
         p.terminate()
@@ -75,13 +98,13 @@ def signal_handler(sig, frame):
 
 def process_worker(
     data_queue: mp.Queue,
-    result: Tuple,
+    result_queue: mp.Queue,
     model_bytes: bytes,
     metadata: ModelMetadata,
     bag_info: dict,
     background: np.ndarray,
     action_names: List[str],
-    error_queue: mp.Queue = None,  # Add error queue parameter
+    error_queue: mp.Queue = None,
 ):
     """
     Worker function to process data frames using a machine learning model and Grad-CAM for visualization.
@@ -100,7 +123,6 @@ def process_worker(
     """
 
     try:
-        result_list, list_lock = result
         flip_x = bag_info.get("flip_x", False)
 
         bar_fig = create_bar_fig(action_names, flip_x)
@@ -128,7 +150,7 @@ def process_worker(
                     step, img, grad_img = process_input_frame(
                         data, start_time=bag_info["start_time"], seq=index, cam=cam
                     )
-                    encimg = create_img(
+                    frame = create_img(
                         bar_fig,
                         step,
                         bag_info,
@@ -138,9 +160,7 @@ def process_worker(
                         flip_x,
                         background,
                     )
-
-                    with list_lock:
-                        result_list.append([index, step, encimg])
+                    result_queue.put([index, step, frame])
 
                 except queue.Empty:
                     continue
@@ -316,6 +336,11 @@ def create_bar_fig(
             fontproperties=FONT_SMALL,
         )
 
+    if action_names:
+        ax.set_xlim(-0.5, len(action_names) - 0.5)
+    # draw once to warm up renderer; cache static background for per-frame blitting
+    fig.canvas.draw()
+    fig._static_bg = fig.canvas.copy_from_bbox(fig.bbox)
     return fig
 
 
@@ -363,9 +388,9 @@ def create_img(
     start_time = "-".join(name_parts[-2:])
     model_name = "-".join(name_parts[:-2])
 
-    # Base frame: background image or black canvas
+    # Base frame: background is already BGR (pre-converted once in process_file)
     if background is not None:
-        frame = cv2.cvtColor(background, cv2.COLOR_RGBA2BGR)
+        frame = background.copy()
     else:
         frame = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
 
@@ -389,7 +414,7 @@ def create_img(
         grad_bgr = cv2.cvtColor(grad_display, cv2.COLOR_RGB2BGR)
     frame[gy1:gy2, gx1:gx2] = cv2.resize(grad_bgr, (gx2 - gx1, gy2 - gy1))
 
-    # Bar chart → rendered by small matplotlib figure, then blitted
+    # Bar chart: restore cached static background, draw only the bars (Agg blitting)
     bx1, by1, bx2, by2 = panels["bar"]
     ax = fig.get_axes()[0]
     for container in list(ax.containers):
@@ -397,28 +422,29 @@ def create_img(
     if len(action_names) > 0:
         n = len(action_names)
         x = list(range(n))
-        car_result = pd.DataFrame(step["car_results"])
+        probs = [r["probability"] for r in step["car_results"]]
         bar_colors = [COLOR_EDGE] * n
-        bar_colors[car_result["probability"].idxmax()] = COLOR_HIGHLIGHT
-        probs = list(car_result["probability"])
+        bar_colors[max(range(n), key=lambda i: probs[i])] = COLOR_HIGHLIGHT
         if flip_x:
-            ax.bar(x, probs[::-1], color=bar_colors[::-1])
+            bars = ax.bar(x, probs[::-1], color=bar_colors[::-1])
         else:
-            ax.bar(x, probs, color=bar_colors)
-        ax.set_xlim(-0.5, n - 0.5)
-    fig.canvas.draw()
+            bars = ax.bar(x, probs, color=bar_colors)
+        fig.canvas.restore_region(fig._static_bg)
+        for patch in bars.patches:
+            ax.draw_artist(patch)
+        fig.canvas.blit(fig.bbox)
+    else:
+        fig.canvas.restore_region(fig._static_bg)
+        fig.canvas.blit(fig.bbox)
     buf = fig.canvas.buffer_rgba()
     bar_w, bar_h = fig.canvas.get_width_height()
     bar_arr = np.frombuffer(buf, dtype=np.uint8).reshape(bar_h, bar_w, 4)
-    frame[by1:by2, bx1:bx2] = cv2.resize(
-        cv2.cvtColor(bar_arr, cv2.COLOR_RGBA2BGR), (bx2 - bx1, by2 - by1)
-    )
+    frame[by1:by2, bx1:bx2] = cv2.cvtColor(bar_arr, cv2.COLOR_RGBA2BGR)
 
     # Panel borders
-    border_bgr = tuple(int(c * 255) for c in reversed(mcolors.to_rgb(COLOR_EDGE)))
     for key in ("img", "grad", "bar"):
         px1, py1, px2, py2 = panels[key]
-        cv2.rectangle(frame, (px1, py1), (px2 - 1, py2 - 1), border_bgr, 1)
+        cv2.rectangle(frame, (px1, py1), (px2 - 1, py2 - 1), BORDER_BGR, 1)
 
     # Header text via Pillow (supports custom TTF fonts)
     # anchor="lb"/"rb": x/y is bottom-left / bottom-right — matches matplotlib va='bottom'
@@ -442,9 +468,7 @@ def create_img(
     )
     frame = cv2.cvtColor(np.array(pil_frame), cv2.COLOR_RGB2BGR)
 
-    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 95]
-    _, encimg = cv2.imencode(".jpg", frame, encode_param)
-    return encimg
+    return frame
 
 
 def process_input_frame(
@@ -642,9 +666,7 @@ def process_file(
     utils.print_baginfo(bag_info)
 
     # Key data points
-    worker_count = (
-        args.workers if args.workers else int((psutil.cpu_count(logical=False)) * 3 / 4)
-    )
+    worker_count = args.workers if args.workers else int(_container_vcpus() * 3 / 4)
     frame_limit = int(min(bag_info["total_frames"], frame_limit))
 
     print("")
@@ -661,6 +683,9 @@ def process_file(
             "AWS-Deepracer_Background_Machine-Learning.928f7bc20a014c7c7823e819ce4c2a84af17597c.jpg",
         )
         background = utils.load_background_image(background_path, WIDTH, HEIGHT)
+        background = cv2.cvtColor(
+            background, cv2.COLOR_RGBA2BGR
+        )  # convert once; workers use .copy()
     else:
         background = None
 
@@ -688,10 +713,9 @@ def process_file(
     try:
         # Create queues for data, results, and errors
         data_queue = mp.Queue()
-        error_queue = mp.Queue()  # Add error queue
-        manager = mp.Manager()
-        result_list = manager.list()
-        list_lock = manager.Lock()
+        error_queue = mp.Queue()
+        # bounded to limit peak memory: worker_count * 8 raw frames in flight
+        result_queue = mp.Queue(maxsize=worker_count * 8)
 
         # Use a separate process to read from the stream
         stream_reader = mp.Process(
@@ -707,7 +731,7 @@ def process_file(
                 target=process_worker,
                 args=(
                     data_queue,
-                    (result_list, list_lock),
+                    result_queue,
                     model_bytes,
                     metadata,
                     bag_info,
@@ -775,10 +799,11 @@ def process_file(
                     for worker in dead_workers:
                         print(f"Worker PID {worker.pid} exit code: {worker.exitcode}")
 
-                while len(result_list) > 0:
-                    with list_lock:
-                        result = result_list.pop(0)
-
+                while True:
+                    try:
+                        result = result_queue.get_nowait()
+                    except queue.Empty:
+                        break
                     heapq.heappush(pq, result)
                     received += 1
                     pbar_proc.update(1)
@@ -788,13 +813,9 @@ def process_file(
 
                 # Process results in order
                 if pq and pq[0][0] == expected_index:
-                    _, step, encimg = heapq.heappop(pq)
+                    _, step, frame = heapq.heappop(pq)
                     steps_data["steps"].append(step)
-                    writer.write(
-                        cv2.imdecode(
-                            np.frombuffer(encimg, dtype=np.uint8), cv2.IMREAD_COLOR
-                        )
-                    )
+                    writer.write(frame)
                     pbar_write.update(1)
                     expected_index += 1
 
