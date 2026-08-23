@@ -272,7 +272,6 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
         {
           type: 'link',
           text: t('topnav.commentator-race'),
-          info: <Badge color="blue">Beta</Badge>,
           href: '/commentator',
         },
       ],
@@ -297,7 +296,6 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
             {
               type: 'link',
               text: t('topnav.upload-to-car-status'),
-              info: <Badge color="blue">{t('topnav.beta')}</Badge>,
               href: '/admin/upload_to_car_status',
             },
             {
@@ -350,7 +348,6 @@ export function TopNav({ user, signout }: TopNavProps): JSX.Element {
         {
           type: 'link',
           text: t('topnav.time-keeper-wizard'),
-          info: <Badge color="blue">{t('topnav.beta')}</Badge>,
           href: '/admin/timekeeper-wizard',
         },
       ],
