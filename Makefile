@@ -109,7 +109,7 @@ drem.clean-base:				## Delete base stack only (async, no wait)
 
 ##@ Manual deploy (bypass the pipeline, deploy direct from local)
 
-.PHONY: manual.deploy manual.deploy.specific manual.deploy.hotswap manual.deploy.website
+.PHONY: manual.deploy manual.deploy.specific manual.deploy.hotswap manual.deploy.website manual.deploy.models
 manual.deploy:  				## Deploy via cdk
 	npx cdk deploy --c manual_deploy=True $(CDK_CONTEXT) --all
 
@@ -123,6 +123,11 @@ manual.deploy.website: local.config local.build	## Build all three apps and depl
 	cd website && npm run build
 	aws s3 sync website/build/ s3://$$(jq -r '.[] | select(.OutputKey=="sourceBucketName") | .OutputValue' cfn.outputs)/ --delete
 	aws cloudfront create-invalidation --distribution-id $$(jq -r '.[] | select(.OutputKey=="distributionId") | .OutputValue' cfn.outputs) --paths "/*"
+
+manual.deploy.models:			## Sync default models to the upload bucket
+	aws s3 sync ./lib/default_models/ \
+	  s3://$$(jq -r '.[] | select(.OutputKey=="uploadBucketName") | .OutputValue' cfn.outputs)/private/$(region):00000000-0000-0000-0000-000000000000/000000000000/default/ \
+	  --no-progress
 
 ##@ Local development
 
