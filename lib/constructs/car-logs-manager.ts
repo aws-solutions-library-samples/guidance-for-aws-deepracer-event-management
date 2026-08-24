@@ -29,7 +29,9 @@ import path = require('path');
 import { CarLogsFetchStepFunction } from './car-logs-fetch';
 
 const MAX_VCPU = 32;
-const MAX_JOB_VCPU = MAX_VCPU / 2;
+const MAX_JOB_VCPU = MAX_VCPU / 4;
+const MAX_MEMORY = 32768;
+const MAX_JOB_MEMORY = MAX_MEMORY / 2;
 
 export interface CarLogsManagerProps {
   logsBucket: s3.IBucket;
@@ -333,7 +335,7 @@ export class CarLogsManager extends Construct {
         },
         resourceRequirements: [
           { type: 'VCPU', value: MAX_JOB_VCPU.toString() },
-          { type: 'MEMORY', value: '32768' },
+          { type: 'MEMORY', value: MAX_JOB_MEMORY.toString() },
         ],
         executionRoleArn: taskExecutionRole.roleArn,
         jobRoleArn: taskRole.roleArn,
