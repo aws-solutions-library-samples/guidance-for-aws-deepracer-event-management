@@ -76,8 +76,9 @@ def _render_and_upload(job: dict) -> tuple[str, str]:
         if not racer:
             raise ValueError(f"Racer {user_id} has no results for event {job['eventId']}")
         pdf_bytes = shared.render_certificate(event, racer, brand, generated_at)
-        key = shared.s3_key(job["eventId"], f"certificate-{racer['username']}")
-        filename = f"certificate-{racer['username']}.pdf"
+        file_label = racer.get("cognitoUsername", racer["username"])
+        key = shared.s3_key(job["eventId"], f"certificate-{file_label}")
+        filename = f"certificate-{file_label}.pdf"
     elif t == "RACER_CERTIFICATES_BULK":
         pdf_bytes = shared.render_bulk_zip(event, ranked, brand, generated_at)
         key, filename = shared.s3_key(job["eventId"], "certificates"), "certificates.zip"

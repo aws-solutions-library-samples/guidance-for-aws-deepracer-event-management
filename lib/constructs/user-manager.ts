@@ -214,6 +214,7 @@ export class UserManager extends NestedStack {
         UserStatus: GraphqlType.string(),
         MFAOptions: user_object_mfa_options.attribute({ isList: true, isRequired: false }),
         sub: GraphqlType.id({ isRequired: false }),
+        racerName: GraphqlType.string({ isRequired: false }),
       },
       directives: [Directive.cognito('admin', 'registration', 'operator'), Directive.iam()],
     });
@@ -347,6 +348,7 @@ export class UserManager extends NestedStack {
             isRequired: false,
           }),
           sub: GraphqlType.id({ isRequired: false }),
+          racerName: GraphqlType.string({ isRequired: false }),
         },
         returnType: user_object.attribute(),
         dataSource: props.appsyncApi.noneDataSource,

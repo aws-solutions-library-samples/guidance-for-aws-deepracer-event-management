@@ -22,7 +22,17 @@
 
 import { generateClient, type GraphQLResult } from 'aws-amplify/api';
 
-const client = generateClient();
+// Lazily initialized so that generateClient() is not called at module evaluation
+// time, before App.tsx has had a chance to call Amplify.configure().
+// Typed as `any` to avoid "excessive stack depth" TS errors from Amplify's
+// deeply recursive generated types (Prettify/DeepReadOnlyObject).
+let _client: any;
+function getClient(): any {
+  if (!_client) {
+    _client = generateClient();
+  }
+  return _client;
+}
 
 /**
  * Execute a GraphQL query using the v6 client.
@@ -36,7 +46,7 @@ export async function graphqlQuery<T = any>(
   query: string,
   variables?: Record<string, any>
 ): Promise<T> {
-  const result = (await client.graphql({ query, variables } as any)) as GraphQLResult<T>;
+  const result = (await getClient().graphql({ query, variables } as any)) as GraphQLResult<T>;
   return result.data as T;
 }
 
@@ -56,7 +66,7 @@ export async function graphqlMutate<T = any>(
   if (options?.authMode) {
     params.authMode = options.authMode;
   }
-  const result = (await client.graphql(params)) as GraphQLResult<T>;
+  const result = (await getClient().graphql(params)) as GraphQLResult<T>;
   return result.data as T;
 }
 
@@ -96,7 +106,7 @@ export function graphqlSubscribe<T = any>(
   subscription: string,
   variables?: Record<string, any>
 ): GraphQLSubscription<T> {
-  const observable = client.graphql({ query: subscription, variables } as any) as any;
+  const observable = getClient().graphql({ query: subscription, variables } as any) as any;
 
   return {
     subscribe(handlers: {

@@ -122,6 +122,11 @@ export class DeepracerEventManagerStack extends cdk.Stack {
     // Get the WAF Web ACL ARN from SSM, created in the base stack
     const wafWebAclRegionalArn = ssm.StringParameter.valueForStringParameter(this, `${ssmBase}/regionalWafWebAclArn`);
 
+    // Get useExternalIdp from SSM, created in the base stack.
+    // NOTE: BaseStack must be deployed before InfrastructureStack when first
+    // enabling extUserPoolId, so that the SSM parameter exists at deploy time.
+    const useExternalIdp = ssm.StringParameter.valueForStringParameter(this, `/${props.baseStackName}/useExternalIdp`);
+
     // Appsync API
     const appsyncResources = this.appsyncApi(this.stackName, userPool, wafWebAclRegionalArn);
 
@@ -330,6 +335,10 @@ export class DeepracerEventManagerStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'userPoolId', {
       value: userPoolId,
+    });
+
+    new cdk.CfnOutput(this, 'useExternalIdp', {
+      value: useExternalIdp,
     });
 
     // CDK BucketDeployment and LogRetention singleton Lambdas — runtime and role are CDK-managed.

@@ -31,6 +31,9 @@ with open("cdk.outputs") as json_file:
             "aws_appsync_region": data["region"],
             "aws_appsync_authenticationType": "AMAZON_COGNITO_USER_POOLS",
         },
+        "Features": {
+            "useExternalIdp": data.get("useExternalIdp", "false") == "true",
+        },
     }
 
     print(json.dumps(output_data, indent=4))

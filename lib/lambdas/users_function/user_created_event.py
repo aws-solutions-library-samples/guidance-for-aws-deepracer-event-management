@@ -5,6 +5,7 @@ import time
 import appsync_helpers
 import boto3
 import http_response
+import user_utils
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
@@ -49,11 +50,11 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
 
     if len(response["Users"]) == 1:
         user = clean_json(response["Users"][0])
-        # extract sub to root level
+        # extract sub and racerName to root level
         for attribute in user["Attributes"]:
             if attribute["Name"] == "sub":
                 user["sub"] = attribute["Value"]
-                break
+        user["racerName"] = user_utils.resolve_display_name(user)
         logger.info(user)
 
     query = """ mutation UserCreated(
@@ -65,6 +66,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         $UserStatus: String
         $Username: String
         $sub: ID
+        $racerName: String
     ) {
         userCreated(
         Attributes: $Attributes
@@ -75,6 +77,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         UserStatus: $UserStatus
         Username: $Username
         sub: $sub
+        racerName: $racerName
         ) {
         Attributes {
             Name
@@ -91,6 +94,7 @@ def lambda_handler(event: dict, context: LambdaContext) -> str:
         UserStatus
         Username
         sub
+        racerName
         }
     }
     """

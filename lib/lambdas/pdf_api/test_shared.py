@@ -1,10 +1,12 @@
 import decimal
 import os
+from unittest.mock import patch
 os.environ.setdefault("PDF_BUCKET", "test-bucket")
 os.environ.setdefault("RACE_TABLE", "test-race")
 os.environ.setdefault("EVENTS_TABLE", "test-events")
 os.environ.setdefault("USER_POOL_ID", "test-pool")
 
+import shared
 from shared import replace_decimal_with_float, requester_identity, enforce_racer_self_service, s3_key, format_lap
 
 
@@ -61,3 +63,25 @@ def test_format_lap_none():
 
 def test_format_lap_rounds_to_ms():
     assert format_lap(1234) == "1.234s"
+
+
+def test_lookup_user_prefers_racer_name_and_keeps_cognito_username_for_profile_lookup():
+    user = {
+        "Username": "cognito-user",
+        "Attributes": [
+            {"Name": "sub", "Value": "u-1"},
+            {"Name": "custom:racerName", "Value": "Display Racer"},
+            {"Name": "preferred_username", "Value": "Preferred Racer"},
+            {"Name": "custom:countryCode", "Value": "SE"},
+        ],
+    }
+
+    with patch.object(shared._cognito, "list_users", return_value={"Users": [user]}), patch.object(
+        shared, "_lookup_racer_profile", return_value={"avatarConfig": "{}", "highlightColour": "#123456"}
+    ) as profile_lookup:
+        result = shared.lookup_user("u-1")
+
+    profile_lookup.assert_called_once_with("cognito-user")
+    assert result["username"] == "Display Racer"
+    assert result["cognitoUsername"] == "cognito-user"
+    assert result["countryCode"] == "SE"

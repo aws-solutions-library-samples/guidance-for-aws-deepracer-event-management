@@ -63,6 +63,7 @@ export const useUsersApi = (userHasAccess: boolean = false): void => {
             ...u,
             Email: getUserEmail(u),
             CountryCode: getUserCountryCode(u),
+            RacerName: u.racerName || u.Username,
             Roles: parseRoles(u),
           }));
           dispatch('ADD_USERS', users);
@@ -90,6 +91,7 @@ export const useUsersApi = (userHasAccess: boolean = false): void => {
               ...user,
               Email: getUserEmail(user),
               CountryCode: getUserCountryCode(user),
+              RacerName: user.racerName || user.Username,
               Roles: parseRoles(user),
             };
             dispatch('UPDATE_USER', enrichedUser);
@@ -119,6 +121,7 @@ export const useUsersApi = (userHasAccess: boolean = false): void => {
               ...user,
               Email: getUserEmail(user),
               CountryCode: getUserCountryCode(user),
+              RacerName: user.racerName || user.Username,
               Roles: parseRoles(user),
             };
             dispatch('UPDATE_USER', enrichedUser);
@@ -130,36 +133,9 @@ export const useUsersApi = (userHasAccess: boolean = false): void => {
     }
     return () => {
       if (subscription) {
-        console.debug('deregister onUserCreated subscription');
+        console.debug('deregister onUserUpdated subscription');
         subscription.unsubscribe();
       }
     };
   }, [dispatch, userHasAccess]);
-
-  // subscribe to user updates (duplicate for reliability)
-  useEffect(() => {
-    let subscription: { unsubscribe: () => void } | undefined;
-    if (userHasAccess) {
-      subscription = graphqlSubscribe<{ onUserUpdated: CognitoUser }>(onUserUpdated).subscribe({
-        next: (event) => {
-          console.debug('onUserUpdated received', event);
-          const user = event.value.data.onUserUpdated;
-          if (user) {
-            const enrichedUser: EnrichedUser = {
-              ...user,
-              Email: getUserEmail(user),
-              CountryCode: getUserCountryCode(user),
-              Roles: parseRoles(user),
-            };
-            dispatch('UPDATE_USER', enrichedUser);
-          }
-        },
-      });
-    }
-    return () => {
-      if (subscription) {
-        subscription.unsubscribe();
-      }
-    };
-  }, [userHasAccess, dispatch]);
 };
