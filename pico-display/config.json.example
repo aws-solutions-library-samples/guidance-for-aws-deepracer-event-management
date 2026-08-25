@@ -1,0 +1,30 @@
+{
+  "wifi": {
+    "ssid": "YourNetworkName",
+    "password": "YourWiFiPassword"
+  },
+  "appsync": {
+    "endpoint": "https://XXXXXXXXXXXX.appsync-api.eu-west-1.amazonaws.com/graphql",
+    "api_key": "da2-XXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "region": "eu-west-1"
+  },
+  "event": {
+    "event_id": "paste-event-id-from-drem-here",
+    "track_id": "1",
+    "race_format": "fastest"
+  },
+  "display": {
+    "brightness": 0.5,
+    "scroll_speed": 40,
+    "leaderboard_top_n": 5,
+    "race_display_lines": 1,
+    "branding_1": "DREM",
+    "branding_1_colour": "yellow",
+    "branding_2": ">> This way towards victory >>",
+    "branding_2_colour": "cyan"
+  },
+  "ota": {
+    "base_url": "https://your-drem-cloudfront-url.com/pico-display/"
+  },
+  "debug": false
+}
