@@ -10,6 +10,7 @@ import {
   GetRaceResetsNameFromId,
   GetRankingNameFromId,
   GetTrackTypeNameFromId,
+  RaceEndConditionEnum,
   RaceTypeEnum,
 } from '../support-functions/raceConfig';
 import { TrackTable } from './trackTable';
@@ -19,6 +20,8 @@ interface RaceConfig {
   trackType: string;
   raceTimeInMin: number;
   numberOfResetsPerLap: string;
+  raceEndCondition?: string;
+  numberOfLaps?: number;
 }
 
 interface Track {
@@ -75,7 +78,9 @@ export const EventDetailsPanelContent: React.FC<EventDetailsPanelContentProps> =
           GetRankingNameFromId(event.raceConfig.rankingMethod)
         )}
         {attributeField(t('events.track-type'), GetTrackTypeNameFromId(event.raceConfig.trackType))}
-        {attributeField(t('events.race.race-time'), event.raceConfig.raceTimeInMin)}
+        {event.raceConfig.raceEndCondition === RaceEndConditionEnum.LAP_COUNT
+          ? attributeField(t('events.race.number-of-laps'), `${event.raceConfig.numberOfLaps} ${t('events.race.laps')}`)
+          : attributeField(t('events.race.race-time'), `${event.raceConfig.raceTimeInMin} min`)}
         {attributeField(
           t('events.race.resets-per-lap'),
           GetRaceResetsNameFromId(event.raceConfig.numberOfResetsPerLap)
