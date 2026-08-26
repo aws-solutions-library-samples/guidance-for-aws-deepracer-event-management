@@ -3,6 +3,9 @@ import json
 with open("cfn.outputs") as json_file:
     data = json.load(json_file)
 
+    cwRumAppMonitorId = None
+    cwRumAppMonitorRegion = None
+    cwRumAppMonitorConfig = None
     for key in data:
         if key["OutputKey"].startswith("appsyncEndpoint"):
             appsyncEndpoint = key["OutputValue"]
@@ -50,17 +53,19 @@ with open("cfn.outputs") as json_file:
             "aws_appsync_authenticationType": "AMAZON_COGNITO_USER_POOLS",
             "aws_appsync_apiKey": appsyncApiKey,
         },
-        "Rum": {
+        "CarActivation": {
+            "registerCarSerialFunctionName": registerCarSerialFunctionName,
+        },
+    }
+
+    if cwRumAppMonitorId:
+        output_data["Rum"] = {
             "drem": {
                 "id": cwRumAppMonitorId,
                 "region": cwRumAppMonitorRegion,
                 "config": cwRumAppMonitorConfig,
             },
-        },
-        "CarActivation": {
-            "registerCarSerialFunctionName": registerCarSerialFunctionName,
-        },
-    }
+        }
 
     print(json.dumps(output_data, indent=4))
 
