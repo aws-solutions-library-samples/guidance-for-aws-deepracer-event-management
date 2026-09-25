@@ -22,6 +22,7 @@ export interface BaseStackProps extends cdk.StackProps {
   email: string;
   labelName: string;
   domainName?: string;
+  extUserPoolId?: string;
 }
 
 export class BaseStack extends cdk.Stack {
@@ -183,13 +184,16 @@ export class BaseStack extends cdk.Stack {
         layersConfig: { ...lambdaLayers },
       },
       eventbus: this.eventbridge.eventbus,
+      existingUserPoolId: props.extUserPoolId,
     });
 
-    // protect cognito with WAF
-    new wafv2.CfnWebACLAssociation(this, 'cognitoWafAssociation', {
-      webAclArn: wafWebAclRegional.attrArn,
-      resourceArn: `arn:${this.partition}:cognito-idp:${this.region}:${this.account}:userpool/${this.idp.userPool.userPoolId}`,
-    });
+    // protect cognito with WAF (only when DREM owns the pool)
+    if (!this.idp.useExistingUserPool) {
+      new wafv2.CfnWebACLAssociation(this, 'cognitoWafAssociation', {
+        webAclArn: wafWebAclRegional.attrArn,
+        resourceArn: `arn:${this.partition}:cognito-idp:${this.region}:${this.account}:userpool/${this.idp.userPool.userPoolId}`,
+      });
+    }
 
     // SSM parameters for cross-stack sharing (avoids CloudFormation Fn::ImportValue dependencies)
     new ssm.StringParameter(this, 'ssmCloudfrontDistributionId', {
@@ -247,6 +251,10 @@ export class BaseStack extends cdk.Stack {
     new ssm.StringParameter(this, 'ssmAuthenticatedUserRoleArn', {
       parameterName: `/${this.stackName}/authenticatedUserRoleArn`,
       stringValue: this.idp.authenticatedUserRole.roleArn,
+    });
+    new ssm.StringParameter(this, 'ssmUseExternalIdp', {
+      parameterName: `/${this.stackName}/useExternalIdp`,
+      stringValue: this.idp.useExistingUserPool ? 'true' : 'false',
     });
   }
 

@@ -265,6 +265,10 @@ export interface User {
   UserLastModifiedDate?: string;
   Enabled?: boolean;
   UserStatus?: string;
+  Email?: string;
+  CountryCode?: string;
+  RacerName?: string;
+  Roles?: string | null;
 }
 
 export interface GetUsersResponse {

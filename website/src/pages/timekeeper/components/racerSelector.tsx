@@ -43,7 +43,11 @@ export const RacerSelector: React.FC<RacerSelectorProps> = ({
     if (!isLoadingRacers) {
       SetUserOptions(
         racers.map((user) => {
-          const option: UserOption = { label: user.Username, value: user.sub };
+          const option = {
+            label: user.RacerName || user.Username,
+            value: user.sub,
+            description: user.Username,
+          };
           return option;
         })
       );

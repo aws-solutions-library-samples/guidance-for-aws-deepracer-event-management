@@ -1,4 +1,5 @@
 """Shared helpers used by orchestrator, worker, and getPdfJob Lambdas."""
+
 import datetime as dt
 import decimal
 import io
@@ -7,9 +8,9 @@ import uuid
 import zipfile
 
 import boto3
+import user_utils
 from aws_lambda_powertools import Logger
 from boto3.dynamodb.conditions import Attr, Key
-
 from race_summary import calculate_racer_summary, rank_racers
 from render import render_pdf
 
@@ -26,7 +27,9 @@ _s3 = boto3.client("s3")
 _cognito = boto3.client("cognito-idp")
 _race_table = _dynamodb.Table(RACE_TABLE)
 _events_table = _dynamodb.Table(EVENTS_TABLE)
-_racer_profile_table = _dynamodb.Table(RACER_PROFILE_TABLE) if RACER_PROFILE_TABLE else None
+_racer_profile_table = (
+    _dynamodb.Table(RACER_PROFILE_TABLE) if RACER_PROFILE_TABLE else None
+)
 
 ADMIN_GROUPS = {"admin", "operator", "commentator"}
 
@@ -52,7 +55,11 @@ def requester_identity(event_identity) -> dict:
     """
     claims = (event_identity or {}).get("claims") or {}
     groups_raw = claims.get("cognito:groups") or ""
-    groups = set(g for g in groups_raw.split(",") if g) if isinstance(groups_raw, str) else set(groups_raw)
+    groups = (
+        set(g for g in groups_raw.split(",") if g)
+        if isinstance(groups_raw, str)
+        else set(groups_raw)
+    )
     return {"sub": claims.get("sub", ""), "groups": groups}
 
 
@@ -75,7 +82,9 @@ def get_races(event_id: str, track_id: str | None) -> list[dict]:
         "FilterExpression": Attr("type").eq("race"),
     }
     if track_id:
-        kwargs["KeyConditionExpression"] = Key("eventId").eq(event_id) & Key("sk").begins_with(f"TRACK#{track_id}#")
+        kwargs["KeyConditionExpression"] = Key("eventId").eq(event_id) & Key(
+            "sk"
+        ).begins_with(f"TRACK#{track_id}#")
     resp = _race_table.query(**kwargs)
     items.extend(resp["Items"])
     while "LastEvaluatedKey" in resp:
@@ -86,7 +95,7 @@ def get_races(event_id: str, track_id: str | None) -> list[dict]:
 
 
 def lookup_user(user_id: str) -> dict:
-    """Resolve a Cognito sub to {username, countryCode, avatarConfig, highlightColour}.
+    """Resolve a Cognito sub to racer identity + profile metadata.
 
     avatarConfig and highlightColour come from the RacerProfile DynamoDB table
     keyed by username (added in the post-#171 RacerProfile rework). They are
@@ -95,17 +104,29 @@ def lookup_user(user_id: str) -> dict:
     try:
         resp = _cognito.list_users(UserPoolId=USER_POOL_ID, Filter=f'sub = "{user_id}"')
         if not resp["Users"]:
-            return {"username": user_id[:8], "countryCode": "", "avatarConfig": None, "highlightColour": None}
+            return {
+                "username": user_id[:8],
+                "countryCode": "",
+                "avatarConfig": None,
+                "highlightColour": None,
+            }
         u = resp["Users"][0]
         attrs = {a["Name"]: a["Value"] for a in u["Attributes"]}
-        username = u["Username"]
+        cognito_username = u["Username"]
+        display_name = user_utils.resolve_display_name(u)
     except Exception as e:
         logger.warning(f"Cognito lookup failed for {user_id}: {e}")
-        return {"username": user_id[:8], "countryCode": "", "avatarConfig": None, "highlightColour": None}
+        return {
+            "username": user_id[:8],
+            "countryCode": "",
+            "avatarConfig": None,
+            "highlightColour": None,
+        }
 
-    profile = _lookup_racer_profile(username)
+    profile = _lookup_racer_profile(cognito_username)
     return {
-        "username": username,
+        "username": display_name,
+        "cognitoUsername": cognito_username,
         "countryCode": attrs.get("custom:countryCode", ""),
         "avatarConfig": profile.get("avatarConfig"),
         "highlightColour": profile.get("highlightColour"),
@@ -145,6 +166,7 @@ def build_summaries(races: list[dict], user_map: dict[str, dict]) -> list[dict]:
         s = calculate_racer_summary(uid, user_races)
         u = user_map.get(uid, {})
         s["username"] = u.get("username", uid[:8])
+        s["cognitoUsername"] = u.get("cognitoUsername", s["username"])
         s["countryCode"] = u.get("countryCode", "")
         s["highlightColour"] = u.get("highlightColour") or None
         s["avatarUrl"] = render_avatar_data_uri(u.get("avatarConfig"))
@@ -174,7 +196,9 @@ def s3_key(event_id: str, name: str) -> str:
     return f"{event_id}/{name}-{ts}-{uid}{'.zip' if name == 'certificates' else '.pdf'}"
 
 
-def render_organiser(event: dict, ranked: list[dict], races: list[dict], brand: dict, generated_at: str) -> bytes:
+def render_organiser(
+    event: dict, ranked: list[dict], races: list[dict], brand: dict, generated_at: str
+) -> bytes:
     by_track: dict[str, list[dict]] = {}
     for r in ranked:
         by_track.setdefault("all", []).append(r)
@@ -183,42 +207,64 @@ def render_organiser(event: dict, ranked: list[dict], races: list[dict], brand: 
         "races": len(races),
         "validLaps": sum(r.get("numberOfValidLaps", 0) for r in ranked),
         "fastestLapFormatted": format_lap(
-            min((r["fastestLapTime"] for r in ranked if r.get("fastestLapTime") is not None), default=None)
+            min(
+                (
+                    r["fastestLapTime"]
+                    for r in ranked
+                    if r.get("fastestLapTime") is not None
+                ),
+                default=None,
+            )
         ),
     }
-    return render_pdf("organiser_summary.html", {
-        "event": event,
-        "tracks": [{"trackId": k, "racers": v} for k, v in by_track.items()],
-        "totals": totals,
-        "brand": brand,
-        "generated_at": generated_at,
-        "page_title": f"{event['eventName']} — Summary",
-    })
+    return render_pdf(
+        "organiser_summary.html",
+        {
+            "event": event,
+            "tracks": [{"trackId": k, "racers": v} for k, v in by_track.items()],
+            "totals": totals,
+            "brand": brand,
+            "generated_at": generated_at,
+            "page_title": f"{event['eventName']} — Summary",
+        },
+    )
 
 
-def render_podium(event: dict, ranked: list[dict], brand: dict, generated_at: str) -> bytes:
-    return render_pdf("podium.html", {
-        "event": event,
-        "podium": ranked[:3],
-        "runners_up": ranked[3:10],
-        "brand": brand,
-        "generated_at": generated_at,
-        "page_title": f"{event['eventName']} — Podium",
-    })
+def render_podium(
+    event: dict, ranked: list[dict], brand: dict, generated_at: str
+) -> bytes:
+    return render_pdf(
+        "podium.html",
+        {
+            "event": event,
+            "podium": ranked[:3],
+            "runners_up": ranked[3:10],
+            "brand": brand,
+            "generated_at": generated_at,
+            "page_title": f"{event['eventName']} — Podium",
+        },
+    )
 
 
-def render_certificate(event: dict, racer: dict, brand: dict, generated_at: str) -> bytes:
-    return render_pdf("racer_certificate.html", {
-        "event": event,
-        "racer": racer,
-        "brand": brand,
-        "generated_at": generated_at,
-        "page_title": f"Certificate — {racer['username']}",
-        "page_orientation": "landscape",
-    })
+def render_certificate(
+    event: dict, racer: dict, brand: dict, generated_at: str
+) -> bytes:
+    return render_pdf(
+        "racer_certificate.html",
+        {
+            "event": event,
+            "racer": racer,
+            "brand": brand,
+            "generated_at": generated_at,
+            "page_title": f"Certificate — {racer['username']}",
+            "page_orientation": "landscape",
+        },
+    )
 
 
-def render_bulk_zip(event: dict, ranked: list[dict], brand: dict, generated_at: str) -> bytes:
+def render_bulk_zip(
+    event: dict, ranked: list[dict], brand: dict, generated_at: str
+) -> bytes:
     """Render one certificate per unique racer who has at least one valid lap."""
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -243,5 +289,7 @@ def put_pdf_object(key: str, body: bytes, filename: str):
         Bucket=PDF_BUCKET,
         Key=key,
         Body=body,
-        ContentType="application/zip" if filename.endswith(".zip") else "application/pdf",
+        ContentType=(
+            "application/zip" if filename.endswith(".zip") else "application/pdf"
+        ),
     )
